@@ -117,7 +117,7 @@ class ProcessAgencyOutboxEventJob implements ShouldQueue
                 }
             }
 
-            if ($invitationId > 0 && ($eventType === 'AGENCY_REQUEST_SENT' || $eventType === 'BULK_AGENCY_REQUIREMENT_SENT' || $eventType === 'AGENCY_INVITATION_SENT')) {
+            if ($invitationId > 0) {
                 try {
                     GeneralMethod::clientRequestIndexElastic($invitationId);
                 } catch (\Throwable $e) {
@@ -126,29 +126,37 @@ class ProcessAgencyOutboxEventJob implements ShouldQueue
             }
 
             // 2. Real-Time WebSocket broadcast to both tenant and agency sessions
-            if ($fromCompanyId > 0 && $toCompanyId > 0) {
+            if ($fromCompanyId > 0) {
                 try {
-                    $broadcastAction = ($eventType === 'AGENCY_REQUEST_CANCELLED') ? 'cancelled' : 'sent';
+                    $broadcastAction = match ($eventType) {
+                        'AGENCY_REQUEST_CANCELLED', 'AGENCY_INVITATION_CANCELLED' => 'cancelled',
+                        'AGENCY_PARTNERSHIP_ACTIVATED' => 'accepted',
+                        'AGENCY_INVITATION_DECLINED' => 'declined',
+                        'AGENCY_INVITATION_HARD_BOUNCED' => 'bounced',
+                        default => 'sent',
+                    };
 
                     // Broadcast to employer company sessions
                     event(new AgencyRequestDeltaUpdated(
                         companyId: $fromCompanyId,
-                        agencyId: $toCompanyId,
+                        agencyId: $toCompanyId ?: 0,
                         eventType: $broadcastAction,
                         entityVersion: (int) ($event->aggregate_version ?? 1),
                         invitationId: $invitationId,
                         extra: ['from_company_id' => $fromCompanyId]
                     ));
 
-                    // Broadcast to partner agency company sessions
-                    event(new AgencyRequestDeltaUpdated(
-                        companyId: $toCompanyId,
-                        agencyId: $fromCompanyId,
-                        eventType: $broadcastAction,
-                        entityVersion: (int) ($event->aggregate_version ?? 1),
-                        invitationId: $invitationId,
-                        extra: ['from_company_id' => $fromCompanyId]
-                    ));
+                    // Broadcast to partner agency company sessions if known
+                    if ($toCompanyId > 0) {
+                        event(new AgencyRequestDeltaUpdated(
+                            companyId: $toCompanyId,
+                            agencyId: $fromCompanyId,
+                            eventType: $broadcastAction,
+                            entityVersion: (int) ($event->aggregate_version ?? 1),
+                            invitationId: $invitationId,
+                            extra: ['from_company_id' => $fromCompanyId]
+                        ));
+                    }
                 } catch (\Throwable $e) {
                     Log::warning("[ProcessAgencyOutboxEventJob] WebSocket broadcast warning for invitation #{$invitationId}: ".$e->getMessage());
                 }

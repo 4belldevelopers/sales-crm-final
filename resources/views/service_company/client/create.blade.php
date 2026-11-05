@@ -10994,6 +10994,12 @@ $('.remove_address').click(function(){
         if (typeof window.updateSuggestedServicesForIndustry === 'function') {
           try { window.updateSuggestedServicesForIndustry(); } catch (e) {}
         }
+        // Auto-select services on entering Step 2 if no services are currently selected
+        if (window.clientServicesManager && (!window.clientServicesManager.selected || window.clientServicesManager.selected.length === 0)) {
+          if (typeof window.addAllSuggestedServices === 'function') {
+            try { window.addAllSuggestedServices(); } catch (e) {}
+          }
+        }
       }
 
       // On Step 3 (Address / Locations), sync AI discovery buttons and website links
@@ -11434,6 +11440,424 @@ $('.remove_address').click(function(){
       }
     };
 
+    // =========================================================================
+    // Industry-Specific Dedicated Services Taxonomy (God-Level Precision)
+    // =========================================================================
+    var INDUSTRY_SPECIFIC_SERVICES = {
+      // 131: Staffing & Recruiting (Specialized Workforce & Recruitment Solutions)
+      131: {
+        name: 'Staffing & Recruiting',
+        services: [
+          'Contract Staffing / Contingent Workforce',
+          'Permanent Placement / Direct Hire',
+          'Executive Search & Leadership Hiring',
+          'Recruitment Process Outsourcing (RPO)',
+          'IT & Technical Staffing',
+          'Volume & Bulk Hiring',
+          'Campus & Graduate Recruitment',
+          'Payroll & Staffing Compliance',
+          'Candidate Assessment & Screening',
+          'Talent Sourcing & Headhunting',
+          'Diversity & Inclusion (D&I) Hiring',
+          'Employer Branding & Talent Advisory'
+        ],
+        desc: 'is a premier Staffing & Recruiting organization delivering end-to-end talent acquisition, executive search, contract staffing, and specialized workforce solutions. The company connects top-tier talent with leading enterprise organizations through rigorous technical screening, rapid turnaround, and proven placement excellence.'
+      },
+
+      // 127: Semiconductors & Microelectronics
+      127: {
+        name: 'Semiconductors',
+        services: [
+          'ASIC & FPGA Design',
+          'VLSI Verification & Emulation',
+          'Silicon Fabrication & Foundry Services',
+          'System-on-Chip (SoC) Architecture',
+          'Semiconductor Packaging & Testing (OSAT)',
+          'Analog & Mixed-Signal IC Design',
+          'Embedded Firmware & Board Support Packages (BSP)',
+          'EDA Tooling & Physical Design / Synthesis',
+          'RF & High-Frequency Wireless IC Design',
+          'Design for Testability (DFT) & Silicon Bring-Up',
+          'Power Management IC (PMIC) Engineering',
+          'MEMS & Micro-Sensor Development'
+        ],
+        desc: 'is a pioneering Semiconductor and microelectronics company specializing in advanced silicon engineering, SoC architecture, VLSI verification, and specialized integrated circuit solutions. The company delivers high-efficiency chipsets, embedded firmware, and foundry-grade hardware to power next-generation computing and industrial systems.'
+      },
+
+      // 68: Internet & Digital Platforms
+      68: {
+        name: 'Internet & Digital Platforms',
+        services: [
+          'High-Concurrency Web Platforms',
+          'Search & Discovery Engine Architecture',
+          'Content Delivery & Video Streaming (CDN/OTT)',
+          'E-Commerce & Digital Marketplace Infrastructure',
+          'AdTech, Bidding & Monetization Platforms',
+          'Real-Time Messaging & WebSocket Engines',
+          'Social Graph & Community Features',
+          'User Acquisition & Growth Engineering',
+          'Identity, Authentication & SSO (OAuth/SAML)',
+          'Trust & Safety / Automated Content Moderation',
+          'Web Performance & Core Web Vitals Optimization',
+          'Progressive Web Apps (PWA) & Headless Web'
+        ],
+        desc: 'is a premier Internet and digital platforms organization delivering scalable web architectures, high-concurrency cloud applications, and high-engagement digital experiences. The company drives audience growth, digital monetization, and real-time connectivity across global web ecosystems.'
+      },
+
+      // 64: Information Technology & Services (Enterprise Managed IT & Systems)
+      64: {
+        name: 'Information Technology & Services',
+        services: [
+          'Enterprise IT Managed Services (MSP)',
+          'Cloud Architecture & Multi-Cloud DevOps',
+          'Custom Software & Systems Engineering',
+          'IT Infrastructure & Network Operations (NOC)',
+          'Cybersecurity, Governance & IT Compliance',
+          'Enterprise Systems Integration (ERP/CRM)',
+          'Data Engineering, ETL & Business Intelligence',
+          '24/7 Enterprise Helpdesk & Technical Support',
+          'Disaster Recovery & Business Continuity (BCDR)',
+          'Database Administration & Performance Tuning',
+          'Digital Workplace & Hybrid Collaboration Tech',
+          'API & Microservices Integration'
+        ],
+        desc: 'is an enterprise Information Technology & Services provider delivering end-to-end managed IT services, cloud infrastructure management, systems integration, and round-the-clock enterprise support. The company empowers organizations through secure digital transformation, reliable operations, and modern technology management.'
+      },
+
+      // 25: Computer Software & SaaS Products
+      25: {
+        name: 'Computer Software & SaaS',
+        services: [
+          'SaaS Platform Engineering & Multi-Tenancy',
+          'Full-Stack Web & Mobile App Development',
+          'Cloud-Native Distributed Architecture',
+          'API Design & Webhook Orchestration',
+          'Agile Product Delivery & Sprint Management',
+          'Automated QA & Continuous Testing Pipelines',
+          'UI/UX Product Design & User Journeys',
+          'Software Modernization & Refactoring',
+          'Billing, Subscription & Stripe Integration',
+          'Data Modeling & Query Optimization',
+          'SDK & Developer Tooling Creation',
+          'Micro-Frontend Architecture'
+        ],
+        desc: 'is an innovative Computer Software and SaaS company designing resilient, cloud-native applications and user-centric digital products. The company combines modern engineering practices, scalable multi-tenant architectures, and intuitive UI/UX design to accelerate digital innovation.'
+      },
+
+      // 1001: Artificial Intelligence & Machine Learning (AI/ML)
+      1001: {
+        name: 'Artificial Intelligence & Machine Learning (AI/ML)',
+        services: [
+          'Generative AI & LLM Application Development',
+          'Retrieval-Augmented Generation (RAG) Systems',
+          'Computer Vision & Real-Time Video Analytics',
+          'Natural Language Processing (NLP) & Speech AI',
+          'MLOps, Model Serving & Automated Pipelines',
+          'Custom AI Autonomous Agents & Tool Calling',
+          'Predictive Modeling & Statistical Forecasting',
+          'Data Labeling, Annotation & Curation',
+          'AI Model Fine-Tuning & Quantization',
+          'Recommendation & Personalization Engines',
+          'Deep Learning Neural Network Design',
+          'AI Safety, Governance & Bias Auditing'
+        ],
+        desc: 'is an advanced Artificial Intelligence & Machine Learning company building state-of-the-art intelligent systems, Generative AI models, and automated MLOps pipelines. The company leverages deep learning, computer vision, and autonomous agent architectures to solve complex enterprise problems.'
+      },
+
+      // 1004: Cybersecurity & Data Privacy (and alias 21)
+      1004: {
+        name: 'Cybersecurity & Data Privacy',
+        services: [
+          'Penetration Testing & Red Teaming',
+          'SOC Operations & SIEM Monitoring',
+          'Zero Trust Architecture & Network Security',
+          'Vulnerability Assessment & Patch Management',
+          'Cloud Security Posture Management (CSPM)',
+          'DevSecOps & Secure Code Auditing (SAST/DAST)',
+          'Identity & Access Management (IAM / PAM)',
+          'Endpoint Detection & Response (EDR / XDR)',
+          'Regulatory Compliance (SOC 2, ISO 27001, HIPAA)',
+          'Incident Response & Forensic Investigation',
+          'Data Loss Prevention (DLP) & Cryptography',
+          'Security Awareness & Phishing Simulation'
+        ],
+        desc: 'is a dedicated Cybersecurity and data privacy organization safeguarding enterprise digital assets against sophisticated threats. Through advanced Zero Trust architecture, 24/7 SOC monitoring, penetration testing, and regulatory compliance advisory, the company ensures defense-in-depth security.'
+      },
+
+      // 1005: Cloud Computing, DevOps & Infrastructure
+      1005: {
+        name: 'Cloud Computing, DevOps & Infrastructure',
+        services: [
+          'Multi-Cloud Architecture (AWS, Azure, GCP)',
+          'Kubernetes & Container Orchestration',
+          'CI/CD Pipeline Automation & GitOps',
+          'Infrastructure as Code (Terraform, Ansible)',
+          'Site Reliability Engineering (SRE) & Observability',
+          'Cloud Cost Optimization (FinOps)',
+          'Cloud Migration & Application Modernization',
+          'High-Availability Database Clustering',
+          'Serverless Architecture & Microservices',
+          'Zero-Downtime Deployment Strategies',
+          'Disaster Recovery & Automated Failover',
+          'Cloud Security Guardrails & Policy-as-Code'
+        ],
+        desc: 'is a high-performance Cloud Computing and DevOps consultancy specializing in automated cloud infrastructure, container orchestration, and continuous delivery pipelines. The company empowers enterprise scale with zero-downtime deployments, cost-optimized architectures, and rock-solid site reliability.'
+      },
+
+      // 133: Telecommunications & Wireless (and aliases 145, 24)
+      133: {
+        name: 'Telecommunications & Wireless',
+        services: [
+          '5G & 4G LTE Network Engineering',
+          'Fiber Optic & Broadband Infrastructure',
+          'Network Operations Center (NOC) Support',
+          'VoIP & Unified Communications (UCaaS)',
+          'Cell Tower Site Acquisition & RF Planning',
+          'Telecom Billing & OSS / BSS Integration',
+          'Satellite Communications & Backhaul',
+          'SD-WAN & Enterprise Managed Connectivity',
+          'Spectrum Management & Regulatory Filings',
+          'IoT & Machine-to-Machine (M2M) Networks',
+          'Telecom Network Slicing & Edge Compute',
+          'Optical Transport & DWDM Systems'
+        ],
+        desc: 'is a premier Telecommunications infrastructure and networking provider delivering robust 5G connectivity, fiber broadband, and enterprise communication solutions. The company connects global businesses and consumers with high-availability networks and next-generation telecom infrastructure.'
+      },
+
+      // 23: Computer Hardware & Electronics (and alias 27)
+      23: {
+        name: 'Computer Hardware & Electronics',
+        services: [
+          'PCB Schematic Design & Layout',
+          'Embedded C/C++ Firmware Engineering',
+          'Hardware Board Bring-Up & Diagnostics',
+          'Thermal, Mechanical & Enclosure Design',
+          'FCC, CE & RoHS Regulatory Certification',
+          'Component Sourcing & Bill of Materials (BOM)',
+          'Contract Manufacturing & EMS Supervision',
+          'High-Speed Signal Integrity & EMC Testing',
+          'IoT Device Prototyping & Edge Hardware',
+          'Power Electronics & Battery Management Systems',
+          'Reliability & Stress Testing (HALT/HASS)',
+          'Hardware Lifecycle & RMA Engineering'
+        ],
+        desc: 'is an engineering-driven Computer Hardware enterprise developing high-reliability electronic assemblies, embedded hardware systems, and computing products. The company brings electronic innovations from initial PCB concept through rigorous regulatory compliance to mass production.'
+      },
+
+      // 1002: FinTech, Payments & Digital Banking (and alias 43)
+      1002: {
+        name: 'FinTech, Payments & Digital Banking',
+        services: [
+          'Digital Payments & Gateway Integration',
+          'Core Banking & Neobanking Architecture',
+          'KYC, AML & Identity Verification',
+          'Fraud Detection & Risk Analytics',
+          'Buy Now Pay Later (BNPL) Solutions',
+          'Open Banking & Financial Data APIs',
+          'WealthTech & Robo-Advisory Platforms',
+          'Regulatory Compliance & RegTech Solutions',
+          'Payment Card & POS Issuing Infrastructure',
+          'Blockchain, Smart Contracts & DeFi',
+          'Lending Tech & Credit Scoring Models',
+          'PCI-DSS & Financial Security Compliance'
+        ],
+        desc: 'is an innovative FinTech and digital banking enterprise delivering secure payment gateway integrations, automated compliance workflows, and next-generation financial architectures. The company drives seamless transaction processing, open banking APIs, and financial intelligence for global organizations.'
+      },
+
+      // 1003: E-Commerce & Direct-to-Consumer (D2C)
+      1003: {
+        name: 'E-Commerce & Direct-to-Consumer (D2C)',
+        services: [
+          'Omnichannel E-Commerce Platforms',
+          'Direct-to-Consumer (D2C) Brand Acceleration',
+          'Quick Commerce & Hyperlocal Delivery Tech',
+          'Payment Gateway & Multi-Currency Checkout',
+          'Inventory & Order Management Systems (OMS)',
+          'Personalization & AI Recommendation Engines',
+          'Marketplace Integration & Syndication',
+          'Customer Loyalty, Subscriptions & Retention',
+          'Product Information Management (PIM)',
+          'Conversion Rate Optimization (CRO)',
+          'Automated Returns & Reverse Logistics',
+          'Headless Commerce & Progressive Web Apps'
+        ],
+        desc: 'is a high-growth E-Commerce and Direct-to-Consumer (D2C) digital commerce leader specializing in omnichannel platforms, conversion rate optimization, and rapid fulfillment architectures. The company empowers retail brands to scale digital sales channels and deliver world-class shopping experiences.'
+      },
+
+      // 1006: HealthTech & Digital Health
+      1006: {
+        name: 'HealthTech & Digital Health',
+        services: [
+          'Telemedicine & Virtual Consultation Platforms',
+          'Electronic Health Records (EHR / EMR) Integration',
+          'Remote Patient Monitoring (RPM) & Wearable Tech',
+          'HIPAA, HITECH & Medical Data Compliance',
+          'Clinical AI & Diagnostic Decision Support',
+          'Pharmacy Management & E-Prescriptions',
+          'Patient Engagement & Portal Solutions',
+          'Medical Device Connectivity (IoMT)',
+          'Clinical Trial Management Systems (CTMS)',
+          'Health Information Exchange (HIE) & FHIR APIs',
+          'Mental Health & Digital Therapeutics (DTx)',
+          'Medical Billing & Revenue Cycle Management (RCM)'
+        ],
+        desc: 'is an advanced HealthTech and digital health pioneer providing certified telehealth platforms, EHR interoperability, and intelligent patient-care solutions. The company operates under strict medical data compliance (HIPAA/HITECH) to improve clinical workflows and patient outcomes.'
+      },
+
+      // 1007: EdTech & Digital Learning (and alias 34)
+      1007: {
+        name: 'EdTech & Digital Learning',
+        services: [
+          'Learning Management Systems (LMS)',
+          'Virtual Classrooms & Video Conferencing',
+          'Interactive Courseware & Gamified Learning',
+          'Adaptive AI Tutoring & Assessment',
+          'Student Information Systems (SIS)',
+          'Corporate Upskilling & Training Portals',
+          'K-12 Digital Curriculum Platforms',
+          'Online Examination & Proctoring Tech',
+          'Micro-Credentials & Digital Badging',
+          'Educational Content Delivery & Streaming',
+          'Student Progress & Learning Analytics',
+          'SCORM / xAPI Integration & Compliance'
+        ],
+        desc: 'is a transformative EdTech and digital learning organization delivering interactive educational platforms, AI-driven adaptive tutoring, and enterprise upskilling environments. The company empowers learners and educators worldwide through accessible, engaging, and data-driven instruction.'
+      },
+
+      // 1008: CleanTech, ClimateTech & Renewable Energy (and alias 122)
+      1008: {
+        name: 'CleanTech, ClimateTech & Renewable Energy',
+        services: [
+          'Solar & Wind Energy Systems Engineering',
+          'Smart Grid Integration & Energy Storage (BESS)',
+          'ESG Reporting & Carbon Accounting Tech',
+          'Clean Hydrogen & Biofuel Solutions',
+          'EV Charging Infrastructure & Telematics',
+          'Energy Efficiency & Building Auditing',
+          'Carbon Capture, Utilization & Storage (CCUS)',
+          'Environmental Monitoring & Satellite Sensors',
+          'Circular Economy & Waste-to-Energy Tech',
+          'Microgrid Architecture & Power Management',
+          'Sustainability Compliance & Green Certifications',
+          'Renewable Asset Lifecycle & O&M Support'
+        ],
+        desc: 'is a forward-looking CleanTech and renewable energy company specializing in decarbonization technologies, smart grid integration, and ESG carbon accounting solutions. The company provides scalable green technologies to accelerate global sustainability and net-zero energy transitions.'
+      },
+
+      // 1010: PropTech & Real Estate Technology
+      1010: {
+        name: 'PropTech & Real Estate Technology',
+        services: [
+          'Real Estate Marketplace & Listing Engines',
+          'Building Information Modeling (BIM)',
+          'Virtual 3D Property Tours & Digital Staging',
+          'Smart Building IoT & Energy Optimization',
+          'Tenant Experience & Property Management Portals',
+          'Digital Lease & Contract Automation',
+          'Construction Management & Telematics',
+          'Commercial Real Estate (CRE) Analytics',
+          'Smart Lock & Access Control Integration',
+          'Automated Rent Collection & Payment Gateways',
+          'Facilities Maintenance Ticketing Systems',
+          'Urban Planning & GIS Mapping Tech'
+        ],
+        desc: 'is an innovative PropTech and smart real estate technology enterprise modernizing property management, commercial leasing, and smart building automation. The company leverages IoT building sensors, 3D visualization, and automated asset workflows to optimize property value and tenant experiences.'
+      },
+
+      // 1011: AgriTech & Smart Farming (and alias 42)
+      1011: {
+        name: 'AgriTech & Smart Farming',
+        services: [
+          'Precision Agriculture & IoT Soil Sensors',
+          'Agricultural Drone Mapping & Crop Spraying',
+          'Hydroponic & Vertical Farming Automation',
+          'Crop Yield Prediction & Satellite Analytics',
+          'Automated Irrigation & Water Management',
+          'Livestock Monitoring & Telematics',
+          'Farm Management Software (FMS)',
+          'Agricultural Supply Chain Traceability',
+          'Greenhouse Climate Control Systems',
+          'Bio-Fertilizer & Sustainable Crop Tech',
+          'Commodity Trading & Market Price Feeds',
+          'Post-Harvest Cold Chain Telematics'
+        ],
+        desc: 'is a cutting-edge AgriTech organization empowering agricultural sustainability through precision IoT sensors, drone mapping, and predictive yield analytics. The company helps growers, farms, and food enterprises maximize crop yields and resource efficiency.'
+      },
+
+      // 1012: HRTech & Talent Acquisition Platforms (and alias 59)
+      1012: {
+        name: 'HRTech & Talent Acquisition Platforms',
+        services: [
+          'Applicant Tracking System (ATS) Architecture',
+          'AI Resume Parsing & Candidate Screening',
+          'Talent Sourcing & Headhunting Tools',
+          'HR Information Systems (HRIS) Integration',
+          'Automated Interview Scheduling & Video Assessments',
+          'Global Payroll & Employer of Record (EOR) Tech',
+          'Employee Onboarding & Digital Workflows',
+          'Performance Management & 360 Reviews',
+          'People Analytics & Workforce Planning',
+          'Diversity, Equity & Inclusion (DEI) Metrics',
+          'Employee Engagement & Pulse Surveys',
+          'Time, Attendance & Shift Scheduling'
+        ],
+        desc: 'is an industry-leading HRTech and talent platform enterprise creating modern software solutions for hiring, global payroll, and workforce operations. The company drives HR efficiency through AI-powered candidate discovery, seamless onboarding, and data-backed people analytics.'
+      },
+
+      // 1013: LegalTech & Regulatory Technology (RegTech) (and alias 74)
+      1013: {
+        name: 'LegalTech & Regulatory Technology (RegTech)',
+        services: [
+          'Contract Lifecycle Management (CLM)',
+          'E-Discovery & Litigation Support Tech',
+          'Legal Document Automation & Assembly',
+          'AI Legal Research & Case Law Analytics',
+          'Regulatory Compliance Tracking & RegTech',
+          'KYC / AML Verification & Identity Auditing',
+          'IP Management & Trademark Monitoring',
+          'Legal Matter & Spend Management',
+          'Secure Virtual Data Rooms (VDR)',
+          'Digital Signature & Notarization Tech',
+          'Privacy Compliance (GDPR, CCPA, CPRA)',
+          'Court Filing & Docket Tracking Systems'
+        ],
+        desc: 'is a specialized LegalTech and RegTech enterprise delivering automated contract lifecycle management, digital compliance auditing, and secure legal operations. The company helps law firms and corporate legal departments accelerate contract turnaround and maintain rigorous regulatory compliance.'
+      },
+
+      // 1014: SpaceTech, Aerospace & Autonomous Systems (and alias 10)
+      1014: {
+        name: 'SpaceTech, Aerospace & Autonomous Systems',
+        services: [
+          'Satellite Design, Payload & Constellation Tech',
+          'Commercial Orbital Launch Systems Engineering',
+          'Unmanned Aerial Vehicles (UAV) & Drones',
+          'Avionics & Flight Control Software',
+          'Autonomous Guidance, Navigation & Control (GNC)',
+          'Deep Space Exploration & Ground Station Tech',
+          'Earth Observation & Remote Sensing Data',
+          'Propulsion Systems & Thermal Management',
+          'Space Situational Awareness & Debris Tracking',
+          'FAA & Regulatory Flight Compliance',
+          'Composite Materials & Aerospace Structures',
+          'Telemetry, Tracking & Command (TT&C)'
+        ],
+        desc: 'is an advanced SpaceTech and aerospace enterprise developing next-generation satellite systems, autonomous flight architectures, and orbital technology solutions. The company combines rigorous aerospace engineering with cutting-edge software to advance space exploration and atmospheric intelligence.'
+      }
+    };
+
+    // Aliases for unified taxonomy mapping
+    INDUSTRY_SPECIFIC_SERVICES[21] = INDUSTRY_SPECIFIC_SERVICES[1004]; // Computer & Network Security -> Cybersecurity
+    INDUSTRY_SPECIFIC_SERVICES[145] = INDUSTRY_SPECIFIC_SERVICES[133];  // Wireless -> Telecommunications & Wireless
+    INDUSTRY_SPECIFIC_SERVICES[24] = INDUSTRY_SPECIFIC_SERVICES[133];   // Computer Networking -> Telecom & Wireless
+    INDUSTRY_SPECIFIC_SERVICES[27] = INDUSTRY_SPECIFIC_SERVICES[23];    // Consumer Electronics -> Hardware & Electronics
+    INDUSTRY_SPECIFIC_SERVICES[43] = INDUSTRY_SPECIFIC_SERVICES[1002];  // Financial Services -> FinTech / Banking
+    INDUSTRY_SPECIFIC_SERVICES[34] = INDUSTRY_SPECIFIC_SERVICES[1007];  // E-Learning -> EdTech & Digital Learning
+    INDUSTRY_SPECIFIC_SERVICES[59] = INDUSTRY_SPECIFIC_SERVICES[1012];  // Human Resources -> HRTech / Talent Platforms
+    INDUSTRY_SPECIFIC_SERVICES[74] = INDUSTRY_SPECIFIC_SERVICES[1013];  // Legal Services -> LegalTech
+    INDUSTRY_SPECIFIC_SERVICES[10] = INDUSTRY_SPECIFIC_SERVICES[1014];  // Aviation & Aerospace -> SpaceTech & Aerospace
+    INDUSTRY_SPECIFIC_SERVICES[122] = INDUSTRY_SPECIFIC_SERVICES[1008]; // Renewables -> CleanTech & Renewable Energy
+    INDUSTRY_SPECIFIC_SERVICES[42] = INDUSTRY_SPECIFIC_SERVICES[1011];  // Farming -> AgriTech & Smart Farming
+
     window.addSuggestedService = function(svc) {
       if (!svc) return;
       if (window.clientServicesManager) {
@@ -11463,7 +11887,7 @@ $('.remove_address').click(function(){
       $('#client_tags_error').hide();
     };
 
-    window.updateSuggestedServicesForIndustry = function(industryItem) {
+    window.updateSuggestedServicesForIndustry = function(industryItem, autoSelect) {
       var $container = $('#client_suggested_services');
       var $label = $('#client_suggested_label');
       if (!$container.length) return;
@@ -11474,6 +11898,7 @@ $('.remove_address').click(function(){
 
       var sectorId = null;
       var sectorName = '';
+      var indId = item ? parseInt(item.id, 10) : parseInt($('#industry').val(), 10);
 
       if (item && item.sector_id) {
         sectorId = parseInt(item.sector_id, 10);
@@ -11493,11 +11918,66 @@ $('.remove_address').click(function(){
       var sectorConfig = INDUSTRY_SECTOR_SERVICES[sectorId] || INDUSTRY_SECTOR_SERVICES[1];
       if (!sectorName) sectorName = sectorConfig.name;
 
+      var indLower = (indName || '').toLowerCase();
+      var specificConfig = INDUSTRY_SPECIFIC_SERVICES[indId] || null;
+
+      if (!specificConfig) {
+        if (indId === 131 || indLower.indexOf('staffing') !== -1 || indLower.indexOf('recruiting') !== -1 || indLower.indexOf('headhunting') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[131];
+        } else if (indId === 127 || indLower.indexOf('semiconductor') !== -1 || indLower.indexOf('microchip') !== -1 || indLower.indexOf('chipset') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[127];
+        } else if (indId === 68 || indLower.indexOf('internet') !== -1 || indLower.indexOf('digital platform') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[68];
+        } else if (indId === 1001 || indLower.indexOf('artificial intelligence') !== -1 || indLower === 'ai' || indLower.indexOf('machine learning') !== -1 || indLower.indexOf('llm') !== -1 || indLower.indexOf('genai') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1001];
+        } else if (indId === 1004 || indId === 21 || indLower.indexOf('cybersecurity') !== -1 || indLower.indexOf('infosec') !== -1 || indLower.indexOf('network security') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1004];
+        } else if (indId === 1005 || indLower.indexOf('cloud computing') !== -1 || indLower.indexOf('devops') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1005];
+        } else if (indId === 25 || indLower.indexOf('computer software') !== -1 || indLower.indexOf('saas') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[25];
+        } else if (indId === 64 || indLower.indexOf('information technology') !== -1 || indLower.indexOf('managed it') !== -1 || indLower === 'msp') {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[64];
+        } else if (indId === 133 || indId === 145 || indId === 24 || indLower.indexOf('telecom') !== -1 || indLower.indexOf('wireless') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[133];
+        } else if (indId === 23 || indId === 27 || indLower.indexOf('computer hardware') !== -1 || indLower.indexOf('consumer electronics') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[23];
+        } else if (indId === 1002 || indId === 43 || indLower.indexOf('fintech') !== -1 || indLower.indexOf('payments') !== -1 || indLower.indexOf('neobank') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1002];
+        } else if (indId === 1003 || indLower.indexOf('ecommerce') !== -1 || indLower.indexOf('e-commerce') !== -1 || indLower.indexOf('d2c') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1003];
+        } else if (indId === 1006 || indLower.indexOf('healthtech') !== -1 || indLower.indexOf('digital health') !== -1 || indLower.indexOf('telehealth') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1006];
+        } else if (indId === 1007 || indId === 34 || indLower.indexOf('edtech') !== -1 || indLower.indexOf('e-learning') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1007];
+        } else if (indId === 1008 || indId === 122 || indLower.indexOf('cleantech') !== -1 || indLower.indexOf('climatetech') !== -1 || indLower.indexOf('renewable') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1008];
+        } else if (indId === 1010 || indLower.indexOf('proptech') !== -1 || indLower.indexOf('real estate tech') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1010];
+        } else if (indId === 1011 || indId === 42 || indLower.indexOf('agritech') !== -1 || indLower.indexOf('smart farming') !== -1 || indLower.indexOf('agriculture') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1011];
+        } else if (indId === 1012 || indId === 59 || indLower.indexOf('hrtech') !== -1 || indLower.indexOf('talent platform') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1012];
+        } else if (indId === 1013 || indId === 74 || indLower.indexOf('legaltech') !== -1 || indLower.indexOf('regtech') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1013];
+        } else if (indId === 1014 || indId === 10 || indLower.indexOf('spacetech') !== -1 || indLower.indexOf('aerospace') !== -1 || indLower.indexOf('autonomous flight') !== -1) {
+          specificConfig = INDUSTRY_SPECIFIC_SERVICES[1014];
+        }
+      }
+
       if ($label.length) {
         $label.text(indName ? 'Suggested Services (' + indName + ')' : 'Suggested Services (' + sectorName + ')');
       }
 
-      var services = sectorConfig.services || [];
+      var services = (specificConfig && specificConfig.services) ? specificConfig.services : (sectorConfig.services || []);
+
+      // Automatically select services into active tags if autoSelect flag is true
+      if (autoSelect && window.clientServicesManager && typeof window.clientServicesManager.addTag === 'function') {
+        services.forEach(function (s) {
+          window.clientServicesManager.addTag(s);
+        });
+      }
+
       var existingTags = [];
       if (window.clientServicesManager && Array.isArray(window.clientServicesManager.selected)) {
         existingTags = window.clientServicesManager.selected.map(function(t) { return String(t || '').toLowerCase(); });
@@ -11526,7 +12006,12 @@ $('.remove_address').click(function(){
       var clientName = ($('#client_id').val() || '').trim() || '4bell';
       var $aiDesc = $('#client_ai_suggested_desc');
       if (indName && $aiDesc.length) {
-        var indDesc = clientName + ' is an industry-leading ' + indName + ' organization providing end-to-end solutions, enterprise excellence, and specialized operations within the ' + sectorName + ' sector. The company focuses on scalable innovation, operational agility, and high-quality client delivery.';
+        var indDesc;
+        if (specificConfig && specificConfig.desc) {
+          indDesc = clientName + ' ' + specificConfig.desc;
+        } else {
+          indDesc = clientName + ' is an industry-leading ' + indName + ' organization providing end-to-end solutions, enterprise excellence, and specialized operations within the ' + sectorName + ' sector. The company focuses on scalable innovation, operational agility, and high-quality client delivery.';
+        }
         $aiDesc.text(indDesc);
       }
     };
@@ -12443,9 +12928,9 @@ $('.remove_address').click(function(){
             window.clearFieldError($('#industry'));
         }
 
-        // Dynamic linkage to Step 2 Services
+        // Dynamic linkage to Step 2 Services (auto-select services on user industry selection)
         if (typeof window.updateSuggestedServicesForIndustry === 'function') {
-            window.updateSuggestedServicesForIndustry(item);
+            window.updateSuggestedServicesForIndustry(item, true);
         }
 
         // Recency
@@ -12684,42 +13169,47 @@ $('.remove_address').click(function(){
         'tech': 64,
         'technology': 64,
         'technology services': 64,
-        'saas': 64,
-        'software as a service': 64,
+        'saas': 25, // Computer Software & SaaS
+        'software as a service': 25,
         'software': 25, // Computer Software
         'software development': 25,
         'software engineering': 25,
         'software company': 25,
         'computer software': 25,
-        'cloud': 148, // Cloud Infrastructure & DevOps
-        'cloud computing': 148,
-        'devops': 148,
-        'cloud infrastructure': 148,
-        'artificial intelligence': 147, // Artificial Intelligence & Machine Learning
-        'ai': 147,
-        'machine learning': 147,
-        'ai/ml': 147,
-        'cybersecurity': 153, // Cybersecurity & Privacy Infrastructure
-        'cyber security': 153,
-        'infosec': 153,
+        'cloud': 1005, // Cloud Computing, DevOps & Infrastructure
+        'cloud computing': 1005,
+        'devops': 1005,
+        'cloud infrastructure': 1005,
+        'artificial intelligence': 1001, // Artificial Intelligence & Machine Learning (AI/ML)
+        'ai': 1001,
+        'machine learning': 1001,
+        'ai/ml': 1001,
+        'genai': 1001,
+        'cybersecurity': 1004, // Cybersecurity & Data Privacy
+        'cyber security': 1004,
+        'infosec': 1004,
         'information security': 21, // Computer & Network Security
         'computer networking': 24,
         'networking': 24,
         'semiconductors': 127,
+        'semiconductor': 127,
+        'microchips': 127,
         'hardware': 23, // Computer Hardware
         'computer hardware': 23,
+        'consumer electronics': 27,
         'internet': 68,
-        'e-commerce': 152, // E-Commerce & Quick Commerce
-        'ecommerce': 152,
+        'e-commerce': 1003, // E-Commerce & Direct-to-Consumer (D2C)
+        'ecommerce': 1003,
+        'd2c': 1003,
         'web development': 68,
         'digital media': 98, // Online Media
-        'gaming': 157, // Gaming, Esports & Interactive Media
+        'gaming': 1009, // Gaming, Esports & Interactive Entertainment
         'video games': 22, // Computer Games
-        'esports': 157,
+        'esports': 1009,
 
         // Finance & Banking
-        'fintech': 149, // FinTech & Digital Assets
-        'financial technology': 149,
+        'fintech': 1002, // FinTech, Payments & Digital Banking
+        'financial technology': 1002,
         'banking': 11,
         'financial services': 43,
         'finance': 43,
@@ -12733,8 +13223,8 @@ $('.remove_address').click(function(){
         'capital markets': 16,
 
         // Healthcare & Life Sciences
-        'healthtech': 150, // HealthTech & Digital Health
-        'digital health': 150,
+        'healthtech': 1006, // HealthTech & Digital Health
+        'digital health': 1006,
         'healthcare': 57, // Hospital & Health Care
         'health care': 57,
         'hospital': 57,
@@ -12748,7 +13238,7 @@ $('.remove_address').click(function(){
         'wellness': 55,
 
         // Professional Services & HR
-        'hrtech': 160, // HRTech & Workforce Platforms
+        'hrtech': 1012, // HRTech & Talent Acquisition Platforms
         'recruiting': 131, // Staffing & Recruiting
         'recruitment': 131,
         'staffing': 131,
@@ -12765,14 +13255,18 @@ $('.remove_address').click(function(){
         'legal services': 74,
         'legal': 74,
         'law practice': 73,
+        'legaltech': 1013, // LegalTech & Regulatory Technology (RegTech)
+        'regtech': 1013,
         'design': 33,
         'graphic design': 54,
 
         // Manufacturing, Industrial, Automotive
         'automotive': 9,
-        'autotech': 158, // AutoTech, EV & Autonomous Mobility
-        'ev': 158,
-        'electric vehicles': 158,
+        'autotech': 9,
+        'ev': 9,
+        'electric vehicles': 9,
+        'spacetech': 1014, // SpaceTech, Aerospace & Autonomous Systems
+        'space technology': 1014,
         'aerospace': 10,
         'aviation': 10,
         'defense': 32,
@@ -12785,7 +13279,7 @@ $('.remove_address').click(function(){
         // Logistics, Supply Chain & Transport
         'logistics': 78, // Logistics & Supply Chain
         'supply chain': 78,
-        'supply chain tech': 156, // Supply Chain Tech & Autonomous Logistics
+        'supply chain tech': 78,
         'transportation': 138,
         'trucking': 138,
         'warehousing': 142,
@@ -12793,7 +13287,7 @@ $('.remove_address').click(function(){
         'shipping': 82, // Maritime
 
         // Real Estate & Construction
-        'proptech': 159, // PropTech & Smart Spaces
+        'proptech': 1010, // PropTech & Real Estate Technology
         'real estate': 119,
         'commercial real estate': 20,
         'construction': 26,
@@ -12801,22 +13295,24 @@ $('.remove_address').click(function(){
         'architecture': 7,
 
         // Energy & CleanTech
-        'cleantech': 154, // ClimateTech, CleanTech & ESG
-        'climatetech': 154,
+        'cleantech': 1008, // CleanTech, ClimateTech & Renewable Energy
+        'climatetech': 1008,
         'renewables': 122,
         'clean energy': 122,
         'solar': 122,
         'oil & energy': 97,
         'oil and gas': 97,
         'utilities': 139,
+        'agritech': 1011, // AgriTech & Smart Farming
 
         // Education, Media, Public
-        'edtech': 151, // EdTech & Future of Work
+        'edtech': 1007, // EdTech & Digital Learning
         'e-learning': 34,
         'education': 35, // Education Management
         'higher education': 56,
         'telecommunications': 133,
         'telecom': 133,
+        'wireless': 145,
         'entertainment': 37,
         'broadcast media': 13,
         'publishing': 116,
@@ -13287,6 +13783,7 @@ $('.remove_address').click(function(){
     var filteredList = [];
     var focusedIndex = -1;
     var isOpen = false;
+    var isUserTyping = false;
     var suppressOpenOnFocus = false;
 
     // DOM References
@@ -13343,7 +13840,12 @@ $('.remove_address').click(function(){
 
     function filterItems(query) {
         var clean = (query || '').trim().toLowerCase();
-        if (!clean) {
+        var selectedId = getSelectedId();
+        var selectedItem = (selectedId !== null && taxonomyMap.has(selectedId)) ? taxonomyMap.get(selectedId) : null;
+        var selectedName = selectedItem ? (selectedItem.display_name || selectedItem.name || '').trim().toLowerCase() : '';
+
+        // If no query OR query matches the current selection, display all options so user can switch in 1 click
+        if (!clean || (selectedName && clean === selectedName)) {
             filteredList = taxonomyList.map(function(item) {
                 return { item: item, matchedAlias: null };
             });
@@ -13388,6 +13890,10 @@ $('.remove_address').click(function(){
         }
 
         var selectedId = getSelectedId();
+        var selectedItem = (selectedId !== null && taxonomyMap.has(selectedId)) ? taxonomyMap.get(selectedId) : null;
+        var selectedName = selectedItem ? (selectedItem.display_name || selectedItem.name || '').trim().toLowerCase() : '';
+        var activeQuery = (query && query.trim().toLowerCase() !== selectedName) ? query : '';
+
         var html = '';
 
         for (var i = 0; i < filteredList.length; i++) {
@@ -13413,7 +13919,7 @@ $('.remove_address').click(function(){
             html += '<div class="jero-ctype-item ' + (isSelected ? 'selected' : '') + ' ' + (isFocused ? 'focused' : '') + '" ' +
                 'data-idx="' + i + '" data-id="' + item.id + '" role="option" id="jero_ctype_opt_' + item.id + '" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
                 '<div class="jero-ctype-item-main">' +
-                '<div class="jero-ctype-item-name">' + highlightMatch(item.display_name || item.name, query) + '</div>' +
+                '<div class="jero-ctype-item-name">' + highlightMatch(item.display_name || item.name, activeQuery) + '</div>' +
                 '</div>' +
                 '<div class="jero-ctype-item-side">' +
                 checkIcon +
@@ -13439,9 +13945,9 @@ $('.remove_address').click(function(){
             var containerBottom = containerTop + listContainer.offsetHeight;
 
             if (itemTop < containerTop) {
-                listContainer.scrollTop = itemTop;
+                listContainer.scrollTop = Math.max(0, itemTop - 20);
             } else if (itemBottom > containerBottom) {
-                listContainer.scrollTop = itemBottom - listContainer.offsetHeight;
+                listContainer.scrollTop = itemBottom - listContainer.offsetHeight + 20;
             }
 
             // WAI-ARIA 1.2: Update aria-activedescendant to the focused option's id
@@ -13466,12 +13972,14 @@ $('.remove_address').click(function(){
     function openDropdown() {
         if (isOpen) return;
         isOpen = true;
+        isUserTyping = false;
         updateDropdownPosition();
         if (wrap) wrap.classList.add('is-open');
         if (dropdown) dropdown.style.display = 'flex';
         if (input) input.setAttribute('aria-expanded', 'true');
 
-        filterItems(input ? input.value : '');
+        // Always show all options on open so user can immediately switch options in 1 click
+        filterItems('');
         var selectedId = getSelectedId();
         focusedIndex = -1;
         if (selectedId !== null) {
@@ -13485,12 +13993,25 @@ $('.remove_address').click(function(){
         if (focusedIndex === -1 && filteredList.length > 0) {
             focusedIndex = 0;
         }
-        renderList(input ? input.value : '');
+        renderList('');
+        setTimeout(function() {
+            scrollFocusedIntoView();
+        }, 20);
+
+        // Auto-select text in input so typing replaces immediately, while keeping all options visible
+        if (input) {
+            setTimeout(function() {
+                try {
+                    input.select();
+                } catch (e) {}
+            }, 10);
+        }
     }
 
     function closeDropdown(restoreText) {
         if (!isOpen) return;
         isOpen = false;
+        isUserTyping = false;
         if (wrap) wrap.classList.remove('is-open');
         if (dropdown) dropdown.style.display = 'none';
         if (input) input.setAttribute('aria-expanded', 'false');
@@ -13523,6 +14044,7 @@ $('.remove_address').click(function(){
 
     function selectItem(item) {
         if (!item) return;
+        isUserTyping = false;
         if (hiddenSelect) {
             hiddenSelect.value = item.id;
             $(hiddenSelect).trigger('change');
@@ -13538,6 +14060,7 @@ $('.remove_address').click(function(){
     }
 
     function clearSelection() {
+        isUserTyping = false;
         if (hiddenSelect) {
             hiddenSelect.value = '';
             $(hiddenSelect).trigger('change');
@@ -13585,6 +14108,11 @@ $('.remove_address').click(function(){
                 if (!isOpen) {
                     input.focus();
                     openDropdown();
+                } else {
+                    input.focus();
+                    try {
+                        input.select();
+                    } catch (e) {}
                 }
             });
         }
@@ -13595,7 +14123,13 @@ $('.remove_address').click(function(){
         });
         input.addEventListener('click', function(e) {
             e.stopPropagation();
-            openDropdown();
+            if (!isOpen) {
+                openDropdown();
+            } else {
+                try {
+                    input.select();
+                } catch (e) {}
+            }
         });
 
         // Dropdown internal clicks should never bubble out to close
@@ -13610,7 +14144,14 @@ $('.remove_address').click(function(){
 
         // Typing in input
         input.addEventListener('input', function() {
-            if (!isOpen) openDropdown();
+            if (!isOpen) {
+                isOpen = true;
+                updateDropdownPosition();
+                if (wrap) wrap.classList.add('is-open');
+                if (dropdown) dropdown.style.display = 'flex';
+                if (input) input.setAttribute('aria-expanded', 'true');
+            }
+            isUserTyping = true;
             focusedIndex = 0;
             filterItems(input.value);
             renderList(input.value);
@@ -13625,8 +14166,18 @@ $('.remove_address').click(function(){
             });
         }
 
-        // Item selection via click
+        // Item selection via click / mousedown (0ms instant switch, preventing focus loss)
         if (listContainer) {
+            listContainer.addEventListener('mousedown', function(e) {
+                // Prevent input blur before selection completes
+                e.preventDefault();
+                var itemEl = e.target.closest('.jero-ctype-item');
+                if (!itemEl) return;
+                var id = parseInt(itemEl.getAttribute('data-id'), 10);
+                if (taxonomyMap.has(id)) {
+                    selectItem(taxonomyMap.get(id));
+                }
+            });
             listContainer.addEventListener('click', function(e) {
                 var itemEl = e.target.closest('.jero-ctype-item');
                 if (!itemEl) return;
@@ -13647,7 +14198,7 @@ $('.remove_address').click(function(){
                 }
                 if (filteredList.length > 0) {
                     focusedIndex = (focusedIndex + 1) % filteredList.length;
-                    renderList(input.value);
+                    renderList(isUserTyping ? input.value : '');
                 }
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -13657,19 +14208,19 @@ $('.remove_address').click(function(){
                 }
                 if (filteredList.length > 0) {
                     focusedIndex = (focusedIndex - 1 + filteredList.length) % filteredList.length;
-                    renderList(input.value);
+                    renderList(isUserTyping ? input.value : '');
                 }
             } else if (e.key === 'Home') {
                 if (isOpen && filteredList.length > 0) {
                     e.preventDefault();
                     focusedIndex = 0;
-                    renderList(input.value);
+                    renderList(isUserTyping ? input.value : '');
                 }
             } else if (e.key === 'End') {
                 if (isOpen && filteredList.length > 0) {
                     e.preventDefault();
                     focusedIndex = filteredList.length - 1;
-                    renderList(input.value);
+                    renderList(isUserTyping ? input.value : '');
                 }
             } else if (e.key === 'Enter') {
                 if (isOpen) {

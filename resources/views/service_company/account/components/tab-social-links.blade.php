@@ -1,4 +1,8 @@
 <!--begin::Step 4: Social Links (Enterprise Single-Column & AI Discovery Architecture)-->
+@php
+  $compSlug = !empty($name) ? \Illuminate\Support\Str::slug($name) : (!empty($account->name) ? \Illuminate\Support\Str::slug($account->name) : (!empty($company->name) ? \Illuminate\Support\Str::slug($company->name) : 'company'));
+  if (empty($compSlug)) { $compSlug = 'company'; }
+@endphp
 <div class="pb-5 client-social-step profile-social-step" data-wizard-type="step-content">
   <div class="client-step-layout client-social-layout">
 
@@ -43,7 +47,7 @@
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="linkedin_url" id="linkedin_url" value="{{ $linkedin_url ?? '' }}" placeholder="https://www.linkedin.com/company/clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="linkedin_url" id="linkedin_url" value="{{ $linkedin_url ?? '' }}" placeholder="https://www.linkedin.com/company/{{ $compSlug }}" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="linkedin_url" title="Clear URL" style="{{ !empty($linkedin_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -64,7 +68,7 @@
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="text" class="form-control client-social-url-input" name="twitter_url" id="twitter_url" value="{{ $twitter_url ?? '' }}" placeholder="https://x.com/clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
+                <input type="text" class="form-control client-social-url-input" name="twitter_url" id="twitter_url" value="{{ $twitter_url ?? '' }}" placeholder="https://x.com/{{ $compSlug }}" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="twitter_url" title="Clear URL" style="{{ !empty($twitter_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -85,7 +89,7 @@
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="facebook_url" id="facebook_url" value="{{ $facebook_url ?? '' }}" placeholder="https://facebook.com/clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="facebook_url" id="facebook_url" value="{{ $facebook_url ?? '' }}" placeholder="https://facebook.com/{{ $compSlug }}" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="facebook_url" title="Clear URL" style="{{ !empty($facebook_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -106,7 +110,7 @@
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="instagram_url" id="instagram_url" value="{{ $instagram_url ?? '' }}" placeholder="https://instagram.com/clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="instagram_url" id="instagram_url" value="{{ $instagram_url ?? '' }}" placeholder="https://instagram.com/{{ $compSlug }}" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="instagram_url" title="Clear URL" style="{{ !empty($instagram_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -127,7 +131,7 @@
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="youtube_url" id="youtube_url" value="{{ $youtube_url ?? '' }}" placeholder="https://youtube.com/@clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="youtube_url" id="youtube_url" value="{{ $youtube_url ?? '' }}" placeholder="https://youtube.com/@{{ $compSlug }}" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="youtube_url" title="Clear URL" style="{{ !empty($youtube_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -148,7 +152,7 @@
                 </div>
               </div>
               <div class="position-relative flex-grow-1 client-social-input-wrapper">
-                <input type="url" class="form-control client-social-url-input" name="github_url" id="github_url" value="{{ $github_url ?? '' }}" placeholder="https://github.com/clientname" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
+                <input type="url" class="form-control client-social-url-input" name="github_url" id="github_url" value="{{ $github_url ?? '' }}" placeholder="https://github.com/{{ $compSlug }}" style="height:36px; border:1px solid #cbd5e1; border-radius:7px; font-size:12px; padding-right:34px; padding-left:12px; color:#1e293b; background:#ffffff;">
                 <button type="button" class="btn client-social-clear-btn" data-target="github_url" title="Clear URL" style="{{ !empty($github_url) ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -238,7 +242,7 @@
                     <span style="font-size:12.5px; font-weight:700; color:#101828;">LinkedIn</span>
                     <span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px;">Verified</span>
                   </div>
-                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_linkedin">https://linkedin.com/company/clientname</div>
+                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_linkedin">https://linkedin.com/company/{{ $compSlug }}</div>
                 </div>
               </div>
               <button type="button" class="btn btn-sm client-ai-social-btn" id="btn_ai_add_linkedin" data-platform="linkedin" onclick="window.clientSocialManager ? window.clientSocialManager.addPlatform('linkedin') : false;" style="background:#ffffff; color:#2563eb; border:1px solid #2563eb; font-weight:600; font-size:11.5px; padding:4px 12px; border-radius:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all 0.15s ease;">
@@ -259,7 +263,7 @@
                     <span style="font-size:12.5px; font-weight:700; color:#101828;">X / Twitter</span>
                     <span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px;">Verified</span>
                   </div>
-                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_twitter">https://x.com/clientname</div>
+                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_twitter">https://x.com/{{ $compSlug }}</div>
                 </div>
               </div>
               <button type="button" class="btn btn-sm client-ai-social-btn" id="btn_ai_add_twitter" data-platform="twitter" onclick="window.clientSocialManager ? window.clientSocialManager.addPlatform('twitter') : false;" style="background:#ffffff; color:#2563eb; border:1px solid #2563eb; font-weight:600; font-size:11.5px; padding:4px 12px; border-radius:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all 0.15s ease;">
@@ -280,7 +284,7 @@
                     <span style="font-size:12.5px; font-weight:700; color:#101828;">Facebook</span>
                     <span class="badge" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px;">Likely Match</span>
                   </div>
-                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_facebook">https://facebook.com/clientname</div>
+                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_facebook">https://facebook.com/{{ $compSlug }}</div>
                 </div>
               </div>
               <button type="button" class="btn btn-sm client-ai-social-btn" id="btn_ai_add_facebook" data-platform="facebook" onclick="window.clientSocialManager ? window.clientSocialManager.addPlatform('facebook') : false;" style="background:#ffffff; color:#2563eb; border:1px solid #2563eb; font-weight:600; font-size:11.5px; padding:4px 12px; border-radius:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all 0.15s ease;">
@@ -301,7 +305,7 @@
                     <span style="font-size:12.5px; font-weight:700; color:#101828;">Instagram</span>
                     <span class="badge" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px;">Possible Match</span>
                   </div>
-                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_instagram">https://instagram.com/clientname</div>
+                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_instagram">https://instagram.com/{{ $compSlug }}</div>
                 </div>
               </div>
               <button type="button" class="btn btn-sm client-ai-social-btn" id="btn_ai_add_instagram" data-platform="instagram" onclick="window.clientSocialManager ? window.clientSocialManager.addPlatform('instagram') : false;" style="background:#ffffff; color:#2563eb; border:1px solid #2563eb; font-weight:600; font-size:11.5px; padding:4px 12px; border-radius:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all 0.15s ease;">
@@ -322,7 +326,7 @@
                     <span style="font-size:12.5px; font-weight:700; color:#101828;">YouTube</span>
                     <span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px;">Verified</span>
                   </div>
-                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_youtube">https://youtube.com/@clientname</div>
+                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_youtube">https://youtube.com/@{{ $compSlug }}</div>
                 </div>
               </div>
               <button type="button" class="btn btn-sm client-ai-social-btn" id="btn_ai_add_youtube" data-platform="youtube" onclick="window.clientSocialManager ? window.clientSocialManager.addPlatform('youtube') : false;" style="background:#ffffff; color:#2563eb; border:1px solid #2563eb; font-weight:600; font-size:11.5px; padding:4px 12px; border-radius:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all 0.15s ease;">
@@ -343,7 +347,7 @@
                     <span style="font-size:12.5px; font-weight:700; color:#101828;">GitHub</span>
                     <span class="badge" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px;">Likely Match</span>
                   </div>
-                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_github">https://github.com/clientname</div>
+                  <div class="text-truncate ai-profile-url-display" style="font-size:11px; color:#64748b; max-width:215px;" id="ai_url_github">https://github.com/{{ $compSlug }}</div>
                 </div>
               </div>
               <button type="button" class="btn btn-sm client-ai-social-btn" id="btn_ai_add_github" data-platform="github" onclick="window.clientSocialManager ? window.clientSocialManager.addPlatform('github') : false;" style="background:#ffffff; color:#2563eb; border:1px solid #2563eb; font-weight:600; font-size:11.5px; padding:4px 12px; border-radius:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all 0.15s ease;">
@@ -353,8 +357,170 @@
           </div>
 
         </div>
+
+        <!-- AI Suggestion Notes Card (Trust & Transparency) -->
+        <div class="client-ai-suggestion-notes" style="background:#fffdf5; border:1px solid #fef3c7; border-radius:10px; padding:14px 16px; margin-top:14px;">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span style="display:inline-flex; align-items:center; justify-content:center; color:#d97706;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>
+              </svg>
+            </span>
+            <h5 style="font-size:12.5px; font-weight:700; color:#92400e; margin:0;">AI Suggestion Notes</h5>
+          </div>
+          <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;">
+            <li class="d-flex align-items-start gap-2" style="font-size:11.5px; color:#78350f; line-height:1.45;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; background:#f59e0b; color:#ffffff; flex-shrink:0; margin-top:1px;">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span>Profiles are discovered from publicly available sources.</span>
+            </li>
+            <li class="d-flex align-items-start gap-2" style="font-size:11.5px; color:#78350f; line-height:1.45;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; background:#f59e0b; color:#ffffff; flex-shrink:0; margin-top:1px;">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span>Review and add only official company profiles.</span>
+            </li>
+            <li class="d-flex align-items-start gap-2" style="font-size:11.5px; color:#78350f; line-height:1.45;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; background:#f59e0b; color:#ffffff; flex-shrink:0; margin-top:1px;">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span>Links marked as “Verified” are confirmed from trusted sources.</span>
+            </li>
+            <li class="d-flex align-items-start gap-2" style="font-size:11.5px; color:#78350f; line-height:1.45;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; background:#f59e0b; color:#ffffff; flex-shrink:0; margin-top:1px;">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span>You can also add links manually on the left.</span>
+            </li>
+          </ul>
+        </div>
+
       </div>
     </aside>
 
   </div>
 </div>
+
+<style>
+  /* --------------------------------------------------------------------------
+     Social Links: 62:38 two-column layout & 15.6" screen optimization
+     -------------------------------------------------------------------------- */
+  .client-social-layout {
+    display: grid !important;
+    width: 100% !important;
+    grid-template-columns: minmax(0, 62fr) minmax(0, 38fr) !important;
+    gap: 20px !important;
+    align-items: start !important;
+  }
+
+  .client-social-single-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .client-social-row:last-child {
+    border-bottom: none !important;
+  }
+
+  .client-social-clear-btn {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 22px !important;
+    height: 22px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    border: none !important;
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    z-index: 2 !important;
+  }
+  .client-social-clear-btn:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+
+  .client-social-url-input:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    outline: none !important;
+  }
+
+  .client-ai-social-list {
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .client-ai-social-list::-webkit-scrollbar {
+    width: 5px;
+  }
+  .client-ai-social-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+
+  .client-ai-social-item:hover {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+  }
+
+  .client-ai-social-btn:hover {
+    background: #eff6ff !important;
+    border-color: #1d4ed8 !important;
+    color: #1d4ed8 !important;
+  }
+
+  .client-ai-social-btn.is-added {
+    background: #ecfdf5 !important;
+    border: 1px solid #a7f3d0 !important;
+    color: #059669 !important;
+    cursor: default !important;
+  }
+
+  /* Compact Viewports (1366x768 and height <= 850px) */
+  @media (max-height: 850px) {
+    .client-social-row {
+      padding-top: 6px !important;
+      padding-bottom: 6px !important;
+      gap: 10px !important;
+    }
+    .client-social-url-input {
+      height: 34px !important;
+      font-size: 12px !important;
+    }
+    .client-ai-social-list {
+      max-height: 340px !important;
+    }
+    .client-ai-social-item {
+      padding: 7px 12px !important;
+      margin-bottom: 6px !important;
+    }
+    .client-ai-suggestion-notes {
+      padding: 10px 14px !important;
+      margin-top: 10px !important;
+    }
+  }
+
+  @media (max-width: 992px) {
+    .client-social-layout {
+      grid-template-columns: 1fr !important;
+    }
+    .client-social-row {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+    .client-social-platform-info {
+      width: 100% !important;
+    }
+    .client-social-input-wrapper {
+      width: 100% !important;
+    }
+  }
+</style>

@@ -243,6 +243,22 @@ class IndustryTaxonomyService
         145 => ['sector' => 1, 'keywords' => 'wireless, radio communication, mobile communications, wi-fi, cellular'],
         146 => ['sector' => 10, 'keywords' => 'writing, editing, copywriting, technical writing, author, content creation'],
         147 => ['sector' => 5, 'keywords' => 'other, miscellaneous, diversified, unlisted, general, multi-industry, cross-sector, conglomerate'],
+
+        // Modern 2026 Tech & Digital Economy Verticals (1001-1014)
+        1001 => ['sector' => 1, 'keywords' => 'artificial intelligence, machine learning, ai, ml, genai, llm, deep learning, data science, nlp, robotics, neural networks, foundation models'],
+        1002 => ['sector' => 2, 'keywords' => 'fintech, payments, digital banking, neobank, payment gateway, pos, stripe, razorpay, bnpl, lending, wealthtech, crypto, open banking'],
+        1003 => ['sector' => 6, 'keywords' => 'ecommerce, e-commerce, d2c, direct to consumer, quick commerce, online retail, shopping, marketplace, omnichannel, b2c ecommerce'],
+        1004 => ['sector' => 1, 'keywords' => 'cybersecurity, infosec, data privacy, threat intelligence, penetration testing, firewall, zero trust, soc, siem, cloud security, edr, compliance'],
+        1005 => ['sector' => 1, 'keywords' => 'cloud computing, devops, infrastructure, aws, azure, google cloud, kubernetes, docker, ci cd, sre, terraform, serverless, microservices'],
+        1006 => ['sector' => 3, 'keywords' => 'healthtech, digital health, telemedicine, telehealth, ehr, emr, medical software, clinical ai, remote monitoring, digital therapeutics, wellness app'],
+        1007 => ['sector' => 10, 'keywords' => 'edtech, digital learning, online education, lms, virtual learning, e-learning, upskilling, tutoring, mooc, educational tech, k-12 platform'],
+        1008 => ['sector' => 7, 'keywords' => 'cleantech, climatetech, renewable energy, clean energy, solar, wind, carbon capture, esg, battery storage, green hydrogen, circular economy'],
+        1009 => ['sector' => 1, 'keywords' => 'gaming, esports, interactive entertainment, game dev, unity, unreal engine, virtual reality, vr, ar, game design, streaming, metaverse'],
+        1010 => ['sector' => 8, 'keywords' => 'proptech, real estate technology, property tech, real estate platform, smart buildings, tenant experience, cre tech, digital leasing, bim'],
+        1011 => ['sector' => 7, 'keywords' => 'agritech, smart farming, precision agriculture, hydroponics, drone farming, crop analytics, greenhouse automation, agricultural biotech'],
+        1012 => ['sector' => 5, 'keywords' => 'hrtech, talent acquisition platforms, ats, applicant tracking, hris, talent acquisition, recruitment software, payroll tech, people analytics, eor'],
+        1013 => ['sector' => 5, 'keywords' => 'legaltech, regtech, regulatory technology, compliance tech, contract management, clm, e-discovery, legal ai, kyc, aml, governance tech'],
+        1014 => ['sector' => 4, 'keywords' => 'spacetech, aerospace, autonomous systems, satellites, rocketry, commercial space, launch vehicles, orbital systems, deep space, earth observation, drones, uav'],
     ];
 
     /**

@@ -1394,73 +1394,264 @@
         .invite-drawer {
             position: fixed;
             top: 0; right: 0; bottom: 0;
-            width: 520px;
+            width: 530px;
             max-width: 100vw;
-            background: #fff;
+            background: linear-gradient(180deg, #f0f4f9 0%, #f7f9fc 50%, #edf2f7 100%);
             z-index: 1050;
             display: flex;
             flex-direction: column;
             transform: translateX(100%);
-            transition: transform .3s cubic-bezier(.4,0,.2,1);
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+            box-shadow: -10px 0 35px rgba(15, 23, 42, 0.15);
         }
         .invite-drawer.open { transform: translateX(0); }
 
-        /* Header */
+        /* Header: Deep Vibrant Blue with Integrated Action Buttons */
         .invite-drawer-head {
-            padding: 28px 32px 20px;
-            border-bottom: 1px solid #f0f1f6;
+            padding: 12px 18px;
+            background: linear-gradient(135deg, #009ef7 0%, #0077c8 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
+            gap: 12px;
+        }
+        /* Enforce light/white color for all header icons so they are crisply visible */
+        .invite-drawer-head i {
+            color: #ffffff !important;
+            opacity: 1 !important;
+        }
+        .invite-head-icon-box {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff !important;
+            font-size: 13px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+        .invite-head-icon-box i {
+            color: #ffffff !important;
+            opacity: 1 !important;
+            font-size: 13px !important;
+        }
+        .invite-drawer-title-wrap {
+            min-width: 0;
+            flex: 1;
         }
         .invite-drawer-title {
-            font-size: 20px;
+            font-size: 15px;
             font-weight: 700;
-            color: #111827;
-            line-height: 1.2;
-            margin: 0 0 4px;
+            color: #ffffff !important;
+            line-height: 1.25;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .invite-drawer-subtitle {
-            font-size: 13px;
-            color: #6b7280;
-            margin: 0;
+            font-size: 11px;
+            color: #e0f2fe;
+            margin: 2px 0 0 0;
+            font-family: 'Poppins', sans-serif;
+            opacity: 0.95;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .invite-drawer-close {
-            width: 34px; height: 34px;
-            border-radius: 8px;
-            border: none;
-            background: #f3f4f6;
-            color: #374151;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background .15s;
+        .invite-head-actions {
+            display: flex;
+            align-items: center;
+            gap: 7px;
             flex-shrink: 0;
-            margin-left: 16px;
-            margin-top: 2px;
         }
-        .invite-drawer-close:hover { background: #e5e7eb; color: #111; }
+        .invite-head-btn-cancel {
+            height: 31px;
+            padding: 0 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.18);
+            font-size: 11.5px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            color: #ffffff !important;
+            cursor: pointer;
+            transition: all .15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .invite-head-btn-cancel i {
+            color: #ffffff !important;
+            opacity: 1 !important;
+            font-size: 11px !important;
+        }
+        .invite-head-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.32);
+            border-color: #ffffff;
+            color: #ffffff !important;
+        }
+        .invite-head-btn-send {
+            height: 31px;
+            padding: 0 14px;
+            border-radius: 6px;
+            border: none;
+            background: #ffffff;
+            font-size: 11.5px;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            color: #008be3 !important;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            transition: all .15s ease;
+        }
+        .invite-head-btn-send i {
+            color: #008be3 !important;
+            opacity: 1 !important;
+            font-size: 12px !important;
+        }
+        .invite-head-btn-send:hover {
+            background: #f8fafc;
+            color: #0077c8 !important;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
+        }
+        .invite-head-btn-send:hover i {
+            color: #0077c8 !important;
+        }
+        .invite-head-btn-send:disabled {
+            opacity: .7;
+            cursor: not-allowed;
+        }
+        .invite-spinner { display: none; }
+        .invite-head-btn-send.loading .invite-label { display: none; }
+        .invite-head-btn-send.loading .invite-spinner { display: inline-flex !important; align-items: center; }
+        .invite-head-close {
+            width: 31px;
+            height: 31px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background .15s, border-color .15s;
+            flex-shrink: 0;
+            margin-left: 2px;
+        }
+        .invite-head-close i {
+            color: #ffffff !important;
+            opacity: 1 !important;
+            font-size: 14px !important;
+            font-weight: 700;
+        }
+        .invite-head-close:hover {
+            background: rgba(255, 255, 255, 0.35);
+            border-color: #ffffff;
+            color: #ffffff !important;
+        }
 
-        /* Body */
+        /* Body: Gradient light background, zero vertical scroll */
         .invite-drawer-body {
             flex: 1;
             overflow-y: auto;
-            padding: 28px 32px;
+            overflow-x: hidden;
+            padding: 12px 18px 8px;
+            background: linear-gradient(180deg, #f0f4f9 0%, #f7f9fc 60%, #edf2f7 100%);
+        }
+        .invite-drawer-body::-webkit-scrollbar {
+            width: 4px;
+        }
+        .invite-drawer-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
         }
 
-        /* Field */
-        .invite-field { margin-bottom: 22px; }
-        .invite-field-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
+        /* Single Unified Card (Rule 20 Modern Card Standard) */
+        .invite-unified-card {
+            background: #ffffff;
+            border: 1.5px solid #dbe2ea;
+            border-radius: 10px;
+            padding: 13px 16px 10px;
+            box-shadow: 0 3px 14px rgba(15, 23, 42, 0.05);
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        .invite-unified-card:hover {
+            border-color: #cbd5e1;
+        }
+        .invite-card-head {
             display: flex;
             align-items: center;
-            gap: 3px;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #f1f5f9;
         }
-        .invite-field-label .req { color: #ef4444; margin-left: 1px; }
+        .invite-card-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e293b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+        .invite-card-badge {
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 999px;
+            line-height: 1.25;
+            font-family: 'Poppins', sans-serif;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+
+        /* 1 Field per Row - Full Width */
+        .invite-field { margin-bottom: 7px; }
+        .invite-field-label {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .invite-field-label-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .invite-field-label .req { color: #ef4444; margin-left: 2px; font-weight: 700; }
+        .invite-opt-tag {
+            font-size: 9.5px;
+            font-weight: 500;
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
         .invite-input-wrap {
             position: relative;
             display: flex;
@@ -1468,96 +1659,379 @@
         }
         .invite-input-icon {
             position: absolute;
-            left: 14px;
-            color: #9ca3af;
-            font-size: 15px;
+            left: 11px;
+            color: #475569;
+            font-size: 13.5px;
             pointer-events: none;
             line-height: 1;
+            z-index: 2;
         }
         .invite-input-wrap input,
         .invite-input-wrap select {
             width: 100%;
-            height: 48px;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 0 16px 0 44px;
-            font-size: 14px;
+            height: 35px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 0 12px 0 34px;
+            font-size: 12.5px;
             font-family: 'Poppins', sans-serif;
-            color: #111827;
-            background: #fff;
+            color: #0f172a;
+            font-weight: 500;
+            background: #ffffff !important;
             outline: none;
             transition: border-color .15s, box-shadow .15s;
             -webkit-appearance: none;
             appearance: none;
         }
         .invite-input-wrap input::placeholder,
-        .invite-input-wrap select.placeholder-active { color: #9ca3af; }
+        .invite-input-wrap select.placeholder-active {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        .invite-input-wrap input:hover,
+        .invite-input-wrap select:hover {
+            border-color: #94a3b8;
+        }
         .invite-input-wrap input:focus,
         .invite-input-wrap select:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, .15);
         }
-        /* chevron for select */
-        .invite-select-wrap { position: relative; }
-        .invite-select-wrap::after {
-            content: '';
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            width: 14px; height: 14px;
-            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") center/contain no-repeat;
+        /* prevent browser autofill from washing out the background */
+        .invite-input-wrap input:-webkit-autofill,
+        .invite-input-wrap input:-webkit-autofill:hover,
+        .invite-input-wrap input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+            -webkit-text-fill-color: #0f172a !important;
         }
-        .invite-field-hint {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 7px;
+        /* ensure phone component input group matches */
+        .invite-drawer-body .jero-phone-input-group {
+            height: 35px !important;
+            min-height: 35px !important;
+            max-height: 35px !important;
+            border: 1.5px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            background: #ffffff !important;
+        }
+        .invite-drawer-body .jero-phone-input-group:hover {
+            border-color: #94a3b8 !important;
+        }
+        .invite-drawer-body .jero-phone-input-group:focus-within {
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, .15) !important;
+        }
+        .invite-drawer-body .jero-country-picker-btn {
+            min-height: 33px !important;
+            max-height: 33px !important;
+            height: 33px !important;
+        }
+        .invite-drawer-body .jero-phone-main-input {
+            color: #0f172a !important;
+            font-weight: 500 !important;
+            font-size: 12.5px !important;
         }
 
-        /* Footer */
-        .invite-drawer-foot {
-            padding: 20px 32px 28px;
-            border-top: 1px solid #f0f1f6;
+        /* Custom Enterprise Role Dropdown (Rule 20 Enterprise Standard) */
+        .invite-role-picker {
+            position: relative;
+            width: 100%;
+        }
+        .invite-role-trigger {
+            width: 100%;
+            height: 35px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 6px;
+            background: #ffffff;
+            padding: 0 10px;
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            gap: 12px;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all .15s ease;
+            user-select: none;
+        }
+        .invite-role-trigger:hover {
+            border-color: #94a3b8;
+        }
+        .invite-role-picker.open .invite-role-trigger {
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, .15);
+        }
+        .invite-role-trigger-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+        }
+        .invite-role-trigger-icon {
+            font-size: 13.5px;
+            color: #009ef7;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .invite-role-trigger-text {
+            font-size: 12.5px;
+            font-family: 'Poppins', sans-serif;
+            color: #0f172a;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .invite-role-trigger-text.is-placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        .invite-role-trigger-badge {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            flex-shrink: 0;
+            line-height: 1.3;
+        }
+        .invite-role-chevron {
+            font-size: 10.5px;
+            color: #64748b;
+            transition: transform .2s ease, color .15s ease;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .invite-role-picker.open .invite-role-chevron {
+            transform: rotate(180deg);
+            color: #009ef7;
+        }
+
+        /* Floating Dropdown Menu */
+        .invite-role-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #d8deec;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.14);
+            z-index: 1060;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: inviteDropdownFadeIn .15s cubic-bezier(.4, 0, .2, 1);
+        }
+        .invite-role-dropdown.dropup {
+            top: auto;
+            bottom: calc(100% + 4px);
+            box-shadow: 0 -10px 25px rgba(15, 23, 42, 0.14);
+        }
+        @keyframes inviteDropdownFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .invite-role-picker.open .invite-role-dropdown {
+            display: flex;
+        }
+
+        /* Dropdown Search Bar */
+        .invite-role-search-wrap {
+            padding: 6px 8px;
+            background: #f8fafc;
+            border-bottom: 1px solid #f1f5f9;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .invite-role-search-icon {
+            position: absolute;
+            left: 16px;
+            color: #94a3b8;
+            font-size: 11px;
+            pointer-events: none;
+        }
+        .invite-role-search-input {
+            width: 100%;
+            height: 28px;
+            padding: 0 24px 0 26px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 11.5px;
+            font-family: 'Poppins', sans-serif;
+            color: #0f172a;
+            background: #ffffff;
+            outline: none;
+            transition: border-color .15s;
+        }
+        .invite-role-search-input:focus {
+            border-color: #009ef7;
+        }
+        .invite-role-search-clear {
+            position: absolute;
+            right: 14px;
+            color: #94a3b8;
+            font-size: 11px;
+            cursor: pointer;
+            display: none;
+        }
+        .invite-role-search-clear:hover { color: #475569; }
+
+        /* Role Items Stream */
+        .invite-role-list {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 4px;
+            scrollbar-width: thin;
+        }
+        .invite-role-list::-webkit-scrollbar { width: 4px; }
+        .invite-role-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .invite-role-item {
+            padding: 7px 9px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background .12s ease;
+            margin-bottom: 2px;
+            border: 1px solid transparent;
+        }
+        .invite-role-item:hover {
+            background: #f0f7ff;
+            border-color: #e0f2fe;
+        }
+        .invite-role-item.selected {
+            background: #e0f2fe;
+            border-color: #bae6fd;
+        }
+        .invite-role-item-main {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+            flex: 1;
+        }
+        .invite-role-item-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
             flex-shrink: 0;
         }
-        .invite-btn-cancel {
-            height: 44px;
-            padding: 0 24px;
-            border-radius: 10px;
-            border: 1.5px solid #e5e7eb;
-            background: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            color: #374151;
-            cursor: pointer;
-            transition: background .15s;
+        .invite-role-item-content {
+            min-width: 0;
+            flex: 1;
         }
-        .invite-btn-cancel:hover { background: #f3f4f6; }
-        .invite-btn-send {
-            height: 44px;
-            padding: 0 24px;
-            border-radius: 10px;
-            border: none;
-            background: #6366f1;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            color: #fff;
-            cursor: pointer;
-            display: flex; align-items: center; gap: 8px;
-            transition: background .15s;
+        .invite-role-item-head {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.2;
         }
-        .invite-btn-send:hover { background: #4f46e5; }
-        .invite-btn-send:disabled { opacity: .65; cursor: not-allowed; }
-        .invite-spinner { display: none; }
-        .invite-btn-send.loading .invite-label { display: none; }
-        .invite-btn-send.loading .invite-spinner { display: inline-block; }
+        .invite-role-item-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e293b;
+            font-family: 'Poppins', sans-serif;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .invite-role-item:hover .invite-role-item-title {
+            color: #009ef7;
+        }
+        .invite-role-item-desc {
+            font-size: 10px;
+            color: #64748b;
+            line-height: 1.25;
+            margin: 1px 0 0 0;
+            font-family: 'Poppins', sans-serif;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .invite-role-item-check {
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            border: 1.5px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: 8px;
+            transition: all .15s ease;
+        }
+        .invite-role-item.selected .invite-role-item-check {
+            background: #009ef7;
+            border-color: #009ef7;
+            color: #ffffff;
+        }
+        .invite-role-item-check i {
+            display: none;
+            font-size: 9px;
+            color: #ffffff;
+        }
+        .invite-role-item.selected .invite-role-item-check i {
+            display: block;
+        }
+
+        /* Empty search state */
+        .invite-role-empty {
+            padding: 18px 12px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            font-family: 'Poppins', sans-serif;
+            display: none;
+        }
+
+        /* Role tier badge colors */
+        .role-badge-admin { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .role-badge-mgmt { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .role-badge-hiring { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .role-badge-eval { background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+        .role-badge-sales { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .role-badge-std { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+        .role-icon-admin { background: #fee2e2; color: #dc2626; }
+        .role-icon-mgmt { background: #fef3c7; color: #d97706; }
+        .role-icon-hiring { background: #e0f2fe; color: #0284c7; }
+        .role-icon-eval { background: #f3e8ff; color: #9333ea; }
+        .role-icon-sales { background: #dcfce7; color: #16a34a; }
+        .role-icon-std { background: #f1f5f9; color: #64748b; }
+        .invite-field-hint {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+            margin-bottom: 0;
+            line-height: 1.3;
+            font-family: 'Poppins', sans-serif;
+        }
+        .invite-secure-strip {
+            text-align: center;
+            font-size: 10.5px;
+            color: #64748b;
+            padding: 5px 0 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        @media (max-width: 576px) {
+            .invite-drawer { width: 100vw; }
+            .invite-row-2col { grid-template-columns: 1fr; gap: 6px; }
+            .invite-drawer-head { flex-wrap: wrap; }
+            .invite-head-actions { width: 100%; justify-content: flex-end; margin-top: 6px; }
+        }
 
         @media (max-width: 1200px) {
             .team-stats-row { grid-template-columns: repeat(2, 1fr); }
@@ -2335,67 +2809,156 @@
         {{-- Invite Member Drawer --}}
         <div class="invite-overlay" id="inviteOverlay"></div>
         <div class="invite-drawer" id="inviteDrawer" role="dialog" aria-modal="true" aria-label="Invite Team Member">
-            {{-- Header --}}
+            {{-- Header: Blue Background with Integrated Action Buttons & High-Contrast Light Icons --}}
             <div class="invite-drawer-head">
-                <div>
-                    <p class="invite-drawer-title">Invite Team Member</p>
-                    <p class="invite-drawer-subtitle">Add a new team member and set their role &amp; permissions</p>
+                <div class="invite-drawer-title-wrap">
+                    <h3 class="invite-drawer-title">
+                        <span class="invite-head-icon-box">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </span>
+                        <span>Invite Team Member</span>
+                    </h3>
+                    <p class="invite-drawer-subtitle">Add colleague &amp; configure role permissions</p>
                 </div>
-                <button class="invite-drawer-close" id="inviteDrawerClose" aria-label="Close">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <div class="invite-head-actions">
+                    <button type="button" class="invite-head-btn-cancel" id="inviteCancelBtn">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </button>
+                    <button type="button" class="invite-head-btn-send" id="inviteSubmitBtn">
+                        <span class="invite-label"><i class="fa-solid fa-paper-plane me-1"></i> Send Invitation</span>
+                        <span class="invite-spinner" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span> Sending...</span>
+                    </button>
+                    <button type="button" class="invite-head-close" id="inviteDrawerClose" aria-label="Close" title="Close drawer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
             </div>
 
-            {{-- Body --}}
+            {{-- Body: Compact 2-Subcard Layout, Zero Vertical Scroll on 15.6" Laptops --}}
             <div class="invite-drawer-body">
                 <form id="inviteForm" enctype="multipart/form-data">
                     @csrf
 
-                    {{-- Name --}}
-                    <div class="invite-field">
-                        <label class="invite-field-label">Name <span class="req">*</span></label>
-                        <div class="invite-input-wrap">
-                            <span class="invite-input-icon"><i class="fa-regular fa-user"></i></span>
-                            <input type="text" name="name" id="inviteName" placeholder="Enter full name" autocomplete="off" />
+                    {{-- Single Unified Card (Rule 20 Modern Card Standard) --}}
+                    <div class="invite-unified-card">
+                        <div class="invite-card-head">
+                            <h4 class="invite-card-title">
+                                <i class="fa-solid fa-id-badge text-primary"></i> Team Member Details
+                            </h4>
+                            <span class="invite-card-badge"><i class="fa-solid fa-shield-halved me-1"></i> Admin Assigned</span>
                         </div>
-                    </div>
 
-                    {{-- Email --}}
-                    <div class="invite-field">
-                        <label class="invite-field-label">Email <span class="req">*</span></label>
-                        <div class="invite-input-wrap">
-                            <span class="invite-input-icon"><i class="fa-regular fa-envelope"></i></span>
-                            <input type="email" name="email" id="inviteEmail" placeholder="Enter email address" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
+                        {{-- Row 1: Full Name --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label" for="inviteName">
+                                <span class="invite-field-label-text">Full Name <span class="req">*</span></span>
+                            </label>
+                            <div class="invite-input-wrap">
+                                <span class="invite-input-icon"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" name="name" id="inviteName" placeholder="Enter full name" autocomplete="off" />
+                            </div>
                         </div>
-                        <div id="inviteEmail_typo_hint" class="team-email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
-                    </div>
 
-                    {{-- Role --}}
-                    <div class="invite-field">
-                        <label class="invite-field-label">Role &amp; Permissions <span class="req">*</span></label>
-                        <div class="invite-input-wrap invite-select-wrap">
-                            <span class="invite-input-icon"><i class="fa-solid fa-shield-halved"></i></span>
-                            <select name="role_id" id="inviteRole">
-                                <option value="" disabled selected>Select role</option>
-                                {{-- Populated by AJAX --}}
-                                <div id="inviteRoleOptions"></div>
-                            </select>
+                        {{-- Row 2: Work Email --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label" for="inviteEmail">
+                                <span class="invite-field-label-text">Work Email <span class="req">*</span></span>
+                            </label>
+                            <div class="invite-input-wrap">
+                                <span class="invite-input-icon"><i class="fa-solid fa-envelope"></i></span>
+                                <input type="email" name="email" id="inviteEmail" placeholder="name@company.com" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
+                            </div>
+                            <div id="inviteEmail_typo_hint" class="team-email-typo-hint" style="display: none; margin-top: 3px; font-size: 11px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 5px; padding: 2px 6px;"></div>
                         </div>
-                        <p class="invite-field-hint">Role will define the permissions the user will have in the system.</p>
+
+                        {{-- Row 3: Mobile Number (Optional) --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label" for="inviteMobile">
+                                <span class="invite-field-label-text">Mobile Number</span>
+                                <span class="invite-opt-tag">Optional</span>
+                            </label>
+                            <x-jero-phone-input
+                                id="inviteMobile"
+                                name="mobile"
+                                countryCodeName="phone_country_code"
+                                countryCodeId="invitePhoneCountryCode"
+                                value=""
+                                countryCode=""
+                                label=""
+                                :required="false"
+                                placeholder="Enter mobile number" />
+                        </div>
+
+                        {{-- Row 4: LinkedIn Profile URL (Optional) --}}
+                        <div class="invite-field">
+                            <label class="invite-field-label" for="inviteLinkedin">
+                                <span class="invite-field-label-text">LinkedIn Profile URL</span>
+                                <span class="invite-opt-tag">Optional</span>
+                            </label>
+                            <div class="invite-input-wrap">
+                                <span class="invite-input-icon"><i class="fa-brands fa-linkedin" style="color: #0a66c2; font-size: 15px;"></i></span>
+                                <input type="text" name="linkedin" id="inviteLinkedin" placeholder="https://linkedin.com/in/username" autocomplete="off" />
+                            </div>
+                        </div>
+
+                        {{-- Row 5: Roles & Permissions (Custom Enterprise Dropdown) --}}
+                        <div class="invite-field" style="margin-bottom: 2px;">
+                            <label class="invite-field-label" for="inviteRoleTrigger">
+                                <span class="invite-field-label-text">Role &amp; Permissions <span class="req">*</span></span>
+                            </label>
+
+                            <!-- Custom Enterprise Role Picker -->
+                            <div class="invite-role-picker" id="inviteRolePicker">
+                                <!-- Trigger Box (Matches 35px Input Heights) -->
+                                <div class="invite-role-trigger" id="inviteRoleTrigger" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
+                                    <div class="invite-role-trigger-left">
+                                        <i class="fa-solid fa-shield-halved invite-role-trigger-icon" id="inviteRoleTriggerIcon"></i>
+                                        <span class="invite-role-trigger-text is-placeholder" id="inviteRoleTriggerText">Select role &amp; permissions</span>
+                                        <span class="invite-role-trigger-badge" id="inviteRoleTriggerBadge" style="display: none;"></span>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-down invite-role-chevron"></i>
+                                </div>
+
+                                <!-- Floating Enterprise Dropdown Panel -->
+                                <div class="invite-role-dropdown" id="inviteRoleDropdown" role="listbox">
+                                    <!-- Search Bar -->
+                                    <div class="invite-role-search-wrap">
+                                        <i class="fa-solid fa-magnifying-glass invite-role-search-icon"></i>
+                                        <input type="text" class="invite-role-search-input" id="inviteRoleSearch" placeholder="Search role name or permission..." autocomplete="off" spellcheck="false" />
+                                        <span class="invite-role-search-clear" id="inviteRoleSearchClear" title="Clear search">
+                                            <i class="fa-solid fa-circle-xmark"></i>
+                                        </span>
+                                    </div>
+
+                                    <!-- Role Options List -->
+                                    <div class="invite-role-list" id="inviteRoleList">
+                                        <!-- Dynamically rendered via JS -->
+                                    </div>
+
+                                    <!-- Empty Search State -->
+                                    <div class="invite-role-empty" id="inviteRoleEmpty">
+                                        <i class="fa-solid fa-filter-circle-xmark d-block mb-1 fs-5 text-muted"></i>
+                                        No matching roles found
+                                    </div>
+                                </div>
+
+                                <!-- Hidden Native Select (For 100% Form & Test Compatibility) -->
+                                <select name="role_id" id="inviteRole" style="display: none !important;" tabindex="-1" aria-hidden="true">
+                                    <option value="" disabled selected>Select role</option>
+                                </select>
+                            </div>
+                            <p class="invite-field-hint">Defines the system access permissions and workspace visibility for this member.</p>
+                        </div>
                     </div>
 
                     {{-- Message area --}}
-                    <div id="inviteMsg" style="display:none; font-size:13px; padding:10px 14px; border-radius:8px; margin-top:4px;"></div>
-                </form>
-            </div>
+                    <div id="inviteMsg" style="display:none; font-size:12px; padding:7px 12px; border-radius:6px; margin-top:5px;"></div>
 
-            {{-- Footer --}}
-            <div class="invite-drawer-foot">
-                <button class="invite-btn-cancel" id="inviteCancelBtn">Cancel</button>
-                <button class="invite-btn-send" id="inviteSubmitBtn">
-                    <span class="invite-label"><i class="fa-solid fa-paper-plane me-1"></i> Send Invitation</span>
-                    <span class="invite-spinner"><span class="spinner-border spinner-border-sm"></span> Sending...</span>
-                </button>
+                    {{-- Micro security strip --}}
+                    <div class="invite-secure-strip">
+                        <i class="fa-solid fa-lock text-muted"></i> Tenant-scoped invite &bull; Enterprise RBAC protected
+                    </div>
+                </form>
             </div>
         </div>
         {{-- End Invite Drawer --}}
@@ -3734,23 +4297,331 @@
 
             // Close drawer on ESC
             $(document).on('keydown', function(e) {
-                if (e.key === 'Escape') closeEditRoleDrawer();
+                if (e.key === 'Escape') {
+                    closeInviteRoleDropdown();
+                    closeEditRoleDrawer();
+                }
             });
 
-            // Phase 1 Optimization: Populate roles into select helper
+            // Role tier classification helper for Enterprise Role Dropdown
+            function getRoleTierMeta(roleName, rawDesc) {
+                var name = (roleName || '').toLowerCase();
+                var desc = rawDesc || '';
+
+                if (name.indexOf('administrator') !== -1 && name.indexOf('sub') === -1) {
+                    return {
+                        tier: 'admin',
+                        badgeText: 'Full Admin',
+                        badgeClass: 'role-badge-admin',
+                        iconClass: 'role-icon-admin',
+                        iconHtml: '<i class="fa-solid fa-user-gear"></i>',
+                        defaultDesc: 'Full organization control, team governance, billing & settings.'
+                    };
+                }
+                if (name.indexOf('sub administrator') !== -1 || name.indexOf('sub admin') !== -1) {
+                    return {
+                        tier: 'mgmt',
+                        badgeText: 'Sub Admin',
+                        badgeClass: 'role-badge-mgmt',
+                        iconClass: 'role-icon-mgmt',
+                        iconHtml: '<i class="fa-solid fa-user-shield"></i>',
+                        defaultDesc: 'Operational authority, user onboarding & workflow management.'
+                    };
+                }
+                if (name.indexOf('team lead') !== -1 || name.indexOf('lead') !== -1) {
+                    return {
+                        tier: 'mgmt',
+                        badgeText: 'Team Lead',
+                        badgeClass: 'role-badge-mgmt',
+                        iconClass: 'role-icon-mgmt',
+                        iconHtml: '<i class="fa-solid fa-user-group"></i>',
+                        defaultDesc: 'Supervises recruiters, manages job pipeline & assignments.'
+                    };
+                }
+                if (name.indexOf('recruiter') !== -1) {
+                    return {
+                        tier: 'hiring',
+                        badgeText: 'Recruiter',
+                        badgeClass: 'role-badge-hiring',
+                        iconClass: 'role-icon-hiring',
+                        iconHtml: '<i class="fa-solid fa-briefcase"></i>',
+                        defaultDesc: 'Candidate sourcing, screening, stage updates & job submissions.'
+                    };
+                }
+                if (name.indexOf('interview') !== -1) {
+                    return {
+                        tier: 'eval',
+                        badgeText: 'Evaluation',
+                        badgeClass: 'role-badge-eval',
+                        iconClass: 'role-icon-eval',
+                        iconHtml: '<i class="fa-solid fa-comments"></i>',
+                        defaultDesc: 'Conducts interviews, reviews submissions & submits scorecards.'
+                    };
+                }
+                if (name.indexOf('sale') !== -1 || name.indexOf('bd') !== -1 || name.indexOf('business') !== -1) {
+                    return {
+                        tier: 'sales',
+                        badgeText: 'Sales & BD',
+                        badgeClass: 'role-badge-sales',
+                        iconClass: 'role-icon-sales',
+                        iconHtml: '<i class="fa-solid fa-chart-line"></i>',
+                        defaultDesc: 'Client management, requirement intakes & commercials.'
+                    };
+                }
+                return {
+                    tier: 'std',
+                    badgeText: 'Standard',
+                    badgeClass: 'role-badge-std',
+                    iconClass: 'role-icon-std',
+                    iconHtml: '<i class="fa-solid fa-user-check"></i>',
+                    defaultDesc: 'Standard organization member access and task collaboration.'
+                };
+            }
+
+            // Custom Enterprise Role Picker Functions
             function populateInviteRoleOptions(roles) {
                 var $select = $('#inviteRole');
                 $select.find('option:not([disabled])').remove();
-                if (roles && roles.length > 0) {
-                    $.each(roles, function(i, role) {
-                        var val = role.id;
-                        var label = role.display_name || role.name;
-                        if (val && label) {
-                            $select.append('<option value="' + val + '">' + label + '</option>');
-                        }
+                var $list = $('#inviteRoleList');
+                $list.empty();
+
+                if (!roles || roles.length === 0) {
+                    $('#inviteRoleEmpty').show().html('No roles available for this workspace.');
+                    return;
+                }
+
+                // Deduplicate roles by normalized display name (e.g. cleans duplicate "Administrator")
+                var seen = {};
+                var deduplicated = [];
+                $.each(roles, function(i, role) {
+                    var label = $.trim(role.display_name || role.name || '');
+                    var key = label.toLowerCase();
+                    if (label && !seen[key]) {
+                        seen[key] = true;
+                        deduplicated.push(role);
+                    }
+                });
+
+                $.each(deduplicated, function(i, role) {
+                    var val = role.id;
+                    var label = role.display_name || role.name;
+                    var meta = getRoleTierMeta(label, role.description);
+                    var desc = role.description && role.description !== label && role.description.length > 5
+                             ? role.description
+                             : meta.defaultDesc;
+
+                    // Sync hidden native select (preserves form submission & test compatibility)
+                    $select.append('<option value="' + val + '">' + label + '</option>');
+
+                    // Render custom enterprise card item
+                    var $item = $(
+                        '<div class="invite-role-item" data-role-id="' + val + '" data-role-name="' + $('<div>').text(label).html() + '">' +
+                            '<div class="invite-role-item-main">' +
+                                '<div class="invite-role-item-icon ' + meta.iconClass + '">' +
+                                    meta.iconHtml +
+                                '</div>' +
+                                '<div class="invite-role-item-content">' +
+                                    '<div class="invite-role-item-head">' +
+                                        '<span class="invite-role-item-title">' + $('<div>').text(label).html() + '</span>' +
+                                        '<span class="invite-role-trigger-badge ' + meta.badgeClass + '">' + meta.badgeText + '</span>' +
+                                    '</div>' +
+                                    '<p class="invite-role-item-desc" title="' + $('<div>').text(desc).html() + '">' + $('<div>').text(desc).html() + '</p>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="invite-role-item-check">' +
+                                '<i class="fa-solid fa-check"></i>' +
+                            '</div>' +
+                        '</div>'
+                    );
+
+                    $list.append($item);
+                });
+
+                $('#inviteRoleEmpty').hide();
+
+                // By default select the Recruiter role upon populating role options
+                autoSelectDefaultRecruiterRole(deduplicated);
+            }
+
+            // Auto-select Recruiter role helper
+            function autoSelectDefaultRecruiterRole(rolesList) {
+                var list = rolesList || (window.teamState ? window.teamState.rolesCache : null);
+                if (!list || list.length === 0) {
+                    var $recruiterItem = $('#inviteRoleList .invite-role-item').filter(function() {
+                        var name = ($(this).data('role-name') || '').toLowerCase().trim();
+                        return name === 'recruiter';
                     });
+                    if (!$recruiterItem.length) {
+                        $recruiterItem = $('#inviteRoleList .invite-role-item').filter(function() {
+                            var name = ($(this).data('role-name') || '').toLowerCase().trim();
+                            return name.indexOf('recruiter') !== -1;
+                        });
+                    }
+                    if ($recruiterItem.length) {
+                        var id = $recruiterItem.first().data('role-id');
+                        var name = $recruiterItem.first().data('role-name');
+                        selectInviteRole(id, name);
+                        return true;
+                    }
+                    return false;
+                }
+
+                // 1. Exact match "recruiter"
+                var target = null;
+                for (var i = 0; i < list.length; i++) {
+                    var n = $.trim(list[i].display_name || list[i].name || '').toLowerCase();
+                    if (n === 'recruiter') {
+                        target = list[i];
+                        break;
+                    }
+                }
+
+                // 2. Contains "recruiter" (e.g. Lead Recruiter)
+                if (!target) {
+                    for (var j = 0; j < list.length; j++) {
+                        var m = $.trim(list[j].display_name || list[j].name || '').toLowerCase();
+                        if (m.indexOf('recruiter') !== -1) {
+                            target = list[j];
+                            break;
+                        }
+                    }
+                }
+
+                if (target) {
+                    var label = target.display_name || target.name;
+                    selectInviteRole(target.id, label);
+                    return true;
+                }
+                return false;
+            }
+
+            function openInviteRoleDropdown() {
+                var $picker = $('#inviteRolePicker');
+                var $dropdown = $('#inviteRoleDropdown');
+                var triggerEl = $('#inviteRoleTrigger')[0];
+                if (triggerEl) {
+                    var triggerRect = triggerEl.getBoundingClientRect();
+                    var spaceBelow = window.innerHeight - triggerRect.bottom;
+                    if (spaceBelow < 240 && triggerRect.top > 240) {
+                        $dropdown.addClass('dropup');
+                    } else {
+                        $dropdown.removeClass('dropup');
+                    }
+                }
+                $picker.addClass('open');
+                $('#inviteRoleTrigger').attr('aria-expanded', 'true');
+                $('#inviteRoleSearch').val('').trigger('input');
+                setTimeout(function() {
+                    $('#inviteRoleSearch').focus();
+                }, 50);
+            }
+
+            function closeInviteRoleDropdown() {
+                var $picker = $('#inviteRolePicker');
+                $picker.removeClass('open');
+                $('#inviteRoleTrigger').attr('aria-expanded', 'false');
+            }
+
+            function selectInviteRole(roleId, roleName) {
+                // Update hidden select
+                $('#inviteRole').val(roleId).trigger('change');
+
+                // Update visual checkmark
+                $('#inviteRoleList .invite-role-item').removeClass('selected');
+                var $selectedItem = $('#inviteRoleList .invite-role-item[data-role-id="' + roleId + '"]');
+                $selectedItem.addClass('selected');
+
+                if (roleId && roleName) {
+                    var meta = getRoleTierMeta(roleName);
+                    $('#inviteRoleTriggerText')
+                        .removeClass('is-placeholder')
+                        .text(roleName);
+                    $('#inviteRoleTriggerBadge')
+                        .attr('class', 'invite-role-trigger-badge ' + meta.badgeClass)
+                        .text(meta.badgeText)
+                        .show();
+                    $('#inviteRoleTriggerIcon')
+                        .attr('class', 'fa-solid fa-shield-halved invite-role-trigger-icon')
+                        .css('color', meta.tier === 'admin' ? '#dc2626' : (meta.tier === 'mgmt' ? '#d97706' : '#009ef7'));
+                } else {
+                    resetInviteRoleTrigger();
                 }
             }
+
+            function resetInviteRoleTrigger() {
+                $('#inviteRole').val('');
+                $('#inviteRoleList .invite-role-item').removeClass('selected');
+                $('#inviteRoleTriggerText')
+                    .addClass('is-placeholder')
+                    .text('Select role & permissions');
+                $('#inviteRoleTriggerBadge').hide().empty();
+                $('#inviteRoleTriggerIcon').attr('class', 'fa-solid fa-shield-halved invite-role-trigger-icon').css('color', '#009ef7');
+            }
+
+            // Trigger click & keyboard
+            $(document).on('click', '#inviteRoleTrigger', function(e) {
+                e.stopPropagation();
+                if ($('#inviteRolePicker').hasClass('open')) {
+                    closeInviteRoleDropdown();
+                } else {
+                    openInviteRoleDropdown();
+                }
+            });
+
+            $(document).on('keydown', '#inviteRoleTrigger', function(e) {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    openInviteRoleDropdown();
+                }
+            });
+
+            // Close dropdown on outside click
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#inviteRolePicker').length) {
+                    closeInviteRoleDropdown();
+                }
+            });
+
+            // Dropdown search filter
+            $(document).on('input', '#inviteRoleSearch', function() {
+                var query = $.trim($(this).val()).toLowerCase();
+                if (query.length > 0) {
+                    $('#inviteRoleSearchClear').show();
+                } else {
+                    $('#inviteRoleSearchClear').hide();
+                }
+
+                var matchedCount = 0;
+                $('#inviteRoleList .invite-role-item').each(function() {
+                    var text = $(this).text().toLowerCase();
+                    if (!query || text.indexOf(query) !== -1) {
+                        $(this).show();
+                        matchedCount++;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                if (matchedCount === 0) {
+                    $('#inviteRoleEmpty').show();
+                } else {
+                    $('#inviteRoleEmpty').hide();
+                }
+            });
+
+            $(document).on('click', '#inviteRoleSearchClear', function(e) {
+                e.stopPropagation();
+                $('#inviteRoleSearch').val('').trigger('input').focus();
+            });
+
+            // Item selection
+            $(document).on('click', '#inviteRoleList .invite-role-item', function(e) {
+                e.stopPropagation();
+                var roleId = $(this).data('role-id');
+                var roleName = $(this).data('role-name');
+                selectInviteRole(roleId, roleName);
+                closeInviteRoleDropdown();
+            });
 
             // ---- Invite Drawer ----
             function openInviteDrawer() {
@@ -3796,6 +4667,15 @@
                 $('#inviteForm').removeData('idempotency-key');
                 $('#inviteEmail_typo_hint').hide().empty();
                 $('#inviteMsg').hide().text('');
+                $('#inviteLinkedin').val('');
+                if ($('#inviteMobile').length) {
+                    $('#inviteMobile').val('');
+                }
+                // By default select the Recruiter role upon opening drawer
+                if (!autoSelectDefaultRecruiterRole()) {
+                    resetInviteRoleTrigger();
+                }
+                closeInviteRoleDropdown();
                 $('#inviteSubmitBtn').removeClass('loading').prop('disabled', false);
                 isInviteSubmitting = false;
                 // Open
@@ -3806,6 +4686,7 @@
             function closeInviteDrawer() {
                 $('#inviteOverlay, #inviteDrawer').removeClass('open');
                 $('#inviteEmail_typo_hint').hide().empty();
+                closeInviteRoleDropdown();
                 document.body.style.overflow = '';
                 isInviteSubmitting = false;
             }
@@ -3878,6 +4759,11 @@
                 }
                 if (!role) {
                     showInviteMsg('Please select a role.', 'error'); return;
+                }
+
+                var rawLinkedin = $.trim($('#inviteLinkedin').val());
+                if (rawLinkedin && !/^https?:\/\//i.test(rawLinkedin)) {
+                    $('#inviteLinkedin').val('https://' + rawLinkedin.replace(/^\/+/, ''));
                 }
 
                 isInviteSubmitting = true;
@@ -4647,7 +5533,7 @@
 					var r = window.teamState.records[i];
 					var status = (r.status || '').toLowerCase();
 					var channels = Array.isArray(r.channels) ? r.channels : [];
-					var isInvited = !r.password || status === 'invited';
+					var isInvited = (status !== 'active') && (!r.password || status === 'invited' || !!r.email_verification_code);
 
 					if (channels.indexOf('client') !== -1 || r.is_client_rep) clientCount++;
 					if (channels.indexOf('agency') !== -1 || channels.indexOf('vendor') !== -1 || r.is_agency_rep || (r.pre_agency_shares > 0)) vendorCount++;
@@ -4691,7 +5577,7 @@
 					list = list.filter(function(r) {
 						var channels = Array.isArray(r.channels) ? r.channels : [];
 						var status = (r.status || '').toLowerCase();
-						var isInvited = !r.password || status === 'invited';
+						var isInvited = (status !== 'active') && (!r.password || status === 'invited' || !!r.email_verification_code);
 
 						if (statusTab === 'client') {
 							return channels.indexOf('client') !== -1 || !!r.is_client_rep;
@@ -4830,7 +5716,7 @@
 				var channels = Array.isArray(row.channels) ? row.channels : [];
 				var publicCount = channels.length;
 
-				var isInvited = (!row.password && row.status !== 'active') || row.status === 'invited';
+				var isInvited = (row.status !== 'active') && (!row.password || row.status === 'invited' || !!row.email_verification_code);
 				var isActive = (row.status === 'active');
 
 				var cardAccent = '#cbd5e1';

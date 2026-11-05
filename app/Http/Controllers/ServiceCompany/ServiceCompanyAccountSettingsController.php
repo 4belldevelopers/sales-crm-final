@@ -26,7 +26,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Validator;
 
 class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseController
@@ -441,6 +440,89 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         return Reply::dataOnly(['status' => 'success', 'message' => $message]);
     }
 
+    /**
+     * Authoritative Server-Side Validation for Company Profile
+     * Tenancy Note: Tenant-scoped validation ensuring mandatory ATS profile integrity.
+     */
+    private function validateCompanySubmission(Request $request)
+    {
+        // Only validate if updating the full company profile (from Edit / Onboarding)
+        if ($request->input('page_mode') !== 'EDIT' && ! $request->has('company_name')) {
+            return null;
+        }
+        if ($request->filled('pageterms') || $request->input('description') === 'setDefault') {
+            return null;
+        }
+
+        // 1. Company Information
+        $compName = trim((string) ($request->name ?? ($request->company_name ?? '')));
+        if (empty($compName)) {
+            return Reply::error('Company Name is required.', 'company_name');
+        }
+
+        $industryId = $request->industry ?: ($request->industries ?: null);
+        $hasIndustry = (! empty($industryId) && (int) $industryId > 0);
+        if (! $hasIndustry) {
+            return Reply::error('Industry is required.', 'industry');
+        }
+
+        $hasSize = (! empty($request->company_size) || ! empty($request->company_sizes));
+        if (! $hasSize) {
+            return Reply::error('Company Size is required.', 'company_size');
+        }
+
+        $hasType = (isset($request->company_type) && $request->company_type !== '') || (isset($request->industries_type) && $request->industries_type !== '');
+        if (! $hasType) {
+            return Reply::error('Company Type is required.', 'company_type');
+        }
+
+        if (empty($request->founded)) {
+            return Reply::error('Founded Year is required.', 'founded');
+        }
+
+        // 2. Logo Size and Extension Check (Max 2MB per enterprise standard)
+        if ($request->hasFile('logo')) {
+            $file = $request->file('logo');
+            if ($file->getSize() > 2 * 1024 * 1024) {
+                return Reply::error('Company logo size cannot exceed 2MB.', 'logo');
+            }
+            $ext = strtolower($file->getClientOriginalExtension());
+            if (! in_array($ext, ['png', 'jpg', 'jpeg', 'webp', 'svg'])) {
+                return Reply::error('Logo must be a valid image file (PNG, JPG, WEBP, SVG).', 'logo');
+            }
+        }
+
+        // 3. Company Description
+        if (empty(trim(strip_tags($request->description ?? '')))) {
+            return Reply::error('Company Description is required.', 'description');
+        }
+
+        // 4. Address Details (Minimum 1 location with City & Full Address)
+        $hasValidAddress = false;
+        $totalAddresses = is_array($request->address) ? count($request->address) : 0;
+        $maxAddressIndex = max($totalAddresses - 1, (int) (@$request->addressId ?? 0));
+        for ($i = 0; $i <= $maxAddressIndex; $i++) {
+            $address = trim(@$request->address[$i] ?? '');
+            $work_city = @$request->kt_tagify_work_location[$i] ?? (@$request->city[$i] ?? (@$request->city_id[$i] ?? ''));
+            if (! empty($address) && ! empty($work_city)) {
+                $hasValidAddress = true;
+                break;
+            }
+        }
+        // Fallback: If client already has locations recorded, allow submission
+        if (! $hasValidAddress && auth()->check()) {
+            $clientData = GeneralMethod::getClientIdCompany(auth()->user()->company_id);
+            if ($clientData && DB::table('client_location')->where('client_id', $clientData->client_id)->exists()) {
+                $hasValidAddress = true;
+            }
+        }
+        if (! $hasValidAddress) {
+            return Reply::error('At least 1 Address Detail with City and Full Address is required.', 'address');
+        }
+
+        return null;
+    }
+
     public function edit($id)
     {
         $id = GeneralMethod::value_decrypt($id);
@@ -453,10 +535,22 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $this->user = $this->user ?? auth()->user();
         abort_if(! $this->user || ! $this->user->can('edit_settings'), 403);
 
-        $this->categories = JobCategory::all();
+        /**
+         * Global Reference Cache: Eliminate repeated DB queries on page load (Rule 1 & Rule 4).
+         * Tenancy Note: Reference data is global and static (non-tenant-scoped).
+         */
+        $this->categories = cache()->remember('global_job_categories_all', 86400, function () {
+            return JobCategory::all();
+        });
         $this->companyType = GeneralMethod::companyType();
         $this->companyTypeTaxonomy = GeneralMethod::companyTypeTaxonomy();
-        $this->department = \App\Services\IndustryTaxonomyService::getGlobalManifest();
+        $this->industries = cache()->remember('global_td_industries_all', 86400, function () {
+            return DB::table('td_industries')
+                ->select('td_industries.ind_id', 'td_industries.ind_name')
+                ->orderBy('td_industries.ind_name', 'ASC')
+                ->get();
+        });
+        $this->department = $this->industries;
         $company_id = auth()->user()->company_id;
         $this->company_id = $company_id;
         $this->account = DB::table('companies')->select('*')->where('id', $company_id)->first();
@@ -474,19 +568,23 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             ->where('client_location.client_id', @$this->client->id)
             ->get();
 
-        $this->industries = DB::table('td_industries')
-            ->select('td_industries.ind_id', 'td_industries.ind_name')
-            ->orderBy('td_industries.ind_name', 'ASC')
-            ->get();
+        $this->countryArr = cache()->remember('global_country_arr_list', 86400, function () {
+            return GeneralMethod::getAllCountryList();
+        });
+        $this->statelist = cache()->remember('global_statelist_101', 86400, function () {
+            return GeneralMethod::statelist(101);
+        });
+        $this->cities = cache()->remember('global_cities_all', 86400, function () {
+            return GeneralMethod::allCities();
+        });
+        $this->indianStatelist = cache()->remember('global_state_list_101', 86400, function () {
+            $statelist = DB::table('state_list')
+                ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
+                ->orderBy('state_list.state')
+                ->get()->toArray();
 
-        $this->countryArr = GeneralMethod::getAllCountryList();
-        $this->statelist = GeneralMethod::statelist(101);
-        $this->cities = GeneralMethod::allCities();
-        $statelist = DB::table('state_list')
-            ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
-            ->orderBy('state_list.state')
-            ->get()->toArray();
-        $this->indianStatelist = json_decode(json_encode($statelist), true);
+            return json_decode(json_encode($statelist), true);
+        });
 
         // Social profile links extraction from $client->detail JSON with fallback to company_career_settings
         $clientDetail = [];
@@ -552,12 +650,31 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         $this->page_mode = 'EDIT';
 
-        return view('service_company.account.edit', $this->data);
+        return response()
+            ->view('service_company.account.edit', $this->data)
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
 
     }
 
     public function update(Request $request, $id)
     {
+        // Authoritative Server-Side Validation for Company Profile Submission
+        if ($validationError = $this->validateCompanySubmission($request)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validationError['message'] ?? 'Validation failed',
+                    'error_name' => $validationError['error_name'] ?? 'validation',
+                    'field' => $validationError['error_name'] ?? 'validation',
+                    'data' => $validationError['data'] ?? [],
+                ], 422);
+            }
+
+            return $validationError;
+        }
+
         //    $mapping = $this->elasticService->getClient()->indices()->getMapping([
         // 	'index' => ELASTIC_COMPANIES_INDEX
         // 	 ]); // dd($mapping);
@@ -770,8 +887,9 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $company_logo_path = '';
         $company_id = auth()->user()->company_id;
         $company = Company::withoutGlobalScopes()->findOrFail($company_id);
-        if (! empty(@$request->company_name)) {
-            $company->company_name = @$request->company_name;
+        $compName = trim((string) ($request->name ?? ($request->company_name ?? '')));
+        if ($compName !== '') {
+            $company->company_name = $compName;
         }
         if (! empty(@$request->website)) {
             $company->website = @$request->website;
@@ -787,8 +905,9 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         if ($request->filled('career_page_link') || $request->filled('career_page_url')) {
             $company->career_page_link = $request->career_page_link ?? $request->career_page_url;
         }
-        if (! empty(@$request->industries)) {
-            $company->industries = @$request->industries;
+        $industryId = $request->industry ?: ($request->industries ?: null);
+        if (! empty($industryId)) {
+            $company->industries = $industryId;
         }
         if (! empty(@$request->company_size) || ! empty(@$request->company_sizes)) {
             $company_size = @$request->company_size ?: @$request->company_sizes;
@@ -822,7 +941,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 $decoded = json_decode($techRaw, true);
                 if (is_array($decoded)) {
                     foreach ($decoded as $item) {
-                        $techArr[] = is_array($item) ? ($item['value'] ?? '') : (string)$item;
+                        $techArr[] = is_array($item) ? ($item['value'] ?? '') : (string) $item;
                     }
                 } else {
                     $techArr = explode(',', $techRaw);
@@ -853,30 +972,34 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         if ($request->hasFile('logo')) {
 
             $file = $request->file('logo');
+            $ext = strtolower($file->getClientOriginalExtension());
+            $allowed = ['png', 'jpeg', 'jpg', 'webp', 'svg'];
 
-            $companyNameR2 = DB::table('companies')
-                ->where('id', auth()->user()->company_id)
-                ->value('company_name');   // change column if needed
-            $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
-            $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
-            $companyNameRTwo = $companyNameR2.'_'.auth()->user()->company_id;
+            if (in_array($ext, $allowed)) {
+                $companyNameR2 = DB::table('companies')
+                    ->where('id', auth()->user()->company_id)
+                    ->value('company_name');   // change column if needed
+                $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
+                $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
+                $companyNameRTwo = $companyNameR2.'_'.auth()->user()->company_id;
 
-            $filename = uniqid('JERO_logo').'.'.$file->getClientOriginalExtension();
+                $filename = uniqid('JERO_logo').'.'.$ext;
+                $r2Path = 'Companies/'.$companyNameRTwo.'/Images/'.$filename;
 
-            $tempPath = $file->storeAs('Companies/'.$companyNameRTwo.'/Images', $filename, 'r2'); // STORAGE/app/temp
-            $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Images/{$filename}";
+                // Apply high-performance 500x500 logo compression (preserves aspect ratio & alpha transparency)
+                $tempCompressedPath = tempnam(sys_get_temp_dir(), 'jero_logo_');
+                GeneralMethod::compressAndSaveLogo($file->getRealPath(), $tempCompressedPath, $ext, 500, 500);
 
-            // $filename = time() . '.' . $file->getClientOriginalExtension();
-            // $filePath = 'Images/' . $filename;
+                if (file_exists($tempCompressedPath) && filesize($tempCompressedPath) > 0) {
+                    \Illuminate\Support\Facades\Storage::disk('r2')->put($r2Path, file_get_contents($tempCompressedPath));
+                    @unlink($tempCompressedPath);
+                } else {
+                    $file->storeAs('Companies/'.$companyNameRTwo.'/Images', $filename, 'r2');
+                }
 
-            // Storage::disk('s3')->put($filePath, file_get_contents($file));
-
-            // $fileUrl = Storage::disk('s3')->url($filePath);
-
-            $company->logo = $fileUrl;
-
-            // 	$company_logo_path				=	Files::upload($request->logo,'company-logo');
-            // 	$company->logo 					=	$company_logo_path;
+                $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Images/{$filename}";
+                $company->logo = $fileUrl;
+            }
         }
         if (! empty(@$request->language)) {
             $company->language = @$request->language;
@@ -917,6 +1040,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         // ElasticCompanyIndex::dispatch($company_id)->onConnection('emails');
 
         $company_coins_value_elastic = [
+            'company_name' => $company->company_name,
+            'website' => $company->website,
             'description' => $company->description,
             'logo' => $company->logo,
             'company_size_from' => $company->company_size_from,
@@ -934,6 +1059,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 'script' => [
                     'lang' => 'painless',
                     'source' => '
+									ctx._source.company_name    = params.company_name;
+									ctx._source.website         = params.website;
 									ctx._source.description    = params.description;
 									ctx._source.logo    = params.logo;
 									ctx._source.company_size_from    = params.company_size_from;
@@ -960,14 +1087,14 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $client_data = GeneralMethod::getClientIdCompany($company_id);
         // dd($client_data,$company_id);
         $client = Client::withoutGlobalScopes()->findOrFail($client_data->client_id);
-        if (! empty(@$request->company_name) || ! empty(@$request->name)) {
-            $client->name = @$request->company_name ?: @$request->name;
+        if ($compName !== '') {
+            $client->name = $compName;
         }
         if (! empty(@$request->website)) {
             $client->website = @$request->website;
         }
-        if (! empty(@$request->industries)) {
-            $client->industry = @$request->industries;
+        if (! empty($industryId)) {
+            $client->industry = $industryId;
         }
         if (! empty(@$request->company_size) || ! empty(@$request->company_sizes)) {
             $company_size = @$request->company_size ?: @$request->company_sizes;
@@ -1068,38 +1195,40 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             }
 
             $addressId = @$request->addressId;
+            $commCountries1 = [];
             for ($i = 0; $i <= $addressId; $i++) {
-
-                $countryID = '';
                 $work_city = @$request->kt_tagify_work_location[$i];
                 $work_city_all = json_decode($work_city, true);
                 if (@$request->kt_tagify_work_location[$i] != '') {
                     foreach ($work_city_all as $cityVal) {
                         $parts = explode('|', $cityVal['value']);
-                        // Trim to remove any leading or trailing whitespace
                         $cityName = trim($parts[0]);
                         $countrName = trim($parts[2]);
-                        $city_row = DB::table('city_list')
-                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                            ->select('city_list.city_id', 'countries.id as country_id')
-                            ->where('city_list.city', '!=', '')
-                            ->where('city_list.city', '=', $cityName)
-                            ->where('countries.country_name', '=', $countrName)
-                            ->first();
+                        $cityCacheKey = 'city_lookup_'.md5($cityName.'|'.$countrName);
+                        $city_row = cache()->remember($cityCacheKey, 86400, function () use ($cityName, $countrName) {
+                            return DB::table('city_list')
+                                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                                ->select('city_list.city_id', 'countries.id as country_id', 'city_list.state_id')
+                                ->where('city_list.city', '!=', '')
+                                ->where('city_list.city', '=', $cityName)
+                                ->where('countries.country_name', '=', $countrName)
+                                ->first();
+                        });
 
-                        if ($city_row) {
-                            $countryID = (@$city_row) ? $city_row->country_id : '';
-
-                            $valueCountry = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => 1, 'country_id' => $countryID];
-
-                            DB::table('commericial_countries')->insert($valueCountry);
-
+                        if ($city_row && ! empty($city_row->country_id)) {
+                            $commCountries1[] = [
+                                'company_id' => $company_id,
+                                'commericial_id' => $commericialId,
+                                'commtype' => 1,
+                                'country_id' => $city_row->country_id,
+                            ];
                         }
-
                     }
                 }
-
+            }
+            if (! empty($commCountries1)) {
+                DB::table('commericial_countries')->insert($commCountries1);
             }
 
         }
@@ -1122,38 +1251,40 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             }
 
             $addressId = @$request->addressId;
+            $commCountries2 = [];
             for ($i = 0; $i <= $addressId; $i++) {
-
-                $countryID = '';
                 $work_city = @$request->kt_tagify_work_location[$i];
                 $work_city_all = json_decode($work_city, true);
                 if (@$request->kt_tagify_work_location[$i] != '') {
                     foreach ($work_city_all as $cityVal) {
                         $parts = explode('|', $cityVal['value']);
-                        // Trim to remove any leading or trailing whitespace
                         $cityName = trim($parts[0]);
                         $countrName = trim($parts[2]);
-                        $city_row = DB::table('city_list')
-                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                            ->select('city_list.city_id', 'countries.id as country_id')
-                            ->where('city_list.city', '!=', '')
-                            ->where('city_list.city', '=', $cityName)
-                            ->where('countries.country_name', '=', $countrName)
-                            ->first();
+                        $cityCacheKey = 'city_lookup_'.md5($cityName.'|'.$countrName);
+                        $city_row = cache()->remember($cityCacheKey, 86400, function () use ($cityName, $countrName) {
+                            return DB::table('city_list')
+                                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                                ->select('city_list.city_id', 'countries.id as country_id', 'city_list.state_id')
+                                ->where('city_list.city', '!=', '')
+                                ->where('city_list.city', '=', $cityName)
+                                ->where('countries.country_name', '=', $countrName)
+                                ->first();
+                        });
 
-                        if ($city_row) {
-                            $countryID = (@$city_row) ? $city_row->country_id : '';
-
-                            $valueCountry = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => 2, 'country_id' => $countryID];
-
-                            DB::table('commericial_countries')->insert($valueCountry);
-
+                        if ($city_row && ! empty($city_row->country_id)) {
+                            $commCountries2[] = [
+                                'company_id' => $company_id,
+                                'commericial_id' => $commericialId,
+                                'commtype' => 2,
+                                'country_id' => $city_row->country_id,
+                            ];
                         }
-
                     }
                 }
-
+            }
+            if (! empty($commCountries2)) {
+                DB::table('commericial_countries')->insert($commCountries2);
             }
 
         }
@@ -1316,59 +1447,49 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             $client_id = @$client_obj->id;
             $addressId = @$request->addressId;
             DB::table('client_location')->where('client_id', $client_id)->delete();
+            $locationsToInsert = [];
             for ($i = 0; $i <= $addressId; $i++) {
-
                 $address = @$request->address[$i];
-                $country = ''; // @$request->country[$i];
-                $state = ''; // @$request->state[$i];
-                $city = @$request->kt_tagify_work_location[$i];
                 $postcode = '0'; // @$request->postcode[$i];
-
-                $stateId = '';
-                $cityID = '';
-                $countryID = '';
-                $city = '';
                 $work_city = @$request->kt_tagify_work_location[$i];
                 $work_city_all = json_decode($work_city, true);
                 if (@$request->kt_tagify_work_location[$i] != '') {
                     foreach ($work_city_all as $cityVal) {
                         $parts = explode('|', $cityVal['value']);
-                        // Trim to remove any leading or trailing whitespace
                         $cityName = trim($parts[0]);
                         $countrName = trim($parts[2]);
-                        $city_row = DB::table('city_list')
-                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                            ->select('city_list.city_id', 'countries.id as country_id')
-                            ->where('city_list.city', '!=', '')
-                            ->where('city_list.city', '=', $cityName)
-                            ->where('countries.country_name', '=', $countrName)
-                            ->first();
-
-                        // dd($city_row);
+                        $cityCacheKey = 'city_lookup_'.md5($cityName.'|'.$countrName);
+                        $city_row = cache()->remember($cityCacheKey, 86400, function () use ($cityName, $countrName) {
+                            return DB::table('city_list')
+                                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                                ->select('city_list.city_id', 'countries.id as country_id', 'city_list.state_id')
+                                ->where('city_list.city', '!=', '')
+                                ->where('city_list.city', '=', $cityName)
+                                ->where('countries.country_name', '=', $countrName)
+                                ->first();
+                        });
 
                         if ($city_row) {
-                            $cityID = (@$city_row) ? $city_row->city_id : '';
-                            $countryID = (@$city_row) ? $city_row->country_id : '';
-                            $stateId = GeneralMethod::stateId($cityID);
+                            $cityID = $city_row->city_id ?? '';
+                            $countryID = $city_row->country_id ?? '';
+                            $stateId = $city_row->state_id ?? GeneralMethod::stateId($cityID);
 
-                            $values = [
+                            $locationsToInsert[] = [
                                 'client_id' => $client_id,
                                 'country_id' => $countryID,
-                                'city' => $city,
+                                'city' => '',
                                 'city_id' => $cityID,
                                 'address' => $address,
                                 'postcode' => $postcode,
                                 'state' => $stateId,
                             ];
-
-                            DB::table('client_location')->insert($values);
-
                         }
-
                     }
                 }
-
+            }
+            if (! empty($locationsToInsert)) {
+                DB::table('client_location')->insert($locationsToInsert);
             }
 
             // Synchronize contacts for the company's client record
@@ -2165,10 +2286,18 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $this->pageTitle = 'Setup Company Profile';
         $company_id = auth()->user()->company_id;
         $this->company_id = $company_id;
-        $this->categories = JobCategory::all();
+        $this->categories = cache()->remember('global_job_categories_all', 86400, function () {
+            return JobCategory::all();
+        });
         $this->companyType = GeneralMethod::companyType();
         $this->companyTypeTaxonomy = GeneralMethod::companyTypeTaxonomy();
-        $this->department = \App\Services\IndustryTaxonomyService::getGlobalManifest();
+        $this->industries = cache()->remember('global_td_industries_all', 86400, function () {
+            return DB::table('td_industries')
+                ->select('td_industries.ind_id', 'td_industries.ind_name')
+                ->orderBy('td_industries.ind_name', 'ASC')
+                ->get();
+        });
+        $this->department = $this->industries;
         $this->industries_type_arr = GeneralMethod::industries_type_arr();
         $this->account = DB::table('companies')->select('*')->where('id', $company_id)->first();
         $this->company = $this->account;
@@ -2183,19 +2312,23 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             ->where('client_location.client_id', @$this->client->id)
             ->get();
 
-        $this->industries = DB::table('td_industries')
-            ->select('td_industries.ind_id', 'td_industries.ind_name')
-            ->orderBy('td_industries.ind_name', 'ASC')
-            ->get();
+        $this->countryArr = cache()->remember('global_country_arr_list', 86400, function () {
+            return GeneralMethod::getAllCountryList();
+        });
+        $this->statelist = cache()->remember('global_statelist_101', 86400, function () {
+            return GeneralMethod::statelist(101);
+        });
+        $this->cities = cache()->remember('global_cities_all', 86400, function () {
+            return GeneralMethod::allCities();
+        });
+        $this->indianStatelist = cache()->remember('global_state_list_101', 86400, function () {
+            $statelist = DB::table('state_list')
+                ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
+                ->orderBy('state_list.state')
+                ->get()->toArray();
 
-        $this->countryArr = GeneralMethod::getAllCountryList();
-        $this->statelist = GeneralMethod::statelist(101);
-        $this->cities = GeneralMethod::allCities();
-        $statelist = DB::table('state_list')
-            ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
-            ->orderBy('state_list.state')
-            ->get()->toArray();
-        $this->indianStatelist = json_decode(json_encode($statelist), true);
+            return json_decode(json_encode($statelist), true);
+        });
 
         // Social profile links extraction from $client->detail JSON with fallback to company_career_settings
         $clientDetail = [];

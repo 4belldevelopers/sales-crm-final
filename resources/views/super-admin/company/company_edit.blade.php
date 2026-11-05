@@ -4203,6 +4203,7 @@ input:checked + .slider-custom:before {
   var ctypeFilteredList = [];
   var ctypeFocusedIndex = -1;
   var ctypeIsOpen = false;
+  var ctypeIsUserTyping = false;
 
   var ctypeWrap = null;
   var ctypeInput = null;
@@ -4238,7 +4239,12 @@ input:checked + .slider-custom:before {
 
   function filterCompanyTypeItems(query) {
     var clean = (query || '').trim().toLowerCase();
-    if (!clean) {
+    var selectedId = getSelectedCompanyTypeId();
+    var selectedItem = (selectedId !== '' && ctypeTaxonomyMap.has(selectedId)) ? ctypeTaxonomyMap.get(selectedId) : null;
+    var selectedName = selectedItem ? (selectedItem.display_name || selectedItem.name || '').trim().toLowerCase() : '';
+
+    // If no query OR query matches the current selection, display all options so user can switch in 1 click
+    if (!clean || (selectedName && clean === selectedName)) {
       ctypeFilteredList = ctypeTaxonomyList.slice(0);
       return;
     }
@@ -4265,6 +4271,10 @@ input:checked + .slider-custom:before {
     }
 
     var selectedId = getSelectedCompanyTypeId();
+    var selectedItem = (selectedId !== '' && ctypeTaxonomyMap.has(selectedId)) ? ctypeTaxonomyMap.get(selectedId) : null;
+    var selectedName = selectedItem ? (selectedItem.display_name || selectedItem.name || '').trim().toLowerCase() : '';
+    var activeQuery = (query && query.trim().toLowerCase() !== selectedName) ? query : '';
+
     var html = '';
 
     for (var i = 0; i < ctypeFilteredList.length; i++) {
@@ -4276,7 +4286,7 @@ input:checked + .slider-custom:before {
       html += '<div class="jero-ctype-item ' + (isSelected ? 'selected' : '') + ' ' + (isFocused ? 'focused' : '') + '" ' +
         'data-idx="' + i + '" data-id="' + escapeHtmlText(itemIdStr) + '" role="option" id="jero_ctype_opt_' + escapeHtmlText(itemIdStr) + '" aria-selected="' + (isSelected ? 'true' : 'false') + '">' +
         '<div class="jero-ctype-item-main">' +
-        '<div class="jero-ctype-item-name">' + highlightCtypeMatch(item.display_name || item.name, query) + '</div>' +
+        '<div class="jero-ctype-item-name">' + highlightCtypeMatch(item.display_name || item.name, activeQuery) + '</div>' +
         '</div>' +
         '</div>';
     }
@@ -4308,9 +4318,9 @@ input:checked + .slider-custom:before {
       var containerBottom = containerTop + ctypeListContainer.offsetHeight;
 
       if (itemTop < containerTop) {
-        ctypeListContainer.scrollTop = itemTop;
+        ctypeListContainer.scrollTop = Math.max(0, itemTop - 20);
       } else if (itemBottom > containerBottom) {
-        ctypeListContainer.scrollTop = itemBottom - ctypeListContainer.offsetHeight;
+        ctypeListContainer.scrollTop = itemBottom - ctypeListContainer.offsetHeight + 20;
       }
 
       if (ctypeInput && item.id) {
@@ -4334,12 +4344,14 @@ input:checked + .slider-custom:before {
   function openCtypeDropdown() {
     if (ctypeIsOpen) return;
     ctypeIsOpen = true;
+    ctypeIsUserTyping = false;
     updateCtypeDropdownPosition();
     if (ctypeWrap) ctypeWrap.classList.add('is-open');
     if (ctypeDropdown) ctypeDropdown.style.display = 'flex';
     if (ctypeInput) ctypeInput.setAttribute('aria-expanded', 'true');
 
-    filterCompanyTypeItems(ctypeInput ? ctypeInput.value : '');
+    // Always show full list on open so user can immediately switch in 1 click
+    filterCompanyTypeItems('');
     var selectedId = getSelectedCompanyTypeId();
     ctypeFocusedIndex = -1;
     if (selectedId !== '') {
@@ -4353,12 +4365,25 @@ input:checked + .slider-custom:before {
     if (ctypeFocusedIndex === -1 && ctypeFilteredList.length > 0) {
       ctypeFocusedIndex = 0;
     }
-    renderCompanyTypeList(ctypeInput ? ctypeInput.value : '');
+    renderCompanyTypeList('');
+    setTimeout(function() {
+      scrollCtypeFocusedIntoView();
+    }, 20);
+
+    // Auto-select text in input so typing replaces immediately, while keeping all options visible
+    if (ctypeInput) {
+      setTimeout(function() {
+        try {
+          ctypeInput.select();
+        } catch (e) {}
+      }, 10);
+    }
   }
 
   function closeCtypeDropdown(restoreText) {
     if (!ctypeIsOpen) return;
     ctypeIsOpen = false;
+    ctypeIsUserTyping = false;
     if (ctypeWrap) ctypeWrap.classList.remove('is-open');
     if (ctypeDropdown) ctypeDropdown.style.display = 'none';
     if (ctypeInput) ctypeInput.setAttribute('aria-expanded', 'false');
@@ -4391,6 +4416,7 @@ input:checked + .slider-custom:before {
 
   function selectCtypeItem(item) {
     if (!item) return;
+    ctypeIsUserTyping = false;
     var strId = String(item.id);
     if (strId === '' || strId === 'null' || strId === 'undefined') {
       clearCtypeSelection();
@@ -4412,6 +4438,7 @@ input:checked + .slider-custom:before {
   }
 
   function clearCtypeSelection() {
+    ctypeIsUserTyping = false;
     if (ctypeHiddenSelect) {
       ctypeHiddenSelect.value = '';
       $(ctypeHiddenSelect).trigger('change');
@@ -4460,6 +4487,11 @@ input:checked + .slider-custom:before {
         if (!ctypeIsOpen) {
           ctypeInput.focus();
           openCtypeDropdown();
+        } else {
+          ctypeInput.focus();
+          try {
+            ctypeInput.select();
+          } catch (e) {}
         }
       });
     }
@@ -4469,7 +4501,13 @@ input:checked + .slider-custom:before {
     });
     ctypeInput.addEventListener('click', function(e) {
       e.stopPropagation();
-      openCtypeDropdown();
+      if (!ctypeIsOpen) {
+        openCtypeDropdown();
+      } else {
+        try {
+          ctypeInput.select();
+        } catch (e) {}
+      }
     });
 
     if (ctypeDropdown) {
@@ -4482,7 +4520,14 @@ input:checked + .slider-custom:before {
     }
 
     ctypeInput.addEventListener('input', function() {
-      if (!ctypeIsOpen) openCtypeDropdown();
+      if (!ctypeIsOpen) {
+        ctypeIsOpen = true;
+        updateCtypeDropdownPosition();
+        if (ctypeWrap) ctypeWrap.classList.add('is-open');
+        if (ctypeDropdown) ctypeDropdown.style.display = 'flex';
+        if (ctypeInput) ctypeInput.setAttribute('aria-expanded', 'true');
+      }
+      ctypeIsUserTyping = true;
       ctypeFocusedIndex = 0;
       filterCompanyTypeItems(ctypeInput.value);
       renderCompanyTypeList(ctypeInput.value);
@@ -4497,6 +4542,16 @@ input:checked + .slider-custom:before {
     }
 
     if (ctypeListContainer) {
+      ctypeListContainer.addEventListener('mousedown', function(e) {
+        // Prevent input blur before selection completes
+        e.preventDefault();
+        var itemEl = e.target.closest('.jero-ctype-item');
+        if (!itemEl) return;
+        var id = itemEl.getAttribute('data-id');
+        if (id !== null && ctypeTaxonomyMap.has(String(id))) {
+          selectCtypeItem(ctypeTaxonomyMap.get(String(id)));
+        }
+      });
       ctypeListContainer.addEventListener('click', function(e) {
         var itemEl = e.target.closest('.jero-ctype-item');
         if (!itemEl) return;
@@ -4516,7 +4571,7 @@ input:checked + .slider-custom:before {
         }
         if (ctypeFilteredList.length > 0) {
           ctypeFocusedIndex = (ctypeFocusedIndex + 1) % ctypeFilteredList.length;
-          renderCompanyTypeList(ctypeInput.value);
+          renderCompanyTypeList(ctypeIsUserTyping ? ctypeInput.value : '');
         }
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
@@ -4526,7 +4581,7 @@ input:checked + .slider-custom:before {
         }
         if (ctypeFilteredList.length > 0) {
           ctypeFocusedIndex = (ctypeFocusedIndex - 1 + ctypeFilteredList.length) % ctypeFilteredList.length;
-          renderCompanyTypeList(ctypeInput.value);
+          renderCompanyTypeList(ctypeIsUserTyping ? ctypeInput.value : '');
         }
       } else if (e.key === 'Enter') {
         if (ctypeIsOpen) {

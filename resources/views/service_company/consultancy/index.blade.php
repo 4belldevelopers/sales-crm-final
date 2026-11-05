@@ -2229,38 +2229,86 @@
   </div>
 </div>
 
-<!-- ── DRAWER FOR ADD / INVITE AGENCY ── -->
-<div class="add-agency-drawer-overlay" id="add_agency_drawer_overlay" aria-hidden="true" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1049;"></div>
-<div class="add-agency-drawer" id="add_agency_drawer" role="dialog" aria-modal="true" aria-labelledby="add_agency_drawer_title" aria-hidden="true" style="display:none; position:fixed; top:0; right:0; bottom:0; width:460px; max-width:90%; background:#ffffff; box-shadow:-5px 0 25px rgba(0,0,0,0.15); z-index:1050; padding:24px; overflow-y:auto; flex-direction:column; justify-content:space-between;">
+<!-- ── DRAWER FOR ADD / INVITE AGENCY (Rule 20 Enterprise Card + Sub-Card Design) ── -->
+<div class="add-agency-drawer-overlay" id="add_agency_drawer_overlay" aria-hidden="true" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); backdrop-filter:blur(2px); z-index:1049;"></div>
+<div class="add-agency-drawer" id="add_agency_drawer" role="dialog" aria-modal="true" aria-labelledby="add_agency_drawer_title" aria-hidden="true" style="display:none; position:fixed; top:0; right:0; bottom:0; width:480px; max-width:92%; background:#ffffff; box-shadow:-8px 0 30px rgba(0,0,0,0.12); z-index:1050; padding:20px 24px; overflow-y:auto; flex-direction:column; justify-content:space-between; font-family:'Poppins', sans-serif;">
     <div>
-        <div class="d-flex align-items-center justify-content-between pb-4 border-bottom mb-4">
-            <h2 class="fs-5 fw-bolder text-dark m-0" id="add_agency_drawer_title">Invite Agency or Consultant</h2>
-            <button type="button" class="btn btn-sm btn-icon btn-light add_staffing_close" id="add_agency_drawer_close_btn" aria-label="Close">✕</button>
-        </div>
-        <form id="add_staffing_partners_form" name="add_staffing_partners_form" action="#" onsubmit="return false;">
-            <div class="mb-4">
-                <label for="staffing_partners_email" class="fw-bold fs-7 mb-2 text-dark d-block">Invite Agency by Email Address</label>
-                <div class="input-group">
-                    <input type="email" name="staffing_partners_email" id="staffing_partners_email" class="form-control form-control-solid" placeholder="Enter agency email address" autocomplete="off">
-                    <button type="button" class="btn btn-primary fw-bold" id="submit_staffing_partners">Invite</button>
+        <!-- DRAWER HEADER -->
+        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-4">
+            <div class="d-flex align-items-center gap-2">
+                <div style="width:36px; height:36px; border-radius:8px; background:#eff6ff; display:flex; align-items:center; justify-content:center; color:#009ef7;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7.5" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="fs-6 fw-bold text-gray-900 m-0" id="add_agency_drawer_title">Invite Staffing Agency Partner</h2>
+                    <span class="text-muted fs-8">Direct partnership collaboration & requisition sharing</span>
                 </div>
             </div>
-            @php
-                $encode = base64_encode(auth()->user()->company_id);
-                $Url = url('/company-registration-invitation/'.$encode);
-            @endphp
-            <div class="text-center my-3 text-muted fw-bold fs-8">── OR ──</div>
-            <div class="mb-4">
-                <label for="kt_share_earn_link_input" class="fw-bold fs-7 mb-2 text-dark d-block">Share Agency Registration Link</label>
-                <div class="input-group">
-                    <input id="kt_share_earn_link_input" type="text" class="form-control form-control-solid" value="{{ $Url }}" readonly>
-                    <button type="button" id="kt_share_earn_link_copy_button" class="btn btn-light fw-bold" data-clipboard-target="#kt_share_earn_link_input">Copy</button>
+            <button type="button" class="btn btn-sm btn-icon btn-light add_staffing_close" id="add_agency_drawer_close_btn" aria-label="Close" style="border-radius:6px;">✕</button>
+        </div>
+
+        <!-- TIER 2: COIN & QUOTA HUD SUB-CARD -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; margin-bottom:18px;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span style="font-size:16px;">🪙</span>
+                    <div>
+                        <div class="fs-8 fw-semibold text-muted">INVITATION COST</div>
+                        <div class="fs-7 fw-bold text-gray-900">5 Coins <span class="text-muted fw-normal fs-8">/ invite</span></div>
+                    </div>
+                </div>
+                <div style="height:28px; width:1px; background:#cbd5e1;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <span style="font-size:16px;">⚡</span>
+                    <div>
+                        <div class="fs-8 fw-semibold text-muted">DAILY LIMIT</div>
+                        <div class="fs-7 fw-bold text-primary">20 Invites <span class="text-muted fw-normal fs-8">/ day</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form id="add_staffing_partners_form" name="add_staffing_partners_form" action="#" onsubmit="return false;">
+            <!-- SUB-CARD: EMAIL INVITATION INPUT -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:18px;">
+                <label for="staffing_partners_email" class="fw-bold fs-7 mb-2 text-gray-800 d-block">
+                    Agency Administrator / Root Email
+                </label>
+                <div class="mb-3">
+                    <input type="email" name="staffing_partners_email" id="staffing_partners_email" class="form-control form-control-solid fs-7" placeholder="e.g. partner@recruitmentagency.com" autocomplete="off" style="border-radius:6px; height:42px;">
+                    <div id="staffing_email_feedback" class="mt-2 fs-8" style="display:none;"></div>
+                </div>
+                <button type="button" class="btn btn-primary fw-bold w-100 fs-7" id="submit_staffing_partners" style="background-color:#009ef7; border-radius:6px; height:40px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    <span>Send Partnership Invite (5 Coins)</span>
+                </button>
+            </div>
+
+            <!-- SUB-CARD: SECURITY & POLICY NOTICE -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
+                <div class="d-flex align-items-start gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:2px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <div class="fs-8 text-muted" style="line-height:1.55;">
+                        <strong class="text-gray-800">Scanner-Safe Security:</strong> Invites include an encrypted 256-bit token with a 7-day TTL. If the recipient email hard-bounces, your 5 coins are automatically refunded.
+                    </div>
                 </div>
             </div>
         </form>
     </div>
-    <div class="pt-4 border-top">
-        <button type="button" class="btn btn-light w-100 add_staffing_close" data-dismiss="modal">Cancel</button>
+    <div class="pt-3 border-top">
+        <button type="button" class="btn btn-light w-100 fs-7 fw-semibold add_staffing_close" data-dismiss="modal" style="border-radius:6px;">Close Drawer</button>
     </div>
 </div>
 
@@ -3586,6 +3634,54 @@
                     error: function(xhr) {
                         $btn.prop('disabled', false).html(originalHtml);
                         const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to resend invitation.';
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'error', title: 'Error', text: msg });
+                        } else {
+                            alert(msg);
+                        }
+                    }
+                });
+            });
+
+            // Cancel Agency Invitation Click Handler
+            $(document).on('click', '.cancel-agency-invite', function(e) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                const invId = $(this).data('invitation-id');
+                if (!invId) return;
+
+                const confirmed = confirm('Are you sure you want to cancel this pending partnership invitation?');
+                if (!confirmed) return;
+
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" style="width:11px; height:11px;"></span> Cancelling...');
+
+                $.ajax({
+                    url: "{{ url('/service/consultancy/cancel_invitation') }}/" + invId,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        $btn.prop('disabled', false).html(originalHtml);
+                        if (response.status === 'success') {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'success', title: 'Cancelled', text: response.message || 'Invitation cancelled successfully.' });
+                            } else {
+                                alert('Invitation cancelled successfully.');
+                            }
+                            self.loadPage(1, true);
+                        } else {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'warning', title: 'Notice', text: response.message });
+                            } else {
+                                alert(response.message);
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        $btn.prop('disabled', false).html(originalHtml);
+                        const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to cancel invitation.';
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({ icon: 'error', title: 'Error', text: msg });
                         } else {

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+* { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+body { background: #f8fafc; padding: 30px; }
+.card-wrapper { max-width: 520px; margin: 0 auto; }
+
+.cd-srv-card-compact {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    margin-bottom: 12px;
+}
+.cd-srv-card-compact.theme-fulltime {
+    border-left: 3.5px solid #009ef7;
+    border-color: #dbeafe;
+}
+.cd-srv-card-compact.theme-contract {
+    border-left: 3.5px solid #7c3aed;
+    border-color: #ede9fe;
+}
+.cd-srv-c-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 12px;
+    gap: 8px;
+}
+.theme-fulltime .cd-srv-c-head { background: #f0f7ff; border-bottom: 1px solid #dbeafe; }
+.theme-contract .cd-srv-c-head { background: #faf7ff; border-bottom: 1px solid #ede9fe; }
+
+.cd-srv-c-head-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cd-srv-c-symbol {
+    width: 26px; height: 26px; border-radius: 6px; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 11px; font-weight: 800;
+}
+.cd-srv-c-symbol.ft { background: #fff; color: #009ef7; border: 1px solid #bfdbfe; }
+.cd-srv-c-symbol.ct { background: #fff; color: #7c3aed; border: 1px solid #ddd6fe; }
+
+.cd-srv-c-title { font-size: 12.5px; font-weight: 700; color: #0f172a; line-height: 1.25; }
+.cd-srv-c-subtitle { font-size: 9.5px; color: #64748b; line-height: 1.2; }
+.cd-srv-c-status-dot {
+    display: inline-block; width: 6.5px; height: 6.5px; border-radius: 50%;
+    background: #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+.cd-srv-c-status-dot.purple {
+    background: #7c3aed; box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25);
+}
+.cd-srv-c-rate-pill {
+    display: inline-flex; align-items: baseline; gap: 4px; padding: 2.5px 8px; border-radius: 5px;
+}
+.cd-srv-c-rate-pill.ft { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+.cd-srv-c-rate-pill.ct { background: #f5f3ff; border: 1px solid #ddd6fe; color: #6d28d9; }
+.cd-srv-c-rate-pill .rate-val { font-size: 12px; font-weight: 800; }
+.cd-srv-c-rate-pill .rate-lbl { font-size: 9px; font-weight: 600; opacity: 0.85; }
+
+/* 5-Line Body Typography Alignment */
+.cd-srv-c-body {
+    padding: 7px 12px 9px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 3.5px;
+    background: #ffffff;
+}
+.cd-srv-c-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 11px;
+    line-height: 20px;
+    min-width: 0;
+    white-space: nowrap;
+}
+.cd-srv-c-key {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    width: 105px;
+    min-width: 105px;
+    max-width: 105px;
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.01em;
+    font-size: 10.5px;
+    line-height: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.cd-srv-c-icon {
+    font-size: 9.5px;
+    width: 13px;
+    text-align: center;
+    flex-shrink: 0;
+    position: relative;
+    top: 1px;
+}
+.cd-srv-c-icon.ft { color: #009ef7; }
+.cd-srv-c-icon.ct { color: #7c3aed; }
+.cd-srv-c-val {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 11px;
+    line-height: 20px;
+    color: #334155;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.cd-srv-c-val, .cd-srv-c-val * {
+    vertical-align: baseline;
+    line-height: 20px;
+}
+.cd-srv-c-val strong {
+    font-weight: 700;
+    color: #0f172a;
+}
+.cd-srv-c-val strong.text-success { color: #10b981; }
+.cd-srv-c-val strong.text-purple { color: #7c3aed; }
+.cd-val-muted { color: #64748b; font-weight: 500; }
+.cd-val-text { color: #334155; font-weight: 500; }
+.cd-srv-c-sep {
+    color: #cbd5e1;
+    font-weight: 400;
+    margin: 0 4px;
+    user-select: none;
+    font-size: 10px;
+    display: inline;
+}
+.cd-srv-c-badge {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3.5px;
+    line-height: 1.2;
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+.cd-srv-c-badge.ft {
+    background: #eff6ff;
+    color: #0085ff;
+    border: 1px solid #bfdbfe;
+}
+.cd-srv-c-badge.ct {
+    background: #f5f3ff;
+    color: #7c3aed;
+    border: 1px solid #ddd6fe;
+}
+.cd-srv-c-country-list {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    gap: 3px;
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+.cd-srv-c-country-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 17px;
+    padding: 0 4.5px;
+    border-radius: 3px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #1e293b;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: default;
+}
+</style>
+</head>
+<body>
+
+<div class="card-wrapper">
+    <!-- Fulltime Card -->
+    <article class="cd-srv-card-compact theme-fulltime">
+        <div class="cd-srv-c-head">
+            <div class="cd-srv-c-head-left">
+                <div class="cd-srv-c-symbol ft">FT</div>
+                <div>
+                    <div><span class="cd-srv-c-title">Fulltime Hiring Services</span> <span class="cd-srv-c-status-dot"></span></div>
+                    <div class="cd-srv-c-subtitle">Permanent direct-hire recruitment & contingency search</div>
+                </div>
+            </div>
+            <div class="cd-srv-c-rate-pill ft">
+                <span class="rate-val">10%</span> <span class="rate-lbl">Default Rate</span>
+            </div>
+        </div>
+        <div class="cd-srv-c-body">
+            <div class="cd-srv-c-row">
+                <div class="cd-srv-c-key"><i class="fas fa-percent cd-srv-c-icon ft"></i><span>Default Rate:</span></div>
+                <div class="cd-srv-c-val"><strong>10%</strong><span class="cd-srv-c-sep">·</span><span class="cd-val-text">Percentage of CTC</span><span class="cd-srv-c-badge ft">5 Tiers</span></div>
+            </div>
+            <div class="cd-srv-c-row">
+                <div class="cd-srv-c-key"><i class="fas fa-file-invoice-dollar cd-srv-c-icon ft"></i><span>Invoicing:</span></div>
+                <div class="cd-srv-c-val"><span class="cd-val-text">One Time Fee</span><span class="cd-srv-c-sep">·</span><span class="cd-val-muted">Trigger:</span> <strong>Candidate Joined</strong></div>
+            </div>
+            <div class="cd-srv-c-row">
+                <div class="cd-srv-c-key"><i class="fas fa-clock cd-srv-c-icon ft"></i><span>Payment Terms:</span></div>
+                <div class="cd-srv-c-val"><strong>Net 30 Days</strong></div>
+            </div>
+            <div class="cd-srv-c-row">
+                <div class="cd-srv-c-key"><i class="fas fa-shield-halved cd-srv-c-icon ft"></i><span>Replacement:</span></div>
+                <div class="cd-srv-c-val"><strong class="text-success">90 Days</strong> <span class="cd-val-text">Free Replacement</span></div>
+            </div>
+            <div class="cd-srv-c-row">
+                <div class="cd-srv-c-key"><i class="fas fa-earth-americas cd-srv-c-icon ft"></i><span>Operations:</span></div>
+                <div class="cd-srv-c-val"><span class="cd-val-text">Operate in <strong>1 Country:</strong></span><span class="cd-srv-c-country-list"><span class="cd-srv-c-country-chip">IN</span></span></div>
+            </div>
+        </div>
+    </article>
+
+    <!-- Contract Card -->
+    <article class="cd-srv-card-compact theme-contract">
+        <div class="cd-srv-c-head">
+            <div class="cd-srv-c-head-left">
+                <div class="cd-srv-c-symbol ct">CT</div>
+                <div>
+                    <div><span class="cd-srv-c-title">Contract Hiring Services</span> <span class="cd-srv-c-status-dot purple"></span></div>
+                    <div class="cd-srv-c-subtitle">Contract staffing, hourly consultants & talent augmentation</div>
+                </div>
+            </div>
+            <div class="cd-srv-c-rate-pill ct">
+                <span class="rate-val">₹ 5</span> <span class="rate-lbl">/ Hour</span>
+            </div>
+        </div>
+        <div class="cd-srv-c-body">
+            <div class="cd-srv-c-row">
+                <div class="cd-srv-c-key"><i class="fas fa-tag cd-srv-c-icon ct"></i><span>Bill Rate:</span></div>
+                <div class="cd-srv-c-val"><strong class="text-purple">₹ 5</strong> <span class="cd-val-muted" style="font-size: 9.5px;">/ Hour</span><span class="cd-srv-c-sep">·</span><span class="cd-val-text">Contract Bill Rate</span><span class="cd-srv-c-badge ct">Hourly</span></div>
+            </div>
+            <div class="cd-srv-c-row">
+                <div class="cd-srv-c-key"><i class="fas fa-file-invoice-dollar cd-srv-c-icon ct"></i><span>Invoicing:</span></div>
+                <div class="cd-srv-c-val"><span class="cd-val-text">Monthly in Advance Invoicing</span><span class="cd-srv-c-sep">·</span><span class="cd-val-muted">Trigger:</span> <strong>Monthly in Advance</strong></div>
+            </div>
+            <div class="cd-srv-c-row">
+                <div class="cd-srv-c-key"><i class="fas fa-clock cd-srv-c-icon ct"></i><span>Payment Terms:</span></div>
+                <div class="cd-srv-c-val"><strong>Net 30 Days</strong></div>
+            </div>
+            <div class="cd-srv-c-row">
+                <div class="cd-srv-c-key"><i class="fas fa-shield-halved cd-srv-c-icon ct"></i><span>Replacement:</span></div>
+                <div class="cd-srv-c-val"><strong class="text-purple">90 Days</strong> <span class="cd-val-text">Free Replacement Contractor</span></div>
+            </div>
+            <div class="cd-srv-c-row">
+                <div class="cd-srv-c-key"><i class="fas fa-earth-americas cd-srv-c-icon ct"></i><span>Operations:</span></div>
+                <div class="cd-srv-c-val"><span class="cd-val-text">Operate in <strong>1 Country:</strong></span><span class="cd-srv-c-country-list"><span class="cd-srv-c-country-chip">IN</span></span></div>
+            </div>
+        </div>
+    </article>
+</div>
+
+</body>
+</html>
