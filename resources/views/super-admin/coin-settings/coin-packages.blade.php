@@ -1039,6 +1039,7 @@
 /**
  * Isolated Coin Packages JavaScript Controller
  * Strict Page-Level Scope (Rule 10 & 17)
+ * Implements API request optimization, client cache, idempotency, and state consistency
  */
 (function($) {
     'use strict';
@@ -1046,6 +1047,23 @@
     var currentTab = '{{ $currentTab ?? "all" }}';
     var searchTimer = null;
     var currentCurrency = localStorage.getItem('jero_coin_curr_pref') || 'inr';
+    var activeFetchXhr = null;
+    var requestSequence = 0;
+    var clientCache = {}; // Client-First In-Memory Cache (Tab + Search + Page)
+    var CACHE_TTL_MS = 60000; // 60-second in-memory freshness
+
+    // RFC4122 UUID v4 generator for two-tier request idempotency
+    function generateUuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    // Purge client cache on state-mutating actions (Rule 6)
+    function invalidateClientCache() {
+        clientCache = {};
+    }
 
     // Apply currency view preference
     function applyCurrency(curr) {
@@ -1074,14 +1092,30 @@
         $('#btnCoinSearchClear').show();
     }
 
-    // Dynamic Live Filter Request
-    function fetchPackages(page) {
+    // Dynamic Live Filter Request with Abortable In-Flight Requests & Client Memory Cache
+    function fetchPackages(page, forceRefresh) {
         var searchVal = $('#inputCoinSearch').val();
         page = page || 1;
+        var cacheKey = currentTab + ':' + searchVal.trim().toLowerCase() + ':p' + page;
 
+        // Check Client-First Memory Cache (User RAM execution)
+        if (!forceRefresh && clientCache[cacheKey]) {
+            var cached = clientCache[cacheKey];
+            if ((Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+                renderResponse(cached.data);
+                return;
+            }
+        }
+
+        // Abort previous in-flight request to prevent race-condition DOM overwrite
+        if (activeFetchXhr && activeFetchXhr.readyState !== 4) {
+            activeFetchXhr.abort();
+        }
+
+        var seq = ++requestSequence;
         $('#coinPackagesContainer').css('opacity', '0.5');
 
-        $.ajax({
+        activeFetchXhr = $.ajax({
             url: "{{ route('superadmin.company.coinPackages') }}",
             type: 'GET',
             data: {
@@ -1093,29 +1127,45 @@
                 'X-Requested-With': 'XMLHttpRequest'
             },
             success: function(res) {
+                // Ignore stale out-of-order response
+                if (seq !== requestSequence) return;
                 $('#coinPackagesContainer').css('opacity', '1');
-                if (res.status === 'success') {
-                    $('#coinPackagesContainer').html(res.html);
 
-                    // Update sub-tab badge counts
-                    if (res.counts) {
-                        $('#tabCountAll').text(res.counts.all);
-                        $('#tabCountOperational').text(res.counts.operational);
-                        $('#tabCountSales').text(res.counts.sales);
-                        $('#tabCountActive').text(res.counts.active);
-                        $('#tabCountInactive').text(res.counts.inactive);
-                        $('#tabCountCustom').text(res.counts.custom);
-                        $('#kpiCountTotal').text(res.counts.all);
-                    }
+                if (res.status === 'success') {
+                    // Populate client RAM cache
+                    clientCache[cacheKey] = {
+                        data: res,
+                        timestamp: Date.now()
+                    };
+                    renderResponse(res);
                 }
             },
-            error: function() {
-                $('#coinPackagesContainer').css('opacity', '1');
+            error: function(xhr, status) {
+                if (status === 'abort') return;
+                if (seq === requestSequence) {
+                    $('#coinPackagesContainer').css('opacity', '1');
+                }
             }
         });
     }
 
-    // 300ms Debounced Dynamic Search
+    // Render response payload and update UI counters
+    function renderResponse(res) {
+        $('#coinPackagesContainer').html(res.html);
+
+        // Update sub-tab badge counts
+        if (res.counts) {
+            $('#tabCountAll').text(res.counts.all);
+            $('#tabCountOperational').text(res.counts.operational);
+            $('#tabCountSales').text(res.counts.sales);
+            $('#tabCountActive').text(res.counts.active);
+            $('#tabCountInactive').text(res.counts.inactive);
+            $('#tabCountCustom').text(res.counts.custom);
+            $('#kpiCountTotal').text(res.counts.all);
+        }
+    }
+
+    // 300ms Debounced Dynamic Search with Timer Cleanup
     $(document).on('keyup', '#inputCoinSearch', function() {
         clearTimeout(searchTimer);
         var val = $(this).val();
@@ -1142,8 +1192,11 @@
     $(document).on('click', '.js-tab-filter', function(e) {
         e.preventDefault();
         var $btn = $(this);
-        currentTab = $btn.data('tab') || 'all';
+        var selectedTab = $btn.data('tab') || 'all';
 
+        if (selectedTab === currentTab) return; // Prevent redundant requests
+
+        currentTab = selectedTab;
         $('.js-tab-filter').removeClass('active');
         $btn.addClass('active');
 
@@ -1158,7 +1211,7 @@
         currentTab = 'all';
         $('.js-tab-filter').removeClass('active');
         $('.js-tab-filter[data-tab="all"]').addClass('active');
-        fetchPackages(1);
+        fetchPackages(1, true);
     });
 
     // AJAX Pagination Link Clicking
@@ -1172,12 +1225,22 @@
         }
     });
 
-    // Quick Status Toggle Switch
+    // Quick Status Toggle Switch with Idempotency & In-Flight Lock
     $(document).on('change', '.js-toggle-pkg-status', function() {
         var $switch = $(this);
         var pkgId = $switch.data('id');
+
+        // Prevent concurrent double-toggle clicks
+        if ($switch.data('in-flight')) {
+            return;
+        }
+
+        $switch.data('in-flight', true);
+        $switch.prop('disabled', true);
+
         var $card = $('#pkg-card-' + pkgId);
         var $statusLabel = $card.find('.cd-status-text');
+        var idempotencyKey = generateUuid();
 
         $.ajax({
             url: "{{ route('superadmin.company.coinPackageToggleStatus') }}",
@@ -1186,8 +1249,16 @@
                 _token: "{{ csrf_token() }}",
                 id: pkgId
             },
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
             success: function(res) {
+                $switch.data('in-flight', false);
+                $switch.prop('disabled', false);
+
                 if (res.status === 'success') {
+                    invalidateClientCache();
+
                     if (res.new_status === 1) {
                         $switch.prop('checked', true);
                         $statusLabel.removeClass('text-danger').addClass('text-success').text('Active');
@@ -1219,6 +1290,8 @@
                 }
             },
             error: function() {
+                $switch.data('in-flight', false);
+                $switch.prop('disabled', false);
                 // Rollback switch state
                 $switch.prop('checked', !$switch.prop('checked'));
                 alert('Connection error occurred. Status could not be updated.');
@@ -1226,14 +1299,19 @@
         });
     });
 
-    // Delete Package with Confirmation
+    // Delete Package with Idempotency & In-Flight Guard
     $(document).on('click', '.js-btn-delete-pkg', function(e) {
         e.preventDefault();
         var $btn = $(this);
         var pkgId = $btn.data('id');
         var pkgName = $btn.data('name') || 'this package';
 
+        if ($btn.data('in-flight')) return;
+
         var confirmDelete = function() {
+            $btn.data('in-flight', true);
+            var idempotencyKey = generateUuid();
+
             $.ajax({
                 url: "{{ route('superadmin.company.coinPackageDestroy') }}",
                 type: 'POST',
@@ -1241,11 +1319,17 @@
                     _token: "{{ csrf_token() }}",
                     id: pkgId
                 },
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 success: function(res) {
+                    $btn.data('in-flight', false);
                     if (res.status === 'success') {
+                        invalidateClientCache();
+
                         $('#pkg-card-' + pkgId).slideUp(300, function() {
                             $(this).remove();
-                            fetchPackages(1);
+                            fetchPackages(1, true);
                         });
 
                         if (typeof Swal !== 'undefined') {
@@ -1264,6 +1348,7 @@
                     }
                 },
                 error: function() {
+                    $btn.data('in-flight', false);
                     alert('Connection error. Could not delete package.');
                 }
             });

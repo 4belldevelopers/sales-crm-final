@@ -1673,6 +1673,21 @@ $(document).ready(function() {
         $('#topupTableView').show();
     });
 
+    // In-flight locking maps to prevent duplicate submissions & race conditions
+    var inFlightToggles = {};
+    var inFlightDeletes = {};
+    var isSavingPackage = false;
+
+    function generateUUID() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
     // ==========================================================================
     // 4. Instant Status Toggle Switch (Active / Inactive)
     // ==========================================================================
@@ -1681,10 +1696,19 @@ $(document).ready(function() {
         var pkgId = $switch.data('id');
         var isChecked = $switch.is(':checked');
 
+        if (inFlightToggles[pkgId]) {
+            $switch.prop('checked', !isChecked);
+            return;
+        }
+        inFlightToggles[pkgId] = true;
+
         $.ajax({
             url: "{{ route('superadmin.company.toggleTopUpCoinPackageStatus') }}",
             type: "POST",
             data: { id: pkgId },
+            headers: {
+                'X-Idempotency-Key': generateUUID()
+            },
             success: function(response) {
                 if (response.status === 'success') {
                     var newStatus = response.new_status;
@@ -1742,6 +1766,9 @@ $(document).ready(function() {
                     confirmButtonText: "Ok",
                     customClass: { confirmButton: "btn btn-primary" }
                 });
+            },
+            complete: function() {
+                inFlightToggles[pkgId] = false;
             }
         });
     });
@@ -1885,10 +1912,13 @@ $(document).ready(function() {
     }
 
     // ==========================================================================
-    // 7. AJAX Form Submission with SweetAlert2
+    // 7. AJAX Form Submission with SweetAlert2 & Idempotency
     // ==========================================================================
     $('#formTopupPackage').on('submit', function(e) {
         e.preventDefault();
+
+        if (isSavingPackage) return;
+        isSavingPackage = true;
 
         var $btn = $('#btnSavePackage');
         var origText = $btn.html();
@@ -1900,11 +1930,12 @@ $(document).ready(function() {
             url: "{{ route('superadmin.company.topUpCoinPackageStore') }}",
             type: "POST",
             data: formData,
+            headers: {
+                'X-Idempotency-Key': generateUUID()
+            },
             processData: false,
             contentType: false,
             success: function(response) {
-                $btn.prop('disabled', false).html(origText);
-
                 if (response.status === 'success') {
                     Swal.fire({
                         text: response.message,
@@ -1927,8 +1958,6 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
-                $btn.prop('disabled', false).html(origText);
-
                 if (xhr.responseJSON && xhr.responseJSON.errors) {
                     var errors = Object.values(xhr.responseJSON.errors).flat().join('<br>');
                     Swal.fire({
@@ -1947,15 +1976,21 @@ $(document).ready(function() {
                         customClass: { confirmButton: "btn btn-primary" }
                     });
                 }
+            },
+            complete: function() {
+                isSavingPackage = false;
+                $btn.prop('disabled', false).html(origText);
             }
         });
     });
 
     // ==========================================================================
-    // 8. Delete / Deactivate Action Handler
+    // 8. Delete / Deactivate Action Handler with Idempotency
     // ==========================================================================
     $(document).on('click', '.js-btn-delete', function() {
         var pkgId = $(this).data('id');
+
+        if (inFlightDeletes[pkgId]) return;
 
         Swal.fire({
             title: "Are you sure?",
@@ -1973,10 +2008,14 @@ $(document).ready(function() {
             buttonsStyling: false
         }).then(function(result) {
             if (result.isConfirmed) {
+                inFlightDeletes[pkgId] = true;
                 $.ajax({
                     url: "{{ route('superadmin.company.destroyTopUpCoinPackage') }}",
                     type: "POST",
                     data: { id: pkgId },
+                    headers: {
+                        'X-Idempotency-Key': generateUUID()
+                    },
                     success: function(response) {
                         if (response.status === 'success') {
                             Swal.fire({
@@ -2016,6 +2055,9 @@ $(document).ready(function() {
                             confirmButtonText: "Ok",
                             customClass: { confirmButton: "btn btn-primary" }
                         });
+                    },
+                    complete: function() {
+                        inFlightDeletes[pkgId] = false;
                     }
                 });
             }

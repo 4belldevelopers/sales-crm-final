@@ -54,6 +54,9 @@ use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
 use App\Services\SuperAdminBenchCandidatesCacheManager;
 use App\Services\SuperAdminCandidateListsCacheManager;
 use App\Services\SuperAdminMeetingScheduleCacheManager;
+use App\Services\SuperAdmin\SuperAdminDefaultTermsCacheManager;
+use App\Services\SuperAdmin\SuperAdminDefaultTermsMutationService;
+use App\Services\SuperAdmin\SuperAdminDefaultTermsReadService;
 use Carbon\Carbon;
 use Crypt;
 use Illuminate\Http\Request;
@@ -6045,197 +6048,46 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      */
     public function defaultTerms(Request $request, $ecrypt_id)
     {
-        $id = decrypt($ecrypt_id);
-        $this->termId = $id;
-        $this->seqId = sprintf('#TERM-%03d', $id);
-        $this->encrypt_id = $ecrypt_id;
-        $this->title = '';
-        $this->used = '';
-        $this->termCategory = 'legal';
-        $this->categoryLabel = 'Legal & Website';
-        $this->termIcon = 'fa-scale-balanced';
-        $this->dbField = 'terms';
-        $this->storageTable = 'global_settings';
-        $this->fallbackNotice = null;
-        $this->publicRoute = null;
-        $this->supportedTokens = [];
+        $id = (int) decrypt($ecrypt_id);
+        $readService = app(SuperAdminDefaultTermsReadService::class);
+        $term = $readService->getTermById($id);
 
-        $offerTokens = [
-            '[CANDIDATE_NAME]',
-            '[CANDIDATE_EMAIL]',
-            '[CANDIDATE_MOBILE]',
-            '[COMPANY_NAME]',
-            '[COMPANY_ADDRESS]',
-            '[JOB_TITLE]',
-            '[JOINING_DATE]',
-            '[AGENCY_NAME]',
-            '[AGENCY_ADDRESS]',
-            '[TODAY_DATE]',
-        ];
-
-        $commercialTokens = [
-            '{AGENCY_COMMERCIAL_SUMMARY}',
-            '{FULLTIME_COMMERCIAL_TABLE}',
-            '{FULLTIME_EXPERIENCE_PRICING}',
-            '{CONTRACT_COMMERCIAL_TABLE}',
-            '{CONTRACT_EXPERIENCE_PRICING}',
-        ];
-
-        if ($id == 1) {
-            $this->th_email_template = DB::table('global_settings')->select('global_settings.terms')->first();
-            $this->title = 'Vendor Terms';
-            $this->used = 'For Vendors';
-            $this->termCategory = 'agency';
-            $this->categoryLabel = 'Agency & Vendor';
-            $this->termIcon = 'fa-handshake';
-            $this->dbField = 'terms';
-            $this->supportedTokens = ['[COMPANY_NAME]', '[AGENCY_NAME]', '[TODAY_DATE]'];
-            $this->scopeNote = 'Platform vendor onboarding, agency SLAs, and master platform terms.';
-        } elseif ($id == 2) {
-            $this->th_email_template = DB::table('global_settings')->select('global_settings.offer_terms as terms')->first();
-            $this->title = 'Fulltime Offer Letter';
-            $this->used = 'For Candidates';
-            $this->termCategory = 'offers';
-            $this->categoryLabel = 'Offer Letters';
-            $this->termIcon = 'fa-briefcase';
-            $this->dbField = 'offer_terms';
-            $this->supportedTokens = array_merge($offerTokens, ['[FULLTIME_COMMERCIAL_TABLE]']);
-            $this->scopeNote = 'Primary default offer letter generated in ATS for Full-Time candidate hires.';
-        } elseif ($id == 3) {
-            $this->th_email_template = DB::table('global_settings')->select('global_settings.privacy_policy as terms')->first();
-            $this->title = 'Privacy Policy';
-            $this->used = 'For Website';
-            $this->termCategory = 'legal';
-            $this->categoryLabel = 'Legal & Website';
-            $this->termIcon = 'fa-shield-halved';
-            $this->dbField = 'privacy_policy';
-            $this->publicRoute = '/privacy-policy';
-            $this->scopeNote = 'Public user data protection, cookies disclosure, and GDPR/DPDP policy.';
-        } elseif ($id == 4) {
-            $this->th_email_template = DB::table('global_settings')->select('global_settings.terms_and_conditions as terms')->first();
-            $this->title = 'Terms and Conditions';
-            $this->used = 'For Website';
-            $this->termCategory = 'legal';
-            $this->categoryLabel = 'Legal & Website';
-            $this->termIcon = 'fa-scale-balanced';
-            $this->dbField = 'terms_and_conditions';
-            $this->publicRoute = '/terms-and-conditions';
-            $this->scopeNote = 'Master SaaS platform terms of service, platform liabilities, and intellectual property.';
-        } elseif ($id == 5) {
-            $this->th_email_template = DB::table('global_settings')->select('global_settings.payment_policy as terms')->first();
-            $this->title = 'Payment Policy';
-            $this->used = 'For Website';
-            $this->termCategory = 'legal';
-            $this->categoryLabel = 'Legal & Website';
-            $this->termIcon = 'fa-credit-card';
-            $this->dbField = 'payment_policy';
-            $this->publicRoute = '/payment-terms-and-conditions';
-            $this->scopeNote = 'Billing cycles, invoices, auto-renewal rules, and platform refund terms.';
-        } elseif ($id == 6) {
-            $this->th_email_template = DB::table('global_settings')->select('global_settings.fraud_alery as terms')->first();
-            $this->title = 'Fraud Alert';
-            $this->used = 'For Website';
-            $this->termCategory = 'legal';
-            $this->categoryLabel = 'Legal & Website';
-            $this->termIcon = 'fa-triangle-exclamation';
-            $this->dbField = 'fraud_alery';
-            $this->scopeNote = 'Candidate scam warnings, anti-phishing advisory, and recruiter verification guidance.';
-        } elseif ($id == 7) {
-            $this->th_email_template = DB::table('global_settings')->select('global_settings.trust_and_safety as terms')->first();
-            $this->title = 'Trust and Safety';
-            $this->used = 'For Website';
-            $this->termCategory = 'legal';
-            $this->categoryLabel = 'Legal & Website';
-            $this->termIcon = 'fa-user-shield';
-            $this->dbField = 'trust_and_safety';
-            $this->scopeNote = 'Marketplace code of conduct, authenticity verification, and hiring safety standards.';
-        } elseif ($id == 8) {
-            $this->th_email_template = DB::table('global_settings')->select('global_settings.report_issue as terms')->first();
-            $this->title = 'Report Issue';
-            $this->used = 'For Website';
-            $this->termCategory = 'legal';
-            $this->categoryLabel = 'Legal & Website';
-            $this->termIcon = 'fa-bug';
-            $this->dbField = 'report_issue';
-            $this->scopeNote = 'Platform issue escalation procedure and security vulnerability reporting SLA.';
-        } elseif ($id == 9) {
-            $this->th_email_template = DB::table('global_settings')->select('global_settings.grievances as terms')->first();
-            $this->title = 'Grievances';
-            $this->used = 'For Website';
-            $this->termCategory = 'legal';
-            $this->categoryLabel = 'Legal & Website';
-            $this->termIcon = 'fa-file-shield';
-            $this->dbField = 'grievances';
-            $this->scopeNote = 'Statutory Grievance Officer disclosures and legal compliance escalation path.';
-        } elseif ($id == 10) {
-            $offerTermsColumn = Schema::hasColumn('global_settings', 'agency_offer_terms') ? 'agency_offer_terms' : 'offer_terms';
-            $rawFieldVal = DB::table('global_settings')->value($offerTermsColumn);
-            if (empty(trim(strip_tags((string) $rawFieldVal)))) {
-                $this->fallbackNotice = 'Currently inherits Fulltime Offer Letter (#2) as editable starter copy.';
-            }
-            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();
-            $this->title = 'Agency Offer Terms';
-            $this->used = 'For Candidates';
-            $this->termCategory = 'offers';
-            $this->categoryLabel = 'Offer Letters';
-            $this->termIcon = 'fa-file-signature';
-            $this->dbField = 'agency_offer_terms';
-            $this->supportedTokens = array_merge($offerTokens, $commercialTokens);
-            $this->scopeNote = 'Offer letter generated for candidates introduced through recruitment agencies.';
-        } elseif ($id == 11) {
-            $offerTermsColumn = Schema::hasColumn('global_settings', 'internship_offer_terms') ? 'internship_offer_terms' : 'offer_terms';
-            $rawFieldVal = DB::table('global_settings')->value($offerTermsColumn);
-            if (empty(trim(strip_tags((string) $rawFieldVal)))) {
-                $this->fallbackNotice = 'Currently inherits Fulltime Offer Letter (#2) as editable starter copy.';
-            }
-            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();
-            $this->title = 'Internship Offer Letter';
-            $this->used = 'For Candidates';
-            $this->termCategory = 'offers';
-            $this->categoryLabel = 'Offer Letters';
-            $this->termIcon = 'fa-graduation-cap';
-            $this->dbField = 'internship_offer_terms';
-            $this->supportedTokens = $offerTokens;
-            $this->scopeNote = 'Internship agreement with stipend terms, tenure duration, and mentorship conditions.';
-        } elseif ($id == 12) {
-            $offerTermsColumn = Schema::hasColumn('global_settings', 'contract_offer_terms') ? 'contract_offer_terms' : 'offer_terms';
-            $rawFieldVal = DB::table('global_settings')->value($offerTermsColumn);
-            if (empty(trim(strip_tags((string) $rawFieldVal)))) {
-                $this->fallbackNotice = 'Currently inherits Fulltime Offer Letter (#2) as editable starter copy.';
-            }
-            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();
-            $this->title = 'Contract Offer Letter';
-            $this->used = 'For Candidates';
-            $this->termCategory = 'offers';
-            $this->categoryLabel = 'Offer Letters';
-            $this->termIcon = 'fa-file-contract';
-            $this->dbField = 'contract_offer_terms';
-            $this->supportedTokens = array_merge($offerTokens, ['{CONTRACT_COMMERCIAL_TABLE}', '{CONTRACT_EXPERIENCE_PRICING}']);
-            $this->scopeNote = 'Contractual employment agreement with monthly/hourly billing & engagement scope.';
-        } elseif ($id == 13) {
-            $this->agencyCommercialDefaults = app(AgencyCommercialTermsService::class)->getGlobalDefault();
-            $this->th_email_template = (object) ['terms' => ''];
-            $this->title = 'Agency Commercial Defaults';
-            $this->used = 'For Agencies';
-            $this->termCategory = 'commercial';
-            $this->categoryLabel = 'Agency & Commercial';
-            $this->termIcon = 'fa-building-columns';
-            $this->dbField = 'agency_commercial_terms';
-            $this->storageTable = 'agency_commercial_terms';
-            $this->supportedTokens = $commercialTokens;
-            $this->scopeNote = 'Global fallback commission rates, CTC % success fees, replacement & payment days.';
+        if (! $term) {
+            abort(404, 'Default term template not found.');
         }
 
-        $rawText = (string) (@$this->th_email_template->terms ?? '');
-        $stripped = trim(strip_tags($rawText));
-        $this->isConfigured = strlen($stripped) > 0 || ($id === 13 && ! empty($this->agencyCommercialDefaults));
-        $this->charCount = strlen($stripped);
-        $this->wordCount = $this->charCount > 0 ? str_word_count($stripped) : 0;
+        $this->termId = $id;
+        $this->seqId = $term['seq_id'] ?? sprintf('#TERM-%03d', $id);
+        $this->encrypt_id = $ecrypt_id;
+        $this->title = $term['title'] ?? '';
+        $this->used = $term['audience'] ?? '';
+        $this->termCategory = $term['category'] ?? 'legal';
+        $this->categoryLabel = $term['category_label'] ?? 'Legal & Website';
+        $this->termIcon = $term['icon'] ?? 'fa-scale-balanced';
+        $this->dbField = $term['db_field'] ?? 'terms';
+        $this->storageTable = $term['storage'] ?? 'global_settings';
+        $this->fallbackNotice = ! empty($term['fallback_to'])
+            ? 'Currently inherits '.$term['fallback_to'].' as editable starter copy.'
+            : null;
+        $this->publicRoute = $term['public_route'] ?? null;
+        $this->supportedTokens = $term['tokens'] ?? [];
+        $this->scopeNote = $term['scope_note'] ?? '';
+
+        if ($id === 13) {
+            $this->agencyCommercialDefaults = app(AgencyCommercialTermsService::class)->getGlobalDefault();
+            $this->th_email_template = (object) ['terms' => ''];
+        } else {
+            $this->th_email_template = (object) ['terms' => $term['raw_content'] ?? ''];
+        }
+
+        $this->isConfigured = ! empty($term['is_configured']);
+        $this->charCount = (int) ($term['char_count'] ?? 0);
+        $this->wordCount = (int) ($term['word_count'] ?? 0);
         $this->pageTitle = 'Edit '.$this->title;
 
         return view('super-admin.default-terms', $this->data);
-        // default-terms-list.blade.php
     }
+
 
     /**
      * Super-Admin Default Legal, Compliance & Offer Terms Catalog
@@ -6251,436 +6103,38 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     public function defaultTermsList()
     {
         $this->pageTitle = 'Default Terms';
-        $this->th_email_template = DB::table('global_settings')->select('global_settings.*')->first();
-        $settings = $this->th_email_template;
 
-        $agencyDefaults = app(AgencyCommercialTermsService::class)->getGlobalDefault();
+        $readService = app(SuperAdminDefaultTermsReadService::class);
+        $data = $readService->getTermsCatalog();
 
-        $offerTokens = [
-            '[CANDIDATE_NAME]',
-            '[CANDIDATE_EMAIL]',
-            '[CANDIDATE_MOBILE]',
-            '[COMPANY_NAME]',
-            '[COMPANY_ADDRESS]',
-            '[JOB_TITLE]',
-            '[JOINING_DATE]',
-            '[AGENCY_NAME]',
-            '[AGENCY_ADDRESS]',
-            '[TODAY_DATE]',
-        ];
-
-        $commercialTokens = [
-            '{AGENCY_COMMERCIAL_SUMMARY}',
-            '{FULLTIME_COMMERCIAL_TABLE}',
-            '{FULLTIME_EXPERIENCE_PRICING}',
-            '{CONTRACT_COMMERCIAL_TABLE}',
-            '{CONTRACT_EXPERIENCE_PRICING}',
-        ];
-
-        $termsDefinitions = [
-            1 => [
-                'title' => 'Vendor Terms',
-                'audience' => 'For Vendors',
-                'audience_key' => 'vendors',
-                'category' => 'agency',
-                'category_label' => 'Agency & Vendor',
-                'icon' => 'fa-handshake',
-                'db_field' => 'terms',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->terms ?? '',
-                'fallback_to' => null,
-                'tokens' => ['[COMPANY_NAME]', '[AGENCY_NAME]', '[TODAY_DATE]'],
-                'scope_note' => 'Platform vendor onboarding, agency SLAs, and master platform terms.',
-                'public_route' => null,
-            ],
-            2 => [
-                'title' => 'Fulltime Offer Letter',
-                'audience' => 'For Candidates',
-                'audience_key' => 'candidates',
-                'category' => 'offers',
-                'category_label' => 'Offer Letters',
-                'icon' => 'fa-briefcase',
-                'db_field' => 'offer_terms',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->offer_terms ?? '',
-                'fallback_to' => null,
-                'tokens' => array_merge($offerTokens, ['[FULLTIME_COMMERCIAL_TABLE]']),
-                'scope_note' => 'Primary default offer letter generated in ATS for Full-Time candidate hires.',
-                'public_route' => null,
-            ],
-            3 => [
-                'title' => 'Privacy Policy',
-                'audience' => 'For Website',
-                'audience_key' => 'website',
-                'category' => 'legal',
-                'category_label' => 'Legal & Website',
-                'icon' => 'fa-shield-halved',
-                'db_field' => 'privacy_policy',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->privacy_policy ?? '',
-                'fallback_to' => null,
-                'tokens' => [],
-                'scope_note' => 'Public user data protection, cookies disclosure, and GDPR/DPDP policy.',
-                'public_route' => '/privacy-policy',
-            ],
-            4 => [
-                'title' => 'Terms and Conditions',
-                'audience' => 'For Website',
-                'audience_key' => 'website',
-                'category' => 'legal',
-                'category_label' => 'Legal & Website',
-                'icon' => 'fa-scale-balanced',
-                'db_field' => 'terms_and_conditions',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->terms_and_conditions ?? '',
-                'fallback_to' => null,
-                'tokens' => [],
-                'scope_note' => 'Master SaaS platform terms of service, platform liabilities, and intellectual property.',
-                'public_route' => '/terms-and-conditions',
-            ],
-            5 => [
-                'title' => 'Payment Policy',
-                'audience' => 'For Website',
-                'audience_key' => 'website',
-                'category' => 'legal',
-                'category_label' => 'Legal & Website',
-                'icon' => 'fa-credit-card',
-                'db_field' => 'payment_policy',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->payment_policy ?? '',
-                'fallback_to' => null,
-                'tokens' => [],
-                'scope_note' => 'Billing cycles, invoices, auto-renewal rules, and platform refund terms.',
-                'public_route' => '/payment-terms-and-conditions',
-            ],
-            6 => [
-                'title' => 'Fraud Alert',
-                'audience' => 'For Website',
-                'audience_key' => 'website',
-                'category' => 'legal',
-                'category_label' => 'Legal & Website',
-                'icon' => 'fa-triangle-exclamation',
-                'db_field' => 'fraud_alery',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->fraud_alery ?? '',
-                'fallback_to' => null,
-                'tokens' => [],
-                'scope_note' => 'Candidate scam warnings, anti-phishing advisory, and recruiter verification guidance.',
-                'public_route' => null,
-            ],
-            7 => [
-                'title' => 'Trust and Safety',
-                'audience' => 'For Website',
-                'audience_key' => 'website',
-                'category' => 'legal',
-                'category_label' => 'Legal & Website',
-                'icon' => 'fa-user-shield',
-                'db_field' => 'trust_and_safety',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->trust_and_safety ?? '',
-                'fallback_to' => null,
-                'tokens' => [],
-                'scope_note' => 'Marketplace code of conduct, authenticity verification, and hiring safety standards.',
-                'public_route' => null,
-            ],
-            8 => [
-                'title' => 'Report Issue',
-                'audience' => 'For Website',
-                'audience_key' => 'website',
-                'category' => 'legal',
-                'category_label' => 'Legal & Website',
-                'icon' => 'fa-bug',
-                'db_field' => 'report_issue',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->report_issue ?? '',
-                'fallback_to' => null,
-                'tokens' => [],
-                'scope_note' => 'Platform issue escalation procedure and security vulnerability reporting SLA.',
-                'public_route' => null,
-            ],
-            9 => [
-                'title' => 'Grievances',
-                'audience' => 'For Website',
-                'audience_key' => 'website',
-                'category' => 'legal',
-                'category_label' => 'Legal & Website',
-                'icon' => 'fa-file-shield',
-                'db_field' => 'grievances',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->grievances ?? '',
-                'fallback_to' => null,
-                'tokens' => [],
-                'scope_note' => 'Statutory Grievance Officer disclosures and legal compliance escalation path.',
-                'public_route' => null,
-            ],
-            10 => [
-                'title' => 'Agency Offer Terms',
-                'audience' => 'For Candidates',
-                'audience_key' => 'candidates',
-                'category' => 'offers',
-                'category_label' => 'Offer Letters',
-                'icon' => 'fa-file-signature',
-                'db_field' => 'agency_offer_terms',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->agency_offer_terms ?? '',
-                'fallback_to' => 'Fulltime Offer Letter (#2)',
-                'tokens' => array_merge($offerTokens, $commercialTokens),
-                'scope_note' => 'Offer letter generated for candidates introduced through recruitment agencies.',
-                'public_route' => null,
-            ],
-            11 => [
-                'title' => 'Internship Offer Letter',
-                'audience' => 'For Candidates',
-                'audience_key' => 'candidates',
-                'category' => 'offers',
-                'category_label' => 'Offer Letters',
-                'icon' => 'fa-graduation-cap',
-                'db_field' => 'internship_offer_terms',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->internship_offer_terms ?? '',
-                'fallback_to' => 'Fulltime Offer Letter (#2)',
-                'tokens' => $offerTokens,
-                'scope_note' => 'Internship agreement with stipend terms, tenure duration, and mentorship conditions.',
-                'public_route' => null,
-            ],
-            12 => [
-                'title' => 'Contract Offer Letter',
-                'audience' => 'For Candidates',
-                'audience_key' => 'candidates',
-                'category' => 'offers',
-                'category_label' => 'Offer Letters',
-                'icon' => 'fa-file-contract',
-                'db_field' => 'contract_offer_terms',
-                'storage' => 'global_settings',
-                'raw_content' => $settings->contract_offer_terms ?? '',
-                'fallback_to' => 'Fulltime Offer Letter (#2)',
-                'tokens' => array_merge($offerTokens, ['{CONTRACT_COMMERCIAL_TABLE}', '{CONTRACT_EXPERIENCE_PRICING}']),
-                'scope_note' => 'Contractual employment agreement with monthly/hourly billing & engagement scope.',
-                'public_route' => null,
-            ],
-            13 => [
-                'title' => 'Agency Commercial Defaults',
-                'audience' => 'For Agencies',
-                'audience_key' => 'agencies',
-                'category' => 'commercial',
-                'category_label' => 'Agency & Commercial',
-                'icon' => 'fa-building-columns',
-                'db_field' => 'agency_commercial_terms',
-                'storage' => 'agency_commercial_terms',
-                'raw_content' => ! empty($agencyDefaults) ? json_encode($agencyDefaults, JSON_PRETTY_PRINT) : '',
-                'fallback_to' => null,
-                'tokens' => $commercialTokens,
-                'scope_note' => 'Global fallback commission rates, CTC % success fees, replacement & payment days.',
-                'public_route' => null,
-            ],
-        ];
-
-        $termsCatalog = [];
-        $totalConfigured = 0;
-        $totalNeedsSetup = 0;
-        $totalOffers = 0;
-        $totalLegal = 0;
-        $totalCommercial = 0;
-
-        foreach ($termsDefinitions as $id => $def) {
-            $rawContent = (string) $def['raw_content'];
-            $stripped = trim(strip_tags($rawContent));
-            $isConfigured = strlen($stripped) > 0;
-
-            if ($id === 13) {
-                // Agency commercial defaults has structured object
-                $isConfigured = ! empty($agencyDefaults) && ! empty((array) $agencyDefaults);
-                $stripped = 'Full-Time Model: '.($agencyDefaults->fulltime_fee_model ?? 'percentage').' ('.($agencyDefaults->fulltime_success_fee_percentage ?? 8.33).'% CTC), Payment Days: '.($agencyDefaults->fulltime_payment_terms_days ?? 30).', Replacement: '.($agencyDefaults->fulltime_replacement_period_days ?? 90).' Days; Contract Model: '.($agencyDefaults->contract_billing_model ?? 'monthly').' ('.($agencyDefaults->contract_billing_cycle ?? 'Monthly in Advance').')';
-            }
-
-            if ($isConfigured) {
-                $totalConfigured++;
-            } else {
-                $totalNeedsSetup++;
-            }
-
-            if ($def['category'] === 'offers') {
-                $totalOffers++;
-            } elseif ($def['category'] === 'legal') {
-                $totalLegal++;
-            } elseif ($def['category'] === 'agency' || $def['category'] === 'commercial') {
-                $totalCommercial++;
-            }
-
-            $charCount = strlen($stripped);
-            $wordCount = $charCount > 0 ? str_word_count($stripped) : 0;
-
-            // Generate clean 140-char excerpt
-            $excerpt = '';
-            if ($isConfigured) {
-                $cleanText = preg_replace('/\s+/', ' ', $stripped);
-                $excerpt = mb_strimwidth($cleanText, 0, 140, '...');
-            } else {
-                $excerpt = ! empty($def['fallback_to'])
-                    ? 'No custom template configured. Automatically inherits '.$def['fallback_to'].' as starter copy.'
-                    : 'No content configured yet. Click Edit to establish master policy.';
-            }
-
-            $termsCatalog[] = [
-                'id' => $id,
-                'encrypted_id' => encrypt($id),
-                'seq_id' => sprintf('#TERM-%03d', $id),
-                'title' => $def['title'],
-                'audience' => $def['audience'],
-                'audience_key' => $def['audience_key'],
-                'category' => $def['category'],
-                'category_label' => $def['category_label'],
-                'icon' => $def['icon'],
-                'db_field' => $def['db_field'],
-                'storage' => $def['storage'],
-                'raw_content' => $rawContent,
-                'clean_text' => $stripped,
-                'is_configured' => $isConfigured,
-                'char_count' => $charCount,
-                'word_count' => $wordCount,
-                'excerpt' => $excerpt,
-                'fallback_to' => $def['fallback_to'],
-                'tokens' => $def['tokens'],
-                'scope_note' => $def['scope_note'],
-                'public_route' => $def['public_route'],
-            ];
-        }
-
-        $this->termsCatalog = $termsCatalog;
-        $this->kpiStats = [
-            'total' => count($termsCatalog),
-            'configured' => $totalConfigured,
-            'needs_setup' => $totalNeedsSetup,
-            'offers' => $totalOffers,
-            'legal' => $totalLegal,
-            'commercial' => $totalCommercial,
-        ];
+        $this->termsCatalog = $data['termsCatalog'];
+        $this->kpiStats = $data['kpiStats'];
 
         return view('super-admin.default-terms-list', $this->data);
-        // default-terms-list.blade.php
     }
 
+    /**
+     * Super-Admin Default Legal, Compliance & Offer Terms Mutation Endpoint
+     *
+     * Intent: Save/update default terms using Two-Tier Idempotency (sys_idempotency_keys),
+     *         ACID row-locked MySQL transactions (<15ms), Transactional Outbox (sys_outbox_events),
+     *         and post-commit fast-path Elasticsearch dual-store synchronization.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function addEditTermsupdate(Request $request)
     {
-        // dd($request->role_ck[0],$request->tokenId);
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $result = app(SuperAdminDefaultTermsMutationService::class)->updateTerm(
+            $request->all(),
+            $idempotencyKey,
+            auth()->id()
+        );
 
-        $id = decrypt($request->encrypt_id);
-        if ($id == 1) {
-            $values = [
-                'terms' => $request->editor1,
-            ];
-        } elseif ($id == 2) {
-            $values = [
-                'offer_terms' => $request->editor1,
-            ];
-        } elseif ($id == 3) {
-            $values = [
-                'privacy_policy' => $request->editor1,
-            ];
-        } elseif ($id == 4) {
-            $values = [
-                'terms_and_conditions' => $request->editor1,
-            ];
-        } elseif ($id == 5) {
-            $values = [
-                'payment_policy' => $request->editor1,
-            ];
-        } elseif ($id == 6) {
-            $values = [
-                'fraud_alery' => $request->editor1,
-            ];
-        } elseif ($id == 7) {
-            $values = [
-                'trust_and_safety' => $request->editor1,
-            ];
-        } elseif ($id == 8) {
-            $values = [
-                'report_issue' => $request->editor1,
-            ];
-        } elseif ($id == 9) {
-            $values = [
-                'grievances' => $request->editor1,
-            ];
-        } elseif ($id == 10) {
-            $values = [
-                'agency_offer_terms' => $request->editor1,
-            ];
-        } elseif ($id == 11) {
-            // Intent: persist the internship default offer template into the existing global settings singleton.
-            $values = [
-                'internship_offer_terms' => $request->editor1,
-            ];
-        } elseif ($id == 12) {
-            // Intent: persist the contract default offer template into the existing global settings singleton.
-            $values = [
-                'contract_offer_terms' => $request->editor1,
-            ];
-        } elseif ($id == 13) {
-            // Intent: persist global agency commercial defaults in the agency-only terms table using company_id 0.
-            $agencyExperienceRows = function (array $labels, array $rates): array {
-                $rows = [];
-                foreach ($labels as $index => $label) {
-                    $label = trim((string) $label);
-                    if ($label === '') {
-                        continue;
-                    }
-                    $rows[] = [
-                        'label' => $label,
-                        'rate' => $rates[$index] ?? '',
-                    ];
-                }
-
-                return $rows;
-            };
-            $payload = [
-                'company_id' => 0,
-                'status' => 'active',
-                'version' => '1.0',
-                'fulltime_fee_model' => $request->input('fulltime_fee_model', 'percentage'),
-                'fulltime_success_fee_percentage' => (float) $request->input('fulltime_success_fee_percentage', 8.33),
-                'fulltime_payment_terms_days' => (int) $request->input('fulltime_payment_terms_days', 30),
-                'fulltime_replacement_period_days' => (int) $request->input('fulltime_replacement_period_days', 90),
-                'contract_billing_model' => $request->input('contract_billing_model', 'monthly'),
-                'contract_rate_amount' => (float) $request->input('contract_rate_amount', 80000),
-                'contract_rate_currency' => (int) $request->input('contract_rate_currency', 4),
-                'contract_payment_terms_days' => (int) $request->input('contract_payment_terms_days', 30),
-                'contract_min_duration_months' => (int) $request->input('contract_min_duration_months', 3),
-                'contract_replacement_policy' => $request->input('contract_replacement_policy', 'As per Contract Terms'),
-                'applies_to' => 'All Agencies',
-                'acceptance_required' => 1,
-                'acceptance_trigger' => 'Before Candidate Submission',
-                'submission_before_acceptance' => 0,
-                'effective_from' => 'Agency Acceptance Date',
-                'agreement_duration_months' => 12,
-                'auto_renewal' => 1,
-                'agency_can_reject' => 1,
-                'updated_by' => auth()->id(),
-                'updated_by_name' => auth()->user()->name ?? null,
-                'settings_json' => json_encode([
-                    'fulltime_fixed_fee_currency' => (int) $request->input('fulltime_fixed_fee_currency', 4),
-                    'fulltime_fixed_fee_amount' => $request->filled('fulltime_fixed_fee_amount') ? (float) $request->input('fulltime_fixed_fee_amount') : null,
-                    'fulltime_fixed_fee_unit' => $request->input('fulltime_fixed_fee_unit', 'Per Hire'),
-                    'fulltime_experience_pricing' => $agencyExperienceRows((array) $request->input('fulltime_experience_label', []), (array) $request->input('fulltime_experience_rate', [])),
-                    'fulltime_basis' => $request->input('fulltime_basis', 'Annual Fixed CTC'),
-                    'contract_rate_display' => $request->input('contract_rate_display', 'Depend upon job requirements'),
-                    'contract_experience_pricing' => $agencyExperienceRows((array) $request->input('contract_experience_label', []), (array) $request->input('contract_experience_rate', [])),
-                    'contract_billing_cycle' => $request->input('contract_billing_cycle', 'Monthly in Advance'),
-                ]),
-            ];
-            app(AgencyCommercialTermsService::class)->upsertGlobalDefault($payload);
-
-            return Reply::dataOnly(['status' => 'success']);
-        }
-
-        // dd($values);
-        // DB::table('email_notifications')->where('id','=',$request->tokenId)->update($values);
-        DB::table('global_settings')
-            ->where('id', DB::table('global_settings')->min('id'))
-            ->update($values);
-
-        return Reply::dataOnly(['status' => 'success']);
-
+        return Reply::dataOnly($result);
     }
+
 
     /**
      * Super Admin Bench Candidates Approval Hub — Index Page
@@ -7718,83 +7172,35 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $search = trim($request->input('search', ''));
         $tab = $request->input('tab', 'all');
         $perPage = (int) $request->input('per_page', 20);
-        $perPage = min(max($perPage, 5), 100);
+        $page = (int) $request->input('page', 1);
 
-        // 1. Calculate KPI Metrics across all packages for Tier 2 Sub-Tabs & summary bar
-        $kpiBase = DB::table('coin_packages');
-        $this->kpiTotal = (clone $kpiBase)->count();
-        $this->kpiOperational = (clone $kpiBase)->where('event_type', 'operational')->count();
-        $this->kpiSales = (clone $kpiBase)->where('event_type', 'sales')->count();
-        $this->kpiActive = (clone $kpiBase)->where('status', 1)->count();
-        $this->kpiInactive = (clone $kpiBase)->where('status', 0)->count();
-        $this->kpiCustom = (clone $kpiBase)->where('custome_pck', '>', 0)->count();
-        $this->kpiTotalCoins = (clone $kpiBase)->sum('coins');
-        $this->kpiAvgInrRate = (clone $kpiBase)->where('coins', '>', 0)->avg('total_price_rate') ?? 0;
+        // Strict CQRS: 100% Read Path served from Elasticsearch with Redis/Dragonfly L2 cache
+        $readService = app(\App\Services\SuperAdmin\SuperAdminCoinPackageReadService::class);
+        $result = $readService->getPackages(
+            ['tab' => $tab, 'search' => $search],
+            $page,
+            $perPage,
+            route('superadmin.company.coinPackages'),
+            $request->query()
+        );
 
-        // 2. Build filtered query for Tier 3 Cards Stream
-        $query = DB::table('coin_packages')
-            ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
-            ->select(
-                'coin_packages.*',
-                'coin_package_types.title',
-                'coin_package_types.days as type_default_days',
-                'coin_package_types.event_type as type_event_type'
-            );
+        $kpi = $result['kpis'];
+        $this->kpiTotal = $kpi['total'];
+        $this->kpiOperational = $kpi['operational'];
+        $this->kpiSales = $kpi['sales'];
+        $this->kpiActive = $kpi['active'];
+        $this->kpiInactive = $kpi['inactive'];
+        $this->kpiCustom = $kpi['custom'];
+        $this->kpiTotalCoins = $kpi['total_coins'];
+        $this->kpiAvgInrRate = $kpi['avg_rate'];
 
-        // Sub-Tab Filter
-        if ($tab === 'operational') {
-            $query->where('coin_packages.event_type', 'operational');
-        } elseif ($tab === 'sales') {
-            $query->where('coin_packages.event_type', 'sales');
-        } elseif ($tab === 'active') {
-            $query->where('coin_packages.status', 1);
-        } elseif ($tab === 'inactive') {
-            $query->where('coin_packages.status', 0);
-        } elseif ($tab === 'custom') {
-            $query->where('coin_packages.custome_pck', '>', 0);
-        }
-
-        // Live Search Filter (Package Title, Event Type, Coins, Price)
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('coin_package_types.title', 'LIKE', '%'.$search.'%')
-                    ->orWhere('coin_packages.event_type', 'LIKE', '%'.$search.'%');
-                if (is_numeric($search)) {
-                    $q->orWhere('coin_packages.id', (int) $search)
-                        ->orWhere('coin_packages.coins', (float) $search)
-                        ->orWhere('coin_packages.price', (float) $search)
-                        ->orWhere('coin_packages.price_usd', (float) $search)
-                        ->orWhere('coin_packages.days', (int) $search);
-                }
-            });
-        }
-
-        // Deterministic Enterprise Ordering
-        $query->orderByDesc('coin_packages.status')
-            ->orderBy('coin_packages.custome_pck', 'asc')
-            ->orderBy('coin_packages.price', 'asc');
-
-        $coinEvents = $query->paginate($perPage)->appends($request->query());
-
-        // 3. Eager load package points for all loaded packages in 1 query to prevent N+1
-        $packageIds = $coinEvents->pluck('id')->toArray();
-        $packagePoints = [];
-        if (! empty($packageIds)) {
-            $pointsRows = DB::table('coin_package_points')
-                ->whereIn('coin_package_id', $packageIds)
-                ->get();
-            foreach ($pointsRows as $pt) {
-                $packagePoints[$pt->coin_package_id][] = $pt;
-            }
-        }
-
-        $this->coinEvents = $coinEvents;
-        $this->packagePoints = $packagePoints;
+        $this->coinEvents = $result['coinEvents'];
+        $this->packagePoints = $result['packagePoints'];
         $this->currentTab = $tab;
         $this->currentSearch = $search;
 
-        // If AJAX request, return partial view and counts for smooth dynamic updates
-        if ($request->ajax()) {
+        // If AJAX or JSON request, return partial view and counts for smooth dynamic updates
+        if ($request->ajax() || $request->wantsJson()) {
             $view = view('super-admin.coin-settings.partials.package-cards', $this->data)->render();
 
             return response()->json([
@@ -7808,7 +7214,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     'inactive' => $this->kpiInactive,
                     'custom' => $this->kpiCustom,
                 ],
-                'pagination' => (string) $coinEvents->links(),
+                'pagination' => (string) $this->coinEvents->links(),
             ]);
         }
 
@@ -7890,17 +7296,33 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function coinPackageStore(Request $req)
     {
-        // dd((int)$req->token_id);
-        $message = '';
-        $status = 'error';
+        $idempotencyKey = $req->header('X-Idempotency-Key') ?? $req->input('idempotency_key');
+        $adminId = auth()->id();
+
+        // Fast-path Idempotency Replay before validation (guarantees safe replay under network retries)
+        if ($idempotencyKey) {
+            $existing = DB::table('sys_idempotency_keys')
+                ->where('tenant_id', 0)
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+
+            if ($existing && $existing->status === 'COMPLETED' && $existing->response_body) {
+                $cached = json_decode($existing->response_body, true);
+                if (is_array($cached)) {
+                    $cached['_replayed'] = true;
+
+                    return response()->json($cached);
+                }
+            }
+        }
 
         $validator = Validator::make($req->all(), [
             'event' => 'required',
             'coin_package' => [
                 'required',
                 Rule::unique('coin_package_types', 'title')
-                    ->where('event_type', $req->event) // assuming 'event' is the name of the event type field in the request
-                    ->ignore((int) $req->coin_package_type_id), // Ignore the current ID for updates
+                    ->where('event_type', $req->event)
+                    ->ignore((int) $req->coin_package_type_id),
             ],
             'durations' => 'required',
             'total_price' => 'required',
@@ -7908,257 +7330,64 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         ]);
 
         if ($validator->fails()) {
-            if ($req->ajax()) {
+            if ($req->ajax() || $req->wantsJson()) {
                 return response()->json([
                     'status' => 'error',
                     'errors' => $validator->errors(),
-                ], 422); // 422 Unprocessable Entity
+                ], 422);
             } else {
                 return redirect()->back()->withErrors($validator)->withInput();
             }
         }
 
-        if ($req->token_id == '' || $req->token_id == 0) {
+        $mutationService = app(\App\Services\SuperAdmin\SuperAdminCoinPackageMutationService::class);
+        $result = $mutationService->savePackage($req->all(), $idempotencyKey, $adminId);
 
-            if (! DB::table('coin_package_types')->where('title', '=', $req->coin_package)->where('event_type', '=', $req->event)->exists()) {
-                DB::table('coin_package_types')->insert(['title' => $req->coin_package, 'event_type' => $req->event, 'days' => $req->durations]);
-                $lastInsertedId = DB::getPdo()->lastInsertId();
-            } else {
-                $coin_package_types = DB::table('coin_package_types')->where('title', '=', $req->coin_package)->select('title', 'id')->first();
-                $lastInsertedId = $coin_package_types->id;
-            }
-            $coin_package_id = (int) $lastInsertedId;
-            $price = (float) $req->total_price;
-            $priceUsd = (float) ($req->total_price_usd ?? 0);
-            $coins = (float) $req->total_coins;
-            $rateInr = ($coins > 0) ? round($price / $coins, 2) : 0.0;
-            $rateUsd = ($coins > 0) ? round($priceUsd / $coins, 2) : 0.0;
-
-            $totalPriceRate = (is_numeric($req->total_price_rate) && is_finite((float) $req->total_price_rate))
-                ? (float) $req->total_price_rate
-                : $rateInr;
-            $totalPriceUsdRate = (is_numeric($req->total_price_usd_rate) && is_finite((float) $req->total_price_usd_rate))
-                ? (float) $req->total_price_usd_rate
-                : $rateUsd;
-
-            $value = [
-                'coin_package_type_id' => $lastInsertedId,
-                'price' => $price,
-                'price_usd' => $priceUsd,
-                'coins' => $coins,
-                'discount' => ($req->discount) ? (int) $req->discount : 0,
-                'days' => ($req->durations) ? (int) $req->durations : 0,
-                'event_type' => $req->event,
-                'total_price_monthly' => is_numeric($req->total_price_monthly) ? (float) $req->total_price_monthly : round($price / 12, 2),
-                'total_price_days' => is_numeric($req->total_price_days) ? (float) $req->total_price_days : round($price / 365, 2),
-                'total_price_rate' => $totalPriceRate,
-                'total_price_usd_monthly' => is_numeric($req->total_price_usd_monthly) ? (float) $req->total_price_usd_monthly : round($priceUsd / 12, 2),
-                'total_price_usd_days' => is_numeric($req->total_price_usd_days) ? (float) $req->total_price_usd_days : round($priceUsd / 365, 2),
-                'total_price_usd_rate' => $totalPriceUsdRate,
-                'visibility_show' => (int) $req->visibility_show,
-                'custome_pck' => (int) $req->package_type,
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s'),
-                'status' => ($req->status) ? 1 : 0,
-            ];
-            $id = DB::table('coin_packages')->insertGetId($value);
-            $coin_package_id = (int) $id;
-            $message = 'Coin Package Created Successfully';
-            $status = 'success';
-        } else {
-
-            DB::table('coin_package_types')->where('id', '=', (int) $req->coin_package_type_id)->update(['title' => $req->coin_package, 'event_type' => $req->event, 'days' => $req->durations]);
-
-            $price = (float) $req->total_price;
-            $priceUsd = (float) ($req->total_price_usd ?? 0);
-            $coins = (float) $req->total_coins;
-            $rateInr = ($coins > 0) ? round($price / $coins, 2) : 0.0;
-            $rateUsd = ($coins > 0) ? round($priceUsd / $coins, 2) : 0.0;
-
-            $totalPriceRate = (is_numeric($req->total_price_rate) && is_finite((float) $req->total_price_rate))
-                ? (float) $req->total_price_rate
-                : $rateInr;
-            $totalPriceUsdRate = (is_numeric($req->total_price_usd_rate) && is_finite((float) $req->total_price_usd_rate))
-                ? (float) $req->total_price_usd_rate
-                : $rateUsd;
-
-            $value = [
-                'coin_package_type_id' => (int) $req->coin_package_type_id,
-                'price' => $price,
-                'price_usd' => $priceUsd,
-                'coins' => $coins,
-                'discount' => ($req->discount) ? (int) $req->discount : 0,
-                'days' => ($req->durations) ? (int) $req->durations : 0,
-                'event_type' => $req->event,
-                'total_price_monthly' => is_numeric($req->total_price_monthly) ? (float) $req->total_price_monthly : round($price / 12, 2),
-                'total_price_days' => is_numeric($req->total_price_days) ? (float) $req->total_price_days : round($price / 365, 2),
-                'total_price_rate' => $totalPriceRate,
-                'total_price_usd_monthly' => is_numeric($req->total_price_usd_monthly) ? (float) $req->total_price_usd_monthly : round($priceUsd / 12, 2),
-                'total_price_usd_days' => is_numeric($req->total_price_usd_days) ? (float) $req->total_price_usd_days : round($priceUsd / 365, 2),
-                'total_price_usd_rate' => $totalPriceUsdRate,
-                'visibility_show' => (int) $req->visibility_show,
-                'custome_pck' => (int) $req->package_type,
-                'updated_at' => date('Y-m-d H:i:s'),
-                'status' => ($req->status) ? 1 : 0,
-            ];
-            $id = ($req->token_id);
-            DB::table('coin_packages')->where('id', $id)->update($value);
-            $coin_package_id = (int) $id;
-            $message = 'Coin Package updated Successfully';
-            $status = 'success';
-        }
-
-        DB::table('coin_package_points')->where('coin_package_points.coin_package_id', $coin_package_id)->delete();
-        if (is_array($req->points) && count($req->points) > 0) {
-            for ($i = 0; $i < count($req->points); $i++) {
-                DB::table('coin_package_points')->insert([
-                    'title' => $req->points[$i],
-                    'status' => $req->status_point[$i] ?? 1,
-                    'coin_package_id' => $coin_package_id,
-                ]);
-            }
-        }
-
-        // Keep Elasticsearch in sync on write mutation (Rule 10)
-        $this->syncCoinPackageToElastic($coin_package_id);
-
-        $data = ['status' => $status, 'message' => $message, 'url' => route('superadmin.company.coinPackages')];
-
-        return response()->json($data);
+        return response()->json($result);
     }
 
     /**
      * Toggle active/inactive status of a coin package.
-     * Synchronizes to MySQL and Elasticsearch.
+     * Synchronizes to MySQL and Elasticsearch with two-tier idempotency and transactional outbox.
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function coinPackageToggleStatus(Request $request)
     {
-        $id = $request->input('id');
+        $id = (int) $request->input('id');
         if (! $id) {
             return response()->json(['status' => 'error', 'message' => 'Package ID is required.'], 400);
         }
 
-        $package = DB::table('coin_packages')->where('id', $id)->first();
-        if (! $package) {
-            return response()->json(['status' => 'error', 'message' => 'Coin package not found.'], 404);
-        }
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $adminId = auth()->id();
 
-        $newStatus = ((int) $package->status === 1) ? 0 : 1;
-        $now = date('Y-m-d H:i:s');
-        DB::table('coin_packages')->where('id', $id)->update([
-            'status' => $newStatus,
-            'updated_at' => $now,
-        ]);
+        $mutationService = app(\App\Services\SuperAdmin\SuperAdminCoinPackageMutationService::class);
+        $result = $mutationService->toggleStatus($id, $idempotencyKey, $adminId);
 
-        // Keep Elasticsearch in sync on write mutation (Rule 10)
-        $this->syncCoinPackageToElastic($id);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Coin package status switched to '.($newStatus ? 'Active' : 'Inactive').'.',
-            'new_status' => $newStatus,
-        ]);
+        return response()->json($result);
     }
 
     /**
      * Delete a coin package and its associated points.
-     * Synchronizes deletion to Elasticsearch.
+     * Synchronizes deletion to Elasticsearch with two-tier idempotency and transactional outbox.
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function coinPackageDestroy(Request $request)
     {
-        $id = $request->input('id');
+        $id = (int) $request->input('id');
         if (! $id) {
             return response()->json(['status' => 'error', 'message' => 'Package ID is required.'], 400);
         }
 
-        $package = DB::table('coin_packages')->where('id', $id)->first();
-        if (! $package) {
-            return response()->json(['status' => 'error', 'message' => 'Coin package not found.'], 404);
-        }
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $adminId = auth()->id();
 
-        // Delete points
-        DB::table('coin_package_points')->where('coin_package_id', $id)->delete();
-        // Delete package
-        DB::table('coin_packages')->where('id', $id)->delete();
+        $mutationService = app(\App\Services\SuperAdmin\SuperAdminCoinPackageMutationService::class);
+        $result = $mutationService->destroyPackage($id, $idempotencyKey, $adminId);
 
-        // Delete from Elasticsearch if index exists
-        try {
-            $elasticService = app(\App\Services\ElasticService::class);
-            if (defined('ELASTIC_COIN_PACKAGES') && $elasticService->indexExists(ELASTIC_COIN_PACKAGES)) {
-                $elasticService->getClient()->delete([
-                    'index' => ELASTIC_COIN_PACKAGES,
-                    'id' => (string) $id,
-                ]);
-            }
-        } catch (\Throwable $e) {
-            \Log::warning('ElasticSearch coin package deletion: '.$e->getMessage());
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Coin package removed successfully.',
-        ]);
-    }
-
-    /**
-     * Synchronize a coin package record to Elasticsearch index ELASTIC_COIN_PACKAGES.
-     *
-     * @param  int  $id
-     * @return void
-     */
-    private function syncCoinPackageToElastic($id)
-    {
-        try {
-            $row = DB::table('coin_packages')
-                ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
-                ->where('coin_packages.id', $id)
-                ->select('coin_packages.*', 'coin_package_types.title')
-                ->first();
-
-            if (! $row) {
-                return;
-            }
-
-            $elasticService = app(\App\Services\ElasticService::class);
-            if (defined('ELASTIC_COIN_PACKAGES') && $elasticService->indexExists(ELASTIC_COIN_PACKAGES)) {
-                $elasticService->getClient()->update([
-                    'index' => ELASTIC_COIN_PACKAGES,
-                    'id' => (string) $row->id,
-                    'retry_on_conflict' => 5,
-                    'body' => [
-                        'doc' => [
-                            'id' => (int) $row->id,
-                            'coin_package_type_id' => (int) $row->coin_package_type_id,
-                            'price' => (float) $row->price,
-                            'price_usd' => (float) ($row->price_usd ?? 0),
-                            'total_price_monthly' => (float) $row->total_price_monthly,
-                            'total_price_days' => (float) $row->total_price_days,
-                            'total_price_rate' => (float) $row->total_price_rate,
-                            'total_price_usd_monthly' => (float) $row->total_price_usd_monthly,
-                            'total_price_usd_days' => (float) $row->total_price_usd_days,
-                            'total_price_usd_rate' => (float) $row->total_price_usd_rate,
-                            'visibility_show' => (int) $row->visibility_show,
-                            'coins' => (float) $row->coins,
-                            'coins_auto' => (float) ($row->coins_auto ?? 0),
-                            'discount' => (int) $row->discount,
-                            'days' => (int) $row->days,
-                            'status' => (int) $row->status,
-                            'custome_pck' => (int) $row->custome_pck,
-                            'event_type' => (string) $row->event_type,
-                            'updated_at' => $row->updated_at ? \Carbon\Carbon::parse($row->updated_at)->toIso8601String() : null,
-                            'created_at' => $row->created_at ? \Carbon\Carbon::parse($row->created_at)->toIso8601String() : null,
-                        ],
-                        'doc_as_upsert' => true,
-                    ],
-                ]);
-            }
-        } catch (\Throwable $e) {
-            \Log::warning('ElasticSearch coin package sync: '.$e->getMessage());
-        }
+        return response()->json($result);
     }
 
     public function coinEventsStore(Request $req)
@@ -8229,23 +7458,44 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         return response()->json($data);
     }
 
-    public function topUpCoinPackages()
+    public function topUpCoinPackages(Request $request)
     {
-        $allPackages = DB::table('top_up_coin_packages')
-            ->orderBy('event_type', 'asc')
-            ->orderBy('coins', 'asc')
-            ->get();
+        $this->pageTitle = 'Top-Up Coin Packages';
 
-        $this->coinEvents = $allPackages;
+        $tab = $request->input('tab', 'all');
+        $search = trim((string) $request->input('search', ''));
 
-        // Executive KPI Metrics
-        $this->totalPackages = $allPackages->count();
-        $this->activePackages = $allPackages->where('status', 1)->count();
-        $this->inactivePackages = $allPackages->where('status', 0)->count();
-        $this->operationalPackages = $allPackages->where('event_type', 'operational')->count();
-        $this->salesPackages = $allPackages->where('event_type', 'sales')->count();
-        $this->customPackages = $allPackages->where('custome_chk', 1)->count();
-        $this->maxDiscount = (float) $allPackages->max('discount');
+        // Strict CQRS: 100% Read Path served from Elasticsearch with Redis/Dragonfly L2 cache
+        $readService = app(\App\Services\SuperAdmin\SuperAdminTopUpCoinPackageReadService::class);
+        $result = $readService->getPackages([
+            'tab' => $tab,
+            'search' => $search,
+        ]);
+
+        $kpi = $result['kpis'];
+        $this->coinEvents = $result['coinEvents'];
+        $this->totalPackages = $kpi['total'];
+        $this->activePackages = $kpi['active'];
+        $this->inactivePackages = $kpi['inactive'];
+        $this->operationalPackages = $kpi['operational'];
+        $this->salesPackages = $kpi['sales'];
+        $this->customPackages = $kpi['custom'];
+        $this->maxDiscount = (float) $kpi['max_discount'];
+
+        // If AJAX or JSON request, return counts for smooth dynamic updates
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'counts' => [
+                    'all' => $this->totalPackages,
+                    'active' => $this->activePackages,
+                    'inactive' => $this->inactivePackages,
+                    'operational' => $this->operationalPackages,
+                    'sales' => $this->salesPackages,
+                    'custom' => $this->customPackages,
+                ],
+            ]);
+        }
 
         return view('super-admin.coin-settings.topup-coin-package', $this->data);
     }
@@ -8255,25 +7505,48 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $decryptedValue = ($request->id);
         $this->update = false;
         if ($decryptedValue != null) {
-            $id = decrypt($request->id);
-            $coin_packages = DB::table('top_up_coin_packages')->where('id', $id)->first();
+            try {
+                $id = decrypt($request->id);
+            } catch (\Exception $e) {
+                $id = (int) $request->id;
+            }
+
+            $coin_packages = \App\Services\SuperAdmin\TopUpCoinPackageCacheManager::rememberItem((int) $id, function () use ($id) {
+                return DB::table('top_up_coin_packages')->where('id', $id)->first();
+            });
+
             $this->update = true;
             $this->coin_packages = $coin_packages;
-            // dd($coin_packages);
         }
 
-        $coin_package_types = DB::table('coin_package_types')
-            ->select('*');
-        $this->coinPackageType = $coin_package_types->get();
+        $this->coinPackageType = Cache::remember('superadmin:coin_package_types:all', 3600, function () {
+            return DB::table('coin_package_types')->select('*')->get();
+        });
 
         return view('super-admin.coin-settings.add-edit-top-up-coin-package', $this->data);
     }
 
     public function topUpCoinPackageStore(Request $req)
     {
-        // dd($req->token_id());
-        $message = '';
-        $status = 'error';
+        $idempotencyKey = $req->header('X-Idempotency-Key') ?? $req->input('idempotency_key');
+        $adminId = auth()->id();
+
+        // Fast-path Idempotency Replay before validation (guarantees safe replay under network retries)
+        if ($idempotencyKey) {
+            $existing = DB::table('sys_idempotency_keys')
+                ->where('tenant_id', 0)
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+
+            if ($existing && $existing->status === 'COMPLETED' && $existing->response_body) {
+                $cached = json_decode($existing->response_body, true);
+                if (is_array($cached)) {
+                    $cached['_replayed'] = true;
+
+                    return response()->json($cached);
+                }
+            }
+        }
 
         $validator = Validator::make($req->all(), [
             'total_price' => 'required',
@@ -8291,64 +7564,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             }
         }
 
-        if ($req->token_id == '' || $req->token_id == 0) {
+        $mutationService = app(\App\Services\SuperAdmin\SuperAdminTopUpCoinPackageMutationService::class);
+        $result = $mutationService->savePackage($req->all(), $idempotencyKey, $adminId);
 
-            $value = [
-                'price' => $req->total_price,
-                'coins' => $req->total_coins,
-                'discount' => ($req->discount) ? $req->discount : 0,
-                'per_coin_rate' => ($req->per_coin_rate) ? $req->per_coin_rate : null,
-                'per_coin_rate_usd' => ($req->per_coin_rate_usd) ? $req->per_coin_rate_usd : null,
-                'price_usd' => ($req->total_price_usd) ? $req->total_price_usd : null,
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s'),
-                'status' => ($req->status) ? 1 : 0,
-            ];
-            if ($req->filled('event_type')) {
-                $value['event_type'] = $req->event_type;
-            }
-            if ($req->has('custome_chk')) {
-                $value['custome_chk'] = $req->custome_chk ? 1 : 0;
-            }
-            DB::table('top_up_coin_packages')->insert($value);
-
-            // Atomic multi-tenant cache invalidation
-            Cache::forget('top_up_coin_packages_op');
-            Cache::forget('top_up_coin_packages_sal');
-
-            $message = 'Top Up Coin Created Successfully';
-            $status = 'success';
-        } else {
-            $value = [
-                'price' => $req->total_price,
-                'coins' => $req->total_coins,
-                'discount' => ($req->discount) ? $req->discount : 0,
-                'per_coin_rate' => ($req->per_coin_rate) ? $req->per_coin_rate : null,
-                'per_coin_rate_usd' => ($req->per_coin_rate_usd) ? $req->per_coin_rate_usd : null,
-                'price_usd' => ($req->total_price_usd) ? $req->total_price_usd : null,
-                'updated_at' => date('Y-m-d H:i:s'),
-                'status' => ($req->status) ? 1 : 0,
-            ];
-            if ($req->filled('event_type')) {
-                $value['event_type'] = $req->event_type;
-            }
-            if ($req->has('custome_chk')) {
-                $value['custome_chk'] = $req->custome_chk ? 1 : 0;
-            }
-            $id = ($req->token_id);
-            DB::table('top_up_coin_packages')->where('id', $id)->update($value);
-
-            // Atomic multi-tenant cache invalidation
-            Cache::forget('top_up_coin_packages_op');
-            Cache::forget('top_up_coin_packages_sal');
-
-            $message = 'Top Up Coin updated Successfully';
-            $status = 'success';
-        }
-
-        $data = ['status' => $status, 'message' => $message, 'url' => route('superadmin.company.topUpCoinPackages')];
-
-        return response()->json($data);
+        return response()->json($result);
     }
 
     /**
@@ -8361,32 +7580,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             'id' => 'required',
         ]);
 
-        $package = DB::table('top_up_coin_packages')->where('id', $request->id)->first();
-        if (! $package) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Top Up Coin Package not found.',
-            ], 404);
-        }
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $adminId = auth()->id();
 
-        $newStatus = $package->status == 1 ? 0 : 1;
-        DB::table('top_up_coin_packages')
-            ->where('id', $request->id)
-            ->update([
-                'status' => $newStatus,
-                'updated_at' => now(),
-            ]);
+        $mutationService = app(\App\Services\SuperAdmin\SuperAdminTopUpCoinPackageMutationService::class);
+        $result = $mutationService->toggleStatus($request->id, $idempotencyKey, $adminId);
 
-        // Atomic multi-tenant cache invalidation
-        Cache::forget('top_up_coin_packages_op');
-        Cache::forget('top_up_coin_packages_sal');
+        $status = $result['status'] === 'success' ? 200 : ($result['status'] === 'error' && str_contains($result['message'] ?? '', 'not found') ? 404 : 400);
 
-        return response()->json([
-            'status' => 'success',
-            'new_status' => $newStatus,
-            'status_label' => $newStatus == 1 ? 'Active' : 'Inactive',
-            'message' => 'Package status updated to '.($newStatus == 1 ? 'Active' : 'Inactive').' successfully.',
-        ]);
+        return response()->json($result, $status);
     }
 
     /**
@@ -8399,31 +7601,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             return response()->json(['status' => 'error', 'message' => 'Package ID required.'], 400);
         }
 
-        $inCart = DB::table('carts')->where('pck_top_id', $id)->exists();
-        if ($inCart) {
-            // Cannot physically delete historic purchases; deactivate instead
-            DB::table('top_up_coin_packages')->where('id', $id)->update(['status' => 0, 'updated_at' => now()]);
-            Cache::forget('top_up_coin_packages_op');
-            Cache::forget('top_up_coin_packages_sal');
-            Cache::forget('sa_static_top_up_coin_packages');
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $adminId = auth()->id();
 
-            return response()->json([
-                'status' => 'success',
-                'deactivated' => true,
-                'message' => 'Package has associated purchase history, so it was set to Inactive instead of being deleted.',
-            ]);
-        }
+        $mutationService = app(\App\Services\SuperAdmin\SuperAdminTopUpCoinPackageMutationService::class);
+        $result = $mutationService->destroyPackage($id, $idempotencyKey, $adminId);
 
-        DB::table('top_up_coin_packages')->where('id', $id)->delete();
-        Cache::forget('top_up_coin_packages_op');
-        Cache::forget('top_up_coin_packages_sal');
-        Cache::forget('sa_static_top_up_coin_packages');
+        $status = $result['status'] === 'success' ? 200 : 400;
 
-        return response()->json([
-            'status' => 'success',
-            'deleted' => true,
-            'message' => 'Package deleted successfully.',
-        ]);
+        return response()->json($result, $status);
     }
 
     public function createOrderTopup(Request $request) {}
