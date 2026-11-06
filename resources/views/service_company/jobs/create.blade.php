@@ -3785,8 +3785,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if ($client_id == $clientarr->id) {
                         $sel = 'selected="selected"';
                     }
-                    $dispName = ! empty($company_name) ? $company_name : $clientarr->name;
-                    echo '<option value="'.@$clientarr->id.'" '.$sel.'>'.ucfirst($dispName).'</option>';
+                    $dispName = ! empty($companyName) ? $companyName : (! empty($company_name) ? $company_name : (! empty($global->company_name) ? $global->company_name : $clientarr->name));
+                    echo '<option value="'.@$clientarr->id.'" '.$sel.'>'.htmlspecialchars($dispName).'</option>';
                 }
             }
                                         ?>
@@ -10631,7 +10631,29 @@ $currency_code = GeneralMethod::defaultCurrency();
         }
 
         <?php
+        $__companyId = (int) (auth()->user()->company_id ?? 0);
+        $__compRow = DB::table('companies')->where('id', $__companyId)->first();
+        $__authoritativeCompName = !empty($companyName) ? $companyName : (!empty($company_name) ? $company_name : ($__compRow?->company_name ?? ''));
+        $__compIndId = (int) ($__compRow?->industries ?? 0);
+        $__authoritativeIndName = $__compIndId > 0
+            ? (DB::table('td_industries')->where('ind_id', $__compIndId)->value('ind_name') ?? 'Staffing & Recruiting')
+            : 'Staffing & Recruiting';
+
         $__clientIds = collect($client ?? [])->pluck('id')->filter()->toArray();
+
+        // Preload td_industries for initial paint
+        $__allIndIds = [];
+        if (isset($client) && (is_array($client) || is_object($client))) {
+            foreach ($client as $clItem) {
+                if (!empty($clItem->industry) && is_numeric($clItem->industry)) {
+                    $__allIndIds[] = (int) $clItem->industry;
+                }
+            }
+        }
+        $__indNamesMap = !empty($__allIndIds)
+            ? DB::table('td_industries')->whereIn('ind_id', array_unique($__allIndIds))->pluck('ind_name', 'ind_id')->toArray()
+            : [];
+
         $__contactsByClient = !empty($__clientIds) 
             ? DB::table('client_contact_info')
                 ->select('id', 'client_id', 'contact_person_name', 'contact_person_email', 'contact_person_number', 'contact_person_designation')
@@ -10660,21 +10682,28 @@ $currency_code = GeneralMethod::defaultCurrency();
                 ->groupBy('client_id')
             : collect();
         ?>
+        var SERVER_CLIENTS_VERSION = <?php echo (int) \Illuminate\Support\Facades\Cache::get('tenant:' . $__companyId . ':clients_version', 1); ?>;
+        var SERVER_COMPANY_NAME = <?php echo json_encode($__authoritativeCompName); ?>;
         // Seed initial client headers passed from server Blade for 0.0ms initial paint
         window.__INITIAL_CLIENTS__ = [
             <?php if (isset($client) && (is_array($client) || is_object($client))) { ?>
                 <?php foreach ($client as $c) { 
                     $__cContacts = $__contactsByClient->get($c->id, collect());
                     $__cLocations = $__locationsByClient->get($c->id, collect());
-                    $__cName = ($c->self_company && !empty($company_name)) ? $company_name : $c->name;
+                    $__isSelf = (int) ($c->self_company ?? 0) === 1;
+                    $__cName = ($__isSelf && !empty($__authoritativeCompName)) ? $__authoritativeCompName : $c->name;
+                    $__cInd = $__isSelf 
+                        ? $__authoritativeIndName 
+                        : (!empty($c->industry) && isset($__indNamesMap[(int)$c->industry]) ? $__indNamesMap[(int)$c->industry] : (is_numeric($c->industry) ? '' : ($c->industry ?? '')));
+                    $__cLogo = $__isSelf ? ($__compRow?->logo ?: ($c->logo ?: '')) : ($c->logo ?: '');
                 ?>
                 {
                     id: <?php echo (int) $c->id; ?>,
-                    n: <?php echo json_encode(ucfirst($__cName)); ?>,
+                    n: <?php echo json_encode($__cName); ?>,
                     t: <?php echo (int) $c->self_company; ?>,
                     s: 1,
-                    l: <?php echo json_encode($c->logo ?: ''); ?>,
-                    i: <?php echo json_encode($c->industry ?: ''); ?>,
+                    l: <?php echo json_encode($__cLogo); ?>,
+                    i: <?php echo json_encode($__cInd); ?>,
                     loc: [
                         <?php foreach ($__cLocations as $__loc) { 
                             $__cityName = !empty($__loc->city_name) ? $__loc->city_name : ($__loc->city ?? '');
@@ -10802,12 +10831,14 @@ $currency_code = GeneralMethod::defaultCurrency();
                     };
                 });
             }
+            var rawInd = String(c.i || c.industry || '').trim();
+            var cleanInd = (/^\d+$/.test(rawInd)) ? '' : formatTitleCase(rawInd);
             return {
                 id: parseInt(c.id, 10),
                 name: name,
                 self_company: (c.t !== undefined ? !!c.t : (c.self_company !== undefined ? !!c.self_company : false)),
                 status: (c.s !== undefined ? parseInt(c.s, 10) : (c.status !== undefined ? parseInt(c.status, 10) : 1)),
-                industry: formatTitleCase(c.i || c.industry || ''),
+                industry: cleanInd,
                 code: code,
                 logo: c.l || c.logo || '',
                 loc: locs,
@@ -11284,8 +11315,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                 badgeClass = 'badge-recent';
             }
 
-            var subText = c.industry ? formatTitleCase(c.industry) : (c.self_company ? 'My Organization' : 'Client');
-            if (c.loc && c.loc.length > 0) {
+            var subText = (c.industry && !/^\d+$/.test(String(c.industry).trim())) ? formatTitleCase(c.industry) : (c.self_company ? 'Staffing & Recruiting' : 'Client');
+            if (c.loc && c.loc.length > 0 && c.loc[0].l) {
                 subText = formatTitleCase(c.loc[0].l) || subText;
             }
 
@@ -11620,7 +11651,29 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             // Layer 2: Hydrate from IndexedDB
             var cached = await idbGet('bundle_' + CURRENT_TENANT_ID);
-            if (cached && cached.clients && cached.clients.length > 0) {
+            var shouldInvalidateCached = false;
+            if (cached) {
+                var cachedVer = parseInt(cached.source_version || cached.read_model_version || 1, 10);
+                if (typeof SERVER_CLIENTS_VERSION !== 'undefined' && cachedVer < SERVER_CLIENTS_VERSION) {
+                    shouldInvalidateCached = true;
+                }
+                // Self-healing check: if cached self_company name does not match authoritative SERVER_COMPANY_NAME
+                if (cached.clients && Array.isArray(cached.clients)) {
+                    var cachedSelf = cached.clients.find(function(item) { return item.t === 1 || item.self_company === 1; });
+                    if (cachedSelf) {
+                        var cachedSelfName = (cachedSelf.n || cachedSelf.name || '').trim();
+                        var cachedSelfInd = String(cachedSelf.i || cachedSelf.industry || '').trim();
+                        if (typeof SERVER_COMPANY_NAME !== 'undefined' && SERVER_COMPANY_NAME && cachedSelfName !== SERVER_COMPANY_NAME) {
+                            shouldInvalidateCached = true;
+                        }
+                        if (/^\d+$/.test(cachedSelfInd)) {
+                            shouldInvalidateCached = true;
+                        }
+                    }
+                }
+            }
+
+            if (cached && cached.clients && cached.clients.length > 0 && !shouldInvalidateCached) {
                 currentManifestVersion = cached.source_version || cached.read_model_version || 1;
                 currentManifestId = cached.manifest_id || '';
 
@@ -11635,12 +11688,22 @@ $currency_code = GeneralMethod::defaultCurrency();
                 if (L0.selectedClientId > 0) {
                     updateTriggerUI(L0.selectedClientId);
                 }
+            } else if (shouldInvalidateCached) {
+                // Outdated or drifted IndexedDB cache detected: purge immediately
+                try {
+                    var db = await getDB();
+                    if (db) {
+                        var tx = db.transaction(['clients_cache'], 'readwrite');
+                        tx.objectStore('clients_cache').delete('bundle_' + CURRENT_TENANT_ID);
+                    }
+                } catch(e) {}
+                localStorage.removeItem('jero_client_etag_' + CURRENT_TENANT_ID);
             }
 
             setState(STATES.READY);
 
-            // Layer 3: Background Stale-While-Revalidate with ETag
-            fetchClientsBundle(false);
+            // Layer 3: Background Stale-While-Revalidate with ETag (force sync if cache was invalidated)
+            fetchClientsBundle(shouldInvalidateCached);
         }
 
         // =========================================================================
