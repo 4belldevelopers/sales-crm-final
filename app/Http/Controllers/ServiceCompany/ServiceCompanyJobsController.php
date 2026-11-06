@@ -6727,14 +6727,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $bundle = null;
         }
 
-        if (! $bundle) {
+        if (! $bundle || empty($bundle['titles']) || empty($bundle['total'])) {
             $lockKey = 'tenant:'.$companyId.':titles:refresh_lock';
             $lock = Cache::lock($lockKey, 10);
 
             if ($lock->get()) {
                 try {
                     $bundle = $this->buildTitlesManifest($companyId, $version);
-                    Cache::put($cacheKey, $bundle, 86400);
+                    if (! empty($bundle['titles'])) {
+                        Cache::put($cacheKey, $bundle, 86400);
+                    }
                 } finally {
                     $lock->release();
                 }
@@ -6746,7 +6748,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $manifestId = $bundle['manifest_id'] ?? ('titles-tenant-'.$companyId.'-v'.$version);
         $etag = 'W/"tindex_'.$companyId.'_s4_'.$manifestId.'"';
 
-        if ($clientEtag && trim($clientEtag) === trim($etag)) {
+        if ($clientEtag && trim($clientEtag) === trim($etag) && ! empty($bundle['titles'])) {
             return response(null, 304)
                 ->header('ETag', $etag)
                 ->header('Cache-Control', 'private, must-revalidate');
@@ -6819,86 +6821,150 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
      */
     protected function buildTitlesManifest(int $companyId, int $version): array
     {
+        $standardTitles = collect();
+
+        // 1. Primary: Canonical Taxonomy V2 designations (if available & populated)
         if (config('taxonomy.feature_new_taxonomy', true)) {
-            $standardTitles = Cache::remember('global:canonical_job_titles_list:v2', 86400, function () {
-                $designations = DB::table('taxonomy_designations as d')
-                    ->join('taxonomy_departments as dept', 'd.department_id', '=', 'dept.id')
-                    ->leftJoin('taxonomy_jd_templates as jdt', 'd.jd_template_id', '=', 'jdt.id')
-                    ->where('d.status', 1)
-                    ->select([
-                        'd.id',
-                        'd.canonical_title as title',
-                        'dept.name as dept_name',
-                        'd.jd_template_id',
-                        'jdt.role_summary',
-                        'jdt.key_responsibilities',
-                        'jdt.must_have_skills',
-                        'jdt.tools_and_platforms',
-                    ])
-                    ->orderBy('d.canonical_title', 'ASC')
-                    ->get();
+            try {
+                $cachedTaxonomy = Cache::get('global:canonical_job_titles_list:v2');
+                if ($cachedTaxonomy && (is_countable($cachedTaxonomy) ? count($cachedTaxonomy) > 0 : ! empty($cachedTaxonomy))) {
+                    $standardTitles = collect($cachedTaxonomy);
+                } else {
+                    if (\Illuminate\Support\Facades\Schema::hasTable('taxonomy_designations')) {
+                        $query = DB::table('taxonomy_designations as d')
+                            ->where('d.status', 1);
 
-                return $designations->map(function ($d) {
-                    $skillsArr = json_decode($d->must_have_skills ?? '[]', true) ?: [];
-                    $respArr = json_decode($d->key_responsibilities ?? '[]', true) ?: [];
-                    $toolsArr = json_decode($d->tools_and_platforms ?? '[]', true) ?: [];
-
-                    $jdHtml = '';
-                    if (! empty($d->role_summary)) {
-                        $jdHtml .= '<p><strong>Role Summary:</strong><br>'.htmlspecialchars($d->role_summary).'</p>';
-                    }
-                    if (! empty($respArr)) {
-                        $jdHtml .= '<p><strong>Key Responsibilities:</strong></p><ul>';
-                        foreach ($respArr as $r) {
-                            $jdHtml .= '<li>'.htmlspecialchars($r).'</li>';
+                        if (\Illuminate\Support\Facades\Schema::hasTable('taxonomy_departments')) {
+                            $query->leftJoin('taxonomy_departments as dept', 'd.department_id', '=', 'dept.id');
                         }
-                        $jdHtml .= '</ul>';
-                    }
-                    if (! empty($skillsArr)) {
-                        $jdHtml .= '<p><strong>Core Technical Competencies:</strong></p><ul>';
-                        foreach ($skillsArr as $s) {
-                            $jdHtml .= '<li>'.htmlspecialchars($s).'</li>';
+                        if (\Illuminate\Support\Facades\Schema::hasTable('taxonomy_jd_templates')) {
+                            $query->leftJoin('taxonomy_jd_templates as jdt', 'd.jd_template_id', '=', 'jdt.id');
                         }
-                        $jdHtml .= '</ul>';
-                    }
-                    if (! empty($toolsArr)) {
-                        $jdHtml .= '<p><strong>Tools & Platforms:</strong> '.htmlspecialchars(implode(', ', $toolsArr)).'</p>';
-                    }
 
-                    return (object) [
-                        'id' => (int) $d->id,
-                        'canonical_id' => (int) $d->id,
-                        'title' => trim($d->title),
-                        'dept_name' => $d->dept_name,
-                        'min_exp' => null,
-                        'max_exp' => null,
-                        'skills' => implode(', ', $skillsArr),
-                        'jd' => $jdHtml,
-                        'taxonomy_version' => '2.0.0',
-                    ];
-                });
-            });
-        } else {
-            $standardTitles = Cache::remember('global:standard_job_titles_list', 86400, function () {
-                return DB::table('jd_details')
-                    ->where('status', 1)
-                    ->select('id', 'title', 'jd', 'minimum_exp', 'maxmum_exp', 'skills')
-                    ->orderBy('title', 'ASC')
-                    ->get();
-            });
+                        $designations = $query->select([
+                            'd.id',
+                            'd.canonical_title as title',
+                            \Illuminate\Support\Facades\Schema::hasTable('taxonomy_departments') ? 'dept.name as dept_name' : DB::raw("'Standard Library' as dept_name"),
+                            'd.jd_template_id',
+                            \Illuminate\Support\Facades\Schema::hasTable('taxonomy_jd_templates') ? 'jdt.role_summary' : DB::raw("NULL as role_summary"),
+                            \Illuminate\Support\Facades\Schema::hasTable('taxonomy_jd_templates') ? 'jdt.key_responsibilities' : DB::raw("NULL as key_responsibilities"),
+                            \Illuminate\Support\Facades\Schema::hasTable('taxonomy_jd_templates') ? 'jdt.must_have_skills' : DB::raw("NULL as must_have_skills"),
+                            \Illuminate\Support\Facades\Schema::hasTable('taxonomy_jd_templates') ? 'jdt.tools_and_platforms' : DB::raw("NULL as tools_and_platforms"),
+                        ])->orderBy('d.canonical_title', 'ASC')->get();
+
+                        if ($designations->isNotEmpty()) {
+                            $standardTitles = $designations->map(function ($d) {
+                                $skillsArr = json_decode($d->must_have_skills ?? '[]', true) ?: [];
+                                $respArr = json_decode($d->key_responsibilities ?? '[]', true) ?: [];
+                                $toolsArr = json_decode($d->tools_and_platforms ?? '[]', true) ?: [];
+
+                                $jdHtml = '';
+                                if (! empty($d->role_summary)) {
+                                    $jdHtml .= '<p><strong>Role Summary:</strong><br>'.htmlspecialchars($d->role_summary).'</p>';
+                                }
+                                if (! empty($respArr)) {
+                                    $jdHtml .= '<p><strong>Key Responsibilities:</strong></p><ul>';
+                                    foreach ($respArr as $r) {
+                                        $jdHtml .= '<li>'.htmlspecialchars($r).'</li>';
+                                    }
+                                    $jdHtml .= '</ul>';
+                                }
+                                if (! empty($skillsArr)) {
+                                    $jdHtml .= '<p><strong>Core Technical Competencies:</strong></p><ul>';
+                                    foreach ($skillsArr as $s) {
+                                        $jdHtml .= '<li>'.htmlspecialchars($s).'</li>';
+                                    }
+                                    $jdHtml .= '</ul>';
+                                }
+                                if (! empty($toolsArr)) {
+                                    $jdHtml .= '<p><strong>Tools & Platforms:</strong> '.htmlspecialchars(implode(', ', $toolsArr)).'</p>';
+                                }
+
+                                return (object) [
+                                    'id' => (int) $d->id,
+                                    'canonical_id' => (int) $d->id,
+                                    'title' => trim($d->title),
+                                    'dept_name' => $d->dept_name ?: 'Standard Library',
+                                    'min_exp' => null,
+                                    'max_exp' => null,
+                                    'skills' => implode(', ', $skillsArr),
+                                    'jd' => $jdHtml,
+                                    'taxonomy_version' => '2.0.0',
+                                ];
+                            });
+
+                            Cache::put('global:canonical_job_titles_list:v2', $standardTitles, 86400);
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Taxonomy canonical designations query warning: '.$e->getMessage());
+            }
         }
 
-        $companyDesignations = Cache::remember('tenant:'.$companyId.':custom_designations', 3600, function () use ($companyId) {
-            if ($companyId <= 0) {
-                return collect();
-            }
+        // 2. Resilient Fallback: Universal ATS standard jd_details (Schema Truth per Rule 8)
+        if ($standardTitles->isEmpty()) {
+            try {
+                $cachedLegacy = Cache::get('global:standard_job_titles_list');
+                if ($cachedLegacy && (is_countable($cachedLegacy) ? count($cachedLegacy) > 0 : ! empty($cachedLegacy))) {
+                    $standardTitles = collect($cachedLegacy);
+                } elseif (\Illuminate\Support\Facades\Schema::hasTable('jd_details')) {
+                    $jdRows = DB::table('jd_details')
+                        ->where('status', 1)
+                        ->select('id', 'title', 'jd', 'minimum_exp', 'maxmum_exp', 'skills')
+                        ->orderBy('title', 'ASC')
+                        ->get();
 
-            return DB::table('designations')
-                ->where('company_id', $companyId)
-                ->select('id', 'name as title')
-                ->orderBy('name', 'ASC')
-                ->get();
-        });
+                    $standardTitles = $jdRows->map(function ($jd) {
+                        return (object) [
+                            'id' => (int) $jd->id,
+                            'canonical_id' => (int) $jd->id,
+                            'title' => trim($jd->title),
+                            'dept_name' => 'Standard Library',
+                            'min_exp' => $jd->minimum_exp,
+                            'max_exp' => $jd->maxmum_exp,
+                            'skills' => (string) ($jd->skills ?? ''),
+                            'jd' => (string) ($jd->jd ?? ''),
+                            'taxonomy_version' => '1.0.0',
+                        ];
+                    });
+
+                    if ($standardTitles->isNotEmpty()) {
+                        Cache::put('global:standard_job_titles_list', $standardTitles, 86400);
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('jd_details standard titles query warning: '.$e->getMessage());
+            }
+        }
+
+        // 3. Multi-Tenant Custom Titles (designations table + tenant historical jobs)
+        $companyDesignations = collect();
+        if ($companyId > 0) {
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('designations')) {
+                    $companyDesignations = DB::table('designations')
+                        ->where('company_id', $companyId)
+                        ->select('id', 'name as title')
+                        ->orderBy('name', 'ASC')
+                        ->get();
+                }
+
+                if (\Illuminate\Support\Facades\Schema::hasTable('jobs')) {
+                    $jobTitles = DB::table('jobs')
+                        ->where('company_id', $companyId)
+                        ->whereNotNull('title')
+                        ->where('title', '!=', '')
+                        ->select(DB::raw('MIN(id) as id'), 'title')
+                        ->groupBy('title')
+                        ->get();
+
+                    $companyDesignations = $companyDesignations->merge($jobTitles)->unique('title');
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Tenant designations query warning: '.$e->getMessage());
+            }
+        }
 
         $titles = [];
         $seenTitles = [];
@@ -6914,13 +6980,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'canonical_id' => (int) ($st->canonical_id ?? $st->id),
                 'title' => trim($st->title),
                 'is_standard' => 1,
-                'has_template' => 1,
+                'has_template' => (! empty($st->jd) || ! empty($st->skills)) ? 1 : 0,
                 'dept_name' => $st->dept_name ?? 'Standard Library',
-                'min_exp' => null,
-                'max_exp' => null,
+                'min_exp' => $st->min_exp ?? null,
+                'max_exp' => $st->max_exp ?? null,
                 'skills' => (string) ($st->skills ?? ''),
                 'jd' => (string) ($st->jd ?? ''),
-                'taxonomy_version' => '2.0.0',
+                'taxonomy_version' => $st->taxonomy_version ?? '2.0.0',
             ];
         }
 
