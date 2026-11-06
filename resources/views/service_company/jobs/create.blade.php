@@ -12396,10 +12396,37 @@ $currency_code = GeneralMethod::defaultCurrency();
                             break;
                         }
                     }
-                    if (!synMatch) allTokensMatched = false;
+                    if (synMatch) {
+                        continue;
+                    }
+
+                    // Token-level typo tolerance against title words
+                    var tokFuzzy = false;
+                    if (allowFuzzy && tok.length >= 3) {
+                        var words = titleLower.split(/[^a-z0-9]+/i).filter(Boolean);
+                        for (var w = 0; w < words.length; w++) {
+                            var word = words[w];
+                            if (Math.abs(word.length - tok.length) <= 2) {
+                                var dist = levenshteinDistance(word, tok, 2);
+                                if (dist <= 1) {
+                                    score += 20;
+                                    tokFuzzy = true;
+                                    break;
+                                } else if (dist <= 2 && tok.length >= 6) {
+                                    score += 15;
+                                    tokFuzzy = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!tokFuzzy) {
+                        allTokensMatched = false;
+                    }
                 }
             }
-            if (allTokensMatched) score += 30;
+            if (allTokensMatched && queryTokens.length > 0) score += 30;
 
             // 3. Organization / Standard Bonus
             if (item.is_standard === 0) score += 25; // Org boost
@@ -12407,20 +12434,6 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             // 4. Recency Bonus
             if (recentIdSet.has(item.id)) score += 35;
-
-            // 5. Typo tolerance fallback: strictly bounded and executed only when explicitly permitted
-            if (allowFuzzy && score < 40 && query.length >= 4) {
-                var words = titleLower.split(/\s+/);
-                for (var w = 0; w < words.length; w++) {
-                    var word = words[w];
-                    if (Math.abs(word.length - query.length) <= 1) {
-                        if (levenshteinDistance(word, query, 2) <= 1) {
-                            score += 20;
-                            break;
-                        }
-                    }
-                }
-            }
 
             return score;
         }
@@ -12457,8 +12470,7 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             // Pass 2: Bounded fuzzy fallback ONLY if fewer than 5 candidates matched and query length >= 4
             if (scored.length < 5 && cleanQ.length >= 4) {
-                var fuzzyChecked = 0;
-                for (var j = 0; j < baseList.length && fuzzyChecked < 40; j++) {
+                for (var j = 0; j < baseList.length; j++) {
                     var candidate = baseList[j];
                     var alreadyScored = false;
                     for (var k = 0; k < scored.length; k++) {
@@ -12469,7 +12481,6 @@ $currency_code = GeneralMethod::defaultCurrency();
                     }
                     if (alreadyScored) continue;
 
-                    fuzzyChecked++;
                     var fScore = scoreCandidate(candidate, cleanQ, queryTokens, recentIdSet, true);
                     if (fScore > 15) {
                         scored.push({ item: candidate, score: fScore });
@@ -12982,13 +12993,16 @@ $currency_code = GeneralMethod::defaultCurrency();
                 } catch (e) {}
             }
 
-            // 2. Check IndexedDB L1 Persistent Store
+            // 2. Check IndexedDB L1 Persistent Store (must have actual titles)
             try {
                 var cached = await idbGet(cacheKey);
-                if (cached && cached.manifest && Array.isArray(cached.manifest.titles)) {
+                if (cached && cached.manifest && Array.isArray(cached.manifest.titles) && cached.manifest.titles.length > 0) {
                     ingestManifest(cached.manifest);
                     checkServerVersion(cached.manifest.version);
                     return;
+                } else if (cached) {
+                    // Purge empty or corrupted IndexedDB cache entry
+                    try { await idbSet(cacheKey, null); } catch (e) {}
                 }
             } catch (err) {}
 
@@ -12997,17 +13011,21 @@ $currency_code = GeneralMethod::defaultCurrency();
         }
 
         function checkServerVersion(localVersion) {
+            var headers = {};
+            // Only send ETag / If-None-Match if we actually have titles loaded locally
+            if (titlesList.length > 0 && localVersion) {
+                headers['If-None-Match'] = 'W/"tindex_' + CURRENT_TENANT_ID + '_s4_titles-tenant-' + CURRENT_TENANT_ID + '-v' + localVersion + '"';
+            }
+
             fetch(BUNDLE_URL, {
                 method: 'GET',
-                headers: {
-                    'If-None-Match': 'W/"tindex_' + CURRENT_TENANT_ID + '_s4_titles-tenant-' + CURRENT_TENANT_ID + '-v' + localVersion + '"'
-                }
+                headers: headers
             }).then(function(res) {
                 if (res.status === 304) return null;
                 if (res.ok) return res.json();
                 return null;
             }).then(function(newManifest) {
-                if (newManifest && Array.isArray(newManifest.titles)) {
+                if (newManifest && Array.isArray(newManifest.titles) && newManifest.titles.length > 0) {
                     ingestManifest(newManifest);
                     idbSet('titles_tenant_' + CURRENT_TENANT_ID, { manifest: newManifest, timestamp: Date.now() });
                     if (indexBroadcast) {
@@ -13024,7 +13042,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             fetch(BUNDLE_URL)
                 .then(function(res) { return res.json(); })
                 .then(function(manifest) {
-                    if (manifest && Array.isArray(manifest.titles)) {
+                    if (manifest && Array.isArray(manifest.titles) && manifest.titles.length > 0) {
                         ingestManifest(manifest);
                         idbSet('titles_tenant_' + CURRENT_TENANT_ID, { manifest: manifest, timestamp: Date.now() });
                     }
