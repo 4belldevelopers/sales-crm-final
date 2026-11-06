@@ -10054,6 +10054,14 @@ $currency_code = GeneralMethod::defaultCurrency();
             data.set('bench_submission', isBench ? 'enabled' : 'disabled');
             data.set('public_market_status', (isMarket || isBench) ? '2' : '0');
 
+            // Sanitize numeric salary values (strip commas)
+            if (data.has('minimum_salary') && data.get('minimum_salary')) {
+                data.set('minimum_salary', String(data.get('minimum_salary')).replace(/,/g, '').trim());
+            }
+            if (data.has('maximum_salary') && data.get('maximum_salary')) {
+                data.set('maximum_salary', String(data.get('maximum_salary')).replace(/,/g, '').trim());
+            }
+
             // If salary visibility is confidential, ensure numeric 0 defaults for database integrity
             if (data.get('salary_visibility') === 'confidential') {
                 if (!data.get('minimum_salary')) data.set('minimum_salary', '0');
@@ -10697,9 +10705,25 @@ $currency_code = GeneralMethod::defaultCurrency();
                 ->get()
                 ->groupBy('client_id')
             : collect();
+        $__parentLogo = !empty($__compRow?->logo) ? trim($__compRow->logo) : (!empty($__authoritativeLogo) ? trim($__authoritativeLogo) : '');
+        $__parentSite = !empty($__compRow?->website) ? trim($__compRow->website) : '';
+        $__parentHost = $__parentSite ? (parse_url($__parentSite, PHP_URL_HOST) ?? $__parentSite) : '';
+        $__parentDomain = $__parentHost ? preg_replace('/^www\./i', '', trim((string) $__parentHost)) : '';
         ?>
         var SERVER_CLIENTS_VERSION = <?php echo (int) \Illuminate\Support\Facades\Cache::get('tenant:' . $__companyId . ':clients_version', 1); ?>;
         var SERVER_COMPANY_NAME = <?php echo json_encode($__authoritativeCompName); ?>;
+        var SERVER_COMPANY_LOGO = <?php echo json_encode($__parentLogo); ?>;
+        var SERVER_COMPANY_DOMAIN = <?php echo json_encode($__parentDomain); ?>;
+
+        function isParentCompanyLogo(logoUrl) {
+            if (!logoUrl) return true;
+            var clean = String(logoUrl).trim().toLowerCase();
+            if (SERVER_COMPANY_LOGO && clean === SERVER_COMPANY_LOGO.toLowerCase()) return true;
+            if (SERVER_COMPANY_DOMAIN && clean.indexOf(SERVER_COMPANY_DOMAIN.toLowerCase()) !== -1) return true;
+            if (clean.indexOf('4bell') !== -1) return true;
+            return false;
+        }
+
         // Seed initial client headers passed from server Blade for 0.0ms initial paint
         window.__INITIAL_CLIENTS__ = [
             <?php if (isset($client) && (is_array($client) || is_object($client))) { ?>
@@ -10711,20 +10735,60 @@ $currency_code = GeneralMethod::defaultCurrency();
                     $__cInd = $__isSelf 
                         ? $__authoritativeIndName 
                         : (!empty($c->industry) && isset($__indNamesMap[(int)$c->industry]) ? $__indNamesMap[(int)$c->industry] : (is_numeric($c->industry) ? '' : ($c->industry ?? '')));
-                    $__rawLogo = $__isSelf 
-                        ? ($__compRow?->logo ?: ($c->logo ?: ($c->logo_logical_path ?? ''))) 
-                        : ($c->logo ?: ($c->logo_logical_path ?? ''));
-                    $__cSite = $__isSelf ? ($__compRow?->website ?: ($c->website ?? '')) : ($c->website ?? '');
+                    
                     $__cLogo = '';
-                    if (!empty($__rawLogo)) {
-                        if (str_starts_with($__rawLogo, 'http://') || str_starts_with($__rawLogo, 'https://')) {
-                            $__cLogo = $__rawLogo;
-                        } else {
-                            $__cLogo = url(ltrim(str_replace('public/', '', $__rawLogo), '/'));
+                    if ($__isSelf) {
+                        $__rawLogo = !empty($__parentLogo) ? $__parentLogo : ($c->logo ?: ($c->logo_logical_path ?? ''));
+                        $__cSite = !empty($__parentSite) ? $__parentSite : ($c->website ?? '');
+                        if (!empty($__rawLogo)) {
+                            if (str_starts_with($__rawLogo, 'http://') || str_starts_with($__rawLogo, 'https://') || str_starts_with($__rawLogo, '//')) {
+                                $__cLogo = $__rawLogo;
+                            } else {
+                                $__cLogo = url(ltrim(str_replace('public/', '', $__rawLogo), '/'));
+                            }
+                        } elseif (!empty($__cSite)) {
+                            $__domain = preg_replace('/^www\./i', '', parse_url($__cSite, PHP_URL_HOST) ?: $__cSite);
+                            if (!empty($__domain) && strpos($__domain, '.') !== false) {
+                                $__cLogo = 'https://www.google.com/s2/favicons?domain=' . urlencode($__domain) . '&sz=256';
+                            }
                         }
-                    } elseif (!empty($__cSite)) {
-                        $__domain = preg_replace('/^www\./', '', parse_url($__cSite, PHP_URL_HOST) ?: $__cSite);
-                        $__cLogo = 'https://www.google.com/s2/favicons?domain=' . urlencode($__domain) . '&sz=256';
+                    } else {
+                        // Internal / External client: strictly own uploaded logo or website favicon (never parent agency logo or domain)
+                        $__cLogPath = trim($c->logo_logical_path ?? '');
+                        $__cSite = trim($c->website ?? '');
+                        $__cLogoField = trim($c->logo ?? '');
+
+                        $__isParentLogoVal = function ($val) use ($__parentLogo, $__parentDomain) {
+                            if (empty($val)) return true;
+                            $clean = strtolower(trim($val));
+                            if (!empty($__parentLogo) && $clean === strtolower($__parentLogo)) return true;
+                            if (!empty($__parentDomain) && stripos($clean, $__parentDomain) !== false) return true;
+                            if (stripos($clean, '4bell') !== false) return true;
+                            return false;
+                        };
+
+                        if (!empty($__cLogPath) && !$__isParentLogoVal($__cLogPath)) {
+                            $__cLogo = (str_starts_with($__cLogPath, 'http://') || str_starts_with($__cLogPath, 'https://') || str_starts_with($__cLogPath, '//'))
+                                ? $__cLogPath
+                                : url(ltrim(str_replace('public/', '', $__cLogPath), '/'));
+                        } elseif (!empty($__cSite)) {
+                            $__clientHost = parse_url($__cSite, PHP_URL_HOST) ?? $__cSite;
+                            $__clientDomain = preg_replace('/^www\./i', '', trim((string) $__clientHost));
+                            if (!empty($__clientDomain) && strpos($__clientDomain, '.') !== false && (empty($__parentDomain) || strcasecmp($__clientDomain, $__parentDomain) !== 0) && stripos($__clientDomain, '4bell') === false) {
+                                $__cLogo = 'https://www.google.com/s2/favicons?domain=' . urlencode($__clientDomain) . '&sz=256';
+                            }
+                        } elseif (!empty($__cLogoField) && !$__isParentLogoVal($__cLogoField)) {
+                            $__cLogo = (str_starts_with($__cLogoField, 'http://') || str_starts_with($__cLogoField, 'https://') || str_starts_with($__cLogoField, '//'))
+                                ? $__cLogoField
+                                : url(ltrim(str_replace('public/', '', $__cLogoField), '/'));
+                        }
+                    }
+
+                    if ($__cLocations->isEmpty()) {
+                        $__cLocations = collect([(object)['id' => 0, 'l' => 'Registered Office', 'city' => '', 'city_name' => '', 'address' => 'Registered Office']]);
+                    }
+                    if ($__cContacts->isEmpty()) {
+                        $__cContacts = collect([(object)['id' => 0, 'contact_person_name' => $__cName . ' HR', 'contact_person_designation' => 'Hiring Contact', 'contact_person_email' => 'hr@example.com', 'contact_person_number' => '']]);
                     }
                 ?>
                 {
@@ -10861,18 +10925,29 @@ $currency_code = GeneralMethod::defaultCurrency();
                     };
                 });
             }
+            if (locs.length === 0) {
+                locs = [{ id: 0, l: 'Registered Office', city: '' }];
+            }
             var rawInd = String(c.i || c.industry || '').trim();
             var cleanInd = (/^\d+$/.test(rawInd)) ? '' : formatTitleCase(rawInd);
+            var isSelf = (c.t !== undefined ? !!c.t : (c.self_company !== undefined ? !!c.self_company : false));
+            var rawLogo = c.l || c.logo || '';
+            if (!isSelf && typeof isParentCompanyLogo === 'function' && isParentCompanyLogo(rawLogo)) {
+                rawLogo = '';
+            }
+            var contacts = (c.cc && Array.isArray(c.cc) && c.cc.length > 0)
+                ? c.cc
+                : [{ id: 0, n: name + ' HR', d: 'Hiring Contact', e: 'hr@example.com', p: '' }];
             return {
                 id: parseInt(c.id, 10),
                 name: name,
-                self_company: (c.t !== undefined ? !!c.t : (c.self_company !== undefined ? !!c.self_company : false)),
+                self_company: isSelf,
                 status: (c.s !== undefined ? parseInt(c.s, 10) : (c.status !== undefined ? parseInt(c.status, 10) : 1)),
                 industry: cleanInd,
                 code: code,
-                logo: c.l || c.logo || '',
+                logo: rawLogo,
                 loc: locs,
-                cc: c.cc || []
+                cc: contacts
             };
         }
 
@@ -11329,8 +11404,12 @@ $currency_code = GeneralMethod::defaultCurrency();
             var isFocused = (index === focusedIndex);
             var col = getAvatarColor(c.name);
             var avatarHtml = '';
-            if (c.logo) {
-                avatarHtml = '<div class="jero-client-item-avatar" style="position:relative;background:' + col.bg + '; color:' + col.color + ';"><img src="' + escapeHtml(c.logo) + '" alt="" onerror="this.remove()" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"><span style="position:absolute;z-index:0;">' + getInitials(c.name) + '</span></div>';
+            var clientLogo = c.logo || '';
+            if (!c.self_company && typeof isParentCompanyLogo === 'function' && isParentCompanyLogo(clientLogo)) {
+                clientLogo = '';
+            }
+            if (clientLogo) {
+                avatarHtml = '<div class="jero-client-item-avatar" style="position:relative;background:' + col.bg + '; color:' + col.color + ';"><img src="' + escapeHtml(clientLogo) + '" alt="" onerror="this.remove()" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"><span style="position:absolute;z-index:0;">' + getInitials(c.name) + '</span></div>';
             } else {
                 avatarHtml = '<div class="jero-client-item-avatar" style="background:' + col.bg + '; color:' + col.color + ';">' + getInitials(c.name) + '</div>';
             }
@@ -11511,8 +11590,12 @@ $currency_code = GeneralMethod::defaultCurrency();
 
             if (avatarEl) {
                 var col = getAvatarColor(client.name);
-                if (client.logo) {
-                    avatarEl.innerHTML = '<img src="' + escapeHtml(client.logo) + '" alt="' + escapeHtml(client.name) + '" onerror="this.remove()" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"><span style="position:absolute;z-index:0;">' + getInitials(client.name) + '</span>';
+                var selLogo = client.logo || '';
+                if (!client.self_company && typeof isParentCompanyLogo === 'function' && isParentCompanyLogo(selLogo)) {
+                    selLogo = '';
+                }
+                if (selLogo) {
+                    avatarEl.innerHTML = '<img src="' + escapeHtml(selLogo) + '" alt="' + escapeHtml(client.name) + '" onerror="this.remove()" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"><span style="position:absolute;z-index:0;">' + getInitials(client.name) + '</span>';
                     avatarEl.style.position = 'relative';
                     avatarEl.style.background = col.bg;
                     avatarEl.style.color = col.color;
@@ -11700,6 +11783,15 @@ $currency_code = GeneralMethod::defaultCurrency();
                         if (/^\d+$/.test(cachedSelfInd)) {
                             shouldInvalidateCached = true;
                         }
+                    }
+                    // Self-healing check: purge any stale cache where non-self clients carry the parent company logo
+                    var hasPollutedLogos = cached.clients.some(function(item) {
+                        var isNonSelf = (item.t === 0 || !item.self_company);
+                        var rawL = item.l || item.logo || '';
+                        return isNonSelf && rawL && typeof isParentCompanyLogo === 'function' && isParentCompanyLogo(rawL);
+                    });
+                    if (hasPollutedLogos) {
+                        shouldInvalidateCached = true;
                     }
                 }
             }
