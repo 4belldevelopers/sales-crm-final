@@ -1609,15 +1609,29 @@ if (empty($isdCompanyAddress)) {
             data: $('#app_interview_create_frm').serialize(),
             success: function(response) {
                 if (response.status == 'success') {
+                    // Purge client-side caches (IndexedDB and RAM) immediately to prevent stale data
+                    if (window.JeroInterviewScheduleLocalStore && window.JeroInterviewScheduleLocalStore.purge) {
+                        try { window.JeroInterviewScheduleLocalStore.purge(); } catch(e){}
+                    }
+                    if (window.itRamCache) {
+                        try { window.itRamCache.clear(); } catch(e){}
+                    }
                     Swal.fire("Success", "Interview schedule successfully!", "success").then(function() {
                         $('#interview_schedule_drawer_close').trigger('click');
-                        location.reload();
+                        if (typeof window.fetchCandidates === 'function') {
+                            window.fetchCandidates(1, '', true);
+                        } else {
+                            location.reload();
+                        }
                     });
                 }
                 if (response.status == 'coinCheck') {
                     Swal.fire("Success", ` ${response.message}`, "warning").then(function() {
                         $('#interview_schedule_drawer_close').trigger('click');
                     });
+                }
+                if (response.status == 'error') {
+                    Swal.fire("Error", response.message || "Failed to schedule interview", "error");
                 }
             },
             complete: function() {
@@ -1676,8 +1690,19 @@ if (empty($isdCompanyAddress)) {
                         if (savesend) {
                             submitForm();
                         } else {
+                            if (window.JeroInterviewScheduleLocalStore && window.JeroInterviewScheduleLocalStore.purge) {
+                                try { window.JeroInterviewScheduleLocalStore.purge(); } catch(e){}
+                            }
+                            if (window.itRamCache) {
+                                try { window.itRamCache.clear(); } catch(e){}
+                            }
                             Swal.fire("Success", "Interview schedule successfully!", "success").then(function() {
                                 $('#interview_schedule_drawer_close').trigger('click');
+                                if (typeof window.fetchCandidates === 'function') {
+                                    window.fetchCandidates(1, '', true);
+                                } else {
+                                    location.reload();
+                                }
                             });
                         }
                     }

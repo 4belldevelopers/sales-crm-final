@@ -10105,21 +10105,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // echo '<pre>'; print_r($_REQUEST); exit;
         // dd(json_encode(@$request->cc_email));
         $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($request->wiseId);
-        // dd($AddJobWiseCondidate->master_status_id);
-        // $client = new GoogleClient();
-        // $client->setClientId(config('google.client_id'));
-        // $client->setClientSecret(config('google.client_secret'));
-        // $client->setRedirectUri(config('google.redirect_uri'));
-        // $client->addScope(Calendar::CALENDAR);
+        if (! $AddJobWiseCondidate) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate application not found.']);
+        }
 
-        // // Generate the Google OAuth URL
-        // $authUrl = $client->createAuthUrl();
-        // //    dd( $authUrl);
-        // // Redirect to Google's OAuth 2.0 server
-        // return redirect($authUrl);
-        //  dd($request->all());
-
-        $application_id = $interview_type = $interviewDate = $master_status_id = $child_status_id = $interview_mode = $interview_mode_lavel = $interviewers = $panellist = '';
         $application_id = @$request->application_id;
         $interview_type = @$request->interview_type;
         $interviewDate = @$request->interviewDate;
@@ -10164,325 +10153,278 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
         $coinsRequ = 1;
         $companyId = (int) auth()->user()->company_id;
+        $userId = (int) auth()->user()->id;
+
+        // Idempotency guard: prevent duplicate records from rapid double submissions within 15 seconds
+        $existingRecent = InterviewSchedule::where('company_id', $companyId)
+            ->where('interview_job_wise_con_id', $AddJobWiseCondidate->id)
+            ->where('schedule_date', $interviewDate)
+            ->where('created_at', '>=', Carbon::now()->subSeconds(15))
+            ->first();
+        if ($existingRecent) {
+            return Reply::dataOnly(['status' => 'success', 'message' => 'Interview already scheduled!']);
+        }
+
         $packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
         if ($packageStatus->status) {
             return Reply::dataOnly(['status' => 'coinCheck', 'message' => $packageStatus->message, 'company_coins' => $packageStatus->company_coins]);
         }
 
-        $coinsDeductions = GeneralMethod::coinsDeductions((int) auth()->user()->company_id, $eventId, auth()->user()->id, auth()->user()->company_id, '', '');
+        $coinsDeductions = GeneralMethod::coinsDeductions($companyId, $eventId, $userId, $companyId, '', '');
         if ($coinsDeductions->status) {
             return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
         }
 
-        // INTERVIEW SCHEDULE
-        $interviewSchedule = new InterviewSchedule;
-        $interviewSchedule->job_application_id = $application_id;
-        if (! empty($request->interview_type)) {
-            $interviewSchedule->reschedule = $interview_type;
-        }
-        if (! empty($interview_mode)) {
-            $interviewSchedule->interview_mode = $interview_mode;
-        }
-        if (! empty($interview_mode_lavel)) {
-            $interviewSchedule->interview_mode_lavel = $interview_mode_lavel;
-        }
-        if (! empty($master_status_id)) {
-            $interviewSchedule->stage = ($AddJobWiseCondidate->master_status_id) ? $AddJobWiseCondidate->master_status_id : $master_status_id;
-        }
-        if (! empty($child_status_id)) {
-            $interviewSchedule->substage = $child_status_id;
-        }
-        if (! empty($panellist)) {
-            $interviewSchedule->interviewers = $panellist;   // implode(',', $panellist);
-        }
-        if (! empty($interview_created_by)) {
-            $interviewSchedule->interview_created_by = $this->user->id;
-        }
+        DB::beginTransaction();
+        try {
+            // INTERVIEW SCHEDULE
+            $interviewSchedule = new InterviewSchedule;
+            $interviewSchedule->job_application_id = $application_id;
+            if (! empty($request->interview_type)) {
+                $interviewSchedule->reschedule = $interview_type;
+            }
+            if (! empty($interview_mode)) {
+                $interviewSchedule->interview_mode = $interview_mode;
+            }
+            if (! empty($interview_mode_lavel)) {
+                $interviewSchedule->interview_mode_lavel = $interview_mode_lavel;
+            }
+            if (! empty($master_status_id)) {
+                $interviewSchedule->stage = ($AddJobWiseCondidate->master_status_id) ? $AddJobWiseCondidate->master_status_id : $master_status_id;
+            }
+            if (! empty($child_status_id)) {
+                $interviewSchedule->substage = $child_status_id;
+            }
+            if (! empty($panellist)) {
+                $interviewSchedule->interviewers = $panellist;   // implode(',', $panellist);
+            }
+            // CRITICAL TENANT/RBAC FIX: Explicitly set creator ID so non-admin recruiters see their scheduled interviews
+            $interviewSchedule->interview_created_by = $userId;
 
-        $interviewSchedule->schedule_date = $interviewDate;
-        $interviewSchedule->schedule_to_time = $interviewTime;
-        $interviewSchedule->interview_job_id = $AddJobWiseCondidate->job_id;
-        $interviewSchedule->interview_job_wise_con_id = $AddJobWiseCondidate->id;
-        $interviewSchedule->mailstatus = $mailstatus;
-        $interviewSchedule->email_template = $email_template;
-        $interviewSchedule->company_id = $companyId;
-        $interviewSchedule->url_link = $request->url;
-        $interviewSchedule->timezone_abbreviation = $timezone;
-        $interviewSchedule->other_email = $ccEmailClean; // cleaned, de-duplicated CC email list
-        $interviewSchedule->save();
+            $interviewSchedule->schedule_date = $interviewDate;
+            $interviewSchedule->schedule_to_time = $interviewTime;
+            $interviewSchedule->interview_job_id = $AddJobWiseCondidate->job_id;
+            $interviewSchedule->interview_job_wise_con_id = $AddJobWiseCondidate->id;
+            $interviewSchedule->mailstatus = ! empty($mailstatus) ? (int) $mailstatus : 0;
+            $interviewSchedule->email_template = ! empty($email_template) ? (int) $email_template : 0;
+            $interviewSchedule->company_id = $companyId;
+            $interviewSchedule->url_link = $request->url;
+            $interviewSchedule->timezone_abbreviation = $timezone;
+            $interviewSchedule->other_email = $ccEmailClean; // cleaned, de-duplicated CC email list
+            $interviewSchedule->save();
 
-        $updateParams = [
-            'index' => ELASTIC_CANDIDATES,
-            'id' => $request->wiseId,
-            'retry_on_conflict' => 5,
-            'body' => [
-                'doc' => [
-                    'schedule_to_time' => $interviewSchedule->schedule_to_time,
-                    'timezone_abbreviation' => $interviewSchedule->timezone_abbreviation,
-                    'schedule_date' => ($interviewSchedule->schedule_date) ? Carbon::parse($interviewSchedule->schedule_date)->toIso8601String() : null,
+            $updateParams = [
+                'index' => ELASTIC_CANDIDATES,
+                'id' => $request->wiseId,
+                'retry_on_conflict' => 5,
+                'body' => [
+                    'doc' => [
+                        'schedule_to_time' => $interviewSchedule->schedule_to_time,
+                        'timezone_abbreviation' => $interviewSchedule->timezone_abbreviation,
+                        'schedule_date' => ($interviewSchedule->schedule_date) ? Carbon::parse($interviewSchedule->schedule_date)->toIso8601String() : null,
+                    ],
+                    'doc_as_upsert' => true,
+                    'detect_noop' => false,
                 ],
-                'doc_as_upsert' => true,
-                'detect_noop' => false,
-            ],
-            'refresh' => false, // Eventual consistency for 10K concurrent scale
-        ];
+                'refresh' => false, // Eventual consistency for 10K concurrent scale
+            ];
 
-        $this->elasticService->getClient()->update($updateParams);
+            try {
+                $this->elasticService->getClient()->update($updateParams);
+            } catch (\Throwable $esEx) {
+                \Log::warning('Elasticsearch candidate update notice in storeSchedule: '.$esEx->getMessage());
+            }
 
-        $interviewSchedule_id = '';
-        $interviewSchedule_id = $interviewSchedule->id;
-        if ($interview_mode == 2 && $interview_mode_lavel == 2) {
-            DB::table('google_meeting_schedule')->insert(['meeting_link' => $request->url, 'user_id' => auth()->user()->id, 'company_id' => auth()->user()->company_id, 'interview_job_wise_con_id' => $AddJobWiseCondidate->id, 'interview_date' => $interviewDate]);
-        }
-        if ($interview_mode == 2 && $interview_mode_lavel == 5) {
-            DB::table('team_meeting_schedule')->insert(['meeting_link' => $request->url, 'user_id' => auth()->user()->id, 'company_id' => auth()->user()->company_id, 'interview_job_wise_con_id' => $AddJobWiseCondidate->id, 'interview_date' => $interviewDate]);
-        }
+            $interviewSchedule_id = $interviewSchedule->id;
+            $subModeId = (int) ($request->interview_mode_lavel ?? 0);
 
-        // mail to candidate for inform interview schedule
-        if ($_SERVER['REMOTE_ADDR'] != '127.0.0.1') {
-            // Notification::send($jobApplication, new CandidateScheduleInterview($jobApplication, $interviewSchedule));
-        }
+            if ($interview_mode == 2 && $subModeId == 2) {
+                DB::table('google_meeting_schedule')->insert([
+                    'meeting_link' => $request->url,
+                    'user_id' => $userId,
+                    'company_id' => $companyId,
+                    'interview_job_wise_con_id' => $AddJobWiseCondidate->id,
+                    'interview_date' => $interviewDate,
+                ]);
+            }
+            if ($interview_mode == 2 && $subModeId == 5) {
+                DB::table('team_meeting_schedule')->insert([
+                    'meeting_link' => $request->url,
+                    'user_id' => $userId,
+                    'company_id' => $companyId,
+                    'interview_job_wise_con_id' => $AddJobWiseCondidate->id,
+                    'interview_date' => $interviewDate,
+                ]);
+            }
 
-        $jobApplication = JobApplication::withoutGlobalScopes()->find($request->application_id);
+            $jobApplication = JobApplication::withoutGlobalScopes()->find($request->application_id);
+            $statusRow = ApplicationStatus::withoutGlobalScopes()->find($request->master_status_id);
 
-        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($request->wiseId);
+            // Correct sub-mode level resolution from interview_mode_lavel table
+            $interview_mode_sub_name = '';
+            if ($subModeId > 0) {
+                $intModeLbl = DB::table('interview_mode_lavel')
+                    ->select('name')
+                    ->where('id', $subModeId)
+                    ->first();
+                $interview_mode_sub_name = $intModeLbl->name ?? '';
+            }
 
-        $date = date('Y-m-d H:i:s');
-        $insert_type = $request->interview_type;
+            $date = date('Y-m-d H:i:s');
+            $values = [
+                'event_id' => 3,
+                'event_by_company_id' => $companyId,
+                'event_by_user_id' => $userId,
+                'application_id' => @$request->application_id ? @$request->application_id : null,
+                'application_email' => @$jobApplication->email ? @$jobApplication->email : null,
+                'job_id' => @$AddJobWiseCondidate->job_id ? @$AddJobWiseCondidate->job_id : $request->jobId,
+                'note' => 'Interview Schedule',
+                'create_at' => @$date ? @$date : null,
+                'update_at' => @$date ? @$date : null,
+                'interview_schedule_date' => $interviewDate,
+                'interview_mode' => $interview_mode,
+                'interview_mode_child_level' => ($request->interview_mode != 3) ? $interview_mode_sub_name : '',
+            ];
 
-        // dd($request->master_status_id);
+            if ($jobApplication && $jobApplication->master_status_id > 0) {
+                $masterStatus = DB::table('master_status')->select('master_status.name')->where('id', $jobApplication->master_status_id)->first();
+                $values['master_process_name'] = @$masterStatus->name;
+            }
+            if ($jobApplication && $jobApplication->child_status_id > 0) {
+                $masterStatus = DB::table('candidate_status')->select('candidate_status.name')->where('candidate_status.id', $jobApplication->child_status_id)->first();
+                $values['child_process_name'] = @$masterStatus->name;
+            }
+            if (! empty(@$comment)) {
+                $values['note'] = @$comment;
+            }
 
-        $statusRow = ApplicationStatus::withoutGlobalScopes()->find($request->master_status_id);
+            if (! empty($request->url) && $request->url != '') {
+                $values['interview_mention_link'] = @$request->url;
+            }
+            if (! empty($request->panellist) && $request->panellist != '') {
+                $values['interviewers'] = @$request->panellist;
+            }
+            $values['interview_schedules_id'] = $interviewSchedule_id;
+            $values['timezone_abbreviation'] = $timezone;
+            $values['interview_to_time'] = $interviewTime;
 
-        $interview_mode_lavel = '';
-        $interview_mode_lavel = @$request->interview_mode;
-        // dd($interview_mode_lavel,$request->all());
-        if ($interview_mode_lavel > 0) {
-            $intModeLbl = DB::table('interview_mode_lavel')
-                ->select('interview_mode_lavel.name')
-                ->where('interview_mode_lavel.id', $interview_mode_lavel)
-                ->first();
-            $interview_mode_lavel = $intModeLbl->name;
-        }
+            GeneralMethod::UpdateTimeline($values);
 
-        /*$values 				=	array(
-                                                  'owner_id' 						=> auth()->user()->id,
+            $InterviewSchedule = InterviewSchedule::join('add_job_wise_condidates', 'add_job_wise_condidates.id', '=', 'interview_schedules.interview_job_wise_con_id')
+                ->join('companies', 'companies.id', '=', 'interview_schedules.company_id')
+                ->leftJoin('clients', 'clients.company_id', '=', 'companies.id')
+                ->leftJoin('client_location', 'client_location.client_id', '=', 'clients.id')
+                ->join('jobs', 'jobs.id', '=', 'interview_schedules.interview_job_id')
+                ->join('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
+                ->leftJoin('updatetimeline', 'updatetimeline.interview_schedules_id', '=', 'interview_schedules.id')
+                ->select('interview_schedules.*', 'updatetimeline.interview_mention_link', 'updatetimeline.interview_mode_child_level as mode_child', 'companies.company_name', 'companies.description', 'companies.website', 'client_location.address as c_address', 'job_applications.full_name', 'job_applications.email as cond_email', 'job_applications.current_designation', 'jobs.employment_type', 'jobs.title', 'jobs.job_description', 'jobs.id as jobID', 'jobs.total_positions')
+                ->where('interview_schedules.id', '=', $interviewSchedule_id)->first();
 
-                                                  'application_id' 				=> @$request->application_id,
-                                                  'application_email' 			=> @$jobApplication->email,
-                                                  'job_id' 						=> @$jobApplication->job_id,
-                                                  'process_id' 					=> @$request->master_status_id,
-                                                  'status_name' 					=> @$statusRow->name,
-
-                                                  'note'			 				=> 'Interview Schedule',
-                                                  'insert_type' 					=> @$insert_type,
-                                                  'create_at' 					=> @$date,
-                                                  'update_at' 					=> @$date,
-                                                  'interview_schedule_date' 		=> @$interviewDate,
-                                                  'interview_mode' 				=> $interview_mode,
-                                                  'timeline_type' 				=> 1,
-                                                  'interview_mode_child_level' 	=> $interview_mode_lavel
-
-                                              );
-              if(!empty($request->url) && $request->url != ''){
-                  $values['interview_mention_link'] = @$request->url;
-              }
-              if(!empty($request->panellist) && $request->panellist != ''){
-                  $values['interviewers'] 	=	@$request->panellist;
-              }
-              if ($request->child_status_id > 0)
-              {
-                  $childStatus = '';
-                  $childStatus = DB::table('candidate_status')->select('*')->where('company_id', '=', $this->user->company_id)->where('id', $request->child_status_id)->first();
-                  $values['process_child_name'] = @$childStatus->name;
-              }
-              if (!empty($panellist)) {
-                  $values['interviewers'] 		= $panellist;
-              }
-              $values['interview_schedules_id'] 	= $interviewSchedule_id;
-              DB::table('timeline')->insert($values);*/
-
-        $date = date('Y-m-d H:i:s');
-        $values = [
-            'event_id' => 3,
-            'event_by_company_id' => auth()->user()->company_id,
-            'event_by_user_id' => auth()->user()->id,
-            // 'master_process_name' 		=>	@$jobApplication->job_id,
-            // 'child_process_name' 			=>	@$master_status,
-
-            'application_id' => @$request->application_id ? @$request->application_id : null,
-            'application_email' => @$jobApplication->email ? @$jobApplication->email : null,
-            'job_id' => @$AddJobWiseCondidate->job_id ? @$AddJobWiseCondidate->job_id : $request->jobId,
-            'note' => 'Interview Schedule',
-            'create_at' => @$date ? @$date : null,
-
-            'update_at' => @$date ? @$date : null,
-
-            'interview_schedule_date' => $interviewDate,
-            'interview_mode' => $interview_mode,
-            // 'timeline_type' 				=>	1,
-            'interview_mode_child_level' => ($request->interview_mode != 3) ? $interview_mode_lavel : '',
-            // 'interview_from_time'			=>
-            // 'interview_to_time'			=>
-        ];
-
-        if ($jobApplication->master_status_id > 0) {
-            $masterStatus = DB::table('master_status')->select('master_status.name')->where('id', $jobApplication->master_status_id)->first();
-            $values['master_process_name'] = @$masterStatus->name;
-        }
-        if ($jobApplication->child_status_id > 0) {
-            $masterStatus = DB::table('candidate_status')->select('candidate_status.name')->where('candidate_status.id', $jobApplication->child_status_id)->first();
-            $values['child_process_name'] = @$masterStatus->name;
-        }
-        if (! empty(@$comment)) {
-            $values['note'] = @$comment;
-        }
-
-        if (! empty($request->url) && $request->url != '') {
-            $values['interview_mention_link'] = @$request->url;
-        }
-        if (! empty($request->panellist) && $request->panellist != '') {
-            $values['interviewers'] = @$request->panellist;
-        }
-        $values['interview_schedules_id'] = $interviewSchedule_id;
-
-        $values['timezone_abbreviation'] = $timezone;
-        $values['interview_to_time'] = $interviewTime;
-
-        // DB::table('timeline')->insert($values);
-        GeneralMethod::UpdateTimeline($values);
-        $jobIdGet = @$AddJobWiseCondidate->job_id ? @$AddJobWiseCondidate->job_id : $request->jobId;
-
-        // $tb_ranks = array('company_id' => auth()->user()->company_id, 'user_id' => auth()->user()->id, 'job_id' => @$jobIdGet,'status' => 1,'application_id' => @$request->application_id);
-        // DB::table('tb_ranks')->insert($tb_ranks);
-
-        $InterviewSchedule = InterviewSchedule::join('add_job_wise_condidates', 'add_job_wise_condidates.id', '=', 'interview_schedules.interview_job_wise_con_id')
-            ->join('companies', 'companies.id', '=', 'interview_schedules.company_id')
-            ->join('clients', 'clients.company_id', '=', 'companies.id')
-            ->join('client_location', 'client_location.client_id', '=', 'clients.id')
-            ->join('jobs', 'jobs.id', '=', 'interview_schedules.interview_job_id')
-            ->join('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
-            ->join('updatetimeline', 'updatetimeline.interview_schedules_id', '=', 'interview_schedules.id')
-            ->select('interview_schedules.*', 'updatetimeline.interview_mention_link', 'updatetimeline.interview_mode_child_level as mode_child', 'companies.company_name', 'companies.description', 'companies.website', 'client_location.address as c_address', 'job_applications.full_name', 'job_applications.email as cond_email', 'job_applications.current_designation', 'jobs.employment_type', 'jobs.title', 'jobs.job_description', 'jobs.id as jobID', 'jobs.total_positions')
-            ->where('interview_schedules.id', '=', $interviewSchedule_id)->first();
-        // dd($InterviewSchedule,$interviewSchedule_id);
-
-        $company_or_client = GeneralMethod::companyDetailsByClient($InterviewSchedule->interview_job_id);
-        $interview_mode = '';
-        if ($InterviewSchedule->interview_mode > 0) {
-            $interview_mode_Arr = GeneralMethod::interview_mode();
-            $interview_mode = $interview_mode_Arr[@$InterviewSchedule->interview_mode];
-        }
-        $interview_mode_child_level = $InterviewSchedule->interview_mode_child_level;
-        if ($InterviewSchedule->interview_mode == 3) {
-            $interview_mode_child_level = @$InterviewSchedule->interview_mention_link;
-        }
-
-        $jobId = $InterviewSchedule->interview_job_id;
-        $lastInsertedId = $InterviewSchedule->interview_job_wise_con_id;
-        $wise_c = DB::table('job_applications')
-            ->select('master_status.name', 'master_status.css_style', 'add_job_wise_condidates.child_status_id as childStatus', 'add_job_wise_condidates.master_status_id', 'jobs.title', 'jobs.id as job_id', 'users.name as posted_by', 'users.image as posted_by_image', 'companies.company_name', 'add_job_wise_condidates.created_at', 'recommendation_relation.id as recommendation_id', 'recommendation_relation.from_company_id', 'recommendation_relation.final_status', 'recommendation_relation.to_company_id')
-            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
-            ->leftjoin('companies', 'companies.id', 'users.company_id')
-            ->join('master_status', function ($join) {
-                $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-            })->join('jobs', function ($join) {
-                $join->on('jobs.id', 'add_job_wise_condidates.job_id');
-            })
-            ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->where('add_job_wise_condidates.id', '=', $lastInsertedId)->where('add_job_wise_condidates.job_id', '=', $jobId)->first();
-
-        $partnersData = User::join('job_assign', 'users.id', '=', 'job_assign.user_id')
-            ->join('package_active', function ($join) {
-                $join->on('users.company_id', '=', 'package_active.company_id')
-                    ->where('package_active.emails_balance', '>', 0)
-                    ->where('package_active.startdate', '<=', now())
-                    ->where('package_active.enddate', '>=', now())
-                    ->where('package_active.packages_status', 1);
-            })
-            ->where('job_assign.job_id', '=', $jobId)
-            ->pluck('users.email')
-            ->toArray();
-
-        $recommendedDataList = DB::table('recommendation_relation');
-        $recommendedDataList = $recommendedDataList->join('companies', 'companies.id', 'recommendation_relation.to_company_id');
-        $recommendedDataList = $recommendedDataList->join('jobs', 'jobs.id', 'recommendation_relation.job_id');
-        $recommendedDataList = $recommendedDataList->leftJoin('job_applications', function ($join) {
-            $join->on('job_applications.thirdparty_company_id', '=', 'companies.id');
-            $join->on('job_applications.job_id', '=', 'jobs.id');
-        });
-        $recommendedDataList = $recommendedDataList->join('package_active', function ($join) {
-            $join->on('companies.id', '=', 'package_active.company_id')
-                ->where('package_active.emails_balance', '>', 0)
-                ->where('package_active.startdate', '<=', now())
-                ->where('package_active.enddate', '>=', now())
-                ->where('package_active.packages_status', 1);
-        });
-        $recommendedDataList = $recommendedDataList->where('recommendation_relation.final_status', 1);
-        $recommendedDataList = $recommendedDataList->where('recommendation_relation.job_id', '=', $jobId);
-        $recommendedDataList = $recommendedDataList->groupBy('companies.id');
-        $recommendedDataList = $recommendedDataList->pluck('companies.company_email');
-        $recommendedDataList = $recommendedDataList->toArray();
-
-        $data = [
-            'InterviewDate' => $interviewDate,
-            'InterviewMode' => $interview_mode.'('.$InterviewSchedule->mode_child.')',
-            'InterviewAddress' => $InterviewSchedule->interview_mention_link,
-            'CompanyName' => $InterviewSchedule->company_name,
-            'CompanyLocation' => $InterviewSchedule->c_address,
-            'Position' => $InterviewSchedule->current_designation,
-            'EmploymentType' => ($InterviewSchedule->employment_type == 1) ? 'Contract' : 'Full-time',
-            'ReqID' => 'R-'.@$InterviewSchedule->jobID,
-            'Reqname' => @$InterviewSchedule->title,
-            'NoofEmployees' => $InterviewSchedule->total_positions,
-            'OfficeTiming' => '...',
-            'NoofWorkingDays' => '...',
-            'WebsiteURL' => $InterviewSchedule->website,
-            'Jobdescription' => $InterviewSchedule->job_description,
-            'AboutOrganization' => $InterviewSchedule->description,
-            'VendorTeam' => @$InterviewSchedule->company_name,
-            'CompanyNameClientname' => $company_or_client,
-            'CandidateName' => $InterviewSchedule->full_name,
-            'username' => auth()->user()->name,
-            'mobile' => auth()->user()->mobile,
-        ];
-        // dd($data);
-        config(['mail.from.name' => auth()->user()->name]);
-        $cc_cond = [$InterviewSchedule->cond_email];
-        $cc = array_merge($partnersData, $recommendedDataList, $cc_cond);
-
-        if (count($cc) > 0) {
-            foreach ($cc as $email) {
-                $client_company_id = 0;
-                $useremail = DB::table('users')->select('*')->where('email', $email)->first();
-                if (! empty($useremail)) {
-                    $client_company_id = @$useremail->company_id;
+            if ($InterviewSchedule) {
+                $company_or_client = GeneralMethod::companyDetailsByClient($InterviewSchedule->interview_job_id);
+                $interview_mode_str = '';
+                if ($InterviewSchedule->interview_mode > 0) {
+                    $interview_mode_Arr = GeneralMethod::interview_mode();
+                    $interview_mode_str = $interview_mode_Arr[@$InterviewSchedule->interview_mode] ?? '';
                 }
-                // dd($client_company_id);
-                if (@$client_company_id > 0) {
-                    $event_name = 'emails';
-                    $event_table_name = 'job applications stage change';
-                    $event_table_id = @$client_company_id;
-                    GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $client_company_id);
+                $interview_mode_child_level = $InterviewSchedule->interview_mode_child_level;
+                if ($InterviewSchedule->interview_mode == 3) {
+                    $interview_mode_child_level = @$InterviewSchedule->interview_mention_link;
+                }
+
+                $jobId = $InterviewSchedule->interview_job_id;
+
+                $partnersData = User::join('job_assign', 'users.id', '=', 'job_assign.user_id')
+                    ->join('package_active', function ($join) {
+                        $join->on('users.company_id', '=', 'package_active.company_id')
+                            ->where('package_active.emails_balance', '>', 0)
+                            ->where('package_active.startdate', '<=', now())
+                            ->where('package_active.enddate', '>=', now())
+                            ->where('package_active.packages_status', 1);
+                    })
+                    ->where('job_assign.job_id', '=', $jobId)
+                    ->pluck('users.email')
+                    ->toArray();
+
+                $recommendedDataList = DB::table('recommendation_relation')
+                    ->join('companies', 'companies.id', 'recommendation_relation.to_company_id')
+                    ->join('jobs', 'jobs.id', 'recommendation_relation.job_id')
+                    ->leftJoin('job_applications', function ($join) {
+                        $join->on('job_applications.thirdparty_company_id', '=', 'companies.id');
+                        $join->on('job_applications.job_id', '=', 'jobs.id');
+                    })
+                    ->join('package_active', function ($join) {
+                        $join->on('companies.id', '=', 'package_active.company_id')
+                            ->where('package_active.emails_balance', '>', 0)
+                            ->where('package_active.startdate', '<=', now())
+                            ->where('package_active.enddate', '>=', now())
+                            ->where('package_active.packages_status', 1);
+                    })
+                    ->where('recommendation_relation.final_status', 1)
+                    ->where('recommendation_relation.job_id', '=', $jobId)
+                    ->groupBy('companies.id')
+                    ->pluck('companies.company_email')
+                    ->toArray();
+
+                $cc_cond = [$InterviewSchedule->cond_email];
+                $cc = array_filter(array_merge($partnersData, $recommendedDataList, $cc_cond));
+
+                if (count($cc) > 0) {
+                    foreach ($cc as $email) {
+                        $client_company_id = 0;
+                        $useremail = DB::table('users')->select('company_id')->where('email', $email)->first();
+                        if (! empty($useremail)) {
+                            $client_company_id = (int) $useremail->company_id;
+                        }
+                        if ($client_company_id > 0) {
+                            GeneralMethod::clientPackageRedeem('emails', 'job applications stage change', $client_company_id, $client_company_id);
+                        }
+                    }
                 }
             }
+
+            // Sync into Elasticsearch ELASTIC_INERTVIEW_TRACKER index
+            GeneralMethod::interviewTrackerAddEditUpload($interviewSchedule_id);
+
+            // Multi-Tenant Atomic Cache Invalidation (Rule 6)
+            $cachekeys = [
+                'allapptracker_version_user_'.$userId,
+                'candidateDetails_version_user_'.$userId,
+                'allinterviewschedule_version_user_'.$userId,
+                'allinterviewbenchcandidates_version_user_'.$userId,
+                'allinterviewschedule_version_company_'.$companyId,
+                'allapptracker_version_company_'.$companyId,
+            ];
+            foreach ($cachekeys as $key) {
+                GeneralMethod::cacheClean($key, $companyId);
+            }
+
+            DB::commit();
+
+            // Realtime event broadcast across company channels
+            try {
+                event(new \App\Events\InterviewScheduled(
+                    $companyId,
+                    $interviewSchedule_id,
+                    $interviewDate,
+                    $statusRow->name ?? 'Scheduled',
+                    'pending'
+                ));
+            } catch (\Throwable $bcEx) {
+                \Log::warning('Broadcast of InterviewScheduled failed: '.$bcEx->getMessage());
+            }
+
+            return Reply::dataOnly(['status' => 'success', 'message' => 'Interview Reschedule successfully !']);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('Error in storeSchedule: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+            ]);
+
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to schedule interview: '.$e->getMessage()]);
         }
-
-        GeneralMethod::interviewTrackerAddEditUpload($interviewSchedule_id);
-
-        $cachekeys = [
-            'allapptracker_version_user_'.$this->user->id,
-            'candidateDetails_version_user_'.$this->user->id,
-            'allinterviewschedule_version_user_'.$this->user->id,
-            'allinterviewbenchcandidates_version_user_'.$this->user->id,
-        ];
-        foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
-        }
-
-        return Reply::dataOnly(['status' => 'success', 'message' => 'Interview Reschedule successfully !']);
-
     }
 
     public function emailSchedule(Request $request)

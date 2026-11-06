@@ -698,7 +698,17 @@ try {
 }
 
 $(document).ready(function() {
-    fetchCandidates(1);
+    var isReload = false;
+    try {
+        var navEntries = performance.getEntriesByType('navigation');
+        if (navEntries && navEntries.length > 0) {
+            isReload = navEntries[0].type === 'reload';
+        } else if (performance.navigation) {
+            isReload = performance.navigation.type === 1;
+        }
+    } catch (e) {}
+
+    fetchCandidates(1, '', isReload);
 
     // Delegate clicks to both page-number buttons and prev/next arrows rendered
     // by the pagination.blade.php partial (class .pagi-page and .pagi-arrow).
