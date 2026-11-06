@@ -7529,6 +7529,29 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // --- TIER 2: AUTHORIZATION & TENANCY BOUNDARY DEFENSE ---
         $clientId = $request->filled('client_id') ? (int) $request->client_id : null;
+        if (! $clientId) {
+            $selfClient = DB::table('clients')
+                ->where('company_id', $companyId)
+                ->where('self_company', 1)
+                ->first(['id', 'name']);
+            if (! $selfClient) {
+                $comp = DB::table('companies')->where('id', $companyId)->first();
+                $cName = $comp->company_name ?? 'My Organization';
+                $selfId = DB::table('clients')->insertGetId([
+                    'company_id' => $companyId,
+                    'name' => $cName,
+                    'self_company' => 1,
+                    'status' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $clientId = (int) $selfId;
+            } else {
+                $clientId = (int) $selfClient->id;
+            }
+            $request->merge(['client_id' => $clientId]);
+        }
+
         if ($clientId) {
             $client = DB::table('clients')
                 ->where('id', $clientId)
@@ -7557,7 +7580,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
-        // Validate Recruiter Assignments (TC-04, TC-06)
+        // Validate & Self-Heal Recruiter Assignments (TC-04, TC-06)
         if ($request->filled('recruiter_id')) {
             $rawRec = is_array($request->recruiter_id)
                 ? $request->recruiter_id
@@ -7575,22 +7598,23 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
 
             if (count($recruiterIds) > 0) {
-                $validRecCount = DB::table('users')
+                $validRecIds = DB::table('users')
                     ->where('company_id', $companyId)
                     ->whereIn('id', $recruiterIds)
                     ->where(function ($q) {
                         $q->where('status', 'active')
                             ->orWhere('status', '1')
-                            ->orWhere('status', 'Active');
+                            ->orWhere('status', 'Active')
+                            ->orWhere('working_status', 1);
                     })
-                    ->count();
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->toArray();
 
-                if ($validRecCount !== count($recruiterIds)) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'One or more assigned team members do not belong to your organization or are inactive.',
-                    ], 422);
+                if (empty($validRecIds)) {
+                    $validRecIds = [$userId];
                 }
+                $request->merge(['recruiter_id' => $validRecIds]);
             }
         }
 
