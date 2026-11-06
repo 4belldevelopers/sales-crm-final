@@ -6202,7 +6202,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         ?string $logicalPath = null,
         ?string $website = null,
         ?string $parentLogo = null,
-        ?string $parentWebsite = null
+        ?string $parentWebsite = null,
+        ?string $clientName = null
     ): ?string {
         if ($isSelf) {
             // Self Company: use authoritative company logo, logical path, or website favicon
@@ -6243,22 +6244,38 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return false;
         };
 
-        // 1. Check client's own uploaded logo (logo_logical_path)
-        if (! empty($logicalPath) && ! $isParentLogoCandidate($logicalPath)) {
+        // 1. Check client's own uploaded logo (logo_logical_path) - real uploaded file
+        if (! empty($logicalPath) && ! $isParentLogoCandidate($logicalPath) && ! str_contains($logicalPath, 'google.com/s2/favicons')) {
             return $this->formatAbsoluteUrl(trim($logicalPath));
         }
 
-        // 2. Check client's own website for favicon
+        // 2. Check client's own logo column ONLY if it does not equal parent logo
+        if (! empty($logo) && ! $isParentLogoCandidate($logo) && ! str_contains($logo, 'google.com/s2/favicons')) {
+            return $this->formatAbsoluteUrl(trim($logo));
+        }
+
+        // 3. Domain resolution for Lepton Software & variants
+        if (! empty($clientName) && stripos($clientName, 'lepton') !== false) {
+            return 'https://www.google.com/s2/favicons?domain=leptonsoftware.com&sz=256';
+        }
+
+        // 4. Check client's own website for favicon
         if (! empty($website)) {
             $clientDomain = $this->extractCleanDomain($website);
             if ($clientDomain && (! $parentDomain || strcasecmp($clientDomain, $parentDomain) !== 0) && stripos($clientDomain, '4bell') === false) {
+                if (stripos($clientDomain, 'lepton') !== false) {
+                    return 'https://www.google.com/s2/favicons?domain=leptonsoftware.com&sz=256';
+                }
                 return "https://www.google.com/s2/favicons?domain={$clientDomain}&sz=256";
             }
         }
 
-        // 3. Check client's own logo column ONLY if it does not equal parent logo
-        if (! empty($logo) && ! $isParentLogoCandidate($logo)) {
-            return $this->formatAbsoluteUrl(trim($logo));
+        // 5. If logicalPath had a previously stored valid favicon (not 4bell), use it
+        if (! empty($logicalPath) && ! $isParentLogoCandidate($logicalPath)) {
+            if (! empty($clientName) && stripos($clientName, 'lepton') !== false) {
+                return 'https://www.google.com/s2/favicons?domain=leptonsoftware.com&sz=256';
+            }
+            return $this->formatAbsoluteUrl(trim($logicalPath));
         }
 
         // Fallback: return null so Metronic initials avatar (e.g. [NL]) renders cleanly
@@ -6282,6 +6299,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return $path;
         }
         $clean = ltrim(str_replace('public/', '', $path), '/');
+        if (! str_contains($clean, '/') && ! empty($clean)) {
+            $clean = 'user-uploads/company-logo/'.$clean;
+        }
 
         return url($clean);
     }
@@ -6361,7 +6381,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             $src['logo_logical_path'] ?? null,
                             $src['website'] ?? null,
                             $authoritativeLogo,
-                            $authoritativeWebsite
+                            $authoritativeWebsite,
+                            $name
                         );
 
                         if (! $id || ! $name) {
@@ -6544,7 +6565,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $c->logo_logical_path,
                 $isSelf ? ($c->company_website ?: $c->website) : $c->website,
                 $c->company_logo,
-                $c->company_website
+                $c->company_website,
+                $name
             );
 
             $locs = $locationsByClient[$c->id] ?? [];

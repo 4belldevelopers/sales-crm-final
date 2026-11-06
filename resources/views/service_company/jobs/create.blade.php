@@ -2287,7 +2287,8 @@
     #jrwrap .jero-client-item-avatar img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
+        background: #ffffff;
     }
     #jrwrap .jero-client-item-info {
         display: flex;
@@ -10777,20 +10778,32 @@ $currency_code = GeneralMethod::defaultCurrency();
                             return false;
                         };
 
-                        if (!empty($__cLogPath) && !$__isParentLogoVal($__cLogPath)) {
+                        if (!empty($__cLogPath) && !$__isParentLogoVal($__cLogPath) && !str_contains($__cLogPath, 'google.com/s2/favicons')) {
                             $__cLogo = (str_starts_with($__cLogPath, 'http://') || str_starts_with($__cLogPath, 'https://') || str_starts_with($__cLogPath, '//'))
                                 ? $__cLogPath
                                 : url(ltrim(str_replace('public/', '', $__cLogPath), '/'));
+                        } elseif (!empty($__cLogoField) && !$__isParentLogoVal($__cLogoField) && !str_contains($__cLogoField, 'google.com/s2/favicons')) {
+                            $__cleanLogo = ltrim(str_replace('public/', '', $__cLogoField), '/');
+                            if (!str_contains($__cleanLogo, '/') && !empty($__cleanLogo)) {
+                                $__cleanLogo = 'user-uploads/company-logo/' . $__cleanLogo;
+                            }
+                            $__cLogo = (str_starts_with($__cleanLogo, 'http://') || str_starts_with($__cleanLogo, 'https://') || str_starts_with($__cleanLogo, '//'))
+                                ? $__cleanLogo
+                                : url($__cleanLogo);
+                        } elseif (stripos($c->name, 'lepton') !== false) {
+                            $__cLogo = 'https://www.google.com/s2/favicons?domain=leptonsoftware.com&sz=256';
                         } elseif (!empty($__cSite)) {
                             $__clientHost = parse_url($__cSite, PHP_URL_HOST) ?? $__cSite;
                             $__clientDomain = preg_replace('/^www\./i', '', trim((string) $__clientHost));
                             if (!empty($__clientDomain) && strpos($__clientDomain, '.') !== false && (empty($__parentDomain) || strcasecmp($__clientDomain, $__parentDomain) !== 0) && stripos($__clientDomain, '4bell') === false) {
-                                $__cLogo = 'https://www.google.com/s2/favicons?domain=' . urlencode($__clientDomain) . '&sz=256';
+                                if (stripos($__clientDomain, 'lepton') !== false) {
+                                    $__cLogo = 'https://www.google.com/s2/favicons?domain=leptonsoftware.com&sz=256';
+                                } else {
+                                    $__cLogo = 'https://www.google.com/s2/favicons?domain=' . urlencode($__clientDomain) . '&sz=256';
+                                }
                             }
-                        } elseif (!empty($__cLogoField) && !$__isParentLogoVal($__cLogoField)) {
-                            $__cLogo = (str_starts_with($__cLogoField, 'http://') || str_starts_with($__cLogoField, 'https://') || str_starts_with($__cLogoField, '//'))
-                                ? $__cLogoField
-                                : url(ltrim(str_replace('public/', '', $__cLogoField), '/'));
+                        } elseif (!empty($__cLogPath) && !$__isParentLogoVal($__cLogPath)) {
+                            $__cLogo = $__cLogPath;
                         }
                     }
 
@@ -10944,6 +10957,11 @@ $currency_code = GeneralMethod::defaultCurrency();
             var rawLogo = c.l || c.logo || '';
             if (!isSelf && typeof isParentCompanyLogo === 'function' && isParentCompanyLogo(rawLogo)) {
                 rawLogo = '';
+            }
+            if (name.toLowerCase().indexOf('lepton') !== -1) {
+                if (!rawLogo || rawLogo.indexOf('lepton.com') !== -1 || rawLogo.indexOf('lepton.ai') !== -1) {
+                    rawLogo = 'https://www.google.com/s2/favicons?domain=leptonsoftware.com&sz=256';
+                }
             }
             var contacts = (c.cc && Array.isArray(c.cc) && c.cc.length > 0)
                 ? c.cc
@@ -11419,9 +11437,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                 clientLogo = '';
             }
             if (clientLogo) {
-                avatarHtml = '<div class="jero-client-item-avatar" style="position:relative;background:' + col.bg + '; color:' + col.color + ';"><img src="' + escapeHtml(clientLogo) + '" alt="" onerror="this.remove()" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"><span style="position:absolute;z-index:0;">' + getInitials(c.name) + '</span></div>';
+                avatarHtml = '<div class="jero-client-item-avatar" style="position:relative;background:#ffffff;border:1px solid #e2e8f0;overflow:hidden;display:flex;align-items:center;justify-content:center;">' +
+                    '<img src="' + escapeHtml(clientLogo) + '" alt="' + escapeHtml(c.name) + '" onerror="this.style.display=\'none\'; if(this.nextElementSibling) this.nextElementSibling.style.display=\'flex\';" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;">' +
+                    '<span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:' + col.bg + ';color:' + col.color + ';font-weight:700;font-size:11px;border-radius:inherit;">' + getInitials(c.name) + '</span>' +
+                '</div>';
             } else {
-                avatarHtml = '<div class="jero-client-item-avatar" style="background:' + col.bg + '; color:' + col.color + ';">' + getInitials(c.name) + '</div>';
+                avatarHtml = '<div class="jero-client-item-avatar" style="background:' + col.bg + '; color:' + col.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;border-radius:inherit;">' + getInitials(c.name) + '</div>';
             }
 
             var badgeText = c.self_company ? 'My Organization' : 'Client';
@@ -11605,14 +11626,23 @@ $currency_code = GeneralMethod::defaultCurrency();
                     selLogo = '';
                 }
                 if (selLogo) {
-                    avatarEl.innerHTML = '<img src="' + escapeHtml(selLogo) + '" alt="' + escapeHtml(client.name) + '" onerror="this.remove()" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"><span style="position:absolute;z-index:0;">' + getInitials(client.name) + '</span>';
+                    avatarEl.innerHTML = '<img src="' + escapeHtml(selLogo) + '" alt="' + escapeHtml(client.name) + '" onerror="this.style.display=\'none\'; if(this.nextElementSibling) this.nextElementSibling.style.display=\'flex\';" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:' + col.bg + ';color:' + col.color + ';font-weight:700;font-size:11px;border-radius:inherit;">' + getInitials(client.name) + '</span>';
                     avatarEl.style.position = 'relative';
-                    avatarEl.style.background = col.bg;
+                    avatarEl.style.background = '#ffffff';
                     avatarEl.style.color = col.color;
+                    avatarEl.style.border = '1px solid #e2e8f0';
+                    avatarEl.style.overflow = 'hidden';
+                    avatarEl.style.display = 'flex';
+                    avatarEl.style.alignItems = 'center';
+                    avatarEl.style.justifyContent = 'center';
                 } else {
                     avatarEl.textContent = getInitials(client.name);
                     avatarEl.style.background = col.bg;
                     avatarEl.style.color = col.color;
+                    avatarEl.style.border = 'none';
+                    avatarEl.style.display = 'flex';
+                    avatarEl.style.alignItems = 'center';
+                    avatarEl.style.justifyContent = 'center';
                 }
             }
 
@@ -11794,13 +11824,18 @@ $currency_code = GeneralMethod::defaultCurrency();
                             shouldInvalidateCached = true;
                         }
                     }
-                    // Self-healing check: purge any stale cache where non-self clients carry the parent company logo
+                    // Self-healing check: purge any stale cache where non-self clients carry the parent company logo or wrong lepton logo
                     var hasPollutedLogos = cached.clients.some(function(item) {
                         var isNonSelf = (item.t === 0 || !item.self_company);
                         var rawL = item.l || item.logo || '';
                         return isNonSelf && rawL && typeof isParentCompanyLogo === 'function' && isParentCompanyLogo(rawL);
                     });
-                    if (hasPollutedLogos) {
+                    var hasOutdatedLeptonLogo = cached.clients.some(function(item) {
+                        var itemName = (item.n || item.name || '').toLowerCase();
+                        var rawL = (item.l || item.logo || '').toLowerCase();
+                        return itemName.indexOf('lepton') !== -1 && (rawL.indexOf('lepton.com') !== -1 || rawL.indexOf('lepton.ai') !== -1);
+                    });
+                    if (hasPollutedLogos || hasOutdatedLeptonLogo) {
                         shouldInvalidateCached = true;
                     }
                 }
