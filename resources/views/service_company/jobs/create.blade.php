@@ -3785,7 +3785,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if ($client_id == $clientarr->id) {
                         $sel = 'selected="selected"';
                     }
-                    echo '<option value="'.@$clientarr->id.'" '.$sel.'>'.ucfirst($clientarr->name).'</option>';
+                    $dispName = ! empty($company_name) ? $company_name : $clientarr->name;
+                    echo '<option value="'.@$clientarr->id.'" '.$sel.'>'.ucfirst($dispName).'</option>';
                 }
             }
                                         ?>
@@ -6427,10 +6428,24 @@ $currency_code = GeneralMethod::defaultCurrency();
                     success: function(data) {
                         if (data.status == 'success') {
                             $('#kt_add_address_close').click();
-                            $("#client_id").val(clientId).change();
+                            if (window.JeroClientSelectEngine && typeof window.JeroClientSelectEngine.bustClientDetailsCache === 'function') {
+                                window.JeroClientSelectEngine.bustClientDetailsCache(clientId);
+                            }
+                            if (data.location_id) {
+                                var newOptLabel = data.address + (data.city ? ' - ' + data.city : '');
+                                $('#address_id').append(new Option(newOptLabel, data.location_id, true, true));
+                                $('#address_id').val(data.location_id).trigger('change');
+                                $('.address_show').hide();
+                                if (typeof clearFieldValidationErrors === 'function') {
+                                    clearFieldValidationErrors('address_id');
+                                }
+                            } else {
+                                $("#client_id").val(clientId).change();
+                            }
                             if (data.tenant_defaults && window.JeroTenantDefaults) {
                                 window.JeroTenantDefaults.syncFromSettings(data.tenant_defaults);
                             }
+                            showToast('Address added successfully!', 'success');
                         }
                     }
                 });
@@ -10624,20 +10639,59 @@ $currency_code = GeneralMethod::defaultCurrency();
                 ->get()
                 ->groupBy('client_id')
             : collect();
+
+        $__locationsByClient = !empty($__clientIds)
+            ? DB::table('client_location')
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select(
+                    'client_location.id',
+                    'client_location.client_id',
+                    'client_location.city',
+                    'client_location.address',
+                    'client_location.country_id',
+                    'city_list.city as city_name',
+                    'state_list.state as state_name',
+                    'countries.country_name'
+                )
+                ->whereIn('client_location.client_id', $__clientIds)
+                ->get()
+                ->groupBy('client_id')
+            : collect();
         ?>
         // Seed initial client headers passed from server Blade for 0.0ms initial paint
         window.__INITIAL_CLIENTS__ = [
             <?php if (isset($client) && (is_array($client) || is_object($client))) { ?>
                 <?php foreach ($client as $c) { 
                     $__cContacts = $__contactsByClient->get($c->id, collect());
+                    $__cLocations = $__locationsByClient->get($c->id, collect());
+                    $__cName = ($c->self_company && !empty($company_name)) ? $company_name : $c->name;
                 ?>
                 {
                     id: <?php echo (int) $c->id; ?>,
-                    n: <?php echo json_encode(ucfirst($c->name)); ?>,
+                    n: <?php echo json_encode(ucfirst($__cName)); ?>,
                     t: <?php echo (int) $c->self_company; ?>,
                     s: 1,
                     l: <?php echo json_encode($c->logo ?: ''); ?>,
                     i: <?php echo json_encode($c->industry ?: ''); ?>,
+                    loc: [
+                        <?php foreach ($__cLocations as $__loc) { 
+                            $__cityName = !empty($__loc->city_name) ? $__loc->city_name : ($__loc->city ?? '');
+                            $__addressPart = $__loc->address ? ucwords($__loc->address) : '';
+                            $__cityPart = $__cityName ? ucwords($__cityName) : '';
+                            $__statePart = $__loc->state_name ? ucwords($__loc->state_name) : '';
+                            $__countryPart = $__loc->country_name ? ucwords($__loc->country_name) : '';
+                            $__extra = implode(', ', array_filter([$__cityPart, $__statePart, $__countryPart]));
+                            $__label = $__addressPart ? ($__addressPart . ($__extra ? ' - ' . $__extra : '')) : $__extra;
+                        ?>
+                        {
+                            id: <?php echo (int) $__loc->id; ?>,
+                            l: <?php echo json_encode($__label ?: 'Address #' . $__loc->id); ?>,
+                            city: <?php echo json_encode((string) $__cityName); ?>
+                        },
+                        <?php } ?>
+                    ],
                     cc: [
                         <?php foreach ($__cContacts as $__cc) { ?>
                         {
@@ -11083,6 +11137,9 @@ $currency_code = GeneralMethod::defaultCurrency();
                 } else if ($addressSelect.val() && typeof window.syncAddressToJobLocation === 'function') {
                     window.syncAddressToJobLocation();
                 }
+                if ($addressSelect.val() && typeof clearFieldValidationErrors === 'function') {
+                    clearFieldValidationErrors('address_id');
+                }
             } else {
                 $addressSelect.html('<option value="">No Address</option>');
                 $addressShow.show();
@@ -11297,8 +11354,30 @@ $currency_code = GeneralMethod::defaultCurrency();
             } else {
                 // Fallback to async detail resolver only if locations were omitted
                 var details = await resolveClientDetails(id);
-                if (details && details.locations) {
+                if (details && details.locations && details.locations.length > 0) {
                     populateAddressDropdownFromLoc(details.locations);
+                } else {
+                    // Circuit breaker fallback to getContactPerson legacy endpoint
+                    var legacyUrl = "{{ route('service_company.jobs.getContactPerson', ':id') }}";
+                    legacyUrl = legacyUrl.replace(':id', id);
+                    $.ajax({
+                        url: legacyUrl,
+                        success: function(resp) {
+                            if (resp && resp.locArr) {
+                                $('#address_id').html(resp.locArr);
+                                if (resp.address_show) { $('.address_show').show(); } else { $('.address_show').hide(); }
+                                if (typeof window.sanitizeAddressSelectOptions === 'function') {
+                                    window.sanitizeAddressSelectOptions();
+                                }
+                                if ($('#address_id').val() && typeof window.syncAddressToJobLocation === 'function') {
+                                    window.syncAddressToJobLocation();
+                                }
+                                if ($('#address_id').val() && typeof clearFieldValidationErrors === 'function') {
+                                    clearFieldValidationErrors('address_id');
+                                }
+                            }
+                        }
+                    });
                 }
             }
 
@@ -11845,7 +11924,22 @@ $currency_code = GeneralMethod::defaultCurrency();
             },
             select: selectClient,
             clear: clearSelection,
-            refresh: function() { return fetchClientsBundle(true); }
+            refresh: function() { return fetchClientsBundle(true); },
+            bustClientDetailsCache: function(clientId) {
+                clientId = parseInt(clientId, 10);
+                L0.detailsCache.delete(clientId);
+                try {
+                    getDB().then(function(db) {
+                        if (db) {
+                            var tx = db.transaction(['clients_cache'], 'readwrite');
+                            tx.objectStore('clients_cache').delete('details_' + CURRENT_TENANT_ID + '_' + clientId);
+                            tx.objectStore('clients_cache').delete('bundle_' + CURRENT_TENANT_ID);
+                        }
+                    });
+                    localStorage.removeItem('jero_details_etag_' + CURRENT_TENANT_ID + '_' + clientId);
+                    localStorage.removeItem('jero_client_etag_' + CURRENT_TENANT_ID);
+                } catch (e) {}
+            }
         };
 
         if (document.readyState === 'loading') {

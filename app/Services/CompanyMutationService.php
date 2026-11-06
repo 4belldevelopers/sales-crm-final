@@ -479,6 +479,9 @@ class CompanyMutationService
                     $clientUpdates['company_type'] = $requestData['company_type'];
                 }
 
+                if (! empty($requestData['company_name'])) {
+                    $clientUpdates['name'] = $requestData['company_name'];
+                }
                 if (! empty($requestData['company_email'])) {
                     $clientUpdates['email'] = $requestData['company_email'];
                 }

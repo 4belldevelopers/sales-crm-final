@@ -5879,9 +5879,50 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $q->where('company_id', $companyId)->orWhereNull('company_id');
             })->orderBy('name', 'ASC')->get();
         });
-        $this->client = Cache::remember('tenant:'.$companyId.':clients', 300, function () use ($companyId) {
-            return Client::select('*')->where('company_id', $companyId)->orderBy('clients.name', 'ASC')->get();
+        $authCompName = ! empty($this->company_name) ? trim($this->company_name) : null;
+        $this->client = Cache::remember('tenant:'.$companyId.':clients', 300, function () use ($companyId, $authCompName) {
+            $clients = Client::select('*')->where('company_id', $companyId)->orderBy('clients.name', 'ASC')->get();
+            $selfClient = $clients->firstWhere('self_company', 1);
+            if ($selfClient && $authCompName && $selfClient->name !== $authCompName) {
+                DB::table('clients')->where('id', $selfClient->id)->where('company_id', $companyId)->update(['name' => $authCompName]);
+                $selfClient->name = $authCompName;
+            } elseif (! $selfClient && $authCompName) {
+                $newSelfId = DB::table('clients')->insertGetId([
+                    'company_id' => $companyId,
+                    'name' => $authCompName,
+                    'self_company' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $clients = Client::select('*')->where('company_id', $companyId)->orderBy('clients.name', 'ASC')->get();
+            }
+            return $clients;
         });
+
+        // Ensure self-company client has at least one registered workplace address
+        $selfClientObj = $this->client->firstWhere('self_company', 1);
+        if ($selfClientObj) {
+            $hasLoc = DB::table('client_location')->where('client_id', $selfClientObj->id)->exists();
+            if (! $hasLoc) {
+                $defaultAddr = DB::table('billing_address_companies')->where('company_id', $companyId)->first();
+                $compRow = DB::table('companies')->where('id', $companyId)->first();
+                $street = ! empty($defaultAddr->street) ? trim($defaultAddr->street) : (! empty($compRow->address) ? trim($compRow->address) : 'Headquarters Workplace');
+                $countryId = ! empty($defaultAddr->country_id) ? (int) $defaultAddr->country_id : (! empty($this->country) ? (int) $this->country : 101);
+                $cityId = ! empty($defaultAddr->city) && is_numeric($defaultAddr->city) ? (int) $defaultAddr->city : null;
+                DB::table('client_location')->insert([
+                    'company_id' => $companyId,
+                    'client_id' => $selfClientObj->id,
+                    'address' => substr($street, 0, 55),
+                    'country_id' => $countryId,
+                    'city_id' => $cityId,
+                    'postcode' => substr($defaultAddr->postal_code ?? '000000', 0, 10),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                Cache::forget('tenant:'.$companyId.':clients_version');
+                Cache::forget('tenant:'.$companyId.':dataset:clients:perm:default');
+            }
+        }
 
         // 5. Zero-query placeholders for view properties unused on the create form
         $this->questions = collect();
@@ -6080,7 +6121,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     foreach ($hits as $hit) {
                         $src = $hit['_source'] ?? [];
                         $id = (int) ($src['id'] ?? $src['client_id'] ?? $hit['_id']);
-                        $name = (string) ($src['name'] ?? $src['company_name'] ?? '');
+                        $isSelf = (int) ($src['self_company'] ?? 0) === 1;
+                        $name = ($isSelf && ! empty($src['company_name'])) ? (string) $src['company_name'] : (string) ($src['name'] ?? $src['company_name'] ?? '');
                         if (! $id || ! $name) {
                             continue;
                         }
@@ -6093,7 +6135,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                 $country = $l['country_name'] ?? '';
                                 $addr = implode(', ', array_filter([$city, $state, $country]));
                                 $locList[] = [
-                                    'id' => (int) ($l['city_id'] ?? $l['id'] ?? 0),
+                                    'id' => (int) ($l['id'] ?? $l['city_id'] ?? 0),
                                     'l' => $addr ?: 'Address',
                                     'city' => (string) $city,
                                 ];
@@ -6142,9 +6184,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // 2. Controlled cache-construction read from MySQL (strictly off web user path)
         $clients = DB::table('clients')
-            ->select('id', 'name', 'self_company', 'logo', 'industry')
-            ->where('company_id', $companyId)
-            ->orderBy('name', 'ASC')
+            ->leftJoin('companies', 'companies.id', '=', 'clients.company_id')
+            ->select('clients.id', 'clients.name', 'clients.self_company', 'clients.logo', 'clients.industry', 'companies.company_name')
+            ->where('clients.company_id', $companyId)
+            ->orderBy('clients.name', 'ASC')
             ->get();
 
         $clientIds = $clients->pluck('id')->toArray();
@@ -6213,11 +6256,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $clientList = [];
         foreach ($clients as $c) {
-            $cleanChars = preg_replace('/[^A-Za-z0-9]/', '', $c->name);
+            $isSelf = (int) ($c->self_company ?? 0) === 1;
+            $clientDisplayName = ($isSelf && ! empty($c->company_name)) ? $c->company_name : $c->name;
+            $cleanChars = preg_replace('/[^A-Za-z0-9]/', '', $clientDisplayName);
             $code = strtoupper(substr($cleanChars ?: 'CL', 0, 4));
             $clientList[] = [
                 'id' => (int) $c->id,
-                'n' => (string) $c->name,
+                'n' => (string) $clientDisplayName,
                 't' => (int) $c->self_company,
                 's' => 1,
                 'i' => (string) ($c->industry ?: ''),
@@ -6322,13 +6367,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
 
             $contacts = DB::table('client_contact_info')
-                ->select('id', 'contact_person_name', 'email', 'contact_number')
+                ->select('id', 'contact_person_name', 'contact_person_email', 'contact_person_number', 'contact_person_designation')
                 ->where('client_id', $client_id)
                 ->get()
                 ->map(function ($c) {
                     return [
                         'id' => (int) $c->id,
-                        'name' => (string) ucwords($c->contact_person_name),
+                        'name' => (string) ucwords(trim($c->contact_person_name ?? '')),
+                        'email' => (string) ($c->contact_person_email ?? ''),
+                        'phone' => (string) ($c->contact_person_number ?? ''),
+                        'designation' => (string) ($c->contact_person_designation ?? 'Hiring Contact'),
                     ];
                 })
                 ->toArray();
