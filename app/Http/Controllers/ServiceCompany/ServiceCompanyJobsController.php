@@ -5941,9 +5941,60 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'updated_at' => now(),
                 ]);
                 GeneralMethod::clientStaffingPartner($selfClientObj->id);
-                Cache::forget('tenant:'.$companyId.':clients_version');
+                $newVer = ((int) Cache::get('tenant:'.$companyId.':clients_version', 1)) + 1;
+                Cache::forever('tenant:'.$companyId.':clients_version', $newVer);
                 Cache::forget('tenant:'.$companyId.':dataset:clients:perm:default');
             }
+        }
+
+        // Ensure every client has at least one workplace location in client_location
+        $clientsWithoutLoc = $this->client->filter(function ($cl) {
+            return ! DB::table('client_location')->where('client_id', $cl->id)->exists();
+        });
+        if ($clientsWithoutLoc->isNotEmpty()) {
+            $defaultAddr = DB::table('billing_address_companies')->where('company_id', $companyId)->first();
+            $countryId = ! empty($defaultAddr->country_id) ? (int) $defaultAddr->country_id : (! empty($this->country) ? (int) $this->country : 101);
+            $cityId = ! empty($defaultAddr->city) && is_numeric($defaultAddr->city) ? (int) $defaultAddr->city : null;
+            foreach ($clientsWithoutLoc as $cWithoutLoc) {
+                DB::table('client_location')->insert([
+                    'company_id' => $companyId,
+                    'client_id' => $cWithoutLoc->id,
+                    'address' => 'Registered Office',
+                    'country_id' => $countryId,
+                    'city_id' => $cityId,
+                    'postcode' => substr($defaultAddr->postal_code ?? '000000', 0, 10),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                GeneralMethod::clientStaffingPartner($cWithoutLoc->id);
+            }
+            $newVer = ((int) Cache::get('tenant:'.$companyId.':clients_version', 1)) + 1;
+            Cache::forever('tenant:'.$companyId.':clients_version', $newVer);
+            Cache::forget('tenant:'.$companyId.':dataset:clients:perm:default');
+        }
+
+        // Ensure every client has at least one contact in client_contact_info
+        $clientsWithoutContacts = $this->client->filter(function ($cl) {
+            return ! DB::table('client_contact_info')->where('client_id', $cl->id)->exists();
+        });
+        if ($clientsWithoutContacts->isNotEmpty()) {
+            foreach ($clientsWithoutContacts as $cWithoutCc) {
+                $contactName = ! empty($cWithoutCc->contact_person_name) ? trim($cWithoutCc->contact_person_name) : trim($cWithoutCc->name).' HR';
+                DB::table('client_contact_info')->insert([
+                    'client_id' => $cWithoutCc->id,
+                    'contact_person_name' => $contactName,
+                    'contact_person_email' => ! empty($cWithoutCc->email) ? trim($cWithoutCc->email) : 'hr@example.com',
+                    'contact_person_number' => ! empty($cWithoutCc->contact_number) ? trim($cWithoutCc->contact_number) : '',
+                    'contact_person_designation' => 'Hiring Manager',
+                    'calling_code' => '+91',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                GeneralMethod::clientStaffingPartner($cWithoutCc->id);
+            }
+            $newVer = ((int) Cache::get('tenant:'.$companyId.':clients_version', 1)) + 1;
+            Cache::forever('tenant:'.$companyId.':clients_version', $newVer);
+            Cache::forget('tenant:'.$companyId.':dataset:clients:perm:default');
         }
 
         // 5. Zero-query placeholders for view properties unused on the create form
@@ -6113,6 +6164,35 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     }
 
     /**
+     * Resolves an authoritative, absolute logo URL with multi-fallback support (URL, logical path, website favicon).
+     */
+    protected function resolveClientLogoUrl(?string $logo, ?string $logicalPath = null, ?string $website = null): ?string
+    {
+        $raw = ! empty($logo) ? trim($logo) : (! empty($logicalPath) ? trim($logicalPath) : null);
+        if (! empty($raw)) {
+            if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://') || str_starts_with($raw, '//')) {
+                return $raw;
+            }
+            $clean = ltrim($raw, '/');
+            if (str_starts_with($clean, 'public/')) {
+                return url($clean);
+            }
+
+            return url('public/'.$clean);
+        }
+
+        if (! empty($website)) {
+            $parsedHost = parse_url($website, PHP_URL_HOST) ?? $website;
+            $cleanDomain = preg_replace('/^www\./i', '', trim((string) $parsedHost));
+            if (! empty($cleanDomain) && strpos($cleanDomain, '.') !== false) {
+                return "https://www.google.com/s2/favicons?domain={$cleanDomain}&sz=256";
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Assemble tenant client manifest from Elasticsearch derived read model with MySQL fallback on cache assembly.
      */
     protected function buildClientsManifest(int $companyId, int $version): array
@@ -6133,7 +6213,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             ],
                         ],
                         'size' => 5000,
-                        '_source' => ['client_id', 'id', 'name', 'company_name', 'self_company', 'logo', 'industries', 'td_industries', 'ind_name', 'main_ind_name', 'client_location', 'client_contact_info'],
+                        '_source' => ['client_id', 'id', 'name', 'company_name', 'self_company', 'logo', 'logo_logical_path', 'website', 'industries', 'td_industries', 'ind_name', 'main_ind_name', 'client_location', 'client_contact_info'],
                     ],
                 ]);
 
@@ -6170,7 +6250,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         if ($isSelf && $authoritativeCompName) {
                             $name = $authoritativeCompName;
                             $industry = $authoritativeIndName;
-                            $logo = $authoritativeLogo ?: ($src['logo'] ?? null);
+                            $logo = $this->resolveClientLogoUrl($authoritativeLogo ?: ($src['logo'] ?? null), $src['logo_logical_path'] ?? null, $compRow?->website ?: ($src['website'] ?? null));
                         } else {
                             $name = (string) ($src['name'] ?? $src['company_name'] ?? '');
                             $indCandidate = (string) ($src['ind_name'] ?? ($src['main_ind_name'] ?? ($src['td_industries'][0]['ind_name'] ?? '')));
@@ -6179,7 +6259,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                 $indCandidate = ($indId > 0 && isset($industriesMap[$indId])) ? $industriesMap[$indId] : '';
                             }
                             $industry = is_numeric($indCandidate) ? '' : $indCandidate;
-                            $logo = $src['logo'] ?? null;
+                            $logo = $this->resolveClientLogoUrl($src['logo'] ?? null, $src['logo_logical_path'] ?? null, $src['website'] ?? null);
                         }
 
                         if (! $id || ! $name) {
@@ -6250,9 +6330,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'clients.name',
                 'clients.self_company',
                 'clients.logo',
+                'clients.logo_logical_path',
+                'clients.website',
                 'clients.industry',
                 'companies.company_name',
                 'companies.logo as company_logo',
+                'companies.website as company_website',
                 'client_ind.ind_name as client_ind_name',
                 'comp_ind.ind_name as comp_ind_name'
             )
@@ -6336,7 +6419,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             if (is_numeric($industryName)) {
                 $industryName = '';
             }
-            $logo = $isSelf ? ($c->company_logo ?: $c->logo) : $c->logo;
+            $logo = $isSelf
+                ? $this->resolveClientLogoUrl($c->company_logo ?: $c->logo, $c->logo_logical_path, $c->company_website ?: $c->website)
+                : $this->resolveClientLogoUrl($c->logo, $c->logo_logical_path, $c->website);
 
             $clientList[] = [
                 'id' => (int) $c->id,
@@ -7247,8 +7332,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // 2. Fallback Path: Direct Elasticsearch document existence check (< 5ms, 0% MySQL reads)
         try {
+            $jobsIndex = defined('ELASTIC_JOBS') ? ELASTIC_JOBS : 'ats_jobs_elastic';
             $exists = $this->elasticService->getClient()->exists([
-                'index' => 'ats_jobs_elastic',
+                'index' => $jobsIndex,
                 'id' => (string) $jobId,
             ])->asBool();
 

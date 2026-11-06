@@ -3765,7 +3765,7 @@ $currency_code = GeneralMethod::defaultCurrency();
     if (isset($currentClient) && $currentClient > 0) {
         $selected_client_id = (int) $currentClient;
     }
-    if ($global_company_type == 3) { ?>
+    if (($global_company_type ?? 0) == 3) { ?>
                                         <input type="text" class="form-input" value="<?php echo @$client[0]->name; ?>" readonly>
                                         <input type="hidden" id="client_id" name="client_id" value="<?php echo @$client[0]->id; ?>">
                                     <?php } else { ?>
@@ -5574,6 +5574,20 @@ $currency_code = GeneralMethod::defaultCurrency();
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="form-footer mt-6">
+                        <button type="button" class="btn btn-secondary" onclick="goToStep(3)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14"/><path d="m12 19-7-7 7-7"/>
+                            </svg>Back
+                        </button>
+                        <button type="button" class="btn btn-primary btn-publish-step4" onclick="publishJob()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px; vertical-align: -2px;">
+                                <path d="m21.426 11.095-17-8A1 1 0 0 0 3.08 4.37l3.87 7.63-3.87 7.63a1 1 0 0 0 1.346 1.275l17-8a1 1 0 0 0 0-1.81zM6.16 13l-1.92 3.78L17.5 12 4.24 7.22 6.16 11H12v2H6.16z"/>
+                            </svg>
+                            <span><?php echo @$buttontext ? $buttontext : ((($page_event ?? '') == 'EDIT') ? 'Update Job' : 'Publish Job'); ?></span>
+                        </button>
                     </div>
 
                     {{-- ===== HIDDEN BACKWARD COMPATIBILITY BLOCK ===== --}}
@@ -7658,6 +7672,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                 focusSelector: '#address_id',
                 validate: function() {
                     var val = ($('#address_id').val() || '').trim();
+                    var $opts = $('#address_id option').filter(function() { return !!($(this).val() || '').trim(); });
+                    if ($opts.length === 0) return true;
                     return !!val;
                 },
                 message: 'Please select an Address.'
@@ -9986,7 +10002,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         var publishBtnText = isEditPage ? 'Update Job' : 'Publish Job';
         var publishBtnContent = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px; vertical-align: -2px;"><path d="m21.426 11.095-17-8A1 1 0 0 0 3.08 4.37l3.87 7.63-3.87 7.63a1 1 0 0 0 1.346 1.275l17-8a1 1 0 0 0 0-1.81zM6.16 13l-1.92 3.78L17.5 12 4.24 7.22 6.16 11H12v2H6.16z"/></svg><span>' + publishBtnText + '</span>';
         function resetPublishBtn($btn) {
-            if (!$btn || !$btn.length) $btn = $('.submit-card .btn-primary');
+            if (!$btn || !$btn.length) $btn = $('.submit-card .btn-primary, .btn-publish-step4');
             $btn.prop('disabled', false).html(publishBtnContent);
         }
 
@@ -10046,7 +10062,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 if (!data.get('max_sal_mode')) data.set('max_sal_mode', '0');
             }
 
-            var $btn = $('.submit-card .btn-primary');
+            var $btn = $('.submit-card .btn-primary, .btn-publish-step4');
             $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...');
 
             if (!navigator.onLine) {
@@ -10695,7 +10711,21 @@ $currency_code = GeneralMethod::defaultCurrency();
                     $__cInd = $__isSelf 
                         ? $__authoritativeIndName 
                         : (!empty($c->industry) && isset($__indNamesMap[(int)$c->industry]) ? $__indNamesMap[(int)$c->industry] : (is_numeric($c->industry) ? '' : ($c->industry ?? '')));
-                    $__cLogo = $__isSelf ? ($__compRow?->logo ?: ($c->logo ?: '')) : ($c->logo ?: '');
+                    $__rawLogo = $__isSelf 
+                        ? ($__compRow?->logo ?: ($c->logo ?: ($c->logo_logical_path ?? ''))) 
+                        : ($c->logo ?: ($c->logo_logical_path ?? ''));
+                    $__cSite = $__isSelf ? ($__compRow?->website ?: ($c->website ?? '')) : ($c->website ?? '');
+                    $__cLogo = '';
+                    if (!empty($__rawLogo)) {
+                        if (str_starts_with($__rawLogo, 'http://') || str_starts_with($__rawLogo, 'https://')) {
+                            $__cLogo = $__rawLogo;
+                        } else {
+                            $__cLogo = url(ltrim(str_replace('public/', '', $__rawLogo), '/'));
+                        }
+                    } elseif (!empty($__cSite)) {
+                        $__domain = preg_replace('/^www\./', '', parse_url($__cSite, PHP_URL_HOST) ?: $__cSite);
+                        $__cLogo = 'https://www.google.com/s2/favicons?domain=' . urlencode($__domain) . '&sz=256';
+                    }
                 ?>
                 {
                     id: <?php echo (int) $c->id; ?>,
@@ -11300,7 +11330,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             var col = getAvatarColor(c.name);
             var avatarHtml = '';
             if (c.logo) {
-                avatarHtml = '<div class="jero-client-item-avatar" style="background:#FFF;"><img src="' + escapeHtml(c.logo) + '" alt=""></div>';
+                avatarHtml = '<div class="jero-client-item-avatar" style="position:relative;background:' + col.bg + '; color:' + col.color + ';"><img src="' + escapeHtml(c.logo) + '" alt="" onerror="this.remove()" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"><span style="position:absolute;z-index:0;">' + getInitials(c.name) + '</span></div>';
             } else {
                 avatarHtml = '<div class="jero-client-item-avatar" style="background:' + col.bg + '; color:' + col.color + ';">' + getInitials(c.name) + '</div>';
             }
@@ -11480,12 +11510,13 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
 
             if (avatarEl) {
+                var col = getAvatarColor(client.name);
                 if (client.logo) {
-                    avatarEl.innerHTML = '<img src="' + escapeHtml(client.logo) + '" alt="' + escapeHtml(client.name) + '">';
-                    avatarEl.style.background = '#FFFFFF';
-                    avatarEl.style.color = 'inherit';
+                    avatarEl.innerHTML = '<img src="' + escapeHtml(client.logo) + '" alt="' + escapeHtml(client.name) + '" onerror="this.remove()" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"><span style="position:absolute;z-index:0;">' + getInitials(client.name) + '</span>';
+                    avatarEl.style.position = 'relative';
+                    avatarEl.style.background = col.bg;
+                    avatarEl.style.color = col.color;
                 } else {
-                    var col = getAvatarColor(client.name);
                     avatarEl.textContent = getInitials(client.name);
                     avatarEl.style.background = col.bg;
                     avatarEl.style.color = col.color;
