@@ -14,6 +14,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -30,6 +31,35 @@ use Illuminate\Support\Str;
 class JobService
 {
     /**
+     * Check if a column exists on the jobs table with static process-level caching.
+     * Prevents fatal SQLSTATE[42S22] Column Not Found errors on production environments.
+     */
+    protected static function jobHasColumn(string $column): bool
+    {
+        static $columns = null;
+        if ($columns === null) {
+            try {
+                $columns = array_flip(Schema::getColumnListing('jobs'));
+            } catch (\Throwable $e) {
+                $columns = [];
+            }
+        }
+
+        return isset($columns[$column]);
+    }
+
+    /**
+     * Set attribute on Job model only if the underlying table actually contains the column.
+     * Prevents fatal SQLSTATE[42S22] Column Not Found errors on production environments.
+     */
+    protected static function setJobAttrIfColumnExists(Job $job, string $column, mixed $value): void
+    {
+        if (self::jobHasColumn($column)) {
+            $job->{$column} = $value;
+        }
+    }
+
+    /**
      * Create a new Job Requisition with batch pivot insertions and asynchronous Elastic indexing.
      *
      * @param  array  $requestData  Input request payload
@@ -45,9 +75,9 @@ class JobService
 
         $job->client_id = $requestData['client_id'] ?? null;
         $job->title = $requestData['title'] ?? null;
-        $job->raw_designation = $requestData['raw_designation'] ?? ($requestData['title'] ?? null);
-        $job->canonical_designation_id = ! empty($requestData['canonical_designation_id']) ? (int) $requestData['canonical_designation_id'] : null;
-        $job->taxonomy_version = $requestData['taxonomy_version'] ?? config('taxonomy.current_version', '2.0.0');
+        self::setJobAttrIfColumnExists($job, 'raw_designation', $requestData['raw_designation'] ?? ($requestData['title'] ?? null));
+        self::setJobAttrIfColumnExists($job, 'canonical_designation_id', ! empty($requestData['canonical_designation_id']) ? (int) $requestData['canonical_designation_id'] : null);
+        self::setJobAttrIfColumnExists($job, 'taxonomy_version', $requestData['taxonomy_version'] ?? config('taxonomy.current_version', '2.0.0'));
         $job->work_shifts = ! empty($requestData['work_shifts']) ? $requestData['work_shifts'] : 'Day Shift';
         $job->category_id = ! empty($requestData['category_id']) && is_numeric($requestData['category_id']) ? (int) $requestData['category_id'] : null;
         if (empty($job->category_id) && (! empty($requestData['custom_department']) || ! empty($requestData['category_id_display']))) {
@@ -125,13 +155,13 @@ class JobService
 
         if ($isInternalOnly) {
             $job->carrier_website = 0;
-            $job->market_pub_state = MarketPubState::PRIVATE->value;
-            $job->market_mod_state = MarketModState::NOT_REQUIRED->value;
-            $job->bench_submission = BenchSubmissionState::DISABLED->value;
+            self::setJobAttrIfColumnExists($job, 'market_pub_state', MarketPubState::PRIVATE->value);
+            self::setJobAttrIfColumnExists($job, 'market_mod_state', MarketModState::NOT_REQUIRED->value);
+            self::setJobAttrIfColumnExists($job, 'bench_submission', BenchSubmissionState::DISABLED->value);
             $job->public_market_status = 0;
         } else {
             $job->carrier_website = $hasCareer ? 1 : 0;
-            $job->bench_submission = $hasBench ? BenchSubmissionState::ENABLED->value : BenchSubmissionState::DISABLED->value;
+            self::setJobAttrIfColumnExists($job, 'bench_submission', $hasBench ? BenchSubmissionState::ENABLED->value : BenchSubmissionState::DISABLED->value);
 
             // Recruiter wants job on marketplace if either Option B (Outsource) or Option C (Bench) is chosen
             if ($hasMarketplace || $hasBench) {
@@ -147,17 +177,17 @@ class JobService
 
                 $autoApproveSetting = (bool) DB::table('global_settings')->value('public_market_job_status');
                 if (! $eval['hard_blocked'] && $eval['risk_score'] < 0.20 && $autoApproveSetting) {
-                    $job->market_pub_state = MarketPubState::PUBLISHED->value;
-                    $job->market_mod_state = MarketModState::AUTO_APPROVED->value;
+                    self::setJobAttrIfColumnExists($job, 'market_pub_state', MarketPubState::PUBLISHED->value);
+                    self::setJobAttrIfColumnExists($job, 'market_mod_state', MarketModState::AUTO_APPROVED->value);
                 } else {
-                    $job->market_pub_state = MarketPubState::PENDING_REVIEW->value;
-                    $job->market_mod_state = MarketModState::PENDING->value;
+                    self::setJobAttrIfColumnExists($job, 'market_pub_state', MarketPubState::PENDING_REVIEW->value);
+                    self::setJobAttrIfColumnExists($job, 'market_mod_state', MarketModState::PENDING->value);
                 }
-                $job->claim_capacity = $hasMarketplace ? ClaimCapacity::OPEN->value : ClaimCapacity::LIMIT_REACHED->value;
+                self::setJobAttrIfColumnExists($job, 'claim_capacity', $hasMarketplace ? ClaimCapacity::OPEN->value : ClaimCapacity::LIMIT_REACHED->value);
             } else {
-                $job->market_pub_state = MarketPubState::PRIVATE->value;
-                $job->market_mod_state = MarketModState::NOT_REQUIRED->value;
-                $job->claim_capacity = ClaimCapacity::OPEN->value;
+                self::setJobAttrIfColumnExists($job, 'market_pub_state', MarketPubState::PRIVATE->value);
+                self::setJobAttrIfColumnExists($job, 'market_mod_state', MarketModState::NOT_REQUIRED->value);
+                self::setJobAttrIfColumnExists($job, 'claim_capacity', ClaimCapacity::OPEN->value);
             }
         }
         $job->work_type = $requestData['work_from_home'] ?? ($requestData['work_type'] ?? 'no');
@@ -194,28 +224,36 @@ class JobService
             $job->save();
 
             // 1. Team Rank Tracking
-            $teamRankElastic = [
-                'company_id' => $user->company_id,
-                'user_id' => $user->id,
-                'candidate_id' => 0,
-                'profileUpload' => 0,
-                'interviewScheduled' => 0,
-                'interviewNoShow' => 0,
-                'offerReleased' => 0,
-                'candidateJoined' => 0,
-                'jobsPosted' => 2,
-                'feedbackGivenOnCVs' => 0,
-                'postJobToVendorMarket' => 0,
-                'outsourceJobsToVendors' => 0,
-                'listBenchCandidates' => 0,
-                'respondToBenchRequests' => 0,
-            ];
-            GeneralMethod::teamRankElastic($teamRankElastic);
+            try {
+                $teamRankElastic = [
+                    'company_id' => $user->company_id,
+                    'user_id' => $user->id,
+                    'candidate_id' => 0,
+                    'profileUpload' => 0,
+                    'interviewScheduled' => 0,
+                    'interviewNoShow' => 0,
+                    'offerReleased' => 0,
+                    'candidateJoined' => 0,
+                    'jobsPosted' => 2,
+                    'feedbackGivenOnCVs' => 0,
+                    'postJobToVendorMarket' => 0,
+                    'outsourceJobsToVendors' => 0,
+                    'listBenchCandidates' => 0,
+                    'respondToBenchRequests' => 0,
+                ];
+                GeneralMethod::teamRankElastic($teamRankElastic);
+            } catch (\Throwable $te) {
+                Log::warning('[JobService@createJob] Team rank tracking warning: '.$te->getMessage());
+            }
 
             // 2. Concurrency-Safe Coin Deductions via Atomic Redis Lock
-            JobConcurrencyLock::runForCompany((int) $user->company_id, function () use ($user, $job) {
-                GeneralMethod::coinsDeductions((int) $user->company_id, 2, $user->id, $user->company_id, $job->id, '');
-            });
+            try {
+                JobConcurrencyLock::runForCompany((int) $user->company_id, function () use ($user, $job) {
+                    GeneralMethod::coinsDeductions((int) $user->company_id, 2, $user->id, $user->company_id, $job->id, '');
+                });
+            } catch (\Throwable $ce) {
+                Log::warning('[JobService@createJob] Coin deduction warning: '.$ce->getMessage());
+            }
 
             // 3. Batch Qualification Processing
             $workQualification = $requestData['qualification'] ?? null;
@@ -475,122 +513,131 @@ class JobService
                 }
             }
 
-            // 12. Notification Email Dispatch
-            if (GeneralMethod::mailPermission(10)) {
-                $companyId = $user->company_id;
-                $mailTypeSubject = GeneralMethod::mailTypeSubject(10, 1);
-                $notificationemail = GeneralMethod::notification($companyId, 'Recuitment');
+            // 12. Notification Email Dispatch (Null-Safe & Resilient Guard)
+            try {
+                if (GeneralMethod::mailPermission(10)) {
+                    $companyId = $user->company_id;
+                    $mailTypeSubject = GeneralMethod::mailTypeSubject(10, 1);
+                    $notificationemail = GeneralMethod::notification($companyId, 'Recuitment');
 
-                $strAdded = DB::table('clients')
-                    ->select('companies.company_name', 'clients.name', 'clients.self_company')
-                    ->join('companies', 'companies.id', '=', 'clients.company_id')
-                    ->where('clients.id', $requestData['client_id'] ?? 0)
-                    ->first();
+                    $strAdded = DB::table('clients')
+                        ->select('companies.company_name', 'clients.name', 'clients.self_company')
+                        ->join('companies', 'companies.id', '=', 'clients.company_id')
+                        ->where('clients.id', $requestData['client_id'] ?? 0)
+                        ->first();
 
-                $contactPersonName = $strAdded->company_name ?? '';
-                if (! empty($strAdded) && $strAdded->self_company != 1 && $user->company_id == $job->company_id) {
-                    $contactPersonName = $strAdded->name ?? '';
-                }
+                    $contactPersonName = $strAdded?->company_name ?? '';
+                    if (! empty($strAdded) && $strAdded->self_company != 1 && $user->company_id == $job->company_id) {
+                        $contactPersonName = $strAdded?->name ?? '';
+                    }
 
-                $locationStr = '';
-                $clientLoc = DB::table('client_city_jobs')
-                    ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                    ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
-                    ->where('client_city_jobs.job_id', $job->id)
-                    ->get();
+                    $locationStr = '';
+                    $clientLoc = DB::table('client_city_jobs')
+                        ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                        ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                        ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                        ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                        ->where('client_city_jobs.job_id', $job->id)
+                        ->get();
 
-                if (count($clientLoc) > 0) {
-                    foreach ($clientLoc as $idx => $cval) {
-                        $locationStr .= ($idx + 1).') '.$cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name.'<br>';
+                    if (count($clientLoc) > 0) {
+                        foreach ($clientLoc as $idx => $cval) {
+                            $locationStr .= ($idx + 1).') '.$cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name.'<br>';
+                        }
+                    }
+
+                    $oprnlink = url('/service_company/mail_jobs_ajax/'.encrypt($job->id).'/');
+                    $rawSubject = $mailTypeSubject?->subject ?? 'New job Added | [{JOB_TITLE}] | [{ClientCompany}] | [{Location}] | [{JobID}]';
+                    $subject = str_replace(
+                        ['[{JOB_TITLE}]', '[{ClientCompany}]', '[{Location}]', '[{JobID}]'],
+                        [$job->title, $contactPersonName, $locationStr, $job->id],
+                        $rawSubject
+                    );
+
+                    $maillink = "You may access and manage the job posting using the link below:<br><br><a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>Click here to open the job</a> <br><br> If the above link does not open directly, you may copy and paste the below link it into your browser.<br><br><a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>".$oprnlink.'</a>';
+
+                    $statusJob = "<strong><span style='color:#27ae60'>Hiring</span></strong>";
+                    if ($job->status === 'inactive') {
+                        $statusJob = "<strong><span style='color:#ff0202'>Closed</span></strong>";
+                    } elseif ($job->status === 'hold') {
+                        $statusJob = "<strong><span style='color:#ffab00'>Hold</span></strong>";
+                    }
+
+                    $salaryMode = GeneralMethod::salaryMode();
+                    $currencyGet = GeneralMethod::currencySymboleforexcell();
+                    $maxSalMode = strtoupper(substr($salaryMode[$job->max_sal_mode] ?? '', 0, 1));
+                    $employmentType = GeneralMethod::employmentType()[(int) $job->employment_type] ?? '';
+
+                    $workType = 'Work From Office';
+                    if ($job->work_type === 'yes') {
+                        $workType = 'Remote';
+                    } elseif ($job->work_type === 'other') {
+                        $workType = 'Hybrid';
+                    }
+
+                    $jobAdditional = Job::select('jobs.id', 'job_categories.name as cat_name', 'qualification_master.name as qualification_name')
+                        ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
+                        ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
+                        ->withoutGlobalScopes()->find($job->id);
+
+                    $hmTemplateVal = is_array($requestData['hiring_namager'] ?? null)
+                        ? implode(', ', array_filter($requestData['hiring_namager']))
+                        : (string) ($requestData['hiring_namager'] ?? '');
+
+                    $recruiterTemplateVal = is_array($requestData['recruiter'] ?? null)
+                        ? implode(', ', array_filter($requestData['recruiter']))
+                        : (string) ($requestData['recruiter'] ?? '');
+
+                    $rawBodyDesc = $mailTypeSubject?->body_description ?? '<p>A new job has been added: [{job_title}] ([{job_id}])</p><p>[{maillink}]</p>';
+                    $templateDescription = str_replace(
+                        [
+                            '[{status}]', '[{clientCompany}]', '[{job_id}]', '[{job_title}]', '[{experience}]',
+                            '[{salaryrange}]', '[{NoofOpenings}]', '[{location}]', '[{remote}]', '[{JobType}]',
+                            '[{Department}]', '[{Qualification}]', '[{hiringManager}]', '[{recruiter}]', '[{addedby}]',
+                            '[{JobDescriptions}]', '[{maillink}]',
+                        ],
+                        [
+                            ucfirst($statusJob),
+                            $contactPersonName,
+                            $job->id,
+                            $job->title,
+                            $job->min_exp.'-'.$job->max_exp.' Years',
+                            ($currencyGet[$job->min_salary_currency] ?? '').' '.$job->min_salary.' to '.$job->max_salary.' '.$maxSalMode,
+                            $requestData['total_positions'] ?? '',
+                            $locationStr,
+                            $workType,
+                            $employmentType,
+                            $jobAdditional->cat_name ?? '',
+                            $jobAdditional->qualification_name ?? '',
+                            $hmTemplateVal,
+                            $recruiterTemplateVal,
+                            $user->name,
+                            $job->job_description,
+                            $maillink,
+                        ],
+                        $rawBodyDesc
+                    );
+
+                    $compRow = DB::table('companies')->where('id', $companyId)->first();
+                    $defailsEmail = $compRow?->company_email ?? '';
+                    $toMailId = $notificationemail?->email ?? $defailsEmail;
+
+                    if (! empty($toMailId)) {
+                        QueueNotificationMailService::dispatch(
+                            $toMailId,
+                            $subject,
+                            'email.common.index',
+                            (object) ['message' => $templateDescription],
+                            [],
+                            $user->email ?? '',
+                            $user->name ?? '',
+                            $cc,
+                            $companyId
+                        )->onConnection('emails');
                     }
                 }
-
-                $oprnlink = url('/service_company/mail_jobs_ajax/'.encrypt($job->id).'/');
-                $subject = str_replace(
-                    ['[{JOB_TITLE}]', '[{ClientCompany}]', '[{Location}]', '[{JobID}]'],
-                    [$job->title, $contactPersonName, $locationStr, $job->id],
-                    $mailTypeSubject->subject
-                );
-
-                $maillink = "You may access and manage the job posting using the link below:<br><br><a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>Click here to open the job</a> <br><br> If the above link does not open directly, you may copy and paste the below link it into your browser.<br><br><a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>".$oprnlink.'</a>';
-
-                $statusJob = "<strong><span style='color:#27ae60'>Hiring</span></strong>";
-                if ($job->status === 'inactive') {
-                    $statusJob = "<strong><span style='color:#ff0202'>Closed</span></strong>";
-                } elseif ($job->status === 'hold') {
-                    $statusJob = "<strong><span style='color:#ffab00'>Hold</span></strong>";
-                }
-
-                $salaryMode = GeneralMethod::salaryMode();
-                $currencyGet = GeneralMethod::currencySymboleforexcell();
-                $maxSalMode = strtoupper(substr($salaryMode[$job->max_sal_mode] ?? '', 0, 1));
-                $employmentType = GeneralMethod::employmentType()[(int) $job->employment_type] ?? '';
-
-                $workType = 'Work From Office';
-                if ($job->work_type === 'yes') {
-                    $workType = 'Remote';
-                } elseif ($job->work_type === 'other') {
-                    $workType = 'Hybrid';
-                }
-
-                $jobAdditional = Job::select('jobs.id', 'job_categories.name as cat_name', 'qualification_master.name as qualification_name')
-                    ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
-                    ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-                    ->withoutGlobalScopes()->find($job->id);
-
-                $hmTemplateVal = is_array($requestData['hiring_namager'] ?? null)
-                    ? implode(', ', array_filter($requestData['hiring_namager']))
-                    : (string) ($requestData['hiring_namager'] ?? '');
-
-                $recruiterTemplateVal = is_array($requestData['recruiter'] ?? null)
-                    ? implode(', ', array_filter($requestData['recruiter']))
-                    : (string) ($requestData['recruiter'] ?? '');
-
-                $templateDescription = str_replace(
-                    [
-                        '[{status}]', '[{clientCompany}]', '[{job_id}]', '[{job_title}]', '[{experience}]',
-                        '[{salaryrange}]', '[{NoofOpenings}]', '[{location}]', '[{remote}]', '[{JobType}]',
-                        '[{Department}]', '[{Qualification}]', '[{hiringManager}]', '[{recruiter}]', '[{addedby}]',
-                        '[{JobDescriptions}]', '[{maillink}]',
-                    ],
-                    [
-                        ucfirst($statusJob),
-                        $contactPersonName,
-                        $job->id,
-                        $job->title,
-                        $job->min_exp.'-'.$job->max_exp.' Years',
-                        ($currencyGet[$job->min_salary_currency] ?? '').' '.$job->min_salary.' to '.$job->max_salary.' '.$maxSalMode,
-                        $requestData['total_positions'] ?? '',
-                        $locationStr,
-                        $workType,
-                        $employmentType,
-                        $jobAdditional->cat_name ?? '',
-                        $jobAdditional->qualification_name ?? '',
-                        $hmTemplateVal,
-                        $recruiterTemplateVal,
-                        $user->name,
-                        $job->job_description,
-                        $maillink,
-                    ],
-                    $mailTypeSubject->body_description
-                );
-
-                $defailsEmail = DB::table('companies')->where('id', $companyId)->first()->company_email ?? '';
-                $toMailId = $notificationemail->email ?? $defailsEmail;
-
-                QueueNotificationMailService::dispatch(
-                    $toMailId,
-                    $subject,
-                    'email.common.index',
-                    (object) ['message' => $templateDescription],
-                    [],
-                    $user->email ?? '',
-                    $user->name ?? '',
-                    $cc,
-                    $companyId
-                )->onConnection('emails');
+            } catch (\Throwable $me) {
+                Log::warning('[JobService@createJob] Notification email dispatch warning: '.$me->getMessage());
             }
 
             // 13. Canonical Transactional Outbox (Guarantees projection & notification durability)
@@ -663,13 +710,13 @@ class JobService
         $job->client_id = $requestData['client_id'] ?? null;
         $job->title = $requestData['title'] ?? null;
         if (array_key_exists('raw_designation', $requestData)) {
-            $job->raw_designation = $requestData['raw_designation'];
+            self::setJobAttrIfColumnExists($job, 'raw_designation', $requestData['raw_designation']);
         }
         if (array_key_exists('canonical_designation_id', $requestData)) {
-            $job->canonical_designation_id = ! empty($requestData['canonical_designation_id']) ? (int) $requestData['canonical_designation_id'] : null;
+            self::setJobAttrIfColumnExists($job, 'canonical_designation_id', ! empty($requestData['canonical_designation_id']) ? (int) $requestData['canonical_designation_id'] : null);
         }
         if (array_key_exists('taxonomy_version', $requestData)) {
-            $job->taxonomy_version = $requestData['taxonomy_version'];
+            self::setJobAttrIfColumnExists($job, 'taxonomy_version', $requestData['taxonomy_version']);
         }
         $job->work_shifts = $requestData['work_shifts'] ?? null;
         if (array_key_exists('category_id', $requestData)) {
@@ -752,17 +799,18 @@ class JobService
 
         if ($isInternalOnly) {
             $job->carrier_website = 0;
-            $job->market_pub_state = MarketPubState::UNPUBLISHED->value;
-            $job->bench_submission = BenchSubmissionState::DISABLED->value;
+            self::setJobAttrIfColumnExists($job, 'market_pub_state', MarketPubState::UNPUBLISHED->value);
+            self::setJobAttrIfColumnExists($job, 'bench_submission', BenchSubmissionState::DISABLED->value);
             $job->public_market_status = 0;
         } else {
             $job->carrier_website = $hasCareer ? 1 : 0;
-            $job->bench_submission = $hasBench ? BenchSubmissionState::ENABLED->value : BenchSubmissionState::DISABLED->value;
+            self::setJobAttrIfColumnExists($job, 'bench_submission', $hasBench ? BenchSubmissionState::ENABLED->value : BenchSubmissionState::DISABLED->value);
 
             if (isset($requestData['visibility_marketplace']) || isset($requestData['visibility_bench_talent']) || isset($requestData['public_market_status'])) {
                 if ($hasMarketplace || $hasBench) {
                     // Check if already approved
-                    if (! in_array($job->market_mod_state, [MarketModState::APPROVED->value, MarketModState::AUTO_APPROVED->value])) {
+                    $currentModState = self::jobHasColumn('market_mod_state') ? $job->market_mod_state : null;
+                    if (! in_array($currentModState, [MarketModState::APPROVED->value, MarketModState::AUTO_APPROVED->value])) {
                         $moderationService = app(\App\Services\MarketplaceModerationService::class);
                         $eval = $moderationService->evaluateRisk([
                             'title' => $job->title,
@@ -776,18 +824,18 @@ class JobService
 
                         $autoApproveSetting = (bool) DB::table('global_settings')->value('public_market_job_status');
                         if (! $eval['hard_blocked'] && $eval['risk_score'] < 0.20 && $autoApproveSetting) {
-                            $job->market_pub_state = MarketPubState::PUBLISHED->value;
-                            $job->market_mod_state = MarketModState::AUTO_APPROVED->value;
+                            self::setJobAttrIfColumnExists($job, 'market_pub_state', MarketPubState::PUBLISHED->value);
+                            self::setJobAttrIfColumnExists($job, 'market_mod_state', MarketModState::AUTO_APPROVED->value);
                         } else {
-                            $job->market_pub_state = MarketPubState::PENDING_REVIEW->value;
-                            $job->market_mod_state = MarketModState::PENDING->value;
+                            self::setJobAttrIfColumnExists($job, 'market_pub_state', MarketPubState::PENDING_REVIEW->value);
+                            self::setJobAttrIfColumnExists($job, 'market_mod_state', MarketModState::PENDING->value);
                         }
                     } else {
-                        $job->market_pub_state = MarketPubState::PUBLISHED->value;
+                        self::setJobAttrIfColumnExists($job, 'market_pub_state', MarketPubState::PUBLISHED->value);
                     }
-                    $job->claim_capacity = $hasMarketplace ? ClaimCapacity::OPEN->value : ClaimCapacity::LIMIT_REACHED->value;
+                    self::setJobAttrIfColumnExists($job, 'claim_capacity', $hasMarketplace ? ClaimCapacity::OPEN->value : ClaimCapacity::LIMIT_REACHED->value);
                 } else {
-                    $job->market_pub_state = MarketPubState::UNPUBLISHED->value;
+                    self::setJobAttrIfColumnExists($job, 'market_pub_state', MarketPubState::UNPUBLISHED->value);
                 }
             }
         }

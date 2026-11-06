@@ -10153,7 +10153,17 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if (xhr.status === 0 || !navigator.onLine) {
                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
                     } else {
-                        var errText = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Server error while saving the job. Please try again.';
+                        var errText = 'Server error while saving the job. Please try again.';
+                        if (xhr.responseJSON) {
+                            if (xhr.responseJSON.message) {
+                                errText = xhr.responseJSON.message;
+                            } else if (xhr.responseJSON.errors) {
+                                var errList = Object.values(xhr.responseJSON.errors).flat();
+                                if (errList.length > 0) {
+                                    errText = errList.join(' ');
+                                }
+                            }
+                        }
                         showToast(errText, 'error');
                     }
                 }
