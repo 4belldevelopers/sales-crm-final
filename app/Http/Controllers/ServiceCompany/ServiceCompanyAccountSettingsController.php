@@ -1716,7 +1716,9 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                     $countryID = (@$city_row) ? $city_row->country_id : '';
                     $stateId = GeneralMethod::stateId($cityID);
 
+                    $company_id = (int) auth()->user()->company_id;
                     $values = [
+                        'company_id' => $company_id,
                         'client_id' => $client_id,
                         'country_id' => $countryID,
                         'city' => $city,
@@ -1726,9 +1728,12 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                         'state' => $stateId,
                     ];
 
-                    DB::table('client_location')->insert($values);
+                    $insertedId = DB::table('client_location')->insertGetId($values);
 
-                    $company_id = auth()->user()->company_id;
+                    \Illuminate\Support\Facades\Cache::forget("tenant:{$company_id}:client_details:{$client_id}");
+                    \Illuminate\Support\Facades\Cache::forget("tenant:{$company_id}:dataset:clients:perm:default");
+                    \Illuminate\Support\Facades\Cache::forget("tenant:{$company_id}:clients");
+                    \Illuminate\Support\Facades\Cache::increment("tenant:{$company_id}:clients_version");
                     \Illuminate\Support\Facades\Cache::forget("tenant_country_code:{$company_id}");
                     \Illuminate\Support\Facades\Cache::forget("tenant_default_country_id:{$company_id}");
                     \Illuminate\Support\Facades\Cache::forget("tenant_default_calling_code:{$company_id}");
@@ -1740,6 +1745,9 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
                     return Reply::dataOnly([
                         'status' => 'success',
+                        'location_id' => $insertedId,
+                        'address' => $address,
+                        'city' => $cityName ?? '',
                         'tenant_defaults' => GeneralMethod::getTenantDefaultsPayload($company_id),
                     ]);
 

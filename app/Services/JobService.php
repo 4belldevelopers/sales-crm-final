@@ -114,9 +114,9 @@ class JobService
         $job->max_sal_mode = $requestData['max_sal_mode'] ?? null;
         $job->salary_visibility = \App\Services\SalaryVisibilityPolicy::normalize($requestData['salary_visibility'] ?? null);
 
-        if (! empty($requestData['detail_description'])) {
-            $job->job_description = $requestData['detail_description'];
-        }
+        $job->job_description = $requestData['detail_description'] ?? ($requestData['job_description'] ?? 'Job details as specified.');
+        $job->job_requirement = ! empty($requestData['job_requirement']) ? $requestData['job_requirement'] : (! empty($requestData['detail_description']) ? $requestData['detail_description'] : 'As per job description');
+        $job->section_visibility = ! empty($requestData['section_visibility']) ? $requestData['section_visibility'] : 'everywhere';
 
         $isInternalOnly = isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1;
         $hasCareer = isset($requestData['carrier_website']) ? ((int) $requestData['carrier_website'] === 1) : (! empty($requestData['visibility_career']));
@@ -794,9 +794,9 @@ class JobService
         $job->work_type = $requestData['work_from_home'] ?? null;
         $job->show_vendor = $requestData['show_client_name'] ?? null;
 
-        if (! empty($requestData['detail_description'])) {
-            $job->job_description = $requestData['detail_description'];
-        }
+        $job->job_description = $requestData['detail_description'] ?? ($requestData['job_description'] ?? 'Job details as specified.');
+        $job->job_requirement = ! empty($requestData['job_requirement']) ? $requestData['job_requirement'] : (! empty($requestData['detail_description']) ? $requestData['detail_description'] : 'As per job description');
+        $job->section_visibility = ! empty($requestData['section_visibility']) ? $requestData['section_visibility'] : 'everywhere';
 
         $currency = GeneralMethod::currency();
 
