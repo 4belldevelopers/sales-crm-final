@@ -13,9 +13,7 @@ namespace App\Http\Controllers\ServiceCompany;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Jobs\QueueNotificationMailService;
-use App\Models\AddJobWiseCondidate;
 use App\Models\InterviewSchedule;
-use App\Models\JobApplication;
 use App\Models\OpenworkspaceInterviewSchedule;
 use App\Models\User;
 use App\Services\ElasticService;
@@ -72,10 +70,10 @@ class InterviewScheduleController extends ServiceCompanyBaseController
 
         $startOfDay = Carbon::now()->startOfDay()->toDateTimeString();
         $endOfDay = Carbon::now()->endOfDay()->toDateTimeString();
-        $valCheck_date = request('custom_hiringtype');
+        $valCheck_date = $request->input('custom_hiringtype') ?? request('custom_hiringtype');
         $chkAdminRole = $this->user->hasRole('admin');
 
-        $searchTerm = trim(request('custom_search') ?? $request->input('search') ?? $request->input('q'));
+        $searchTerm = trim($request->input('custom_search') ?? $request->input('search') ?? $request->input('q') ?? request('custom_search') ?? '');
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
@@ -108,7 +106,9 @@ class InterviewScheduleController extends ServiceCompanyBaseController
 
         $versionKey = 'allinterviewschedule_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allinterviewschedule:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $companyVersionKey = 'allinterviewschedule_version_company_'.$company_id;
+        $companyVersion = cache()->get($companyVersionKey, 1);
+        $cacheKeySet = 'ats:allinterviewschedule:'.$this->user->id.':v'.$version.':cv'.$companyVersion.':'.md5(json_encode($cachePayload));
 
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
@@ -139,7 +139,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             return response()->json($responseData);
         }
 
-        $valCheck = request('custom_hiringtype');
+        $valCheck = $request->input('custom_hiringtype') ?? request('custom_hiringtype');
         switch ($valCheck) {
             case 1:
                 $sort[] = ['schedule_date' => ['order' => 'asc']];
@@ -338,6 +338,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         if (! $chkAdminRole) {
             $accessShould = [
                 ['nested' => ['path' => 'job_assign', 'query' => ['term' => ['job_assign.user_id' => auth()->user()->id]]]],
+                ['term' => ['interview_created_by' => (int) auth()->user()->id]],
             ];
             $myName = trim(auth()->user()->name ?? '');
             if ($myName !== '') {
@@ -396,7 +397,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $toEntry = $total > 0 ? min($page * $size, $total) : 0;
 
         $userPermissions = $this->userPermissions;
-        $statsCacheKey = 'ats:interview_stats:'.$this->user->id.':'.$version;
+        $statsCacheKey = 'ats:interview_stats:'.$this->user->id.':v'.$version.':cv'.$companyVersion;
         $stats = cache()->remember($statsCacheKey, now()->addMinutes(10), function () use ($company_id, $chkAdminRole, $page) {
             return $this->dashboardStats($company_id, $chkAdminRole, $page);
         });
@@ -742,7 +743,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     ->select(
                         'jobs.id as job_id',
                         DB::raw("COALESCE(clients.name, companies.company_name, '') as client_title"),
-                        DB::raw("COALESCE(clients.self_company, 1) as self_company")
+                        DB::raw('COALESCE(clients.self_company, 1) as self_company')
                     )
                     ->get();
                 foreach ($clientRows as $cRow) {
@@ -1018,7 +1019,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     ->select(
                         'jobs.id as job_id',
                         DB::raw("COALESCE(clients.name, companies.company_name, '') as client_title"),
-                        DB::raw("COALESCE(clients.self_company, 1) as self_company")
+                        DB::raw('COALESCE(clients.self_company, 1) as self_company')
                     )
                     ->get();
                 foreach ($clientRows as $cRow) {

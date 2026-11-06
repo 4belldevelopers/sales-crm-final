@@ -48,7 +48,7 @@ class JobService
         $job->raw_designation = $requestData['raw_designation'] ?? ($requestData['title'] ?? null);
         $job->canonical_designation_id = ! empty($requestData['canonical_designation_id']) ? (int) $requestData['canonical_designation_id'] : null;
         $job->taxonomy_version = $requestData['taxonomy_version'] ?? config('taxonomy.current_version', '2.0.0');
-        $job->work_shifts = $requestData['work_shifts'] ?? null;
+        $job->work_shifts = ! empty($requestData['work_shifts']) ? $requestData['work_shifts'] : 'Day Shift';
         $job->category_id = ! empty($requestData['category_id']) && is_numeric($requestData['category_id']) ? (int) $requestData['category_id'] : null;
         if (empty($job->category_id) && (! empty($requestData['custom_department']) || ! empty($requestData['category_id_display']))) {
             $customDept = trim($requestData['custom_department'] ?? $requestData['category_id_display']);

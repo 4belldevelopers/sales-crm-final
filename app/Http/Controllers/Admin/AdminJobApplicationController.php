@@ -2372,9 +2372,7 @@ class AdminJobApplicationController extends AdminBaseController
         if (! empty($panellist)) {
             $interviewSchedule->interviewers = $panellist;   // implode(',', $panellist);
         }
-        if (! empty($interview_created_by)) {
-            $interviewSchedule->interview_created_by = $this->user->id;
-        }
+        $interviewSchedule->interview_created_by = auth()->user()->id ?? $this->user->id;
         $interviewSchedule->schedule_date = $interviewDate;
         $interviewSchedule->save();
 
@@ -2502,9 +2500,7 @@ class AdminJobApplicationController extends AdminBaseController
         if (! empty($panellist)) {
             $interviewSchedule->interviewers = $panellist;   // implode(',', $panellist);
         }
-        if (! empty($interview_created_by)) {
-            $interviewSchedule->interview_created_by = $this->user->id;
-        }
+        $interviewSchedule->interview_created_by = auth()->user()->id ?? $this->user->id;
         $interviewSchedule->save();
 
         $interviewSchedule_id = '';

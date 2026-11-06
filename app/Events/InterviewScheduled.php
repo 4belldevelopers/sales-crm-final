@@ -22,16 +22,19 @@ class InterviewScheduled implements ShouldBroadcast
     use Dispatchable, SerializesModels;
 
     public function __construct(
-        public readonly int    $companyId,
-        public readonly int    $interviewId,
+        public readonly int $companyId,
+        public readonly int $interviewId,
         public readonly string $scheduleDate,
         public readonly string $stage = '',
         public readonly string $status = 'pending',
     ) {}
 
-    public function broadcastOn(): PrivateChannel
+    public function broadcastOn(): array
     {
-        return new PrivateChannel("company.{$this->companyId}.dashboard");
+        return [
+            new PrivateChannel("company.{$this->companyId}"),
+            new PrivateChannel("company.{$this->companyId}.dashboard"),
+        ];
     }
 
     public function broadcastAs(): string
@@ -42,10 +45,10 @@ class InterviewScheduled implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'interviewId'  => $this->interviewId,
+            'interviewId' => $this->interviewId,
             'scheduleDate' => $this->scheduleDate,
-            'stage'        => $this->stage,
-            'status'       => $this->status,
+            'stage' => $this->stage,
+            'status' => $this->status,
         ];
     }
 }
