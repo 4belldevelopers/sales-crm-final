@@ -5873,31 +5873,53 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
+        $compRow = DB::table('companies')->where('id', $companyId)->first();
+        $authCompName = ! empty($compRow?->company_name) ? trim($compRow->company_name) : (! empty($this->companyName) ? trim($this->companyName) : null);
+        $this->company_name = $authCompName;
+        $this->companyName = $authCompName;
+
         // 4. Tenant + Master categories (cached 5 min; busted by JobCategoryObserver) and clients
         $this->categories = Cache::remember('tenant:'.$companyId.':all_categories', 300, function () use ($companyId) {
             return JobCategory::where(function ($q) use ($companyId) {
                 $q->where('company_id', $companyId)->orWhereNull('company_id');
             })->orderBy('name', 'ASC')->get();
         });
-        $authCompName = ! empty($this->company_name) ? trim($this->company_name) : null;
-        $this->client = Cache::remember('tenant:'.$companyId.':clients', 300, function () use ($companyId, $authCompName) {
+
+        // Tenancy Note: Ensure self-company client is 100% synchronized with authoritative company_name
+        $clients = Client::select('*')->where('company_id', $companyId)->orderBy('clients.name', 'ASC')->get();
+        $selfClients = $clients->where('self_company', 1);
+        $hasDrift = false;
+
+        if ($selfClients->isEmpty() && $authCompName) {
+            $newSelfId = DB::table('clients')->insertGetId([
+                'company_id' => $companyId,
+                'name' => $authCompName,
+                'self_company' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            GeneralMethod::clientStaffingPartner($newSelfId);
+            $hasDrift = true;
             $clients = Client::select('*')->where('company_id', $companyId)->orderBy('clients.name', 'ASC')->get();
-            $selfClient = $clients->firstWhere('self_company', 1);
-            if ($selfClient && $authCompName && $selfClient->name !== $authCompName) {
-                DB::table('clients')->where('id', $selfClient->id)->where('company_id', $companyId)->update(['name' => $authCompName]);
-                $selfClient->name = $authCompName;
-            } elseif (! $selfClient && $authCompName) {
-                $newSelfId = DB::table('clients')->insertGetId([
-                    'company_id' => $companyId,
-                    'name' => $authCompName,
-                    'self_company' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                $clients = Client::select('*')->where('company_id', $companyId)->orderBy('clients.name', 'ASC')->get();
+        } else {
+            foreach ($selfClients as $sc) {
+                if ($authCompName && $sc->name !== $authCompName) {
+                    DB::table('clients')->where('id', $sc->id)->where('company_id', $companyId)->update(['name' => $authCompName]);
+                    $sc->name = $authCompName;
+                    GeneralMethod::clientStaffingPartner($sc->id);
+                    $hasDrift = true;
+                }
             }
-            return $clients;
-        });
+        }
+
+        if ($hasDrift) {
+            Cache::forget('tenant:'.$companyId.':clients');
+            Cache::forget('tenant:'.$companyId.':dataset:clients:perm:default');
+            $newVer = ((int) Cache::get('tenant:'.$companyId.':clients_version', 1)) + 1;
+            Cache::forever('tenant:'.$companyId.':clients_version', $newVer);
+        }
+
+        $this->client = $clients;
 
         // Ensure self-company client has at least one registered workplace address
         $selfClientObj = $this->client->firstWhere('self_company', 1);
@@ -5905,7 +5927,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $hasLoc = DB::table('client_location')->where('client_id', $selfClientObj->id)->exists();
             if (! $hasLoc) {
                 $defaultAddr = DB::table('billing_address_companies')->where('company_id', $companyId)->first();
-                $compRow = DB::table('companies')->where('id', $companyId)->first();
                 $street = ! empty($defaultAddr->street) ? trim($defaultAddr->street) : (! empty($compRow->address) ? trim($compRow->address) : 'Headquarters Workplace');
                 $countryId = ! empty($defaultAddr->country_id) ? (int) $defaultAddr->country_id : (! empty($this->country) ? (int) $this->country : 101);
                 $cityId = ! empty($defaultAddr->city) && is_numeric($defaultAddr->city) ? (int) $defaultAddr->city : null;
@@ -5919,6 +5940,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+                GeneralMethod::clientStaffingPartner($selfClientObj->id);
                 Cache::forget('tenant:'.$companyId.':clients_version');
                 Cache::forget('tenant:'.$companyId.':dataset:clients:perm:default');
             }
@@ -6111,18 +6133,55 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             ],
                         ],
                         'size' => 5000,
-                        '_source' => ['client_id', 'id', 'name', 'company_name', 'self_company', 'logo', 'industries', 'td_industries', 'client_location', 'client_contact_info'],
+                        '_source' => ['client_id', 'id', 'name', 'company_name', 'self_company', 'logo', 'industries', 'td_industries', 'ind_name', 'main_ind_name', 'client_location', 'client_contact_info'],
                     ],
                 ]);
 
                 $hits = $esResult['hits']['hits'] ?? [];
                 if (! empty($hits)) {
+                    // Tenancy Note: Authoritatively sync tenant company identity
+                    $compRow = DB::table('companies')->where('id', $companyId)->first();
+                    $authoritativeCompName = $compRow?->company_name ?: null;
+                    $authoritativeIndId = (int) ($compRow?->industries ?? 0);
+                    $authoritativeIndName = $authoritativeIndId > 0
+                        ? (DB::table('td_industries')->where('ind_id', $authoritativeIndId)->value('ind_name') ?? 'Staffing & Recruiting')
+                        : 'Staffing & Recruiting';
+                    $authoritativeLogo = $compRow?->logo ?: null;
+
+                    // Pre-resolve td_industries map for non-numeric industry labels
+                    $indIds = [];
+                    foreach ($hits as $hit) {
+                        $src = $hit['_source'] ?? [];
+                        $ind = $src['industries'] ?? ($src['industry'] ?? null);
+                        if (is_numeric($ind) && (int) $ind > 0) {
+                            $indIds[] = (int) $ind;
+                        }
+                    }
+                    $industriesMap = ! empty($indIds)
+                        ? DB::table('td_industries')->whereIn('ind_id', array_unique($indIds))->pluck('ind_name', 'ind_id')->toArray()
+                        : [];
+
                     $clientList = [];
                     foreach ($hits as $hit) {
                         $src = $hit['_source'] ?? [];
                         $id = (int) ($src['id'] ?? $src['client_id'] ?? $hit['_id']);
                         $isSelf = (int) ($src['self_company'] ?? 0) === 1;
-                        $name = ($isSelf && ! empty($src['company_name'])) ? (string) $src['company_name'] : (string) ($src['name'] ?? $src['company_name'] ?? '');
+
+                        if ($isSelf && $authoritativeCompName) {
+                            $name = $authoritativeCompName;
+                            $industry = $authoritativeIndName;
+                            $logo = $authoritativeLogo ?: ($src['logo'] ?? null);
+                        } else {
+                            $name = (string) ($src['name'] ?? $src['company_name'] ?? '');
+                            $indCandidate = (string) ($src['ind_name'] ?? ($src['main_ind_name'] ?? ($src['td_industries'][0]['ind_name'] ?? '')));
+                            if (empty($indCandidate) || is_numeric($indCandidate)) {
+                                $indId = (int) ($src['industries'] ?? ($src['industry'] ?? 0));
+                                $indCandidate = ($indId > 0 && isset($industriesMap[$indId])) ? $industriesMap[$indId] : '';
+                            }
+                            $industry = is_numeric($indCandidate) ? '' : $indCandidate;
+                            $logo = $src['logo'] ?? null;
+                        }
+
                         if (! $id || ! $name) {
                             continue;
                         }
@@ -6156,7 +6215,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             }
                         }
 
-                        $industry = (string) ($src['industries'] ?? ($src['td_industries'][0]['ind_name'] ?? ''));
                         $cleanChars = preg_replace('/[^A-Za-z0-9]/', '', $name);
                         $code = strtoupper(substr($cleanChars ?: 'CL', 0, 4));
 
@@ -6167,7 +6225,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             's' => 1,
                             'i' => $industry,
                             'c' => $code,
-                            'l' => $src['logo'] ?? null,
+                            'l' => $logo,
                             'loc' => $locList,
                             'cc' => $contactList,
                         ];
@@ -6185,7 +6243,19 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // 2. Controlled cache-construction read from MySQL (strictly off web user path)
         $clients = DB::table('clients')
             ->leftJoin('companies', 'companies.id', '=', 'clients.company_id')
-            ->select('clients.id', 'clients.name', 'clients.self_company', 'clients.logo', 'clients.industry', 'companies.company_name')
+            ->leftJoin('td_industries as client_ind', 'client_ind.ind_id', '=', 'clients.industry')
+            ->leftJoin('td_industries as comp_ind', 'comp_ind.ind_id', '=', 'companies.industries')
+            ->select(
+                'clients.id',
+                'clients.name',
+                'clients.self_company',
+                'clients.logo',
+                'clients.industry',
+                'companies.company_name',
+                'companies.logo as company_logo',
+                'client_ind.ind_name as client_ind_name',
+                'comp_ind.ind_name as comp_ind_name'
+            )
             ->where('clients.company_id', $companyId)
             ->orderBy('clients.name', 'ASC')
             ->get();
@@ -6260,14 +6330,22 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $clientDisplayName = ($isSelf && ! empty($c->company_name)) ? $c->company_name : $c->name;
             $cleanChars = preg_replace('/[^A-Za-z0-9]/', '', $clientDisplayName);
             $code = strtoupper(substr($cleanChars ?: 'CL', 0, 4));
+            $industryName = $isSelf
+                ? ($c->comp_ind_name ?: ($c->client_ind_name ?: 'Staffing & Recruiting'))
+                : ($c->client_ind_name ?: '');
+            if (is_numeric($industryName)) {
+                $industryName = '';
+            }
+            $logo = $isSelf ? ($c->company_logo ?: $c->logo) : $c->logo;
+
             $clientList[] = [
                 'id' => (int) $c->id,
                 'n' => (string) $clientDisplayName,
                 't' => (int) $c->self_company,
                 's' => 1,
-                'i' => (string) ($c->industry ?: ''),
+                'i' => (string) $industryName,
                 'c' => $code,
-                'l' => $c->logo ?: null,
+                'l' => $logo ?: null,
                 'loc' => $locationsByClient[$c->id] ?? [],
                 'cc' => $contactsByClient[$c->id] ?? [],
             ];

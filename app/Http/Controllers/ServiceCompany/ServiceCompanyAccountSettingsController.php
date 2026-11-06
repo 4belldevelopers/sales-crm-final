@@ -1085,71 +1085,73 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $response = $this->elasticService->getClient()->updateByQuery($params);
 
         $client_data = GeneralMethod::getClientIdCompany($company_id);
-        // dd($client_data,$company_id);
-        $client = Client::withoutGlobalScopes()->findOrFail($client_data->client_id);
-        if ($compName !== '') {
-            $client->name = $compName;
-        }
-        if (! empty(@$request->website)) {
-            $client->website = @$request->website;
-        }
-        if (! empty($industryId)) {
-            $client->industry = $industryId;
-        }
-        if (! empty(@$request->company_size) || ! empty(@$request->company_sizes)) {
-            $company_size = @$request->company_size ?: @$request->company_sizes;
-            if (strpos($company_size, '-') !== false) {
-                [$from_size, $to_size] = explode('-', $company_size);
-                $client->company_size_from = $from_size;
-                $client->company_sizes = $to_size;
+        $clientId = $client_data?->client_id ?? DB::table('clients')->where('company_id', $company_id)->where('self_company', 1)->value('id');
+        $client = $clientId ? Client::withoutGlobalScopes()->find($clientId) : null;
+        if ($client) {
+            if ($compName !== '') {
+                $client->name = $compName;
             }
-        }
-        if (! empty(@$request->company_type)) {
-            $client->company_type = @$request->company_type;
-        } elseif (! empty(@$request->industries_type)) {
-            $client->company_type = @$request->industries_type;
-        }
-        if (! empty(@$request->founded)) {
-            $client->founded = @$request->founded;
-        }
-        if (\Illuminate\Support\Facades\Schema::hasColumn('clients', 'tax_id') && $request->filled('tax_id')) {
-            $client->tax_id = $request->tax_id;
-        }
-        if (\Illuminate\Support\Facades\Schema::hasColumn('clients', 'career_page_link') && ($request->filled('career_page_link') || $request->filled('career_page_url'))) {
-            $client->career_page_link = $request->career_page_link ?? $request->career_page_url;
-        }
-        if ($company->logo) {
-            $client->logo = $company->logo;
-        }
-        if (! empty(@$request->description)) {
-            $client->description = @$request->description;
-        }
-        if ($request->has('tags') && \Illuminate\Support\Facades\Schema::hasColumn('clients', 'tags')) {
-            $client->tags = is_array($request->tags) ? json_encode($request->tags) : $request->tags;
-        }
+            if (! empty(@$request->website)) {
+                $client->website = @$request->website;
+            }
+            if (! empty($industryId)) {
+                $client->industry = $industryId;
+            }
+            if (! empty(@$request->company_size) || ! empty(@$request->company_sizes)) {
+                $company_size = @$request->company_size ?: @$request->company_sizes;
+                if (strpos($company_size, '-') !== false) {
+                    [$from_size, $to_size] = explode('-', $company_size);
+                    $client->company_size_from = $from_size;
+                    $client->company_sizes = $to_size;
+                }
+            }
+            if (! empty(@$request->company_type)) {
+                $client->company_type = @$request->company_type;
+            } elseif (! empty(@$request->industries_type)) {
+                $client->company_type = @$request->industries_type;
+            }
+            if (! empty(@$request->founded)) {
+                $client->founded = @$request->founded;
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('clients', 'tax_id') && $request->filled('tax_id')) {
+                $client->tax_id = $request->tax_id;
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('clients', 'career_page_link') && ($request->filled('career_page_link') || $request->filled('career_page_url'))) {
+                $client->career_page_link = $request->career_page_link ?? $request->career_page_url;
+            }
+            if ($company->logo) {
+                $client->logo = $company->logo;
+            }
+            if (! empty(@$request->description)) {
+                $client->description = @$request->description;
+            }
+            if ($request->has('tags') && \Illuminate\Support\Facades\Schema::hasColumn('clients', 'tags')) {
+                $client->tags = is_array($request->tags) ? json_encode($request->tags) : $request->tags;
+            }
 
-        // Authoritatively persist social links and metadata into $client->detail JSON
-        $existingDetail = [];
-        if (! empty($client->detail)) {
-            $existingDetail = is_string($client->detail) ? (json_decode($client->detail, true) ?: []) : (array) $client->detail;
-        }
-        $detailData = array_merge($existingDetail, [
-            'career_page_url' => $request->career_page_url ?? $request->career_page_link ?? null,
-            'linkedin_url' => $request->linkedin_url ?? null,
-            'twitter_url' => $request->twitter_url ?? null,
-            'github_url' => $request->github_url ?? null,
-            'youtube_url' => $request->youtube_url ?? null,
-            'facebook_url' => $request->facebook_url ?? null,
-            'instagram_url' => $request->instagram_url ?? null,
-            'custom_link' => $request->custom_link ?? null,
-            'tax_id' => $request->tax_id ?? null,
-        ]);
-        $filteredDetail = array_filter($detailData, fn ($val) => $val !== null && $val !== '');
-        if (! empty($filteredDetail)) {
-            $client->detail = json_encode($filteredDetail);
-        }
+            // Authoritatively persist social links and metadata into $client->detail JSON
+            $existingDetail = [];
+            if (! empty($client->detail)) {
+                $existingDetail = is_string($client->detail) ? (json_decode($client->detail, true) ?: []) : (array) $client->detail;
+            }
+            $detailData = array_merge($existingDetail, [
+                'career_page_url' => $request->career_page_url ?? $request->career_page_link ?? null,
+                'linkedin_url' => $request->linkedin_url ?? null,
+                'twitter_url' => $request->twitter_url ?? null,
+                'github_url' => $request->github_url ?? null,
+                'youtube_url' => $request->youtube_url ?? null,
+                'facebook_url' => $request->facebook_url ?? null,
+                'instagram_url' => $request->instagram_url ?? null,
+                'custom_link' => $request->custom_link ?? null,
+                'tax_id' => $request->tax_id ?? null,
+            ]);
+            $filteredDetail = array_filter($detailData, fn ($val) => $val !== null && $val !== '');
+            if (! empty($filteredDetail)) {
+                $client->detail = json_encode($filteredDetail);
+            }
 
-        $client->save();
+            $client->save();
+        }
 
         // Also synchronize to company_career_settings if table exists
         if (\Illuminate\Support\Facades\Schema::hasTable('company_career_settings')) {
@@ -1168,8 +1170,13 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             );
         }
 
-        if ($client_data) {
+        if ($client) {
+            GeneralMethod::clientStaffingPartner($client->id);
+        } elseif ($client_data && ! empty($client_data->client_id)) {
             GeneralMethod::clientStaffingPartner($client_data->client_id);
+        }
+        if ($compName !== '') {
+            DB::table('clients')->where('company_id', $company_id)->where('self_company', 1)->update(['name' => $compName]);
         }
 
         $default_rates = DB::table('default_rates')->first();
@@ -1667,6 +1674,10 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         \Illuminate\Support\Facades\Cache::forget("tenant_default_timezone:{$company_id}");
         \Illuminate\Support\Facades\Cache::forget("tenant_defaults_payload:{$company_id}");
         \Illuminate\Support\Facades\Cache::forever("tenant_defaults_version:{$company_id}", time());
+        Cache::forget("tenant:{$company_id}:clients");
+        Cache::forget("tenant:{$company_id}:dataset:clients:perm:default");
+        $newClientsVersion = ((int) Cache::get("tenant:{$company_id}:clients_version", 1)) + 1;
+        Cache::forever("tenant:{$company_id}:clients_version", $newClientsVersion);
         $this->accountSettingsService->flushAccountCache($company_id);
         \App\Services\CommercialReadModelService::invalidateTenantCache($company_id);
 

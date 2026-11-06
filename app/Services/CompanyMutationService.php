@@ -556,6 +556,15 @@ class CompanyMutationService
                     }
                 }
 
+                $selfClientRow = DB::table('clients')->select('id')->where('company_id', $companyId)->where('self_company', 1)->first();
+                if ($selfClientRow?->id) {
+                    \App\Helper\GeneralMethod::clientStaffingPartner($selfClientRow->id);
+                }
+                \Illuminate\Support\Facades\Cache::forget("tenant:{$companyId}:clients");
+                \Illuminate\Support\Facades\Cache::forget("tenant:{$companyId}:dataset:clients:perm:default");
+                $newClientsVersion = ((int) \Illuminate\Support\Facades\Cache::get("tenant:{$companyId}:clients_version", 1)) + 1;
+                \Illuminate\Support\Facades\Cache::forever("tenant:{$companyId}:clients_version", $newClientsVersion);
+
                 return [
                     'status' => 'success',
                     'action' => 'updated',
