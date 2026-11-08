@@ -114,10 +114,20 @@ class JobService
         $job->min_exp = isset($requestData['min_exp']) && is_numeric($requestData['min_exp']) ? (int) $requestData['min_exp'] : 0;
         $job->max_exp = isset($requestData['max_exp']) && is_numeric($requestData['max_exp']) ? (int) $requestData['max_exp'] : 0;
 
-        $startDate = date('Y-m-d');
-        $endDate = date('Y-m-d', strtotime($startDate.' + '.($requestData['end_date'] ?? 0).' days'));
-        $job->start_date = $startDate;
-        $job->end_date = $endDate;
+        $startDateStr = date('Y-m-d H:i:s');
+        $rawEndDate = $requestData['end_date'] ?? null;
+        if (! empty($rawEndDate)) {
+            if (is_numeric($rawEndDate)) {
+                $endDateStr = date('Y-m-d 23:59:59', strtotime(date('Y-m-d').' + '.(int) $rawEndDate.' days'));
+            } else {
+                $parsedTime = strtotime($rawEndDate);
+                $endDateStr = $parsedTime ? date('Y-m-d 23:59:59', $parsedTime) : date('Y-m-d 23:59:59', strtotime(date('Y-m-d').' + 60 days'));
+            }
+        } else {
+            $endDateStr = date('Y-m-d 23:59:59', strtotime(date('Y-m-d').' + 60 days'));
+        }
+        $job->start_date = $startDateStr;
+        $job->end_date = $endDateStr;
         $job->priority = 0;
         $job->location_id = 1;
 
@@ -244,129 +254,149 @@ class JobService
             // 2. Concurrency-Safe Coin Deductions via Atomic Redis Lock
             try {
                 JobConcurrencyLock::runForCompany((int) $user->company_id, function () use ($user, $job) {
-                    GeneralMethod::coinsDeductions((int) $user->company_id, 2, $user->id, $user->company_id, $job->id, '');
+                    GeneralMethod::coinsDeductions((int) $user->company_id, 2, $user->id, $user->company_id, $job->id, null);
                 });
             } catch (\Throwable $ce) {
                 Log::warning('[JobService@createJob] Coin deduction warning: '.$ce->getMessage());
             }
 
             // 3. Batch Qualification Processing
-            $workQualification = $requestData['qualification'] ?? null;
-            if (! empty($workQualification)) {
-                $workQualificationAll = is_array($workQualification) ? $workQualification : json_decode($workQualification, true);
-                if (is_array($workQualificationAll) && count($workQualificationAll) > 0) {
-                    $qualNames = array_column($workQualificationAll, 'value');
-                    $qualMasterMap = DB::table('qualification_master')
-                        ->select('id', 'name')
-                        ->whereIn('name', $qualNames)
-                        ->get()
-                        ->keyBy('name');
+            try {
+                $workQualification = $requestData['qualification'] ?? null;
+                if (! empty($workQualification)) {
+                    $workQualificationAll = is_array($workQualification) ? $workQualification : json_decode($workQualification, true);
+                    if (is_array($workQualificationAll) && count($workQualificationAll) > 0) {
+                        $qualNames = array_column($workQualificationAll, 'value');
+                        $qualMasterMap = DB::table('qualification_master')
+                            ->select('id', 'name')
+                            ->whereIn('name', $qualNames)
+                            ->get()
+                            ->keyBy('name');
 
-                    $batchQualInsert = [];
-                    foreach ($workQualificationAll as $idx => $qVal) {
-                        $qName = $qVal['value'] ?? null;
-                        if (! $qName) {
-                            continue;
+                        $batchQualInsert = [];
+                        foreach ($workQualificationAll as $idx => $qVal) {
+                            $qName = $qVal['value'] ?? null;
+                            if (! $qName) {
+                                continue;
+                            }
+
+                            $qRow = $qualMasterMap->get($qName);
+                            if ($idx === 0 && $qRow) {
+                                $job->qualification = $qRow->id;
+                                $job->save();
+                            }
+
+                            if ($qRow) {
+                                $batchQualInsert[] = [
+                                    'job_id' => $job->id,
+                                    'qualification_id' => $qRow->id,
+                                    'qualification_name' => $qRow->name,
+                                ];
+                            }
                         }
 
-                        $qRow = $qualMasterMap->get($qName);
-                        if ($idx === 0 && $qRow) {
-                            $job->qualification = $qRow->id;
-                            $job->save();
+                        if (count($batchQualInsert) > 0) {
+                            DB::table('job_qualifications')->insert($batchQualInsert);
                         }
-
-                        if ($qRow) {
-                            $batchQualInsert[] = [
-                                'job_id' => $job->id,
-                                'qualification_id' => $qRow->id,
-                                'qualification_name' => $qRow->name,
-                            ];
-                        }
-                    }
-
-                    if (count($batchQualInsert) > 0) {
-                        DB::table('job_qualifications')->insert($batchQualInsert);
                     }
                 }
+            } catch (\Throwable $qe) {
+                Log::warning('[JobService@createJob] Qualifications insert warning: '.$qe->getMessage());
             }
 
             // 4. Client Location Processing
-            if (! empty($requestData['address_id']) && is_numeric($requestData['address_id']) && (int) $requestData['address_id'] > 0) {
-                $addrId = (int) $requestData['address_id'];
-                $exists = DB::table('client_location')->where('id', $addrId)->exists();
-                if ($exists) {
-                    DB::table('client_location_jobs')->insert([
-                        'company_id' => $user->company_id,
-                        'client_location_id' => $addrId,
-                        'job_id' => $job->id,
-                    ]);
+            try {
+                if (! empty($requestData['address_id']) && is_numeric($requestData['address_id']) && (int) $requestData['address_id'] > 0) {
+                    $addrId = (int) $requestData['address_id'];
+                    $exists = DB::table('client_location')->where('id', $addrId)->exists();
+                    if ($exists) {
+                        DB::table('client_location_jobs')->insert([
+                            'company_id' => $user->company_id,
+                            'client_location_id' => $addrId,
+                            'job_id' => $job->id,
+                        ]);
+                    }
                 }
+            } catch (\Throwable $le) {
+                Log::warning('[JobService@createJob] Client location insert warning: '.$le->getMessage());
             }
 
             // 5. Batch Work City Processing
-            $this->syncJobCities($job, $requestData['kt_tagify_work_location'] ?? null, $user, $requestData);
+            try {
+                $this->syncJobCities($job, $requestData['kt_tagify_work_location'] ?? null, $user, $requestData);
+            } catch (\Throwable $ce) {
+                Log::warning('[JobService@createJob] syncJobCities warning: '.$ce->getMessage());
+            }
 
             // 6. Job Countries Processing
-            if (! empty($requestData['kt_select2_4']) && is_array($requestData['kt_select2_4'])) {
-                $batchCountryInsert = [];
-                foreach ($requestData['kt_select2_4'] as $ld) {
-                    $batchCountryInsert[] = [
-                        'company_id' => $user->company_id,
-                        'country_id' => $ld,
-                        'job_id' => $job->id,
-                    ];
+            try {
+                if (! empty($requestData['kt_select2_4']) && is_array($requestData['kt_select2_4'])) {
+                    $batchCountryInsert = [];
+                    foreach ($requestData['kt_select2_4'] as $ld) {
+                        $batchCountryInsert[] = [
+                            'company_id' => $user->company_id,
+                            'country_id' => $ld,
+                            'job_id' => $job->id,
+                        ];
+                    }
+                    if (count($batchCountryInsert) > 0) {
+                        DB::table('job_countries')->insert($batchCountryInsert);
+                    }
                 }
-                if (count($batchCountryInsert) > 0) {
-                    DB::table('job_countries')->insert($batchCountryInsert);
-                }
+            } catch (\Throwable $coEx) {
+                Log::warning('[JobService@createJob] Countries insert warning: '.$coEx->getMessage());
             }
 
             // 7. Skills Tag Processing (Batch query & insert)
-            $tagsArr = [];
-            if (! empty($requestData['tags'])) {
-                $tags = is_array($requestData['tags']) ? $requestData['tags'] : json_decode($requestData['tags'], true);
-                if (is_array($tags) && count($tags) > 0) {
-                    $skillsAddElastic = [];
-                    foreach ($tags as $t) {
-                        $val = is_array($t) ? ($t['value'] ?? '') : (is_string($t) ? $t : '');
-                        $val = trim((string) $val);
-                        if ($val !== '') {
-                            // Truncate to max 55 chars (varchar(55)) to avoid MySQL 1406 strict mode error
-                            $skillsAddElastic[] = substr($val, 0, 55);
+            try {
+                $tagsArr = [];
+                if (! empty($requestData['tags'])) {
+                    $tags = is_array($requestData['tags']) ? $requestData['tags'] : json_decode($requestData['tags'], true);
+                    if (is_array($tags) && count($tags) > 0) {
+                        $skillsAddElastic = [];
+                        foreach ($tags as $t) {
+                            $val = is_array($t) ? ($t['value'] ?? '') : (is_string($t) ? $t : '');
+                            $val = trim((string) $val);
+                            if ($val !== '') {
+                                // Truncate to max 55 chars (varchar(55)) to avoid MySQL 1406 strict mode error
+                                $skillsAddElastic[] = substr($val, 0, 55);
+                            }
                         }
-                    }
-                    $skillsAddElastic = array_values(array_unique($skillsAddElastic));
+                        $skillsAddElastic = array_values(array_unique($skillsAddElastic));
 
-                    if (count($skillsAddElastic) > 0) {
-                        try {
-                            GeneralMethod::skillsAddElastic($skillsAddElastic);
-                        } catch (\Throwable $se) {
-                            Log::warning('[JobService@createJob] skillsAddElastic warning: '.$se->getMessage());
+                        if (count($skillsAddElastic) > 0) {
+                            try {
+                                GeneralMethod::skillsAddElastic($skillsAddElastic);
+                            } catch (\Throwable $se) {
+                                Log::warning('[JobService@createJob] skillsAddElastic warning: '.$se->getMessage());
+                            }
                         }
-                    }
-                    $tagsArr = $skillsAddElastic;
+                        $tagsArr = $skillsAddElastic;
 
-                    $existingSkills = DB::table('job_metronics_skills')
-                        ->where('company_id', $user->company_id)
-                        ->where('job_id', $job->id)
-                        ->pluck('skill_name')
-                        ->toArray();
+                        $existingSkills = DB::table('job_metronics_skills')
+                            ->where('company_id', $user->company_id)
+                            ->where('job_id', $job->id)
+                            ->pluck('skill_name')
+                            ->toArray();
 
-                    $batchSkillInsert = [];
-                    foreach ($tagsArr as $value) {
-                        if (! in_array($value, $existingSkills, true)) {
-                            $batchSkillInsert[] = [
-                                'company_id' => $user->company_id,
-                                'job_id' => $job->id,
-                                'skill_name' => substr($value, 0, 55),
-                            ];
+                        $batchSkillInsert = [];
+                        foreach ($tagsArr as $value) {
+                            if (! in_array($value, $existingSkills, true)) {
+                                $batchSkillInsert[] = [
+                                    'company_id' => $user->company_id,
+                                    'job_id' => $job->id,
+                                    'skill_name' => substr($value, 0, 55),
+                                ];
+                            }
                         }
-                    }
 
-                    if (count($batchSkillInsert) > 0) {
-                        DB::table('job_metronics_skills')->insert($batchSkillInsert);
+                        if (count($batchSkillInsert) > 0) {
+                            DB::table('job_metronics_skills')->insert($batchSkillInsert);
+                        }
                     }
                 }
+            } catch (\Throwable $skEx) {
+                Log::warning('[JobService@createJob] Skills insert warning: '.$skEx->getMessage());
             }
 
             // 8. Legacy jd_details Write Freeze:
@@ -375,170 +405,182 @@ class JobService
             // are canonically resolved and preserved in jobs.raw_designation & canonical_designation_id.
 
             // 9. Job Additional Details
-            if (! empty($requestData['custom_title']) && is_array($requestData['custom_title'])) {
-                $batchCustomInsert = [];
-                foreach ($requestData['custom_title'] as $adArr) {
-                    if (! empty($adArr)) {
-                        $batchCustomInsert[] = [
-                            'company_id' => $user->company_id,
-                            'job_id' => $job->id,
-                            'detail_value' => $adArr,
-                        ];
+            try {
+                if (! empty($requestData['custom_title']) && is_array($requestData['custom_title'])) {
+                    $batchCustomInsert = [];
+                    foreach ($requestData['custom_title'] as $adArr) {
+                        if (! empty($adArr)) {
+                            $batchCustomInsert[] = [
+                                'company_id' => $user->company_id,
+                                'job_id' => $job->id,
+                                'detail_value' => $adArr,
+                            ];
+                        }
+                    }
+                    if (count($batchCustomInsert) > 0) {
+                        DB::table('job_additional_detail')->insert($batchCustomInsert);
                     }
                 }
-                if (count($batchCustomInsert) > 0) {
-                    DB::table('job_additional_detail')->insert($batchCustomInsert);
-                }
+            } catch (\Throwable $adEx) {
+                Log::warning('[JobService@createJob] Additional detail insert warning: '.$adEx->getMessage());
             }
 
             // 10. Batch Recruiter Assignment & Captain Invariant (Section 2.3)
             $cc = [];
-            $rawRecArr = ! empty($requestData['recruiter_id'])
-                ? (is_array($requestData['recruiter_id']) ? $requestData['recruiter_id'] : explode(',', (string) $requestData['recruiter_id']))
-                : [];
+            try {
+                $rawRecArr = ! empty($requestData['recruiter_id'])
+                    ? (is_array($requestData['recruiter_id']) ? $requestData['recruiter_id'] : explode(',', (string) $requestData['recruiter_id']))
+                    : [];
 
-            $recruiterArr = array_values(array_unique(array_filter(array_map('trim', $rawRecArr), function ($val) {
-                return $val !== '' && is_numeric($val) && (int) $val > 0;
-            })));
+                $recruiterArr = array_values(array_unique(array_filter(array_map('trim', $rawRecArr), function ($val) {
+                    return $val !== '' && is_numeric($val) && (int) $val > 0;
+                })));
 
-            if (empty($recruiterArr)) {
-                $recruiterArr = [(int) $user->id];
-            }
+                if (empty($recruiterArr)) {
+                    $recruiterArr = [(int) $user->id];
+                }
 
-            $recUsers = DB::table('users')
-                ->select('id', 'email')
-                ->where('company_id', $user->company_id)
-                ->whereIn('id', $recruiterArr)
-                ->where(function ($q) {
-                    $q->where('status', 'active')
-                        ->orWhere('status', '1')
-                        ->orWhere('status', 'Active')
-                        ->orWhere('working_status', 1);
-                })
-                ->get()
-                ->keyBy('id');
-
-            // Fallback to creating user if none of the specified recruiters matched active status
-            if ($recUsers->isEmpty()) {
                 $recUsers = DB::table('users')
                     ->select('id', 'email')
-                    ->where('id', $user->id)
+                    ->where('company_id', $user->company_id)
+                    ->whereIn('id', $recruiterArr)
+                    ->where(function ($q) {
+                        $q->where('status', 'active')
+                            ->orWhere('status', '1')
+                            ->orWhere('status', 'Active')
+                            ->orWhere('working_status', 1);
+                    })
                     ->get()
                     ->keyBy('id');
-                $recruiterArr = [(int) $user->id];
-            }
 
-            $batchRecInsert = [];
-            $primaryRecruiterId = null;
-
-            foreach ($recruiterArr as $recId) {
-                $recRow = $recUsers->get($recId);
-                if ($recRow) {
-                    $cc[] = $recRow->email;
-                    if ($primaryRecruiterId === null) {
-                        $primaryRecruiterId = (int) $recRow->id;
-                    }
-                    $batchRecInsert[] = [
-                        'company_id' => $user->company_id,
-                        'user_id' => $recRow->id,
-                        'spok_user_id' => null, // Initialized null, atomically updated below
-                        'job_id' => $job->id,
-                    ];
-                    GeneralMethod::cacheClean('alljobslist_version_user_'.$recRow->id);
+                // Fallback to creating user if none of the specified recruiters matched active status
+                if ($recUsers->isEmpty()) {
+                    $recUsers = DB::table('users')
+                        ->select('id', 'email')
+                        ->where('id', $user->id)
+                        ->get()
+                        ->keyBy('id');
+                    $recruiterArr = [(int) $user->id];
                 }
-            }
 
-            if (count($batchRecInsert) > 0) {
-                // 1. Persist recruiter assignment batch
-                DB::table('job_assign')->insert($batchRecInsert);
+                $batchRecInsert = [];
+                $primaryRecruiterId = null;
 
-                // 2. Clear any conflicting spokesperson records for this company & job
-                DB::table('job_assign')
-                    ->where('job_id', $job->id)
-                    ->where('company_id', $user->company_id)
-                    ->update(['spok_user_id' => null]);
+                foreach ($recruiterArr as $recId) {
+                    $recRow = $recUsers->get($recId);
+                    if ($recRow) {
+                        $cc[] = $recRow->email;
+                        if ($primaryRecruiterId === null) {
+                            $primaryRecruiterId = (int) $recRow->id;
+                        }
+                        $batchRecInsert[] = [
+                            'company_id' => $user->company_id,
+                            'user_id' => $recRow->id,
+                            'spok_user_id' => null, // Initialized null, atomically updated below
+                            'job_id' => $job->id,
+                        ];
+                        GeneralMethod::cacheClean('alljobslist_version_user_'.$recRow->id);
+                    }
+                }
 
-                // 3. Atomically assign Captain to primary recruiter (earliest assignment order)
-                if ($primaryRecruiterId > 0) {
+                if (count($batchRecInsert) > 0) {
+                    // 1. Persist recruiter assignment batch
+                    DB::table('job_assign')->insert($batchRecInsert);
+
+                    // 2. Clear any conflicting spokesperson records for this company & job
                     DB::table('job_assign')
                         ->where('job_id', $job->id)
-                        ->where('user_id', $primaryRecruiterId)
                         ->where('company_id', $user->company_id)
-                        ->update(['spok_user_id' => $primaryRecruiterId]);
-                }
+                        ->update(['spok_user_id' => null]);
 
-                app(\App\Services\RelationshipManagerService::class)->invalidateCompanyRoster((int) $user->company_id);
+                    // 3. Atomically assign Captain to primary recruiter (earliest assignment order)
+                    if ($primaryRecruiterId > 0) {
+                        DB::table('job_assign')
+                            ->where('job_id', $job->id)
+                            ->where('user_id', $primaryRecruiterId)
+                            ->where('company_id', $user->company_id)
+                            ->update(['spok_user_id' => $primaryRecruiterId]);
+                    }
+
+                    app(\App\Services\RelationshipManagerService::class)->invalidateCompanyRoster((int) $user->company_id);
+                }
+            } catch (\Throwable $recEx) {
+                Log::warning('[JobService@createJob] Recruiter assignment warning: '.$recEx->getMessage());
             }
 
             // 11. Batch Hiring Manager Assignment with Strict Tenancy & Client Scope
-            if ((! empty($requestData['hiring_namager']) || ! empty($requestData['hiring_manager_id'])) && ! empty($requestData['client_id'])) {
-                $rawHmArr = ! empty($requestData['hiring_namager'])
-                    ? (is_array($requestData['hiring_namager']) ? $requestData['hiring_namager'] : explode(',', (string) $requestData['hiring_namager']))
-                    : [];
-                $hmNames = array_values(array_unique(array_filter(array_map('trim', $rawHmArr))));
+            try {
+                if ((! empty($requestData['hiring_namager']) || ! empty($requestData['hiring_manager_id'])) && ! empty($requestData['client_id'])) {
+                    $rawHmArr = ! empty($requestData['hiring_namager'])
+                        ? (is_array($requestData['hiring_namager']) ? $requestData['hiring_namager'] : explode(',', (string) $requestData['hiring_namager']))
+                        : [];
+                    $hmNames = array_values(array_unique(array_filter(array_map('trim', $rawHmArr))));
 
-                $rawHmIds = ! empty($requestData['hiring_manager_id'])
-                    ? (is_array($requestData['hiring_manager_id']) ? $requestData['hiring_manager_id'] : explode(',', (string) $requestData['hiring_manager_id']))
-                    : [];
-                $hmIds = array_values(array_unique(array_filter(array_map('intval', $rawHmIds), fn ($id) => $id > 0)));
+                    $rawHmIds = ! empty($requestData['hiring_manager_id'])
+                        ? (is_array($requestData['hiring_manager_id']) ? $requestData['hiring_manager_id'] : explode(',', (string) $requestData['hiring_manager_id']))
+                        : [];
+                    $hmIds = array_values(array_unique(array_filter(array_map('intval', $rawHmIds), fn ($id) => $id > 0)));
 
-                if (count($hmNames) > 0 || count($hmIds) > 0) {
-                    $clientId = (int) $requestData['client_id'];
-                    $hmQuery = DB::table('client_contact_info')
-                        ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
-                        ->select('client_contact_info.id', 'client_contact_info.contact_person_name')
-                        ->where('client_contact_info.client_id', $clientId)
-                        ->where('clients.company_id', $user->company_id);
+                    if (count($hmNames) > 0 || count($hmIds) > 0) {
+                        $clientId = (int) $requestData['client_id'];
+                        $hmQuery = DB::table('client_contact_info')
+                            ->join('clients', 'clients.id', '=', 'client_contact_info.client_id')
+                            ->select('client_contact_info.id', 'client_contact_info.contact_person_name')
+                            ->where('client_contact_info.client_id', $clientId)
+                            ->where('clients.company_id', $user->company_id);
 
-                    if (! empty($hmIds) && ! empty($hmNames)) {
-                        $hmQuery->where(function ($q) use ($hmIds, $hmNames) {
-                            $q->whereIn('client_contact_info.id', $hmIds)
-                                ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
-                        });
-                    } elseif (! empty($hmIds)) {
-                        $hmQuery->whereIn('client_contact_info.id', $hmIds);
-                    } else {
-                        $hmQuery->whereIn('client_contact_info.contact_person_name', $hmNames);
-                    }
-
-                    $availableHmRows = $hmQuery->get();
-
-                    $batchHmInsert = [];
-                    $insertedContactIds = [];
-
-                    // 1. Match by ID first
-                    foreach ($hmIds as $idVal) {
-                        $matched = $availableHmRows->firstWhere('id', $idVal);
-                        if ($matched && ! in_array($matched->id, $insertedContactIds)) {
-                            $batchHmInsert[] = [
-                                'company_id' => $user->company_id,
-                                'client_contact_info_id' => $matched->id,
-                                'job_id' => $job->id,
-                            ];
-                            $insertedContactIds[] = $matched->id;
+                        if (! empty($hmIds) && ! empty($hmNames)) {
+                            $hmQuery->where(function ($q) use ($hmIds, $hmNames) {
+                                $q->whereIn('client_contact_info.id', $hmIds)
+                                    ->orWhereIn('client_contact_info.contact_person_name', $hmNames);
+                            });
+                        } elseif (! empty($hmIds)) {
+                            $hmQuery->whereIn('client_contact_info.id', $hmIds);
+                        } else {
+                            $hmQuery->whereIn('client_contact_info.contact_person_name', $hmNames);
                         }
-                    }
 
-                    // 2. Match by Name (case-insensitive for resilient persistence)
-                    foreach ($hmNames as $cpName) {
-                        $lowerCp = strtolower($cpName);
-                        $matched = $availableHmRows->first(function ($r) use ($lowerCp) {
-                            return strtolower(trim($r->contact_person_name)) === $lowerCp;
-                        });
-                        if ($matched && ! in_array($matched->id, $insertedContactIds)) {
-                            $batchHmInsert[] = [
-                                'company_id' => $user->company_id,
-                                'client_contact_info_id' => $matched->id,
-                                'job_id' => $job->id,
-                            ];
-                            $insertedContactIds[] = $matched->id;
+                        $availableHmRows = $hmQuery->get();
+
+                        $batchHmInsert = [];
+                        $insertedContactIds = [];
+
+                        // 1. Match by ID first
+                        foreach ($hmIds as $idVal) {
+                            $matched = $availableHmRows->firstWhere('id', $idVal);
+                            if ($matched && ! in_array($matched->id, $insertedContactIds)) {
+                                $batchHmInsert[] = [
+                                    'company_id' => $user->company_id,
+                                    'client_contact_info_id' => $matched->id,
+                                    'job_id' => $job->id,
+                                ];
+                                $insertedContactIds[] = $matched->id;
+                            }
                         }
-                    }
 
-                    if (count($batchHmInsert) > 0) {
-                        DB::table('client_contact_info_jobs')->insert($batchHmInsert);
+                        // 2. Match by Name (case-insensitive for resilient persistence)
+                        foreach ($hmNames as $cpName) {
+                            $lowerCp = strtolower($cpName);
+                            $matched = $availableHmRows->first(function ($r) use ($lowerCp) {
+                                return strtolower(trim($r->contact_person_name)) === $lowerCp;
+                            });
+                            if ($matched && ! in_array($matched->id, $insertedContactIds)) {
+                                $batchHmInsert[] = [
+                                    'company_id' => $user->company_id,
+                                    'client_contact_info_id' => $matched->id,
+                                    'job_id' => $job->id,
+                                ];
+                                $insertedContactIds[] = $matched->id;
+                            }
+                        }
+
+                        if (count($batchHmInsert) > 0) {
+                            DB::table('client_contact_info_jobs')->insert($batchHmInsert);
+                        }
                     }
                 }
+            } catch (\Throwable $hmEx) {
+                Log::warning('[JobService@createJob] Hiring manager assignment warning: '.$hmEx->getMessage());
             }
 
             // 12. Notification Email Dispatch (Null-Safe & Resilient Guard)
@@ -1359,37 +1401,45 @@ class JobService
                     }
 
                     if (count($batchCityInsert) > 0) {
-                        DB::table('client_city_jobs')->insert($batchCityInsert);
+                        try {
+                            DB::table('client_city_jobs')->insert($batchCityInsert);
+                        } catch (\Throwable $be) {
+                            Log::warning('[JobService@syncJobCities] batchCityInsert warning: '.$be->getMessage());
+                        }
                     }
                 }
             }
         }
 
         // Resilience: If client_city_jobs is still empty after processing, auto-populate from client location/address
-        $hasCity = DB::table('client_city_jobs')->where('job_id', $job->id)->exists();
-        if (! $hasCity && ! empty($requestData['address_id'])) {
-            $addrId = (int) $requestData['address_id'];
-            $locRecord = DB::table('client_location')->where('id', $addrId)->first();
-            if (! $locRecord) {
-                $locRecord = DB::table('client_location')->where('city_id', $addrId)->first();
+        try {
+            $hasCity = DB::table('client_city_jobs')->where('job_id', $job->id)->exists();
+            if (! $hasCity && ! empty($requestData['address_id'])) {
+                $addrId = (int) $requestData['address_id'];
+                $locRecord = DB::table('client_location')->where('id', $addrId)->first();
+                if (! $locRecord) {
+                    $locRecord = DB::table('client_location')->where('city_id', $addrId)->first();
+                }
+                if ($locRecord && ! empty($locRecord->city_id)) {
+                    DB::table('client_city_jobs')->insert([
+                        'company_id' => $user->company_id,
+                        'city_id' => $locRecord->city_id,
+                        'country_id' => $locRecord->country_id ?? 101,
+                        'job_id' => $job->id,
+                    ]);
+                } elseif ($addrId > 0 && DB::table('city_list')->where('city_id', $addrId)->exists()) {
+                    $cityRow = DB::table('city_list')->where('city_id', $addrId)->first();
+                    $stateRow = DB::table('state_list')->where('id', $cityRow->state_id ?? 0)->first();
+                    DB::table('client_city_jobs')->insert([
+                        'company_id' => $user->company_id,
+                        'city_id' => $addrId,
+                        'country_id' => $stateRow->country_id ?? 101,
+                        'job_id' => $job->id,
+                    ]);
+                }
             }
-            if ($locRecord && ! empty($locRecord->city_id)) {
-                DB::table('client_city_jobs')->insert([
-                    'company_id' => $user->company_id,
-                    'city_id' => $locRecord->city_id,
-                    'country_id' => $locRecord->country_id ?? 101,
-                    'job_id' => $job->id,
-                ]);
-            } elseif ($addrId > 0 && DB::table('city_list')->where('city_id', $addrId)->exists()) {
-                $cityRow = DB::table('city_list')->where('city_id', $addrId)->first();
-                $stateRow = DB::table('state_list')->where('id', $cityRow->state_id ?? 0)->first();
-                DB::table('client_city_jobs')->insert([
-                    'company_id' => $user->company_id,
-                    'city_id' => $addrId,
-                    'country_id' => $stateRow->country_id ?? 101,
-                    'job_id' => $job->id,
-                ]);
-            }
+        } catch (\Throwable $fe) {
+            Log::warning('[JobService@syncJobCities] fallback city insert warning: '.$fe->getMessage());
         }
     }
 }

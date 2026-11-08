@@ -19,6 +19,23 @@ class Job extends Model
                 GeneralMethod::invalidateSpartnerlistingCache(auth()->user()->id);
             }
         });
+
+        static::saving(function ($job) {
+            // Self-healing schema guard: prune attributes that do not physically exist on the jobs table
+            try {
+                $columns = \Illuminate\Support\Facades\Schema::getColumnListing('jobs');
+                if (! empty($columns)) {
+                    $colMap = array_flip($columns);
+                    foreach ($job->getAttributes() as $key => $val) {
+                        if (! isset($colMap[$key])) {
+                            $job->offsetUnset($key);
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Fail-safe: prevent fatal crashes if schema inspection is unavailable
+            }
+        });
     }
 
     protected $dates = ['end_date', 'start_date'];
