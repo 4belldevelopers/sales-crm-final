@@ -76,6 +76,32 @@ return new class extends Migration
             // Backfill normalized_recipient for historical rows
             DB::statement("UPDATE staffing_company_invitation SET normalized_recipient = LOWER(TRIM(to_email)) WHERE normalized_recipient IS NULL AND to_email IS NOT NULL");
 
+            // Deduplicate active invitations before adding unique index if needed
+            $duplicateInvites = DB::table('staffing_company_invitation')
+                ->select('from_company_id', 'normalized_recipient')
+                ->where('to_invitation_status', 0)
+                ->whereNotNull('normalized_recipient')
+                ->groupBy('from_company_id', 'normalized_recipient')
+                ->havingRaw('COUNT(*) > 1')
+                ->get();
+
+            foreach ($duplicateInvites as $inv) {
+                $keepId = DB::table('staffing_company_invitation')
+                    ->where('from_company_id', $inv->from_company_id)
+                    ->where('normalized_recipient', $inv->normalized_recipient)
+                    ->where('to_invitation_status', 0)
+                    ->max('id');
+
+                if ($keepId) {
+                    DB::table('staffing_company_invitation')
+                        ->where('from_company_id', $inv->from_company_id)
+                        ->where('normalized_recipient', $inv->normalized_recipient)
+                        ->where('to_invitation_status', 0)
+                        ->where('id', '<', $keepId)
+                        ->update(['to_invitation_status' => 2]);
+                }
+            }
+
             // Add STORED generated column and unique index if not present
             $hasActiveSlot = DB::select("SHOW COLUMNS FROM staffing_company_invitation LIKE 'active_invite_slot'");
             if (empty($hasActiveSlot)) {
@@ -102,6 +128,31 @@ return new class extends Migration
 
         // 4. staffing_company_relation
         if (Schema::hasTable('staffing_company_relation')) {
+            // Deduplicate active relations: keep latest active record per pair, mark older duplicates final_status = 3 (superseded/closed)
+            $duplicateRelations = DB::table('staffing_company_relation')
+                ->select('from_company_id', 'to_company_id')
+                ->where('final_status', 1)
+                ->groupBy('from_company_id', 'to_company_id')
+                ->havingRaw('COUNT(*) > 1')
+                ->get();
+
+            foreach ($duplicateRelations as $rel) {
+                $keepId = DB::table('staffing_company_relation')
+                    ->where('from_company_id', $rel->from_company_id)
+                    ->where('to_company_id', $rel->to_company_id)
+                    ->where('final_status', 1)
+                    ->max('id');
+
+                if ($keepId) {
+                    DB::table('staffing_company_relation')
+                        ->where('from_company_id', $rel->from_company_id)
+                        ->where('to_company_id', $rel->to_company_id)
+                        ->where('final_status', 1)
+                        ->where('id', '<', $keepId)
+                        ->update(['final_status' => 3]);
+                }
+            }
+
             $hasActiveRelSlot = DB::select("SHOW COLUMNS FROM staffing_company_relation LIKE 'active_relation_slot'");
             if (empty($hasActiveRelSlot)) {
                 DB::statement("
