@@ -58,6 +58,7 @@ class IndexClientListToElasticsearch extends Command
                             'state_name'   => ['type' => 'keyword'],
                             'country_id'   => ['type' => 'integer'],
                             'country_name' => ['type' => 'keyword'],
+                            'address'      => ['type' => 'text'],
                         ],
                     ],
                     'td_industries' => [

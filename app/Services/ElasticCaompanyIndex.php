@@ -100,11 +100,12 @@ class ElasticCaompanyIndex
                         ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
                         ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
                         ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-                        ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                        ->select('client_location.address', 'city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
                         ->where('client_id', $client->id)
                         ->get()
                         ->map(function ($s) {
                             return [
+                                'address' => $s->address,
                                 'city_name' => $s->city_name,
                                 'state_name' => $s->state_name,
                                 'country_name' => $s->country_name,

@@ -2290,6 +2290,14 @@
         object-fit: contain;
         background: #ffffff;
     }
+    #jrwrap .jero-client-avatar img + span,
+    #jrwrap .jero-client-item-avatar img + span {
+        display: none !important;
+    }
+    #jrwrap .jero-client-avatar img[style*="display: none"] + span,
+    #jrwrap .jero-client-item-avatar img[style*="display: none"] + span {
+        display: flex !important;
+    }
     #jrwrap .jero-client-item-info {
         display: flex;
         flex-direction: column;
@@ -3849,7 +3857,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                                             <div class="jero-client-tabs">
                                                 <button type="button" class="jero-tab-btn active" data-filter="all">All Companies <span class="tab-count" id="jero_count_all">0</span></button>
                                                 <button type="button" class="jero-tab-btn" data-filter="internal">My Organization <span class="tab-count" id="jero_count_internal">0</span></button>
-                                                <button type="button" class="jero-tab-btn" data-filter="client">Internal Clients <span class="tab-count" id="jero_count_clients">0</span></button>
+                                                <button type="button" class="jero-tab-btn" data-filter="client">Clients <span class="tab-count" id="jero_count_clients">0</span></button>
                                             </div>
 
                                             <!-- Scrollable Items Container (264px viewport with DOM Virtualization) -->
@@ -11148,9 +11156,12 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
 
             if (!query) {
-                // When query is empty and viewing All, hoist top frecent clients
-                if (filter === 'all') {
+                // When query is empty and viewing All or Clients, hoist top frecent clients
+                if (filter === 'all' || filter === 'client') {
                     var frecent = getFrecentClients(3);
+                    if (filter === 'client') {
+                        frecent = frecent.filter(function(c) { return !c.self_company; });
+                    }
                     if (frecent.length > 0) {
                         var frecentIds = new Set(frecent.map(function(c) { return c.id; }));
                         var rest = baseList.filter(function(c) { return !frecentIds.has(c.id); });
@@ -11417,6 +11428,7 @@ $currency_code = GeneralMethod::defaultCurrency();
             var container = document.getElementById('jero_client_list_container');
             if (container) container.scrollTop = 0;
 
+            positionPopover();
             updateVirtualWindow();
         }
 
@@ -11445,14 +11457,16 @@ $currency_code = GeneralMethod::defaultCurrency();
                 avatarHtml = '<div class="jero-client-item-avatar" style="background:' + col.bg + '; color:' + col.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;border-radius:inherit;">' + getInitials(c.name) + '</div>';
             }
 
-            var badgeText = c.self_company ? 'My Organization' : 'Client';
-            var badgeClass = c.self_company ? 'badge-internal' : 'badge-client';
+            var badgesHtml = '';
             if (c.status === 0) {
-                badgeText = 'Inactive';
-                badgeClass = 'badge-deactivated';
-            } else if (c._isRecent) {
-                badgeText = '★ Recent';
-                badgeClass = 'badge-recent';
+                badgesHtml = '<span class="jero-client-badge badge-deactivated">Inactive</span>';
+            } else {
+                var orgClass = c.self_company ? 'badge-internal' : 'badge-client';
+                var orgText = c.self_company ? 'My Organization' : 'Client';
+                badgesHtml = '<span class="jero-client-badge ' + orgClass + '">' + orgText + '</span>';
+                if (c._isRecent) {
+                    badgesHtml += '<span class="jero-client-badge badge-recent" style="margin-left:4px;">★ Recent</span>';
+                }
             }
 
             var subText = (c.industry && !/^\d+$/.test(String(c.industry).trim())) ? formatTitleCase(c.industry) : (c.self_company ? 'Staffing & Recruiting' : 'Client');
@@ -11467,7 +11481,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         '<div class="jero-client-item-name">' + highlightMatch(c.name, query) + '</div>' +
                         '<div class="jero-client-item-sub">' + escapeHtml(subText) + '</div>' +
                     '</div>' +
-                    '<span class="jero-client-badge ' + badgeClass + '">' + badgeText + '</span>' +
+                    '<div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">' + badgesHtml + '</div>' +
                 '</div>' +
                 (isSel ? '<span class="jero-client-item-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>' : '') +
             '</div>';
@@ -11807,6 +11821,10 @@ $currency_code = GeneralMethod::defaultCurrency();
             var cached = await idbGet('bundle_' + CURRENT_TENANT_ID);
             var shouldInvalidateCached = false;
             if (cached) {
+                // Self-healing check: purge legacy schema (< 5) to ensure complete workplace addresses
+                if (!cached.schema_version || cached.schema_version < 5) {
+                    shouldInvalidateCached = true;
+                }
                 var cachedVer = parseInt(cached.source_version || cached.read_model_version || 1, 10);
                 if (typeof SERVER_CLIENTS_VERSION !== 'undefined' && cachedVer < SERVER_CLIENTS_VERSION) {
                     shouldInvalidateCached = true;
@@ -11942,18 +11960,22 @@ $currency_code = GeneralMethod::defaultCurrency();
             var rect = wrap.getBoundingClientRect();
             var spaceBelow = window.innerHeight - rect.bottom;
             var spaceAbove = rect.top;
-            var popoverHeight = 310;
 
-            if (spaceBelow < popoverHeight && spaceAbove > spaceBelow) {
+            // Dynamic height based on visible items count (min 44px, max VIEWPORT_HEIGHT = 264px)
+            var count = (visibleItems && visibleItems.length) ? visibleItems.length : 1;
+            var targetListHeight = Math.min(VIEWPORT_HEIGHT, Math.max(44, count * ITEM_HEIGHT));
+            var popoverHeight = targetListHeight + 130; // 130px for search, tabs, footer & paddings
+
+            if (spaceBelow < popoverHeight && spaceAbove > spaceBelow && spaceAbove > 180) {
                 popover.classList.add('flipped-up');
                 if (listEl) {
-                    var avail = Math.max(160, Math.min(VIEWPORT_HEIGHT, spaceAbove - 110));
+                    var avail = Math.max(44, Math.min(targetListHeight, spaceAbove - 130));
                     listEl.style.height = avail + 'px';
                 }
             } else {
                 popover.classList.remove('flipped-up');
                 if (listEl) {
-                    var avail = Math.max(160, Math.min(VIEWPORT_HEIGHT, spaceBelow - 110));
+                    var avail = Math.max(44, Math.min(targetListHeight, spaceBelow - 130));
                     listEl.style.height = avail + 'px';
                 }
             }
@@ -12585,6 +12607,15 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
 
             if (currentMatches.length === 0) {
+                if (titlesList.length === 0) {
+                    container.innerHTML = '<div class="jero-title-empty-state" style="padding:24px;text-align:center;">' +
+                        '<div class="spinner-border spinner-border-sm text-primary mb-2" role="status" style="width:1.25rem;height:1.25rem;"></div>' +
+                        '<div style="color:#7E8299;font-size:12px;font-weight:500;">Loading recommended job titles...</div>' +
+                        '</div>';
+                    fetchBundleFromServer(1);
+                    adjustDropdownPosition();
+                    return;
+                }
                 container.innerHTML = '<div class="jero-title-empty-state">' +
                     'No standardized titles match "' + escapeHtml(q) + '"' +
                     '</div>';
@@ -13004,11 +13035,14 @@ $currency_code = GeneralMethod::defaultCurrency();
         }
 
         function ingestManifest(manifest) {
-            if (!manifest || !Array.isArray(manifest.titles)) return;
+            if (!manifest || !Array.isArray(manifest.titles) || manifest.titles.length === 0) return;
             titlesList = manifest.titles;
             buildInvertedIndex(titlesList);
             updateTabCounts();
             syncInitialState();
+            if (isOpen) {
+                renderDropdownList();
+            }
         }
 
         async function initCacheAndSync() {
