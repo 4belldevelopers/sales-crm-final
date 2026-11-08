@@ -78,7 +78,8 @@ class JobService
         self::setJobAttrIfColumnExists($job, 'raw_designation', $requestData['raw_designation'] ?? ($requestData['title'] ?? null));
         self::setJobAttrIfColumnExists($job, 'canonical_designation_id', ! empty($requestData['canonical_designation_id']) ? (int) $requestData['canonical_designation_id'] : null);
         self::setJobAttrIfColumnExists($job, 'taxonomy_version', $requestData['taxonomy_version'] ?? config('taxonomy.current_version', '2.0.0'));
-        $job->work_shifts = ! empty($requestData['work_shifts']) ? $requestData['work_shifts'] : 'Day Shift';
+        $allowedShifts = ['Day Shift', 'Night Shift', 'Rotational shift', 'UK Timezone', 'US Timezone'];
+        $job->work_shifts = in_array($requestData['work_shifts'] ?? '', $allowedShifts, true) ? $requestData['work_shifts'] : 'Day Shift';
         $job->category_id = ! empty($requestData['category_id']) && is_numeric($requestData['category_id']) ? (int) $requestData['category_id'] : null;
         if (empty($job->category_id) && (! empty($requestData['custom_department']) || ! empty($requestData['category_id_display']))) {
             $customDept = trim($requestData['custom_department'] ?? $requestData['category_id_display']);
@@ -106,20 +107,12 @@ class JobService
                 }
             }
         }
-        $job->required_columns = ! empty($requestData['required_columns']) ? $requestData['required_columns'] : 'No Preference';
+        $job->required_columns = ! empty($requestData['required_columns']) ? (is_array($requestData['required_columns']) ? implode(',', $requestData['required_columns']) : (string) $requestData['required_columns']) : 'No Preference';
 
-        if (! empty($requestData['employment_type'])) {
-            $job->employment_type = $requestData['employment_type'];
-        }
-        if (! empty($requestData['total_positions'])) {
-            $job->total_positions = $requestData['total_positions'];
-        }
-        if (! empty($requestData['min_exp'])) {
-            $job->min_exp = $requestData['min_exp'];
-        }
-        if (! empty($requestData['max_exp'])) {
-            $job->max_exp = $requestData['max_exp'];
-        }
+        $job->employment_type = ! empty($requestData['employment_type']) && is_numeric($requestData['employment_type']) ? (int) $requestData['employment_type'] : 1;
+        $job->total_positions = ! empty($requestData['total_positions']) && is_numeric($requestData['total_positions']) ? (int) $requestData['total_positions'] : 1;
+        $job->min_exp = isset($requestData['min_exp']) && is_numeric($requestData['min_exp']) ? (int) $requestData['min_exp'] : 0;
+        $job->max_exp = isset($requestData['max_exp']) && is_numeric($requestData['max_exp']) ? (int) $requestData['max_exp'] : 0;
 
         $startDate = date('Y-m-d');
         $endDate = date('Y-m-d', strtotime($startDate.' + '.($requestData['end_date'] ?? 0).' days'));
@@ -144,8 +137,10 @@ class JobService
         $job->max_sal_mode = $requestData['max_sal_mode'] ?? null;
         $job->salary_visibility = \App\Services\SalaryVisibilityPolicy::normalize($requestData['salary_visibility'] ?? null);
 
-        $job->job_description = $requestData['detail_description'] ?? ($requestData['job_description'] ?? 'Job details as specified.');
-        $job->job_requirement = ! empty($requestData['job_requirement']) ? $requestData['job_requirement'] : (! empty($requestData['detail_description']) ? $requestData['detail_description'] : 'As per job description');
+        $rawJobDesc = trim((string) ($requestData['detail_description'] ?? ($requestData['job_description'] ?? '')));
+        $job->job_description = $rawJobDesc !== '' ? $rawJobDesc : 'Job details as specified.';
+        $rawJobReq = trim((string) ($requestData['job_requirement'] ?? ''));
+        $job->job_requirement = $rawJobReq !== '' ? $rawJobReq : $job->job_description;
         $job->section_visibility = ! empty($requestData['section_visibility']) ? $requestData['section_visibility'] : 'everywhere';
 
         $isInternalOnly = isset($requestData['visibility_internal']) && (int) $requestData['visibility_internal'] === 1;
@@ -296,12 +291,16 @@ class JobService
             }
 
             // 4. Client Location Processing
-            if (! empty($requestData['address_id'])) {
-                DB::table('client_location_jobs')->insert([
-                    'company_id' => $user->company_id,
-                    'client_location_id' => $requestData['address_id'],
-                    'job_id' => $job->id,
-                ]);
+            if (! empty($requestData['address_id']) && is_numeric($requestData['address_id']) && (int) $requestData['address_id'] > 0) {
+                $addrId = (int) $requestData['address_id'];
+                $exists = DB::table('client_location')->where('id', $addrId)->exists();
+                if ($exists) {
+                    DB::table('client_location_jobs')->insert([
+                        'company_id' => $user->company_id,
+                        'client_location_id' => $addrId,
+                        'job_id' => $job->id,
+                    ]);
+                }
             }
 
             // 5. Batch Work City Processing
@@ -327,9 +326,23 @@ class JobService
             if (! empty($requestData['tags'])) {
                 $tags = is_array($requestData['tags']) ? $requestData['tags'] : json_decode($requestData['tags'], true);
                 if (is_array($tags) && count($tags) > 0) {
-                    $skillsAddElastic = array_column($tags, 'value');
+                    $skillsAddElastic = [];
+                    foreach ($tags as $t) {
+                        $val = is_array($t) ? ($t['value'] ?? '') : (is_string($t) ? $t : '');
+                        $val = trim((string) $val);
+                        if ($val !== '') {
+                            // Truncate to max 55 chars (varchar(55)) to avoid MySQL 1406 strict mode error
+                            $skillsAddElastic[] = substr($val, 0, 55);
+                        }
+                    }
+                    $skillsAddElastic = array_values(array_unique($skillsAddElastic));
+
                     if (count($skillsAddElastic) > 0) {
-                        GeneralMethod::skillsAddElastic($skillsAddElastic);
+                        try {
+                            GeneralMethod::skillsAddElastic($skillsAddElastic);
+                        } catch (\Throwable $se) {
+                            Log::warning('[JobService@createJob] skillsAddElastic warning: '.$se->getMessage());
+                        }
                     }
                     $tagsArr = $skillsAddElastic;
 
@@ -345,7 +358,7 @@ class JobService
                             $batchSkillInsert[] = [
                                 'company_id' => $user->company_id,
                                 'job_id' => $job->id,
-                                'skill_name' => $value,
+                                'skill_name' => substr($value, 0, 55),
                             ];
                         }
                     }
@@ -380,66 +393,81 @@ class JobService
 
             // 10. Batch Recruiter Assignment & Captain Invariant (Section 2.3)
             $cc = [];
-            if (! empty($requestData['recruiter_id'])) {
-                $rawRecArr = is_array($requestData['recruiter_id'])
-                    ? $requestData['recruiter_id']
-                    : explode(',', (string) $requestData['recruiter_id']);
+            $rawRecArr = ! empty($requestData['recruiter_id'])
+                ? (is_array($requestData['recruiter_id']) ? $requestData['recruiter_id'] : explode(',', (string) $requestData['recruiter_id']))
+                : [];
 
-                $recruiterArr = array_values(array_unique(array_filter(array_map('trim', $rawRecArr), function ($val) {
-                    return $val !== '' && is_numeric($val) && (int) $val > 0;
-                })));
+            $recruiterArr = array_values(array_unique(array_filter(array_map('trim', $rawRecArr), function ($val) {
+                return $val !== '' && is_numeric($val) && (int) $val > 0;
+            })));
 
-                if (count($recruiterArr) > 0) {
-                    $recUsers = DB::table('users')
-                        ->select('id', 'email')
-                        ->where('company_id', $user->company_id)
-                        ->whereIn('id', $recruiterArr)
-                        ->where('status', 'active')
-                        ->get()
-                        ->keyBy('id');
+            if (empty($recruiterArr)) {
+                $recruiterArr = [(int) $user->id];
+            }
 
-                    $batchRecInsert = [];
-                    $primaryRecruiterId = null;
+            $recUsers = DB::table('users')
+                ->select('id', 'email')
+                ->where('company_id', $user->company_id)
+                ->whereIn('id', $recruiterArr)
+                ->where(function ($q) {
+                    $q->where('status', 'active')
+                        ->orWhere('status', '1')
+                        ->orWhere('status', 'Active')
+                        ->orWhere('working_status', 1);
+                })
+                ->get()
+                ->keyBy('id');
 
-                    foreach ($recruiterArr as $recId) {
-                        $recRow = $recUsers->get($recId);
-                        if ($recRow) {
-                            $cc[] = $recRow->email;
-                            if ($primaryRecruiterId === null) {
-                                $primaryRecruiterId = (int) $recRow->id;
-                            }
-                            $batchRecInsert[] = [
-                                'company_id' => $user->company_id,
-                                'user_id' => $recRow->id,
-                                'spok_user_id' => null, // Initialized null, atomically updated below
-                                'job_id' => $job->id,
-                            ];
-                            GeneralMethod::cacheClean('alljobslist_version_user_'.$recRow->id);
-                        }
+            // Fallback to creating user if none of the specified recruiters matched active status
+            if ($recUsers->isEmpty()) {
+                $recUsers = DB::table('users')
+                    ->select('id', 'email')
+                    ->where('id', $user->id)
+                    ->get()
+                    ->keyBy('id');
+                $recruiterArr = [(int) $user->id];
+            }
+
+            $batchRecInsert = [];
+            $primaryRecruiterId = null;
+
+            foreach ($recruiterArr as $recId) {
+                $recRow = $recUsers->get($recId);
+                if ($recRow) {
+                    $cc[] = $recRow->email;
+                    if ($primaryRecruiterId === null) {
+                        $primaryRecruiterId = (int) $recRow->id;
                     }
-
-                    if (count($batchRecInsert) > 0) {
-                        // 1. Persist recruiter assignment batch
-                        DB::table('job_assign')->insert($batchRecInsert);
-
-                        // 2. Clear any conflicting spokesperson records for this company & job
-                        DB::table('job_assign')
-                            ->where('job_id', $job->id)
-                            ->where('company_id', $user->company_id)
-                            ->update(['spok_user_id' => null]);
-
-                        // 3. Atomically assign Captain to primary recruiter (earliest assignment order)
-                        if ($primaryRecruiterId > 0) {
-                            DB::table('job_assign')
-                                ->where('job_id', $job->id)
-                                ->where('user_id', $primaryRecruiterId)
-                                ->where('company_id', $user->company_id)
-                                ->update(['spok_user_id' => $primaryRecruiterId]);
-                        }
-
-                        app(\App\Services\RelationshipManagerService::class)->invalidateCompanyRoster((int) $user->company_id);
-                    }
+                    $batchRecInsert[] = [
+                        'company_id' => $user->company_id,
+                        'user_id' => $recRow->id,
+                        'spok_user_id' => null, // Initialized null, atomically updated below
+                        'job_id' => $job->id,
+                    ];
+                    GeneralMethod::cacheClean('alljobslist_version_user_'.$recRow->id);
                 }
+            }
+
+            if (count($batchRecInsert) > 0) {
+                // 1. Persist recruiter assignment batch
+                DB::table('job_assign')->insert($batchRecInsert);
+
+                // 2. Clear any conflicting spokesperson records for this company & job
+                DB::table('job_assign')
+                    ->where('job_id', $job->id)
+                    ->where('company_id', $user->company_id)
+                    ->update(['spok_user_id' => null]);
+
+                // 3. Atomically assign Captain to primary recruiter (earliest assignment order)
+                if ($primaryRecruiterId > 0) {
+                    DB::table('job_assign')
+                        ->where('job_id', $job->id)
+                        ->where('user_id', $primaryRecruiterId)
+                        ->where('company_id', $user->company_id)
+                        ->update(['spok_user_id' => $primaryRecruiterId]);
+                }
+
+                app(\App\Services\RelationshipManagerService::class)->invalidateCompanyRoster((int) $user->company_id);
             }
 
             // 11. Batch Hiring Manager Assignment with Strict Tenancy & Client Scope
