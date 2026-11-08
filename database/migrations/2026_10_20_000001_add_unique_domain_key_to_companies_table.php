@@ -16,6 +16,33 @@ return new class extends Migration
     {
         $existing = DB::select("SHOW INDEXES FROM companies WHERE Key_name = 'uq_companies_domain_key'");
         if (empty($existing)) {
+            // Deduplicate existing records: keep earliest company per domain_key, suffix duplicates with -dup-{id}
+            $duplicates = DB::table('companies')
+                ->select('domain_key')
+                ->whereNotNull('domain_key')
+                ->where('domain_key', '!=', '')
+                ->groupBy('domain_key')
+                ->havingRaw('COUNT(*) > 1')
+                ->pluck('domain_key');
+
+            foreach ($duplicates as $domain) {
+                $companiesWithDomain = DB::table('companies')
+                    ->where('domain_key', $domain)
+                    ->orderBy('id', 'asc')
+                    ->pluck('id');
+
+                $isFirst = true;
+                foreach ($companiesWithDomain as $companyId) {
+                    if ($isFirst) {
+                        $isFirst = false;
+                        continue;
+                    }
+                    DB::table('companies')
+                        ->where('id', $companyId)
+                        ->update(['domain_key' => $domain.'-dup-'.$companyId]);
+                }
+            }
+
             Schema::table('companies', function (Blueprint $table) {
                 $table->unique('domain_key', 'uq_companies_domain_key');
             });

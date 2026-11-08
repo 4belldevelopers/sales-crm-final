@@ -187,8 +187,10 @@ jobs:
             echo ""
             echo ">> Setting storage and cache permissions"
 
-            chown -R www:www storage bootstrap/cache || true
+            chown -R www:www storage bootstrap/cache public js designations skills demo || true
             chmod -R 777 storage bootstrap/cache || true
+            chmod -R 755 public js designations skills demo || true
+            chmod -R 644 public/js/*.js js/*.js || true
 
             ###########################################################
             # RESTART SERVICES
