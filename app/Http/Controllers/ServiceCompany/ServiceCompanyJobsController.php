@@ -6117,24 +6117,32 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         try {
             $bundle = Cache::get($cacheKey);
             if ($bundle && ! empty($bundle['clients']) && is_array($bundle['clients'])) {
-                $compRow = DB::table('companies')->where('id', $companyId)->first(['logo', 'website']);
-                $parentLogo = ! empty($compRow?->logo) ? strtolower(trim($compRow->logo)) : '';
-                $parentDomain = ! empty($compRow?->website) ? $this->extractCleanDomain($compRow->website) : '';
-                $hasPollution = false;
-                foreach ($bundle['clients'] as $chk) {
-                    if (($chk['t'] ?? 0) === 0 && ! empty($chk['l'])) {
-                        $chkLogo = strtolower(trim($chk['l']));
-                        if (($parentLogo && $chkLogo === $parentLogo) || ($parentDomain && stripos($chkLogo, $parentDomain) !== false) || stripos($chkLogo, '4bell') !== false) {
-                            $hasPollution = true;
-                            break;
-                        }
-                    }
-                }
-                if ($hasPollution) {
+                // Auto-upgrade stale schema (< 5) to include complete workplace addresses
+                if (($bundle['schema_version'] ?? 0) < 5) {
                     $bundle = null;
                     Cache::forget($cacheKey);
                     $version = ((int) Cache::get('tenant:'.$companyId.':clients_version', 1)) + 1;
                     Cache::forever('tenant:'.$companyId.':clients_version', $version);
+                } else {
+                    $compRow = DB::table('companies')->where('id', $companyId)->first(['logo', 'website']);
+                    $parentLogo = ! empty($compRow?->logo) ? strtolower(trim($compRow->logo)) : '';
+                    $parentDomain = ! empty($compRow?->website) ? $this->extractCleanDomain($compRow->website) : '';
+                    $hasPollution = false;
+                    foreach ($bundle['clients'] as $chk) {
+                        if (($chk['t'] ?? 0) === 0 && ! empty($chk['l'])) {
+                            $chkLogo = strtolower(trim($chk['l']));
+                            if (($parentLogo && $chkLogo === $parentLogo) || ($parentDomain && stripos($chkLogo, $parentDomain) !== false) || stripos($chkLogo, '4bell') !== false) {
+                                $hasPollution = true;
+                                break;
+                            }
+                        }
+                    }
+                    if ($hasPollution) {
+                        $bundle = null;
+                        Cache::forget($cacheKey);
+                        $version = ((int) Cache::get('tenant:'.$companyId.':clients_version', 1)) + 1;
+                        Cache::forever('tenant:'.$companyId.':clients_version', $version);
+                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -6171,7 +6179,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $manifestId = $bundle['manifest_id'] ?? ('tenant-'.$companyId.'-v'.$version);
-        $etag = 'W/"cindex_'.$companyId.'_s4_'.$manifestId.'"';
+        $etag = 'W/"cindex_'.$companyId.'_s5_'.$manifestId.'"';
 
         if ($clientEtag && trim($clientEtag) === trim($etag)) {
             return response(null, 304)
@@ -6343,10 +6351,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $authoritativeLogo = $compRow?->logo ?: null;
                     $authoritativeWebsite = $compRow?->website ?: null;
 
-                    // Pre-resolve td_industries map for non-numeric industry labels
+                    // Pre-resolve td_industries map for non-numeric industry labels & client locations
                     $indIds = [];
+                    $allHitClientIds = [];
                     foreach ($hits as $hit) {
                         $src = $hit['_source'] ?? [];
+                        $cid = (int) ($src['id'] ?? $src['client_id'] ?? $hit['_id']);
+                        if ($cid > 0) {
+                            $allHitClientIds[] = $cid;
+                        }
                         $ind = $src['industries'] ?? ($src['industry'] ?? null);
                         if (is_numeric($ind) && (int) $ind > 0) {
                             $indIds[] = (int) $ind;
@@ -6354,6 +6367,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     }
                     $industriesMap = ! empty($indIds)
                         ? DB::table('td_industries')->whereIn('ind_id', array_unique($indIds))->pluck('ind_name', 'ind_id')->toArray()
+                        : [];
+
+                    $addressesByLocId = ! empty($allHitClientIds)
+                        ? DB::table('client_location')
+                            ->whereIn('client_id', array_unique($allHitClientIds))
+                            ->pluck('address', 'id')
+                            ->toArray()
                         : [];
 
                     $clientList = [];
@@ -6392,13 +6412,17 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         $locList = [];
                         if (! empty($src['client_location']) && is_array($src['client_location'])) {
                             foreach (array_slice($src['client_location'], 0, 3) as $l) {
-                                $city = $l['city_name'] ?? '';
-                                $state = $l['state_name'] ?? '';
-                                $country = $l['country_name'] ?? '';
-                                $addr = implode(', ', array_filter([$city, $state, $country]));
+                                $locId = (int) ($l['id'] ?? $l['city_id'] ?? 0);
+                                $city = $l['city_name'] ?? ($l['city'] ?? '');
+                                $state = $l['state_name'] ?? ($l['state'] ?? '');
+                                $country = $l['country_name'] ?? ($l['country'] ?? '');
+                                $rawAddr = ! empty($l['address']) ? $l['address'] : ($addressesByLocId[$locId] ?? '');
+                                $addressPart = (! empty($rawAddr) && strtolower(trim($rawAddr)) !== 'registered office') ? ucwords(trim($rawAddr)) : '';
+                                $extra = implode(', ', array_filter([$city, $state, $country]));
+                                $fullAddr = $addressPart ? ($addressPart.($extra ? ' - '.$extra : '')) : ($extra ?: ($rawAddr ?: 'Registered Office'));
                                 $locList[] = [
-                                    'id' => (int) ($l['id'] ?? $l['city_id'] ?? 0),
-                                    'l' => $addr ?: 'Address',
+                                    'id' => $locId,
+                                    'l' => $fullAddr,
                                     'city' => (string) $city,
                                 ];
                             }
@@ -6618,7 +6642,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         return [
             'manifest_id' => $manifestId,
-            'schema_version' => 4,
+            'schema_version' => 5,
             'tenant_id' => $companyId,
             'source_version' => $version,
             'read_model_version' => $version,
@@ -6852,6 +6876,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 if ($cachedTaxonomy && (is_countable($cachedTaxonomy) ? count($cachedTaxonomy) > 0 : ! empty($cachedTaxonomy))) {
                     $standardTitles = collect($cachedTaxonomy);
                 } else {
+                    Cache::forget('global:canonical_job_titles_list:v2');
                     if (\Illuminate\Support\Facades\Schema::hasTable('taxonomy_designations')) {
                         $query = DB::table('taxonomy_designations as d')
                             ->where('d.status', 1);
@@ -6930,8 +6955,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $cachedLegacy = Cache::get('global:standard_job_titles_list');
                 if ($cachedLegacy && (is_countable($cachedLegacy) ? count($cachedLegacy) > 0 : ! empty($cachedLegacy))) {
                     $standardTitles = collect($cachedLegacy);
-                } elseif (\Illuminate\Support\Facades\Schema::hasTable('jd_details')) {
-                    $jdRows = DB::table('jd_details')
+                } else {
+                    Cache::forget('global:standard_job_titles_list');
+                    if (\Illuminate\Support\Facades\Schema::hasTable('jd_details')) {
+                        $jdRows = DB::table('jd_details')
                         ->where('status', 1)
                         ->select('id', 'title', 'jd', 'minimum_exp', 'maxmum_exp', 'skills')
                         ->orderBy('title', 'ASC')
@@ -6951,8 +6978,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         ];
                     });
 
-                    if ($standardTitles->isNotEmpty()) {
-                        Cache::put('global:standard_job_titles_list', $standardTitles, 86400);
+                        if ($standardTitles->isNotEmpty()) {
+                            Cache::put('global:standard_job_titles_list', $standardTitles, 86400);
+                        }
                     }
                 }
             } catch (\Throwable $e) {
