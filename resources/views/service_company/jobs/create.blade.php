@@ -199,13 +199,55 @@
     #jrwrap .rich-editor:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
     #jrwrap .rich-editor:empty::before { content: attr(data-placeholder); color: var(--text-muted); }
 
-    /* Tags Input */
+    /* Tags Input & Key Skills Enterprise UI (Rule 20 Modern Card + Sub-Card Standard) */
     #jrwrap .tags-input-wrapper { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card-bg); min-height: 44px; align-items: center; transition: all 0.2s; }
     #jrwrap .tags-input-wrapper:focus-within { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
     #jrwrap .tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--primary-light); border: 1px solid var(--primary); border-radius: 16px; font-size: 12px; font-weight: 500; color: var(--primary); }
     #jrwrap .tag-remove { width: 14px; height: 14px; border-radius: 50%; background: var(--primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; border: none; line-height: 1; }
     #jrwrap .tag-input { border: none; outline: none; font-family: 'Poppins', sans-serif; font-size: 13px; flex: 1; min-width: 100px; background: transparent; }
     #jrwrap .tag-input::placeholder { color: var(--text-muted); }
+
+    /* Modern Key Skills Sub-Card Design System */
+    #jrwrap .skills-search-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
+    #jrwrap .skills-input-container { position: relative; display: flex; align-items: center; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
+    #jrwrap .skills-input-container:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+    #jrwrap .skills-search-icon { position: absolute; left: 12px; color: #94a3b8; pointer-events: none; width: 16px; height: 16px; }
+    #jrwrap .skills-text-input { width: 100%; border: none; outline: none; background: transparent; padding: 10px 42px 10px 38px; font-family: 'Poppins', sans-serif; font-size: 13px; color: var(--text-primary); }
+    #jrwrap .skills-text-input::placeholder { color: var(--text-muted); }
+    #jrwrap .skills-input-clear-btn { position: absolute; right: 12px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; display: none; }
+    #jrwrap .skills-input-clear-btn:hover { color: var(--text-primary); }
+
+    /* Floating Autocomplete Dropdown */
+    #jrwrap .skills-dropdown-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05); z-index: 1050; max-height: 230px; overflow-y: auto; display: none; }
+    #jrwrap .skills-dropdown-header { padding: 6px 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+    #jrwrap .skills-dropdown-item { padding: 9px 14px; font-size: 13px; color: #1e293b; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; transition: background 0.15s, color 0.15s; }
+    #jrwrap .skills-dropdown-item:last-child { border-bottom: none; }
+    #jrwrap .skills-dropdown-item:hover, #jrwrap .skills-dropdown-item.active { background: #eff6ff; color: #0284c7; }
+    #jrwrap .skills-dropdown-item .skill-match-tag { font-size: 11px; color: #0284c7; font-weight: 500; background: #e0f2fe; padding: 2px 8px; border-radius: 12px; }
+    #jrwrap .skills-dropdown-empty { padding: 12px 14px; font-size: 12px; color: #64748b; text-align: center; }
+
+    /* Selected Skills Sub-Card Box */
+    #jrwrap .selected-skills-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; transition: border-color 0.2s; }
+    #jrwrap .selected-skills-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    #jrwrap .selected-skills-title { font-size: 12px; font-weight: 600; color: #1e293b; display: inline-flex; align-items: center; gap: 6px; }
+    #jrwrap .selected-skills-counter { font-size: 11px; font-weight: 500; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 12px; }
+    #jrwrap .selected-skills-clear-btn { background: none; border: none; font-size: 11px; font-weight: 500; color: #ef4444; cursor: pointer; padding: 0; }
+    #jrwrap .selected-skills-clear-btn:hover { text-decoration: underline; }
+    #jrwrap .selected-skills-container { display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px; align-items: center; }
+    #jrwrap .empty-skills-state { font-size: 12px; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px; }
+
+    /* Selected Skill Tag Chip */
+    #jrwrap .skill-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 12px; background: #eef6ff; border: 1px solid #bae6fd; border-radius: 6px; font-size: 12px; font-weight: 500; color: #0369a1; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    #jrwrap .skill-chip-remove { border: none; background: transparent; color: #0284c7; cursor: pointer; width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; line-height: 1; padding: 0; transition: all 0.15s; }
+    #jrwrap .skill-chip-remove:hover { background: #fee2e2; color: #dc2626; }
+
+    /* Recommended / Suggested Pills */
+    #jrwrap .recommended-skills-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 8px; }
+    #jrwrap .recommended-skills-container { display: flex; flex-wrap: wrap; gap: 6px; }
+    #jrwrap .suggested-skill-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; font-size: 12px; font-weight: 500; color: #475569; cursor: pointer; transition: all 0.15s; }
+    #jrwrap .suggested-skill-pill:hover { border-color: #0284c7; color: #0284c7; background: #f0f9ff; }
+    #jrwrap .suggested-skill-pill.is-added { background: #f1f5f9; border-color: #e2e8f0; color: #94a3b8; cursor: default; }
+    #jrwrap .suggested-skill-pill.is-added .pill-icon { color: #10b981; }
 
     /* Questions (Step 3) */
     #jrwrap .content-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
@@ -5133,7 +5175,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                             <textarea name="kt_docs_tinymce_hidden" id="kt_docs_tinymce_hidden" style="display:none;"><?php echo @$job->job_description; ?></textarea>
                         </div>
                     </div>
-                    <div class="card">
+                    <div class="card" id="cardKeySkills">
                         <div class="card-body">
                             <div class="section-title">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -5141,19 +5183,54 @@ $currency_code = GeneralMethod::defaultCurrency();
                                 </svg>Key Skills
                             </div>
                             <label class="form-label required">Add skills required for this position (press Enter or comma to add)</label>
-                            <div class="tags-input-wrapper" id="skillsWrapper" onclick="document.getElementById('skillsInput').focus()">
-                                <input type="text" class="tag-input" id="skillsInput" placeholder="e.g. Java, React, Node.js...">
+
+                            {{-- Tier 1: Search & Input Field with Autocomplete (Rule 20 Modern Standard) --}}
+                            <div class="skills-search-wrapper" id="skillsSearchWrapper">
+                                <div class="skills-input-container">
+                                    <svg class="skills-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"/>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                    </svg>
+                                    <input type="text" class="skills-text-input" id="skillsInput" placeholder="Type a skill (e.g. Java, React, Sales, Lead Generation...) and press Enter" autocomplete="off">
+                                    <button type="button" class="skills-input-clear-btn" id="skillsInputClear" title="Clear input">&times;</button>
+                                </div>
+                                <div class="skills-dropdown-panel" id="skillsDropdownPanel">
+                                    <!-- Dynamic Autocomplete Results -->
+                                </div>
                             </div>
-                            <span style="font-size:11px;color:var(--text-muted);margin-right:8px;">Suggested:</span>
-                            <div class="chips-container skillsWrapperSkill" style="margin-top:12px;">
-                                <span class="chip" onclick="addSuggestedSkill(this,'Java')">Java <span class="remove">+</span></span>
-                                <span class="chip" onclick="addSuggestedSkill(this,'Spring Boot')">Spring Boot <span class="remove">+</span></span>
-                                <span class="chip" onclick="addSuggestedSkill(this,'Microservices')">Microservices <span class="remove">+</span></span>
-                                <span class="chip" onclick="addSuggestedSkill(this,'React')">React <span class="remove">+</span></span>
-                                <span class="chip" onclick="addSuggestedSkill(this,'AWS')">AWS <span class="remove">+</span></span>
-                                <span class="chip" onclick="addSuggestedSkill(this,'Docker')">Docker <span class="remove">+</span></span><span class="chip" onclick="addSuggestedSkill(this,'Kubernetes')">Kubernetes <span class="remove">+</span></span>
-                                <span class="chip" onclick="addSuggestedSkill(this,'SQL')">SQL <span class="remove">+</span></span>
+
+                            {{-- Tier 2: Selected Skills Container (Directly Below Input) --}}
+                            <div class="selected-skills-card" id="skillsWrapper">
+                                <div class="selected-skills-header">
+                                    <span class="selected-skills-title">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        Selected Skills
+                                        <span class="selected-skills-counter" id="skillsCountBadge">0/10 added</span>
+                                    </span>
+                                    <button type="button" class="selected-skills-clear-btn" id="skillsClearAllBtn" style="display:none;" onclick="clearAllSkills()">Clear All</button>
+                                </div>
+                                <div class="selected-skills-container" id="selectedSkillsBox">
+                                    <div class="empty-skills-state" id="emptySkillsNotice">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="12" y1="8" x2="12" y2="12"/>
+                                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                        </svg>
+                                        No skills added yet. Type above or pick from recommended skills below.
+                                    </div>
+                                </div>
                             </div>
+
+                            {{-- Tier 3: Suggested & Recommended Skills --}}
+                            <div>
+                                <div class="recommended-skills-label">Recommended &amp; Popular Skills:</div>
+                                <div class="recommended-skills-container skillsWrapperSkill" id="recommendedSkillsList">
+                                    <!-- Dynamic and standard pills populated via JS -->
+                                </div>
+                            </div>
+
                             {{-- Hidden real field POSTed to backend (Tagify JSON, synced from skills chips) --}}
                             <input type="hidden" name="tags" id="tags" value="">
                         </div>
@@ -9630,26 +9707,266 @@ $currency_code = GeneralMethod::defaultCurrency();
             }
         }
 
-        // ---------- SKILLS ----------
+        // ---------- SKILLS (Rule 20 Enterprise Card + Sub-Card Standard) ----------
+        var standardSkillLibrary = [
+            // Engineering & Tech
+            "Java", "Spring Boot", "Microservices", "React", "Node.js", "Python", "JavaScript", "TypeScript",
+            "SQL", "AWS", "Docker", "Kubernetes", "Angular", "Vue.js", "C#", ".NET", "PHP", "Laravel",
+            "MongoDB", "PostgreSQL", "Git", "REST API", "GraphQL", "DevOps", "CI/CD", "Linux", "HTML5", "CSS3",
+            "Data Science", "Machine Learning", "Artificial Intelligence", "Tableau", "Power BI", "Kafka", "Redis",
+            // Sales, Marketing & Business
+            "Sales", "Lead Generation", "B2B Sales", "Business Development", "Inside Sales", "Cold Calling",
+            "Account Management", "Client Servicing", "CRM", "Salesforce", "HubSpot", "Digital Marketing",
+            "Content Marketing", "SEO", "Market Research", "Product Management", "Project Management",
+            "Agile", "Scrum", "Communication Skills", "Negotiation", "Problem Solving", "Team Leadership"
+        ];
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
         function initSkillsInput() {
             var input = document.getElementById('skillsInput');
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); var val = input.value.trim().replace(',', ''); if (val) addSkill(val); }
-                if (e.key === 'Backspace' && input.value === '' && skills.length > 0) removeSkill(skills[skills.length - 1]);
+            var clearBtn = document.getElementById('skillsInputClear');
+            var dropdown = document.getElementById('skillsDropdownPanel');
+            var focusedIndex = -1;
+
+            if (!input) return;
+
+            // Render recommended pills
+            renderRecommendedSkills();
+
+            // Input typing: live autocomplete dropdown & clear button toggle
+            input.addEventListener('input', function() {
+                var query = input.value.trim();
+                if (clearBtn) clearBtn.style.display = query.length > 0 ? 'inline-block' : 'none';
+                focusedIndex = -1;
+                renderSkillsAutocomplete(query);
             });
-            input.addEventListener('blur', function() { var val = input.value.trim(); if (val) addSkill(val); });
+
+            // Keyboard navigation
+            input.addEventListener('keydown', function(e) {
+                var items = dropdown ? dropdown.querySelectorAll('.skills-dropdown-item') : [];
+                if (e.key === 'ArrowDown') {
+                    if (items.length > 0) {
+                        e.preventDefault();
+                        focusedIndex = (focusedIndex + 1) % items.length;
+                        updateFocusedSkillItem(items, focusedIndex);
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    if (items.length > 0) {
+                        e.preventDefault();
+                        focusedIndex = (focusedIndex - 1 + items.length) % items.length;
+                        updateFocusedSkillItem(items, focusedIndex);
+                    }
+                } else if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    if (focusedIndex >= 0 && items[focusedIndex]) {
+                        var chosenSkill = items[focusedIndex].getAttribute('data-skill');
+                        if (chosenSkill) addSkill(chosenSkill);
+                    } else {
+                        var val = input.value.trim().replace(/,/g, '');
+                        if (val) addSkill(val);
+                    }
+                    closeSkillsDropdown();
+                } else if (e.key === 'Escape') {
+                    closeSkillsDropdown();
+                } else if (e.key === 'Backspace' && input.value === '' && skills.length > 0) {
+                    removeSkill(skills[skills.length - 1]);
+                }
+            });
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    input.value = '';
+                    clearBtn.style.display = 'none';
+                    closeSkillsDropdown();
+                    input.focus();
+                });
+            }
+
+            // Click outside closes dropdown
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#skillsSearchWrapper').length) {
+                    closeSkillsDropdown();
+                }
+            });
         }
-        function addSkill(skill) { skill = skill.replace(/[^a-zA-Z0-9 +#.\/&()_-]/g, '').replace(/\s+/g, ' ').trim(); if (!skill || skills.indexOf(skill) !== -1) return; if (skills.length >= 10) { showToast('Maximum 10 skills allowed', 'error'); return; } skills.push(skill); renderSkills(); }
-        function addSuggestedSkill(el, skill) { addSkill(skill); el.classList.add('selected'); }
-        function removeSkill(skill) { skills = skills.filter(function(s) { return s !== skill; }); renderSkills(); document.querySelectorAll('#step2 .chip').forEach(function(el) { if (el.textContent.indexOf(skill) !== -1) el.classList.remove('selected'); }); }
-        function renderSkills() {
-            var wrapper = document.getElementById('skillsWrapper');
+
+        function updateFocusedSkillItem(items, index) {
+            items.forEach(function(item, idx) {
+                if (idx === index) {
+                    item.classList.add('active');
+                    item.scrollIntoView({ block: 'nearest' });
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        function renderSkillsAutocomplete(query) {
+            var dropdown = document.getElementById('skillsDropdownPanel');
+            if (!dropdown) return;
+
+            if (!query) {
+                dropdown.style.display = 'none';
+                dropdown.innerHTML = '';
+                return;
+            }
+
+            var lowerQ = query.toLowerCase();
+            var matches = standardSkillLibrary.filter(function(s) {
+                return s.toLowerCase().indexOf(lowerQ) !== -1 && !skills.some(function(added) { return added.toLowerCase() === s.toLowerCase(); });
+            }).slice(0, 8);
+
+            var isExactMatch = standardSkillLibrary.some(function(s) {
+                return s.toLowerCase() === lowerQ;
+            });
+
+            var html = '<div class="skills-dropdown-header">Matching Standard Skills</div>';
+
+            if (matches.length > 0) {
+                matches.forEach(function(s) {
+                    var regex = new RegExp('(' + escapeRegExp(query) + ')', 'gi');
+                    var highlighted = escapeHtml(s).replace(regex, '<strong style="color:#0284c7;">$1</strong>');
+                    html += '<div class="skills-dropdown-item" data-skill="' + escapeHtml(s) + '" onclick="selectAutocompleteSkill(\'' + escapeHtml(s).replace(/'/g, "\\'") + '\')">' +
+                        '<span>' + highlighted + '</span>' +
+                        '<span class="skill-match-tag">Standard Library</span>' +
+                    '</div>';
+                });
+            }
+
+            // Custom skill option if not directly matching an existing or added skill
+            var isAlreadyAdded = skills.some(function(added) { return added.toLowerCase() === lowerQ; });
+            if (!isAlreadyAdded && !isExactMatch) {
+                html += '<div class="skills-dropdown-item" data-skill="' + escapeHtml(query) + '" onclick="selectAutocompleteSkill(\'' + escapeHtml(query).replace(/'/g, "\\'") + '\')">' +
+                    '<span>+ Add "<strong>' + escapeHtml(query) + '</strong>" as custom skill</span>' +
+                    '<span class="skill-match-tag" style="background:#fef3c7; color:#b45309;">Custom</span>' +
+                '</div>';
+            }
+
+            if (matches.length === 0 && isAlreadyAdded) {
+                html += '<div class="skills-dropdown-empty">Skill already added to selected list</div>';
+            }
+
+            dropdown.innerHTML = html;
+            dropdown.style.display = 'block';
+        }
+
+        function selectAutocompleteSkill(skill) {
+            addSkill(skill);
+            closeSkillsDropdown();
             var input = document.getElementById('skillsInput');
-            var tags = skills.map(function(s) { return '<span class="tag">' + escapeHtml(s) + ' <button type="button" class="tag-remove js-remove-skill" data-skill="' + escapeHtml(s) + '">&times;</button></span>'; }).join('');
-            wrapper.querySelectorAll('.tag').forEach(function(t) { t.remove(); });
-            input.insertAdjacentHTML('beforebegin', tags);
-            input.value = '';
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            var clearBtn = document.getElementById('skillsInputClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+        }
+
+        function closeSkillsDropdown() {
+            var dropdown = document.getElementById('skillsDropdownPanel');
+            if (dropdown) {
+                dropdown.style.display = 'none';
+                dropdown.innerHTML = '';
+            }
+        }
+
+        function addSkill(skill) {
+            skill = skill.replace(/[^a-zA-Z0-9 +#.\/&()_-]/g, '').replace(/\s+/g, ' ').trim();
+            if (!skill) return;
+            var lower = skill.toLowerCase();
+            if (skills.some(function(s) { return s.toLowerCase() === lower; })) return;
+
+            if (skills.length >= 10) {
+                showToast('Maximum 10 skills allowed', 'error');
+                return;
+            }
+
+            skills.push(skill);
+            renderSkills();
+
+            var input = document.getElementById('skillsInput');
+            if (input) input.value = '';
+            var clearBtn = document.getElementById('skillsInputClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+        }
+
+        function addSuggestedSkill(el, skill) {
+            addSkill(skill);
+        }
+
+        function removeSkill(skill) {
+            skills = skills.filter(function(s) { return s !== skill; });
+            renderSkills();
+        }
+
+        function clearAllSkills() {
+            skills = [];
+            renderSkills();
+        }
+
+        function renderRecommendedSkills() {
+            var container = document.getElementById('recommendedSkillsList');
+            if (!container) return;
+
+            var featured = [
+                "Java", "React", "Node.js", "Python", "Spring Boot", "SQL", "AWS", "Docker",
+                "Sales", "Lead Generation", "B2B Sales", "Business Development",
+                "Project Management", "Communication Skills"
+            ];
+
+            var html = featured.map(function(s) {
+                var isSelected = skills.some(function(item) { return item.toLowerCase() === s.toLowerCase(); });
+                var cls = isSelected ? 'suggested-skill-pill is-added' : 'suggested-skill-pill';
+                var icon = isSelected ? '<span class="pill-icon">✓</span>' : '+';
+                var clickAction = isSelected ? '' : 'onclick="addSuggestedSkill(this, \'' + escapeHtml(s).replace(/'/g, "\\'") + '\')"';
+                return '<button type="button" class="' + cls + '" ' + clickAction + '>' +
+                    icon + ' ' + escapeHtml(s) +
+                '</button>';
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function renderSkills() {
+            var box = document.getElementById('selectedSkillsBox');
+            var countBadge = document.getElementById('skillsCountBadge');
+            var clearAllBtn = document.getElementById('skillsClearAllBtn');
+
+            if (countBadge) {
+                countBadge.textContent = skills.length + '/10 added';
+            }
+
+            if (clearAllBtn) {
+                clearAllBtn.style.display = skills.length > 0 ? 'inline-block' : 'none';
+            }
+
+            if (box) {
+                if (skills.length === 0) {
+                    box.innerHTML = '<div class="empty-skills-state" id="emptySkillsNotice">' +
+                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">' +
+                            '<circle cx="12" cy="12" r="10"/>' +
+                            '<line x1="12" y1="8" x2="12" y2="12"/>' +
+                            '<line x1="12" y1="16" x2="12.01" y2="16"/>' +
+                        '</svg>' +
+                        'No skills added yet. Type above or pick from recommended skills below.' +
+                    '</div>';
+                } else {
+                    var chipsHtml = skills.map(function(s) {
+                        return '<span class="skill-chip">' +
+                            escapeHtml(s) +
+                            '<button type="button" class="skill-chip-remove js-remove-skill" data-skill="' + escapeHtml(s) + '" title="Remove">&times;</button>' +
+                        '</span>';
+                    }).join('');
+                    box.innerHTML = chipsHtml;
+                }
+            }
+
+            renderRecommendedSkills();
             syncSkills();
+
             if (skills.length > 0 && typeof clearFieldValidationErrors === 'function') {
                 clearFieldValidationErrors('skills');
             }
@@ -10100,6 +10417,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                         resetPublishBtn($btn);
                         if (isEditPage) {
                             try {
+                                clearJobDraftRAM();
                                 localStorage.setItem('job_drawer_bust', Date.now());
                                 if (window.opener && window.opener.jobDrawerCache) {
                                     window.opener.jobDrawerCache = {};
@@ -10108,10 +10426,10 @@ $currency_code = GeneralMethod::defaultCurrency();
                             showToast('Job updated successfully!', 'success');
                             setTimeout(function() { window.location = __indexUrl; }, 600);
                         } else if (data.check_ready_url && data.job_id) {
-                            try { localStorage.setItem('job_drawer_bust', Date.now()); } catch (e) {}
+                            try { clearJobDraftRAM(); localStorage.setItem('job_drawer_bust', Date.now()); } catch (e) {}
                             launchJobReadinessVerificationGate(data.job_id, data.check_ready_url, __indexUrl);
                         } else {
-                            try { localStorage.setItem('job_drawer_bust', Date.now()); } catch (e) {}
+                            try { clearJobDraftRAM(); localStorage.setItem('job_drawer_bust', Date.now()); } catch (e) {}
                             showToast('Job saved successfully!', 'success');
                             setTimeout(function() { window.location = __indexUrl; }, 600);
                         }
@@ -10162,6 +10480,11 @@ $currency_code = GeneralMethod::defaultCurrency();
                     if (xhr.status === 0 || !navigator.onLine) {
                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
                     } else {
+                        // Preserve form data in RAM & rotate operation_id for clean retry
+                        var retryOpId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('op_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+                        $('#operation_id').val(retryOpId);
+                        saveJobDraftToRAM();
+
                         var errText = 'Server error while saving the job. Please try again.';
                         if (xhr.responseJSON) {
                             if (xhr.responseJSON.message) {
@@ -10178,7 +10501,41 @@ $currency_code = GeneralMethod::defaultCurrency();
                 }
             });
         }
-        function saveDraft() { syncAll(); showToast('Draft synced. Use Publish to save the job.', 'info'); }
+        function saveDraft() { syncAll(); saveJobDraftToRAM(); showToast('Draft synced. Use Publish to save the job.', 'info'); }
+
+        function saveJobDraftToRAM() {
+            try {
+                var draft = {
+                    title: $('#title').val() || '',
+                    category_id: $('#category_id').val() || '',
+                    category_id_display: $('#category_id_display').val() || '',
+                    client_id: $('#client_id').val() || '',
+                    address_id: $('#address_id').val() || '',
+                    total_positions: $('#total_positions').val() || '',
+                    employment_type: $('#employment_type').val() || '',
+                    min_exp: $('#min_exp').val() || '',
+                    max_exp: $('#max_exp').val() || '',
+                    minimum_salary: $('#minimum_salary').val() || '',
+                    maximum_salary: $('#maximum_salary').val() || '',
+                    min_salary_currency: $('#min_salary_currency').val() || '',
+                    max_salary_currency: $('#max_salary_currency').val() || '',
+                    min_sal_mode: $('#min_sal_mode').val() || '',
+                    max_sal_mode: $('#max_sal_mode').val() || '',
+                    work_shifts: $('#work_shifts').val() || '',
+                    work_type: $('#work_type').val() || '',
+                    skills: typeof skills !== 'undefined' ? skills : [],
+                    qualifications: typeof qualifications !== 'undefined' ? qualifications : [],
+                    selectedCities: typeof selectedCities !== 'undefined' ? selectedCities : [],
+                    jd: document.getElementById('jobDescription') ? document.getElementById('jobDescription').innerHTML : '',
+                    savedAt: Date.now()
+                };
+                sessionStorage.setItem('jero_job_form_draft', JSON.stringify(draft));
+            } catch (e) {}
+        }
+
+        function clearJobDraftRAM() {
+            try { sessionStorage.removeItem('jero_job_form_draft'); } catch (e) {}
+        }
 
         /**
          * Recruiter-First Verification Gate: Active 10-Second Readiness Countdown

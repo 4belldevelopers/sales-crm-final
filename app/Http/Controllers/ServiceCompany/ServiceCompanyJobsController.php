@@ -7696,7 +7696,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
-        // Validate & Self-Heal Recruiter Assignments (TC-04, TC-06)
+        // Validate & Self-Heal Recruiter Assignments (TC-04, TC-06, Captain Invariant)
         if ($request->filled('recruiter_id')) {
             $rawRec = is_array($request->recruiter_id)
                 ? $request->recruiter_id
@@ -7731,7 +7731,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $validRecIds = [$userId];
                 }
                 $request->merge(['recruiter_id' => $validRecIds]);
+            } else {
+                $request->merge(['recruiter_id' => [$userId]]);
             }
+        } else {
+            $request->merge(['recruiter_id' => [$userId]]);
         }
 
         // Validate & Self-Heal Hiring Manager Contacts (TC-05)
@@ -7848,10 +7852,17 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             \Log::error('jobs store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
+            $errMsg = config('app.debug')
+                ? ('Submission failed: '.$e->getMessage())
+                : ($e instanceof \Illuminate\Database\QueryException
+                    ? 'Database validation failed while saving the job. Please verify all details and try again.'
+                    : ('Submission failed: '.$e->getMessage()));
+
             return response()->json([
                 'status' => 'error',
                 'msgType' => 'danger',
-                'message' => 'Submission failed. Please try again.',
+                'message' => $errMsg,
+                'debug_message' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
