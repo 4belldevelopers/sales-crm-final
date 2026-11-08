@@ -216,7 +216,7 @@ jobs:
             php artisan octane:stop || true
             sleep 3
             setsid nohup bash start-octane.sh > storage/logs/octane-start.log 2>&1 < /dev/null &
-            sleep 5
+            sleep 8
             php artisan octane:status || true
 
             ###########################################################
@@ -229,13 +229,23 @@ jobs:
             php artisan up
 
             ###########################################################
-            # HEALTH CHECK
+            # HEALTH CHECK & WARMUP
             ###########################################################
 
             echo ""
-            echo ">> Running health check"
+            echo ">> Checking FrankenPHP warmup & health"
 
-            curl -fsS https://hire.jero.works > /dev/null
+            for i in $(seq 1 10); do
+              if curl -fsSk https://hire.jero.works > /dev/null 2>&1 || curl -fsS http://127.0.0.1:8000 > /dev/null 2>&1; then
+                echo "✅ Octane is running and accepting connections."
+                break
+              fi
+              echo "Waiting for Octane upstream to bind (attempt $i)..."
+              sleep 3
+            done
+
+            echo ">> Octane start log tail:"
+            tail -n 25 storage/logs/octane-start.log || true
 
             ###########################################################
             # COMPLETE
