@@ -7850,19 +7850,31 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 );
             }
 
-            \Log::error('jobs store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
+            $sqlMsg = $e->getMessage();
+            \Log::error('jobs store() transaction failed: '.$sqlMsg, ['exception' => $e]);
 
-            $errMsg = config('app.debug')
-                ? ('Submission failed: '.$e->getMessage())
-                : ($e instanceof \Illuminate\Database\QueryException
-                    ? 'Database validation failed while saving the job. Please verify all details and try again.'
-                    : ('Submission failed: '.$e->getMessage()));
+            if ($e instanceof \Illuminate\Database\QueryException) {
+                if (preg_match('/Column \'([^\']+)\' cannot be null/i', $sqlMsg, $m)) {
+                    $errMsg = "Database error: Field '{$m[1]}' cannot be empty.";
+                } elseif (preg_match('/Unknown column \'([^\']+)\' in \'field list\'/i', $sqlMsg, $m)) {
+                    $errMsg = "Database error: Unknown column '{$m[1]}'.";
+                } elseif (preg_match('/Data too long for column \'([^\']+)\'/i', $sqlMsg, $m)) {
+                    $errMsg = "Database error: Value for '{$m[1]}' exceeds maximum allowed length.";
+                } elseif (preg_match('/1062 Duplicate entry/i', $sqlMsg)) {
+                    $errMsg = "Database error: Duplicate record detected.";
+                } else {
+                    $errMsg = 'Database error: '.$sqlMsg;
+                }
+            } else {
+                $errMsg = 'Submission failed: '.$sqlMsg;
+            }
 
             return response()->json([
                 'status' => 'error',
                 'msgType' => 'danger',
                 'message' => $errMsg,
-                'debug_message' => config('app.debug') ? $e->getMessage() : null,
+                'sql_error' => $sqlMsg,
+                'debug_message' => $sqlMsg,
             ], 500);
         }
     }

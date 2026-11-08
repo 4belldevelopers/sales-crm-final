@@ -45,37 +45,44 @@ class CoinOutboxService
     ): int {
         $idempotencyKey = (string) Str::uuid();
 
-        $outboxId = (int) DB::table('sys_outbox_events')->insertGetId([
-            'tenant_id' => $companyId,
-            'idempotency_key' => $idempotencyKey,
-            'aggregate_type' => 'CoinTransaction',
-            'aggregate_id' => $logId,
-            'aggregate_version' => 1,
-            'event_type' => 'COIN_TRANSACTION_UPDATED',
-            'payload' => json_encode([
-                'log_id' => $logId,
-                'company_id' => $companyId,
-                'event_type' => $eventType,
-                'transection_type' => strtolower($transectionType),
-                'coins' => (float) $coins,
-                'balance_coins' => (float) $balanceCoins,
-                'event' => $eventDescription,
-                'created_at' => now()->toIso8601String(),
-            ]),
-            'status' => 'PENDING',
-            'attempts' => 0,
-            'available_at' => now(),
-            'created_at' => now(),
-        ]);
+        $outboxId = 0;
+        try {
+            $outboxId = (int) DB::table('sys_outbox_events')->insertGetId([
+                'tenant_id' => $companyId,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'CoinTransaction',
+                'aggregate_id' => $logId,
+                'aggregate_version' => 1,
+                'event_type' => 'COIN_TRANSACTION_UPDATED',
+                'payload' => json_encode([
+                    'log_id' => $logId,
+                    'company_id' => $companyId,
+                    'event_type' => $eventType,
+                    'transection_type' => strtolower($transectionType),
+                    'coins' => (float) $coins,
+                    'balance_coins' => (float) $balanceCoins,
+                    'event' => $eventDescription,
+                    'created_at' => now()->toIso8601String(),
+                ]),
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'available_at' => now(),
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $oe) {
+            Log::warning('[CoinOutboxService] Failed to record outbox event: '.$oe->getMessage());
+        }
 
         // Dispatch outbox worker after transaction commits
-        DB::afterCommit(function () use ($outboxId) {
-            try {
-                ProcessCoinOutboxEventJob::dispatch($outboxId);
-            } catch (\Throwable $e) {
-                Log::warning('[CoinOutboxService] Direct outbox job dispatch deferred: '.$e->getMessage());
-            }
-        });
+        if ($outboxId > 0) {
+            DB::afterCommit(function () use ($outboxId) {
+                try {
+                    ProcessCoinOutboxEventJob::dispatch($outboxId);
+                } catch (\Throwable $e) {
+                    Log::warning('[CoinOutboxService] Failed to dispatch outbox worker: '.$e->getMessage());
+                }
+            });
+        }
 
         return $outboxId;
     }

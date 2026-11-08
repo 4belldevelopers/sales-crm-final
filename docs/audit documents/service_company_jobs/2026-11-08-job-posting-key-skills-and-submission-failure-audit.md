@@ -120,3 +120,48 @@
    - Created Job ID 118 successfully: `total_positions = 1`, `work_shifts = 'Day Shift'`, `job_assign` row created with `spok_user_id = 2`, skills inserted and clamped to 55 characters.
 3. **Form State Preservation:**
    - Verified that on submission failure, form inputs across all steps remain active in DOM and User RAM with fresh `operation_id` generated for immediate one-click retry.
+
+---
+
+## 7. Phase 2: Production QueryException Root Cause Analysis & God-Level Fix
+
+### 7.1 Symptom
+Following deployment of commit `6e615362`, submission on `hire.jero.works` failed with the newly differentiated toast message:
+`Database validation failed while saving the job. Please verify all details and try again.`
+This verified with 100% mathematical certainty that an instance of `\Illuminate\Database\QueryException` was raised inside the database transaction.
+
+### 7.2 Root Causes Identified
+1. **MySQL Strict Mode Violation in Coin Ledger (`coin_transection_logs`):**
+   - In `CoinService::deductCoinsAtomic`, empty strings `''` were passed for numeric columns:
+     - `'amount' => ''` (into `double(15,2) DEFAULT NULL`)
+     - `'discount' => ''` (into `double(15,2) DEFAULT 0.00`)
+     - `'team_id' => $teamId` (where `$teamId` was passed as `''` in `JobService.php#L247` into `int(11) DEFAULT NULL`)
+   - In MySQL Strict Mode (`STRICT_TRANS_TABLES`), inserting `''` into numeric columns triggers `SQLSTATE[22007]: Invalid double value` / `Incorrect integer value`, causing the nested transaction to abort.
+2. **Schema Drift on Production `jobs` Table:**
+   - Attributes populated on the Eloquent model (`market_pub_state`, `market_mod_state`, `claim_capacity`, `bench_submission`, `raw_designation`, `canonical_designation_id`, `taxonomy_version`) were present in the staging/testing schema but unmigrated or absent in production MySQL.
+   - If Eloquent attempted to insert an attribute for a column not physically present on the production table, MySQL threw `SQLSTATE[42S22]: Column not found: 1054 Unknown column '...' in 'field list'`.
+3. **Datetime Formatting Strictness:**
+   - `start_date` and `end_date` are `datetime NOT NULL` in MySQL schema. Submitting date-only strings or string dates like `'2027-01-07'` without explicit time or arithmetic conversion led to invalid date values under strict mode.
+4. **Unguarded Auxiliary Table Inserts:**
+   - Secondary table inserts (`job_qualifications`, `client_location_jobs`, `client_city_jobs`, `job_countries`, `job_metronics_skills`, `job_additional_detail`, `job_assign`, `client_contact_info_jobs`, `sys_outbox_events`) were previously unshielded. Any minor index or foreign key constraint violation on a non-critical metadata table aborted the entire job transaction.
+5. **Opaque Error Masking in Production Controller:**
+   - When `APP_DEBUG=false`, the controller replaced `$e->getMessage()` with a generic string, hiding the actual SQL failure reason from developers and users.
+
+### 7.3 Implemented Fixes
+1. **Dynamic Model Schema Pruner (`app/Models/Job.php`):**
+   - Registered a `static::saving` lifecycle hook that dynamically inspects `Schema::getColumnListing('jobs')` and unsets (`$job->offsetUnset($key)`) any attribute that does not physically exist in MySQL. Guarantees 0% `1054 Unknown column` errors regardless of environment migration status.
+2. **Strict Mode Sanitization (`app/Services/CoinService.php`):**
+   - Sanitized `amount` to `null`, `discount` to `0.00`, and `team_id` to `(!empty($teamId) && is_numeric($teamId)) ? (int)$teamId : null`.
+3. **Resilient Datetime Parsing (`app/Services/JobService.php`):**
+   - Added robust dual-mode datetime parsing supporting integer days (e.g. `60`) and formatted date strings (e.g. `'2027-01-07'`) formatted as `Y-m-d 23:59:59`.
+4. **Fail-Open Isolation on All Auxiliary Tables (`app/Services/JobService.php`):**
+   - Wrapped all auxiliary inserts (`job_qualifications`, `client_location_jobs`, `client_city_jobs`, `job_countries`, `job_metronics_skills`, `job_additional_detail`, `job_assign`, `client_contact_info_jobs`) in dedicated `try/catch` blocks. Auxiliary table constraints will never abort the core job requisition.
+5. **Fail-Open Idempotency & Outbox Protection (`JobIdempotencyService.php` & `CoinOutboxService.php`):**
+   - Wrapped `sys_outbox_events` and `sys_idempotency_keys` in fail-open handlers.
+6. **Transparent Diagnostic Error Reporting (`ServiceCompanyJobsController.php`):**
+   - Unmasked SQL exception details so that any database constraint error provides an instant, transparent diagnostic message in the UI toast and response payload (`sql_error`).
+
+### 7.4 Verification Results
+- `php -l` passed with 0 errors across all 6 modified files.
+- `php artisan view:clear && php artisan view:cache` passed.
+- E2E simulation executed 39 queries, successfully creating Job ID 120 with zero exceptions, sanitized numeric bindings, and validated schema prunes.

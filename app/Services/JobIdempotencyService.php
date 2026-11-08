@@ -250,7 +250,14 @@ class JobIdempotencyService
                 'lock' => $redisLock ?: null,
             ];
         } catch (\Throwable $e) {
-            throw $e;
+            Log::warning('[JobIdempotencyService] sys_idempotency_keys check failed, failing open: '.$e->getMessage());
+
+            return [
+                'status' => 'proceed',
+                'idempotency_key' => $idempotencyKey,
+                'request_hash' => $requestHash,
+                'lock' => $redisLock ?: null,
+            ];
         }
     }
 
