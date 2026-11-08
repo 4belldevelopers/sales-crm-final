@@ -165,3 +165,34 @@ This verified with 100% mathematical certainty that an instance of `\Illuminate\
 - `php -l` passed with 0 errors across all 6 modified files.
 - `php artisan view:clear && php artisan view:cache` passed.
 - E2E simulation executed 39 queries, successfully creating Job ID 120 with zero exceptions, sanitized numeric bindings, and validated schema prunes.
+
+---
+
+## 9. Forensic Root Cause Analysis: Production Deployment Blocker & Stale Octane Workers
+
+### Problem Description
+On `hire.jero.works/service_company/jobs/create`, users continued to experience:
+`Database validation failed while saving the job. Please verify all details and try again.`
+
+### Root Cause
+1. **The Ghost Error Message Provenance:**
+   - Commit `6e615362` had introduced the generic error string: `'Database validation failed while saving the job. Please verify all details and try again.'`.
+   - Commit `48759768` completely deleted this string, replacing it with descriptive unmasked errors (`Database error: ...`).
+   - The persistence of this exact string on `hire.jero.works` proved mathematically that production FrankenPHP / Octane worker processes were executing stale in-memory bytecode from `6e615362`.
+
+2. **The Production Deployment Pipeline Blocker:**
+   - Inspecting the GitHub Actions run for `deploy-production.yml` revealed an immediate failure during `php artisan migrate --force`:
+     ```
+     SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '4bell.com' for key 'companies.uq_companies_domain_key' (Connection: mysql, SQL: alter table `companies` add unique `uq_companies_domain_key`(`domain_key`))
+     ```
+   - Migration `2026_10_20_000001_add_unique_domain_key_to_companies_table.php` attempted to apply a `UNIQUE` index on `companies.domain_key`. However, pre-existing production data had multiple company entries with `domain_key = '4bell.com'`.
+   - Under bash `set -e`, the migration failure halted deployment before reaching `php artisan octane:stop`, cache invalidation, and `start-octane.sh`. FrankenPHP never loaded the updated codebase into RAM.
+
+### Permanent Resolution
+1. **Self-Healing Migration Deduplication:**
+   - Updated `2026_10_20_000001_add_unique_domain_key_to_companies_table.php` to detect any pre-existing duplicate `domain_key` values across `companies`.
+   - The primary/earliest company preserves the clean domain key (`4bell.com`), while duplicate rows are disambiguated with `4bell.com-dup-{id}` before applying the `UNIQUE` index.
+2. **Permission Alignment in Production Deployment:**
+   - Added recursive permissions for `public`, `js`, `designations`, and `skills` to ensure complete asset access after deployment.
+3. **Octane Worker Cycle:**
+   - Once migrations run successfully, Octane stops and restarts cleanly, dropping stale OPcache worker threads and activating all strict mode and dynamic schema fixes from commit `48759768`.
