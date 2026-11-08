@@ -252,6 +252,25 @@ jobs:
             ###########################################################
 
             echo ""
+            echo ">> DIAGNOSTICS: Nginx config & Upstream & Logs"
+            cat /www/server/panel/vhost/nginx/hire.jero.works.conf 2>/dev/null || cat /www/server/nginx/conf/vhost/hire.jero.works.conf 2>/dev/null || true
+            cat /www/server/panel/vhost/nginx/proxy/hire.jero.works/*.conf 2>/dev/null || true
+            echo ""
+            echo ">> Listening ports:"
+            ss -tlpn 2>/dev/null || netstat -tlpn 2>/dev/null || true
+            echo ""
+            echo ">> Octane & Nginx processes:"
+            ps aux | grep -E "nginx|octane|frankenphp" | grep -v grep || true
+            echo ""
+            echo ">> Nginx error log:"
+            tail -n 25 /www/wwwlogs/hire.jero.works.error.log 2>/dev/null || tail -n 25 /var/log/nginx/error.log 2>/dev/null || true
+            echo ""
+            echo ">> Testing localhost ports:"
+            curl -I http://127.0.0.1:8000 2>/dev/null || echo "Port 8000 not responding"
+            curl -I http://127.0.0.1:8001 2>/dev/null || echo "Port 8001 not responding"
+            curl -I http://127.0.0.1:8080 2>/dev/null || echo "Port 8080 not responding"
+
+            echo ""
             echo "=================================================="
             echo "✅ DEPLOYMENT COMPLETED SUCCESSFULLY"
             echo "Finished: $(date)"
