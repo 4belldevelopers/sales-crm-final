@@ -266,10 +266,11 @@
 
     /**
      * Phase 5: Canonical Integration Layer — JeroCandidateFormBridge
+     * Powered by Safe Form Hydration Protocol (SFHP)
      */
     var JeroCandidateFormBridge = {
         populate: function (result, isEditMode) {
-            console.log('[PARSER 9] Form mapping started (isEditMode: ' + !!isEditMode + ')');
+            console.log('[PARSER 9] Form mapping started via SFHP (isEditMode: ' + !!isEditMode + ')');
 
             if (!result || typeof result !== 'object') {
                 var invalidResultErr = new Error('Cannot map non-object ATS result to form');
@@ -277,268 +278,334 @@
                 return;
             }
 
-            var cand = result.candidate || {};
+            // SFHP Invariant 1: Lock hydration to prevent premature FormValidation error avalanches
+            window.__JERO_HYDRATION_IN_PROGRESS = true;
+            var populatedFields = [];
+            var dirtyElements = [];
 
-            function setVal(selector, value) {
-                if (value === null || value === undefined) return;
-                var strVal = String(value).trim();
-                if (strVal === '') return;
+            try {
+                var cand = result.candidate || {};
 
-                var $el = $(selector);
-                if (!$el.length) return;
+                // SFHP Invariant 2: Non-destructive Fill-If-Empty rule
+                function safeSetVal(selector, value, validationFieldName) {
+                    if (value === null || value === undefined) return false;
+                    var strVal = String(value).trim();
+                    if (strVal === '') return false;
 
-                if (isEditMode) {
-                    var cur = $el.val();
-                    if (cur !== null && cur !== undefined && String(cur).trim() !== '') {
-                        return; // Preserve existing values in edit mode
+                    var $el = $(selector);
+                    if (!$el.length) return false;
+
+                    var cur = ($el.val() || '').trim();
+
+                    // Rule A: In EDIT MODE, NEVER overwrite existing values
+                    if (isEditMode && cur !== '') {
+                        return false;
+                    }
+
+                    // Rule B: In ADD MODE, if recruiter already entered manual value, preserve it
+                    if (!isEditMode && cur !== '') {
+                        console.log('[SFHP] Preserving manual recruiter entry for ' + selector + ': "' + cur + '"');
+                        return false;
+                    }
+
+                    $el.val(strVal);
+                    dirtyElements.push($el[0]);
+                    if (validationFieldName) {
+                        populatedFields.push(validationFieldName);
+                    }
+                    return true;
+                }
+
+                // SFHP Invariant 3: Select2 Safe Hydration Adapter
+                function safeSetSelect2(selector, targetVal, validationFieldName) {
+                    if (targetVal === null || targetVal === undefined) return false;
+                    var $el = $(selector);
+                    if (!$el.length) return false;
+
+                    var cur = ($el.val() || '').trim();
+                    if (isEditMode && cur !== '') return false;
+                    if (!isEditMode && cur !== '') return false;
+
+                    var strTarget = String(targetVal).trim();
+                    var optionExists = $el.find('option[value="' + strTarget + '"]').length > 0;
+                    if (optionExists) {
+                        $el.val(strTarget);
+                        if ($.fn.select2 && $el.hasClass('select2-hidden-accessible')) {
+                            $el.trigger('change.select2');
+                        }
+                        dirtyElements.push($el[0]);
+                        if (validationFieldName) {
+                            populatedFields.push(validationFieldName);
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+
+                // 1. Full Name
+                if (cand.name) {
+                    var rawName = String(cand.name).replace(/^(curriculum vitae|resume|profile|cv|candidate)\s*[-:]*\s*/i, '').trim();
+                    if (rawName.length >= 2) {
+                        var formattedName = (typeof window.formatCandidateTitleCase === 'function')
+                            ? window.formatCandidateTitleCase(rawName)
+                            : rawName;
+                        safeSetVal('#full_name', formattedName, 'full_name');
+                        safeSetVal('#name', formattedName);
                     }
                 }
 
-                $el.val(strVal);
-                $el.trigger('input').trigger('change');
+                // 2. Primary Email
+                if (cand.email) {
+                    var cleanEmail = String(cand.email)
+                        .replace(/^mailto:/i, '')
+                        .replace(/[.,;:\/\s]+$/, '')
+                        .trim()
+                        .toLowerCase();
+                    safeSetVal('#email', cleanEmail, 'email');
+                }
 
-                var domEl = $el[0];
-                if (domEl && typeof domEl.dispatchEvent === 'function') {
+                // 3. Primary Mobile & Country Code (Enterprise JeroPhoneBox Integration)
+                var phoneVal = cand.mobileNumber || cand.phone;
+                if (phoneVal) {
+                    if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
+                        window.JeroPhoneBox.setPhone('phone', phoneVal);
+                        populatedFields.push('phone');
+                    } else {
+                        var digitsOnly = String(phoneVal).replace(/\D/g, '');
+                        if (digitsOnly.length > 10) {
+                            digitsOnly = digitsOnly.slice(-10);
+                        }
+                        safeSetVal('#phone', digitsOnly, 'phone');
+                    }
+                }
+                if (cand.countryCode) {
+                    var cc = String(cand.countryCode).trim();
+                    if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
+                        window.JeroPhoneBox.setCountry('phone', cc);
+                    } else {
+                        safeSetVal('#primary_country_code', cc.replace(/^\+/, ''));
+                    }
+                }
+
+                // 4. Phase 10: Date of Birth (Normalized to YYYY-MM-DD)
+                if (cand.dob) {
+                    var normalizedDob = normalizeDob(cand.dob);
+                    if (normalizedDob) {
+                        safeSetVal('#dob', normalizedDob, 'dob');
+                    }
+                }
+
+                // 5. Phase 7: Authoritative City Population via Tagify Bridge & Custom Combobox
+                // Requirement: Only display the city if it matches an authoritative system city; otherwise remain blank.
+                var parsedLocData = cand.location || cand.city || (result && (result.location || result.city));
+                if (typeof window.resolveAndSetCandidateLocation === 'function') {
+                    window.resolveAndSetCandidateLocation(parsedLocData);
+                } else if (typeof window.setSingleCandidateLocation === 'function') {
+                    window.setSingleCandidateLocation(parsedLocData);
+                } else {
+                    var locInput = document.querySelector('#kt_tagify_work_location');
+                    var tagifyLoc = (locInput && locInput.__tagify) || window.tagifylocation;
+                    if (tagifyLoc && typeof tagifyLoc.removeAllTags === 'function') {
+                        tagifyLoc.removeAllTags();
+                    }
+                }
+
+                // 5b. Nationality Auto-Detection (Client RAM In-Memory Matcher)
+                var detectedNationality = null;
+                if (cand.nationality) {
+                    detectedNationality = cand.nationality;
+                }
+                if (!detectedNationality) {
+                    var rawCc = String(cand.countryCode || '').replace(/^\+/, '').trim();
+                    if (rawCc === '91') detectedNationality = 'Indian';
+                    else if (rawCc === '44') detectedNationality = 'British';
+                    else if (rawCc === '61') detectedNationality = 'Australian';
+                    else if (rawCc === '971') detectedNationality = 'Emirati';
+                    else if (rawCc === '65') detectedNationality = 'Singaporean';
+                    else if (rawCc === '49') detectedNationality = 'German';
+                    else if (rawCc === '33') detectedNationality = 'French';
+                    else if (rawCc === '353') detectedNationality = 'Irish';
+                    else if (rawCc === '31') detectedNationality = 'Dutch';
+                    else if (rawCc === '966') detectedNationality = 'Saudi';
+                    else if (rawCc === '1') {
+                        var locStr = String(parsedLocData || '').toLowerCase();
+                        if (/canada|ontario|toronto|vancouver|quebec|alberta|montreal|calgary|ottawa/.test(locStr)) {
+                            detectedNationality = 'Canadian';
+                        } else {
+                            detectedNationality = 'American';
+                        }
+                    }
+                }
+                if (!detectedNationality && parsedLocData) {
+                    var locLower = String(parsedLocData).toLowerCase();
+                    if (/india|bengaluru|bangalore|delhi|mumbai|hyderabad|pune|chennai|kolkata|noida|gurgaon|ahmedabad/.test(locLower)) {
+                        detectedNationality = 'Indian';
+                    } else if (/united states|usa|california|new york|texas|seattle|san francisco|chicago|los angeles|boston|austin/.test(locLower)) {
+                        detectedNationality = 'American';
+                    } else if (/united kingdom|uk|london|manchester|birmingham|england|scotland|wales|edinburgh/.test(locLower)) {
+                        detectedNationality = 'British';
+                    } else if (/canada|toronto|vancouver|montreal|ottawa|calgary|edmonton/.test(locLower)) {
+                        detectedNationality = 'Canadian';
+                    } else if (/australia|sydney|melbourne|brisbane|perth|adelaide/.test(locLower)) {
+                        detectedNationality = 'Australian';
+                    } else if (/dubai|abu dhabi|uae|united arab emirates|sharjah/.test(locLower)) {
+                        detectedNationality = 'Emirati';
+                    } else if (/singapore/.test(locLower)) {
+                        detectedNationality = 'Singaporean';
+                    } else if (/germany|berlin|munich|frankfurt|hamburg|stuttgart/.test(locLower)) {
+                        detectedNationality = 'German';
+                    } else if (/france|paris|lyon|marseille/.test(locLower)) {
+                        detectedNationality = 'French';
+                    } else if (/ireland|dublin|cork/.test(locLower)) {
+                        detectedNationality = 'Irish';
+                    } else if (/netherlands|amsterdam|rotterdam|utrecht|hague/.test(locLower)) {
+                        detectedNationality = 'Dutch';
+                    } else if (/saudi arabia|riyadh|jeddah|dammam/.test(locLower)) {
+                        detectedNationality = 'Saudi';
+                    }
+                }
+                if (detectedNationality) {
+                    var natOption = $('#nationality').find('option').filter(function () {
+                        return $(this).val().toLowerCase() === detectedNationality.toLowerCase() ||
+                               $(this).text().toLowerCase().indexOf(detectedNationality.toLowerCase()) !== -1;
+                    }).first();
+                    if (natOption.length) {
+                        safeSetSelect2('#nationality', natOption.val(), 'nationality');
+                    }
+                }
+
+                // 6. Phase 8: Skills Population via Tagify Bridge (Deduplicated via Case-Insensitive Set)
+                var skillsList = Array.isArray(result.skills) ? result.skills : [];
+                if (skillsList.length) {
+                    var skillInput = document.querySelector('#kt_tagify_2');
+                    var tagifySkill = (skillInput && skillInput.__tagify) || window.tagifyskill;
+
+                    var uniqueSkills = [];
+                    var seen = new Set();
+                    if (tagifySkill && Array.isArray(tagifySkill.value)) {
+                        tagifySkill.value.forEach(function (t) {
+                            var v = (t.value || t.name || '').toLowerCase().trim();
+                            if (v) seen.add(v);
+                        });
+                    }
+
+                    skillsList.forEach(function (s) {
+                        var name = String(s || '').trim();
+                        var lower = name.toLowerCase();
+                        if (name && !seen.has(lower)) {
+                            seen.add(lower);
+                            uniqueSkills.push(name);
+                        }
+                    });
+
+                    if (tagifySkill && typeof tagifySkill.addTags === 'function') {
+                        try {
+                            if (!isEditMode && (!tagifySkill.value || !tagifySkill.value.length)) {
+                                tagifySkill.removeAllTags();
+                            }
+                            if (uniqueSkills.length) {
+                                tagifySkill.addTags(uniqueSkills);
+                            }
+                            if (typeof window.refreshCandidatePrimarySkills === 'function') {
+                                window.refreshCandidatePrimarySkills();
+                            }
+                        } catch (skillErr) {
+                            console.warn('[JeroCandidateFormBridge] Tagify skills error, using fallback:', skillErr);
+                            safeSetVal('#kt_tagify_2', uniqueSkills.join(', '));
+                        }
+                    } else {
+                        safeSetVal('#kt_tagify_2', uniqueSkills.join(', '));
+                    }
+                }
+
+                // 7. Phase 9: Experience & Fresher Selection
+                var expList = Array.isArray(result.experience) ? result.experience : [];
+                if (expList.length > 0) {
+                    var latestJob = expList[0] || {};
+                    if (latestJob.company) {
+                        safeSetVal('#current_company', latestJob.company);
+                    }
+                    if (latestJob.title) {
+                        safeSetVal('#current_designation', latestJob.title);
+                    }
+
+                    var totalExp = calculateTotalExperience(expList);
+                    safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
+                    safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
+                    safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
+                    safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
+                } else if (!isEditMode) {
+                    // Explicitly select 0 for Fresher
+                    safeSetSelect2('#total_exp_year', '0', 'total_exp_year');
+                    safeSetSelect2('#total_exp_month', '0', 'total_exp_month');
+                    safeSetSelect2('#rel_exp_year', '0', 'rel_exp_year');
+                    safeSetSelect2('#rel_exp_month', '0', 'rel_exp_month');
+                }
+
+                // 8. Education / Qualification (Select2 Safe Adapter)
+                var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
+                if (matchedQualId) {
+                    safeSetSelect2('#qualification', String(matchedQualId), 'qualification');
+                }
+
+                // 9. Career Summary (strictly for career summary, limited to 100 words, NEVER fills recruiter internal note)
+                var summary = result.summary || '';
+                if (summary) {
+                    var words = String(summary).trim().split(/\s+/).filter(Boolean);
+                    if (words.length > 100) {
+                        summary = words.slice(0, 100).join(' ');
+                    }
+                    safeSetVal('#careersummary', summary);
+                    var csEl = document.querySelector('#careersummary');
+                    if (csEl && csEl.parentElement) {
+                        var csCc = csEl.parentElement.querySelector('.cc');
+                        if (csCc) {
+                            var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
+                            csCc.textContent = actualWordCount + ' / 100';
+                        }
+                    }
+                }
+
+                // 10. Professional Links
+                if (cand.linkedin) {
+                    safeSetVal('#linkedin', cand.linkedin);
+                }
+                if (cand.github) {
+                    safeSetVal('#github', cand.github);
+                }
+
+            } catch (popErr) {
+                console.error('[JeroCandidateFormBridge] SFHP Hydration error:', popErr);
+            } finally {
+                // SFHP Invariant 4: Flush input events cleanly after all fields settled
+                window.__JERO_HYDRATION_IN_PROGRESS = false;
+
+                dirtyElements.forEach(function (domEl) {
                     try {
                         domEl.dispatchEvent(new Event('input', { bubbles: true }));
                         domEl.dispatchEvent(new Event('change', { bubbles: true }));
                     } catch (_) {}
-                }
-            }
+                });
 
-            // 1. Full Name
-            if (cand.name) {
-                var rawName = String(cand.name).replace(/^(curriculum vitae|resume|profile|cv|candidate)\s*[-:]*\s*/i, '').trim();
-                if (rawName.length >= 2) {
-                    var formattedName = (typeof window.formatCandidateTitleCase === 'function')
-                        ? window.formatCandidateTitleCase(rawName)
-                        : rawName;
-                    setVal('#full_name', formattedName);
-                    setVal('#name', formattedName);
-                }
-            }
-
-            // 2. Primary Email
-            if (cand.email) {
-                var cleanEmail = String(cand.email)
-                    .replace(/^mailto:/i, '')
-                    .replace(/[.,;:\/\s]+$/, '')
-                    .trim()
-                    .toLowerCase();
-                setVal('#email', cleanEmail);
-            }
-
-            // 3. Primary Mobile & Country Code (Enterprise JeroPhoneBox Integration)
-            var phoneVal = cand.mobileNumber || cand.phone;
-            if (phoneVal) {
-                if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
-                    window.JeroPhoneBox.setPhone('phone', phoneVal);
-                } else {
-                    var digitsOnly = String(phoneVal).replace(/\D/g, '');
-                    setVal('#phone', digitsOnly);
-                }
-            }
-            if (cand.countryCode) {
-                var cc = String(cand.countryCode).trim();
-                if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
-                    window.JeroPhoneBox.setCountry('phone', cc);
-                } else {
-                    setVal('#primary_country_code', cc.replace(/^\+/, ''));
-                }
-            }
-
-            // 4. Phase 10: Date of Birth (Normalized to YYYY-MM-DD)
-            if (cand.dob) {
-                var normalizedDob = normalizeDob(cand.dob);
-                if (normalizedDob) {
-                    setVal('#dob', normalizedDob);
-                }
-            }
-
-            // 5. Phase 7: Authoritative City Population via Tagify Bridge
-            // Requirement: Only display the city if it matches an authoritative system city; otherwise remain blank.
-            var parsedLocData = cand.location || cand.city || (result && (result.location || result.city));
-            if (typeof window.resolveAndSetCandidateLocation === 'function') {
-                window.resolveAndSetCandidateLocation(parsedLocData);
-            } else if (typeof window.setSingleCandidateLocation === 'function') {
-                window.setSingleCandidateLocation(parsedLocData);
-            } else {
-                var locInput = document.querySelector('#kt_tagify_work_location');
-                var tagifyLoc = (locInput && locInput.__tagify) || window.tagifylocation;
-                if (tagifyLoc && typeof tagifyLoc.removeAllTags === 'function') {
-                    tagifyLoc.removeAllTags();
-                }
-            }
-
-            // 5b. Nationality Auto-Detection (Client RAM In-Memory Matcher)
-            var detectedNationality = null;
-            if (cand.nationality) {
-                detectedNationality = cand.nationality;
-            }
-            if (!detectedNationality) {
-                var rawCc = String(cand.countryCode || '').replace(/^\+/, '').trim();
-                if (rawCc === '91') detectedNationality = 'Indian';
-                else if (rawCc === '44') detectedNationality = 'British';
-                else if (rawCc === '61') detectedNationality = 'Australian';
-                else if (rawCc === '971') detectedNationality = 'Emirati';
-                else if (rawCc === '65') detectedNationality = 'Singaporean';
-                else if (rawCc === '49') detectedNationality = 'German';
-                else if (rawCc === '33') detectedNationality = 'French';
-                else if (rawCc === '353') detectedNationality = 'Irish';
-                else if (rawCc === '31') detectedNationality = 'Dutch';
-                else if (rawCc === '966') detectedNationality = 'Saudi';
-                else if (rawCc === '1') {
-                    var locStr = String(parsedLocData || '').toLowerCase();
-                    if (/canada|ontario|toronto|vancouver|quebec|alberta|montreal|calgary|ottawa/.test(locStr)) {
-                        detectedNationality = 'Canadian';
-                    } else {
-                        detectedNationality = 'American';
+                // SFHP Invariant 5: Single-pass deferred revalidation
+                setTimeout(function () {
+                    var validator = window.candidateFormValidator || window.benchFormValidator;
+                    if (validator && typeof validator.revalidateField === 'function') {
+                        populatedFields.forEach(function (f) {
+                            try { validator.revalidateField(f); } catch (_) {}
+                        });
                     }
-                }
-            }
-            if (!detectedNationality && parsedLocData) {
-                var locLower = String(parsedLocData).toLowerCase();
-                if (/india|bengaluru|bangalore|delhi|mumbai|hyderabad|pune|chennai|kolkata|noida|gurgaon|ahmedabad/.test(locLower)) {
-                    detectedNationality = 'Indian';
-                } else if (/united states|usa|california|new york|texas|seattle|san francisco|chicago|los angeles|boston|austin/.test(locLower)) {
-                    detectedNationality = 'American';
-                } else if (/united kingdom|uk|london|manchester|birmingham|england|scotland|wales|edinburgh/.test(locLower)) {
-                    detectedNationality = 'British';
-                } else if (/canada|toronto|vancouver|montreal|ottawa|calgary|edmonton/.test(locLower)) {
-                    detectedNationality = 'Canadian';
-                } else if (/australia|sydney|melbourne|brisbane|perth|adelaide/.test(locLower)) {
-                    detectedNationality = 'Australian';
-                } else if (/dubai|abu dhabi|uae|united arab emirates|sharjah/.test(locLower)) {
-                    detectedNationality = 'Emirati';
-                } else if (/singapore/.test(locLower)) {
-                    detectedNationality = 'Singaporean';
-                } else if (/germany|berlin|munich|frankfurt|hamburg|stuttgart/.test(locLower)) {
-                    detectedNationality = 'German';
-                } else if (/france|paris|lyon|marseille/.test(locLower)) {
-                    detectedNationality = 'French';
-                } else if (/ireland|dublin|cork/.test(locLower)) {
-                    detectedNationality = 'Irish';
-                } else if (/netherlands|amsterdam|rotterdam|utrecht|hague/.test(locLower)) {
-                    detectedNationality = 'Dutch';
-                } else if (/saudi arabia|riyadh|jeddah|dammam/.test(locLower)) {
-                    detectedNationality = 'Saudi';
-                }
-            }
-            if (detectedNationality) {
-                setVal('#nationality', detectedNationality);
-                if ($.fn.select2 && $('#nationality').hasClass('select2-hidden-accessible')) {
-                    $('#nationality').trigger('change.select2');
-                }
-            }
+                }, 60);
 
-            // 6. Phase 8: Skills Population via Tagify Bridge
-            var skillsList = Array.isArray(result.skills) ? result.skills : [];
-            if (skillsList.length) {
-                var skillInput = document.querySelector('#kt_tagify_2');
-                var tagifySkill = (skillInput && skillInput.__tagify) || window.tagifyskill;
+                console.log('[PARSER 10] Form mapping completed safely via SFHP');
 
-                var uniqueSkills = [];
-                var seen = new Set();
-                if (isEditMode && tagifySkill && Array.isArray(tagifySkill.value)) {
-                    tagifySkill.value.forEach(function (t) {
-                        var v = (t.value || t.name || '').toLowerCase();
-                        if (v) seen.add(v);
+                try {
+                    var evt = new CustomEvent('jero:resume-parsed', {
+                        detail: { atsJson: result, isEditMode: isEditMode }
                     });
-                }
-
-                skillsList.forEach(function (s) {
-                    var name = String(s || '').trim();
-                    var lower = name.toLowerCase();
-                    if (name && !seen.has(lower)) {
-                        seen.add(lower);
-                        uniqueSkills.push(name);
-                    }
-                });
-
-                if (tagifySkill && typeof tagifySkill.addTags === 'function') {
-                    try {
-                        if (!isEditMode) {
-                            tagifySkill.removeAllTags();
-                        }
-                        if (uniqueSkills.length) {
-                            tagifySkill.addTags(uniqueSkills);
-                        }
-                        if (typeof window.refreshCandidatePrimarySkills === 'function') {
-                            window.refreshCandidatePrimarySkills();
-                        }
-                    } catch (skillErr) {
-                        console.warn('[JeroCandidateFormBridge] Tagify skills error, using fallback:', skillErr);
-                        setVal('#kt_tagify_2', uniqueSkills.join(', '));
-                    }
-                } else {
-                    setVal('#kt_tagify_2', uniqueSkills.join(', '));
-                }
+                    window.dispatchEvent(evt);
+                } catch (_) {}
             }
-
-            // 7. Phase 9: Experience & Fresher Selection
-            var expList = Array.isArray(result.experience) ? result.experience : [];
-            if (expList.length > 0) {
-                var latestJob = expList[0] || {};
-                if (latestJob.company) {
-                    setVal('#current_company', latestJob.company);
-                }
-                if (latestJob.title) {
-                    setVal('#current_designation', latestJob.title);
-                }
-
-                var totalExp = calculateTotalExperience(expList);
-                setVal('#total_exp_year', String(totalExp.years));
-                setVal('#total_exp_month', String(totalExp.months));
-                setVal('#rel_exp_year', String(totalExp.years));
-                setVal('#rel_exp_month', String(totalExp.months));
-            } else if (!isEditMode) {
-                // Explicitly select 0 for Fresher
-                setVal('#total_exp_year', '0');
-                setVal('#total_exp_month', '0');
-                setVal('#rel_exp_year', '0');
-                setVal('#rel_exp_month', '0');
-            }
-
-            // 8. Education / Qualification
-            var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
-            if (matchedQualId) {
-                setVal('#qualification', String(matchedQualId));
-            }
-
-            // 9. Career Summary (strictly for career summary, limited to 100 words, NEVER fills recruiter internal note)
-            var summary = result.summary || '';
-            if (summary) {
-                var words = String(summary).trim().split(/\s+/).filter(Boolean);
-                if (words.length > 100) {
-                    summary = words.slice(0, 100).join(' ');
-                }
-                setVal('#careersummary', summary);
-                var csEl = document.querySelector('#careersummary');
-                if (csEl && csEl.parentElement) {
-                    var csCc = csEl.parentElement.querySelector('.cc');
-                    if (csCc) {
-                        var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
-                        csCc.textContent = actualWordCount + ' / 100';
-                    }
-                }
-            }
-
-            // 10. Professional Links
-            if (cand.linkedin) {
-                setVal('#linkedin', cand.linkedin);
-            }
-            if (cand.github) {
-                setVal('#github', cand.github);
-            }
-
-            console.log('[PARSER 10] Form mapping completed');
-
-            try {
-                var evt = new CustomEvent('jero:resume-parsed', {
-                    detail: { atsJson: result, isEditMode: isEditMode }
-                });
-                window.dispatchEvent(evt);
-            } catch (_) {}
         }
     };
 

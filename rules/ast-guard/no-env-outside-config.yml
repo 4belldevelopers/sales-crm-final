@@ -1,0 +1,6 @@
+id: no-env-outside-config
+message: "Rule 11: Direct env() calls outside config/ are forbidden. Use config() instead."
+severity: error
+language: php
+rule:
+  pattern: env($$$ARGS)

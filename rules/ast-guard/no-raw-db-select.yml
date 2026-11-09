@@ -1,0 +1,8 @@
+id: no-raw-db-select
+message: "Rule 1 CQRS Violation: Direct DB::select() in web/api execution path is forbidden. Reads must query Elasticsearch."
+severity: error
+language: php
+rule:
+  any:
+    - pattern: DB::select($$$ARGS)
+    - pattern: \DB::select($$$ARGS)

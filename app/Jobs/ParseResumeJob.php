@@ -1,10 +1,13 @@
 <?php
 
 /**
- * Downloads a resume from R2, extracts text, parses structured data via OpenAI,
- * and updates candidate_resume_uploads. If a candidate_id is known (edit flow),
- * also updates the job_applications record with parsed fields.
- * Runs on the 'default' queue so it never blocks an HTTP response.
+ * DEPRECATED / LEGACY V1 JOB — DO NOT USE IN PRODUCTION
+ *
+ * In JERO V2 (Client-First / Rule 3), resume parsing is executed 100% Client-Side
+ * inside the browser via Cloudflare-hosted WASM module (https://parser.jero.works/jero-resume-parser-2tURGwDx.js).
+ * Zero OpenAI calls, zero server CPU or queue strain.
+ *
+ * This job is retained solely as a legacy fallback.
  */
 
 namespace App\Jobs;

@@ -1,0 +1,25 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+
+    # Disable DB scans to prevent remote connection hangs & run ultra-fast
+    disableMigrationScan: true
+    disableSchemaScan: true
+
+    # Level 5 provides strict typing, relation checks, and undefined method detection without drowning in legacy array shapes
+    level: 5
+
+    # Strictly adhere to Rule 12 & Rule 18 (Product Company & Staffing Company code freeze)
+    excludePaths:
+        - app/Http/Controllers/ProductCompany/*
+        - app/Http/Controllers/StaffingCompany/*
+        - app/Http/Controllers/Admin/AdminCvTrackerController-06-06-2022.php
+
+    # Handle known dynamic Eloquent and legacy properties
+    ignoreErrors:
+        - '#Access to an undefined property App\\Models\\[a-zA-Z0-9_]+::\$[a-zA-Z0-9_]+#'
+
+

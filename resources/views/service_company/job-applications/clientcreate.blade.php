@@ -9163,6 +9163,7 @@ var KTAddCandidate = function () {
         );
 
         window.benchFormValidator = validator;
+        window.candidateFormValidator = validator;
 
         var executeCandidateSubmit = function () {
             window.__candidateIsSubmitting = true;

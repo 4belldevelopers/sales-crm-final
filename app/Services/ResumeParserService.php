@@ -5,8 +5,15 @@ namespace App\Services;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Sends extracted resume text to OpenAI and returns structured candidate data.
- * Falls back to regex-based extraction if OpenAI is unavailable.
+ * DEPRECATED / LEGACY V1 ARTIFACT — DO NOT USE IN PRODUCTION
+ *
+ * Production resume parsing in JERO is 100% Client-Side / Browser-Side (User RAM + WASM):
+ * - Hosted on Cloudflare: https://parser.jero.works/jero-resume-parser-2tURGwDx.js
+ * - Executed by: window.JeroClientParser / JeroCandidateFormBridge
+ * - Technology: In-browser pdf.js + mammoth.js + layout + compromise NLP
+ * - Zero OpenAI API dependency, zero server strain, zero latency, 100% private.
+ *
+ * This class is retained solely as a legacy fallback and is NEVER invoked in the V2 upload pipeline.
  */
 class ResumeParserService
 {

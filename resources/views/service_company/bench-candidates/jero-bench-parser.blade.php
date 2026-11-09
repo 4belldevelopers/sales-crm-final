@@ -303,85 +303,117 @@
                 return;
             }
 
-            var cand = result.candidate || {};
+            // SFHP Invariant 1: Lock hydration to prevent premature FormValidation error avalanches
+            window.__JERO_HYDRATION_IN_PROGRESS = true;
+            var populatedFields = [];
+            var dirtyElements = [];
 
-            function setVal(selector, value) {
-                if (value === null || value === undefined) return;
-                var strVal = String(value).trim();
-                if (strVal === '') return;
+            try {
+                var cand = result.candidate || {};
 
-                var $el = $(selector);
-                if (!$el.length) return;
+                // SFHP Invariant 2: Non-destructive Fill-If-Empty rule
+                function safeSetVal(selector, value, validationFieldName) {
+                    if (value === null || value === undefined) return false;
+                    var strVal = String(value).trim();
+                    if (strVal === '') return false;
 
-                if (isEditMode) {
-                    var cur = $el.val();
-                    if (cur !== null && cur !== undefined && String(cur).trim() !== '') {
-                        return; // Preserve existing values in edit mode
+                    var $el = $(selector);
+                    if (!$el.length) return false;
+
+                    var cur = ($el.val() || '').trim();
+
+                    // Rule A: In EDIT MODE, NEVER overwrite existing values
+                    if (isEditMode && cur !== '') {
+                        return false;
+                    }
+
+                    // Rule B: In ADD MODE, if recruiter already entered manual value, preserve it
+                    if (!isEditMode && cur !== '') {
+                        console.log('[SFHP] Preserving manual recruiter entry for ' + selector + ': "' + cur + '"');
+                        return false;
+                    }
+
+                    $el.val(strVal);
+                    dirtyElements.push($el[0]);
+                    if (validationFieldName) {
+                        populatedFields.push(validationFieldName);
+                    }
+                    return true;
+                }
+
+                // SFHP Invariant 3: Select2 Safe Hydration Adapter
+                function safeSetSelect2(selector, targetVal, validationFieldName) {
+                    if (targetVal === null || targetVal === undefined) return false;
+                    var $el = $(selector);
+                    if (!$el.length) return false;
+
+                    var cur = ($el.val() || '').trim();
+                    if (isEditMode && cur !== '') return false;
+                    if (!isEditMode && cur !== '') return false;
+
+                    var strTarget = String(targetVal).trim();
+                    var optionExists = $el.find('option[value="' + strTarget + '"]').length > 0;
+                    if (optionExists) {
+                        $el.val(strTarget);
+                        if ($.fn.select2 && $el.hasClass('select2-hidden-accessible')) {
+                            $el.trigger('change.select2');
+                        }
+                        dirtyElements.push($el[0]);
+                        if (validationFieldName) {
+                            populatedFields.push(validationFieldName);
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+
+                // 1. Full Name (Enterprise Title Casing: 1st letter capital, rest small)
+                if (cand.name) {
+                    var formatTitleCase = function (str) {
+                        if (!str) return '';
+                        return String(str)
+                            .toLowerCase()
+                            .replace(/(^|[\s\-\'])([a-z])/g, function (match, separator, char) {
+                                return separator + char.toUpperCase();
+                            })
+                            .trim();
+                    };
+                    var formattedCandName = formatTitleCase(cand.name);
+                    safeSetVal('#full_name', formattedCandName, 'full_name');
+                    safeSetVal('#name', formattedCandName);
+                }
+
+                // 2. Primary Email
+                if (cand.email) {
+                    safeSetVal('#email', cand.email, 'email');
+                }
+
+                // 3. Primary Mobile & Country Code
+                var phoneVal = cand.mobileNumber || cand.phone;
+                if (phoneVal) {
+                    var digitsOnly = String(phoneVal).replace(/\D/g, '');
+                    if (digitsOnly.length > 10) {
+                        digitsOnly = digitsOnly.slice(-10);
+                    }
+                    if (window.createTalentPhoneInputs && window.createTalentPhoneInputs.primary && typeof window.createTalentPhoneInputs.primary.setNumber === 'function') {
+                        try {
+                            window.createTalentPhoneInputs.primary.setNumber(digitsOnly);
+                        } catch (_) {}
+                    }
+                    safeSetVal('#phone', digitsOnly, 'phone');
+                }
+                if (cand.countryCode) {
+                    var cc = String(cand.countryCode).replace(/^\+/, '').trim();
+                    safeSetVal('#primary_country_code', cc);
+                }
+
+                // 4. Date of Birth (Normalized to YYYY-MM-DD)
+                if (cand.dob) {
+                    var normalizedDob = normalizeDob(cand.dob);
+                    if (normalizedDob) {
+                        safeSetVal('#dob', normalizedDob, 'dob');
                     }
                 }
-
-                $el.val(strVal);
-                $el.trigger('input').trigger('change');
-                if ($.fn.select2 && $el.hasClass('select2-hidden-accessible')) {
-                    $el.trigger('change.select2');
-                }
-
-                var domEl = $el[0];
-                if (domEl && typeof domEl.dispatchEvent === 'function') {
-                    try {
-                        domEl.dispatchEvent(new Event('input', { bubbles: true }));
-                        domEl.dispatchEvent(new Event('change', { bubbles: true }));
-                    } catch (_) {}
-                }
-            }
-
-            // 1. Full Name (Enterprise Title Casing: 1st letter capital, rest small)
-            if (cand.name) {
-                var formatTitleCase = function (str) {
-                    if (!str) return '';
-                    return String(str)
-                        .toLowerCase()
-                        .replace(/(^|[\s\-\'])([a-z])/g, function (match, separator, char) {
-                            return separator + char.toUpperCase();
-                        })
-                        .trim();
-                };
-                var formattedCandName = formatTitleCase(cand.name);
-                setVal('#full_name', formattedCandName);
-                setVal('#name', formattedCandName);
-            }
-
-            // 2. Primary Email
-            if (cand.email) {
-                setVal('#email', cand.email);
-            }
-
-            // 3. Primary Mobile & Country Code
-            var phoneVal = cand.mobileNumber || cand.phone;
-            if (phoneVal) {
-                var digitsOnly = String(phoneVal).replace(/\D/g, '');
-                if (digitsOnly.length > 10) {
-                    digitsOnly = digitsOnly.slice(-10);
-                }
-                if (window.createTalentPhoneInputs && window.createTalentPhoneInputs.primary && typeof window.createTalentPhoneInputs.primary.setNumber === 'function') {
-                    try {
-                        window.createTalentPhoneInputs.primary.setNumber(digitsOnly);
-                    } catch (_) {}
-                }
-                setVal('#phone', digitsOnly);
-            }
-            if (cand.countryCode) {
-                var cc = String(cand.countryCode).replace(/^\+/, '').trim();
-                setVal('#primary_country_code', cc);
-            }
-
-            // 4. Date of Birth (Normalized to YYYY-MM-DD)
-            if (cand.dob) {
-                var normalizedDob = normalizeDob(cand.dob);
-                if (normalizedDob) {
-                    setVal('#dob', normalizedDob);
-                }
-            }
 
             // 5. Location Tagify Bridge
             var parsedLocData = cand.location || cand.city || (result && (result.location || result.city));
@@ -457,9 +489,12 @@
                 }
             }
             if (detectedNationality) {
-                setVal('#nationality', detectedNationality);
-                if ($.fn.select2 && $('#nationality').hasClass('select2-hidden-accessible')) {
-                    $('#nationality').trigger('change.select2');
+                var natOption = $('#nationality').find('option').filter(function () {
+                    return $(this).val().toLowerCase() === detectedNationality.toLowerCase() ||
+                           $(this).text().toLowerCase().indexOf(detectedNationality.toLowerCase()) !== -1;
+                }).first();
+                if (natOption.length) {
+                    safeSetSelect2('#nationality', natOption.val(), 'nationality');
                 }
             }
 
@@ -496,73 +531,97 @@
                 }
             }
 
-            // 7. Experience & Current Role
-            var expList = Array.isArray(result.experience) ? result.experience : [];
-            if (expList.length > 0) {
-                var latestJob = expList[0] || {};
-                if (latestJob.company) {
-                    setVal('#current_company', latestJob.company);
-                }
-                if (latestJob.title) {
-                    setVal('#current_designation', latestJob.title);
+                // 7. Experience & Current Role
+                var expList = Array.isArray(result.experience) ? result.experience : [];
+                if (expList.length > 0) {
+                    var latestJob = expList[0] || {};
+                    if (latestJob.company) {
+                        safeSetVal('#current_company', latestJob.company);
+                    }
+                    if (latestJob.title) {
+                        safeSetVal('#current_designation', latestJob.title);
+                    }
+
+                    var totalExp = calculateTotalExperience(expList);
+                    safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
+                    safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
+                    safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
+                    safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
+                } else if (!isEditMode) {
+                    safeSetSelect2('#total_exp_year', '0', 'total_exp_year');
+                    safeSetSelect2('#total_exp_month', '0', 'total_exp_month');
+                    safeSetSelect2('#rel_exp_year', '0', 'rel_exp_year');
+                    safeSetSelect2('#rel_exp_month', '0', 'rel_exp_month');
                 }
 
-                var totalExp = calculateTotalExperience(expList);
-                setVal('#total_exp_year', String(totalExp.years));
-                setVal('#total_exp_month', String(totalExp.months));
-                setVal('#rel_exp_year', String(totalExp.years));
-                setVal('#rel_exp_month', String(totalExp.months));
-            } else if (!isEditMode) {
-                setVal('#total_exp_year', '0');
-                setVal('#total_exp_month', '0');
-                setVal('#rel_exp_year', '0');
-                setVal('#rel_exp_month', '0');
-            }
-
-            // 8. Education / Qualification
-            var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
-            if (matchedQualId) {
-                setVal('#qualification', String(matchedQualId));
-            }
-
-            // 9. Career Summary (strictly capped at 100 words, updates counter)
-            var summary = result.summary || '';
-            if (summary) {
-                var words = String(summary).trim().split(/\s+/).filter(Boolean);
-                if (words.length > 100) {
-                    summary = words.slice(0, 100).join(' ');
+                // 8. Education / Qualification
+                var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
+                if (matchedQualId) {
+                    safeSetSelect2('#qualification', String(matchedQualId), 'qualification');
                 }
-                setVal('#careersummary', summary);
-                var csEl = document.querySelector('#careersummary');
-                if (csEl && csEl.parentElement) {
-                    var csCc = csEl.parentElement.querySelector('.cc');
-                    if (csCc) {
-                        var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
-                        csCc.textContent = actualWordCount + ' / 100';
+
+                // 9. Career Summary (strictly capped at 100 words, updates counter)
+                var summary = result.summary || '';
+                if (summary) {
+                    var words = String(summary).trim().split(/\s+/).filter(Boolean);
+                    if (words.length > 100) {
+                        summary = words.slice(0, 100).join(' ');
+                    }
+                    safeSetVal('#careersummary', summary);
+                    var csEl = document.querySelector('#careersummary');
+                    if (csEl && csEl.parentElement) {
+                        var csCc = csEl.parentElement.querySelector('.cc');
+                        if (csCc) {
+                            var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
+                            csCc.textContent = actualWordCount + ' / 100';
+                        }
                     }
                 }
-            }
 
-            // 10. Professional Links
-            var social = result.social || {};
-            if (cand.linkedin || social.linkedin) {
-                setVal('#linkedin', cand.linkedin || social.linkedin);
-            }
-            if (cand.github || social.github) {
-                setVal('#github', cand.github || social.github);
-            }
-            if (cand.behance || social.behance) {
-                setVal('#behance', cand.behance || social.behance);
-            }
+                // 10. Professional Links
+                var social = result.social || {};
+                if (cand.linkedin || social.linkedin) {
+                    safeSetVal('#linkedin', cand.linkedin || social.linkedin);
+                }
+                if (cand.github || social.github) {
+                    safeSetVal('#github', cand.github || social.github);
+                }
+                if (cand.behance || social.behance) {
+                    safeSetVal('#behance', cand.behance || social.behance);
+                }
 
-            console.log('[TALENT PARSER] Form mapping completed successfully');
+            } catch (popErr) {
+                console.error('[TALENT PARSER] SFHP Hydration error:', popErr);
+            } finally {
+                // SFHP Invariant 4: Flush input events cleanly after all fields settled
+                window.__JERO_HYDRATION_IN_PROGRESS = false;
 
-            try {
-                var evt = new CustomEvent('jero:bench-resume-parsed', {
-                    detail: { atsJson: result, isEditMode: isEditMode }
+                dirtyElements.forEach(function (domEl) {
+                    try {
+                        domEl.dispatchEvent(new Event('input', { bubbles: true }));
+                        domEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (_) {}
                 });
-                window.dispatchEvent(evt);
-            } catch (_) {}
+
+                // SFHP Invariant 5: Single-pass deferred revalidation
+                setTimeout(function () {
+                    var validator = window.benchFormValidator || window.candidateFormValidator;
+                    if (validator && typeof validator.revalidateField === 'function') {
+                        populatedFields.forEach(function (f) {
+                            try { validator.revalidateField(f); } catch (_) {}
+                        });
+                    }
+                }, 60);
+
+                console.log('[TALENT PARSER] Form mapping completed successfully via SFHP');
+
+                try {
+                    var evt = new CustomEvent('jero:bench-resume-parsed', {
+                        detail: { atsJson: result, isEditMode: isEditMode }
+                    });
+                    window.dispatchEvent(evt);
+                } catch (_) {}
+            }
         }
     };
 

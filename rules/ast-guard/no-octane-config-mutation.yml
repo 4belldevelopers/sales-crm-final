@@ -1,0 +1,6 @@
+id: no-octane-config-mutation
+message: "Octane/FrankenPHP Hazard: Mutating config() at runtime pollutes worker memory across multi-tenant sessions."
+severity: error
+language: php
+rule:
+  pattern: config([$$$PAIRS])
