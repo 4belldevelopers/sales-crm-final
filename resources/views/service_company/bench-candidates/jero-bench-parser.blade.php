@@ -390,17 +390,10 @@
                         return false;
                     }
 
-                    // Rule B: In ADD MODE, if recruiter already entered manual value, preserve it
+                    // Rule B: In ADD MODE, if recruiter already entered manual value or field is pre-filled (e.g. Job Title), preserve it
                     if (!isEditMode && cur !== '') {
-                        var isJobTitlePlaceholder = (selector === '#current_designation' && (
-                            cur === ($el[0] ? $el[0].getAttribute('value') : '') ||
-                            ($('#job_title').length && cur === ($('#job_title').val() || '').trim())
-                        ));
-
-                        if (!isJobTitlePlaceholder) {
-                            console.log('[SFHP] Preserving manual recruiter entry for ' + selector + ': "' + cur + '"');
-                            return false;
-                        }
+                        console.log('[SFHP] Preserving manual/prefilled value for ' + selector + ': "' + cur + '"');
+                        return false;
                     }
 
                     $el.val(strVal);
