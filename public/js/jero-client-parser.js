@@ -96,10 +96,11 @@
     /**
      * Calculates total experience in years and months from experience entries.
      * Merges overlapping date intervals to avoid duplicate counting.
+     * Also checks summary and duration strings as fallback.
      */
-    function calculateTotalExperience(experienceList) {
-        if (!Array.isArray(experienceList) || !experienceList.length) {
-            return { years: 0, months: 0 };
+    function calculateTotalExperience(experienceList, summaryText) {
+        if (!Array.isArray(experienceList)) {
+            experienceList = [];
         }
 
         var now = new Date();
@@ -136,6 +137,36 @@
         }
 
         if (!intervals.length) {
+            // Check if duration text exists in summary (e.g. "2.6 years of experience")
+            var sumMatch = String(summaryText || '').match(/(\d+(?:\.\d+)?)\+?\s*(?:years?|yrs?)\s+(?:of\s+)?experience/i);
+            if (sumMatch) {
+                var totalFloat = parseFloat(sumMatch[1]);
+                var y = Math.floor(totalFloat);
+                var m = Math.round((totalFloat - y) * 12);
+                return {
+                    years: Math.min(Math.max(y, 0), 60),
+                    months: Math.min(Math.max(m, 0), 11)
+                };
+            }
+
+            // Fallback: Check duration patterns in experience entries (e.g. "8 Months", "1 Year")
+            var durMonths = 0;
+            for (var d = 0; d < experienceList.length; d++) {
+                var expStr = (experienceList[d].title || '') + ' ' + (experienceList[d].company || '') + ' ' + (experienceList[d].dateRaw || '');
+                var ym = expStr.match(/(\d+(?:\.\d+)?)\s*(?:years?|yrs?)/i);
+                if (ym) durMonths += parseFloat(ym[1]) * 12;
+                var mm = expStr.match(/(\d+)\s*(?:months?|mos?)/i);
+                if (mm) durMonths += parseInt(mm[1], 10);
+            }
+            if (durMonths > 0) {
+                var dy = Math.floor(durMonths / 12);
+                var dm = Math.round(durMonths % 12);
+                return {
+                    years: Math.min(Math.max(dy, 0), 60),
+                    months: Math.min(Math.max(dm, 0), 11)
+                };
+            }
+
             return { years: 0, months: 0 };
         }
 
@@ -161,6 +192,38 @@
         return {
             years: Math.min(Math.max(years, 0), 60),
             months: Math.min(Math.max(months, 0), 11)
+        };
+    }
+
+    /**
+     * Cleans up designation and company name when formatted like "Title – Company, Location (Duration)"
+     * or when company was misidentified as the job description text.
+     */
+    function cleanJobAndCompany(rawTitle, rawCompany) {
+        var designation = String(rawTitle || '').trim();
+        var company = String(rawCompany || '').trim();
+
+        var isCompanySentence = company && (
+            /^(provided|worked|responsible|developed|managed|assisted|handled|created|led|designed|engineered|maintaining|coordinating)\b/i.test(company) ||
+            company.length > 55
+        );
+
+        if (isCompanySentence && designation && /[–\-]/.test(designation)) {
+            var parts = designation.split(/\s*[–\-]\s*/);
+            if (parts.length >= 2) {
+                designation = parts[0].trim();
+                var candidateCompany = parts.slice(1).join(' - ');
+                candidateCompany = candidateCompany.replace(/\s*\([^\)]*\)/g, '').trim();
+                candidateCompany = candidateCompany.replace(/,\s*[A-Z][a-zA-Z\s]+$/, '').trim();
+                if (candidateCompany) {
+                    company = candidateCompany;
+                }
+            }
+        }
+
+        return {
+            designation: designation,
+            company: company
         };
     }
 
@@ -508,26 +571,27 @@
 
                 // 7. Phase 9: Experience & Fresher Selection
                 var expList = Array.isArray(result.experience) ? result.experience : [];
+                var totalExp = calculateTotalExperience(expList, result.summary);
+
                 if (expList.length > 0) {
                     var latestJob = expList[0] || {};
-                    if (latestJob.company) {
-                        safeSetVal('#current_company', latestJob.company);
+                    var cleanedJob = cleanJobAndCompany(latestJob.title, latestJob.company);
+                    if (cleanedJob.company) {
+                        safeSetVal('#current_company', cleanedJob.company);
                     }
-                    if (latestJob.title) {
-                        safeSetVal('#current_designation', latestJob.title);
+                    if (cleanedJob.designation) {
+                        safeSetVal('#current_designation', cleanedJob.designation);
                     }
 
-                    var totalExp = calculateTotalExperience(expList);
                     safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
                     safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
                     safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
                     safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
                 } else if (!isEditMode) {
-                    // Explicitly select 0 for Fresher
-                    safeSetSelect2('#total_exp_year', '0', 'total_exp_year');
-                    safeSetSelect2('#total_exp_month', '0', 'total_exp_month');
-                    safeSetSelect2('#rel_exp_year', '0', 'rel_exp_year');
-                    safeSetSelect2('#rel_exp_month', '0', 'rel_exp_month');
+                    safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
+                    safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
+                    safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
+                    safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
                 }
 
                 // 8. Education / Qualification (Select2 Safe Adapter)
