@@ -7251,6 +7251,7 @@ var KTAddCandidate = function () {
             }
         );
         window.benchFormValidator = validator;
+        window.candidateFormValidator = validator;
 
         var executeSubmit = function () {
             closeRequiredFieldsModal();
@@ -7541,6 +7542,7 @@ var KTEditCandidate = function () {
         );
 
         window.benchFormValidator = validator;
+        window.candidateFormValidator = validator;
 
         var executeEditSubmit = function () {
             closeRequiredFieldsModal();
