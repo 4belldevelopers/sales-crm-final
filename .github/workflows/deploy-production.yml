@@ -214,8 +214,6 @@ jobs:
             # stop/start is required to clear OPcache and actually load the
             # freshly deployed code. Same fix as deploy-staging.yml.
             php artisan octane:stop || true
-            pkill -f "octane:start" || true
-            pkill -f "frankenphp" || true
             sleep 3
             setsid nohup bash start-octane.sh 8010 > storage/logs/octane-start.log 2>&1 < /dev/null &
             sleep 8
