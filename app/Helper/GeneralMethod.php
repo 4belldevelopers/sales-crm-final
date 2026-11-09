@@ -5737,22 +5737,76 @@ END:VCALENDAR";
 
     }
 
+    /**
+     * Retrieve comma-separated list of selected qualification names for a job.
+     * Fallback order:
+     * 1. job_qualifications table (by qualification_name or resolved qualification_id)
+     * 2. jobs.qualification column (joining qualification_master)
+     * 3. Default to 'Any Qualification' if job exists but has no qualifications recorded
+     *
+     * @param int|string $jobyID
+     * @return string
+     */
     public static function allQualificationSelected($jobyID)
     {
+        if (empty($jobyID)) {
+            return 'Any Qualification';
+        }
 
-        $qualificationlistSelect = DB::table('job_qualifications')
-            ->select('job_qualifications.qualification_name')
-            ->where('job_qualifications.job_id', $jobyID)
-            ->get()->map(function ($qualification) {
-                return $qualification->qualification_name;
-            });
-        // $jobqualificationSelectedTag  =
-        $jobqualificationSelectedTag = $qualificationlistSelect->toArray();
+        $quals = DB::table('job_qualifications')
+            ->where('job_id', $jobyID)
+            ->get();
 
-        // dd($qualificationlistSelect);
+        $names = [];
+        if ($quals->isNotEmpty()) {
+            $missingIds = [];
+            foreach ($quals as $q) {
+                $name = trim((string) ($q->qualification_name ?? ''));
+                if ($name !== '') {
+                    $names[] = $name;
+                } elseif (! empty($q->qualification_id)) {
+                    $missingIds[] = (int) $q->qualification_id;
+                }
+            }
 
-        return ($jobqualificationSelectedTag) ? implode(',', $jobqualificationSelectedTag) : '';
+            if (! empty($missingIds)) {
+                $resolvedNames = DB::table('qualification_master')
+                    ->whereIn('id', $missingIds)
+                    ->pluck('name')
+                    ->toArray();
+                foreach ($resolvedNames as $rn) {
+                    $rn = trim((string) $rn);
+                    if ($rn !== '' && ! in_array($rn, $names, true)) {
+                        $names[] = $rn;
+                    }
+                }
+            }
+        }
 
+        // Fallback 1: Check jobs.qualification column
+        if (empty($names)) {
+            $job = DB::table('jobs')->select('qualification')->where('id', $jobyID)->first();
+            if ($job && ! empty($job->qualification)) {
+                if (is_numeric($job->qualification)) {
+                    $masterName = DB::table('qualification_master')->where('id', (int) $job->qualification)->value('name');
+                    if (! empty($masterName)) {
+                        $names[] = trim($masterName);
+                    }
+                } elseif (is_string($job->qualification)) {
+                    $trimmed = trim($job->qualification);
+                    if ($trimmed !== '') {
+                        $names[] = $trimmed;
+                    }
+                }
+            }
+        }
+
+        // Fallback 2: Default to 'Any Qualification' if job exists but has no qualification
+        if (empty($names)) {
+            $names[] = 'Any Qualification';
+        }
+
+        return implode(',', array_unique($names));
     }
 
     public static function Jobcities($cityID)

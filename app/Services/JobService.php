@@ -12,6 +12,7 @@ use App\Jobs\QueueNotificationMailService;
 use App\Models\Job;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -262,44 +263,8 @@ class JobService
 
             // 3. Batch Qualification Processing
             try {
-                $workQualification = $requestData['qualification'] ?? null;
-                if (! empty($workQualification)) {
-                    $workQualificationAll = is_array($workQualification) ? $workQualification : json_decode($workQualification, true);
-                    if (is_array($workQualificationAll) && count($workQualificationAll) > 0) {
-                        $qualNames = array_column($workQualificationAll, 'value');
-                        $qualMasterMap = DB::table('qualification_master')
-                            ->select('id', 'name')
-                            ->whereIn('name', $qualNames)
-                            ->get()
-                            ->keyBy('name');
-
-                        $batchQualInsert = [];
-                        foreach ($workQualificationAll as $idx => $qVal) {
-                            $qName = $qVal['value'] ?? null;
-                            if (! $qName) {
-                                continue;
-                            }
-
-                            $qRow = $qualMasterMap->get($qName);
-                            if ($idx === 0 && $qRow) {
-                                $job->qualification = $qRow->id;
-                                $job->save();
-                            }
-
-                            if ($qRow) {
-                                $batchQualInsert[] = [
-                                    'job_id' => $job->id,
-                                    'qualification_id' => $qRow->id,
-                                    'qualification_name' => $qRow->name,
-                                ];
-                            }
-                        }
-
-                        if (count($batchQualInsert) > 0) {
-                            DB::table('job_qualifications')->insert($batchQualInsert);
-                        }
-                    }
-                }
+                $this->syncJobQualifications($job, $requestData['qualification'] ?? null, $user);
+                $job->save();
             } catch (\Throwable $qe) {
                 Log::warning('[JobService@createJob] Qualifications insert warning: '.$qe->getMessage());
             }
@@ -958,44 +923,7 @@ class JobService
         DB::beginTransaction();
         try {
             // Batch qualification update
-            $workQualification = $requestData['qualification'] ?? null;
-            if (! empty($workQualification)) {
-                DB::table('job_qualifications')->where('job_id', $job->id)->delete();
-                $workQualificationAll = is_array($workQualification) ? $workQualification : json_decode($workQualification, true);
-                if (is_array($workQualificationAll) && count($workQualificationAll) > 0) {
-                    $qualNames = array_column($workQualificationAll, 'value');
-                    $qualMasterMap = DB::table('qualification_master')
-                        ->select('id', 'name')
-                        ->whereIn('name', $qualNames)
-                        ->get()
-                        ->keyBy('name');
-
-                    $batchQualInsert = [];
-                    foreach ($workQualificationAll as $idx => $qVal) {
-                        $qName = $qVal['value'] ?? null;
-                        if (! $qName) {
-                            continue;
-                        }
-
-                        $qRow = $qualMasterMap->get($qName);
-                        if ($idx === 0 && $qRow) {
-                            $job->qualification = $qRow->id;
-                        }
-
-                        if ($qRow) {
-                            $batchQualInsert[] = [
-                                'job_id' => $job->id,
-                                'qualification_id' => $qRow->id,
-                                'qualification_name' => $qRow->name,
-                            ];
-                        }
-                    }
-
-                    if (count($batchQualInsert) > 0) {
-                        DB::table('job_qualifications')->insert($batchQualInsert);
-                    }
-                }
-            }
+            $this->syncJobQualifications($job, $requestData['qualification'] ?? null, $user);
 
             $newAggregateVersion = ((int) ($job->aggregate_version ?? 0)) + 1;
             self::setJobAttrIfColumnExists($job, 'aggregate_version', $newAggregateVersion);
@@ -1292,6 +1220,155 @@ class JobService
         }
 
         return $job;
+    }
+
+    /**
+     * Synchronize job qualifications with MySQL job_qualifications pivot, qualification_master, and jobs.qualification column.
+     *
+     * Intent: Reliably persist up to 5 educational degrees/qualifications for a job, mapping aliases to qualification_master,
+     * supporting custom/unlisted qualifications via ID 60 ('Others'), and strictly preventing accidental wipes during partial updates.
+     * Tenancy Note: Scoped strictly to the job and its owning company.
+     *
+     * @param  Job  $job
+     * @param  mixed  $workQualification
+     * @param  \App\Models\User|null  $user
+     * @return void
+     */
+    public function syncJobQualifications(Job $job, $workQualification, $user = null): void
+    {
+        // 1. Parse input
+        if (is_string($workQualification)) {
+            $decoded = json_decode($workQualification, true);
+            $workQualificationAll = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $workQualification)));
+        } elseif (is_array($workQualification)) {
+            $workQualificationAll = $workQualification;
+        } else {
+            $workQualificationAll = [];
+        }
+
+        // Extract normalized names
+        $extractedNames = [];
+        foreach ($workQualificationAll as $item) {
+            $name = null;
+            if (is_array($item)) {
+                $name = $item['value'] ?? $item['name'] ?? $item['qualification_name'] ?? null;
+            } elseif (is_string($item) || is_numeric($item)) {
+                $name = (string) $item;
+            }
+            if (! empty($name) && is_string($name)) {
+                $name = trim($name);
+                if ($name !== '' && ! in_array($name, $extractedNames, true)) {
+                    $extractedNames[] = $name;
+                }
+            }
+        }
+
+        // If payload is empty or invalid, DO NOT wipe existing qualifications on update!
+        if (empty($extractedNames)) {
+            $existingCount = DB::table('job_qualifications')->where('job_id', $job->id)->count();
+            if ($existingCount > 0) {
+                // Qualifications already exist in DB; preserve them
+                return;
+            }
+            // If neither exists, default to 'Any Qualification'
+            $extractedNames = ['Any Qualification'];
+        }
+
+        // 2. Fetch qualification_master map (both exact name and lowercase name)
+        $masterList = DB::table('qualification_master')->select('id', 'name')->get();
+        $nameMap = [];
+        $lowerMap = [];
+        foreach ($masterList as $m) {
+            $nameMap[$m->name] = $m;
+            $lowerMap[strtolower($m->name)] = $m;
+        }
+
+        // Known alias map for human input variations
+        $aliasMap = [
+            'btech' => 'B.Tech/B.E',
+            'b.tech' => 'B.Tech/B.E',
+            'be' => 'B.Tech/B.E',
+            'b.e' => 'B.Tech/B.E',
+            'b.tech / b.e' => 'B.Tech/B.E',
+            'btech/be' => 'B.Tech/B.E',
+            'mba' => 'MBA/PGDM',
+            'pgdm' => 'MBA/PGDM',
+            'mba / pgdm' => 'MBA/PGDM',
+            'mca' => 'MCA',
+            'bsc' => 'B.Sc',
+            'b.sc' => 'B.Sc',
+            'b.sc / b.s' => 'B.Sc',
+            'bcom' => 'B.Com',
+            'b.com' => 'B.Com',
+            'bba' => 'B.B.A/ B.M.S',
+            'bms' => 'B.B.A/ B.M.S',
+            'bba / bms' => 'B.B.A/ B.M.S',
+            'any' => 'Any Qualification',
+            'any qualification' => 'Any Qualification',
+            'open' => 'Any Qualification',
+            'any graduation' => 'Any Graduation',
+            'graduation' => 'Any Graduation',
+            'graduate' => 'Any Graduation',
+            'any post graduation' => 'Any Post Graduation',
+            'post graduation' => 'Any Post Graduation',
+            'postgraduate' => 'Any Post Graduation',
+            'pg' => 'Any Post Graduation',
+            'any degree' => 'Any Degree',
+            'degree' => 'Any Degree',
+            'diploma' => 'Diploma',
+            'polytechnic' => 'Diploma',
+            'others' => 'Others',
+            'other' => 'Others',
+        ];
+
+        $batchQualInsert = [];
+        $primaryQualId = null;
+
+        foreach ($extractedNames as $idx => $rawName) {
+            $matchedMaster = null;
+
+            // Direct exact match
+            if (isset($nameMap[$rawName])) {
+                $matchedMaster = $nameMap[$rawName];
+            } else {
+                $cleanLower = strtolower(trim($rawName));
+                // Check alias
+                if (isset($aliasMap[$cleanLower]) && isset($nameMap[$aliasMap[$cleanLower]])) {
+                    $matchedMaster = $nameMap[$aliasMap[$cleanLower]];
+                } elseif (isset($lowerMap[$cleanLower])) {
+                    $matchedMaster = $lowerMap[$cleanLower];
+                }
+            }
+
+            if ($matchedMaster) {
+                $qualId = (int) $matchedMaster->id;
+                $qualName = $matchedMaster->name;
+            } else {
+                // Custom / unlisted qualification: map to 60 ('Others') and retain user's qualification name
+                $qualId = 60; // Others
+                $qualName = $rawName;
+            }
+
+            if ($idx === 0) {
+                $primaryQualId = $qualId;
+            }
+
+            $batchQualInsert[] = [
+                'job_id' => $job->id,
+                'qualification_id' => $qualId,
+                'qualification_name' => $qualName,
+            ];
+        }
+
+        if (! empty($batchQualInsert)) {
+            // Delete old pivot entries and replace atomically
+            DB::table('job_qualifications')->where('job_id', $job->id)->delete();
+            DB::table('job_qualifications')->insert($batchQualInsert);
+        }
+
+        if ($primaryQualId !== null) {
+            $job->qualification = $primaryQualId;
+        }
     }
 
     /**
