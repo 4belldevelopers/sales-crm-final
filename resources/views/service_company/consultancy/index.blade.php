@@ -2230,12 +2230,47 @@
 </div>
 
 <!-- ── DRAWER FOR ADD / INVITE AGENCY (Rule 20 Enterprise Card + Sub-Card Design) ── -->
+<style>
+    .add-agency-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 500px;
+        max-width: 95vw;
+        height: 100vh;
+        background: #ffffff;
+        box-shadow: -10px 0 35px rgba(15, 23, 42, 0.12);
+        z-index: 1050;
+        display: none;
+        flex-direction: column;
+        justify-content: space-between;
+        font-family: 'Poppins', sans-serif;
+    }
+    .add-agency-drawer.is-active {
+        display: flex !important;
+    }
+    .add-agency-drawer-body::-webkit-scrollbar {
+        width: 5px;
+    }
+    .add-agency-drawer-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .add-agency-drawer-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+    .add-agency-drawer-body::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
+
 <div class="add-agency-drawer-overlay" id="add_agency_drawer_overlay" aria-hidden="true" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); backdrop-filter:blur(2px); z-index:1049;"></div>
-<div class="add-agency-drawer" id="add_agency_drawer" role="dialog" aria-modal="true" aria-labelledby="add_agency_drawer_title" aria-hidden="true" style="display:none; position:fixed; top:0; right:0; bottom:0; width:500px; max-width:94%; height:100vh; background:#ffffff; box-shadow:-10px 0 35px rgba(15,23,42,0.12); z-index:1050; flex-direction:column; justify-content:space-between; font-family:'Poppins', sans-serif;">
-    <!-- DRAWER HEADER (FIXED TOP) -->
-    <div style="padding:20px 24px; border-bottom:1px solid #e2e8f0; background:#ffffff; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+<div class="add-agency-drawer" id="add_agency_drawer" role="dialog" aria-modal="true" aria-labelledby="add_agency_drawer_title" aria-hidden="true">
+    <!-- DRAWER HEADER (FIXED TOP WITH DISTINCT BACKGROUND) -->
+    <div style="padding:16px 22px; background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom:1.5px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
         <div class="d-flex align-items-center gap-3">
-            <div style="width:40px; height:40px; border-radius:10px; background:#eff6ff; border:1px solid #dbeafe; display:flex; align-items:center; justify-content:center; color:#009ef7; flex-shrink:0;">
+            <div style="width:38px; height:38px; border-radius:10px; background:#ffffff; border:1px solid #cbd5e1; display:flex; align-items:center; justify-content:center; color:#009ef7; box-shadow:0 1px 2px rgba(0,0,0,0.05); flex-shrink:0;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                     <circle cx="8.5" cy="7.5" r="4"></circle>
@@ -2244,11 +2279,11 @@
                 </svg>
             </div>
             <div>
-                <h2 class="m-0" id="add_agency_drawer_title" style="font-size:16px; font-weight:700; color:#0f172a; line-height:1.25;">Invite Staffing Agency Partner</h2>
-                <span style="font-size:12px; font-weight:400; color:#64748b;">Direct partnership collaboration & requisition sharing</span>
+                <h2 class="m-0" id="add_agency_drawer_title" style="font-size:15.5px; font-weight:700; color:#0f172a; line-height:1.25;">Invite Staffing Partner</h2>
+                <span style="font-size:11.5px; font-weight:400; color:#64748b;">Direct collaboration & pipeline requisition sharing</span>
             </div>
         </div>
-        <button type="button" class="btn btn-sm btn-icon add_staffing_close" id="add_agency_drawer_close_btn" aria-label="Close" style="width:32px; height:32px; border-radius:8px; background:#f8fafc; border:1px solid #e2e8f0; color:#64748b; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;">
+        <button type="button" class="btn btn-sm btn-icon add_staffing_close" id="add_agency_drawer_close_btn" aria-label="Close" style="width:32px; height:32px; border-radius:8px; background:#ffffff; border:1px solid #cbd5e1; color:#64748b; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -2256,32 +2291,33 @@
         </button>
     </div>
 
-    <!-- DRAWER BODY (SCROLLABLE CONTENT) -->
-    <div style="padding:22px 24px; overflow-y:auto; flex-grow:1; display:flex; flex-direction:column; gap:16px;">
-        <form id="add_staffing_partners_form" name="add_staffing_partners_form" action="#" onsubmit="return false;" style="display:flex; flex-direction:column; gap:16px;">
-            <!-- SUB-CARD 1: SMART AGENCY SEARCH & INVITATION INPUT -->
-            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px; box-shadow:0 1px 3px rgba(15,23,42,0.02);">
+    <!-- DRAWER BODY (SCROLLABLE CONTENT - COMPACT 15.6" FIT) -->
+    <div class="add-agency-drawer-body" style="padding:16px 20px; overflow-y:auto; flex-grow:1; display:flex; flex-direction:column; gap:12px; background:#ffffff;">
+        <form id="add_staffing_partners_form" name="add_staffing_partners_form" action="#" onsubmit="return false;" style="display:flex; flex-direction:column; gap:12px;">
+            <!-- SUB-CARD 1: SMART AGENCY SEARCH & INVITATION INPUT (DISTINCT SOFT SKY BLUE BACKGROUND) -->
+            <div style="background:linear-gradient(135deg, #f0f7ff 0%, #f8fbff 100%); border:1.5px solid #bae6fd; border-radius:12px; padding:14px 16px; box-shadow:0 1px 3px rgba(2,132,199,0.05);">
                 <div class="d-flex align-items-center justify-content-between mb-1">
-                    <label for="staffing_partners_search_input" class="m-0" style="font-size:13.5px; font-weight:600; color:#0f172a;">
-                        Search Agency or Enter Email
+                    <label for="staffing_partners_search_input" class="m-0 d-flex align-items-center gap-1" style="font-size:13px; font-weight:700; color:#0f172a;">
+                        <span style="width:7px; height:7px; border-radius:50%; background:#0284c7; display:inline-block;"></span>
+                        <span>Option 1: Direct Agency Invite</span>
                     </label>
-                    <span class="badge" style="background:#eff6ff; color:#0284c7; border:1px solid #bae6fd; font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:6px;">Live Search</span>
+                    <span class="badge" style="background:#dbeafe; color:#0369a1; border:1px solid #bfdbfe; font-size:10px; font-weight:600; padding:2px 8px; border-radius:12px;">Live Search</span>
                 </div>
-                <div style="font-size:12px; color:#64748b; margin-top:3px; margin-bottom:12px; line-height:1.45;">
-                    Search registered agencies by name or email, or type a new agency email:
+                <div style="font-size:11.5px; color:#475569; margin-top:2px; margin-bottom:10px; line-height:1.4;">
+                    Search registered staffing firms across JERO, or type an agency email:
                 </div>
 
                 <!-- Search Input with Live Autocomplete -->
-                <div class="position-relative mb-3">
-                    <div class="input-group" style="border:1.5px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; transition:border-color 0.2s, box-shadow 0.2s;">
+                <div class="position-relative mb-2">
+                    <div class="input-group" style="border:1.5px solid #cbd5e1; border-radius:8px; overflow:hidden; background:#ffffff; height:38px; box-shadow:0 1px 2px rgba(0,0,0,0.04); transition:border-color 0.2s, box-shadow 0.2s;">
                         <span class="input-group-text bg-transparent border-0 ps-3 pe-2" style="color:#94a3b8;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
                         </span>
-                        <input type="text" id="staffing_partners_search_input" class="form-control border-0 shadow-none px-2" placeholder="Type agency name or email address..." autocomplete="off" style="height:42px; font-size:13px; font-weight:500; color:#0f172a;">
-                        <button type="button" id="btn_clear_agency_search" class="btn btn-sm btn-icon position-absolute end-0 top-50 translate-middle-y me-2 d-none" style="z-index:5; width:22px; height:22px; border-radius:50%; background:#e2e8f0; color:#475569; border:none; display:flex; align-items:center; justify-content:center; padding:0;" title="Clear">
+                        <input type="text" id="staffing_partners_search_input" class="form-control border-0 shadow-none px-2" placeholder="Type agency name or email address..." autocomplete="off" style="height:36px; font-size:12.5px; font-weight:500; color:#0f172a;">
+                        <button type="button" id="btn_clear_agency_search" class="btn btn-sm btn-icon position-absolute end-0 top-50 translate-middle-y me-2 d-none" style="z-index:5; width:20px; height:20px; border-radius:50%; background:#e2e8f0; color:#475569; border:none; display:flex; align-items:center; justify-content:center; padding:0;" title="Clear">
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -2293,88 +2329,100 @@
                     <input type="hidden" name="staffing_partners_email" id="staffing_partners_email" value="">
 
                     <!-- Autocomplete Results Floating Dropdown -->
-                    <div id="agency_autocomplete_dropdown" class="position-absolute start-0 end-0 bg-white border border-gray-300 rounded-3 shadow-lg d-none" style="top:48px; z-index:1070; max-height:260px; overflow-y:auto; padding:4px 0;">
+                    <div id="agency_autocomplete_dropdown" class="position-absolute start-0 end-0 bg-white border border-gray-300 rounded-3 shadow-lg d-none" style="top:44px; z-index:1070; max-height:240px; overflow-y:auto; padding:4px 0;">
                         <!-- Results dynamically injected by JS -->
                     </div>
                 </div>
 
                 <!-- Selected Agency Preview Badge / Card -->
-                <div id="selected_agency_preview" class="d-none p-2 mb-3 rounded-2 border d-flex align-items-center justify-content-between" style="background:#f0fdf4; border-color:#86efac !important;">
+                <div id="selected_agency_preview" class="d-none p-2 mb-2 rounded-2 border d-flex align-items-center justify-content-between" style="background:#f0fdf4; border-color:#86efac !important;">
                     <div class="d-flex align-items-center gap-2 min-w-0">
-                        <div id="selected_agency_avatar" style="width:32px; height:32px; border-radius:6px; background:#16a34a; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex-shrink:0;">
+                        <div id="selected_agency_avatar" style="width:28px; height:28px; border-radius:6px; background:#16a34a; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; flex-shrink:0;">
                             AG
                         </div>
                         <div class="min-w-0">
-                            <div id="selected_agency_name" style="font-size:13px; font-weight:700; color:#0f172a;" class="text-truncate">Agency Name</div>
-                            <div id="selected_agency_email" style="font-size:11.5px; color:#15803d;" class="text-truncate">email@agency.com</div>
+                            <div id="selected_agency_name" style="font-size:12px; font-weight:700; color:#0f172a;" class="text-truncate">Agency Name</div>
+                            <div id="selected_agency_email" style="font-size:11px; color:#15803d;" class="text-truncate">email@agency.com</div>
                         </div>
                     </div>
-                    <button type="button" id="btn_remove_selected_agency" class="btn btn-sm btn-icon btn-light-danger ms-2 flex-shrink-0" style="width:24px; height:24px; border-radius:6px;" title="Remove Selection">✕</button>
+                    <button type="button" id="btn_remove_selected_agency" class="btn btn-sm btn-icon btn-light-danger ms-2 flex-shrink-0" style="width:22px; height:22px; border-radius:6px;" title="Remove Selection">✕</button>
                 </div>
 
                 <div id="staffing_email_feedback" class="mb-2 fs-8 text-danger" style="display:none;"></div>
 
-                <button type="button" class="btn btn-primary fw-bold w-100" id="submit_staffing_partners" style="background-color:#009ef7; border-radius:8px; height:42px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:13px; box-shadow:0 2px 6px rgba(0,158,247,0.25);">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <button type="button" class="btn btn-primary fw-bold w-100" id="submit_staffing_partners" style="background-color:#009ef7; border-radius:8px; height:38px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:12.5px; box-shadow:0 2px 5px rgba(0,158,247,0.25); border:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                     </svg>
-                    <span>Send Partnership Invite (5 Coins)</span>
+                    <span>Send Partnership Invite</span>
+                    <span class="badge ms-1" style="background:rgba(255,255,255,0.22); color:#ffffff; font-size:10px; font-weight:600; padding:2px 6px; border-radius:4px;">5 Coins</span>
                 </button>
             </div>
 
             <!-- OR DIVIDER -->
-            <div class="d-flex align-items-center my-0" style="gap:12px;">
+            <div class="d-flex align-items-center my-0" style="gap:10px;">
                 <div class="flex-grow-1" style="height:1px; background:#e2e8f0;"></div>
-                <span style="font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.8px;">OR</span>
+                <span style="font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.8px; background:#f1f5f9; padding:2px 10px; border-radius:12px; border:1px solid #e2e8f0;">OR SHARE DIRECT LINK</span>
                 <div class="flex-grow-1" style="height:1px; background:#e2e8f0;"></div>
             </div>
 
-            <!-- SUB-CARD 2: SHARE DIRECT REGISTRATION LINK -->
+            <!-- SUB-CARD 2: SHARE DIRECT REGISTRATION LINK (DISTINCT SOFT EMERALD GREEN BACKGROUND) -->
             @php
                 $encodeCompanyId = base64_encode(auth()->user()->company_id);
                 $shareRegistrationUrl = url('/company-registration-invitation/' . $encodeCompanyId);
             @endphp
-            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px; box-shadow:0 1px 3px rgba(15,23,42,0.02);">
+            <div style="background:linear-gradient(135deg, #f0fdf4 0%, #f7fef9 100%); border:1.5px solid #bbf7d0; border-radius:12px; padding:14px 16px; box-shadow:0 1px 3px rgba(16,185,129,0.05);">
                 <div class="d-flex align-items-center justify-content-between mb-1">
-                    <label for="kt_share_earn_link_input" class="m-0" style="font-size:13.5px; font-weight:600; color:#0f172a;">
-                        Share Agency Registration Link
+                    <label for="kt_share_earn_link_input" class="m-0 d-flex align-items-center gap-1" style="font-size:13px; font-weight:700; color:#0f172a;">
+                        <span style="width:7px; height:7px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+                        <span>Option 2: Share Registration Link</span>
                     </label>
-                    <span class="badge" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:6px;">0 Coins • Direct Link</span>
+                    <span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:10px; font-weight:600; padding:2px 8px; border-radius:12px;">0 Coins • Direct Link</span>
                 </div>
-                <div style="font-size:12px; color:#64748b; margin-top:3px; margin-bottom:12px; line-height:1.45;">
-                    Share this unique link via Slack, WhatsApp, LinkedIn or email to let agencies self-register & connect with your organization:
+                <div style="font-size:11.5px; color:#475569; margin-top:2px; margin-bottom:10px; line-height:1.4;">
+                    Share this unique link via WhatsApp, Slack, LinkedIn or email to let agencies self-register:
                 </div>
-                <div class="input-group" style="border:1.5px solid #cbd5e1; border-radius:8px; overflow:hidden;">
-                    <input id="kt_share_earn_link_input" type="text" class="form-control border-0 shadow-none px-3" value="{{ $shareRegistrationUrl }}" readonly style="background:#f8fafc; font-size:12px; font-weight:500; color:#475569; height:40px;">
-                    <button type="button" id="kt_share_earn_link_copy_button" class="btn fw-bold" data-clipboard-target="#kt_share_earn_link_input" style="background:#eff6ff; color:#009ef7; border-left:1.5px solid #cbd5e1; height:40px; min-width:95px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; transition:all 0.2s;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="input-group mb-2" style="border:1.5px solid #cbd5e1; border-radius:8px; overflow:hidden; height:38px; background:#ffffff; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                    <input id="kt_share_earn_link_input" type="text" class="form-control border-0 shadow-none ps-2 pe-1" value="{{ $shareRegistrationUrl }}" readonly style="background:#ffffff; font-size:10px; font-weight:500; color:#334155; height:36px; letter-spacing:-0.15px; white-space:nowrap;" title="{{ $shareRegistrationUrl }}">
+                    <button type="button" id="kt_share_earn_link_copy_button" class="btn fw-bold px-2" data-clipboard-target="#kt_share_earn_link_input" style="background:#059669; color:#ffffff; height:38px; min-width:76px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px; border:none; transition:all 0.2s;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                         </svg>
                         <span>Copy Link</span>
                     </button>
                 </div>
+
+                <!-- Quick Share Direct Actions -->
+                <div class="d-flex align-items-center justify-content-between pt-1" style="font-size:11px; color:#64748b;">
+                    <span>Quick Share via:</span>
+                    <div class="d-flex align-items-center gap-1">
+                        <a href="https://api.whatsapp.com/send?text={{ urlencode('Join our staffing agency partner network on JERO: ' . $shareRegistrationUrl) }}" target="_blank" rel="noopener" class="btn btn-sm btn-light px-2 py-0 border" style="font-size:10.5px; font-weight:600; color:#15803d; background:#ffffff; border-radius:4px; height:24px; display:flex; align-items:center;">WhatsApp</a>
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ urlencode($shareRegistrationUrl) }}" target="_blank" rel="noopener" class="btn btn-sm btn-light px-2 py-0 border" style="font-size:10.5px; font-weight:600; color:#0284c7; background:#ffffff; border-radius:4px; height:24px; display:flex; align-items:center;">LinkedIn</a>
+                        <a href="mailto:?subject={{ urlencode('Staffing Partner Registration Invitation') }}&body={{ urlencode('Join our staffing agency partner network on JERO: ' . $shareRegistrationUrl) }}" class="btn btn-sm btn-light px-2 py-0 border" style="font-size:10.5px; font-weight:600; color:#475569; background:#ffffff; border-radius:4px; height:24px; display:flex; align-items:center;">Email</a>
+                    </div>
+                </div>
             </div>
 
             <!-- SUB-CARD 3: SECURITY & POLICY NOTICE -->
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px;">
-                <div class="d-flex align-items-start gap-2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#009ef7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:2px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px;">
+                <div class="d-flex align-items-center gap-2">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#009ef7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                         <polyline points="9 12 11 14 15 10"></polyline>
                     </svg>
-                    <div style="font-size:11.5px; color:#64748b; line-height:1.5;">
-                        <strong style="color:#0f172a; font-weight:600;">Scanner-Safe Security:</strong> Invites include an encrypted 256-bit token with a 7-day TTL. If the recipient email hard-bounces, your 5 coins are automatically refunded.
+                    <div style="font-size:11px; color:#64748b; line-height:1.4;">
+                        <strong style="color:#0f172a; font-weight:600;">Scanner-Safe Security:</strong> 256-bit token with 7-day TTL. Auto-coin refund applies if recipient email bounces.
                     </div>
                 </div>
             </div>
         </form>
     </div>
 
-    <!-- DRAWER FOOTER (FIXED BOTTOM) -->
-    <div style="padding:16px 24px; border-top:1px solid #e2e8f0; background:#ffffff; flex-shrink:0;">
-        <button type="button" class="btn w-100 fw-semibold add_staffing_close" data-dismiss="modal" style="height:40px; border-radius:8px; background:#f1f5f9; border:1px solid #e2e8f0; color:#475569; font-size:13px; transition:all 0.2s;">Close Drawer</button>
+    <!-- DRAWER FOOTER (FIXED BOTTOM WITH DISTINCT BACKGROUND) -->
+    <div style="padding:12px 20px; background:#f8fafc; border-top:1.5px solid #e2e8f0; flex-shrink:0;">
+        <button type="button" class="btn w-100 fw-semibold add_staffing_close" data-dismiss="modal" style="height:38px; border-radius:8px; background:#ffffff; border:1.5px solid #cbd5e1; color:#475569; font-size:12.5px; transition:all 0.2s; box-shadow:0 1px 2px rgba(0,0,0,0.04);">Close Drawer</button>
     </div>
 </div>
 
@@ -3616,18 +3664,36 @@
                 $('#staffing_email_feedback').hide().empty();
             }
 
-            $('#open_add_agency_drawer').on('click', function(e) {
-                if (e) e.preventDefault();
-                $('#add_agency_drawer_overlay, #add_agency_drawer').fadeIn(150);
+            function openAddAgencyDrawer() {
+                $('#add_agency_drawer_overlay').fadeIn(150);
+                $('#add_agency_drawer').addClass('is-active').css('display', 'flex').hide().fadeIn(150);
                 setTimeout(function() {
                     $('#staffing_partners_search_input').focus();
                 }, 160);
+            }
+
+            function closeAddAgencyDrawer() {
+                $('#add_agency_drawer_overlay').fadeOut(150);
+                $('#add_agency_drawer').fadeOut(150, function() {
+                    $(this).removeClass('is-active');
+                });
+                clearAgencySelection();
+            }
+
+            $('#open_add_agency_drawer').on('click', function(e) {
+                if (e) e.preventDefault();
+                openAddAgencyDrawer();
             });
 
             $(document).on('click', '.add_staffing_close, #add_agency_drawer_overlay, #add_agency_drawer_close_btn', function(e) {
                 if (e) e.preventDefault();
-                $('#add_agency_drawer_overlay, #add_agency_drawer').fadeOut(150);
-                clearAgencySelection();
+                closeAddAgencyDrawer();
+            });
+
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape' && $('#add_agency_drawer').is(':visible')) {
+                    closeAddAgencyDrawer();
+                }
             });
 
             $(document).on('click', '#btn_clear_agency_search, #btn_remove_selected_agency', function(e) {
@@ -3858,7 +3924,7 @@
                                 alert(response.message);
                             }
                         } else if (response.status === 'success') {
-                            $('#add_agency_drawer_overlay, #add_agency_drawer').fadeOut(150);
+                            closeAddAgencyDrawer();
                             if (typeof Swal !== 'undefined') {
                                 Swal.fire({ icon: 'success', title: 'Invitation Sent!', text: response.message || 'Invitation sent successfully.' });
                             } else {
