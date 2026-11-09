@@ -3380,7 +3380,7 @@
                     <div class="ei">
                       <label class="candidate-experience-field"><span>Years</span><select id="total_exp_year" name="total_exp_year">
                         <option value="">Years</option>
-                        <option value="0" {{ $selected_exp_year==0 ? 'selected' : '' }}>Fresher</option>
+                        <option value="0" {{ (!is_null($selected_exp_year) && (int)$selected_exp_year===0) ? 'selected' : '' }}>Fresher</option>
                         @php
                             for ($i = 1; $i <= 60; $i++) {
                                   $selected = '';
@@ -3426,7 +3426,7 @@
                     <div class="ei">
                       <label class="candidate-experience-field"><span>Years</span><select id="rel_exp_year" name="rel_exp_year">
                         <option value="">Years</option>
-                        <option value="0" {{ $selected_rel_exp_year==0 ? 'selected' : '' }}>Fresher</option>
+                        <option value="0" {{ (!is_null($selected_rel_exp_year) && (int)$selected_rel_exp_year===0) ? 'selected' : '' }}>Fresher</option>
                         @php
                               for ($i = 1; $i <= 60; $i++) {
                                     $selected = '';
@@ -7078,10 +7078,64 @@ var KTUPDATECandidate = {
       }
 
       function candidateSelectedSkills() {
-          var val = (typeof tagifyskill !== 'undefined' && tagifyskill && Array.isArray(tagifyskill.value)) ? tagifyskill.value : [];
-          return candidateUniqueSkills(val.map(function (skill) {
-              return { id: skill.id || '', name: skill.value || '' };
-          }));
+          var skills = [];
+          var seen = new Set();
+
+          // 1. Tagify value array if available
+          var tagify = (typeof tagifyskill !== 'undefined' && tagifyskill) ? tagifyskill : window.tagifyskill;
+          if (tagify && Array.isArray(tagify.value) && tagify.value.length) {
+              tagify.value.forEach(function (skill) {
+                  var sName = typeof skill === 'object' ? (skill.value || skill.name) : skill;
+                  var clean = String(sName || '').trim();
+                  if (clean && !seen.has(clean.toLowerCase())) {
+                      seen.add(clean.toLowerCase());
+                      skills.push({ id: skill.id || '', name: clean });
+                  }
+              });
+          }
+
+          // 2. Underlying input fallback if tagify.value is empty
+          if (!skills.length) {
+              var rawInput = document.querySelector('#kt_tagify_2');
+              if (rawInput && rawInput.value) {
+                  try {
+                      var parsedJson = JSON.parse(rawInput.value);
+                      if (Array.isArray(parsedJson)) {
+                          parsedJson.forEach(function (item) {
+                              var name = typeof item === 'object' ? (item.value || item.name) : item;
+                              var clean = String(name || '').trim();
+                              if (clean && !seen.has(clean.toLowerCase())) {
+                                  seen.add(clean.toLowerCase());
+                                  skills.push({ id: item.id || '', name: clean });
+                              }
+                          });
+                      }
+                  } catch (_) {
+                      rawInput.value.split(',').forEach(function (part) {
+                          var clean = part.trim();
+                          if (clean && !seen.has(clean.toLowerCase())) {
+                              seen.add(clean.toLowerCase());
+                              skills.push({ id: '', name: clean });
+                          }
+                      });
+                  }
+              }
+          }
+
+          // 3. Existing visual chips fallback if DOM chips exist
+          if (!skills.length && candidatePrimarySkillChips) {
+              var existingChips = candidatePrimarySkillChips.querySelectorAll('.candidate-primary-skill-chip');
+              existingChips.forEach(function (c) {
+                  var name = c.getAttribute('data-skill-name') || (c.querySelector('span:first-child') && c.querySelector('span:first-child').textContent) || '';
+                  var clean = name.trim();
+                  if (clean && !seen.has(clean.toLowerCase())) {
+                      seen.add(clean.toLowerCase());
+                      skills.push({ id: '', name: clean });
+                  }
+              });
+          }
+
+          return candidateUniqueSkills(skills);
       }
 
       function candidateSkillsMatch(requiredSkill, selectedSkill) {
@@ -7591,9 +7645,10 @@ var KTUPDATECandidate = {
               if (!Array.isArray(skillsList) || !skillsList.length) return;
               var selected = candidateSelectedSkills();
               var toAdd = [];
+              var tagify = (typeof tagifyskill !== 'undefined' && tagifyskill) ? tagifyskill : window.tagifyskill;
 
               skillsList.forEach(function (raw) {
-                  var clean = String(raw || '').trim();
+                  var clean = String(typeof raw === 'object' ? (raw.name || raw.value) : raw || '').trim();
                   if (!clean) return;
                   var resolved = resolveSkillAlias(clean);
                   var norm = candidateSkillKey(resolved);
@@ -7609,14 +7664,41 @@ var KTUPDATECandidate = {
                       var req = candidateUniqueSkills(candidateRequiredSkills).find(function (r) {
                           return candidateSkillsMatch(r, { name: clean }) || candidateSkillsMatch(r, { name: resolved });
                       });
-                      toAdd.push(req ? { value: req.name, id: req.id } : resolved);
+                      toAdd.push(req ? { value: req.name, id: req.id } : { value: resolved });
                   }
               });
 
               if (toAdd.length) {
-                  if (typeof tagifyskill !== 'undefined' && tagifyskill && typeof tagifyskill.addTags === 'function') {
-                      tagifyskill.addTags(toAdd);
+                  if (tagify && typeof tagify.addTags === 'function') {
+                      try { tagify.addTags(toAdd); } catch (_) {}
                   }
+
+                  // Directly populate visual chips immediately to guarantee instant render
+                  if (candidatePrimarySkillChips) {
+                      toAdd.forEach(function (item) {
+                          var sName = typeof item === 'object' ? item.value : item;
+                          var existing = candidatePrimarySkillChips.querySelector('.candidate-primary-skill-chip[data-skill-name="' + CSS.escape(sName) + '"]');
+                          if (!existing) {
+                              var chip = document.createElement('span');
+                              chip.className = 'candidate-primary-skill-chip';
+                              chip.setAttribute('data-skill-name', sName);
+                              var label = document.createElement('span');
+                              label.textContent = sName;
+                              var removeBtn = document.createElement('button');
+                              removeBtn.type = 'button';
+                              removeBtn.setAttribute('aria-label', 'Remove ' + sName);
+                              removeBtn.title = 'Remove ' + sName;
+                              removeBtn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+                              removeBtn.addEventListener('click', function () {
+                                  removeCandidatePrimarySkill(sName);
+                              });
+                              chip.append(label, removeBtn);
+                              candidatePrimarySkillChips.appendChild(chip);
+                          }
+                      });
+                      if (candidatePrimarySkillEmpty) candidatePrimarySkillEmpty.hidden = true;
+                  }
+
                   if (typeof refreshCandidatePrimarySkills === 'function') {
                       refreshCandidatePrimarySkills();
                   }
@@ -11743,6 +11825,17 @@ $(function initializeCandidateSkillRatings() {
             } else if (!val) {
                 $cs.find('.jero-cs-value').addClass('jero-cs-placeholder').text('Select qualification');
                 $cs.find('.jero-cs-badge').hide().text('');
+            } else {
+                var $opt = $('#qualification').find('option[value="' + val + '"]').first();
+                if ($opt.length) {
+                    $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($opt.text().trim());
+                    var optBadge = $opt.attr('data-badge') || '';
+                    if (optBadge) {
+                        $cs.find('.jero-cs-badge').show().text(optBadge);
+                    } else {
+                        $cs.find('.jero-cs-badge').hide().text('');
+                    }
+                }
             }
         }
     });
