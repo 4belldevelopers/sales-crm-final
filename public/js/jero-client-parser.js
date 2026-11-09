@@ -826,6 +826,17 @@
                                 } else {
                                     $cs.find('.jero-cs-badge').hide().text('');
                                 }
+                            } else {
+                                var $opt = $('#qualification').find('option[value="' + matchedQualId + '"]').first();
+                                if ($opt.length) {
+                                    $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($opt.text().trim());
+                                    var optBadge = $opt.attr('data-badge') || '';
+                                    if (optBadge) {
+                                        $cs.find('.jero-cs-badge').show().text(optBadge);
+                                    } else {
+                                        $cs.find('.jero-cs-badge').hide().text('');
+                                    }
+                                }
                             }
                         }
                         $('#qualification').trigger('change');
@@ -850,8 +861,9 @@
                                 csEl.dispatchEvent(new Event('input', { bubbles: true }));
                                 csEl.dispatchEvent(new Event('change', { bubbles: true }));
                             } catch (_) {}
-                            if (csEl.parentElement) {
-                                var csCc = csEl.parentElement.querySelector('.cc');
+                            var csParent = csEl.closest('.summary-card-body, .candidate-card-body, .fsc') || csEl.parentElement;
+                            if (csParent) {
+                                var csCc = csParent.querySelector('.cc');
                                 if (csCc) {
                                     var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
                                     csCc.textContent = actualWordCount + ' / 100';
