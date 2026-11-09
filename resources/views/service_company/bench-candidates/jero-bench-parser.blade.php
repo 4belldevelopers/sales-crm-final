@@ -249,10 +249,6 @@
      * - experience[i].title (e.g. "Software Engineer – Triotree Pvt. Ltd.")
      */
     function extractCompanyFromExperience(expList, cand) {
-        if (cand && cand.currentCompany) return String(cand.currentCompany).trim();
-        if (cand && cand.company) return String(cand.company).trim();
-        if (!Array.isArray(expList) || !expList.length) return '';
-
         var isSentence = function (text) {
             return !text ||
                 /^(provided|worked|responsible|developed|managed|assisted|handled|created|led|designed|engineered|maintaining|coordinating|building|supported|participated)\b/i.test(text) ||
@@ -265,6 +261,12 @@
             s = s.replace(/,\s*[A-Za-z\s]+$/, '').trim(); // Remove trailing city ", Noida"
             return s;
         };
+
+        if (cand && (cand.currentCompany || cand.company || cand.current_company)) {
+            var candComp = cleanCompName(cand.currentCompany || cand.company || cand.current_company);
+            if (candComp && !isSentence(candComp) && candComp.length >= 2) return candComp;
+        }
+        if (!Array.isArray(expList) || !expList.length) return '';
 
         for (var i = 0; i < expList.length; i++) {
             var item = expList[i];
@@ -671,87 +673,141 @@
                 var totalExp = calculateTotalExperience(expList, result.summary || result.career_summary || result.objective || (cand && (cand.summary || cand.objective)));
 
                 // 7a. Current Company Extraction & Population
-                var extractedCompany = extractCompanyFromExperience(expList, cand);
-                if (extractedCompany) {
-                    safeSetVal('#current_company', extractedCompany, 'current_company');
+                try {
+                    var extractedCompany = extractCompanyFromExperience(expList, cand);
+                    if (!extractedCompany) {
+                        extractedCompany = cand.currentCompany || cand.company || cand.current_company || result.company || result.current_company || '';
+                    }
+                    if (extractedCompany) {
+                        safeSetVal('#current_company', extractedCompany, 'current_company');
+                        safeSetVal('#company_name', extractedCompany, 'company_name');
+                        var compEl = document.querySelector('#current_company');
+                        if (compEl && !compEl.value) {
+                            compEl.value = extractedCompany;
+                            compEl.dispatchEvent(new Event('input', { bubbles: true }));
+                            compEl.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                } catch (e) {
+                    console.error('[SFHP] Bench Current Company error:', e);
                 }
 
                 // 7b. Designation: Strictly keep existing pre-filled job title untouched (per user specification)
                 // Only populate if current designation is completely empty:
-                var $desigEl = $('#current_designation');
-                if ($desigEl.length && !($desigEl.val() || '').trim()) {
-                    var latestJob = expList[0] || {};
-                    var cleanedJob = cleanJobAndCompany(latestJob.title, latestJob.company);
-                    var designationToSet = cleanedJob.designation || cand.currentDesignation || '';
-                    if (designationToSet) {
-                        safeSetVal('#current_designation', designationToSet, 'current_designation');
+                try {
+                    var $desigEl = $('#current_designation');
+                    if ($desigEl.length && !($desigEl.val() || '').trim()) {
+                        var latestJob = expList[0] || {};
+                        var cleanedJob = cleanJobAndCompany(latestJob.title, latestJob.company);
+                        var designationToSet = cleanedJob.designation || cand.currentDesignation || '';
+                        if (designationToSet) {
+                            safeSetVal('#current_designation', designationToSet, 'current_designation');
+                        }
                     }
+                } catch (e) {
+                    console.error('[SFHP] Bench Designation error:', e);
                 }
 
                 // 7c. Experience Dropdowns (Years & Months)
-                safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
-                safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
-                safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
-                safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
+                try {
+                    safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
+                    safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
+                    safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
+                    safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
+
+                    // Native select fallback to ensure values and change events fire unconditionally
+                    ['#total_exp_year', '#rel_exp_year'].forEach(function (sel) {
+                        var el = document.querySelector(sel);
+                        if (el && String(totalExp.years) !== '') {
+                            el.value = String(totalExp.years);
+                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    });
+                    ['#total_exp_month', '#rel_exp_month'].forEach(function (sel) {
+                        var el = document.querySelector(sel);
+                        if (el && String(totalExp.months) !== '') {
+                            el.value = String(totalExp.months);
+                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    });
+                } catch (e) {
+                    console.error('[SFHP] Bench Experience error:', e);
+                }
 
                 // 8. Education / Qualification (Select2 Safe Adapter + Custom Combobox Sync)
-                var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
-                if (matchedQualId) {
-                    safeSetSelect2('#qualification', String(matchedQualId), 'qualification');
-                    var $cs = $('#jero-cs-qualification');
-                    if ($cs.length) {
-                        var $item = $cs.find('.jero-cs-item[data-val="' + matchedQualId + '"]').first();
-                        $cs.find('.jero-cs-item').removeClass('is-selected');
-                        if ($item.length) {
-                            $item.addClass('is-selected');
-                            $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($item.find('.jero-cs-item-text').text().trim());
-                            var badge = $item.attr('data-badge') || '';
-                            if (badge) {
-                                $cs.find('.jero-cs-badge').show().text(badge);
-                            } else {
-                                $cs.find('.jero-cs-badge').hide().text('');
+                try {
+                    var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
+                    if (matchedQualId) {
+                        safeSetSelect2('#qualification', String(matchedQualId), 'qualification');
+                        var qualSelect = document.getElementById('qualification');
+                        if (qualSelect) {
+                            qualSelect.value = String(matchedQualId);
+                            qualSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                        var $cs = $('#jero-cs-qualification');
+                        if ($cs.length) {
+                            var $item = $cs.find('.jero-cs-item[data-val="' + matchedQualId + '"]').first();
+                            $cs.find('.jero-cs-item').removeClass('is-selected');
+                            if ($item.length) {
+                                $item.addClass('is-selected');
+                                $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($item.find('.jero-cs-item-text').text().trim());
+                                var badge = $item.attr('data-badge') || '';
+                                if (badge) {
+                                    $cs.find('.jero-cs-badge').show().text(badge);
+                                } else {
+                                    $cs.find('.jero-cs-badge').hide().text('');
+                                }
                             }
                         }
+                        $('#qualification').trigger('change');
                     }
-                    $('#qualification').trigger('change');
+                } catch (e) {
+                    console.error('[SFHP] Bench Qualification error:', e);
                 }
 
                 // 9. Career Summary (strictly capped at 100 words, updates counter)
-                var summary = result.summary || result.career_summary || result.objective || (cand && (cand.summary || cand.objective)) || '';
-                if (summary) {
-                    var words = String(summary).trim().split(/\s+/).filter(Boolean);
-                    if (words.length > 100) {
-                        summary = words.slice(0, 100).join(' ');
-                    }
-                    safeSetVal('#careersummary', summary, 'careersummary');
-                    var csEl = document.querySelector('#careersummary');
-                    if (csEl) {
-                        try {
-                            csEl.dispatchEvent(new Event('input', { bubbles: true }));
-                        } catch (_) {}
-                        if (csEl.parentElement) {
-                            var csCc = csEl.parentElement.querySelector('.cc');
-                            if (csCc) {
-                                var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
-                                csCc.textContent = actualWordCount + ' / 100';
+                try {
+                    var summary = result.summary || result.career_summary || result.objective || (cand && (cand.summary || cand.objective)) || '';
+                    if (summary) {
+                        var words = String(summary).trim().split(/\s+/).filter(Boolean);
+                        if (words.length > 100) {
+                            summary = words.slice(0, 100).join(' ');
+                        }
+                        safeSetVal('#careersummary', summary, 'careersummary');
+                        var csEl = document.querySelector('#careersummary');
+                        if (csEl) {
+                            if (!csEl.value) csEl.value = summary;
+                            try {
+                                csEl.dispatchEvent(new Event('input', { bubbles: true }));
+                                csEl.dispatchEvent(new Event('change', { bubbles: true }));
+                            } catch (_) {}
+                            if (csEl.parentElement) {
+                                var csCc = csEl.parentElement.querySelector('.cc');
+                                if (csCc) {
+                                    var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
+                                    csCc.textContent = actualWordCount + ' / 100';
+                                }
                             }
                         }
                     }
-                }
-                        }
-                    }
+                } catch (e) {
+                    console.error('[SFHP] Bench Career summary error:', e);
                 }
 
                 // 10. Professional Links
-                var social = result.social || {};
-                if (cand.linkedin || social.linkedin) {
-                    safeSetVal('#linkedin', cand.linkedin || social.linkedin);
-                }
-                if (cand.github || social.github) {
-                    safeSetVal('#github', cand.github || social.github);
-                }
-                if (cand.behance || social.behance) {
-                    safeSetVal('#behance', cand.behance || social.behance);
+                try {
+                    var social = result.social || {};
+                    if (cand.linkedin || social.linkedin) {
+                        safeSetVal('#linkedin', cand.linkedin || social.linkedin);
+                    }
+                    if (cand.github || social.github) {
+                        safeSetVal('#github', cand.github || social.github);
+                    }
+                    if (cand.behance || social.behance) {
+                        safeSetVal('#behance', cand.behance || social.behance);
+                    }
+                } catch (e) {
+                    console.error('[SFHP] Bench Professional links error:', e);
                 }
 
             } catch (popErr) {

@@ -45,6 +45,7 @@ jobs:
             # cached route file lingers instead. Routing still works without the cache, just
             # without that perf optimization, until the duplicate names are cleaned up.
             php artisan route:clear
+            php artisan view:clear
             php artisan view:cache
             echo ">> Ensuring storage and cache permissions"
             chown -R www:www storage bootstrap/cache public js designations skills demo || true

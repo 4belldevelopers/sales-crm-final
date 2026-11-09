@@ -247,10 +247,6 @@
      * - experience[i].title (e.g. "Software Engineer – Triotree Pvt. Ltd.")
      */
     function extractCompanyFromExperience(expList, cand) {
-        if (cand && cand.currentCompany) return String(cand.currentCompany).trim();
-        if (cand && cand.company) return String(cand.company).trim();
-        if (!Array.isArray(expList) || !expList.length) return '';
-
         var isSentence = function (text) {
             return !text ||
                 /^(provided|worked|responsible|developed|managed|assisted|handled|created|led|designed|engineered|maintaining|coordinating|building|supported|participated)\b/i.test(text) ||
@@ -263,6 +259,12 @@
             s = s.replace(/,\s*[A-Za-z\s]+$/, '').trim(); // Remove trailing city ", Noida"
             return s;
         };
+
+        if (cand && (cand.currentCompany || cand.company || cand.current_company)) {
+            var candComp = cleanCompName(cand.currentCompany || cand.company || cand.current_company);
+            if (candComp && !isSentence(candComp) && candComp.length >= 2) return candComp;
+        }
+        if (!Array.isArray(expList) || !expList.length) return '';
 
         for (var i = 0; i < expList.length; i++) {
             var item = expList[i];
@@ -495,267 +497,383 @@
                 }
 
                 // 1. Full Name
-                if (cand.name) {
-                    var rawName = String(cand.name).replace(/^(curriculum vitae|resume|profile|cv|candidate)\s*[-:]*\s*/i, '').trim();
-                    if (rawName.length >= 2) {
-                        var formattedName = (typeof window.formatCandidateTitleCase === 'function')
-                            ? window.formatCandidateTitleCase(rawName)
-                            : rawName;
-                        safeSetVal('#full_name', formattedName, 'full_name');
-                        safeSetVal('#name', formattedName);
+                try {
+                    if (cand.name) {
+                        var rawName = String(cand.name).replace(/^(curriculum vitae|resume|profile|cv|candidate)\s*[-:]*\s*/i, '').trim();
+                        if (rawName.length >= 2) {
+                            var formattedName = (typeof window.formatCandidateTitleCase === 'function')
+                                ? window.formatCandidateTitleCase(rawName)
+                                : rawName;
+                            safeSetVal('#full_name', formattedName, 'full_name');
+                            safeSetVal('#name', formattedName);
+                        }
                     }
+                } catch (e) {
+                    console.error('[SFHP] Full Name error:', e);
                 }
 
                 // 2. Primary Email
-                if (cand.email) {
-                    var cleanEmail = String(cand.email)
-                        .replace(/^mailto:/i, '')
-                        .replace(/[.,;:\/\s]+$/, '')
-                        .trim()
-                        .toLowerCase();
-                    safeSetVal('#email', cleanEmail, 'email');
+                try {
+                    if (cand.email) {
+                        var cleanEmail = String(cand.email)
+                            .replace(/^mailto:/i, '')
+                            .replace(/[.,;:\/\s]+$/, '')
+                            .trim()
+                            .toLowerCase();
+                        safeSetVal('#email', cleanEmail, 'email');
+                    }
+                } catch (e) {
+                    console.error('[SFHP] Email error:', e);
                 }
 
                 // 3. Primary Mobile & Country Code (Enterprise JeroPhoneBox Integration)
-                var phoneVal = cand.mobileNumber || cand.phone;
-                if (phoneVal) {
-                    if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
-                        window.JeroPhoneBox.setPhone('phone', phoneVal);
-                        populatedFields.push('phone');
-                    } else {
-                        var digitsOnly = String(phoneVal).replace(/\D/g, '');
-                        if (digitsOnly.length > 10) {
-                            digitsOnly = digitsOnly.slice(-10);
+                try {
+                    var phoneVal = cand.mobileNumber || cand.phone;
+                    if (phoneVal) {
+                        if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
+                            window.JeroPhoneBox.setPhone('phone', phoneVal);
+                            populatedFields.push('phone');
+                        } else {
+                            var digitsOnly = String(phoneVal).replace(/\D/g, '');
+                            if (digitsOnly.length > 10) {
+                                digitsOnly = digitsOnly.slice(-10);
+                            }
+                            safeSetVal('#phone', digitsOnly, 'phone');
                         }
-                        safeSetVal('#phone', digitsOnly, 'phone');
                     }
-                }
-                if (cand.countryCode) {
-                    var cc = String(cand.countryCode).trim();
-                    if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
-                        window.JeroPhoneBox.setCountry('phone', cc);
-                    } else {
-                        safeSetVal('#primary_country_code', cc.replace(/^\+/, ''));
+                    if (cand.countryCode) {
+                        var cc = String(cand.countryCode).trim();
+                        if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
+                            window.JeroPhoneBox.setCountry('phone', cc);
+                        } else {
+                            safeSetVal('#primary_country_code', cc.replace(/^\+/, ''));
+                        }
                     }
+                } catch (e) {
+                    console.error('[SFHP] Phone error:', e);
                 }
 
                 // 4. Phase 10: Date of Birth (Normalized to YYYY-MM-DD)
-                if (cand.dob) {
-                    var normalizedDob = normalizeDob(cand.dob);
-                    if (normalizedDob) {
-                        safeSetVal('#dob', normalizedDob, 'dob');
+                try {
+                    if (cand.dob) {
+                        var normalizedDob = normalizeDob(cand.dob);
+                        if (normalizedDob) {
+                            safeSetVal('#dob', normalizedDob, 'dob');
+                        }
                     }
+                } catch (e) {
+                    console.error('[SFHP] DOB error:', e);
                 }
 
                 // 5. Phase 7: Authoritative City Population via Tagify Bridge & Custom Combobox
                 // Requirement: Only display the city if it matches an authoritative system city; otherwise remain blank.
-                var parsedLocData = cand.location || cand.city || (result && (result.location || result.city));
-                if (typeof window.resolveAndSetCandidateLocation === 'function') {
-                    window.resolveAndSetCandidateLocation(parsedLocData);
-                } else if (typeof window.setSingleCandidateLocation === 'function') {
-                    window.setSingleCandidateLocation(parsedLocData);
-                } else {
-                    var locInput = document.querySelector('#kt_tagify_work_location');
-                    var tagifyLoc = (locInput && locInput.__tagify) || window.tagifylocation;
-                    if (tagifyLoc && typeof tagifyLoc.removeAllTags === 'function') {
-                        tagifyLoc.removeAllTags();
+                try {
+                    var parsedLocData = cand.location || cand.city || (result && (result.location || result.city));
+                    if (typeof window.resolveAndSetCandidateLocation === 'function') {
+                        window.resolveAndSetCandidateLocation(parsedLocData);
+                    } else if (typeof window.setSingleCandidateLocation === 'function') {
+                        window.setSingleCandidateLocation(parsedLocData);
+                    } else {
+                        var locInput = document.querySelector('#kt_tagify_work_location');
+                        var tagifyLoc = (locInput && locInput.__tagify) || window.tagifylocation;
+                        if (tagifyLoc && typeof tagifyLoc.removeAllTags === 'function') {
+                            tagifyLoc.removeAllTags();
+                        }
                     }
+                } catch (e) {
+                    console.error('[SFHP] Location error:', e);
                 }
 
                 // 5b. Nationality Auto-Detection (Client RAM In-Memory Matcher)
-                var detectedNationality = null;
-                if (cand.nationality) {
-                    detectedNationality = cand.nationality;
-                }
-                if (!detectedNationality) {
-                    var rawCc = String(cand.countryCode || '').replace(/^\+/, '').trim();
-                    if (rawCc === '91') detectedNationality = 'Indian';
-                    else if (rawCc === '44') detectedNationality = 'British';
-                    else if (rawCc === '61') detectedNationality = 'Australian';
-                    else if (rawCc === '971') detectedNationality = 'Emirati';
-                    else if (rawCc === '65') detectedNationality = 'Singaporean';
-                    else if (rawCc === '49') detectedNationality = 'German';
-                    else if (rawCc === '33') detectedNationality = 'French';
-                    else if (rawCc === '353') detectedNationality = 'Irish';
-                    else if (rawCc === '31') detectedNationality = 'Dutch';
-                    else if (rawCc === '966') detectedNationality = 'Saudi';
-                    else if (rawCc === '1') {
-                        var locStr = String(parsedLocData || '').toLowerCase();
-                        if (/canada|ontario|toronto|vancouver|quebec|alberta|montreal|calgary|ottawa/.test(locStr)) {
-                            detectedNationality = 'Canadian';
-                        } else {
-                            detectedNationality = 'American';
+                try {
+                    var detectedNationality = null;
+                    if (cand.nationality) {
+                        detectedNationality = cand.nationality;
+                    }
+                    if (!detectedNationality) {
+                        var rawCc = String(cand.countryCode || '').replace(/^\+/, '').trim();
+                        if (rawCc === '91') detectedNationality = 'Indian';
+                        else if (rawCc === '44') detectedNationality = 'British';
+                        else if (rawCc === '61') detectedNationality = 'Australian';
+                        else if (rawCc === '971') detectedNationality = 'Emirati';
+                        else if (rawCc === '65') detectedNationality = 'Singaporean';
+                        else if (rawCc === '49') detectedNationality = 'German';
+                        else if (rawCc === '33') detectedNationality = 'French';
+                        else if (rawCc === '353') detectedNationality = 'Irish';
+                        else if (rawCc === '31') detectedNationality = 'Dutch';
+                        else if (rawCc === '966') detectedNationality = 'Saudi';
+                        else if (rawCc === '1') {
+                            var locStr = String(parsedLocData || '').toLowerCase();
+                            if (/canada|ontario|toronto|vancouver|quebec|alberta|montreal|calgary|ottawa/.test(locStr)) {
+                                detectedNationality = 'Canadian';
+                            } else {
+                                detectedNationality = 'American';
+                            }
                         }
                     }
-                }
-                if (!detectedNationality && parsedLocData) {
-                    var locLower = String(parsedLocData).toLowerCase();
-                    if (/india|bengaluru|bangalore|delhi|mumbai|hyderabad|pune|chennai|kolkata|noida|gurgaon|ahmedabad/.test(locLower)) {
-                        detectedNationality = 'Indian';
-                    } else if (/united states|usa|california|new york|texas|seattle|san francisco|chicago|los angeles|boston|austin/.test(locLower)) {
-                        detectedNationality = 'American';
-                    } else if (/united kingdom|uk|london|manchester|birmingham|england|scotland|wales|edinburgh/.test(locLower)) {
-                        detectedNationality = 'British';
-                    } else if (/canada|toronto|vancouver|montreal|ottawa|calgary|edmonton/.test(locLower)) {
-                        detectedNationality = 'Canadian';
-                    } else if (/australia|sydney|melbourne|brisbane|perth|adelaide/.test(locLower)) {
-                        detectedNationality = 'Australian';
-                    } else if (/dubai|abu dhabi|uae|united arab emirates|sharjah/.test(locLower)) {
-                        detectedNationality = 'Emirati';
-                    } else if (/singapore/.test(locLower)) {
-                        detectedNationality = 'Singaporean';
-                    } else if (/germany|berlin|munich|frankfurt|hamburg|stuttgart/.test(locLower)) {
-                        detectedNationality = 'German';
-                    } else if (/france|paris|lyon|marseille/.test(locLower)) {
-                        detectedNationality = 'French';
-                    } else if (/ireland|dublin|cork/.test(locLower)) {
-                        detectedNationality = 'Irish';
-                    } else if (/netherlands|amsterdam|rotterdam|utrecht|hague/.test(locLower)) {
-                        detectedNationality = 'Dutch';
-                    } else if (/saudi arabia|riyadh|jeddah|dammam/.test(locLower)) {
-                        detectedNationality = 'Saudi';
+                    if (!detectedNationality && parsedLocData) {
+                        var locLower = String(parsedLocData).toLowerCase();
+                        if (/india|bengaluru|bangalore|delhi|mumbai|hyderabad|pune|chennai|kolkata|noida|gurgaon|ahmedabad/.test(locLower)) {
+                            detectedNationality = 'Indian';
+                        } else if (/united states|usa|california|new york|texas|seattle|san francisco|chicago|los angeles|boston|austin/.test(locLower)) {
+                            detectedNationality = 'American';
+                        } else if (/united kingdom|uk|london|manchester|birmingham|england|scotland|wales|edinburgh/.test(locLower)) {
+                            detectedNationality = 'British';
+                        } else if (/canada|toronto|vancouver|montreal|ottawa|calgary|edmonton/.test(locLower)) {
+                            detectedNationality = 'Canadian';
+                        } else if (/australia|sydney|melbourne|brisbane|perth|adelaide/.test(locLower)) {
+                            detectedNationality = 'Australian';
+                        } else if (/dubai|abu dhabi|uae|united arab emirates|sharjah/.test(locLower)) {
+                            detectedNationality = 'Emirati';
+                        } else if (/singapore/.test(locLower)) {
+                            detectedNationality = 'Singaporean';
+                        } else if (/germany|berlin|munich|frankfurt|hamburg|stuttgart/.test(locLower)) {
+                            detectedNationality = 'German';
+                        } else if (/france|paris|lyon|marseille/.test(locLower)) {
+                            detectedNationality = 'French';
+                        } else if (/ireland|dublin|cork/.test(locLower)) {
+                            detectedNationality = 'Irish';
+                        } else if (/netherlands|amsterdam|rotterdam|utrecht|hague/.test(locLower)) {
+                            detectedNationality = 'Dutch';
+                        } else if (/saudi arabia|riyadh|jeddah|dammam/.test(locLower)) {
+                            detectedNationality = 'Saudi';
+                        }
                     }
-                }
-                if (detectedNationality) {
-                    var natOption = $('#nationality').find('option').filter(function () {
-                        return $(this).val().toLowerCase() === detectedNationality.toLowerCase() ||
-                               $(this).text().toLowerCase().indexOf(detectedNationality.toLowerCase()) !== -1;
-                    }).first();
-                    if (natOption.length) {
-                        safeSetSelect2('#nationality', natOption.val(), 'nationality');
+                    if (detectedNationality) {
+                        var natOption = $('#nationality').find('option').filter(function () {
+                            return $(this).val().toLowerCase() === detectedNationality.toLowerCase() ||
+                                   $(this).text().toLowerCase().indexOf(detectedNationality.toLowerCase()) !== -1;
+                        }).first();
+                        if (natOption.length) {
+                            safeSetSelect2('#nationality', natOption.val(), 'nationality');
+                        }
                     }
+                } catch (e) {
+                    console.error('[SFHP] Nationality error:', e);
                 }
 
                 // 6. Phase 8: Skills Population via Batch Bridge or Tagify Bridge
-                var skillsList = Array.isArray(result.skills) ? result.skills : [];
-                if (skillsList.length) {
-                    if (typeof window.addCandidatePrimarySkillsBatch === 'function') {
-                        window.addCandidatePrimarySkillsBatch(skillsList);
-                    } else if (typeof window.addParsedBenchSkills === 'function') {
-                        window.addParsedBenchSkills(skillsList);
-                    } else {
-                        var skillInput = document.querySelector('#kt_tagify_2');
-                        var tagifySkill = (skillInput && skillInput.__tagify) || window.tagifyskill;
+                try {
+                    var skillsList = Array.isArray(result.skills) ? result.skills : [];
+                    if (skillsList.length) {
+                        var batchHandled = false;
+                        if (typeof window.addCandidatePrimarySkillsBatch === 'function') {
+                            try {
+                                window.addCandidatePrimarySkillsBatch(skillsList);
+                                batchHandled = true;
+                            } catch (bErr) {
+                                console.warn('[SFHP] addCandidatePrimarySkillsBatch warning:', bErr);
+                            }
+                        }
+                        if (!batchHandled && typeof window.addParsedBenchSkills === 'function') {
+                            try {
+                                window.addParsedBenchSkills(skillsList);
+                                batchHandled = true;
+                            } catch (_) {}
+                        }
 
-                        var uniqueSkills = [];
-                        var seen = new Set();
-                        if (tagifySkill && Array.isArray(tagifySkill.value)) {
-                            tagifySkill.value.forEach(function (t) {
-                                var v = (t.value || t.name || '').toLowerCase().trim();
-                                if (v) seen.add(v);
+                        // Direct Visual Chips Fallback if container is still empty
+                        var chipsContainer = document.querySelector('#candidatePrimarySkillChips');
+                        var emptySkillsEl = document.querySelector('#candidatePrimarySkillEmpty');
+                        if (chipsContainer && (!chipsContainer.children || chipsContainer.children.length === 0)) {
+                            if (emptySkillsEl) emptySkillsEl.hidden = true;
+                            skillsList.forEach(function (s) {
+                                var sName = String(typeof s === 'object' ? (s.name || s.value) : s || '').trim();
+                                if (!sName) return;
+                                var chip = document.createElement('span');
+                                chip.className = 'candidate-primary-skill-chip';
+                                chip.setAttribute('data-skill-name', sName);
+                                var label = document.createElement('span');
+                                label.textContent = sName;
+                                var removeBtn = document.createElement('button');
+                                removeBtn.type = 'button';
+                                removeBtn.setAttribute('aria-label', 'Remove ' + sName);
+                                removeBtn.title = 'Remove ' + sName;
+                                removeBtn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+                                removeBtn.addEventListener('click', function () {
+                                    if (typeof window.removeCandidatePrimarySkill === 'function') {
+                                        window.removeCandidatePrimarySkill(sName);
+                                    } else {
+                                        chip.remove();
+                                    }
+                                });
+                                chip.append(label, removeBtn);
+                                chipsContainer.appendChild(chip);
                             });
                         }
 
-                        skillsList.forEach(function (s) {
-                            var name = String(s || '').trim();
-                            var lower = name.toLowerCase();
-                            if (name && !seen.has(lower)) {
-                                seen.add(lower);
-                                uniqueSkills.push(name);
-                            }
-                        });
-
+                        // Sync hidden Tagify input
+                        var skillInput = document.querySelector('#kt_tagify_2');
+                        var tagifySkill = (skillInput && skillInput.__tagify) || window.tagifyskill;
                         if (tagifySkill && typeof tagifySkill.addTags === 'function') {
                             try {
-                                if (!isEditMode && (!tagifySkill.value || !tagifySkill.value.length)) {
-                                    tagifySkill.removeAllTags();
+                                var uniqueSkills = [];
+                                var seenSkills = new Set();
+                                if (Array.isArray(tagifySkill.value)) {
+                                    tagifySkill.value.forEach(function (t) {
+                                        var v = (t.value || t.name || '').toLowerCase().trim();
+                                        if (v) seenSkills.add(v);
+                                    });
                                 }
+                                skillsList.forEach(function (s) {
+                                    var name = String(typeof s === 'object' ? (s.name || s.value) : s || '').trim();
+                                    var lower = name.toLowerCase();
+                                    if (name && !seenSkills.has(lower)) {
+                                        seenSkills.add(lower);
+                                        uniqueSkills.push(name);
+                                    }
+                                });
                                 if (uniqueSkills.length) {
                                     tagifySkill.addTags(uniqueSkills);
                                 }
-                            } catch (skillErr) {
-                                console.warn('[JeroCandidateFormBridge] Tagify skills error, using fallback:', skillErr);
-                                safeSetVal('#kt_tagify_2', uniqueSkills.join(', '));
-                            }
-                        } else {
-                            safeSetVal('#kt_tagify_2', uniqueSkills.join(', '));
+                            } catch (_) {}
+                        } else if (skillInput && !skillInput.value) {
+                            skillInput.value = skillsList.map(function(s) { return typeof s === 'object' ? (s.name || s.value) : s; }).join(', ');
+                        }
+
+                        if (typeof window.refreshCandidatePrimarySkills === 'function') {
+                            try { window.refreshCandidatePrimarySkills(); } catch (_) {}
                         }
                     }
-
-                    if (typeof window.refreshCandidatePrimarySkills === 'function') {
-                        window.refreshCandidatePrimarySkills();
-                    }
+                } catch (e) {
+                    console.error('[SFHP] Skills error:', e);
                 }
 
-                // 7. Phase 9: Experience & Fresher Selection
+                // 7. Phase 9: Experience Dropdowns & Calculation
                 var expList = Array.isArray(result.experience) ? result.experience : (Array.isArray(result.work_experience) ? result.work_experience : []);
                 var totalExp = calculateTotalExperience(expList, result.summary || result.career_summary || result.objective || (cand && (cand.summary || cand.objective)));
 
+                try {
+                    safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
+                    safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
+                    safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
+                    safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
+
+                    // Native select fallback to ensure values and change events fire unconditionally
+                    ['#total_exp_year', '#rel_exp_year'].forEach(function (sel) {
+                        var el = document.querySelector(sel);
+                        if (el && String(totalExp.years) !== '') {
+                            el.value = String(totalExp.years);
+                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    });
+                    ['#total_exp_month', '#rel_exp_month'].forEach(function (sel) {
+                        var el = document.querySelector(sel);
+                        if (el && String(totalExp.months) !== '') {
+                            el.value = String(totalExp.months);
+                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    });
+                } catch (e) {
+                    console.error('[SFHP] Experience error:', e);
+                }
+
                 // 7a. Current Company Extraction & Population
-                var extractedCompany = extractCompanyFromExperience(expList, cand);
-                if (extractedCompany) {
-                    safeSetVal('#current_company', extractedCompany, 'current_company');
+                try {
+                    var extractedCompany = extractCompanyFromExperience(expList, cand);
+                    if (!extractedCompany) {
+                        extractedCompany = cand.currentCompany || cand.company || cand.current_company || result.company || result.current_company || '';
+                    }
+                    if (extractedCompany) {
+                        safeSetVal('#current_company', extractedCompany, 'current_company');
+                        safeSetVal('#company_name', extractedCompany, 'company_name');
+                        var compEl = document.querySelector('#current_company');
+                        if (compEl && !compEl.value) {
+                            compEl.value = extractedCompany;
+                            compEl.dispatchEvent(new Event('input', { bubbles: true }));
+                            compEl.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                } catch (e) {
+                    console.error('[SFHP] Current Company error:', e);
                 }
 
                 // 7b. Designation: Strictly keep existing pre-filled job title untouched (per user specification)
                 // Only populate if current designation is completely empty:
-                var $desigEl = $('#current_designation');
-                if ($desigEl.length && !($desigEl.val() || '').trim()) {
-                    var latestJob = expList[0] || {};
-                    var cleanedJob = cleanJobAndCompany(latestJob.title, latestJob.company);
-                    var designationToSet = cleanedJob.designation || cand.currentDesignation || '';
-                    if (designationToSet) {
-                        safeSetVal('#current_designation', designationToSet, 'current_designation');
-                    }
-                }
-
-                // 7c. Experience Dropdowns (Years & Months)
-                safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
-                safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
-                safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
-                safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
-
-                // 8. Education / Qualification (Select2 Safe Adapter + Custom Combobox Sync)
-                var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
-                if (matchedQualId) {
-                    safeSetSelect2('#qualification', String(matchedQualId), 'qualification');
-                    var $cs = $('#jero-cs-qualification');
-                    if ($cs.length) {
-                        var $item = $cs.find('.jero-cs-item[data-val="' + matchedQualId + '"]').first();
-                        $cs.find('.jero-cs-item').removeClass('is-selected');
-                        if ($item.length) {
-                            $item.addClass('is-selected');
-                            $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($item.find('.jero-cs-item-text').text().trim());
-                            var badge = $item.attr('data-badge') || '';
-                            if (badge) {
-                                $cs.find('.jero-cs-badge').show().text(badge);
-                            } else {
-                                $cs.find('.jero-cs-badge').hide().text('');
-                            }
+                try {
+                    var $desigEl = $('#current_designation');
+                    if ($desigEl.length && !($desigEl.val() || '').trim()) {
+                        var latestJob = expList[0] || {};
+                        var cleanedJob = cleanJobAndCompany(latestJob.title, latestJob.company);
+                        var designationToSet = cleanedJob.designation || cand.currentDesignation || '';
+                        if (designationToSet) {
+                            safeSetVal('#current_designation', designationToSet, 'current_designation');
                         }
                     }
-                    $('#qualification').trigger('change');
+                } catch (e) {
+                    console.error('[SFHP] Designation error:', e);
+                }
+
+                // 8. Education / Qualification (Select2 Safe Adapter + Custom Combobox Sync)
+                try {
+                    var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
+                    if (matchedQualId) {
+                        safeSetSelect2('#qualification', String(matchedQualId), 'qualification');
+                        var qualSelect = document.getElementById('qualification');
+                        if (qualSelect) {
+                            qualSelect.value = String(matchedQualId);
+                            qualSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                        var $cs = $('#jero-cs-qualification');
+                        if ($cs.length) {
+                            var $item = $cs.find('.jero-cs-item[data-val="' + matchedQualId + '"]').first();
+                            $cs.find('.jero-cs-item').removeClass('is-selected');
+                            if ($item.length) {
+                                $item.addClass('is-selected');
+                                $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($item.find('.jero-cs-item-text').text().trim());
+                                var badge = $item.attr('data-badge') || '';
+                                if (badge) {
+                                    $cs.find('.jero-cs-badge').show().text(badge);
+                                } else {
+                                    $cs.find('.jero-cs-badge').hide().text('');
+                                }
+                            }
+                        }
+                        $('#qualification').trigger('change');
+                    }
+                } catch (e) {
+                    console.error('[SFHP] Qualification error:', e);
                 }
 
                 // 9. Career Summary (strictly for career summary, limited to 100 words, NEVER fills recruiter internal note)
-                var summary = result.summary || result.career_summary || result.objective || (cand && (cand.summary || cand.objective)) || '';
-                if (summary) {
-                    var words = String(summary).trim().split(/\s+/).filter(Boolean);
-                    if (words.length > 100) {
-                        summary = words.slice(0, 100).join(' ');
-                    }
-                    safeSetVal('#careersummary', summary, 'careersummary');
-                    var csEl = document.querySelector('#careersummary');
-                    if (csEl) {
-                        try {
-                            csEl.dispatchEvent(new Event('input', { bubbles: true }));
-                        } catch (_) {}
-                        if (csEl.parentElement) {
-                            var csCc = csEl.parentElement.querySelector('.cc');
-                            if (csCc) {
-                                var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
-                                csCc.textContent = actualWordCount + ' / 100';
+                try {
+                    var summary = result.summary || result.career_summary || result.objective || (cand && (cand.summary || cand.objective)) || '';
+                    if (summary) {
+                        var words = String(summary).trim().split(/\s+/).filter(Boolean);
+                        if (words.length > 100) {
+                            summary = words.slice(0, 100).join(' ');
+                        }
+                        safeSetVal('#careersummary', summary, 'careersummary');
+                        var csEl = document.querySelector('#careersummary');
+                        if (csEl) {
+                            if (!csEl.value) csEl.value = summary;
+                            try {
+                                csEl.dispatchEvent(new Event('input', { bubbles: true }));
+                                csEl.dispatchEvent(new Event('change', { bubbles: true }));
+                            } catch (_) {}
+                            if (csEl.parentElement) {
+                                var csCc = csEl.parentElement.querySelector('.cc');
+                                if (csCc) {
+                                    var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
+                                    csCc.textContent = actualWordCount + ' / 100';
+                                }
                             }
                         }
                     }
+                } catch (e) {
+                    console.error('[SFHP] Career summary error:', e);
                 }
 
                 // 10. Professional Links
-                if (cand.linkedin) {
-                    safeSetVal('#linkedin', cand.linkedin);
-                }
-                if (cand.github) {
-                    safeSetVal('#github', cand.github);
+                try {
+                    if (cand.linkedin) {
+                        safeSetVal('#linkedin', cand.linkedin);
+                    }
+                    if (cand.github) {
+                        safeSetVal('#github', cand.github);
+                    }
+                } catch (e) {
+                    console.error('[SFHP] Professional links error:', e);
                 }
 
             } catch (popErr) {

@@ -6510,7 +6510,8 @@ var KTUPDATECandidate = {
       }
 
       function candidateSelectedSkills() {
-          return candidateUniqueSkills((tagifyskill.value || []).map(function (skill) {
+          var val = (typeof tagifyskill !== 'undefined' && tagifyskill && Array.isArray(tagifyskill.value)) ? tagifyskill.value : [];
+          return candidateUniqueSkills(val.map(function (skill) {
               return { id: skill.id || '', name: skill.value || '' };
           }));
       }
@@ -7017,26 +7018,34 @@ var KTUPDATECandidate = {
 
       // Resume Parser Batch Bridge: Deduplicates & adds skills in bulk
       window.addCandidatePrimarySkillsBatch = function (skillsList) {
-          if (!Array.isArray(skillsList) || !skillsList.length) return;
-          var selected = candidateSelectedSkills();
-          var selectedSet = new Set(selected.map(function (s) { return candidateSkillKey(s.name); }));
-          var toAdd = [];
+          try {
+              if (!Array.isArray(skillsList) || !skillsList.length) return;
+              var selected = candidateSelectedSkills();
+              var selectedSet = new Set(selected.map(function (s) { return candidateSkillKey(s.name); }));
+              var toAdd = [];
 
-          skillsList.forEach(function (raw) {
-              var clean = resolveSkillAlias(String(raw || '').trim());
-              var norm = candidateSkillKey(clean);
-              if (clean && !selectedSet.has(norm)) {
-                  selectedSet.add(norm);
-                  var req = candidateUniqueSkills(candidateRequiredSkills).find(function (r) {
-                      return candidateSkillKey(r.name) === norm;
-                  });
-                  toAdd.push(req ? { value: req.name, id: req.id } : clean);
+              skillsList.forEach(function (raw) {
+                  var clean = resolveSkillAlias(String(raw || '').trim());
+                  var norm = candidateSkillKey(clean);
+                  if (clean && !selectedSet.has(norm)) {
+                      selectedSet.add(norm);
+                      var req = candidateUniqueSkills(candidateRequiredSkills).find(function (r) {
+                          return candidateSkillKey(r.name) === norm;
+                      });
+                      toAdd.push(req ? { value: req.name, id: req.id } : clean);
+                  }
+              });
+
+              if (toAdd.length) {
+                  if (typeof tagifyskill !== 'undefined' && tagifyskill && typeof tagifyskill.addTags === 'function') {
+                      tagifyskill.addTags(toAdd);
+                  }
+                  if (typeof refreshCandidatePrimarySkills === 'function') {
+                      refreshCandidatePrimarySkills();
+                  }
               }
-          });
-
-          if (toAdd.length && tagifyskill && typeof tagifyskill.addTags === 'function') {
-              tagifyskill.addTags(toAdd);
-              refreshCandidatePrimarySkills();
+          } catch (batchErr) {
+              console.warn('[Skills Batch Bridge] Batch skills addition error:', batchErr);
           }
       };
 
