@@ -7572,6 +7572,7 @@ $currency_code = GeneralMethod::defaultCurrency();
         var __editQuestions = {!! json_encode($__editQ) !!};
         var __editTags   = {!! json_encode(@$jobtags) !!};
         var __editQual   = {!! json_encode(@$default_qualification) !!};
+        var __jobQualification = {!! json_encode(@$job->qualification) !!};
         var __editLoc    = {!! json_encode(@$default_loc) !!};
 
         <?php if (($page_event ?? '') == 'EDIT') { ?>
@@ -7622,11 +7623,29 @@ $currency_code = GeneralMethod::defaultCurrency();
                 String(__editTags).split(',').forEach(function(s) { s = s.trim(); if (s && skills.indexOf(s) === -1) skills.push(s); });
                 renderSkills();
             }
-            // EDIT prefill: qualifications
+            // Educational Qualifications initialization (EDIT & ADD)
+            var rawQuals = [];
             if (__editQual) {
-                String(__editQual).split(',').forEach(function(q) { q = q.trim(); if (q && qualifications.indexOf(q) === -1) qualifications.push(q); });
-                renderQualifications();
+                if (Array.isArray(__editQual)) {
+                    rawQuals = __editQual;
+                } else if (typeof __editQual === 'string') {
+                    rawQuals = __editQual.split(',');
+                }
             }
+            if (rawQuals.length === 0 && typeof __jobQualification !== 'undefined' && __jobQualification) {
+                rawQuals = [String(__jobQualification)];
+            }
+            rawQuals.forEach(function(q) {
+                if (typeof q === 'object' && q !== null) q = q.value || q.qualification_name || q.name || '';
+                q = String(q || '').trim();
+                if (q && qualifications.indexOf(q) === -1) {
+                    qualifications.push(q);
+                }
+            });
+            if (qualifications.length === 0) {
+                qualifications.push('Any Qualification');
+            }
+            renderQualifications();
             // EDIT prefill: questions
             if (Array.isArray(__editQuestions) && __editQuestions.length) {
                 __editQuestions.forEach(function(t, i) { if (t && String(t).trim() !== '') questions.push({ id: i + 1, text: t, type: 'short', required: true }); });
@@ -7659,12 +7678,6 @@ $currency_code = GeneralMethod::defaultCurrency();
                 if (workShiftSelect && (!workShiftSelect.value || workShiftSelect.value === '')) {
                     workShiftSelect.value = 'Day Shift';
                     $(workShiftSelect).trigger('change');
-                }
-
-                // 5. Educational Qualification default: 'Any Qualification'
-                if (!__editQual && qualifications.length === 0) {
-                    qualifications.push('Any Qualification');
-                    renderQualifications();
                 }
 
                 // 6. Job Auto Close default: '60'
@@ -9646,6 +9659,13 @@ $currency_code = GeneralMethod::defaultCurrency();
             if (qualifications.length >= 5) {
                 showToast('Maximum 5 qualifications allowed', 'error');
                 return;
+            }
+            // Seamless transition: if currently only 'Any Qualification' is selected and user selects a specific degree, replace it
+            if (qualifications.length === 1 && qualifications[0] === 'Any Qualification' && qual !== 'Any Qualification') {
+                qualifications = [];
+            } else if (qual === 'Any Qualification') {
+                // If user selects 'Any Qualification', reset to open universal eligibility
+                qualifications = [];
             }
             qualifications.push(qual);
             renderQualifications();
