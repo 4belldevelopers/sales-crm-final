@@ -983,6 +983,13 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
    		var id = $(this).data('row-id');
         var cacheKey = 'job_' + id + '_regular';
+        if (localStorage.getItem('job_drawer_bust_id_' + id) || localStorage.getItem('job_drawer_bust')) {
+            if (window.jobDrawerCache) {
+                delete window.jobDrawerCache[cacheKey];
+                delete window.jobDrawerCache['job_' + id + '_client'];
+            }
+            localStorage.removeItem('job_drawer_bust_id_' + id);
+        }
         if (window.jobDrawerCache && window.jobDrawerCache[cacheKey]) {
             $('#kt_activitiesJob_body').html(window.jobDrawerCache[cacheKey]);
             return;
@@ -1053,6 +1060,13 @@ $(document).on('click', '.client-show-detail', function ()
   $('#kt_activitiesJob_toggle').trigger('click');		
    		var id = $(this).data('row-id');
         var cacheKey = 'job_' + id + '_client';
+        if (localStorage.getItem('job_drawer_bust_id_' + id) || localStorage.getItem('job_drawer_bust')) {
+            if (window.jobDrawerCache) {
+                delete window.jobDrawerCache[cacheKey];
+                delete window.jobDrawerCache['job_' + id + '_regular'];
+            }
+            localStorage.removeItem('job_drawer_bust_id_' + id);
+        }
         if (window.jobDrawerCache && window.jobDrawerCache[cacheKey]) {
             $('#kt_activitiesJob_body').html(window.jobDrawerCache[cacheKey]);
             return;
