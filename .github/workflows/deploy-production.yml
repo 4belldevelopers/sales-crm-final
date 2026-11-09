@@ -214,8 +214,10 @@ jobs:
             # stop/start is required to clear OPcache and actually load the
             # freshly deployed code. Same fix as deploy-staging.yml.
             php artisan octane:stop || true
+            pkill -f "octane:start" || true
+            pkill -f "frankenphp" || true
             sleep 3
-            setsid nohup bash start-octane.sh > storage/logs/octane-start.log 2>&1 < /dev/null &
+            setsid nohup bash start-octane.sh 8010 > storage/logs/octane-start.log 2>&1 < /dev/null &
             sleep 8
             php artisan octane:status || true
 
@@ -236,8 +238,8 @@ jobs:
             echo ">> Checking FrankenPHP warmup & health"
 
             for i in $(seq 1 10); do
-              if curl -fsSk https://hire.jero.works > /dev/null 2>&1 || curl -fsS http://127.0.0.1:8000 > /dev/null 2>&1; then
-                echo "✅ Octane is running and accepting connections."
+              if curl -fsSk https://hire.jero.works > /dev/null 2>&1 || curl -fsS http://127.0.0.1:8010 > /dev/null 2>&1; then
+                echo "✅ Octane is running on port 8010 and accepting connections."
                 break
               fi
               echo "Waiting for Octane upstream to bind (attempt $i)..."
@@ -266,6 +268,7 @@ jobs:
             tail -n 25 /www/wwwlogs/hire.jero.works.error.log 2>/dev/null || tail -n 25 /var/log/nginx/error.log 2>/dev/null || true
             echo ""
             echo ">> Testing localhost ports:"
+            curl -I http://127.0.0.1:8010 2>/dev/null || echo "Port 8010 not responding"
             curl -I http://127.0.0.1:8000 2>/dev/null || echo "Port 8000 not responding"
             curl -I http://127.0.0.1:8001 2>/dev/null || echo "Port 8001 not responding"
             curl -I http://127.0.0.1:8080 2>/dev/null || echo "Port 8080 not responding"
