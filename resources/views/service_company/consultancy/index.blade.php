@@ -2279,7 +2279,7 @@
                 </svg>
             </div>
             <div>
-                <h2 class="m-0" id="add_agency_drawer_title" style="font-size:15.5px; font-weight:700; color:#0f172a; line-height:1.25;">Invite Staffing Partner</h2>
+                <h2 class="m-0" id="add_agency_drawer_title" style="font-size:15.5px; font-weight:700; color:#0f172a; line-height:1.25;">Invite Agencies</h2>
                 <span style="font-size:11.5px; font-weight:400; color:#64748b;">Direct collaboration & pipeline requisition sharing</span>
             </div>
         </div>
