@@ -571,16 +571,35 @@ graph TD
   - `resources/views/service_company/consultancy/index.blade.php`: Add Agency Drawer updated to Rule 20 Modern Card + Sub-Card Design with live Coin & Quota HUD.
   - `resources/views/service_company/ajax_pages/staffing-partner-ajax.blade.php`: Card Stream with Resend and Cancel action triggers.
 - **Automated God-Level Test Suite (`tests/Feature/AgencyPartnershipGodAuditTest.php`):**
-  - **17/17 Tests PASSED (71 assertions, 0 errors, 0 failures, 100% pass rate)**.
+  - **19/19 Tests PASSED (88 assertions, 0 errors, 0 failures, 100% pass rate)**.
   ```text
   PHPUnit 11.5.44 by Sebastian Bergmann and contributors.
   Runtime:       PHP 8.2.12
   Configuration: C:\Users\VIBHANSHU JAISWAL.000\Documents\GitHub\JWMaincode28June2026\phpunit.xml
 
-  .................                                                 17 / 17 (100%)
+  ...................                                               19 / 19 (100%)
 
-  Time: 01:56.998, Memory: 66.00 MB
+  Time: 01:24.196, Memory: 74.00 MB
 
-  OK (17 tests, 71 assertions)
+  OK (19 tests, 88 assertions)
   ```
-- **Code Style & Formatting:** Laravel Pint 100% formatted (15 files, 7 style issues resolved). Zero syntax errors across PHP 8.2.
+- **Code Style & Formatting:** Laravel Pint 100% formatted. Zero syntax errors across PHP 8.2.
+
+---
+
+## 15. Enhanced Feature Additions: Smart Agency Autocomplete & Restored Link Sharing
+
+### 15.1 Smart Agency Search & Autocomplete Sub-Card
+- **Endpoint:** `GET /service_company/consultancy/search_agency_autocomplete?q={query}` (`service_company.consultancy.search_agency_autocomplete`).
+- **Capabilities:**
+  - Multi-tenant isolated (cannot invite own company or super-admin accounts).
+  - Hybrid CQRS retrieval: searches Elasticsearch `ELASTIC_COMPANIES_INDEX` with fallback to MySQL indexed lookups.
+  - Dual lookup: matches against Agency Company Name OR Admin/Recruiter User Email.
+  - In-flight partnership state pre-enrichment (`connection_status`: `'connected'`, `'pending'`, or `'available'`).
+  - Client-side debounced input (300ms) with interactive floating dropdown, logo/initials avatar, and quick-invite external email fallback.
+
+### 15.2 Restored Direct Referral & Registration Link Sub-Card
+- **URL Schema:** `url('/company-registration-invitation/' . base64_encode(auth()->user()->company_id))`.
+- **UI:** Rule 20 Sub-Card with "0 Coins • Direct Link" badge and 1-click clipboard copy (`#kt_share_earn_link_copy_button`).
+- **Zero Coin Cost:** Sharing the direct link requires 0 coins and allows recruiters to distribute their partnership link freely over Slack, WhatsApp, LinkedIn, or personal email.
+- **15.6" Screen Fit:** Internal vertical scrolling without horizontal or page-level overflow.

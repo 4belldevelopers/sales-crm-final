@@ -10,15 +10,13 @@ Date			:	05-April-2021
 
 namespace App\Http\Controllers\ServiceCompany;
 
-use App\Domain\AgencyPartnership\Actions\CreateInvitationAction;
 use App\Domain\AgencyPartnership\Actions\CancelInvitationAction;
+use App\Domain\AgencyPartnership\Actions\CreateInvitationAction;
 use App\Domain\AgencyPartnership\Exceptions\AgencyPartnershipException;
 use App\Events\ConsultancyPartnershipUpdated;
 use App\Exports\ConsultancyExport;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
-use App\Jobs\ProcessAgencyOutboxEventJob;
-use App\Jobs\QueueNotificationMailService;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Country;
@@ -777,6 +775,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'warning', 'message' => $ape->getMessage()]);
         } catch (\Throwable $e) {
             Log::error('Cancel invitation failed: '.$e->getMessage(), ['exception' => $e]);
+
             return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to cancel invitation: '.$e->getMessage()]);
         }
     }
@@ -793,12 +792,12 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             ->where('from_company_id', $company_id)
             ->first();
 
-        if (!$oldInv) {
+        if (! $oldInv) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Original invitation not found.']);
         }
 
         try {
-            $idempotencyKey = 'reinvite_' . $invitationId . '_' . time();
+            $idempotencyKey = 'reinvite_'.$invitationId.'_'.time();
             $result = $createAction->execute($company_id, $userId, (string) $oldInv->to_email, $idempotencyKey);
 
             $this->agencyListingService->clearCompanyStatsCache($company_id);
@@ -818,8 +817,197 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'warning', 'message' => $ape->getMessage()]);
         } catch (\Throwable $e) {
             Log::error('Re-invite failed: '.$e->getMessage(), ['exception' => $e]);
+
             return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to re-invite agency: '.$e->getMessage()]);
         }
+    }
+
+    /**
+     * Search and autocomplete registered agencies by agency company name, root email, or user email.
+     * Implements strict multi-tenant isolation, CQRS ES-first with MySQL fallback, and pre-enriched connection status.
+     */
+    public function searchAgencyAutocomplete(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $company_id = (int) auth()->user()->company_id;
+        $query = trim((string) $request->input('q', ''));
+
+        if (strlen($query) < 2) {
+            return response()->json(['status' => 'success', 'data' => []]);
+        }
+
+        $superAdminIds = GeneralMethod::superAdminCompanyIds();
+        $results = [];
+
+        // 1. Elasticsearch query first (CQRS Universal Read Scope)
+        try {
+            if ($this->elasticService && $this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
+                $esParams = [
+                    'index' => ELASTIC_COMPANIES_INDEX,
+                    'body' => [
+                        'size' => 10,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['status' => 'active']],
+                                    ['term' => ['company_type' => 2]],
+                                    [
+                                        'bool' => [
+                                            'should' => [
+                                                ['wildcard' => ['company_name' => '*'.strtolower($query).'*']],
+                                                ['match_phrase_prefix' => ['company_name' => $query]],
+                                                ['wildcard' => ['team_members.email' => '*'.strtolower($query).'*']],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                                'must_not' => array_merge(
+                                    [['term' => ['id' => $company_id]]],
+                                    array_map(fn ($saId) => ['term' => ['id' => $saId]], $superAdminIds)
+                                ),
+                            ],
+                        ],
+                    ],
+                ];
+
+                $esResponse = $this->elasticService->getClient()->search($esParams);
+                $hits = $esResponse['hits']['hits'] ?? [];
+                foreach ($hits as $hit) {
+                    $src = $hit['_source'];
+                    $cId = (int) $src['id'];
+                    $results[$cId] = [
+                        'id' => $cId,
+                        'company_name' => $src['company_name'] ?? '',
+                        'email' => $src['company_email'] ?? ($src['team_members'][0]['email'] ?? ''),
+                        'logo' => $src['logo'] ?? '',
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('searchAgencyAutocomplete ES search error: '.$e->getMessage());
+        }
+
+        // 2. MySQL DB query to supplement / ensure full coverage of root email and users
+        if (count($results) < 10) {
+            $dbAgencies = DB::table('companies')
+                ->leftJoin('users', function ($join) {
+                    $join->on('users.company_id', '=', 'companies.id')
+                        ->where('users.root_user', '=', 1);
+                })
+                ->select(
+                    'companies.id',
+                    'companies.company_name',
+                    'companies.logo',
+                    'companies.company_email',
+                    'users.email as root_email',
+                    'users.name as root_name'
+                )
+                ->where('companies.status', '=', 'active')
+                ->where('companies.company_type', '=', 2)
+                ->where('companies.id', '!=', $company_id)
+                ->whereNotIn('companies.id', $superAdminIds)
+                ->where(function ($q) use ($query) {
+                    $q->where('companies.company_name', 'like', "%{$query}%")
+                        ->orWhere('companies.company_email', 'like', "%{$query}%")
+                        ->orWhere('users.email', 'like', "%{$query}%")
+                        ->orWhere('users.name', 'like', "%{$query}%");
+                })
+                ->limit(10)
+                ->get();
+
+            foreach ($dbAgencies as $agency) {
+                $cId = (int) $agency->id;
+                if (! isset($results[$cId])) {
+                    $results[$cId] = [
+                        'id' => $cId,
+                        'company_name' => $agency->company_name,
+                        'email' => $agency->root_email ?: $agency->company_email,
+                        'logo' => $agency->logo,
+                    ];
+                } else {
+                    if (empty($results[$cId]['email'])) {
+                        $results[$cId]['email'] = $agency->root_email ?: $agency->company_email;
+                    }
+                }
+            }
+        }
+
+        // 3. Pre-enrich connection status against current tenant
+        $allAgencyIds = array_keys($results);
+        if (! empty($allAgencyIds)) {
+            // Check active partnerships in staffing_company_relation
+            $connectedPairs = DB::table('staffing_company_relation')
+                ->where('final_status', 1)
+                ->where(function ($q) use ($company_id, $allAgencyIds) {
+                    $q->where(function ($sub) use ($company_id, $allAgencyIds) {
+                        $sub->where('from_company_id', $company_id)
+                            ->whereIn('to_company_id', $allAgencyIds);
+                    })->orWhere(function ($sub) use ($company_id, $allAgencyIds) {
+                        $sub->where('to_company_id', $company_id)
+                            ->whereIn('from_company_id', $allAgencyIds);
+                    });
+                })
+                ->get();
+
+            $connectedIds = [];
+            foreach ($connectedPairs as $pair) {
+                if ($pair->from_company_id == $company_id) {
+                    $connectedIds[] = (int) $pair->to_company_id;
+                } else {
+                    $connectedIds[] = (int) $pair->from_company_id;
+                }
+            }
+            $connectedIds = array_unique($connectedIds);
+
+            // Check pending invitations in staffing_company_invitation
+            $pendingInvitations = DB::table('staffing_company_invitation')
+                ->where('from_company_id', $company_id)
+                ->where('to_invitation_status', 0)
+                ->get();
+
+            $pendingEmails = $pendingInvitations->pluck('to_email')->map(fn ($e) => strtolower(trim((string) $e)))->toArray();
+            $pendingCompanyIds = array_filter($pendingInvitations->pluck('to_company_id')->toArray());
+
+            foreach ($results as $cId => &$item) {
+                $email = strtolower(trim((string) ($item['email'] ?? '')));
+                if (in_array($cId, $connectedIds, true)) {
+                    $item['connection_status'] = 'connected';
+                } elseif (in_array($cId, $pendingCompanyIds, true) || in_array($email, $pendingEmails, true)) {
+                    $item['connection_status'] = 'pending';
+                } else {
+                    $item['connection_status'] = 'available';
+                }
+
+                // Format logo URL
+                if (! empty($item['logo'])) {
+                    if (str_starts_with($item['logo'], 'http://') || str_starts_with($item['logo'], 'https://')) {
+                        $item['logo_url'] = $item['logo'];
+                    } else {
+                        $item['logo_url'] = asset_url('company-logo/'.$item['logo']);
+                    }
+                } else {
+                    $item['logo_url'] = null;
+                }
+
+                // Initials for avatar fallback
+                $words = explode(' ', trim((string) $item['company_name']));
+                $initials = '';
+                foreach ($words as $w) {
+                    if (! empty($w)) {
+                        $initials .= strtoupper(substr($w, 0, 1));
+                    }
+                    if (strlen($initials) >= 2) {
+                        break;
+                    }
+                }
+                $item['initials'] = $initials ?: 'AG';
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => array_values($results),
+        ]);
     }
 
     public function requestPartners($id)

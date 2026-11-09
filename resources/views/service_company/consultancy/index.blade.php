@@ -2274,15 +2274,54 @@
         </div>
 
         <form id="add_staffing_partners_form" name="add_staffing_partners_form" action="#" onsubmit="return false;">
-            <!-- SUB-CARD: EMAIL INVITATION INPUT -->
-            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:18px;">
-                <label for="staffing_partners_email" class="fw-bold fs-7 mb-2 text-gray-800 d-block">
-                    Agency Administrator / Root Email
-                </label>
-                <div class="mb-3">
-                    <input type="email" name="staffing_partners_email" id="staffing_partners_email" class="form-control form-control-solid fs-7" placeholder="e.g. partner@recruitmentagency.com" autocomplete="off" style="border-radius:6px; height:42px;">
-                    <div id="staffing_email_feedback" class="mt-2 fs-8" style="display:none;"></div>
+            <!-- SUB-CARD 1: SMART AGENCY SEARCH & INVITATION INPUT -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <label for="staffing_partners_search_input" class="fw-bold fs-7 text-gray-800 m-0">
+                        Search Agency or Enter Email
+                    </label>
+                    <span class="badge badge-light-primary fs-9 fw-bold">Live Search</span>
                 </div>
+                <div class="text-muted fs-8 mb-2">Search registered agencies by name or email, or type a new agency email:</div>
+
+                <!-- Search Input with Live Autocomplete -->
+                <div class="position-relative mb-2">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 ps-3 pe-2 text-muted" style="border-radius:6px 0 0 6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </span>
+                        <input type="text" id="staffing_partners_search_input" class="form-control form-control-solid fs-7 border-0" placeholder="Type agency name or email address..." autocomplete="off" style="border-radius:0 6px 6px 0; height:42px;">
+                        <button type="button" id="btn_clear_agency_search" class="btn btn-sm btn-icon btn-active-light-primary position-absolute end-0 top-50 translate-middle-y me-1 d-none" style="z-index:5;" title="Clear">✕</button>
+                    </div>
+
+                    <!-- Hidden target email input used by submit action -->
+                    <input type="hidden" name="staffing_partners_email" id="staffing_partners_email" value="">
+
+                    <!-- Autocomplete Results Floating Dropdown -->
+                    <div id="agency_autocomplete_dropdown" class="position-absolute start-0 end-0 bg-white border border-gray-300 rounded-3 shadow-lg d-none" style="top:46px; z-index:1070; max-height:260px; overflow-y:auto; padding:4px 0;">
+                        <!-- Results dynamically injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Selected Agency Preview Badge / Card -->
+                <div id="selected_agency_preview" class="d-none p-2 mb-3 rounded-2 border d-flex align-items-center justify-content-between" style="background:#f0fdf4; border-color:#bbf7d0 !important;">
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                        <div id="selected_agency_avatar" style="width:32px; height:32px; border-radius:6px; background:#16a34a; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex-shrink:0;">
+                            AG
+                        </div>
+                        <div class="min-w-0">
+                            <div id="selected_agency_name" class="fs-7 fw-bold text-gray-900 text-truncate">Agency Name</div>
+                            <div id="selected_agency_email" class="fs-8 text-muted text-truncate">email@agency.com</div>
+                        </div>
+                    </div>
+                    <button type="button" id="btn_remove_selected_agency" class="btn btn-sm btn-icon btn-light-danger ms-2 flex-shrink-0" style="width:24px; height:24px; border-radius:4px;" title="Remove Selection">✕</button>
+                </div>
+
+                <div id="staffing_email_feedback" class="mb-2 fs-8 text-danger" style="display:none;"></div>
+
                 <button type="button" class="btn btn-primary fw-bold w-100 fs-7" id="submit_staffing_partners" style="background-color:#009ef7; border-radius:6px; height:40px; display:flex; align-items:center; justify-content:center; gap:8px;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -2292,15 +2331,42 @@
                 </button>
             </div>
 
-            <!-- SUB-CARD: SECURITY & POLICY NOTICE -->
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
+            <!-- SUB-CARD 2: SHARE DIRECT REGISTRATION LINK (RESTORED PER USER REQUEST) -->
+            @php
+                $encodeCompanyId = base64_encode(auth()->user()->company_id);
+                $shareRegistrationUrl = url('/company-registration-invitation/' . $encodeCompanyId);
+            @endphp
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <label for="kt_share_earn_link_input" class="fw-bold fs-7 text-gray-800 m-0">
+                        Share Agency Registration Link
+                    </label>
+                    <span class="badge badge-light-success fs-9 fw-bold">0 Coins • Direct Link</span>
+                </div>
+                <div class="text-muted fs-8 mb-2" style="line-height:1.45;">
+                    Share this unique link via Slack, WhatsApp, LinkedIn or email to let agencies self-register & connect with your organization:
+                </div>
+                <div class="input-group">
+                    <input id="kt_share_earn_link_input" type="text" class="form-control form-control-solid fs-8 text-muted" value="{{ $shareRegistrationUrl }}" readonly style="border-radius:6px 0 0 6px; height:38px;">
+                    <button type="button" id="kt_share_earn_link_copy_button" class="btn btn-light-primary fw-bold fs-8" data-clipboard-target="#kt_share_earn_link_input" style="border-radius:0 6px 6px 0; height:38px; min-width:85px; display:flex; align-items:center; justify-content:center; gap:5px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span>Copy Link</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-CARD 3: SECURITY & POLICY NOTICE -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; margin-bottom:12px;">
                 <div class="d-flex align-items-start gap-2">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:2px;">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="16" x2="12" y2="12"></line>
                         <line x1="12" y1="8" x2="12.01" y2="8"></line>
                     </svg>
-                    <div class="fs-8 text-muted" style="line-height:1.55;">
+                    <div class="fs-8 text-muted" style="line-height:1.5;">
                         <strong class="text-gray-800">Scanner-Safe Security:</strong> Invites include an encrypted 256-bit token with a 7-day TTL. If the recipient email hard-bounces, your 5 coins are automatically refunded.
                     </div>
                 </div>
@@ -3538,30 +3604,242 @@
                 }
             });
 
-            // Add Agency Drawer Open/Close
+            // ─── Add Agency Drawer: Smart Autocomplete & Search ───
+            let agencySearchTimeout = null;
+
+            function clearAgencySelection() {
+                $('#staffing_partners_search_input').val('');
+                $('#staffing_partners_email').val('');
+                $('#selected_agency_preview').addClass('d-none');
+                $('#agency_autocomplete_dropdown').addClass('d-none').empty();
+                $('#btn_clear_agency_search').addClass('d-none');
+                $('#staffing_email_feedback').hide().empty();
+            }
+
             $('#open_add_agency_drawer').on('click', function(e) {
                 if (e) e.preventDefault();
                 $('#add_agency_drawer_overlay, #add_agency_drawer').fadeIn(150);
+                setTimeout(function() {
+                    $('#staffing_partners_search_input').focus();
+                }, 160);
             });
+
             $(document).on('click', '.add_staffing_close, #add_agency_drawer_overlay, #add_agency_drawer_close_btn', function(e) {
                 if (e) e.preventDefault();
                 $('#add_agency_drawer_overlay, #add_agency_drawer').fadeOut(150);
+                clearAgencySelection();
+            });
+
+            $(document).on('click', '#btn_clear_agency_search, #btn_remove_selected_agency', function(e) {
+                if (e) e.preventDefault();
+                clearAgencySelection();
+                $('#staffing_partners_search_input').focus();
+            });
+
+            // Live debounced search input
+            $(document).on('input', '#staffing_partners_search_input', function() {
+                const query = $(this).val().trim();
+                const $dropdown = $('#agency_autocomplete_dropdown');
+
+                if (query.length > 0) {
+                    $('#btn_clear_agency_search').removeClass('d-none');
+                } else {
+                    $('#btn_clear_agency_search').addClass('d-none');
+                }
+
+                if ($('#selected_agency_preview').is(':visible')) {
+                    $('#selected_agency_preview').addClass('d-none');
+                    $('#staffing_partners_email').val('');
+                }
+
+                clearTimeout(agencySearchTimeout);
+
+                if (query.length < 2) {
+                    $dropdown.addClass('d-none').empty();
+                    return;
+                }
+
+                $dropdown.html('<div class="p-3 text-center text-muted fs-8"><span class="spinner-border spinner-border-sm me-2 text-primary" style="width:12px; height:12px;"></span>Searching agencies...</div>').removeClass('d-none');
+
+                agencySearchTimeout = setTimeout(function() {
+                    $.ajax({
+                        url: "{{ route('service_company.consultancy.search_agency_autocomplete') }}",
+                        type: 'GET',
+                        data: { q: query },
+                        dataType: 'json',
+                        success: function(res) {
+                            $dropdown.empty();
+                            const results = (res && res.data) ? res.data : [];
+
+                            if (results.length === 0) {
+                                let noResultHtml = '<div class="p-3 text-muted fs-8 text-center">No registered agencies found.</div>';
+                                if (query.includes('@')) {
+                                    noResultHtml += `
+                                        <div class="agency-search-external-opt p-2 px-3 border-top d-flex align-items-center justify-content-between cursor-pointer bg-hover-light-primary" data-email="${escapeAttr(query)}" style="transition:background 0.15s ease;">
+                                            <div class="d-flex align-items-center gap-2 min-w-0">
+                                                <div style="width:28px; height:28px; border-radius:6px; background:#eff6ff; color:#009ef7; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0;">✉</div>
+                                                <div class="min-w-0">
+                                                    <div class="fs-8 fw-semibold text-gray-900 text-truncate">Invite external agency</div>
+                                                    <div class="fs-9 text-muted text-truncate">${escapeAttr(query)}</div>
+                                                </div>
+                                            </div>
+                                            <span class="badge badge-light-primary fs-9 fw-bold">Invite</span>
+                                        </div>
+                                    `;
+                                }
+                                $dropdown.html(noResultHtml);
+                            } else {
+                                results.forEach(function(ag) {
+                                    let badgeHtml = '';
+                                    let itemClass = 'agency-search-item';
+                                    if (ag.connection_status === 'connected') {
+                                        badgeHtml = '<span class="badge badge-light-success fs-9 fw-semibold">Connected</span>';
+                                        itemClass += ' is-connected opacity-75';
+                                    } else if (ag.connection_status === 'pending') {
+                                        badgeHtml = '<span class="badge badge-light-warning fs-9 fw-semibold">Invite Pending</span>';
+                                        itemClass += ' is-pending opacity-75';
+                                    } else {
+                                        badgeHtml = '<span class="badge badge-light-primary fs-9 fw-bold">Select Agency</span>';
+                                    }
+
+                                    let avatarHtml = '';
+                                    if (ag.logo_url) {
+                                        avatarHtml = `<img src="${escapeAttr(ag.logo_url)}" alt="" style="width:30px; height:30px; border-radius:6px; object-fit:contain; border:1px solid #e2e8f0; flex-shrink:0;">`;
+                                    } else {
+                                        avatarHtml = `<div style="width:30px; height:30px; border-radius:6px; background:#eef2ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; flex-shrink:0;">${escapeAttr(ag.initials || 'AG')}</div>`;
+                                    }
+
+                                    const itemHtml = `
+                                        <div class="${itemClass} p-2 px-3 border-bottom d-flex align-items-center justify-content-between cursor-pointer bg-hover-light" 
+                                             data-id="${ag.id}" 
+                                             data-name="${escapeAttr(ag.company_name)}" 
+                                             data-email="${escapeAttr(ag.email)}" 
+                                             data-logo="${escapeAttr(ag.logo_url || '')}"
+                                             data-initials="${escapeAttr(ag.initials || 'AG')}"
+                                             data-status="${ag.connection_status}"
+                                             style="transition:background 0.15s ease;">
+                                            <div class="d-flex align-items-center gap-2 min-w-0">
+                                                ${avatarHtml}
+                                                <div class="min-w-0">
+                                                    <div class="fs-8 fw-bold text-gray-900 text-truncate">${escapeAttr(ag.company_name)}</div>
+                                                    <div class="fs-9 text-muted text-truncate">${escapeAttr(ag.email)}</div>
+                                                </div>
+                                            </div>
+                                            <div class="ms-2 flex-shrink-0">
+                                                ${badgeHtml}
+                                            </div>
+                                        </div>
+                                    `;
+                                    $dropdown.append(itemHtml);
+                                });
+
+                                if (query.includes('@')) {
+                                    $dropdown.append(`
+                                        <div class="agency-search-external-opt p-2 px-3 d-flex align-items-center justify-content-between cursor-pointer bg-hover-light-primary" data-email="${escapeAttr(query)}" style="transition:background 0.15s ease;">
+                                            <div class="d-flex align-items-center gap-2 min-w-0">
+                                                <div style="width:28px; height:28px; border-radius:6px; background:#eff6ff; color:#009ef7; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0;">✉</div>
+                                                <div class="min-w-0">
+                                                    <div class="fs-8 fw-semibold text-gray-900 text-truncate">Invite external email directly</div>
+                                                    <div class="fs-9 text-muted text-truncate">${escapeAttr(query)}</div>
+                                                </div>
+                                            </div>
+                                            <span class="badge badge-light-primary fs-9 fw-bold">Invite</span>
+                                        </div>
+                                    `);
+                                }
+                            }
+                        },
+                        error: function() {
+                            $dropdown.html('<div class="p-3 text-danger fs-8 text-center">Failed to load agency search results.</div>');
+                        }
+                    });
+                }, 300);
+            });
+
+            // Select an Agency from Autocomplete list
+            $(document).on('click', '.agency-search-item', function() {
+                const status = $(this).data('status');
+                const name = $(this).data('name');
+                const email = $(this).data('email');
+                const logo = $(this).data('logo');
+                const initials = $(this).data('initials');
+
+                if (status === 'connected') {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'info', title: 'Already Connected', text: `"${name}" is already an active staffing partner with your organization.` });
+                    } else {
+                        alert(`"${name}" is already an active staffing partner.`);
+                    }
+                    return;
+                }
+
+                if (status === 'pending') {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'info', title: 'Invite Pending', text: `An invitation has already been sent to "${name}" (${email}) and is pending response.` });
+                    } else {
+                        alert(`An invitation has already been sent to "${name}".`);
+                    }
+                    return;
+                }
+
+                // Available to select
+                $('#staffing_partners_email').val(email);
+                $('#staffing_partners_search_input').val(name);
+                $('#selected_agency_name').text(name);
+                $('#selected_agency_email').text(email);
+
+                if (logo) {
+                    $('#selected_agency_avatar').html(`<img src="${escapeAttr(logo)}" alt="" style="width:100%; height:100%; object-fit:contain; border-radius:6px;">`);
+                } else {
+                    $('#selected_agency_avatar').text(initials || 'AG');
+                }
+
+                $('#selected_agency_preview').removeClass('d-none');
+                $('#agency_autocomplete_dropdown').addClass('d-none').empty();
+                $('#btn_clear_agency_search').removeClass('d-none');
+                $('#staffing_email_feedback').hide().empty();
+            });
+
+            // Select external email option from dropdown
+            $(document).on('click', '.agency-search-external-opt', function() {
+                const email = $(this).data('email');
+                $('#staffing_partners_email').val(email);
+                $('#staffing_partners_search_input').val(email);
+                $('#agency_autocomplete_dropdown').addClass('d-none').empty();
+                $('#btn_clear_agency_search').removeClass('d-none');
+                $('#staffing_email_feedback').hide().empty();
+            });
+
+            // Close autocomplete dropdown on outside click
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#staffing_partners_search_input, #agency_autocomplete_dropdown').length) {
+                    $('#agency_autocomplete_dropdown').addClass('d-none');
+                }
             });
 
             // Submit Agency Invitation via Email
             $(document).on('click', '#submit_staffing_partners', function(e) {
                 if (e) e.preventDefault();
-                const email = $('#staffing_partners_email').val().trim();
+                let email = $('#staffing_partners_email').val().trim();
                 if (!email) {
+                    email = $('#staffing_partners_search_input').val().trim();
+                }
+
+                if (!email || !email.includes('@')) {
                     if (typeof Swal !== 'undefined') {
-                        Swal.fire({ icon: 'warning', title: 'Email required', text: 'Please enter an agency email address.' });
+                        Swal.fire({ icon: 'warning', title: 'Agency Email Required', text: 'Please search and select a registered agency, or enter a valid email address.' });
                     } else if (typeof swal !== 'undefined') {
-                        swal({ title: 'Warning!', text: 'Please enter an agency email address.', type: 'warning' });
+                        swal({ title: 'Warning!', text: 'Please enter a valid email address.', type: 'warning' });
                     } else {
-                        alert('Please enter an agency email address.');
+                        alert('Please enter a valid email address.');
                     }
                     return;
                 }
+
+                const $btn = $('#submit_staffing_partners');
+                const origBtnHtml = $btn.html();
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Sending Invite...');
+
                 const url = "{{ route('service_company.consultancy.staffing_invitation', 0) }}";
                 $.ajax({
                     type: 'POST',
@@ -3571,17 +3849,18 @@
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
-                        $('#staffing_partners_email').val('');
+                        $btn.prop('disabled', false).html(origBtnHtml);
+                        clearAgencySelection();
                         if (response.status === 'warning') {
                             if (typeof Swal !== 'undefined') {
-                                Swal.fire({ icon: 'warning', title: 'Warning', text: response.message });
+                                Swal.fire({ icon: 'warning', title: 'Notice', text: response.message });
                             } else {
                                 alert(response.message);
                             }
                         } else if (response.status === 'success') {
                             $('#add_agency_drawer_overlay, #add_agency_drawer').fadeOut(150);
                             if (typeof Swal !== 'undefined') {
-                                Swal.fire({ icon: 'success', title: 'Invited!', text: response.message || 'Invitation sent successfully.' });
+                                Swal.fire({ icon: 'success', title: 'Invitation Sent!', text: response.message || 'Invitation sent successfully.' });
                             } else {
                                 alert('Invitation sent successfully.');
                             }
@@ -3589,6 +3868,7 @@
                         }
                     },
                     error: function(xhr) {
+                        $btn.prop('disabled', false).html(origBtnHtml);
                         const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to send invitation.';
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({ icon: 'error', title: 'Error', text: msg });
@@ -3597,6 +3877,44 @@
                         }
                     }
                 });
+            });
+
+            // Share Registration Link Copy Button
+            $(document).on('click', '#kt_share_earn_link_copy_button', function(e) {
+                if (e) e.preventDefault();
+                const copyInput = document.getElementById("kt_share_earn_link_input");
+                if (copyInput) {
+                    copyInput.select();
+                    copyInput.setSelectionRange(0, 99999);
+                    const linkValue = copyInput.value;
+                    const $btn = $('#kt_share_earn_link_copy_button');
+                    const origHtml = $btn.html();
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(linkValue).then(function() {
+                            $btn.html('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!');
+                            setTimeout(function() { $btn.html(origHtml); }, 2000);
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'success',
+                                    title: 'Registration link copied to clipboard!',
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                });
+                            }
+                        }).catch(function() {
+                            document.execCommand('copy');
+                            $btn.html('Copied!');
+                            setTimeout(function() { $btn.html(origHtml); }, 2000);
+                        });
+                    } else {
+                        document.execCommand('copy');
+                        $btn.html('Copied!');
+                        setTimeout(function() { $btn.html(origHtml); }, 2000);
+                    }
+                }
             });
 
             // Resend Agency Invitation Click Handler
@@ -3689,19 +4007,6 @@
                         }
                     }
                 });
-            });
-
-            // Copy Link
-            $('#kt_share_earn_link_copy_button').on('click', function() {
-                const copyText = document.getElementById("kt_share_earn_link_input");
-                if (copyText) {
-                    copyText.select();
-                    copyText.setSelectionRange(0, 99999);
-                    navigator.clipboard.writeText(copyText.value);
-                    $(this).text('Copied!');
-                    const btn = $(this);
-                    setTimeout(function() { btn.text('Copy'); }, 2000);
-                }
             });
 
             // Outside click closes popovers

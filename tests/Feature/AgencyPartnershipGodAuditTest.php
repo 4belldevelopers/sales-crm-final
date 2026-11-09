@@ -7,12 +7,9 @@ use App\Domain\AgencyPartnership\Actions\CancelInvitationAction;
 use App\Domain\AgencyPartnership\Actions\CreateInvitationAction;
 use App\Domain\AgencyPartnership\Actions\DeclineInvitationAction;
 use App\Domain\AgencyPartnership\Exceptions\ActiveInvitationExistsException;
-use App\Domain\AgencyPartnership\Exceptions\ActivePartnershipExistsException;
 use App\Domain\AgencyPartnership\Exceptions\CoolingOffPeriodException;
 use App\Domain\AgencyPartnership\Exceptions\DailyQuotaExceededException;
 use App\Domain\AgencyPartnership\Exceptions\InsufficientCoinsException;
-use App\Domain\AgencyPartnership\Exceptions\InvalidInvitationTokenException;
-use App\Domain\AgencyPartnership\Exceptions\UnauthorizedAcceptanceException;
 use App\Domain\AgencyPartnership\Jobs\HandleMailBounceJob;
 use App\Domain\AgencyPartnership\Services\AgencyRecipientNormalizer;
 use App\Domain\AgencyPartnership\Services\InvitationTokenService;
@@ -45,8 +42,11 @@ class AgencyPartnershipGodAuditTest extends TestCase
     use DatabaseTransactions;
 
     protected User $clientUser;
+
     protected User $agencyUser;
+
     protected int $clientCompanyId = 2;
+
     protected int $agencyCompanyId = 3;
 
     protected function setUp(): void
@@ -99,12 +99,12 @@ class AgencyPartnershipGodAuditTest extends TestCase
      */
     public function test_recipient_normalizer(): void
     {
-        $input = "  Test.Recruiter+Tag@Example.COM ";
+        $input = '  Test.Recruiter+Tag@Example.COM ';
         $normalized = AgencyRecipientNormalizer::normalize($input);
-        $this->assertEquals("test.recruiter+tag@example.com", $normalized);
+        $this->assertEquals('test.recruiter+tag@example.com', $normalized);
 
         $domain = AgencyRecipientNormalizer::extractDomain($input);
-        $this->assertEquals("example.com", $domain);
+        $this->assertEquals('example.com', $domain);
     }
 
     /**
@@ -112,13 +112,13 @@ class AgencyPartnershipGodAuditTest extends TestCase
      */
     public function test_token_service(): void
     {
-        $service = new InvitationTokenService();
+        $service = new InvitationTokenService;
         $token = $service->generate();
 
         $this->assertEquals(64, strlen($token['raw_token']));
         $this->assertEquals(64, strlen($token['token_hash']));
         $this->assertTrue($service->verify($token['raw_token'], $token['token_hash']));
-        $this->assertFalse($service->verify('invalid_token_' . str_repeat('a', 50), $token['token_hash']));
+        $this->assertFalse($service->verify('invalid_token_'.str_repeat('a', 50), $token['token_hash']));
     }
 
     /**
@@ -127,7 +127,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
     public function test_invitation_creation_deducts_coins_and_creates_ledger(): void
     {
         $action = app(CreateInvitationAction::class);
-        $testEmail = 'newagency_' . uniqid() . '@partnerdomain.com';
+        $testEmail = 'newagency_'.uniqid().'@partnerdomain.com';
 
         $initialCoin = (float) DB::table('company_coins')->where('company_id', $this->clientCompanyId)->where('status', 'valid')->value('balance_coin');
 
@@ -135,7 +135,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
             $this->clientCompanyId,
             $this->clientUser->id,
             $testEmail,
-            'idemp_test_' . uniqid()
+            'idemp_test_'.uniqid()
         );
 
         $this->assertEquals('success', $result['status']);
@@ -185,7 +185,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $action->execute(
             $this->clientCompanyId,
             $this->clientUser->id,
-            'quota_blocked_' . uniqid() . '@agency.com'
+            'quota_blocked_'.uniqid().'@agency.com'
         );
     }
 
@@ -204,7 +204,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $action->execute(
             $this->clientCompanyId,
             $this->clientUser->id,
-            'lowcoin_' . uniqid() . '@agency.com'
+            'lowcoin_'.uniqid().'@agency.com'
         );
     }
 
@@ -214,7 +214,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
     public function test_duplicate_pending_invitation_blocked(): void
     {
         $action = app(CreateInvitationAction::class);
-        $email = 'duplicate_test_' . uniqid() . '@testagency.com';
+        $email = 'duplicate_test_'.uniqid().'@testagency.com';
 
         // First invite succeeds
         $res1 = $action->execute($this->clientCompanyId, $this->clientUser->id, $email);
@@ -222,7 +222,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
 
         // Second invite with new idempotency key must be blocked by ActiveInvitationExistsException
         $this->expectException(ActiveInvitationExistsException::class);
-        $action->execute($this->clientCompanyId, $this->clientUser->id, $email, 'fresh_key_' . uniqid());
+        $action->execute($this->clientCompanyId, $this->clientUser->id, $email, 'fresh_key_'.uniqid());
     }
 
     /**
@@ -232,7 +232,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
     {
         $createAction = app(CreateInvitationAction::class);
         $cancelAction = app(CancelInvitationAction::class);
-        $email = 'cancel_test_' . uniqid() . '@cancelagency.com';
+        $email = 'cancel_test_'.uniqid().'@cancelagency.com';
 
         $res = $createAction->execute($this->clientCompanyId, $this->clientUser->id, $email);
         $invId = $res['invitation_id'];
@@ -246,7 +246,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $this->assertNull($slotVal);
 
         // Immediate re-invitation is now allowed!
-        $reinviteRes = $createAction->execute($this->clientCompanyId, $this->clientUser->id, $email, 'reinv_' . uniqid());
+        $reinviteRes = $createAction->execute($this->clientCompanyId, $this->clientUser->id, $email, 'reinv_'.uniqid());
         $this->assertEquals('success', $reinviteRes['status']);
     }
 
@@ -257,7 +257,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
     {
         $tokenService = app(InvitationTokenService::class);
         $tokenData = $tokenService->generate();
-        $email = 'decline_test_' . uniqid() . '@declineagency.com';
+        $email = 'decline_test_'.uniqid().'@declineagency.com';
 
         $invId = DB::table('staffing_company_invitation')->insertGetId([
             'from_company_id' => $this->clientCompanyId,
@@ -296,7 +296,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $tokenService = app(InvitationTokenService::class);
         $tokenData = $tokenService->generate();
 
-        $email = 'scanner_safe_' . uniqid() . '@agency.com';
+        $email = 'scanner_safe_'.uniqid().'@agency.com';
         $invId = DB::table('staffing_company_invitation')->insertGetId([
             'from_company_id' => $this->clientCompanyId,
             'from_user_id' => $this->clientUser->id,
@@ -311,7 +311,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
             'normalized_recipient' => AgencyRecipientNormalizer::normalize($email),
         ]);
 
-        $response = $this->get('/partner-invite/' . $tokenData['raw_token']);
+        $response = $this->get('/partner-invite/'.$tokenData['raw_token']);
         $response->assertStatus(200);
         $response->assertHeader('Referrer-Policy', 'no-referrer');
         $cacheControl = (string) $response->headers->get('Cache-Control');
@@ -384,7 +384,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
     {
         $tokenService = app(InvitationTokenService::class);
         $tokenData = $tokenService->generate();
-        $email = 'bounced_' . uniqid() . '@invalidhost.xyz';
+        $email = 'bounced_'.uniqid().'@invalidhost.xyz';
 
         $invId = DB::table('staffing_company_invitation')->insertGetId([
             'from_company_id' => $this->clientCompanyId,
@@ -403,7 +403,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $initialBalance = (float) DB::table('company_coins')->where('company_id', $this->clientCompanyId)->where('status', 'valid')->value('balance_coin');
 
         // Dispatch bounce job
-        $job = new HandleMailBounceJob($invId, 'bounce_evt_' . uniqid(), '550 Mailbox does not exist');
+        $job = new HandleMailBounceJob($invId, 'bounce_evt_'.uniqid(), '550 Mailbox does not exist');
         $job->handle();
 
         // Coins must be refunded (+5)
@@ -419,14 +419,14 @@ class AgencyPartnershipGodAuditTest extends TestCase
         // coin_ledger must contain CREDIT record with refund_reference_id
         $ledger = DB::table('coin_ledger')
             ->where('company_id', $this->clientCompanyId)
-            ->where('refund_reference_id', 'REFUND_BOUNCE_INV_' . $invId)
+            ->where('refund_reference_id', 'REFUND_BOUNCE_INV_'.$invId)
             ->first();
         $this->assertNotNull($ledger);
         $this->assertEquals('CREDIT', $ledger->entry_type);
         $this->assertEquals(5.00, (float) $ledger->amount);
 
         // Immediate replay of duplicate bounce event must not refund coins again!
-        $job2 = new HandleMailBounceJob($invId, 'bounce_evt_duplicate_' . uniqid(), '550 Replay');
+        $job2 = new HandleMailBounceJob($invId, 'bounce_evt_duplicate_'.uniqid(), '550 Replay');
         $job2->handle();
 
         $finalBalance = (float) DB::table('company_coins')->where('company_id', $this->clientCompanyId)->where('status', 'valid')->value('balance_coin');
@@ -439,8 +439,8 @@ class AgencyPartnershipGodAuditTest extends TestCase
     public function test_single_transaction_idempotency_caching(): void
     {
         $action = app(CreateInvitationAction::class);
-        $email = 'idemp_test_' . uniqid() . '@agency.com';
-        $idempKey = 'fixed_key_' . uniqid();
+        $email = 'idemp_test_'.uniqid().'@agency.com';
+        $idempKey = 'fixed_key_'.uniqid();
 
         $initialCoins = (float) DB::table('company_coins')->where('company_id', $this->clientCompanyId)->where('status', 'valid')->value('balance_coin');
 
@@ -466,7 +466,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
     public function test_controller_staffing_invitation_endpoint(): void
     {
         $this->actingAs($this->clientUser);
-        $email = 'ctrl_invite_' . uniqid() . '@agency.com';
+        $email = 'ctrl_invite_'.uniqid().'@agency.com';
 
         $response = $this->postJson(route('service_company.consultancy.staffing_invitation', 0), [
             'staffing_partners_email' => $email,
@@ -485,7 +485,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
     public function test_controller_cancel_invitation_endpoint(): void
     {
         $this->actingAs($this->clientUser);
-        $email = 'ctrl_cancel_' . uniqid() . '@agency.com';
+        $email = 'ctrl_cancel_'.uniqid().'@agency.com';
 
         $action = app(CreateInvitationAction::class);
         $res = $action->execute($this->clientCompanyId, $this->clientUser->id, $email);
@@ -507,7 +507,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
     public function test_controller_re_invite_endpoint(): void
     {
         $this->actingAs($this->clientUser);
-        $email = 'ctrl_reinv_' . uniqid() . '@agency.com';
+        $email = 'ctrl_reinv_'.uniqid().'@agency.com';
 
         $action = app(CreateInvitationAction::class);
         $res = $action->execute($this->clientCompanyId, $this->clientUser->id, $email);
@@ -571,7 +571,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $tokenService = app(InvitationTokenService::class);
         $tokenData = $tokenService->generate();
 
-        $email = 'ctrl_decline_' . uniqid() . '@agency.com';
+        $email = 'ctrl_decline_'.uniqid().'@agency.com';
         $invId = DB::table('staffing_company_invitation')->insertGetId([
             'from_company_id' => $this->clientCompanyId,
             'from_user_id' => $this->clientUser->id,
@@ -598,5 +598,94 @@ class AgencyPartnershipGodAuditTest extends TestCase
         // Status is -1
         $status = DB::table('staffing_company_invitation')->where('id', $invId)->value('to_invitation_status');
         $this->assertEquals(-1, (int) $status);
+    }
+
+    /**
+     * T-18: Search agency autocomplete by company name and email address.
+     */
+    public function test_search_agency_autocomplete_by_name_and_email(): void
+    {
+        $this->actingAs($this->clientUser);
+
+        $agencyCompany = DB::table('companies')->where('id', $this->agencyCompanyId)->first();
+        $this->assertNotNull($agencyCompany);
+
+        // 1. Search by Agency Company Name
+        $searchTerm = substr($agencyCompany->company_name, 0, 8);
+        $response = $this->getJson(route('service_company.consultancy.search_agency_autocomplete', ['q' => $searchTerm]));
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertEquals('success', $data['status']);
+        $this->assertNotEmpty($data['data']);
+        $agency = $data['data'][0];
+        $this->assertStringContainsStringIgnoringCase($searchTerm, $agency['company_name']);
+
+        // 2. Search by User / Admin Email
+        $responseEmail = $this->getJson(route('service_company.consultancy.search_agency_autocomplete', ['q' => $this->agencyUser->email]));
+        $responseEmail->assertStatus(200);
+        $dataEmail = $responseEmail->json();
+        $this->assertEquals('success', $dataEmail['status']);
+        $this->assertNotEmpty($dataEmail['data']);
+
+        // 3. Short query (<2 chars) returns empty array
+        $shortResponse = $this->getJson(route('service_company.consultancy.search_agency_autocomplete', ['q' => 'a']));
+        $shortResponse->assertStatus(200);
+        $shortData = $shortResponse->json();
+        $this->assertEmpty($shortData['data']);
+    }
+
+    /**
+     * T-19: Search agency autocomplete connection status enrichment and tenant isolation.
+     */
+    public function test_search_agency_autocomplete_connection_status_and_tenant_isolation(): void
+    {
+        $this->actingAs($this->clientUser);
+
+        $clientCompany = DB::table('companies')->where('id', $this->clientCompanyId)->first();
+        $agencyCompany = DB::table('companies')->where('id', $this->agencyCompanyId)->first();
+        $this->assertNotNull($clientCompany);
+        $this->assertNotNull($agencyCompany);
+
+        // Verify client company cannot find itself (multi-tenant isolation)
+        $response = $this->getJson(route('service_company.consultancy.search_agency_autocomplete', ['q' => $clientCompany->company_name]));
+        $response->assertStatus(200);
+        $data = $response->json();
+        $ids = array_column($data['data'], 'id');
+        $this->assertNotContains($this->clientCompanyId, $ids);
+
+        // Verify connected agency returns status 'connected'
+        $relationExists = DB::table('staffing_company_relation')
+            ->where(function ($q) {
+                $q->where('from_company_id', $this->clientCompanyId)->where('to_company_id', $this->agencyCompanyId);
+            })->orWhere(function ($q) {
+                $q->where('to_company_id', $this->clientCompanyId)->where('from_company_id', $this->agencyCompanyId);
+            })
+            ->where('final_status', 1)
+            ->exists();
+
+        if (! $relationExists) {
+            DB::table('staffing_company_relation')->insert([
+                'from_company_id' => $this->clientCompanyId,
+                'to_company_id' => $this->agencyCompanyId,
+                'final_status' => 1,
+                'from_status' => 1,
+                'to_status' => 1,
+                'from_created_at' => Carbon::now(),
+                'to_created_at' => Carbon::now(),
+            ]);
+        }
+
+        $agencyResponse = $this->getJson(route('service_company.consultancy.search_agency_autocomplete', ['q' => $agencyCompany->company_name]));
+        $agencyResponse->assertStatus(200);
+        $agencyData = $agencyResponse->json();
+        $matched = null;
+        foreach ($agencyData['data'] as $item) {
+            if ($item['id'] == $this->agencyCompanyId) {
+                $matched = $item;
+                break;
+            }
+        }
+        $this->assertNotNull($matched);
+        $this->assertEquals('connected', $matched['connection_status']);
     }
 }
