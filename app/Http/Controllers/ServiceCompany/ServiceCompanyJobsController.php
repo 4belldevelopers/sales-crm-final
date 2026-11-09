@@ -7971,9 +7971,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:jobDetails:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
-        ⚡ Check DragonflyDB first
+        ⚡ Check DragonflyDB first (supports intentional cache-busting via refresh/nocache/bust query param)
         ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
+        $forceRefresh = $request->has('refresh') || $request->has('nocache') || $request->has('bust');
+        if (! $forceRefresh && cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
         }
 
@@ -8081,12 +8082,77 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
-        $qualifications = (object) ($this->job->job_qualifications ?? []);
+        /**
+         * Authoritative Qualification Resolution:
+         * 1. Multi-select job_qualifications array from Elasticsearch or MySQL.
+         * 2. Authoritative MySQL pivot resolution via GeneralMethod::allQualificationSelected().
+         * 3. Master taxonomy resolution via qualification_master ID.
+         * 4. Failsafe default to 'Any Qualification'.
+         */
+        $resolvedQualNames = [];
+        $rawJobQuals = $this->job->job_qualifications ?? [];
+        if (! empty($rawJobQuals)) {
+            $rawJobQualsArr = is_array($rawJobQuals) ? $rawJobQuals : (array) $rawJobQuals;
+            foreach ($rawJobQualsArr as $jq) {
+                $jqObj = (object) $jq;
+                $qName = trim((string) ($jqObj->qualification_name ?? ''));
+                $qId = (int) ($jqObj->qualification_id ?? 0);
 
-        if (! empty($qualifications)) {
-            $first = reset($qualifications);
-            $this->job->qualification_name = $first['qualification_name'] ?? '';
+                // If qName is missing, empty, or 'Others' while a valid master ID is present, resolve from master
+                if (($qName === '' || strcasecmp($qName, 'Others') === 0) && $qId > 0 && $qId !== 60) {
+                    $mRow = DB::table('qualification_master')->where('id', $qId)->first();
+                    if ($mRow && ! empty($mRow->name)) {
+                        $qName = $mRow->name;
+                    }
+                }
+                if ($qName !== '' && ! in_array($qName, $resolvedQualNames, true)) {
+                    $resolvedQualNames[] = $qName;
+                }
+            }
         }
+
+        // Tier 2: Check MySQL job_qualifications / jobs table via GeneralMethod
+        if (empty($resolvedQualNames) && ($this->job->id ?? 0) > 0) {
+            $mysqlSelected = GeneralMethod::allQualificationSelected($this->job->id);
+            if (! empty($mysqlSelected)) {
+                $parts = array_filter(array_map('trim', explode(',', $mysqlSelected)));
+                foreach ($parts as $p) {
+                    if ($p !== '' && ! in_array($p, $resolvedQualNames, true)) {
+                        $resolvedQualNames[] = $p;
+                    }
+                }
+            }
+        }
+
+        // Tier 3: Resolve via jobs.qualification master ID
+        if (empty($resolvedQualNames) && ! empty($this->job->qualification)) {
+            $masterRec = GeneralMethod::qualification($this->job->qualification);
+            if ($masterRec && ! empty($masterRec->name)) {
+                $resolvedQualNames[] = trim($masterRec->name);
+            }
+        }
+
+        // Clean up 'Others' misassignment if job has no actual 'Others' custom qualification
+        if (count($resolvedQualNames) === 1 && $resolvedQualNames[0] === 'Others') {
+            $dbQualId = DB::table('jobs')->where('id', $this->job->id ?? 0)->value('qualification');
+            if ($dbQualId && $dbQualId != 60) {
+                $dbMasterName = DB::table('qualification_master')->where('id', $dbQualId)->value('name');
+                if ($dbMasterName) {
+                    $resolvedQualNames = [$dbMasterName];
+                }
+            } else {
+                $resolvedQualNames = ['Any Qualification'];
+            }
+        }
+
+        if (empty($resolvedQualNames)) {
+            $resolvedQualNames = ['Any Qualification'];
+        }
+
+        $finalQualDisplay = implode(', ', array_unique($resolvedQualNames));
+        $this->job_qualifications_display = $finalQualDisplay;
+        $this->job->qualification_name = $finalQualDisplay;
+        $this->qualification = (object) ['name' => $finalQualDisplay];
 
         $job_metronics_skills = $this->job->job_metronics_skills ?? [];
         $this->skillArr = (object) collect($job_metronics_skills)->map(fn ($row) => (object) $row)
