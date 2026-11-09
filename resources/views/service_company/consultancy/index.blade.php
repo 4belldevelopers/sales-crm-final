@@ -2236,7 +2236,7 @@
         top: 0;
         right: 0;
         bottom: 0;
-        width: 500px;
+        width: 560px;
         max-width: 95vw;
         height: 100vh;
         background: #ffffff;
@@ -2384,8 +2384,8 @@
                     Share this unique link via WhatsApp, Slack, LinkedIn or email to let agencies self-register:
                 </div>
                 <div class="input-group mb-2" style="border:1.5px solid #cbd5e1; border-radius:8px; overflow:hidden; height:38px; background:#ffffff; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-                    <input id="kt_share_earn_link_input" type="text" class="form-control border-0 shadow-none ps-2 pe-1" value="{{ $shareRegistrationUrl }}" readonly style="background:#ffffff; font-size:10px; font-weight:500; color:#334155; height:36px; letter-spacing:-0.15px; white-space:nowrap;" title="{{ $shareRegistrationUrl }}">
-                    <button type="button" id="kt_share_earn_link_copy_button" class="btn fw-bold px-2" data-clipboard-target="#kt_share_earn_link_input" style="background:#059669; color:#ffffff; height:38px; min-width:76px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px; border:none; transition:all 0.2s;">
+                    <input id="kt_share_earn_link_input" type="text" class="form-control border-0 shadow-none ps-3 pe-1" value="{{ $shareRegistrationUrl }}" readonly style="background:#ffffff; font-size:11px; font-weight:500; color:#334155; height:36px; white-space:nowrap;" title="{{ $shareRegistrationUrl }}">
+                    <button type="button" id="kt_share_earn_link_copy_button" class="btn fw-bold px-2" data-clipboard-target="#kt_share_earn_link_input" style="background:#059669; color:#ffffff; height:38px; min-width:78px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px; border:none; transition:all 0.2s;">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
