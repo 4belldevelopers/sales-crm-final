@@ -10415,23 +10415,26 @@ $currency_code = GeneralMethod::defaultCurrency();
                 success: function(data) {
                     if (data.status == 'success') {
                         resetPublishBtn($btn);
-                        if (isEditPage) {
-                            try {
-                                clearJobDraftRAM();
-                                localStorage.setItem('job_drawer_bust', Date.now());
-                                if (window.opener && window.opener.jobDrawerCache) {
-                                    window.opener.jobDrawerCache = {};
-                                }
-                            } catch (e) {}
-                            showToast('Job updated successfully!', 'success');
-                            setTimeout(function() { window.location = __indexUrl; }, 600);
-                        } else if (data.check_ready_url && data.job_id) {
-                            try { clearJobDraftRAM(); localStorage.setItem('job_drawer_bust', Date.now()); } catch (e) {}
-                            launchJobReadinessVerificationGate(data.job_id, data.check_ready_url, __indexUrl);
+                        try {
+                            clearJobDraftRAM();
+                            localStorage.setItem('job_drawer_bust', Date.now());
+                            if (data.job_id) {
+                                localStorage.setItem('job_drawer_bust_id_' + data.job_id, Date.now());
+                            }
+                            if (window.opener && window.opener.jobDrawerCache) {
+                                window.opener.jobDrawerCache = {};
+                            }
+                        } catch (e) {}
+
+                        if (data.check_ready_url && data.job_id) {
+                            var gateTitle = isEditPage ? 'Job Updated! Synchronizing Your Listing...' : 'Job Saved! Readying Your Listing...';
+                            var gateMsg = isEditPage
+                                ? 'Verifying search index so your updated job appears immediately on the Job Tracker without any delay or confusion.'
+                                : 'Verifying search index so your new job appears immediately on the Job Tracker without any delay or confusion.';
+                            launchJobReadinessVerificationGate(data.job_id, data.check_ready_url, data.redirect_url || __indexUrl, gateTitle, gateMsg);
                         } else {
-                            try { clearJobDraftRAM(); localStorage.setItem('job_drawer_bust', Date.now()); } catch (e) {}
-                            showToast('Job saved successfully!', 'success');
-                            setTimeout(function() { window.location = __indexUrl; }, 600);
+                            showToast(isEditPage ? 'Job updated successfully!' : 'Job saved successfully!', 'success');
+                            setTimeout(function() { window.location = data.redirect_url || __indexUrl; }, 600);
                         }
                     } else if (data.status == 'conflict' || (data.code && data.code === 'IDEMPOTENCY_KEY_REUSE')) {
                         resetPublishBtn($btn);
@@ -10542,7 +10545,7 @@ $currency_code = GeneralMethod::defaultCurrency();
          * Intent: Holds recruiter on a reassuring verification screen, probing readiness
          * with 0% MySQL reads until Elasticsearch indexing completes. Eliminates recruiter confusion.
          */
-        function launchJobReadinessVerificationGate(jobId, checkReadyUrl, indexUrl) {
+        function launchJobReadinessVerificationGate(jobId, checkReadyUrl, indexUrl, customTitle, customSubtitle) {
             var maxWaitSeconds = 30;
             var cycleSeconds = 10;
             var currentCycleRemaining = cycleSeconds;
@@ -10550,6 +10553,9 @@ $currency_code = GeneralMethod::defaultCurrency();
             var pollInterval = null;
             var countdownInterval = null;
             var isReadyConfirmed = false;
+
+            var titleText = customTitle || 'Job Saved! Readying Your Listing...';
+            var subtitleText = customSubtitle || 'Verifying search index so your new job appears immediately on the Job Tracker without any delay or confusion.';
 
             var modalHtml = `
             <div id="jobReadinessModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.75);backdrop-filter:blur(4px);z-index:999999;display:flex;align-items:center;justify-content:center;">
@@ -10563,9 +10569,9 @@ $currency_code = GeneralMethod::defaultCurrency();
                             <span id="jrCountdownNumber" style="position:absolute;font-size:22px;font-weight:700;color:#1E293B;">10</span>
                         </div>
                     </div>
-                    <h3 id="jrGateTitle" style="font-size:20px;font-weight:700;color:#0F172A;margin-bottom:8px;">Job Saved! Readying Your Listing...</h3>
+                    <h3 id="jrGateTitle" style="font-size:20px;font-weight:700;color:#0F172A;margin-bottom:8px;">${titleText}</h3>
                     <p id="jrGateSubtitle" style="font-size:13px;color:#64748B;line-height:1.6;margin-bottom:24px;">
-                        Verifying search index so your new job appears immediately on the Job Tracker without any delay or confusion.
+                        ${subtitleText}
                     </p>
                     <div id="jrGateActions" style="display:none;margin-top:16px;">
                         <a href="${indexUrl}" class="btn btn-primary btn-sm" style="margin-right:8px;padding:8px 18px;font-weight:600;">Go to Job Tracker</a>
@@ -10586,6 +10592,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                 clearInterval(pollInterval);
                 clearInterval(countdownInterval);
 
+                var isEditMode = (typeof __pageEvent !== 'undefined' && __pageEvent === 'EDIT');
+                var liveTitle = isEditMode ? 'Job Updated & Verified!' : 'Job Live & Verified!';
+                var liveSub = isEditMode 
+                    ? 'Your updates are saved, indexed, and 100% synchronized. Redirecting to your listing now...'
+                    : 'Your job is indexed and 100% ready to view. Redirecting to your listing now...';
+
                 $('#jrGateIconContainer').html(`
                     <div style="width:72px;height:72px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -10593,8 +10605,8 @@ $currency_code = GeneralMethod::defaultCurrency();
                         </svg>
                     </div>
                 `);
-                $('#jrGateTitle').text('Job Live & Verified!').css('color', '#059669');
-                $('#jrGateSubtitle').text('Your job is indexed and 100% ready to view. Redirecting to your listing now...');
+                $('#jrGateTitle').text(liveTitle).css('color', '#059669');
+                $('#jrGateSubtitle').text(liveSub);
 
                 setTimeout(function() {
                     window.location.href = indexUrl + (indexUrl.indexOf('?') === -1 ? '?' : '&') + 'new_job_id=' + jobId;

@@ -777,9 +777,13 @@ class JobService
      */
     public function updateJob(Job $job, array $requestData, User $user): Job
     {
-        $job->client_id = $requestData['client_id'] ?? null;
-        $job->title = $requestData['title'] ?? null;
-        if (array_key_exists('raw_designation', $requestData)) {
+        if (! empty($requestData['client_id'])) {
+            $job->client_id = (int) $requestData['client_id'];
+        }
+        if (! empty($requestData['title'])) {
+            $job->title = $requestData['title'];
+        }
+        if (array_key_exists('raw_designation', $requestData) && $requestData['raw_designation'] !== null) {
             self::setJobAttrIfColumnExists($job, 'raw_designation', $requestData['raw_designation']);
         }
         if (array_key_exists('canonical_designation_id', $requestData)) {
@@ -788,7 +792,9 @@ class JobService
         if (array_key_exists('taxonomy_version', $requestData)) {
             self::setJobAttrIfColumnExists($job, 'taxonomy_version', $requestData['taxonomy_version']);
         }
-        $job->work_shifts = $requestData['work_shifts'] ?? null;
+        if (! empty($requestData['work_shifts'])) {
+            $job->work_shifts = $requestData['work_shifts'];
+        }
         if (array_key_exists('category_id', $requestData)) {
             $job->category_id = ! empty($requestData['category_id']) && is_numeric($requestData['category_id']) ? (int) $requestData['category_id'] : null;
         }
@@ -818,24 +824,33 @@ class JobService
                 }
             }
         }
-        $job->required_columns = $requestData['required_columns'] ?? null;
-
-        if (! empty($requestData['employment_type'])) {
-            $job->employment_type = $requestData['employment_type'];
-        }
-        if (! empty($requestData['total_positions'])) {
-            $job->total_positions = $requestData['total_positions'];
-        }
-        if (! empty($requestData['min_exp'])) {
-            $job->min_exp = $requestData['min_exp'];
-        }
-        if (! empty($requestData['max_exp'])) {
-            $job->max_exp = $requestData['max_exp'];
+        if (isset($requestData['required_columns'])) {
+            $job->required_columns = $requestData['required_columns'];
         }
 
-        $startDate = $job->start_date;
-        $endDate = date('Y-m-d', strtotime($startDate.' + '.($requestData['end_date'] ?? 0).' days'));
-        $job->end_date = $endDate;
+        if (isset($requestData['employment_type']) && $requestData['employment_type'] !== '') {
+            $job->employment_type = (int) $requestData['employment_type'];
+        }
+        if (! empty($requestData['total_positions']) && is_numeric($requestData['total_positions'])) {
+            $job->total_positions = (int) $requestData['total_positions'];
+        }
+        if (isset($requestData['min_exp']) && $requestData['min_exp'] !== '') {
+            $job->min_exp = (int) $requestData['min_exp'];
+        }
+        if (isset($requestData['max_exp']) && $requestData['max_exp'] !== '') {
+            $job->max_exp = (int) $requestData['max_exp'];
+        }
+
+        $rawEndDate = $requestData['end_date'] ?? null;
+        if (! empty($rawEndDate)) {
+            if (is_numeric($rawEndDate)) {
+                $endDateStr = date('Y-m-d 23:59:59', strtotime(date('Y-m-d').' + '.(int) $rawEndDate.' days'));
+            } else {
+                $parsedTime = strtotime($rawEndDate);
+                $endDateStr = $parsedTime ? date('Y-m-d 23:59:59', $parsedTime) : date('Y-m-d 23:59:59', strtotime(date('Y-m-d').' + 60 days'));
+            }
+            $job->end_date = $endDateStr;
+        }
         $job->priority = 0;
         $job->location_id = 1;
 
@@ -982,14 +997,17 @@ class JobService
                 }
             }
 
+            $newAggregateVersion = ((int) ($job->aggregate_version ?? 0)) + 1;
+            self::setJobAttrIfColumnExists($job, 'aggregate_version', $newAggregateVersion);
+            self::setJobAttrIfColumnExists($job, 'state_version', ((int) ($job->state_version ?? 0)) + 1);
             $job->save();
 
             // Client Location
-            if (! empty($requestData['address_id'])) {
+            if (! empty($requestData['address_id']) && is_numeric($requestData['address_id']) && (int) $requestData['address_id'] > 0) {
                 DB::table('client_location_jobs')->where('job_id', $job->id)->delete();
                 DB::table('client_location_jobs')->insert([
                     'company_id' => $user->company_id,
-                    'client_location_id' => $requestData['address_id'],
+                    'client_location_id' => (int) $requestData['address_id'],
                     'job_id' => $job->id,
                 ]);
             }
@@ -1175,15 +1193,13 @@ class JobService
                 }
             }
 
-            // Additional Details
+            // Additional Details / Screening Questions
             if (! empty($requestData['custom_title']) && is_array($requestData['custom_title'])) {
-                DB::table('job_additional_detail')->where('job_id', $job->id)->whereNotIn('detail_value', $requestData['custom_title'])->delete();
+                $cleanTitles = array_values(array_filter(array_map('trim', $requestData['custom_title'])));
+                DB::table('job_additional_detail')->where('job_id', $job->id)->whereNotIn('detail_value', $cleanTitles)->delete();
                 $exitsDetails = DB::table('job_additional_detail')->where('job_id', $job->id)->pluck('detail_value')->toArray();
 
-                $notCommonDetails = array_merge(
-                    array_diff($requestData['custom_title'], $exitsDetails),
-                    array_diff($exitsDetails, $requestData['custom_title'])
-                );
+                $notCommonDetails = array_diff($cleanTitles, $exitsDetails);
 
                 if (count($notCommonDetails) > 0) {
                     $batchDetailInsert = [];
@@ -1200,6 +1216,8 @@ class JobService
                         DB::table('job_additional_detail')->insert($batchDetailInsert);
                     }
                 }
+            } else {
+                DB::table('job_additional_detail')->where('job_id', $job->id)->delete();
             }
 
             GeneralMethod::cacheClean('alljobslist_version_user_'.$user->id);
@@ -1216,21 +1234,25 @@ class JobService
 
         // Post-commit Elasticsearch Indexing (Immediate + Async Queue)
         try {
-            GeneralMethod::elasticJobsAddEditUpdateIndex($job->id);
+            GeneralMethod::elasticJobsAddEditUpdateIndex($job->id, $newAggregateVersion);
             if (class_exists(ElasticJobsIndexJob::class)) {
                 ElasticJobsIndexJob::dispatch($job->id)->onQueue('es-index');
             }
+            Cache::put("job:ready:{$user->company_id}:{$job->id}:v", $newAggregateVersion, 120);
+            Cache::put("job:ready:{$user->company_id}:{$job->id}", true, 120);
         } catch (\Throwable $e) {
             Log::error('[JobService@updateJob] ES Indexing failed: '.$e->getMessage());
         }
 
         // Multi-Tenant Atomic Cache Invalidation & Reverb Synchronization
         try {
-            // A. Bust Job Caches across Redis / Dragonfly & Atomic Drawer Invalidation
+            // A. Bust Job Listing & Drawer Caches across Redis / Dragonfly & Atomic Drawer Invalidation
+            \Illuminate\Support\Facades\Cache::increment('alljobslist_version_company_'.$user->company_id);
+            \Illuminate\Support\Facades\Cache::increment('alljobslist_version_user_'.$user->id);
             \Illuminate\Support\Facades\Cache::increment('jobDetails_version_job_'.$job->id);
+            \Illuminate\Support\Facades\Cache::increment('jobDetails_version_company_'.$user->company_id);
             \Illuminate\Support\Facades\Cache::increment('jobDetails_v3_version_user_'.$user->id);
             GeneralMethod::invalidateCareerTenantCache($user->company_id, $job->id);
-            \Illuminate\Support\Facades\Cache::forget('jobDetails_version_company_'.$user->company_id);
             \Illuminate\Support\Facades\Cache::forget('v3:status_job:'.$job->id);
             \Illuminate\Support\Facades\Cache::forget('v3:status_log:'.$job->id);
             \Illuminate\Support\Facades\Cache::forget('job_skills_metronic:'.$job->id);

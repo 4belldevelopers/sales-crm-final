@@ -7580,29 +7580,54 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     {
         $companyId = (int) (auth()->user()->company_id ?? 0);
         $jobId = (int) $id;
+        $expectedVersion = (int) request()->input('v', 0);
 
         if ($companyId <= 0 || $jobId <= 0) {
             return response()->json(['ready' => false, 'error' => 'invalid_context'], 400);
         }
 
-        // 1. Fast Path: Check Redis readiness key set by ElasticJobsIndexJob worker (< 1ms)
-        $redisReady = Cache::get("job:ready:{$companyId}:{$jobId}");
-        if ($redisReady === true) {
-            return response()->json(['ready' => true, 'source' => 'cache']);
+        // 1. Fast Path: Check Redis readiness key set by indexer (< 1ms)
+        if ($expectedVersion > 0) {
+            $redisReady = (int) Cache::get("job:ready:{$companyId}:{$jobId}:v", 0);
+            if ($redisReady >= $expectedVersion) {
+                return response()->json(['ready' => true, 'source' => 'cache', 'v' => $redisReady]);
+            }
+        } else {
+            $redisReady = Cache::get("job:ready:{$companyId}:{$jobId}");
+            if ($redisReady === true) {
+                return response()->json(['ready' => true, 'source' => 'cache']);
+            }
         }
 
-        // 2. Fallback Path: Direct Elasticsearch document existence check (< 5ms, 0% MySQL reads)
+        // 2. Fallback Path: Direct Elasticsearch document check (< 5ms, 0% MySQL reads)
         try {
             $jobsIndex = defined('ELASTIC_JOBS') ? ELASTIC_JOBS : 'ats_jobs_elastic';
             $exists = $this->elasticService->getClient()->exists([
                 'index' => $jobsIndex,
                 'id' => (string) $jobId,
-            ])->asBool();
+            ]);
+            $isExists = is_bool($exists) ? $exists : (method_exists($exists, 'asBool') ? $exists->asBool() : (bool) $exists);
 
-            if ($exists) {
-                Cache::put("job:ready:{$companyId}:{$jobId}", true, 120);
+            if ($isExists) {
+                if ($expectedVersion > 0) {
+                    $res = $this->elasticService->getClient()->get([
+                        'index' => $jobsIndex,
+                        'id' => (string) $jobId,
+                        '_source_includes' => ['aggregate_version', 'state_version'],
+                    ]);
+                    $doc = is_array($res) ? $res : (method_exists($res, 'asArray') ? $res->asArray() : (array) $res);
+                    $docVersion = (int) ($doc['_source']['aggregate_version'] ?? ($doc['_source']['state_version'] ?? 1));
+                    if ($docVersion >= $expectedVersion) {
+                        Cache::put("job:ready:{$companyId}:{$jobId}:v", $docVersion, 120);
+                        Cache::put("job:ready:{$companyId}:{$jobId}", true, 120);
 
-                return response()->json(['ready' => true, 'source' => 'es']);
+                        return response()->json(['ready' => true, 'source' => 'es', 'v' => $docVersion]);
+                    }
+                } else {
+                    Cache::put("job:ready:{$companyId}:{$jobId}", true, 120);
+
+                    return response()->json(['ready' => true, 'source' => 'es']);
+                }
             }
         } catch (\Throwable $e) {
             // Non-blocking fallback
@@ -15270,8 +15295,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         abort_if(Gate::denies('edit_jobs'), 403);
         $id = GeneralMethod::value_decrypt($id);
 
+        $this->user = $this->user ?? auth()->user();
         $userId = (int) auth()->user()->id;
-        $company_id = (int) $this->user->company_id;
+        $company_id = (int) ($this->user->company_id ?? auth()->user()->company_id);
 
         // 1. User + company profile — cached 1 hour per user
         $userCompanyProfile = Cache::remember('user_profile:'.$userId, 3600, function () use ($userId) {
@@ -15398,6 +15424,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->where('company_id', $company_id)
             ->where('job_id', $id)
             ->get();
+        $this->jobtags = $this->job_metronics_skills->pluck('skill_name')->implode(',');
 
         $this->page_event = 'EDIT';
         $this->currency = GeneralMethod::currency();
@@ -15461,7 +15488,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // 10. Pre-seed departments manifest for 0ms client-first browser execution (10K concurrency)
         $this->departmentsManifest = \App\Services\DepartmentTaxonomyService::buildTenantManifest($company_id, (int) Cache::get('tenant:'.$company_id.':dept_version', 1));
 
-        return view('service_company.jobs.create', $this->data);
+        return response()
+            ->view('service_company.jobs.create', $this->data)
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     /**
@@ -15477,22 +15508,48 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     {
         abort_if(Gate::denies('edit_jobs'), 403);
 
-        $company_id = auth()->user()->company_id;
+        $this->user = $this->user ?? auth()->user();
+        $company_id = (int) ($this->user->company_id ?? auth()->user()->company_id);
         $job = Job::where('company_id', $company_id)->withoutGlobalScopes()->findOrFail($id);
 
         try {
-            $jobService->updateJob($job, $request->all(), auth()->user());
+            $job = $jobService->updateJob($job, $request->all(), auth()->user());
+            $newVersion = (int) ($job->aggregate_version ?? 1);
 
             /* Intent: Invalidate tenant career and Job Drawer Redis/Dragonfly caches so pages show updated job details immediately */
+            $userId = (int) auth()->id();
             Cache::increment('jobDetails_version_job_'.$id);
-            Cache::increment('jobDetails_v3_version_user_'.auth()->id());
+            Cache::increment('jobDetails_version_company_'.$company_id);
+            Cache::increment('jobDetails_v3_version_user_'.$userId);
+            Cache::increment('alljobslist_version_company_'.$company_id);
+            Cache::increment('alljobslist_version_user_'.$userId);
+            Cache::forget('v3:status_job:'.$id);
+            Cache::forget('v3:status_log:'.$id);
+            Cache::forget('job_skills_metronic:'.$id);
             GeneralMethod::invalidateCareerTenantCache($company_id, $id);
+
+            $responsePayload = [
+                'status' => 'success',
+                'job_id' => $job->id,
+                'expected_version' => $newVersion,
+                'check_ready_url' => route('service_company.jobs.checkReady', ['id' => $job->id, 'v' => $newVersion]),
+                'redirect_url' => route('service_company.jobs.index'),
+                'message' => __('menu.jobs').' '.__('messages.updatedSuccessfully'),
+            ];
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json($responsePayload);
+            }
 
             return Reply::redirect(route('service_company.jobs.index'), __('menu.jobs').' '.__('messages.updatedSuccessfully'));
         } catch (\Throwable $e) {
             \Log::error('jobs update() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
-            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Update failed. Please try again.']);
+            return response()->json([
+                'status' => 'error',
+                'msgType' => 'danger',
+                'message' => 'Update failed: '.$e->getMessage(),
+            ], 500);
         }
     }
 

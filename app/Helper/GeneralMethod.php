@@ -9756,6 +9756,7 @@ END:VCALENDAR";
                 'index' => ELASTIC_JOBS,
                 'id' => $row->id,
                 'retry_on_conflict' => 5,
+                'refresh' => true,
                 'body' => [
                     'script' => [
                         'source' => "if (ctx._source.aggregate_version != null && ctx._source.aggregate_version > params.new_version) { ctx.op = 'none'; } else { ctx._source.putAll(params.doc); }",
@@ -9771,8 +9772,10 @@ END:VCALENDAR";
 
             self::addUpdateCompanyJob($row->company_id, $row->id);
 
-            // Rule 6: Invalidate client jobs KPI cache and tenant client projection version
+            // Rule 6: Atomic readiness & cache invalidation
             if (! empty($row->company_id)) {
+                cache()->put("job:ready:{$row->company_id}:{$row->id}:v", $targetAggregateVersion, 120);
+                cache()->put("job:ready:{$row->company_id}:{$row->id}", true, 120);
                 self::cacheClean('tenant_'.$row->company_id.'_client_version');
             }
             if (! empty($row->client_id) && ! empty($row->company_id)) {
