@@ -392,8 +392,15 @@
 
                     // Rule B: In ADD MODE, if recruiter already entered manual value, preserve it
                     if (!isEditMode && cur !== '') {
-                        console.log('[SFHP] Preserving manual recruiter entry for ' + selector + ': "' + cur + '"');
-                        return false;
+                        var isJobTitlePlaceholder = (selector === '#current_designation' && (
+                            cur === ($el[0] ? $el[0].getAttribute('value') : '') ||
+                            ($('#job_title').length && cur === ($('#job_title').val() || '').trim())
+                        ));
+
+                        if (!isJobTitlePlaceholder) {
+                            console.log('[SFHP] Preserving manual recruiter entry for ' + selector + ': "' + cur + '"');
+                            return false;
+                        }
                     }
 
                     $el.val(strVal);
@@ -421,6 +428,7 @@
                         if ($.fn.select2 && $el.hasClass('select2-hidden-accessible')) {
                             $el.trigger('change.select2');
                         }
+                        $el.trigger('change');
                         dirtyElements.push($el[0]);
                         if (validationFieldName) {
                             populatedFields.push(validationFieldName);
@@ -595,12 +603,18 @@
             }
 
                 // 7. Experience & Current Role
-                var expList = Array.isArray(result.experience) ? result.experience : [];
+                var expList = Array.isArray(result.experience) ? result.experience : (Array.isArray(result.work_experience) ? result.work_experience : []);
                 var totalExp = calculateTotalExperience(expList, result.summary);
 
                 if (expList.length > 0) {
                     var latestJob = expList[0] || {};
                     var cleanedJob = cleanJobAndCompany(latestJob.title, latestJob.company);
+                    if (!cleanedJob.company && cand.currentCompany) {
+                        cleanedJob.company = cand.currentCompany;
+                    }
+                    if (!cleanedJob.designation && cand.currentDesignation) {
+                        cleanedJob.designation = cand.currentDesignation;
+                    }
                     if (cleanedJob.company) {
                         safeSetVal('#current_company', cleanedJob.company);
                     }
@@ -613,16 +627,37 @@
                     safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
                     safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
                 } else if (!isEditMode) {
+                    if (cand.currentCompany) {
+                        safeSetVal('#current_company', cand.currentCompany);
+                    }
+                    if (cand.currentDesignation) {
+                        safeSetVal('#current_designation', cand.currentDesignation);
+                    }
                     safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
                     safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
                     safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
                     safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
                 }
 
-                // 8. Education / Qualification
+                // 8. Education / Qualification (Select2 Safe Adapter + Custom Combobox Sync)
                 var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
                 if (matchedQualId) {
                     safeSetSelect2('#qualification', String(matchedQualId), 'qualification');
+                    var $cs = $('#jero-cs-qualification');
+                    if ($cs.length) {
+                        var $item = $cs.find('.jero-cs-item[data-val="' + matchedQualId + '"]').first();
+                        $cs.find('.jero-cs-item').removeClass('is-selected');
+                        if ($item.length) {
+                            $item.addClass('is-selected');
+                            $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($item.find('.jero-cs-item-text').text().trim());
+                            var badge = $item.attr('data-badge') || '';
+                            if (badge) {
+                                $cs.find('.jero-cs-badge').show().text(badge);
+                            } else {
+                                $cs.find('.jero-cs-badge').hide().text('');
+                            }
+                        }
+                    }
                 }
 
                 // 9. Career Summary (strictly capped at 100 words, updates counter)

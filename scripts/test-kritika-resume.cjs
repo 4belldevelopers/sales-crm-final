@@ -142,7 +142,7 @@ async function testKritikaResume() {
             </select>
 
             <!-- Qualification -->
-            <select id="qualification" name="qualification">
+            <select id="qualification" name="qualification" style="display:none;">
                 <option value="">Select qualification</option>
                 <option value="13">B.Tech / B.E (Engineering & Technology)</option>
                 <option value="40">M.Tech / M.E</option>
@@ -152,10 +152,21 @@ async function testKritikaResume() {
                 <option value="15">BCA</option>
                 <option value="16">Diploma</option>
             </select>
+            <!-- Custom Combobox matching create.blade.php -->
+            <div class="jero-custom-select" id="jero-cs-qualification">
+                <div class="jero-cs-trigger">
+                    <span class="jero-cs-value jero-cs-placeholder">Select qualification</span>
+                    <span class="jero-cs-badge" style="display:none;"></span>
+                </div>
+                <div class="jero-cs-dropdown" style="display:none;">
+                    <div class="jero-cs-item" data-val="13"><span class="jero-cs-item-text">B.Tech / B.E</span></div>
+                    <div class="jero-cs-item" data-val="15"><span class="jero-cs-item-text">BCA</span></div>
+                </div>
+            </div>
 
-            <!-- Employment Details -->
+            <!-- Employment Details - Note pre-filled Job Title from Blade -->
             <input type="text" id="current_company" name="current_company" value="" />
-            <input type="text" id="current_designation" name="current_designation" value="" />
+            <input type="text" id="current_designation" name="current_designation" value="Lead Full Stack PHP Engineer (V7)" />
             <select id="total_exp_year" name="total_exp_year">
                 <option value="">Years</option>
                 <option value="0">Fresher</option>
@@ -256,6 +267,7 @@ async function testKritikaResume() {
                 gender: $('#gender').val(),
                 qualification: $('#qualification').val(),
                 qualification_text: $('#qualification option:selected').text(),
+                cs_qualification_text: $('#jero-cs-qualification .jero-cs-value').text(),
                 current_company: $('#current_company').val(),
                 current_designation: $('#current_designation').val(),
                 total_exp_year: $('#total_exp_year').val(),
