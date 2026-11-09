@@ -64,7 +64,53 @@ $candidateValuesTotaljoin = $candidateValuesTotaljoin ?? 0;
 
  $currencyArr 				=	GeneralMethod::currency();
  $salaryMode 			=	GeneralMethod::salaryMode();
- $qualification  = GeneralMethod::qualification(@$job->qualification);
+
+ /**
+  * Authoritative Qualification Display Resolution:
+  * Prioritizes controller-passed $job_qualifications_display or $job->qualification_name,
+  * then parses $job->job_qualifications array, then GeneralMethod::allQualificationSelected,
+  * and gracefully falls back to 'Any Qualification'.
+  */
+ $qualificationDisplay = null;
+ if (! empty($job_qualifications_display)) {
+     $qualificationDisplay = $job_qualifications_display;
+ } elseif (! empty($job->qualification_name)) {
+     $qualificationDisplay = $job->qualification_name;
+ } elseif (! empty($job->job_qualifications) && (is_array($job->job_qualifications) || is_object($job->job_qualifications))) {
+     $qNames = [];
+     foreach ((array) $job->job_qualifications as $jq) {
+         $jqObj = (object) $jq;
+         $qn = trim((string) ($jqObj->qualification_name ?? ''));
+         $qId = (int) ($jqObj->qualification_id ?? 0);
+         if (($qn === '' || strcasecmp($qn, 'Others') === 0) && $qId > 0 && $qId !== 60) {
+             $mRow = DB::table('qualification_master')->where('id', $qId)->first();
+             if ($mRow && ! empty($mRow->name)) {
+                 $qn = $mRow->name;
+             }
+         }
+         if ($qn !== '' && ! in_array($qn, $qNames, true)) {
+             $qNames[] = $qn;
+         }
+     }
+     if (! empty($qNames)) {
+         $qualificationDisplay = implode(', ', $qNames);
+     }
+ }
+
+ if (empty($qualificationDisplay) && ! empty($job->id)) {
+     $qualificationDisplay = GeneralMethod::allQualificationSelected($job->id);
+ }
+
+ if (empty($qualificationDisplay) && ! empty($job->qualification)) {
+     $rawMaster = GeneralMethod::qualification($job->qualification);
+     $qualificationDisplay = $rawMaster->name ?? null;
+ }
+
+ if (empty($qualificationDisplay) || $qualificationDisplay === 'Others') {
+     $qualificationDisplay = 'Any Qualification';
+ }
+
+ $qualification = (object) ['name' => $qualificationDisplay];
                                     
  $feedback_status = GeneralMethod::feedback_status();
  $available_status = GeneralMethod::available_status();

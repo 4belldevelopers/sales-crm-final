@@ -11,7 +11,7 @@ return new class extends Migration
      * Run the migrations.
      * Intent: Ensure qualification_master contains standard universal eligibility degrees
      * (especially ID 65 'Any Qualification', ID 57 'Any Graduation', ID 58 'Any Post Graduation',
-     * and ID 59 'Any Degree') and auto-repair existing jobs that were misattributed to ID 60 ('Others').
+     * and ID 59 'Any Degree') and auto-repair existing jobs (such as Job 2288) that were misattributed to ID 60 ('Others').
      */
     public function up(): void
     {
@@ -59,7 +59,25 @@ return new class extends Migration
                 }
             }
 
-            // Clear all cached qualification master and job details versions
+            // Specifically repair Job 2288 (reported in production incident)
+            if (Schema::hasTable('jobs')) {
+                $job2288 = DB::table('jobs')->where('id', 2288)->first();
+                if ($job2288) {
+                    DB::table('jobs')->where('id', 2288)->update(['qualification' => 65]);
+                    if (Schema::hasTable('job_qualifications')) {
+                        DB::table('job_qualifications')->where('job_id', 2288)->delete();
+                        DB::table('job_qualifications')->insert([
+                            'job_id' => 2288,
+                            'qualification_id' => 65,
+                            'qualification_name' => 'Any Qualification',
+                        ]);
+                    }
+                    Cache::forget('jobDetails_version_job_2288');
+                    Cache::increment('jobDetails_version_job_2288');
+                }
+            }
+
+            // Clear all cached qualification master keys
             Cache::forget('global_qualification_master');
             Cache::forget('qualification_master_list');
             Cache::forget('qualification_master');

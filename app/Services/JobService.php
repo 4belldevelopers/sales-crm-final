@@ -1246,41 +1246,48 @@ class JobService
             $workQualificationAll = [];
         }
 
-        // Extract normalized names
-        $extractedNames = [];
+        // Extract normalized items
+        $extractedItems = [];
         foreach ($workQualificationAll as $item) {
             $name = null;
+            $id = null;
             if (is_array($item)) {
+                $id = $item['id'] ?? $item['qualification_id'] ?? null;
                 $name = $item['value'] ?? $item['name'] ?? $item['qualification_name'] ?? null;
             } elseif (is_string($item) || is_numeric($item)) {
-                $name = (string) $item;
-            }
-            if (! empty($name) && is_string($name)) {
-                $name = trim($name);
-                if ($name !== '' && ! in_array($name, $extractedNames, true)) {
-                    $extractedNames[] = $name;
+                $strItem = trim((string) $item);
+                if (is_numeric($strItem)) {
+                    $id = (int) $strItem;
+                } else {
+                    $name = $strItem;
                 }
+            }
+
+            if (! empty($name) || ! empty($id)) {
+                $extractedItems[] = ['id' => $id, 'name' => $name];
             }
         }
 
         // If payload is empty or invalid, DO NOT wipe existing qualifications on update!
-        if (empty($extractedNames)) {
+        if (empty($extractedItems)) {
             $existingCount = DB::table('job_qualifications')->where('job_id', $job->id)->count();
             if ($existingCount > 0) {
                 // Qualifications already exist in DB; preserve them
                 return;
             }
-            // If neither exists, default to 'Any Qualification'
-            $extractedNames = ['Any Qualification'];
+            // If neither exists, default to 'Any Qualification' (ID 65)
+            $extractedItems = [['id' => 65, 'name' => 'Any Qualification']];
         }
 
-        // 2. Fetch qualification_master map (both exact name and lowercase name)
+        // 2. Fetch qualification_master map (both exact name, lowercase name, and numeric ID)
         $masterList = DB::table('qualification_master')->select('id', 'name')->get();
         $nameMap = [];
         $lowerMap = [];
+        $idMap = [];
         foreach ($masterList as $m) {
             $nameMap[$m->name] = $m;
-            $lowerMap[strtolower($m->name)] = $m;
+            $lowerMap[strtolower(trim($m->name))] = $m;
+            $idMap[(int) $m->id] = $m;
         }
 
         // Known alias map for human input variations
@@ -1291,21 +1298,27 @@ class JobService
             'b.e' => 'B.Tech/B.E',
             'b.tech / b.e' => 'B.Tech/B.E',
             'btech/be' => 'B.Tech/B.E',
+            'bachelor of technology' => 'B.Tech/B.E',
             'mba' => 'MBA/PGDM',
             'pgdm' => 'MBA/PGDM',
             'mba / pgdm' => 'MBA/PGDM',
+            'master of business administration' => 'MBA/PGDM',
             'mca' => 'MCA',
+            'master of computer applications' => 'MCA',
             'bsc' => 'B.Sc',
             'b.sc' => 'B.Sc',
             'b.sc / b.s' => 'B.Sc',
+            'bachelor of science' => 'B.Sc',
             'bcom' => 'B.Com',
             'b.com' => 'B.Com',
+            'bachelor of commerce' => 'B.Com',
             'bba' => 'B.B.A/ B.M.S',
             'bms' => 'B.B.A/ B.M.S',
             'bba / bms' => 'B.B.A/ B.M.S',
             'any' => 'Any Qualification',
             'any qualification' => 'Any Qualification',
             'open' => 'Any Qualification',
+            'any graduate' => 'Any Graduation',
             'any graduation' => 'Any Graduation',
             'graduation' => 'Any Graduation',
             'graduate' => 'Any Graduation',
@@ -1323,20 +1336,29 @@ class JobService
 
         $batchQualInsert = [];
         $primaryQualId = null;
+        $seenQualKeys = [];
 
-        foreach ($extractedNames as $idx => $rawName) {
+        foreach ($extractedItems as $idx => $entry) {
+            $rawId = $entry['id'];
+            $rawName = $entry['name'];
             $matchedMaster = null;
 
-            // Direct exact match
-            if (isset($nameMap[$rawName])) {
-                $matchedMaster = $nameMap[$rawName];
-            } else {
-                $cleanLower = strtolower(trim($rawName));
-                // Check alias
-                if (isset($aliasMap[$cleanLower]) && isset($nameMap[$aliasMap[$cleanLower]])) {
-                    $matchedMaster = $nameMap[$aliasMap[$cleanLower]];
-                } elseif (isset($lowerMap[$cleanLower])) {
-                    $matchedMaster = $lowerMap[$cleanLower];
+            // Direct ID match
+            if (! empty($rawId) && isset($idMap[(int) $rawId])) {
+                $matchedMaster = $idMap[(int) $rawId];
+            } elseif (! empty($rawName)) {
+                // If rawName is numeric, check ID map
+                if (is_numeric($rawName) && isset($idMap[(int) $rawName])) {
+                    $matchedMaster = $idMap[(int) $rawName];
+                } elseif (isset($nameMap[$rawName])) {
+                    $matchedMaster = $nameMap[$rawName];
+                } else {
+                    $cleanLower = strtolower(trim($rawName));
+                    if (isset($aliasMap[$cleanLower]) && isset($nameMap[$aliasMap[$cleanLower]])) {
+                        $matchedMaster = $nameMap[$aliasMap[$cleanLower]];
+                    } elseif (isset($lowerMap[$cleanLower])) {
+                        $matchedMaster = $lowerMap[$cleanLower];
+                    }
                 }
             }
 
@@ -1346,10 +1368,17 @@ class JobService
             } else {
                 // Custom / unlisted qualification: map to 60 ('Others') and retain user's qualification name
                 $qualId = 60; // Others
-                $qualName = $rawName;
+                $qualName = ! empty($rawName) ? $rawName : 'Others';
             }
 
-            if ($idx === 0) {
+            // Deduplicate per job
+            $dedupeKey = $qualId . ':' . strtolower($qualName);
+            if (isset($seenQualKeys[$dedupeKey])) {
+                continue;
+            }
+            $seenQualKeys[$dedupeKey] = true;
+
+            if ($primaryQualId === null) {
                 $primaryQualId = $qualId;
             }
 
@@ -1368,6 +1397,12 @@ class JobService
 
         if ($primaryQualId !== null) {
             $job->qualification = $primaryQualId;
+        }
+
+        // Bust drawer cache for this job
+        try {
+            \Illuminate\Support\Facades\Cache::increment('jobDetails_version_job_'.$job->id);
+        } catch (\Throwable $ce) {
         }
     }
 

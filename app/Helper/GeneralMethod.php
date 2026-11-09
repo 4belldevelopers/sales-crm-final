@@ -5762,10 +5762,13 @@ END:VCALENDAR";
             $missingIds = [];
             foreach ($quals as $q) {
                 $name = trim((string) ($q->qualification_name ?? ''));
-                if ($name !== '') {
+                $qId = (int) ($q->qualification_id ?? 0);
+                if (($name === '' || strcasecmp($name, 'Others') === 0) && $qId > 0 && $qId !== 60) {
+                    $missingIds[] = $qId;
+                } elseif ($name !== '') {
                     $names[] = $name;
-                } elseif (! empty($q->qualification_id)) {
-                    $missingIds[] = (int) $q->qualification_id;
+                } elseif ($qId > 0) {
+                    $missingIds[] = $qId;
                 }
             }
 
@@ -9835,6 +9838,7 @@ END:VCALENDAR";
             if (! empty($row->client_id) && ! empty($row->company_id)) {
                 cache()->forget('ats:kpi:internal_client_jobs:'.$row->company_id.':'.$row->client_id);
             }
+            Cache::increment("jobDetails_version_job_{$row->id}");
 
         }
 
@@ -14576,6 +14580,12 @@ END:VCALENDAR";
                     ->select('skill_name')
                     ->where('job_id', $jId)
                     ->get()
+                    ->toArray();
+
+                $dbJob->job_qualifications = DB::table('job_qualifications')
+                    ->where('job_id', $jId)
+                    ->get()
+                    ->map(fn ($q) => (array) $q)
                     ->toArray();
 
                 $jobDetailsCache[$jId] = $dbJob;
