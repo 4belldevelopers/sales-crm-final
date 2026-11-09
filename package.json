@@ -19,7 +19,8 @@
         "lint:blade": "blade-formatter --check \"resources/views/service_company/**/*.blade.php\"",
         "lint:mermaid": "node scripts/validate-mermaid.js",
         "phpstan": "vendor/bin/phpstan analyse --memory-limit=1G",
-        "test:k6": "tools/k6/k6.exe run scripts/k6-ats-loadtest.js"
+        "test:k6": "tools/k6/k6.exe run scripts/k6-ats-loadtest.js",
+        "test:parser": "node scripts/test-parser-end-to-end.cjs"
     },
     "devDependencies": {
         "@ast-grep/cli": "^0.51.1",
