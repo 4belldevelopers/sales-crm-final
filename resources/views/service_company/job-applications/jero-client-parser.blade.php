@@ -219,8 +219,8 @@
             company.length > 55
         );
 
-        if (isCompanySentence && designation && /[–\-]/.test(designation)) {
-            var parts = designation.split(/\s*[–\-]\s*/);
+        if (isCompanySentence && designation && /[–—\-\u2013\u2014\u2015\u2212\|]/.test(designation)) {
+            var parts = designation.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*/);
             if (parts.length >= 2) {
                 designation = parts[0].trim();
                 var candidateCompany = parts.slice(1).join(' - ');
@@ -236,6 +236,73 @@
             designation: designation,
             company: company
         };
+    }
+
+    /**
+     * Extracts company name from experience list or candidate object.
+     * Handles:
+     * - candidate.currentCompany or candidate.company
+     * - experience[i].company (skipping sentences like "Provided technical support...")
+     * - experience[i].description[j] (e.g. "Triotree Pvt. Ltd., Noida (8 Months)")
+     * - experience[i].title (e.g. "Software Engineer – Triotree Pvt. Ltd.")
+     */
+    function extractCompanyFromExperience(expList, cand) {
+        if (cand && cand.currentCompany) return String(cand.currentCompany).trim();
+        if (cand && cand.company) return String(cand.company).trim();
+        if (!Array.isArray(expList) || !expList.length) return '';
+
+        var isSentence = function (text) {
+            return !text ||
+                /^(provided|worked|responsible|developed|managed|assisted|handled|created|led|designed|engineered|maintaining|coordinating|building|supported|participated)\b/i.test(text) ||
+                text.length > 60;
+        };
+
+        var cleanCompName = function (raw) {
+            var s = String(raw || '').trim();
+            s = s.replace(/\s*\([^\)]*\)/g, '').trim(); // Remove (8 Months), (Noida)
+            s = s.replace(/,\s*[A-Za-z\s]+$/, '').trim(); // Remove trailing city ", Noida"
+            return s;
+        };
+
+        for (var i = 0; i < expList.length; i++) {
+            var item = expList[i];
+            if (!item) continue;
+
+            // A. Check item.company
+            var comp = String(item.company || '').trim();
+            if (comp && !isSentence(comp)) {
+                var c1 = cleanCompName(comp);
+                if (c1 && c1.length >= 2 && c1.length <= 60) return c1;
+            }
+
+            // B. Check item.description array (e.g. "Triotree Pvt. Ltd., Noida (8 Months)")
+            if (Array.isArray(item.description) && item.description.length > 0) {
+                for (var d = 0; d < item.description.length; d++) {
+                    var descLine = String(item.description[d] || '').trim();
+                    if (!descLine) continue;
+                    var looksLikeCompany = /\b(pvt|ltd|limited|inc|llc|technologies|systems|solutions|infotech|services|corp|corporation|group|software|consulting)\b/i.test(descLine) ||
+                        (!isSentence(descLine) && descLine.length < 50 && /[A-Z]/.test(descLine));
+                    if (looksLikeCompany) {
+                        var c2 = cleanCompName(descLine);
+                        if (c2 && c2.length >= 2 && c2.length <= 60 && !isSentence(c2)) {
+                            return c2;
+                        }
+                    }
+                }
+            }
+
+            // C. Check item.title if formatted as "Role – Company" or "Role at Company"
+            var title = String(item.title || '').trim();
+            var titleParts = title.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*|\s+at\s+|\s+@\s+/i);
+            if (titleParts.length >= 2) {
+                var c3 = cleanCompName(titleParts.slice(1).join(' - '));
+                if (c3 && c3.length >= 2 && c3.length <= 60 && !isSentence(c3)) {
+                    return c3;
+                }
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -295,7 +362,8 @@
             var edu = educationList[i];
             var degreeRaw = String(edu.degree || '').toLowerCase().trim();
             var fieldRaw = String(edu.field || '').toLowerCase().trim();
-            var combined = (degreeRaw + ' ' + fieldRaw).trim();
+            var instRaw = String(edu.institution || '').toLowerCase().trim();
+            var combined = (degreeRaw + ' ' + fieldRaw + ' ' + instRaw).trim();
 
             if (!combined) continue;
 
@@ -303,20 +371,36 @@
                 var opt = options[j];
                 if (!opt.value) continue;
                 var optText = opt.textContent.toLowerCase().trim();
+                var aliases = (opt.getAttribute('data-aliases') || '').toLowerCase().split(',').map(function (a) { return a.trim(); }).filter(Boolean);
                 if (!optText) continue;
 
                 if (combined === optText || degreeRaw === optText) {
                     return opt.value;
                 }
 
-                if (/\bb\.?tech\b/i.test(degreeRaw) && /\bb\.?tech\b/i.test(optText)) return opt.value;
-                if (/\bm\.?tech\b/i.test(degreeRaw) && /\bm\.?tech\b/i.test(optText)) return opt.value;
-                if (/\bmba\b/i.test(degreeRaw) && /\bmba\b/i.test(optText)) return opt.value;
-                if (/\bmca\b/i.test(degreeRaw) && /\bmca\b/i.test(optText)) return opt.value;
-                if (/\bbca\b/i.test(degreeRaw) && /\bbca\b/i.test(optText)) return opt.value;
-                if (/\bphd\b/i.test(degreeRaw) && /\bphd\b/i.test(optText)) return opt.value;
-                if (/\bdoctorate\b/i.test(degreeRaw) && /\bdoctor/i.test(optText)) return opt.value;
-                if (/\bdiploma\b/i.test(degreeRaw) && /\bdiploma\b/i.test(optText)) return opt.value;
+                // Check acronym & alias matching
+                if (/\bb\.?tech\b|\bb\.?e\b|\bbachelor of technology\b/i.test(degreeRaw) && /\bb\.?tech\b|\bb\.?e\b/i.test(optText)) return opt.value;
+                if (/\bm\.?tech\b|\bm\.?e\b|\bmaster of technology\b/i.test(degreeRaw) && /\bm\.?tech\b|\bm\.?e\b/i.test(optText)) return opt.value;
+                if (/\bmba\b|\bpgdm\b/i.test(degreeRaw) && /\bmba\b/i.test(optText)) return opt.value;
+                if (/\bmca\b|\bmaster of computer/i.test(degreeRaw) && /\bmca\b/i.test(optText)) return opt.value;
+                if (/\bbca\b|\bbachelor of computer/i.test(degreeRaw) && /\bbca\b/i.test(optText)) return opt.value;
+                if (/\bb\.?sc\b|\bbs\b|\bbachelor of science\b/i.test(degreeRaw) && /\bb\.?sc\b|\bbs\b/i.test(optText)) return opt.value;
+                if (/\bm\.?sc\b|\bms\b|\bmaster of science\b/i.test(degreeRaw) && /\bm\.?sc\b|\bms\b/i.test(optText)) return opt.value;
+                if (/\bbba\b|\bbms\b/i.test(degreeRaw) && /\bbba\b/i.test(optText)) return opt.value;
+                if (/\bb\.?com\b/i.test(degreeRaw) && /\bb\.?com\b/i.test(optText)) return opt.value;
+                if (/\bm\.?com\b/i.test(degreeRaw) && /\bm\.?com\b/i.test(optText)) return opt.value;
+                if (/\bph\.?d\b|\bdoctorate\b/i.test(degreeRaw) && /\bph\.?d\b|\bdoctorate\b/i.test(optText)) return opt.value;
+                if (/\bdiploma\b|\bpolytechnic\b/i.test(degreeRaw) && /\bdiploma\b|\bpolytechnic\b/i.test(optText)) return opt.value;
+                if (/\b12th\b|\bhsc\b|\bintermediate\b|\bhigh school\b/i.test(degreeRaw) && /\b12th\b/i.test(optText)) return opt.value;
+                if (/\b10th\b|\bssc\b|\bmatric/i.test(degreeRaw) && /\b10th\b/i.test(optText)) return opt.value;
+
+                // Check data-aliases attribute if present
+                for (var a = 0; a < aliases.length; a++) {
+                    var al = aliases[a];
+                    if (al.length >= 3 && (degreeRaw === al || combined.indexOf(al) !== -1)) {
+                        return opt.value;
+                    }
+                }
 
                 if (combined.indexOf(optText) !== -1 || optText.indexOf(degreeRaw) !== -1) {
                     return opt.value;
@@ -387,7 +471,11 @@
 
                     var cur = ($el.val() || '').trim();
                     if (isEditMode && cur !== '') return false;
-                    if (!isEditMode && cur !== '') return false;
+
+                    // In Add mode: Experience dropdowns default to "0" (Fresher) on page load.
+                    // If cur === "0", allow updating with parsed experience.
+                    var isExperienceDefault = (selector === '#total_exp_year' || selector === '#rel_exp_year' || selector === '#total_exp_month' || selector === '#rel_exp_month') && (cur === '0' || cur === '');
+                    if (!isEditMode && cur !== '' && !isExperienceDefault) return false;
 
                     var strTarget = String(targetVal).trim();
                     var optionExists = $el.find('option[value="' + strTarget + '"]').length > 0;
@@ -538,91 +626,84 @@
                     }
                 }
 
-                // 6. Phase 8: Skills Population via Tagify Bridge (Deduplicated via Case-Insensitive Set)
+                // 6. Phase 8: Skills Population via Batch Bridge or Tagify Bridge
                 var skillsList = Array.isArray(result.skills) ? result.skills : [];
                 if (skillsList.length) {
-                    var skillInput = document.querySelector('#kt_tagify_2');
-                    var tagifySkill = (skillInput && skillInput.__tagify) || window.tagifyskill;
+                    if (typeof window.addCandidatePrimarySkillsBatch === 'function') {
+                        window.addCandidatePrimarySkillsBatch(skillsList);
+                    } else if (typeof window.addParsedBenchSkills === 'function') {
+                        window.addParsedBenchSkills(skillsList);
+                    } else {
+                        var skillInput = document.querySelector('#kt_tagify_2');
+                        var tagifySkill = (skillInput && skillInput.__tagify) || window.tagifyskill;
 
-                    var uniqueSkills = [];
-                    var seen = new Set();
-                    if (tagifySkill && Array.isArray(tagifySkill.value)) {
-                        tagifySkill.value.forEach(function (t) {
-                            var v = (t.value || t.name || '').toLowerCase().trim();
-                            if (v) seen.add(v);
-                        });
-                    }
-
-                    skillsList.forEach(function (s) {
-                        var name = String(s || '').trim();
-                        var lower = name.toLowerCase();
-                        if (name && !seen.has(lower)) {
-                            seen.add(lower);
-                            uniqueSkills.push(name);
+                        var uniqueSkills = [];
+                        var seen = new Set();
+                        if (tagifySkill && Array.isArray(tagifySkill.value)) {
+                            tagifySkill.value.forEach(function (t) {
+                                var v = (t.value || t.name || '').toLowerCase().trim();
+                                if (v) seen.add(v);
+                            });
                         }
-                    });
 
-                    if (tagifySkill && typeof tagifySkill.addTags === 'function') {
-                        try {
-                            if (!isEditMode && (!tagifySkill.value || !tagifySkill.value.length)) {
-                                tagifySkill.removeAllTags();
+                        skillsList.forEach(function (s) {
+                            var name = String(s || '').trim();
+                            var lower = name.toLowerCase();
+                            if (name && !seen.has(lower)) {
+                                seen.add(lower);
+                                uniqueSkills.push(name);
                             }
-                            if (uniqueSkills.length) {
-                                tagifySkill.addTags(uniqueSkills);
-                            }
-                            if (typeof window.refreshCandidatePrimarySkills === 'function') {
-                                window.refreshCandidatePrimarySkills();
-                            }
-                            setTimeout(function () {
-                                if (typeof window.refreshCandidatePrimarySkills === 'function') {
-                                    window.refreshCandidatePrimarySkills();
+                        });
+
+                        if (tagifySkill && typeof tagifySkill.addTags === 'function') {
+                            try {
+                                if (!isEditMode && (!tagifySkill.value || !tagifySkill.value.length)) {
+                                    tagifySkill.removeAllTags();
                                 }
-                            }, 50);
-                        } catch (skillErr) {
-                            console.warn('[JeroCandidateFormBridge] Tagify skills error, using fallback:', skillErr);
+                                if (uniqueSkills.length) {
+                                    tagifySkill.addTags(uniqueSkills);
+                                }
+                            } catch (skillErr) {
+                                console.warn('[JeroCandidateFormBridge] Tagify skills error, using fallback:', skillErr);
+                                safeSetVal('#kt_tagify_2', uniqueSkills.join(', '));
+                            }
+                        } else {
                             safeSetVal('#kt_tagify_2', uniqueSkills.join(', '));
                         }
-                    } else {
-                        safeSetVal('#kt_tagify_2', uniqueSkills.join(', '));
+                    }
+
+                    if (typeof window.refreshCandidatePrimarySkills === 'function') {
+                        window.refreshCandidatePrimarySkills();
                     }
                 }
 
                 // 7. Phase 9: Experience & Fresher Selection
                 var expList = Array.isArray(result.experience) ? result.experience : (Array.isArray(result.work_experience) ? result.work_experience : []);
-                var totalExp = calculateTotalExperience(expList, result.summary);
+                var totalExp = calculateTotalExperience(expList, result.summary || result.career_summary || result.objective || (cand && (cand.summary || cand.objective)));
 
-                if (expList.length > 0) {
+                // 7a. Current Company Extraction & Population
+                var extractedCompany = extractCompanyFromExperience(expList, cand);
+                if (extractedCompany) {
+                    safeSetVal('#current_company', extractedCompany, 'current_company');
+                }
+
+                // 7b. Designation: Strictly keep existing pre-filled job title untouched (per user specification)
+                // Only populate if current designation is completely empty:
+                var $desigEl = $('#current_designation');
+                if ($desigEl.length && !($desigEl.val() || '').trim()) {
                     var latestJob = expList[0] || {};
                     var cleanedJob = cleanJobAndCompany(latestJob.title, latestJob.company);
-                    if (!cleanedJob.company && cand.currentCompany) {
-                        cleanedJob.company = cand.currentCompany;
+                    var designationToSet = cleanedJob.designation || cand.currentDesignation || '';
+                    if (designationToSet) {
+                        safeSetVal('#current_designation', designationToSet, 'current_designation');
                     }
-                    if (!cleanedJob.designation && cand.currentDesignation) {
-                        cleanedJob.designation = cand.currentDesignation;
-                    }
-                    if (cleanedJob.company) {
-                        safeSetVal('#current_company', cleanedJob.company);
-                    }
-                    if (cleanedJob.designation) {
-                        safeSetVal('#current_designation', cleanedJob.designation);
-                    }
-
-                    safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
-                    safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
-                    safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
-                    safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
-                } else if (!isEditMode) {
-                    if (cand.currentCompany) {
-                        safeSetVal('#current_company', cand.currentCompany);
-                    }
-                    if (cand.currentDesignation) {
-                        safeSetVal('#current_designation', cand.currentDesignation);
-                    }
-                    safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
-                    safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
-                    safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
-                    safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
                 }
+
+                // 7c. Experience Dropdowns (Years & Months)
+                safeSetSelect2('#total_exp_year', String(totalExp.years), 'total_exp_year');
+                safeSetSelect2('#total_exp_month', String(totalExp.months), 'total_exp_month');
+                safeSetSelect2('#rel_exp_year', String(totalExp.years), 'rel_exp_year');
+                safeSetSelect2('#rel_exp_month', String(totalExp.months), 'rel_exp_month');
 
                 // 8. Education / Qualification (Select2 Safe Adapter + Custom Combobox Sync)
                 var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
@@ -643,22 +724,28 @@
                             }
                         }
                     }
+                    $('#qualification').trigger('change');
                 }
 
                 // 9. Career Summary (strictly for career summary, limited to 100 words, NEVER fills recruiter internal note)
-                var summary = result.summary || '';
+                var summary = result.summary || result.career_summary || result.objective || (cand && (cand.summary || cand.objective)) || '';
                 if (summary) {
                     var words = String(summary).trim().split(/\s+/).filter(Boolean);
                     if (words.length > 100) {
                         summary = words.slice(0, 100).join(' ');
                     }
-                    safeSetVal('#careersummary', summary);
+                    safeSetVal('#careersummary', summary, 'careersummary');
                     var csEl = document.querySelector('#careersummary');
-                    if (csEl && csEl.parentElement) {
-                        var csCc = csEl.parentElement.querySelector('.cc');
-                        if (csCc) {
-                            var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
-                            csCc.textContent = actualWordCount + ' / 100';
+                    if (csEl) {
+                        try {
+                            csEl.dispatchEvent(new Event('input', { bubbles: true }));
+                        } catch (_) {}
+                        if (csEl.parentElement) {
+                            var csCc = csEl.parentElement.querySelector('.cc');
+                            if (csCc) {
+                                var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
+                                csCc.textContent = actualWordCount + ' / 100';
+                            }
                         }
                     }
                 }
