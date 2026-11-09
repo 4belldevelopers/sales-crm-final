@@ -7078,7 +7078,8 @@ var KTUPDATECandidate = {
       }
 
       function candidateSelectedSkills() {
-          return candidateUniqueSkills((tagifyskill.value || []).map(function (skill) {
+          var val = (typeof tagifyskill !== 'undefined' && tagifyskill && Array.isArray(tagifyskill.value)) ? tagifyskill.value : [];
+          return candidateUniqueSkills(val.map(function (skill) {
               return { id: skill.id || '', name: skill.value || '' };
           }));
       }
@@ -7586,34 +7587,42 @@ var KTUPDATECandidate = {
 
       // Resume Parser Batch Bridge: Deduplicates & adds skills in bulk
       window.addCandidatePrimarySkillsBatch = function (skillsList) {
-          if (!Array.isArray(skillsList) || !skillsList.length) return;
-          var selected = candidateSelectedSkills();
-          var toAdd = [];
+          try {
+              if (!Array.isArray(skillsList) || !skillsList.length) return;
+              var selected = candidateSelectedSkills();
+              var toAdd = [];
 
-          skillsList.forEach(function (raw) {
-              var clean = String(raw || '').trim();
-              if (!clean) return;
-              var resolved = resolveSkillAlias(clean);
-              var norm = candidateSkillKey(resolved);
+              skillsList.forEach(function (raw) {
+                  var clean = String(raw || '').trim();
+                  if (!clean) return;
+                  var resolved = resolveSkillAlias(clean);
+                  var norm = candidateSkillKey(resolved);
 
-              var isAlreadySelected = selected.some(function (s) {
-                  return candidateSkillKey(s.name) === norm || candidateSkillsMatch(s, { name: clean }) || candidateSkillsMatch(s, { name: resolved });
-              }) || toAdd.some(function (t) {
-                  var tName = typeof t === 'object' ? t.value : t;
-                  return candidateSkillKey(tName) === norm;
+                  var isAlreadySelected = selected.some(function (s) {
+                      return candidateSkillKey(s.name) === norm || candidateSkillsMatch(s, { name: clean }) || candidateSkillsMatch(s, { name: resolved });
+                  }) || toAdd.some(function (t) {
+                      var tName = typeof t === 'object' ? t.value : t;
+                      return candidateSkillKey(tName) === norm;
+                  });
+
+                  if (!isAlreadySelected) {
+                      var req = candidateUniqueSkills(candidateRequiredSkills).find(function (r) {
+                          return candidateSkillsMatch(r, { name: clean }) || candidateSkillsMatch(r, { name: resolved });
+                      });
+                      toAdd.push(req ? { value: req.name, id: req.id } : resolved);
+                  }
               });
 
-              if (!isAlreadySelected) {
-                  var req = candidateUniqueSkills(candidateRequiredSkills).find(function (r) {
-                      return candidateSkillsMatch(r, { name: clean }) || candidateSkillsMatch(r, { name: resolved });
-                  });
-                  toAdd.push(req ? { value: req.name, id: req.id } : resolved);
+              if (toAdd.length) {
+                  if (typeof tagifyskill !== 'undefined' && tagifyskill && typeof tagifyskill.addTags === 'function') {
+                      tagifyskill.addTags(toAdd);
+                  }
+                  if (typeof refreshCandidatePrimarySkills === 'function') {
+                      refreshCandidatePrimarySkills();
+                  }
               }
-          });
-
-          if (toAdd.length && tagifyskill && typeof tagifyskill.addTags === 'function') {
-              tagifyskill.addTags(toAdd);
-              refreshCandidatePrimarySkills();
+          } catch (batchErr) {
+              console.warn('[Skills Batch Bridge] Batch skills addition error:', batchErr);
           }
       };
 
