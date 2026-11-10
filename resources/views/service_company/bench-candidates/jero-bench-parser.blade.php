@@ -217,6 +217,367 @@
     }
 
     /**
+     * JeroIdentityEngine — SuperGod-Mode Candidate Identity & Employer Resolution
+     * 100% Client-Side Browser RAM Execution (Zero Server / MySQL Strain - Rules 1, 2, 3, 4)
+     * Calibrated Multi-Modal Triangulation, Bounded Subword Segmentation, Contextual Guards,
+     * Strict Non-Authoritative Filename Policy, and Dedicated Employment Chronology Resolver.
+     */
+    var JeroIdentityEngine = {
+        THRESHOLDS: {
+            HIGH: 140,
+            MEDIUM: 80
+        },
+
+        DOCUMENT_HEADER_BLACKLIST: /^(curriculum\s+vitae|resume|biodata|bio-data|profile|personal\s+dossier|personal\s+profile|cv|candidate\s+profile|summary|career\s+summary|professional\s+summary|contact\s+details|personal\s+details|portfolio|work\s+experience|experience|education|skills|objective|about\s+me)$/i,
+
+        FILENAME_BLACKLIST_WORDS: new Set([
+            'resume', 'cv', 'profile', 'final', 'updated', 'latest', 'new', 'draft', 'copy', 'candidate', 'biodata', 'document', 'doc', 'portfolio', 'application', 'years', 'year', 'yrs', 'yr', 'experience', 'experienced', 'fresher', 'job',
+            'senior', 'junior', 'lead', 'developer', 'engineer', 'architect', 'analyst', 'manager', 'consultant', 'specialist', 'director', 'intern',
+            'java', 'python', 'react', 'reactjs', 'node', 'nodejs', 'aws', 'azure', 'devops', 'fullstack', 'frontend', 'backend', 'php', 'laravel', 'salesforce', 'sql', 'qa', 'dotnet', 'android', 'ios', 'flutter', 'kubernetes', 'docker'
+        ]),
+
+        ACADEMIC_KEYWORDS: /(?:university|college|institute|school|academy|degree|bachelor|master|b\.?tech|m\.?tech|b\.?e\.|m\.?e\.|b\.?sc|m\.?sc|bca|mca|ph\.?d|diploma)\b/i,
+        ACADEMIC_ROLES_REJECT: /(?:student|candidate|degree|pursuing|graduated|diploma|b\.?tech|bachelor|master)\b/i,
+
+        ROLE_LEXICON: /(?:Senior|Junior|Lead|Principal|Staff|Chief|Head|Associate|Assistant|Executive|Global)?\s*(?:Software|Cloud|Cybersecurity|DevOps|Frontend|Backend|Full\s*Stack|Data|Systems|Network|Product|Project|Quality|QA|Test|Mobile|iOS|Android|AI|ML|Platform|Security|Solutions|Operations|IT|Database|HR|Talent|Recruiter|Marketing|Finance|Sales)?\s*(?:Engineer|Developer|Analyst|Architect|Specialist|Consultant|Manager|Director|Officer|Lead|Coordinator|Administrator|Expert|Scientist|Programmer|Intern|Associate|VP|Vice\s+President)\b/i,
+
+        ACTIVE_DATE_REGEX: /\b(present|current|till\s*date|ongoing|till\s*now|now|active)\b/i,
+
+        CANONICAL_EMPLOYER_MAP: new Map([
+            ['google', 'Google'], ['microsoft', 'Microsoft'], ['amazon', 'Amazon'], ['apple', 'Apple'], ['meta', 'Meta'], ['netflix', 'Netflix'],
+            ['adobe', 'Adobe'], ['salesforce', 'Salesforce'], ['oracle', 'Oracle'], ['cisco', 'Cisco'], ['intel', 'Intel'], ['ibm', 'IBM'],
+            ['uber', 'Uber'], ['airbnb', 'Airbnb'], ['stripe', 'Stripe'], ['spotify', 'Spotify'], ['nvidia', 'NVIDIA'], ['twitter', 'Twitter'],
+            ['linkedin', 'LinkedIn'], ['palantir', 'Palantir'], ['snowflake', 'Snowflake'], ['databricks', 'Databricks'], ['servicenow', 'ServiceNow'],
+            ['atlassian', 'Atlassian'], ['github', 'GitHub'], ['gitlab', 'GitLab'], ['zoom', 'Zoom'], ['vmware', 'VMware'], ['broadcom', 'Broadcom'],
+            ['qualcomm', 'Qualcomm'], ['amd', 'AMD'], ['hp', 'HP'], ['dell', 'Dell'], ['lenovo', 'Lenovo'], ['samsung', 'Samsung'], ['sony', 'Sony'],
+            ['ebay', 'eBay'], ['aws', 'AWS'], ['sap', 'SAP'],
+            ['accenture', 'Accenture'], ['deloitte', 'Deloitte'], ['ey', 'EY'], ['ernst & young', 'EY'], ['pwc', 'PwC'], ['pricewaterhousecoopers', 'PwC'],
+            ['kpmg', 'KPMG'], ['mckinsey', 'McKinsey & Company'], ['mckinsey & company', 'McKinsey & Company'], ['bcg', 'BCG'], ['bain', 'Bain & Company'],
+            ['capgemini', 'Capgemini'], ['cognizant', 'Cognizant'], ['infosys', 'Infosys'], ['tcs', 'TCS'], ['tata consultancy services', 'TCS'],
+            ['wipro', 'Wipro'], ['hcltech', 'HCLTech'], ['hcl technologies', 'HCLTech'], ['tech mahindra', 'Tech Mahindra'], ['ltimindtree', 'LTIMindtree'],
+            ['mindtree', 'Mindtree'], ['genpact', 'Genpact'], ['dxc technology', 'DXC Technology'], ['ntt data', 'NTT DATA'],
+            ['aecom', 'Aecom'], ['siemens', 'Siemens'], ['ge', 'GE'], ['honeywell', 'Honeywell'], ['bosch', 'Bosch'], ['robert bosch', 'Robert Bosch'],
+            ['schneider electric', 'Schneider Electric'], ['l&t', 'L&T'], ['larsen & toubro', 'L&T'], ['tata motors', 'Tata Motors'], ['boeing', 'Boeing'],
+            ['flipkart', 'Flipkart'], ['swiggy', 'Swiggy'], ['zomato', 'Zomato'], ['paytm', 'Paytm'], ['phonepe', 'PhonePe'], ['razorpay', 'Razorpay'],
+            ['cred', 'CRED'], ['meesho', 'Meesho'], ['zerodha', 'Zerodha'], ['ola', 'Ola'], ['zepto', 'Zepto'], ['inmobi', 'InMobi'],
+            ['freshworks', 'Freshworks'], ['postman', 'Postman'], ['browserstack', 'BrowserStack'], ['dream11', 'Dream11'], ['groww', 'Groww'],
+            ['policybazaar', 'Policybazaar'], ['nykaa', 'Nykaa'], ['cars24', 'CARS24'], ['lenskart', 'Lenskart'], ['delhivery', 'Delhivery']
+        ]),
+
+        resolveCandidateName: function(parsedResult, file, rawTextLines) {
+            var candidates = [];
+
+            if (parsedResult && parsedResult.candidate && parsedResult.candidate.name) {
+                var clean = this.sanitizeName(parsedResult.candidate.name);
+                if (clean && !this.DOCUMENT_HEADER_BLACKLIST.test(clean)) {
+                    candidates.push({ name: clean, score: 180, source: 'parser_bundle' });
+                }
+            }
+
+            if (Array.isArray(rawTextLines) && rawTextLines.length) {
+                for (var i = 0; i < Math.min(rawTextLines.length, 6); i++) {
+                    var line = rawTextLines[i].trim();
+                    if (this.isValidNameLine(line)) {
+                        var cleanLine = this.sanitizeName(line);
+                        var score = 160 - (i * 20);
+                        candidates.push({ name: cleanLine, score: score, source: 'spatial_line_' + i });
+                    }
+                }
+            }
+
+            var uniqueMap = new Map();
+            candidates.forEach(function(cand) {
+                var key = cand.name.toLowerCase();
+                if (!uniqueMap.has(key) || uniqueMap.get(key).score < cand.score) {
+                    uniqueMap.set(key, cand);
+                }
+            });
+            var uniqueCandidates = Array.from(uniqueMap.values());
+
+            var email = (parsedResult && parsedResult.candidate && parsedResult.candidate.email) || '';
+            var validFilenameTokens = this.extractValidFilenameTokens(file ? file.name : '');
+            var self = this;
+
+            uniqueCandidates.forEach(function(cand) {
+                var candTokens = cand.name.toLowerCase().split(/\s+/).filter(function(t) { return t.length >= 2; });
+                
+                var emailScore = self.evaluateEmailCorroboration(candTokens, email);
+                cand.score += emailScore;
+
+                if (validFilenameTokens.length >= 2) {
+                    var overlap = candTokens.filter(function(t) { return validFilenameTokens.includes(t); }).length;
+                    if (overlap >= 2) cand.score += 35;
+                    else if (overlap === 1) cand.score += 15;
+                }
+            });
+
+            uniqueCandidates.sort(function(a, b) { return b.score - a.score; });
+
+            if (uniqueCandidates.length > 0) {
+                var best = uniqueCandidates[0];
+                if (best.score >= this.THRESHOLDS.MEDIUM) {
+                    return best.name;
+                }
+            }
+
+            return '';
+        },
+
+        resolveCurrentCompany: function(expList, cand, fullResult) {
+            if (cand && (cand.currentCompany || cand.company)) {
+                var c = this.cleanCompanyName(cand.currentCompany || cand.company);
+                if (c && !this.isSentence(c) && !this.isPureAcademicInstitution(c, '')) {
+                    return this.toCanonicalEmployerName(c);
+                }
+            }
+
+            if (Array.isArray(expList) && expList.length > 0) {
+                var activeRecord = this.resolveActiveEmploymentRecord(expList);
+                if (activeRecord) {
+                    var comp = this.cleanCompanyName(activeRecord.company);
+                    if (comp && !this.isSentence(comp) && !this.isPureAcademicInstitution(comp, activeRecord.title)) {
+                        return this.toCanonicalEmployerName(comp);
+                    }
+
+                    var splitComp = this.disambiguateRoleAndCompany(activeRecord.title);
+                    if (splitComp && !this.isPureAcademicInstitution(splitComp, activeRecord.title)) {
+                        return this.toCanonicalEmployerName(splitComp);
+                    }
+
+                    var graphComp = this.matchEmployerKnowledgeGraph(activeRecord.title, activeRecord.description);
+                    if (graphComp) return graphComp;
+                }
+            }
+
+            var summaryComp = this.mineCompanyFromSummary(fullResult ? fullResult.summary : '');
+            return summaryComp ? this.toCanonicalEmployerName(summaryComp) : '';
+        },
+
+        mineCompanyFromSummary: function(summaryText) {
+            if (!summaryText || typeof summaryText !== 'string') return '';
+            var match = summaryText.match(/(?:at|with|for)\s+([A-Z][A-Za-z0-9\s.,&-]{2,55}?(?:Pvt\.?\s*Ltd\.?|Private\s+Limited|Limited|Inc\.?|LLC|Corporation|Technologies|Solutions|Consulting|Services|Enterprises|Systems))\b/i);
+            if (match) {
+                var cleaned = this.cleanCompanyName(match[1]);
+                if (cleaned && !this.isSentence(cleaned)) return cleaned;
+            }
+            return '';
+        },
+
+        resolveActiveEmploymentRecord: function(expList) {
+            var validRecords = [];
+
+            for (var i = 0; i < expList.length; i++) {
+                var item = expList[i];
+                if (!item) continue;
+                var title = item.title || '';
+                var company = item.company || '';
+
+                if (this.isPureAcademicInstitution(company, title)) {
+                    continue;
+                }
+
+                var dateRange = this.parseDateRange(item.date || item.period || item.end_date || item.duration || title);
+
+                var isCurrent = false;
+                if (item.is_current === true || item.current === true) isCurrent = true;
+                if (dateRange.isCurrent) isCurrent = true;
+
+                var endTimestamp = isCurrent ? Infinity : dateRange.endTimestamp;
+
+                var weight = 100;
+                if (/\b(intern|internship|trainee|apprentice)\b/i.test(title)) weight -= 50;
+                if (/\b(advisor|consultant|freelance|part[\s-]time)\b/i.test(title)) weight -= 20;
+
+                validRecords.push({
+                    item: item,
+                    title: title,
+                    company: company,
+                    description: item.description || '',
+                    endTimestamp: endTimestamp,
+                    startTimestamp: dateRange.startTimestamp,
+                    weight: weight
+                });
+            }
+
+            if (!validRecords.length) return null;
+
+            validRecords.sort(function(a, b) {
+                if (b.endTimestamp !== a.endTimestamp) return b.endTimestamp - a.endTimestamp;
+                if (b.weight !== a.weight) return b.weight - a.weight;
+                return b.startTimestamp - a.startTimestamp;
+            });
+
+            return validRecords[0];
+        },
+
+        parseDateRange: function(str) {
+            var result = { startTimestamp: 0, endTimestamp: 0, isCurrent: false };
+            if (!str || typeof str !== 'string') return result;
+
+            var MONTH_MAP = {
+                jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+                jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12
+            };
+
+            if (this.ACTIVE_DATE_REGEX.test(str)) {
+                result.isCurrent = true;
+                result.endTimestamp = Infinity;
+            }
+
+            var RANGE_REGEX = /(?:(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*)?((?:19|20)\d{2})\s*(?:[-–—to\s]+)\s*(?:(?:(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*)?((?:19|20)\d{2})|present|current|till\s*date|now|ongoing)\b/i;
+            var match = str.match(RANGE_REGEX);
+            if (match) {
+                var startMonth = match[1] ? MONTH_MAP[match[1].toLowerCase()] : 1;
+                var startYear = parseInt(match[2], 10);
+                result.startTimestamp = startYear + (startMonth / 100);
+
+                if (match[4]) {
+                    var endMonth = match[3] ? MONTH_MAP[match[3].toLowerCase()] : 12;
+                    var endYear = parseInt(match[4], 10);
+                    result.endTimestamp = endYear + (endMonth / 100);
+                }
+            } else {
+                var singleYear = str.match(/\b(20\d\d|19\d\d)\b/);
+                if (singleYear) {
+                    result.endTimestamp = parseInt(singleYear[1], 10);
+                }
+            }
+
+            return result;
+        },
+
+        isPureAcademicInstitution: function(company, title) {
+            if (!company) return false;
+            if (/(?:pvt\.?\s*ltd\.?|private\s+limited|limited|inc\.?|llc|gmbh|s\.a\.)/i.test(company)) {
+                return false;
+            }
+            if (title && this.ROLE_LEXICON.test(title) && !this.ACADEMIC_ROLES_REJECT.test(title)) {
+                return false;
+            }
+            if (title && this.ACADEMIC_ROLES_REJECT.test(title)) return true;
+            return this.ACADEMIC_KEYWORDS.test(company);
+        },
+
+        evaluateEmailCorroboration: function(candTokens, email) {
+            if (!email || typeof email !== 'string' || !candTokens.length) return 0;
+            var prefix = email.split('@')[0].toLowerCase();
+            prefix = prefix.replace(/\d+/g, '');
+            prefix = prefix.replace(/(official|work|career|jobs?|mail|inbox|dev|contact)/g, '');
+
+            var forwardConcat = candTokens.join('');
+            var reverseConcat = candTokens.slice().reverse().join('');
+
+            if (prefix === forwardConcat || prefix.indexOf(forwardConcat) !== -1) return 80;
+            if (prefix === reverseConcat || prefix.indexOf(reverseConcat) !== -1) return 60;
+
+            if (candTokens.length >= 2) {
+                var initial = candTokens[0].charAt(0);
+                var lastName = candTokens[candTokens.length - 1];
+                if (prefix.startsWith(initial) && prefix.indexOf(lastName) !== -1) return 40;
+            }
+
+            var singleMatch = candTokens.some(function(t) { return t.length >= 4 && prefix.indexOf(t) !== -1; });
+            return singleMatch ? 20 : 0;
+        },
+
+        extractValidFilenameTokens: function(filename) {
+            if (!filename || typeof filename !== 'string') return [];
+            var clean = filename.replace(/\.(pdf|docx|doc|rtf|txt)$/i, '');
+            clean = clean.replace(/^(jero_|cv_|resume_|updated_|final_)/i, '');
+            clean = clean.replace(/[\(_]\d+[\)_]/g, ' ');
+            clean = clean.replace(/[_\-+]/g, ' ').toLowerCase();
+
+            var rawTokens = clean.split(/\s+/).filter(function(t) { return t.length >= 2; });
+            var self = this;
+            var validTokens = rawTokens.filter(function(t) { return !self.FILENAME_BLACKLIST_WORDS.has(t) && !/^\d+$/.test(t); });
+            
+            return (validTokens.length >= 2 && validTokens.length <= 4) ? validTokens : [];
+        },
+
+        toCanonicalEmployerName: function(name) {
+            if (!name || typeof name !== 'string') return '';
+            var lower = name.toLowerCase().trim();
+            if (this.CANONICAL_EMPLOYER_MAP.has(lower)) {
+                return this.CANONICAL_EMPLOYER_MAP.get(lower);
+            }
+            return name;
+        },
+
+        matchEmployerKnowledgeGraph: function(title, desc) {
+            var combined = ((title || '') + ' ' + (desc || '')).toLowerCase();
+            for (var [key, canonical] of this.CANONICAL_EMPLOYER_MAP.entries()) {
+                var regex = new RegExp('\\b' + key + '\\b', 'i');
+                if (regex.test(combined)) {
+                    return canonical;
+                }
+            }
+            return '';
+        },
+
+        disambiguateRoleAndCompany: function(titleStr) {
+            if (!titleStr || typeof titleStr !== 'string') return '';
+            var delimiters = ['—', '–', '-', '|', '@', ' at ', '•'];
+            for (var i = 0; i < delimiters.length; i++) {
+                var delim = delimiters[i];
+                if (titleStr.indexOf(delim) !== -1) {
+                    var parts = titleStr.split(delim).map(function(p) { return p.trim(); });
+                    if (parts.length >= 2) {
+                        var partA = parts[0];
+                        var partB = parts[1];
+
+                        var isRoleA = this.ROLE_LEXICON.test(partA);
+                        var isRoleB = this.ROLE_LEXICON.test(partB);
+
+                        if (isRoleA && !isRoleB) {
+                            return this.cleanCompanyName(partB);
+                        } else if (isRoleB && !isRoleA) {
+                            return this.cleanCompanyName(partA);
+                        }
+                    }
+                }
+            }
+            return '';
+        },
+
+        cleanCompanyName: function(str) {
+            if (!str || typeof str !== 'string') return '';
+            return str.trim()
+                .replace(/\s*\([^\)]*(?:years?|yrs?|months?|present|date|\d{4})[^\)]*\)/gi, '')
+                .replace(/,\s*[A-Z][a-zA-Z\s]+(?:,\s*[A-Z]{2,})?$/, '')
+                .replace(/\s*\[(?:hybrid|remote|onsite)\]/gi, '')
+                .trim();
+        },
+
+        isSentence: function(str) {
+            if (!str || str.length > 55) return true;
+            var ACTION_VERBS = /^(responsible|managed|developed|engineered|designed|led|assisted|collaborated|provided|created|built|delivered)\b/i;
+            return ACTION_VERBS.test(str);
+        },
+
+        sanitizeName: function(str) {
+            if (!str || typeof str !== 'string') return '';
+            var clean = str.trim()
+                .replace(/^(dr\.|mr\.|ms\.|mrs\.|prof\.|er\.|adv\.)\s+/i, '')
+                .replace(/,\s*(?:ph\.?d|pmp|cfa|md|cpa|mba)\b/gi, '')
+                .trim();
+
+            var roleMatch = clean.match(this.ROLE_LEXICON);
+            if (roleMatch && roleMatch.index > 2) {
+                clean = clean.substring(0, roleMatch.index).trim();
+            }
+            return clean;
+        },
+
+        isValidNameLine: function(line) {
+            if (!line || line.length > 45) return false;
+            if (this.DOCUMENT_HEADER_BLACKLIST.test(line)) return false;
+            if (/\d/.test(line) || /[@\/:;]/.test(line)) return false;
+            var words = line.trim().split(/\s+/);
+            return words.length >= 2 && words.length <= 4;
+        }
+    };
+
+    /**
      * Cleans up designation and company name when formatted like "Title – Company, Location (Duration)"
      * or when company was misidentified as the job description text.
      */
@@ -250,14 +611,17 @@
 
     /**
      * Extracts company name from experience list or candidate object.
-     * Handles:
-     * - candidate.currentCompany or candidate.company
-     * - experience[i].company (skipping sentences like "Provided technical support...")
-     * - experience[i].description[j] (e.g. "Triotree Pvt. Ltd., Noida (8 Months)")
-     * - experience[i].title (e.g. "Software Engineer – Triotree Pvt. Ltd.")
-     * - fallback: scans summary and document text for "<Role> at <Company>" patterns
+     * Evaluates via JeroIdentityEngine (Chronology Resolver & Canonical Employer Graph) first,
+     * with defensive fallback to legacy extraction.
      */
     function extractCompanyFromExperience(expList, cand, fullResult) {
+        try {
+            var modernComp = JeroIdentityEngine.resolveCurrentCompany(expList, cand, fullResult);
+            if (modernComp) return modernComp;
+        } catch (compErr) {
+            console.warn('[JeroIdentityEngine] resolveCurrentCompany fallback:', compErr);
+        }
+
         var isSentence = function (text) {
             return !text ||
                 /^(provided|worked|responsible|developed|managed|assisted|handled|created|led|designed|engineered|maintaining|coordinating|building|supported|participated)\b/i.test(text) ||
@@ -542,20 +906,27 @@
                     return false;
                 }
 
-                // 1. Full Name (Enterprise Title Casing: 1st letter capital, rest small)
-                if (cand.name) {
-                    var formatTitleCase = function (str) {
-                        if (!str) return '';
-                        return String(str)
-                            .toLowerCase()
-                            .replace(/(^|[\s\-\'])([a-z])/g, function (match, separator, char) {
-                                return separator + char.toUpperCase();
-                            })
-                            .trim();
-                    };
-                    var formattedCandName = formatTitleCase(cand.name);
-                    safeSetVal('#full_name', formattedCandName, 'full_name');
-                    safeSetVal('#name', formattedCandName);
+                // 1. Full Name (SuperGod-Mode 5-Vector Triangulation Engine)
+                try {
+                    var rawText = (result.rawText || result.text || '');
+                    if (!rawText && result.sections) {
+                        try { rawText = Object.values(result.sections).join('\n'); } catch (_) {}
+                    }
+                    var rawLines = rawText ? rawText.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean) : [];
+
+                    var resolvedName = JeroIdentityEngine.resolveCandidateName(result, _activeFile, rawLines);
+                    if (!resolvedName && cand.name) {
+                        resolvedName = JeroIdentityEngine.sanitizeName(cand.name);
+                    }
+                    if (resolvedName && resolvedName.length >= 2) {
+                        var formattedCandName = (typeof window.formatCandidateTitleCase === 'function')
+                            ? window.formatCandidateTitleCase(resolvedName)
+                            : resolvedName.split(' ').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); }).join(' ');
+                        safeSetVal('#full_name', formattedCandName, 'full_name');
+                        safeSetVal('#name', formattedCandName);
+                    }
+                } catch (e) {
+                    console.error('[SFHP] Bench Full Name error:', e);
                 }
 
                 // 2. Primary Email
@@ -830,7 +1201,7 @@
                 var expList = Array.isArray(result.experience) ? result.experience : (Array.isArray(result.work_experience) ? result.work_experience : []);
                 var totalExp = calculateTotalExperience(expList, result.summary || result.career_summary || result.objective || (cand && (cand.summary || cand.objective)));
 
-                // 7a. Current Company Extraction & Population
+                // 7a. Current Company Extraction & Population (SuperGod-Mode Chronology & Brand Engine)
                 try {
                     var extractedCompany = extractCompanyFromExperience(expList, cand, result);
                     if (!extractedCompany) {
@@ -855,9 +1226,24 @@
                 try {
                     var $desigEl = $('#current_designation');
                     if ($desigEl.length && !($desigEl.val() || '').trim()) {
-                        var latestJob = expList[0] || {};
-                        var cleanedJob = cleanJobAndCompany(latestJob.title, latestJob.company);
-                        var designationToSet = cleanedJob.designation || cand.currentDesignation || '';
+                        var activeRecord = JeroIdentityEngine.resolveActiveEmploymentRecord(expList);
+                        var designationToSet = '';
+                        if (activeRecord && activeRecord.title) {
+                            var disRole = JeroIdentityEngine.disambiguateRoleAndCompany(activeRecord.title);
+                            if (disRole) {
+                                var parts = activeRecord.title.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*|\s+at\s+|\s+@\s+/i);
+                                if (parts.length >= 2) {
+                                    designationToSet = JeroIdentityEngine.ROLE_LEXICON.test(parts[0]) ? parts[0].trim() : parts[1].trim();
+                                }
+                            } else {
+                                designationToSet = activeRecord.title.trim();
+                            }
+                        }
+                        if (!designationToSet) {
+                            var latestJob = expList[0] || {};
+                            var cleanedJob = cleanJobAndCompany(latestJob.title, latestJob.company);
+                            designationToSet = cleanedJob.designation || cand.currentDesignation || '';
+                        }
                         if (designationToSet) {
                             safeSetVal('#current_designation', designationToSet, 'current_designation');
                         }
@@ -1111,12 +1497,14 @@
 
     // Expose global namespaces for Add Talent Flow (Rule 17)
     window.JeroBenchFormBridge = JeroBenchFormBridge;
+    window.JeroIdentityEngine = JeroIdentityEngine;
     window.JeroBenchClientParser = {
         load: loadParserModule,
         parseAndPopulate: parseAndPopulate,
         calculateTotalExperience: calculateTotalExperience,
         matchQualification: matchQualification,
         normalizeDob: normalizeDob,
+        identityEngine: JeroIdentityEngine,
         cancelActiveParse: cancelActiveParse,
         getLastResult: function () { return _lastParsedResult; },
         getActiveFile: function () { return _activeFile; },
