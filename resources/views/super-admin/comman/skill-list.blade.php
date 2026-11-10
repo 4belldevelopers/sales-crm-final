@@ -865,10 +865,159 @@ $(document).ready(function() {
     let selectedSkillIds = new Set();
     let tagifyInstance = null;
 
-    // Client-First In-Memory Cache (60s TTL) & Anti-Race XHR Controller
+    // ─── Multi-Tier Client Caching (L1 RAM + L2 IndexedDB) & Anti-Race Controller ───
     let clientRamCache = new Map();
     const CLIENT_CACHE_TTL_MS = 60000;
     let activeFetchXhr = null;
+    let lastActiveTimestamp = Date.now();
+
+    // ─── Enterprise Client Database: JeroSkillsDB (IndexedDB v1) ───
+    class JeroSkillsDB {
+        static DB_NAME = 'JeroSkillsDB';
+        static DB_VERSION = 1;
+        static STORE_NAME = 'skills_cache';
+        static db = null;
+        static isAvailable = typeof window !== 'undefined' && 'indexedDB' in window;
+
+        static async init() {
+            if (!this.isAvailable) return null;
+            return new Promise(function(resolve) {
+                try {
+                    let req = window.indexedDB.open(JeroSkillsDB.DB_NAME, JeroSkillsDB.DB_VERSION);
+                    req.onupgradeneeded = function(e) {
+                        let db = e.target.result;
+                        if (!db.objectStoreNames.contains(JeroSkillsDB.STORE_NAME)) {
+                            db.createObjectStore(JeroSkillsDB.STORE_NAME, { keyPath: 'key' });
+                        }
+                    };
+                    req.onsuccess = function(e) {
+                        JeroSkillsDB.db = e.target.result;
+                        resolve(JeroSkillsDB.db);
+                    };
+                    req.onerror = function() {
+                        resolve(null);
+                    };
+                    req.onblocked = function() {
+                        resolve(null);
+                    };
+                } catch (err) {
+                    resolve(null);
+                }
+            });
+        }
+
+        static async get(key) {
+            if (!this.db) return null;
+            return new Promise(function(resolve) {
+                try {
+                    let tx = JeroSkillsDB.db.transaction(JeroSkillsDB.STORE_NAME, 'readonly');
+                    let req = tx.objectStore(JeroSkillsDB.STORE_NAME).get(key);
+                    req.onsuccess = function() {
+                        let result = req.result;
+                        if (result && (Date.now() - result.timestamp < CLIENT_CACHE_TTL_MS)) {
+                            resolve(result.data);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    req.onerror = function() { resolve(null); };
+                } catch (e) {
+                    resolve(null);
+                }
+            });
+        }
+
+        static async set(key, data) {
+            if (!this.db) return false;
+            return new Promise(function(resolve) {
+                try {
+                    let tx = JeroSkillsDB.db.transaction(JeroSkillsDB.STORE_NAME, 'readwrite');
+                    tx.objectStore(JeroSkillsDB.STORE_NAME).put({
+                        key: key,
+                        data: data,
+                        timestamp: Date.now()
+                    });
+                    tx.oncomplete = function() { resolve(true); };
+                    tx.onerror = function() { resolve(false); };
+                } catch (e) {
+                    resolve(false);
+                }
+            });
+        }
+
+        static async clear() {
+            if (!this.db) return false;
+            return new Promise(function(resolve) {
+                try {
+                    let tx = JeroSkillsDB.db.transaction(JeroSkillsDB.STORE_NAME, 'readwrite');
+                    tx.objectStore(JeroSkillsDB.STORE_NAME).clear();
+                    tx.oncomplete = function() { resolve(true); };
+                    tx.onerror = function() { resolve(false); };
+                } catch (e) {
+                    resolve(false);
+                }
+            });
+        }
+    }
+
+    // Initialize IndexedDB in the background safely
+    JeroSkillsDB.init();
+
+    // ─── Real-Time Multi-Tab Synchronization (BroadcastChannel) ───
+    const skillsSyncChannel = (typeof window.BroadcastChannel !== 'undefined')
+        ? new BroadcastChannel('jero_skills_sync')
+        : null;
+
+    function broadcastMutation(action = 'mutation') {
+        if (skillsSyncChannel) {
+            try {
+                skillsSyncChannel.postMessage({ action: action, timestamp: Date.now() });
+            } catch (e) {
+                console.warn('[SkillsSync] BroadcastChannel error:', e);
+            }
+        }
+    }
+
+    function invalidateClientCaches(broadcast = true) {
+        clientRamCache.clear();
+        JeroSkillsDB.clear();
+        if (broadcast) {
+            broadcastMutation('mutation');
+        }
+    }
+
+    if (skillsSyncChannel) {
+        skillsSyncChannel.onmessage = function(e) {
+            if (e.data && e.data.action === 'mutation') {
+                invalidateClientCaches(false);
+                fetchSkills(1, true);
+            }
+        };
+    }
+
+    // Real-Time WebSockets Synchronization via Laravel Reverb / Echo
+    if (typeof window.Echo !== 'undefined') {
+        try {
+            window.Echo.channel('superadmin.skills')
+                .listen('.skill.updated', function() {
+                    invalidateClientCaches(false);
+                    fetchSkills(1, true);
+                });
+        } catch (echoErr) {
+            console.warn('[SkillsEcho] Listener notice:', echoErr);
+        }
+    }
+
+    // Zero Stale Data: Automatic re-validation on tab focus if data is older than 60 seconds
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            if (Date.now() - lastActiveTimestamp > CLIENT_CACHE_TTL_MS) {
+                invalidateClientCaches(false);
+                fetchSkills(1, true);
+            }
+            lastActiveTimestamp = Date.now();
+        }
+    });
 
     function generateUUID() {
         if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -901,8 +1050,8 @@ $(document).ready(function() {
         });
     }
 
-    // ─── Fetch Skills Data (AJAX Stream Update with Client RAM Cache & In-Flight Abort) ───
-    function fetchSkills(page = 1) {
+    // ─── Fetch Skills Data (Multi-Tier L1 RAM -> L2 IndexedDB -> L3 AJAX Stream Update) ───
+    async function fetchSkills(page = 1, forceNetwork = false) {
         let params = {
             page: page,
             q: currentSearch,
@@ -917,15 +1066,26 @@ $(document).ready(function() {
         let newUrl = window.location.pathname + '?' + queryStr;
         window.history.pushState(null, '', newUrl);
 
-        // 1. Client RAM Cache Check (0ms transition, 0 server strain)
         let cacheKey = `${page}:${currentSearch}:${currentRange}:${currentLetter}:${currentSize}:${currentSort}`;
-        let cached = clientRamCache.get(cacheKey);
-        if (cached && (Date.now() - cached.timestamp < CLIENT_CACHE_TTL_MS)) {
-            renderSkillsResponse(cached.data);
-            return;
+
+        if (!forceNetwork) {
+            // 1. Client RAM Cache Check (L1 - 0ms)
+            let cachedRam = clientRamCache.get(cacheKey);
+            if (cachedRam && (Date.now() - cachedRam.timestamp < CLIENT_CACHE_TTL_MS)) {
+                renderSkillsResponse(cachedRam.data);
+                return;
+            }
+
+            // 2. Client IndexedDB Check (L2 - < 5ms)
+            let cachedDb = await JeroSkillsDB.get(cacheKey);
+            if (cachedDb) {
+                clientRamCache.set(cacheKey, { timestamp: Date.now(), data: cachedDb });
+                renderSkillsResponse(cachedDb);
+                return;
+            }
         }
 
-        // 2. Abort previous in-flight request to eliminate race conditions
+        // 3. Abort previous in-flight request to eliminate race conditions
         if (activeFetchXhr && activeFetchXhr.readyState !== 4) {
             activeFetchXhr.abort();
         }
@@ -941,8 +1101,9 @@ $(document).ready(function() {
             success: function(res) {
                 $('#skillsStreamWrapper').css('opacity', '1');
                 if (res.status === 'success') {
-                    // Cache successful response in user RAM
+                    // Cache successful response in L1 RAM and L2 IndexedDB
                     clientRamCache.set(cacheKey, { timestamp: Date.now(), data: res });
+                    JeroSkillsDB.set(cacheKey, res);
                     renderSkillsResponse(res);
                 }
             },
@@ -1213,11 +1374,11 @@ $(document).ready(function() {
                     success: function(res) {
                         $btn.data('processing', false).prop('disabled', false);
                         if (res.status === 'success') {
-                            clientRamCache.clear();
+                            invalidateClientCaches();
                             Swal.fire('Deleted!', res.message, 'success');
                             selectedSkillIds.clear();
                             updateBulkToolbar();
-                            fetchSkills(1);
+                            fetchSkills(1, true);
                         } else {
                             Swal.fire('Error', res.message || 'Could not delete skills.', 'error');
                         }
@@ -1268,11 +1429,11 @@ $(document).ready(function() {
                     success: function(res) {
                         $btn.data('processing', false).prop('disabled', false);
                         if (res.status === 'success') {
-                            clientRamCache.clear();
+                            invalidateClientCaches();
                             toastr.success(res.message || 'Skill deleted successfully.');
                             $('#skill-card-' + docId).fadeOut(200, function() {
                                 $(this).remove();
-                                fetchSkills(1);
+                                fetchSkills(1, true);
                             });
                         } else {
                             Swal.fire('Error', res.message || 'Failed to delete skill.', 'error');
@@ -1430,7 +1591,7 @@ $(document).ready(function() {
                 $btn.prop('disabled', false);
 
                 if (res.status === 'success') {
-                    clientRamCache.clear();
+                    invalidateClientCaches();
                     hideSkillDrawer();
                     Swal.fire({
                         title: 'Success!',
@@ -1439,7 +1600,7 @@ $(document).ready(function() {
                         timer: 1800,
                         showConfirmButton: false
                     });
-                    fetchSkills(1);
+                    fetchSkills(1, true);
                 } else {
                     Swal.fire('Validation Error', res.message || 'Please verify the entered skill values.', 'error');
                 }

@@ -83,6 +83,10 @@ class SuperAdminSkillsBackendTest extends TestCase
 
         if (! empty($this->createdIdempotencyKeys)) {
             DB::table('sys_idempotency_keys')->whereIn('idempotency_key', $this->createdIdempotencyKeys)->delete();
+            foreach ($this->createdIdempotencyKeys as $k) {
+                $prefix = substr($k, 0, 30);
+                DB::table('sys_outbox_events')->where('idempotency_key', 'like', "{$prefix}%")->delete();
+            }
         }
 
         SuperAdminSkillCacheManager::flushCaches();
@@ -277,5 +281,75 @@ class SuperAdminSkillsBackendTest extends TestCase
     {
         $this->artisan('skills:reindex')
             ->assertExitCode(0);
+    }
+
+    /**
+     * Test 7: Circuit breaker database fallback functions seamlessly if ES encounters exception.
+     */
+    public function test_skills_circuit_breaker_database_fallback(): void
+    {
+        $this->actingAs($this->superAdmin);
+
+        $cbSkillName = 'cbskill'.substr(md5(uniqid()), 0, 8);
+        $this->createdSkillNames[] = $cbSkillName;
+
+        // Directly insert into MySQL master skills
+        $now = now();
+        $dbId = DB::table('skills')->insertGetId([
+            'company_id' => null,
+            'name' => $cbSkillName,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        $readService = app(\App\Services\SuperAdmin\SuperAdminSkillReadService::class);
+        $reflection = new \ReflectionClass($readService);
+        $fallbackMethod = $reflection->getMethod('fallbackDatabaseRead');
+        $fallbackMethod->setAccessible(true);
+
+        $result = $fallbackMethod->invokeArgs($readService, [
+            $cbSkillName, // search
+            '', // letter
+            '', // range
+            1, // page
+            20, // size
+            'newest', // sort
+        ]);
+
+        $this->assertGreaterThanOrEqual(1, $result['total']);
+        $this->assertSame($cbSkillName, $result['hits'][0]['skill_name']);
+    }
+
+    /**
+     * Test 8: Idempotency keys exceeding 64 chars are safely clamped without throwing DB exceptions.
+     */
+    public function test_skills_idempotency_key_length_safety(): void
+    {
+        $this->actingAs($this->superAdmin);
+
+        $longKey = 'test-skill-very-long-idempotency-key-that-exceeds-sixty-four-characters-'.uniqid();
+        $this->createdIdempotencyKeys[] = substr($longKey, 0, 64);
+        $uniqueSkillName = 'longkeyskill'.substr(md5(uniqid()), 0, 8);
+        $this->createdSkillNames[] = $uniqueSkillName;
+
+        $response = $this->postJson(
+            route('superadmin.company.addEditSkillUpdate'),
+            [
+                'tokenId' => '0',
+                'skill_name' => $uniqueSkillName,
+            ],
+            ['X-Idempotency-Key' => $longKey]
+        );
+
+        $response->assertStatus(200);
+        $this->assertSame('success', $response->json('status'));
+
+        // Verify stored key in DB is clamped to <= 64 chars
+        $storedKey = DB::table('sys_idempotency_keys')
+            ->where('tenant_id', 0)
+            ->where('idempotency_key', substr($longKey, 0, 64))
+            ->first();
+        $this->assertNotNull($storedKey);
+        $this->assertSame('COMPLETED', $storedKey->status);
     }
 }

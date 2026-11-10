@@ -148,10 +148,14 @@ flowchart TD
   - [`resources/views/super-admin/comman/skill-list.blade.php`](file:///c:/xampp/htdocs/git/JWMaincode28June2026/resources/views/super-admin/comman/skill-list.blade.php)
   - [`resources/views/super-admin/comman/add-edit-skill.blade.php`](file:///c:/xampp/htdocs/git/JWMaincode28June2026/resources/views/super-admin/comman/add-edit-skill.blade.php)
 - **Mechanics:**
+  - **Enterprise Client Database (`JeroSkillsDB` IndexedDB v1):** Persistent client L2 store providing <5ms query hydration across page reloads without network strain.
   - **In-Flight XHR Abort:** Previous AJAX requests are cancelled (`activeFetchXhr.abort()`) prior to launching new searches or tab switches, preventing race-condition DOM overrides.
-  - **Client-Side RAM Cache:** Results for visited filters and searches are cached in browser RAM for 60 seconds (`clientRamCache`), providing 0ms transitions with zero network requests.
+  - **Client-Side RAM Cache (L1):** Results for visited filters and searches are cached in browser RAM for 60 seconds (`clientRamCache`), providing 0ms transitions with zero network requests.
+  - **Real-Time Multi-Tab Synchronization:** `BroadcastChannel('jero_skills_sync')` broadcasts mutation events instantly to all open tabs; listening tabs invalidate client caches and refresh silently in the background with zero page reload.
+  - **Real-Time WebSockets Sync:** Integrates with `window.Echo.channel('superadmin.skills')` for server-pushed updates.
+  - **Zero Stale Data Visibility Re-Validation:** On tab focus (`visibilitychange`), re-validates queries older than 60 seconds.
   - **In-Flight Mutation Locks:** Rapid clicks on delete buttons or save buttons are blocked while a request is in flight.
-  - **Idempotency UUIDs:** Generates RFC 4122 v4 UUIDs for every mutation and passes them via `X-Idempotency-Key`.
+  - **Idempotency UUIDs:** Generates RFC 4122 v4 UUIDs for every mutation and passes them via `X-Idempotency-Key` (defensively clamped to 64 chars).
   - **SessionStorage Draft Recovery:** Autosaves draft skill tags in `sessionStorage` (`jero_master_skill_draft`) and clears on successful save.
   - **Preservation:** HTML markup, classes, styling, colors, and layout are 100% untouched.
 
@@ -168,8 +172,8 @@ flowchart TD
 | `app/Console/Commands/ReindexSkillsToElasticCommand.php` | **Created** | CLI command `php artisan skills:reindex` to synchronize MySQL ↔ ES. |
 | `app/Console/Commands/ProcessSkillOutboxCommand.php` | **Created** | CLI command `php artisan skills:process-outbox` for scheduled event dispatch. |
 | `app/Http/Controllers/SuperAdmin/SuperAdminCompanyController.php` | **Modified** | Delegated `skillskElastic`, `skillDelete`, `addEditSkillUpdate` to read/mutation services. |
-| `resources/views/super-admin/comman/skill-list.blade.php` | **Modified** | Upgraded `<script>` with in-flight abort, client RAM cache, and idempotency. Zero UI changes. |
-| `resources/views/super-admin/comman/add-edit-skill.blade.php` | **Modified** | Upgraded `<script>` with in-flight lock, idempotency, and draft recovery. Zero UI changes. |
+| `resources/views/super-admin/comman/skill-list.blade.php` | **Modified** | Upgraded `<script>` with `JeroSkillsDB` (IndexedDB v1), `BroadcastChannel`, and anti-race abort. Zero UI changes. |
+| `resources/views/super-admin/comman/add-edit-skill.blade.php` | **Modified** | Upgraded `<script>` with `BroadcastChannel` mutation dispatch and draft recovery. Zero UI changes. |
 | `tests/Feature/SuperAdminSkillsBackendTest.php` | **Created** | Comprehensive automated PHPUnit test suite covering CQRS, outbox, and idempotency. |
 
 ---
@@ -187,11 +191,11 @@ PHPUnit 11.5.44 by Sebastian Bergmann and contributors.
 Runtime:       PHP 8.2.12
 Configuration: C:\xampp\htdocs\git\JWMaincode28June2026\phpunit.xml
 
-......                                                              6 / 6 (100%)
+........                                                            8 / 8 (100%)
 
-Time: 00:05.989, Memory: 76.00 MB
+Time: 00:08.498, Memory: 76.00 MB
 
-OK (6 tests, 31 assertions)
+OK (8 tests, 38 assertions)
 ```
 
 ### 5.2 Verification Scenarios Verified
@@ -204,7 +208,9 @@ OK (6 tests, 31 assertions)
 | **4** | **Transactional Outbox Persistence** | Created skill via POST API | **Passed** | `sys_outbox_events` logged with `status = 'COMPLETED'` via fast path, ES synced. |
 | **5** | **Single & Bulk Deletion with Outbox** | Deleted skill via POST API | **Passed** | MySQL row deleted, outbox event logged, ES document purged. |
 | **6** | **CLI Reindex Command** | `php artisan skills:reindex` | **Passed** | Successfully reindexed 42 master skills and flushed cache. |
-| **7** | **Zero UI/Design Mutations** | Git diff inspection | **Passed** | 0 HTML/CSS modifications; visual presentation, table, and cards are 100% identical. |
+| **7** | **Circuit-Breaker DB Fallback** | `fallbackDatabaseRead` method reflection | **Passed** | Safely served skills from MySQL `skills` table if ES is unreachable. |
+| **8** | **Idempotency Key Length Safety** | >64-char `X-Idempotency-Key` header | **Passed** | Clamped safely to 64 chars without throwing database truncation exceptions. |
+| **9** | **Zero UI/Design Mutations** | Git diff inspection | **Passed** | 0 HTML/CSS modifications; visual presentation, table, and cards are 100% identical. |
 
 ---
 

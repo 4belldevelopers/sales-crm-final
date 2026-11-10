@@ -345,6 +345,14 @@ $(document).ready(function() {
                         sessionStorage.removeItem('jero_master_skill_draft');
                     }
 
+                    if (typeof BroadcastChannel !== 'undefined') {
+                        try {
+                            let bc = new BroadcastChannel('jero_skills_sync');
+                            bc.postMessage({ action: 'mutation', timestamp: Date.now() });
+                            bc.close();
+                        } catch (bcErr) {}
+                    }
+
                     Swal.fire({
                         title: 'Success!',
                         text: response.message || 'Skill saved successfully.',

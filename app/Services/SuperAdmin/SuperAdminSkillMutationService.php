@@ -44,12 +44,28 @@ class SuperAdminSkillMutationService
     protected function formatIdempotencyKey(string $action, string|int $identifier, ?string $clientKey, array $payload): string
     {
         if ($clientKey && trim($clientKey) !== '') {
-            return trim($clientKey);
+            return substr(trim($clientKey), 0, 64);
         }
 
         $hash = substr($this->computeRequestHash($payload), 0, 16);
+        $ident = substr((string) $identifier, 0, 20);
 
-        return "skill:{$action}:{$identifier}:{$hash}";
+        return substr("skill:{$action}:{$ident}:{$hash}", 0, 64);
+    }
+
+    /**
+     * Compute a unique outbox event idempotency key bounded to 64 characters.
+     */
+    protected function computeOutboxKey(string $baseKey, string|int $suffix): string
+    {
+        $suffixStr = ":{$suffix}";
+        $maxBaseLen = 64 - strlen($suffixStr);
+
+        if ($maxBaseLen > 0) {
+            return substr($baseKey, 0, $maxBaseLen).$suffixStr;
+        }
+
+        return substr($suffixStr, 0, 64);
     }
 
     /**
@@ -117,7 +133,7 @@ class SuperAdminSkillMutationService
                         'updated_at' => $now,
                     ]);
 
-                    $customDocId = uniqid('skill_', true);
+                    $customDocId = (string) $newDbId;
 
                     // Insert atomic outbox event
                     $outboxPayload = [
@@ -131,7 +147,7 @@ class SuperAdminSkillMutationService
 
                     $outboxEventId = DB::table('sys_outbox_events')->insertGetId([
                         'tenant_id' => 0,
-                        'idempotency_key' => "{$finalIdempotencyKey}:{$newDbId}",
+                        'idempotency_key' => $this->computeOutboxKey($finalIdempotencyKey, $newDbId),
                         'aggregate_type' => 'Skill',
                         'aggregate_id' => $newDbId,
                         'aggregate_version' => 1,
@@ -333,7 +349,7 @@ class SuperAdminSkillMutationService
 
                 $outboxEventId = DB::table('sys_outbox_events')->insertGetId([
                     'tenant_id' => 0,
-                    'idempotency_key' => "{$finalIdempotencyKey}:{$docIdStr}",
+                    'idempotency_key' => $this->computeOutboxKey($finalIdempotencyKey, $docIdStr),
                     'aggregate_type' => 'Skill',
                     'aggregate_id' => $dbId,
                     'aggregate_version' => 1,
