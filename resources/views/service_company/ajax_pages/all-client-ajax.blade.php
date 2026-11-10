@@ -1,6 +1,8 @@
 @php
     use App\Helper\GeneralMethod;
+    use Carbon\Carbon;
     use Illuminate\Support\Facades\DB;
+    use Illuminate\Support\Facades\Auth;
 
     $salaryMode = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
@@ -18,23 +20,70 @@
     @if($isPending)
         @php
             $company_name = ucwords($rowObj->company_name ?? 'Client');
-            $rowTargetId = $rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->id ?? 0));
-            $invitationId = $rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0);
+            $client_id = $rowObj->client_id ?? 0;
             $from_company_id = $rowObj->from_company_id ?? 0;
+            $staffing_company_invitation_id = $rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0);
+            $target_id = $client_id ?: ($from_company_id ?: $staffing_company_invitation_id);
+
             $city = $rowObj->city_name ?? ($rowObj->city ?? '');
-            $stateName = $rowObj->state_name ?? ($rowObj->state ?? '');
             $country_name = $rowObj->country_name ?? ($rowObj->country ?? '');
-            $departmentArr = !empty($rowObj->ind_name) ? $rowObj->ind_name : 'Other / Diversified Services';
+            $ind_name = !empty($rowObj->ind_name) ? $rowObj->ind_name : 'Staffing & Recruiting';
+
+            $currentCompanyId = $company_id ?? (Auth::check() ? Auth::user()->company_id : null);
+            $tenantTimezone = GeneralMethod::defaultTimeZone($currentCompanyId);
+            $now = Carbon::now($tenantTimezone);
+
+            // Resolve Timestamps & Expiry with Tenant Timezone
             $created_at = !empty($rowObj->from_created_at) ? $rowObj->from_created_at : ($rowObj->created_at ?? '');
-            $newDate = !empty($created_at) ? date('d M, Y', strtotime($created_at)) : '-';
-            $daysAgo = !empty($created_at) ? GeneralMethod::timeAgo($created_at) : 'Just now';
+            $createdAt = !empty($created_at) ? Carbon::parse($created_at)->setTimezone($tenantTimezone) : Carbon::now($tenantTimezone);
+            $expiresAt = !empty($rowObj->expires_at) ? Carbon::parse($rowObj->expires_at)->setTimezone($tenantTimezone) : (clone $createdAt)->addDays(7);
+            
+            $tzShort = $createdAt->format('T');
+            $dateSentFormatted = $createdAt->format('d M, Y • h:i A') . ' ' . $tzShort;
+            $expiryDateFormatted = $expiresAt->format('d M, Y • h:i A') . ' ' . $tzShort;
+            $daysAgo = GeneralMethod::timeAgo($createdAt);
 
-            $expiresAt = !empty($rowObj->expires_at) ? $rowObj->expires_at : (!empty($created_at) ? date('Y-m-d H:i:s', strtotime($created_at . ' +7 days')) : null);
-            $expiresFormatted = $expiresAt ? date('d M, Y', strtotime($expiresAt)) : 'in 7 days';
+            $isExpired = $now->greaterThan($expiresAt);
 
-            $requisitionCount = (int) ($rowObj->requisition_count ?? 0);
+            if ($isExpired) {
+                $expiryCountdown = 'Expired';
+                $expiryBadgeClass = 'badge-light-danger text-danger';
+                $ttlLabel = 'Expired';
+            } else {
+                $diffDays = (int) $now->diffInDays($expiresAt);
+                $diffHours = (int) $now->diffInHours($expiresAt);
+                if ($diffDays >= 1) {
+                    $expiryCountdown = $diffDays . ' ' . \Illuminate\Support\Str::plural('day', $diffDays) . ' left';
+                    $expiryBadgeClass = ($diffDays <= 2) ? 'badge-light-warning text-warning' : 'badge-light-success text-success';
+                    $ttlLabel = $diffDays . 'd remaining';
+                } elseif ($diffHours >= 1) {
+                    $expiryCountdown = $diffHours . ' ' . \Illuminate\Support\Str::plural('hr', $diffHours) . ' left';
+                    $expiryBadgeClass = 'badge-light-danger text-danger';
+                    $ttlLabel = $diffHours . 'h remaining';
+                } else {
+                    $diffMins = max(1, (int) $now->diffInMinutes($expiresAt));
+                    $expiryCountdown = $diffMins . 'm left';
+                    $expiryBadgeClass = 'badge-light-danger text-danger';
+                    $ttlLabel = $diffMins . 'm remaining';
+                }
+            }
 
-            /* ── logo / avatar calculation ── */
+            // Singular Authoritative Status Pill
+            $to_invitation_status = (int) ($rowObj->to_invitation_status ?? 0);
+            $statusLabel = 'Action Needed';
+            $statusClass = 'pill-warning';
+            if ($to_invitation_status == 1) {
+                $statusLabel = 'Connected';
+                $statusClass = 'pill-active';
+            } elseif ($to_invitation_status == -1) {
+                $statusLabel = 'Declined';
+                $statusClass = 'pill-inactive';
+            } elseif ($to_invitation_status == 2 || $isExpired) {
+                $statusLabel = 'Expired';
+                $statusClass = 'pill-inactive';
+            }
+
+            // Logo / avatar calculation
             $background_image = '';
             if (!empty($rowObj->logo) && strlen($rowObj->logo) > 10) {
                 $background_image = $rowObj->logo;
@@ -74,37 +123,53 @@
             } else {
                 $initials = 'CL';
             }
+
+            // Website resolve
+            $displayWebsite = !empty($rowObj->website) ? $rowObj->website : null;
+            if (!empty($displayWebsite)) {
+                $displayWebsite = rtrim(preg_replace('~^https?://(www\.)?~i', '', $displayWebsite), '/');
+            }
         @endphp
 
-        <div class="cl-primary-card tbl-r is-pending-request" data-pending-id="{{ $invitationId }}" data-row-id="{{ $rowTargetId }}" data-client-type="request">
+        <div class="cl-primary-card tbl-r is-pending-request is-inbound-invite" data-pending-id="{{ $staffing_company_invitation_id }}" data-row-id="{{ $target_id }}" data-client-type="request">
             {{-- Upper 4 Discrete Sub-Cards Grid --}}
             <div class="cl-subcards-grid">
                 {{-- SUB-CARD 1: Client Identity --}}
                 <div class="cl-subcard cl-subcard-identity">
                     <div class="cl-subcard-head">
-                        <span class="cl-subcard-title">Client Identity</span>
+                        <span class="cl-subcard-title" title="Inviting client company details">Client</span>
                         <div class="cl-subcard-badges">
-                            <span class="cl-scope-pill pill-direct type-direct">Direct Client</span>
-                            <span class="badge" style="background:#fef3c7; color:#d97706; font-size:9px; font-weight:700; padding:1.5px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
+                            <span class="cl-scope-pill pill-direct type-direct" title="Inbound direct client partnership request">Direct Client</span>
+                            <span class="cl-status-pill {{ $statusClass }}" title="Authoritative invitation status: {{ $statusLabel }}">
+                                <span class="cl-status-pill-dot {{ $statusClass === 'pill-warning' ? 'animate-pulse' : '' }}"></span>
+                                <span>{{ $statusLabel }}</span>
+                            </span>
                         </div>
                     </div>
                     <div class="cl-identity-body">
-                        <div class="cl-logo-box">
-                            @if (!empty($background_image) && strlen($background_image) > 10)
-                                <img src="{{ $background_image }}" alt="{{ $initials }}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                        <div class="cl-logo-box" title="Client company logo or initials">
+                            @if (!empty($background_image))
+                                <img src="{{ $background_image }}" alt="{{ e($initials) }}" class="cl-logo-img" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
                                 <span class="cl-initials-fallback {{ $bgTextDecore }}" style="display:none;">{{ $initials }}</span>
                             @else
                                 <span class="cl-initials-fallback {{ $bgTextDecore }}">{{ $initials }}</span>
                             @endif
                         </div>
-                        <div class="cl-details-box">
-                            <div class="cl-name view-request-terms" data-row-id="{{ $rowTargetId }}" data-client-type="request" title="{{ $company_name }}">{{ $company_name }}</div>
-                            @if(!empty($departmentArr))
-                                <div class="cl-ind" title="{{ $departmentArr }}">{{ $departmentArr }}</div>
+                        <div class="cl-details-box min-w-0">
+                            <div class="cl-name view-request-terms text-truncate" data-row-id="{{ $target_id }}" data-client-type="request" title="{{ e($company_name) }}" style="cursor:pointer;">
+                                {{ $company_name }}
+                            </div>
+                            <div class="cl-ind text-truncate" title="Industry: {{ e($ind_name) }}">{{ $ind_name }}</div>
+                            @if (!empty($displayWebsite))
+                                <div class="cl-size text-primary text-truncate d-flex align-items-center gap-1 mt-0.5" style="font-size:10.5px; color:#0284c7;" title="Official Website: {{ e($displayWebsite) }}">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                    </svg>
+                                    <span class="text-truncate">{{ $displayWebsite }}</span>
+                                </div>
                             @else
-                                <div class="cl-ind text-muted">—</div>
+                                <div class="cl-size text-muted text-truncate" style="font-size:10px; color:#94a3b8;">Corporate Client</div>
                             @endif
-                            <div class="cl-size text-muted">—</div>
                         </div>
                     </div>
                 </div>
@@ -112,30 +177,23 @@
                 {{-- SUB-CARD 2: Location --}}
                 <div class="cl-subcard cl-subcard-loc">
                     <div class="cl-subcard-head">
-                        <span class="cl-subcard-title">Location</span>
+                        <span class="cl-subcard-title" title="Client headquarters or primary operating location">Location</span>
                     </div>
                     <div class="cl-loc-body">
-                        <svg class="cl-loc-pin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="cl-loc-pin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" title="Geographic location">
                             <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
                             <circle cx="12" cy="10" r="3"/>
                         </svg>
-                        @php
-                            $reqCity = !empty($city) ? ucwords(strtolower((string) $city)) : '';
-                            $reqState = !empty($stateName) ? ucwords(strtolower((string) $stateName)) : '';
-                            $reqCountry = !empty($country_name) ? ucwords(strtolower((string) $country_name)) : '';
-                        @endphp
                         <div class="cl-loc-lines">
-                            @if(!empty($reqCity))
-                                <div class="cl-loc-city" title="{{ $reqCity }}">{{ $reqCity }}</div>
+                            @if ($city)
+                                <div class="cl-loc-city text-truncate" title="City: {{ e($city) }}">{{ $city }}</div>
                             @endif
-                            @if(!empty($reqState))
-                                <div class="cl-loc-state" title="{{ $reqState }}">{{ $reqState }}</div>
+                            @if ($country_name)
+                                <div class="cl-loc-country text-truncate" title="Country: {{ e($country_name) }}">{{ $country_name }}</div>
                             @endif
-                            @if(!empty($reqCountry))
-                                <div class="cl-loc-country" title="{{ $reqCountry }}">{{ $reqCountry }}</div>
-                            @endif
-                            @if(empty($reqCity) && empty($reqState) && empty($reqCountry))
-                                <div class="cl-loc-empty">—</div>
+                            @if (!$city && !$country_name)
+                                <div class="cl-loc-empty" style="color:#64748b; font-size:11px;">Unspecified</div>
+                                <div style="font-size:9.5px; color:#94a3b8;">Set on connection</div>
                             @endif
                         </div>
                     </div>
@@ -160,81 +218,96 @@
                 <div class="cl-subcard cl-subcard-pipeline">
                     <div class="cl-subcard-head d-flex align-items-center justify-content-between">
                         <span class="cl-subcard-title" title="Partnership decision actions">Actions</span>
-                        <span class="badge badge-light-success py-0.5 px-2" style="font-size:9.5px; font-weight:700;" title="Remaining decision window">
-                            6 days left
+                        <span class="badge {{ $expiryBadgeClass }} py-0.5 px-2" style="font-size:9.5px; font-weight:700;" title="Remaining decision window">
+                            {{ $expiryCountdown }}
                         </span>
                     </div>
                     <div class="cl-pipe-body tbl-cell-req-actions d-flex align-items-center justify-content-center h-100" style="padding:4px 0;">
-                        <div class="d-flex align-items-center gap-1.5 w-100">
-                            <!-- Accept Button -->
-                            <button type="button" 
-                                    class="btn btn-sm btn-success fw-bold request_event flex-fill text-truncate" 
-                                    data-row-id="{{ $invitationId }}" 
-                                    data-row-event="1" 
-                                    data-row-from_company="{{ $from_company_id }}" 
-                                    style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#10b981; border:none; color:#ffffff; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
-                                    title="Accept Direct Client Partnership">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                                <span class="text-truncate">Accept</span>
-                            </button>
+                        @if ($to_invitation_status == 1)
+                            <span class="badge bg-light-success text-success fw-bold px-3 py-1.5 d-inline-flex align-items-center gap-1" style="font-size:11px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Connected</span>
+                            </span>
+                        @elseif ($to_invitation_status == -1)
+                            <span class="badge bg-light-danger text-danger fw-bold px-3 py-1.5 d-inline-flex align-items-center gap-1" style="font-size:11px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                <span>Declined</span>
+                            </span>
+                        @elseif ($to_invitation_status == 2 || $isExpired)
+                            <span class="badge bg-light-danger text-danger fw-bold px-3 py-1.5" style="font-size:11px;">Expired</span>
+                        @else
+                            <div class="d-flex align-items-center gap-1.5 w-100">
+                                <!-- Accept Button -->
+                                <button type="button" 
+                                        class="btn btn-sm btn-success fw-bold request_event flex-fill text-truncate" 
+                                        data-row-id="{{ $staffing_company_invitation_id }}" 
+                                        data-row-event="1" 
+                                        data-row-from_company="{{ $from_company_id }}" 
+                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#10b981; border:none; color:#ffffff; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
+                                        title="Accept Direct Client Partnership">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span class="text-truncate">Accept</span>
+                                </button>
 
-                            <!-- Decline Button -->
-                            <button type="button" 
-                                    class="btn btn-sm btn-light-danger fw-bold request_event flex-fill text-truncate" 
-                                    data-row-id="{{ $invitationId }}" 
-                                    data-row-event="-1" 
-                                    data-row-from_company="{{ $from_company_id }}" 
-                                    style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#fef2f2; border:1.5px solid #fecaca; color:#ef4444; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
-                                    title="Decline Partnership Request">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                                <span class="text-truncate">Decline</span>
-                            </button>
+                                <!-- Decline Button -->
+                                <button type="button" 
+                                        class="btn btn-sm btn-light-danger fw-bold request_event flex-fill text-truncate" 
+                                        data-row-id="{{ $staffing_company_invitation_id }}" 
+                                        data-row-event="-1" 
+                                        data-row-from_company="{{ $from_company_id }}" 
+                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#fef2f2; border:1.5px solid #fecaca; color:#ef4444; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
+                                        title="Decline Partnership Request">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                    <span class="text-truncate">Decline</span>
+                                </button>
 
-                            <!-- Terms Button -->
-                            <button type="button" 
-                                    class="btn btn-sm btn-light fw-bold show-detail-direct view-request-terms flex-fill text-truncate" 
-                                    data-row-id="{{ $rowTargetId }}" 
-                                    data-client-type="request" 
-                                    style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#eff6ff; border:1.5px solid #bfdbfe; color:#2563eb; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
-                                    title="Review Partnership Terms & Profile">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                </svg>
-                                <span class="text-truncate">Terms</span>
-                            </button>
-                        </div>
+                                <!-- Terms Button -->
+                                <button type="button" 
+                                        class="btn btn-sm btn-light fw-bold show-detail-direct view-request-terms flex-fill text-truncate" 
+                                        data-row-id="{{ $target_id }}" 
+                                        data-client-type="request" 
+                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#eff6ff; border:1.5px solid #bfdbfe; color:#2563eb; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
+                                        title="Review Partnership Terms & Profile">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    </svg>
+                                    <span class="text-truncate">Terms</span>
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
 
-            {{-- BOTTOM STRIP: Audit Timeline and Reference ID --}}
+            {{-- BOTTOM STRIP: Audit Timeline and Reference ID with Timezone --}}
             <div class="cl-card-bottom-strip d-flex align-items-center justify-content-between flex-wrap gap-2" style="padding:7px 14px; background:#f8fafc; border-top:1px solid #e2e8f0; font-size:11px;">
                 <div class="d-flex align-items-center flex-wrap gap-2 text-muted">
-                    <div class="d-flex align-items-center gap-1.5" title="Request received on {{ $newDate }}">
+                    <div class="d-flex align-items-center gap-1.5" title="Request received on {{ $dateSentFormatted }}">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
                         <span style="color:#64748b;">Request Received:</span>
-                        <strong class="text-gray-900">{{ $newDate }}</strong>
+                        <strong class="text-gray-900">{{ $dateSentFormatted }}</strong>
                         <span class="text-primary fw-semibold" style="font-size:10px;">({{ $daysAgo }})</span>
                     </div>
                     <span style="color:#cbd5e1; font-weight:bold;">•</span>
-                    <div class="d-flex align-items-center gap-1.5" title="Valid until {{ $expiresFormatted }}">
+                    <div class="d-flex align-items-center gap-1.5" title="Valid until {{ $expiryDateFormatted }}">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                             <circle cx="12" cy="12" r="10"></circle>
                             <path d="M12 6v6l4 2"></path>
                         </svg>
                         <span style="color:#64748b;">Expires:</span>
-                        <strong class="text-gray-900">{{ $expiresFormatted }}</strong>
+                        <strong class="text-gray-900">{{ $expiryDateFormatted }}</strong>
+                        <span class="fw-semibold {{ $isExpired ? 'text-danger' : 'text-success' }}" style="font-size:10px;">{{ $ttlLabel }}</span>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2 text-muted" style="font-size:10.5px;">
@@ -246,7 +319,7 @@
                         <span>Verified Client Outreach</span>
                     </span>
                     <span style="color:#cbd5e1; font-weight:bold;">•</span>
-                    <span>Ref: <strong class="text-gray-700">#REQ-{{ str_pad($invitationId, 5, '0', STR_PAD_LEFT) }}</strong></span>
+                    <span>Ref: <strong class="text-gray-700">#REQ-{{ str_pad($staffing_company_invitation_id, 5, '0', STR_PAD_LEFT) }}</strong></span>
                 </div>
             </div>
         </div>
