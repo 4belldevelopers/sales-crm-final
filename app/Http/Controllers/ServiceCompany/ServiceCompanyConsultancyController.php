@@ -274,6 +274,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     'data' => [],
                     'userPermissions' => $userPermissions,
                     'company_id' => $company_id,
+                    'tenantTimezone' => \App\Helper\GeneralMethod::defaultTimeZone($company_id),
                     'batchAgencyStats' => [],
                     'batchLocations' => [],
                     'batchIndustries' => [],
