@@ -13057,13 +13057,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     public function send_job_recommanded_request($id)
     {
         $from_company_id = auth()->user()->company_id;
-        $from_user_id = $this->user->id;
+        $currentUser = $this->user ?? auth()->user();
+        $from_user_id = $currentUser ? $currentUser->id : auth()->id();
         $to_company_id = $id;
 
         $jobidGet = (int) ($_REQUEST['current_jobid'] ?? 0);
 
         $jobRowCheck = DB::table('jobs')->where('id', $jobidGet)->first();
-        if (! $jobRowCheck || (! $this->user->hasRole('admin') && (int) $jobRowCheck->company_id !== (int) $from_company_id)) {
+        if (! $jobRowCheck || (! ($currentUser && $currentUser->hasRole('admin')) && (int) $jobRowCheck->company_id !== (int) $from_company_id)) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Unauthorized: Job requisition does not belong to your company.']);
         }
 
@@ -13267,14 +13268,45 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
                 }
 
-                // Check and insert staffing company invitation if not exists
-                $clientInvitationCounter = DB::table('staffing_company_invitation')
+                // Concurrency & Idempotency Guard: Check existing active or historical invitation
+                $existingInvitation = DB::table('staffing_company_invitation')
                     ->where('from_company_id', $from_company_id)
                     ->where('to_company_id', $to_company_id)
-                    ->where('to_invitation_status', '!=', -1)
-                    ->count();
+                    ->whereIn('to_invitation_status', [0, 1])
+                    ->orderBy('id', 'desc')
+                    ->first();
 
-                if ($clientInvitationCounter == 0) {
+                $needsNewInvitation = true;
+                if ($existingInvitation) {
+                    if ((int) $existingInvitation->to_invitation_status === 1) {
+                        // Already accepted/connected
+                        $invitationId = $existingInvitation->id;
+                        $needsNewInvitation = false;
+                    } elseif ((int) $existingInvitation->to_invitation_status === 0) {
+                        $isPast = false;
+                        if (! empty($existingInvitation->expires_at)) {
+                            $isPast = \Carbon\Carbon::parse($existingInvitation->expires_at)->isPast();
+                        } elseif (! empty($existingInvitation->from_created_at)) {
+                            $isPast = \Carbon\Carbon::parse($existingInvitation->from_created_at)->addDays(7)->isPast();
+                        }
+                        if ($isPast) {
+                            // JIT Lazy Expiry (Rule 22): Lazily transition expired invitation to -2, releasing unique slot
+                            DB::table('staffing_company_invitation')
+                                ->where('id', $existingInvitation->id)
+                                ->update([
+                                    'to_invitation_status' => -2,
+                                    'updated_at' => now(),
+                                ]);
+                            $needsNewInvitation = true;
+                        } else {
+                            // Active non-expired invitation exists
+                            $invitationId = $existingInvitation->id;
+                            $needsNewInvitation = false;
+                        }
+                    }
+                }
+
+                if ($needsNewInvitation) {
                     $company_row = DB::table('companies')->select('companies.company_email')->where('companies.id', '=', $to_company_id)->first();
                     $toEmail = $company_row ? (string) $company_row->company_email : '';
                     $normalizedRecipient = \App\Domain\AgencyPartnership\Services\AgencyRecipientNormalizer::normalize($toEmail);
@@ -13295,8 +13327,21 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
-                    $invitationId = DB::table('staffing_company_invitation')->insertGetId($insertInvitation);
-                    $sendInvitationMail = true;
+                    try {
+                        $invitationId = DB::table('staffing_company_invitation')->insertGetId($insertInvitation);
+                        $sendInvitationMail = true;
+                    } catch (\Illuminate\Database\QueryException $qe) {
+                        // Concurrency guard: Catch 1062 duplicate key on uk_tenant_active_slot gracefully
+                        if ($qe->getCode() === '23000' && str_contains($qe->getMessage(), '1062')) {
+                            $invitationId = DB::table('staffing_company_invitation')
+                                ->where('from_company_id', $from_company_id)
+                                ->where('to_company_id', $to_company_id)
+                                ->where('to_invitation_status', 0)
+                                ->value('id');
+                        } else {
+                            throw $qe;
+                        }
+                    }
                 }
 
                 // Check and insert recommendation relation
@@ -13949,24 +13994,39 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     if (! in_array($toCompanyId, $existingInvitations)) {
                         $toEmail = $companiesMap[$toCompanyId] ?? '';
                         $normalizedRecipient = \App\Domain\AgencyPartnership\Services\AgencyRecipientNormalizer::normalize((string) $toEmail);
-                        $invId = DB::table('staffing_company_invitation')->insertGetId([
-                            'from_company_id' => $from_company_id,
-                            'from_client_id' => $fromClientId,
-                            'from_user_id' => $from_user_id,
-                            'from_status' => 1,
-                            'from_created_at' => $today,
-                            'to_company_id' => $toCompanyId,
-                            'to_email' => $toEmail,
-                            'to_status' => 0,
-                            'job_id' => $jobId,
-                            'to_invitation_status' => 0,
-                            'expires_at' => now()->addDays(7),
-                            'delivery_status' => 'PENDING',
-                            'normalized_recipient' => $normalizedRecipient,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                        $createdInvitations[$toCompanyId] = $invId;
+                        try {
+                            $invId = DB::table('staffing_company_invitation')->insertGetId([
+                                'from_company_id' => $from_company_id,
+                                'from_client_id' => $fromClientId,
+                                'from_user_id' => $from_user_id,
+                                'from_status' => 1,
+                                'from_created_at' => $today,
+                                'to_company_id' => $toCompanyId,
+                                'to_email' => $toEmail,
+                                'to_status' => 0,
+                                'job_id' => $jobId,
+                                'to_invitation_status' => 0,
+                                'expires_at' => now()->addDays(7),
+                                'delivery_status' => 'PENDING',
+                                'normalized_recipient' => $normalizedRecipient,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                            $createdInvitations[$toCompanyId] = $invId;
+                        } catch (\Illuminate\Database\QueryException $qe) {
+                            if ($qe->getCode() === '23000' && str_contains($qe->getMessage(), '1062')) {
+                                $invId = (int) DB::table('staffing_company_invitation')
+                                    ->where('from_company_id', $from_company_id)
+                                    ->where('to_company_id', $toCompanyId)
+                                    ->where('to_invitation_status', 0)
+                                    ->value('id');
+                                if ($invId > 0) {
+                                    $createdInvitations[$toCompanyId] = $invId;
+                                }
+                            } else {
+                                throw $qe;
+                            }
+                        }
                     }
 
                     // Insert recommendation_relation

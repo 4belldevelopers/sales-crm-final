@@ -2119,7 +2119,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             }
         }
 
-        $schemaVersion = '2.1';
+        $schemaVersion = '2.2';
         $cachePayload['version'] = $tenantVersion;
         $hash = md5(json_encode($cachePayload));
         $cacheKeySet = 'ats:v2:clientrequest:'.$company_id.':'.$tenantVersion.':'.$hash;
@@ -2245,9 +2245,21 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 try {
                     $response = $this->elasticService->getClient()->search($params);
                     $total = $response['hits']['total']['value'] ?? 0;
-                    $data = array_map(function ($hit) {
+                    $rawHits = array_map(function ($hit) {
                         return $hit['_source'];
                     }, $response['hits']['hits']);
+
+                    // Enforce strict request-level primary key uniqueness (Section 4)
+                    $uniqueData = [];
+                    $seenIds = [];
+                    foreach ($rawHits as $row) {
+                        $invId = (int) ($row['staffing_company_invitation_id'] ?? ($row['id'] ?? 0));
+                        if ($invId > 0 && ! isset($seenIds[$invId])) {
+                            $seenIds[$invId] = true;
+                            $uniqueData[] = $row;
+                        }
+                    }
+                    $data = $uniqueData;
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::warning('[client_request_data] ES search error: '.$e->getMessage());
                     $total = 0;
@@ -2257,6 +2269,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
             // Resilient DB Fallback: If Elasticsearch returned 0 hits or is unreachable, query MySQL directly
             if ($total === 0 && empty($searchQuery)) {
+                $locationSub = DB::table('client_location')
+                    ->select('client_id', 'city_id', 'country_id')
+                    ->whereIn('id', function ($query) {
+                        $query->select(DB::raw('MIN(id)'))
+                            ->from('client_location')
+                            ->groupBy('client_id');
+                    });
+
                 $dbQuery = DB::table('staffing_company_invitation')
                     ->select(
                         'staffing_company_invitation.id',
@@ -2285,17 +2305,26 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             ->where('clients.self_company', 1);
                     })
                     ->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries')
-                    ->leftJoin('client_location', 'client_location.client_id', '=', 'clients.id')
-                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                    ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                    ->leftJoinSub($locationSub, 'primary_loc', 'primary_loc.client_id', '=', 'clients.id')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'primary_loc.city_id')
+                    ->leftJoin('countries', 'countries.id', '=', 'primary_loc.country_id')
                     ->where('staffing_company_invitation.to_company_id', $company_id)
                     ->where('staffing_company_invitation.to_invitation_status', 0)
                     ->where(function ($q) {
                         $q->whereNull('staffing_company_invitation.expires_at')
                             ->orWhere('staffing_company_invitation.expires_at', '>', now());
-                    });
+                    })
+                    ->groupBy('staffing_company_invitation.id');
 
-                $total = $dbQuery->count();
+                $total = DB::table('staffing_company_invitation')
+                    ->where('to_company_id', $company_id)
+                    ->where('to_invitation_status', 0)
+                    ->where(function ($q) {
+                        $q->whereNull('expires_at')
+                            ->orWhere('expires_at', '>', now());
+                    })
+                    ->count();
+
                 if ($total > 0) {
                     $data = $dbQuery->skip($from)->take($size)->get()->map(function ($row) {
                         return (array) $row;
@@ -2362,26 +2391,69 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $reqState = $rowObj->state_name ?? (! is_numeric($rowObj->state ?? '') ? ($rowObj->state ?? '') : '');
                 $reqCountry = $rowObj->country_name ?? ($rowObj->country ?? '');
 
+                $rowTargetId = $rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->id ?? 0));
+                $expiresFormatted = ! empty($rowObj->expires_at) ? date('d M, Y', strtotime($rowObj->expires_at)) : '';
+                $reqCount = (int) ($rowObj->jobs_count ?? 1);
+
                 $rowsDto[] = [
-                    'id' => (int) ($rowObj->id ?? 0),
+                    'id' => (int) ($rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0)),
                     'client_id' => (int) ($rowObj->client_id ?? 0),
-                    'company_name' => ucwords($rowObj->company_name ?? ''),
+                    'target_id' => (int) $rowTargetId,
+                    'name' => ucwords($cleanName),
+                    'company_name' => ucwords($cleanName),
                     'logo_url' => (string) $background_image,
                     'initials' => (string) $initials,
                     'bg_color' => (string) $bgTextDecore,
+                    'industry' => (string) ($rowObj->ind_name ?? ''),
                     'ind_name' => (string) ($rowObj->ind_name ?? ''),
+                    'industry_id' => null,
+                    'company_size' => (string) ($rowObj->company_size ?? ''),
+                    'location_main' => (string) $reqCity,
                     'city' => ! empty($reqCity) ? ucwords(strtolower((string) $reqCity)) : '',
                     'state' => ! empty($reqState) ? ucwords(strtolower((string) $reqState)) : '',
                     'country' => ! empty($reqCountry) ? ucwords(strtolower((string) $reqCountry)) : '',
                     'city_name' => (string) $reqCity,
                     'country_name' => (string) $reqCountry,
-                    'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? 0),
+                    'country_id' => null,
+                    'country_ids' => [],
+                    'locations' => [],
+                    'city_id' => null,
+                    'state_id' => null,
+                    'is_direct' => true,
+                    'is_pending_request' => true,
+                    'client_type_css' => 'show-detail-direct',
+                    'client_type' => 'Direct Client',
+                    'is_active_hiring' => false,
+                    'is_inactive' => false,
+                    'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0)),
                     'from_company_id' => (int) ($rowObj->from_company_id ?? 0),
                     'to_invitation_status' => (int) ($rowObj->to_invitation_status ?? 0),
                     'website' => (string) ($rowObj->website ?? ''),
                     'expires_at' => ! empty($rowObj->expires_at) ? (string) $rowObj->expires_at : null,
+                    'jobs' => [
+                        'hiring' => 0,
+                        'hold' => 0,
+                        'closed' => 0,
+                        'active' => 0,
+                    ],
+                    'pv' => [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    'pipeline' => [
+                        'active_pipeline' => 0,
+                        'applications' => 0,
+                        'sourced' => 0,
+                        'screening' => 0,
+                        'evaluated' => 0,
+                        'negotiations' => 0,
+                        'offers' => 0,
+                        'joined' => 0,
+                        'rejected' => 0,
+                        'in_review' => 0,
+                        'interviews' => 0,
+                    ],
                     'connected_on' => (string) $newDate,
+                    'expires_on' => (string) $expiresFormatted,
                     'days_ago' => (string) $daysAgo,
+                    'projection_version' => (int) $tenantVersion,
                 ];
             }
 
@@ -2443,7 +2515,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
      * Atomically invalidate tenant client cache and counter keys on mutations.
      * Enforces Multi-Tenant Atomic Cache Invalidation (Rule 6).
      *
-     * @param int $companyId
      * @return int New tenant mutation version
      */
     public static function invalidateTenantClientCache(int $companyId): int
@@ -2455,6 +2526,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         cache()->forget("ats:v2:client_counters:{$companyId}:1");
         cache()->forget("ats:v2:hiring_clients:{$companyId}:{$oldVersion}");
         cache()->forget("ats:v2:hiring_clients:{$companyId}:{$newVersion}");
+
         return $newVersion;
     }
 

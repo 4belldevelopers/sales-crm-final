@@ -1278,7 +1278,7 @@
         if (internal !== null && !isNaN(internal)) {
             $('#span_clientCustom, #tabBadgeInternal').text(internal);
             window.CLIENT_DATA_COUNTERS.clientCustom = internal;
-            $('#span_clientCustomSub').text(internal > 0 ? (internal + ' active internal') : 'No internal clients yet');
+            $('#span_clientCustomSub').text(internal > 0 ? (internal + ' internal ' + (internal > 1 ? 'clients' : 'client')) : 'No internal clients yet');
         }
         if (direct !== null && !isNaN(direct)) {
             $('#span_clientDirect, #tabBadgeDirect').text(direct);
@@ -1484,7 +1484,7 @@
                 </div>
                 <div class="cl-card-sub blue">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                    <span id="span_clientCustomSub">{{ $internalClientsCount > 0 ? $internalClientsCount . ' active internal' : 'No internal clients yet' }}</span>
+                    <span id="span_clientCustomSub">{{ $internalClientsCount > 0 ? $internalClientsCount . ' internal ' . ($internalClientsCount > 1 ? 'clients' : 'client') : 'No internal clients yet' }}</span>
                 </div>
             </a>
 
@@ -5824,7 +5824,8 @@ function initClientWorker() {
         @if(!empty($initialRows))
         const initialRows = {!! json_encode($initialRows) !!};
         if (initialRows && initialRows.length > 0) {
-            const isFullSeed = (initialRows.length >= {{ (int)$totalClientsCount }});
+            const isDirectoryTab = (activeClientTab !== 'request');
+            const isFullSeed = isDirectoryTab && (initialRows.length >= {{ (int)$totalClientsCount }});
             if (typeof ClientSearchEngine !== 'undefined') {
                 ClientSearchEngine.hydrate(initialRows, {{ (int)($initialDataVersion ?? 1) }}, isFullSeed);
             }
@@ -6226,7 +6227,7 @@ function loadClientList(page, updateUrl = true, cursor = null) {
     // ── Zero-Network Execution Guard (JDCR In-Memory Search & Query Engine) ──
     // Strictly enforces 0% Server / MySQL / Elasticsearch reads for all search, filter,
     // sort, and pagination interactions over the hydrated active working set.
-    if (typeof ClientSearchEngine !== 'undefined' && ClientSearchEngine.isReady && ClientSearchEngine.size() > 0) {
+    if (typeof ClientSearchEngine !== 'undefined' && ClientSearchEngine.isReady && ClientSearchEngine.size() > 0 && activeClientTab !== 'request') {
         if (ClientStore.currentXhr && ClientStore.currentXhr.readyState !== 4) {
             ClientStore.currentXhr.abort();
             ClientStore.currentXhr = null;
