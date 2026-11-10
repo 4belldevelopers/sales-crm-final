@@ -1454,12 +1454,41 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ],
                 ];
 
+                $pendingRequests = [];
+                $pendingCount = 0;
+                if ($tabFilter === 'all') {
+                    $pendingRequests = $this->getPendingClientInvitations($company_id, $searchQuery, $countryParam, $cityParam, $industryParam);
+                    $pendingCount = count($pendingRequests);
+                }
+
+                $esFrom = $from;
+                $esSize = $size;
+
+                if ($tabFilter === 'all' && $pendingCount > 0) {
+                    if ($size >= 1000) {
+                        $esFrom = 0;
+                        $esSize = $size;
+                    } elseif ($page === 1) {
+                        if ($pendingCount >= $size) {
+                            $esFrom = 0;
+                            $esSize = 0;
+                        } else {
+                            $esFrom = 0;
+                            $esSize = max(0, $size - $pendingCount);
+                        }
+                    } else {
+                        $itemsBefore = ($page - 1) * $size;
+                        $esFrom = max(0, $itemsBefore - $pendingCount);
+                        $esSize = $size;
+                    }
+                }
+
                 $params = [
                     'index' => ELASTIC_CLIENT_LIST,
                     'request_cache' => true,
                     'body' => [
-                        'from' => $from,
-                        'size' => $size,
+                        'from' => $esFrom,
+                        'size' => $esSize,
                         'sort' => $sort,
                         'query' => ['bool' => ['must' => $must]],
                         'aggs' => $facetAggs,
@@ -1481,6 +1510,23 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
                     $recencyBuckets = $response['aggregations']['recency_buckets']['buckets'] ?? [];
                     $pipelineBuckets = $response['aggregations']['pipeline_buckets']['buckets'] ?? [];
+                }
+
+                // ── Prepend Pending Client Invites at TOP of Client Lists (Rule 20 & Enterprise Workflow) ──
+                if ($tabFilter === 'all' && $pendingCount > 0) {
+                    if ($size >= 1000) {
+                        $data = array_merge($pendingRequests, $data);
+                        $total = $pendingCount + $total;
+                    } elseif ($page === 1) {
+                        if ($pendingCount >= $size) {
+                            $data = array_slice($pendingRequests, 0, $size);
+                        } else {
+                            $data = array_merge($pendingRequests, $data);
+                        }
+                        $total = $pendingCount + $total;
+                    } else {
+                        $total = $pendingCount + $total;
+                    }
                 }
 
                 $nextCursor = null;
@@ -1617,11 +1663,41 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         $initials = 'CL';
                     }
 
+                    $tenantTimezone = GeneralMethod::defaultTimeZone($company_id);
                     $createdTimestamp = ! empty($rowObj->from_created_at) ? $rowObj->from_created_at : ($rowObj->created_at ?? null);
-                    $newDate = $createdTimestamp ? date('d M, Y', strtotime($createdTimestamp)) : '-';
-                    $daysAgo = $createdTimestamp ? GeneralMethod::timeAgo($createdTimestamp) : '';
+                    $createdAtCarbon = ! empty($createdTimestamp) ? Carbon::parse($createdTimestamp)->setTimezone($tenantTimezone) : Carbon::now($tenantTimezone);
                     $expiresAt = ! empty($rowObj->expires_at) ? $rowObj->expires_at : ($createdTimestamp ? date('Y-m-d H:i:s', strtotime($createdTimestamp.' +7 days')) : null);
-                    $expiresFormatted = $expiresAt ? date('d M, Y', strtotime($expiresAt)) : 'in 7 days';
+                    $expiresAtCarbon = ! empty($expiresAt) ? Carbon::parse($expiresAt)->setTimezone($tenantTimezone) : (clone $createdAtCarbon)->addDays(7);
+
+                    $tzShort = $createdAtCarbon->format('T');
+                    $newDate = $createdAtCarbon->format('d M, Y • h:i A').' '.$tzShort;
+                    $expiresFormatted = $expiresAtCarbon->format('d M, Y • h:i A').' '.$tzShort;
+                    $daysAgo = GeneralMethod::timeAgo($createdAtCarbon);
+
+                    $nowCarbon = Carbon::now($tenantTimezone);
+                    $isExpired = $nowCarbon->greaterThan($expiresAtCarbon);
+                    if ($isExpired) {
+                        $expiryCountdown = 'Expired';
+                        $expiryBadgeClass = 'badge-light-danger text-danger';
+                        $ttlLabel = 'Expired';
+                    } else {
+                        $diffDays = (int) $nowCarbon->diffInDays($expiresAtCarbon);
+                        $diffHours = (int) $nowCarbon->diffInHours($expiresAtCarbon);
+                        if ($diffDays >= 1) {
+                            $expiryCountdown = $diffDays.' '.\Illuminate\Support\Str::plural('day', $diffDays).' left';
+                            $expiryBadgeClass = ($diffDays <= 2) ? 'badge-light-warning text-warning' : 'badge-light-success text-success';
+                            $ttlLabel = $diffDays.'d remaining';
+                        } elseif ($diffHours >= 1) {
+                            $expiryCountdown = $diffHours.' '.\Illuminate\Support\Str::plural('hr', $diffHours).' left';
+                            $expiryBadgeClass = 'badge-light-danger text-danger';
+                            $ttlLabel = $diffHours.'h remaining';
+                        } else {
+                            $diffMins = max(1, (int) $nowCarbon->diffInMinutes($expiresAtCarbon));
+                            $expiryCountdown = $diffMins.'m left';
+                            $expiryBadgeClass = 'badge-light-danger text-danger';
+                            $ttlLabel = $diffMins.'m remaining';
+                        }
+                    }
 
                     $background_image = '';
                     if (! empty($rowObj->logo) && strlen($rowObj->logo) > 10) {
@@ -1648,16 +1724,20 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'client_id' => (int) ($rowObj->client_id ?? 0),
                         'target_id' => (int) $rowTargetId,
                         'name' => ucwords($cleanName),
+                        'company_name' => ucwords($cleanName),
                         'logo_url' => (string) $background_image,
                         'initials' => (string) $initials,
                         'bg_color' => (string) $bgTextDecore,
                         'industry' => (string) ($rowObj->ind_name ?? ''),
+                        'ind_name' => (string) ($rowObj->ind_name ?? ''),
                         'industry_id' => null,
                         'company_size' => (string) ($rowObj->company_size ?? ''),
                         'location_main' => (string) $reqCity,
                         'city' => ! empty($reqCity) ? ucwords(strtolower((string) $reqCity)) : '',
                         'state' => ! empty($reqState) ? ucwords(strtolower((string) $reqState)) : '',
                         'country' => ! empty($reqCountry) ? ucwords(strtolower((string) $reqCountry)) : '',
+                        'city_name' => (string) $reqCity,
+                        'country_name' => (string) $reqCountry,
                         'country_id' => null,
                         'country_ids' => [],
                         'locations' => [],
@@ -1671,6 +1751,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'is_inactive' => false,
                         'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0)),
                         'from_company_id' => (int) ($rowObj->from_company_id ?? 0),
+                        'to_invitation_status' => (int) ($rowObj->to_invitation_status ?? 0),
+                        'website' => (string) ($rowObj->website ?? ''),
+                        'expiry_countdown' => (string) $expiryCountdown,
+                        'expiry_badge_class' => (string) $expiryBadgeClass,
+                        'ttl_label' => (string) $ttlLabel,
+                        'is_expired' => (bool) $isExpired,
                         'jobs' => [
                             'hiring' => $reqCount,
                             'hold' => 0,
@@ -2365,17 +2451,24 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $rowsDto[] = [
                     'id' => (int) ($rowObj->id ?? 0),
                     'client_id' => (int) ($rowObj->client_id ?? 0),
+                    'target_id' => (int) ($rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->id ?? 0))),
+                    'name' => ucwords($cleanName),
                     'company_name' => ucwords($rowObj->company_name ?? ''),
+                    'is_pending_request' => true,
+                    'is_direct' => true,
+                    'client_type' => 'Direct Client',
+                    'client_type_css' => 'show-detail-direct',
                     'logo_url' => (string) $background_image,
                     'initials' => (string) $initials,
                     'bg_color' => (string) $bgTextDecore,
+                    'industry' => (string) ($rowObj->ind_name ?? ''),
                     'ind_name' => (string) ($rowObj->ind_name ?? ''),
                     'city' => ! empty($reqCity) ? ucwords(strtolower((string) $reqCity)) : '',
                     'state' => ! empty($reqState) ? ucwords(strtolower((string) $reqState)) : '',
                     'country' => ! empty($reqCountry) ? ucwords(strtolower((string) $reqCountry)) : '',
                     'city_name' => (string) $reqCity,
                     'country_name' => (string) $reqCountry,
-                    'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? 0),
+                    'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0)),
                     'from_company_id' => (int) ($rowObj->from_company_id ?? 0),
                     'to_invitation_status' => (int) ($rowObj->to_invitation_status ?? 0),
                     'website' => (string) ($rowObj->website ?? ''),
@@ -2437,6 +2530,140 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 }
             }
         }
+    }
+
+    /**
+     * Fetch pending client invitations for the current company to prepend to client listings.
+     * Guaranteed to use Elasticsearch first with resilient MySQL fallback (0% stale data).
+     * Rule 1/2: ES universal scope for reads, MySQL strictly for writes/resilient read-fallback.
+     * Rule 20: Prepend pending invite cards to top of client list.
+     */
+    public function getPendingClientInvitations(int $companyId, string $searchQuery = '', ?string $countryParam = null, ?string $cityParam = null, ?string $industryParam = null): array
+    {
+        $pendingData = [];
+
+        if ($this->elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
+            try {
+                $boolQuery = [
+                    'bool' => [
+                        'filter' => [
+                            ['term' => ['to_company_id' => (int) $companyId]],
+                        ],
+                        'must_not' => [
+                            ['terms' => ['to_invitation_status' => [-1, 1]]],
+                        ],
+                    ],
+                ];
+
+                if (! empty($searchQuery)) {
+                    $boolQuery['bool']['must'][] = [
+                        'multi_match' => [
+                            'query' => $searchQuery,
+                            'fields' => ['company_name^3', 'ind_name^2', 'city_name', 'country_name'],
+                            'type' => 'phrase_prefix',
+                        ],
+                    ];
+                }
+
+                $sort = [
+                    ['to_invitation_status' => ['order' => 'asc']],
+                    ['expires_at' => ['order' => 'asc', 'missing' => '_last', 'unmapped_type' => 'date']],
+                    ['created_at' => ['order' => 'desc']],
+                    ['id' => ['order' => 'desc']],
+                ];
+
+                $params = [
+                    'index' => ELASTIC_CLIENT_REQUEST,
+                    'request_cache' => true,
+                    'body' => [
+                        'from' => 0,
+                        'size' => 100,
+                        'sort' => $sort,
+                        'query' => $boolQuery,
+                        '_source' => [
+                            'id', 'company_name', 'logo', 'website', 'ind_name', 'city_name', 'country_name',
+                            'created_at', 'from_created_at', 'expires_at', 'to_invitation_status', 'staffing_company_invitation_id',
+                            'from_company_id', 'client_id', 'tags',
+                        ],
+                    ],
+                ];
+
+                $response = $this->elasticService->getClient()->search($params);
+                if (! empty($response['hits']['hits'])) {
+                    $pendingData = array_map(function ($hit) {
+                        $src = $hit['_source'];
+                        $src['is_pending_request'] = true;
+                        return $src;
+                    }, $response['hits']['hits']);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('[getPendingClientInvitations] ES error: ' . $e->getMessage());
+                $pendingData = [];
+            }
+        }
+
+        // Resilient MySQL Fallback (Lazy evaluation & tenant-scoped)
+        if (empty($pendingData)) {
+            $dbQuery = DB::table('staffing_company_invitation')
+                ->select(
+                    'staffing_company_invitation.id',
+                    'staffing_company_invitation.id as staffing_company_invitation_id',
+                    'staffing_company_invitation.from_company_id',
+                    'staffing_company_invitation.from_client_id',
+                    'staffing_company_invitation.from_user_id',
+                    'staffing_company_invitation.from_created_at',
+                    'staffing_company_invitation.created_at',
+                    'staffing_company_invitation.to_company_id',
+                    'staffing_company_invitation.to_email',
+                    'staffing_company_invitation.to_invitation_status',
+                    'staffing_company_invitation.expires_at',
+                    'companies.company_name',
+                    'companies.logo',
+                    'companies.website',
+                    'companies.industries',
+                    'td_industries.ind_name',
+                    'city_list.city as city_name',
+                    'countries.country_name',
+                    'clients.id as client_id'
+                )
+                ->join('companies', 'companies.id', '=', 'staffing_company_invitation.from_company_id')
+                ->leftJoin('clients', function ($join) {
+                    $join->on('clients.company_id', '=', 'companies.id')
+                        ->where('clients.self_company', 1);
+                })
+                ->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries')
+                ->leftJoin('client_location', 'client_location.client_id', '=', 'clients.id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->where('staffing_company_invitation.to_company_id', $companyId)
+                ->where('staffing_company_invitation.to_invitation_status', 0)
+                ->where(function ($q) {
+                    $q->whereNull('staffing_company_invitation.expires_at')
+                        ->orWhere('staffing_company_invitation.expires_at', '>', now());
+                });
+
+            if (! empty($searchQuery)) {
+                $dbQuery->where(function ($q) use ($searchQuery) {
+                    $q->where('companies.company_name', 'like', "%{$searchQuery}%")
+                        ->orWhere('td_industries.ind_name', 'like', "%{$searchQuery}%")
+                        ->orWhere('city_list.city', 'like', "%{$searchQuery}%")
+                        ->orWhere('countries.country_name', 'like', "%{$searchQuery}%");
+                });
+            }
+
+            $pendingData = $dbQuery->orderBy('staffing_company_invitation.id', 'desc')->get()->map(function ($row) {
+                $arr = (array) $row;
+                $arr['is_pending_request'] = true;
+                return $arr;
+            })->toArray();
+        }
+
+        // Deduplicate by ID to guarantee exact 1 card per invitation
+        if (! empty($pendingData)) {
+            $pendingData = array_values(array_column($pendingData, null, 'id'));
+        }
+
+        return $pendingData;
     }
 
     /**

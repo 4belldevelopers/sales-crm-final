@@ -4822,6 +4822,9 @@ function renderClientRows(rows) {
             const expiresFormatted = r.expires_on || (r.expires_at ? r.expires_at.substring(0, 10) : 'in 7 days');
             const daysAgo = r.days_ago || 'Just now';
             const connectedOn = r.connected_on || '-';
+            const expiryCountdown = r.expiry_countdown || '6 days left';
+            const expiryBadgeClass = r.expiry_badge_class || 'badge-light-success text-success';
+            const ttlLabel = r.ttl_label ? `<span class="fw-semibold text-success" style="font-size:10px;">${escapeAttr(r.ttl_label)}</span>` : '';
             const websiteHtml = r.website ? `<div class="cl-size text-primary text-truncate d-flex align-items-center gap-1 mt-0.5" style="font-size:10.5px; color:#0284c7;" title="Official Website: ${escapeAttr(r.website)}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="text-truncate">${escapeAttr(r.website)}</span></div>` : '<div class="cl-size text-muted text-truncate" style="font-size:10px; color:#94a3b8;">Corporate Client</div>';
 
             return `
@@ -4884,8 +4887,8 @@ function renderClientRows(rows) {
                     <div class="cl-subcard cl-subcard-pipeline">
                         <div class="cl-subcard-head d-flex align-items-center justify-content-between">
                             <span class="cl-subcard-title" title="Partnership decision actions">Actions</span>
-                            <span class="badge badge-light-success py-0.5 px-2" style="font-size:9.5px; font-weight:700;" title="Remaining decision window">
-                                6 days left
+                            <span class="badge ${expiryBadgeClass} py-0.5 px-2" style="font-size:9.5px; font-weight:700;" title="Remaining decision window">
+                                ${escapeAttr(expiryCountdown)}
                             </span>
                         </div>
                         <div class="cl-pipe-body tbl-cell-req-actions d-flex align-items-center justify-content-center h-100" style="padding:4px 0;">
@@ -4954,6 +4957,7 @@ function renderClientRows(rows) {
                             </svg>
                             <span style="color:#64748b;">Expires:</span>
                             <strong class="text-gray-900">${escapeAttr(expiresFormatted)}</strong>
+                            ${ttlLabel}
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-2 text-muted" style="font-size:10.5px;">
@@ -5618,6 +5622,9 @@ const ClientSearchEngine = (function() {
                 // 3. Tab Boundary Predicate
                 if (tab === 'request' || tab === 'requests') {
                     if (!item.isPendingRequest) continue;
+                } else if (tab === 'all') {
+                    // On Total Clients tab, include both pending requests and approved clients!
+                    // Pending requests will be sorted strictly to the top of the client lists.
                 } else {
                     if (item.isPendingRequest) continue;
                     if (tab === 'internal' && item.isDirect) continue;
@@ -5738,6 +5745,12 @@ const ClientSearchEngine = (function() {
 
             // 5. Deterministic Sort
             scoredCandidates.sort(function(a, b) {
+                // On Total Clients tab ('all'), pin pending invites strictly to the top of the client list
+                if (tab === 'all') {
+                    if (a.item.isPendingRequest && !b.item.isPendingRequest) return -1;
+                    if (!a.item.isPendingRequest && b.item.isPendingRequest) return 1;
+                }
+
                 if (isSearching && Math.abs(b.score - a.score) > 0) {
                     return b.score - a.score;
                 }
