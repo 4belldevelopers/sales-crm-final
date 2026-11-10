@@ -1233,6 +1233,88 @@
   display: inline-block;
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
+
+/* ── Pending Request & Inbound Invite Sub-Card Grid (Modern Enterprise Standard) ── */
+.is-pending-request .cl-subcards-grid,
+.is-inbound-invite .cl-subcards-grid {
+  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.15fr) minmax(0, 1.85fr) minmax(0, 1.6fr) !important;
+}
+.is-pending-request.cl-primary-card {
+  border-left: 3.5px solid #f59e0b !important;
+  background: #ffffff !important;
+}
+.is-pending-request.cl-primary-card:hover {
+  border-color: #cbd5e1 !important;
+  border-left-color: #f59e0b !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+}
+.is-pending-request .tbl-cell-req-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 2px 0 !important;
+  width: 100% !important;
+}
+.is-pending-request .cl-req-btn-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  max-width: 255px !important;
+  margin: 0 auto !important;
+}
+.is-pending-request .cl-req-btn {
+  height: 31px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.15px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  border-radius: 6px !important;
+  flex: 1 1 0% !important;
+  max-width: 82px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  transition: all 0.15s ease-in-out !important;
+  cursor: pointer !important;
+}
+.is-pending-request .cl-req-btn-accept {
+  background: #10b981 !important;
+  border: 1px solid #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2) !important;
+}
+.is-pending-request .cl-req-btn-accept:hover {
+  background: #059669 !important;
+  border-color: #059669 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3) !important;
+}
+.is-pending-request .cl-req-btn-decline {
+  background: #ffffff !important;
+  border: 1px solid #fecaca !important;
+  color: #ef4444 !important;
+}
+.is-pending-request .cl-req-btn-decline:hover {
+  background: #fef2f2 !important;
+  border-color: #f87171 !important;
+  color: #dc2626 !important;
+}
+.is-pending-request .cl-req-btn-terms {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+}
+.is-pending-request .cl-req-btn-terms:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
 </style>
 @endpush
 @section('content')
@@ -4875,54 +4957,51 @@ function renderClientRows(rows) {
                         </div>
                         <div class="cl-jobs-body tbl-cell-jobs d-flex flex-column justify-content-center" style="gap:4px;">
                             <div class="d-flex align-items-center gap-1.5" style="font-size:11px;">
-                                <span class="badge badge-light-primary py-0.5 px-2 fw-bold text-truncate" style="font-size:10px;">Direct Invitation</span>
+                                <span class="badge badge-light-primary py-0.5 px-2 fw-bold text-nowrap" style="font-size:10px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:4px;">Direct Invitation</span>
                             </div>
-                            <div class="text-muted text-truncate" style="font-size:10.5px; color:#64748b;" title="Direct client partnership request">
+                            <div class="text-muted text-nowrap" style="font-size:10.5px; color:#475569; font-weight:500;" title="Direct client partnership request">
                                 Talent & Hiring Partner
                             </div>
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 4: Action Center -->
-                    <div class="cl-subcard cl-subcard-pipeline">
+                    <!-- SUB-CARD 4: Action Center (Enterprise Proportions & Styling) -->
+                    <div class="cl-subcard cl-subcard-pipeline cl-subcard-actions">
                         <div class="cl-subcard-head d-flex align-items-center justify-content-between">
                             <span class="cl-subcard-title" title="Partnership decision actions">Actions</span>
-                            <span class="badge ${expiryBadgeClass} py-0.5 px-2" style="font-size:9.5px; font-weight:700;" title="Remaining decision window">
+                            <span class="badge ${expiryBadgeClass} py-0.5 px-2" style="font-size:9.5px; font-weight:700; border-radius:4px;" title="Remaining decision window">
                                 ${escapeAttr(expiryCountdown)}
                             </span>
                         </div>
-                        <div class="cl-pipe-body tbl-cell-req-actions d-flex align-items-center justify-content-center h-100" style="padding:4px 0;">
-                            <div class="d-flex align-items-center gap-1.5 w-100">
+                        <div class="cl-pipe-body tbl-cell-req-actions d-flex align-items-center justify-content-center h-100" style="padding:2px 0;">
+                            <div class="cl-req-btn-group">
                                 <button type="button" 
-                                        class="btn btn-sm btn-success fw-bold request_event flex-fill text-truncate" 
+                                        class="btn btn-sm cl-req-btn cl-req-btn-accept request_event" 
                                         data-row-id="${invId}" 
                                         data-row-event="1" 
                                         data-row-from_company="${fromComp}" 
-                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#10b981; border:none; color:#ffffff; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
                                         title="Accept Direct Client Partnership">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                                         <polyline points="20 6 9 17 4 12"></polyline>
                                     </svg>
-                                    <span class="text-truncate">Accept</span>
+                                    <span>Accept</span>
                                 </button>
                                 <button type="button" 
-                                        class="btn btn-sm btn-light-danger fw-bold request_event flex-fill text-truncate" 
+                                        class="btn btn-sm cl-req-btn cl-req-btn-decline request_event" 
                                         data-row-id="${invId}" 
                                         data-row-event="-1" 
                                         data-row-from_company="${fromComp}" 
-                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#fef2f2; border:1.5px solid #fecaca; color:#ef4444; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
                                         title="Decline Partnership Request">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                                         <line x1="18" y1="6" x2="6" y2="18"></line>
                                         <line x1="6" y1="6" x2="18" y2="18"></line>
                                     </svg>
-                                    <span class="text-truncate">Decline</span>
+                                    <span>Decline</span>
                                 </button>
                                 <button type="button" 
-                                        class="btn btn-sm btn-light fw-bold show-detail-direct view-request-terms flex-fill text-truncate" 
+                                        class="btn btn-sm cl-req-btn cl-req-btn-terms show-detail-direct view-request-terms" 
                                         data-row-id="${targetId}" 
                                         data-client-type="request" 
-                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#eff6ff; border:1.5px solid #bfdbfe; color:#2563eb; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
                                         title="Review Partnership Terms & Profile">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -4930,7 +5009,7 @@ function renderClientRows(rows) {
                                         <line x1="16" y1="13" x2="8" y2="13"></line>
                                         <line x1="16" y1="17" x2="8" y2="17"></line>
                                     </svg>
-                                    <span class="text-truncate">Terms</span>
+                                    <span>Terms</span>
                                 </button>
                             </div>
                         </div>

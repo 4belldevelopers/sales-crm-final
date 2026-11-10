@@ -47,18 +47,31 @@ flowchart TD
 | File Path | Nature of Change | Summary of Changes |
 |:---|:---|:---|
 | `app/Http/Controllers/ServiceCompany/ServiceCompanyClientController.php` | Modified | Added `getPendingClientInvitations()` method; prepended pending requests to `$data` on `tab=all`; adjusted pagination offsets; added Carbon timezone formatting (`IST`), `expiry_countdown`, `expiry_badge_class`, `ttl_label` to DTO; mapped `'name'` and `'is_pending_request'` in `client_request_data()`. |
-| `resources/views/service_company/ajax_pages/all-client-ajax.blade.php` | Modified | Upgraded `@if($isPending)` block to the exact 4 discrete sub-cards layout (`Client` \| `Location` \| `Engagement` \| `Actions`) matching `client_request_ajax.blade.php`, with timezone resolution, pulse pill, and 3 equal-width buttons. |
-| `resources/views/service_company/client/index.blade.php` | Modified | Updated `renderClientRows(rows)` for pending requests to display dynamic countdown badges and timezone labels; updated `ClientSearchEngine` to include pending requests on `tab === 'all'` and deterministically sort them to the top. |
+| `resources/views/service_company/ajax_pages/all-client-ajax.blade.php` | Modified | Added scoped `<style>` block for pending request subcards; upgraded `@if($isPending)` block to the enterprise 4 discrete sub-cards layout (`Client` \| `Location` \| `Engagement` \| `Actions`); balanced grid proportions; applied `.cl-req-btn-group` and `.cl-req-btn` button styles; set `text-nowrap` on engagement scope. |
+| `resources/views/service_company/ajax_pages/client_request_ajax.blade.php` | Modified | Updated sub-card grid template to `minmax(0, 2.4fr) minmax(0, 1.15fr) minmax(0, 1.85fr) minmax(0, 1.6fr)`; upgraded buttons to `.cl-req-btn-group` and `.cl-req-btn` (`Accept`, `Decline`, `Terms`); prevented text truncation on engagement sub-card. |
+| `resources/views/service_company/client/index.blade.php` | Modified | Added scoped pending request subcard CSS; updated `renderClientRows(rows)` for pending requests with `.cl-req-btn-group` and `.cl-req-btn`; updated `ClientSearchEngine` to include pending requests on `tab === 'all'` and deterministically sort them to the top. |
+| `demo/css/clientList.css` | Modified | Added global scoped rules for `.is-pending-request .cl-subcards-grid` and `.is-inbound-invite .cl-subcards-grid`; defined `.cl-req-btn-group` and individual button styles (`.cl-req-btn-accept`, `.cl-req-btn-decline`, `.cl-req-btn-terms`); added responsive breakpoints for `<=` 992px (2x2 grid) and `<=` 640px (1 column). |
 | `public/assets/service_company/client/cl-data-worker.js` | Modified | Updated `queryDataset()` in Web Worker to include pending requests on `tab === 'all'` and sort `is_pending_request` items to the top of the client list. |
 
 ---
 
 ## 4. 15.6" Screen Fit & Enterprise UI/UX Standard (Rule 20)
 
-- **Sub-Cards Grid Template:** Strictly locked to `minmax(0, 2.3fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 2.3fr)` on 15.6" screens (`1366×768` and `1920×1080`), guaranteeing zero horizontal overflow.
-- **Ambient Left Border:** Amber accent `border-left: 3.5px solid #f59e0b` immediately differentiates inbound pending invitations from registered client cards.
-- **Discrete Action Center:** Equal 33.3% flex-distribution for `Accept` (solid emerald `#10b981`), `Decline` (soft danger `#fef2f2` / border `#fecaca`), and `Terms` (soft blue `#eff6ff` / border `#bfdbfe`).
-- **Audit Strip (Tier 5):** Displays exact request receipt and expiry timestamps with localized timezone (e.g., `10 Nov, 2026 • 12:33 AM IST`) alongside `Verified Client Outreach` and canonical reference `#REQ-00115`.
+- **Balanced Enterprise Grid Template:** Sub-card proportions strictly calibrated to:
+  `grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.15fr) minmax(0, 1.85fr) minmax(0, 1.6fr) !important;`
+  - **Column 1 (`CLIENT`, 34.3%):** Generous breathing room for company logo, bold name, `DIRECT CLIENT` pill, and `ACTION NEEDED` pulsing status pill.
+  - **Column 2 (`LOCATION`, 16.4%):** Clean pin icon, city, and country with zero crowding.
+  - **Column 3 (`ENGAGEMENT`, 26.4%):** Expanded by +68% width with `text-nowrap` badges, completely eliminating unsightly truncation (`Direct Invitati...` -> `Direct Invitation`, `Talent & Hiring ...` -> `Talent & Hiring Partner`).
+  - **Column 4 (`ACTIONS`, 22.9%):** Sub-card width reduced by ~32% to a compact, disciplined enterprise action center.
+- **Enterprise Button Group (`.cl-req-btn-group`):**
+  - Buttons restricted to balanced widths (`max-width: 82px`, height: 31px, font-size: 11px, font-weight: 600, border-radius: 6px).
+  - **Primary CTA (`Accept`):** Solid emerald `#10b981` (hover `#059669`), white text, crisp checkmark SVG, subtle tactile elevation.
+  - **Negative CTA (`Decline`):** Clean white background, delicate rose border `1px solid #fecaca`, text `#ef4444` (hover `#fef2f2`).
+  - **Neutral CTA (`Terms`):** Clean white background, slate border `1px solid #cbd5e1`, text `#334155` (hover `#f8fafc`).
+- **Responsive Symmetry:**
+  - On 15.6" screens (`1366×768` & `1920×1080`): 4 discrete horizontal sub-cards with zero horizontal scroll.
+  - At `<= 992px`: Smooth 2x2 grid (Client & Location on top, Engagement & Actions on bottom).
+  - At `<= 640px`: Single vertical stack.
 
 ---
 
