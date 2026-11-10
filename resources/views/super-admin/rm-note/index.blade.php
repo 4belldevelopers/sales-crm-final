@@ -962,23 +962,241 @@ var _clientTemplateCache = {};
 var _inFlightToggles = {};
 var _inFlightDuplicates = {};
 var _inFlightDeletes = {};
+var _inFlightDataFetches = {};
+var _lastActiveTimestamp = Date.now();
 
-// Client-First Idempotency UUID Generator
-function generateIdempotencyKey() {
-    if (window.crypto && window.crypto.randomUUID) {
-        return window.crypto.randomUUID();
+// ─── Enterprise Client Database: JeroBenchRmNotesDB (IndexedDB v1) ───
+class JeroBenchRmNotesDB {
+    static DB_NAME = 'JeroBenchRmNotesDB';
+    static DB_VERSION = 1;
+    static STORE_NAME = 'bench_rm_notes_store';
+    static db = null;
+
+    static init() {
+        if (!('indexedDB' in window)) return Promise.resolve(null);
+        return new Promise(function(resolve) {
+            try {
+                let req = window.indexedDB.open(JeroBenchRmNotesDB.DB_NAME, JeroBenchRmNotesDB.DB_VERSION);
+                req.onupgradeneeded = function(e) {
+                    let db = e.target.result;
+                    if (!db.objectStoreNames.contains(JeroBenchRmNotesDB.STORE_NAME)) {
+                        db.createObjectStore(JeroBenchRmNotesDB.STORE_NAME, { keyPath: 'key' });
+                    }
+                };
+                req.onsuccess = function(e) {
+                    JeroBenchRmNotesDB.db = e.target.result;
+                    resolve(JeroBenchRmNotesDB.db);
+                };
+                req.onerror = function() { resolve(null); };
+            } catch (err) {
+                resolve(null);
+            }
+        });
     }
-    return 'brmnote_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+
+    static async get(key) {
+        if (!this.db) await this.init();
+        if (!this.db) return null;
+        return new Promise(function(resolve) {
+            try {
+                let tx = JeroBenchRmNotesDB.db.transaction(JeroBenchRmNotesDB.STORE_NAME, 'readonly');
+                let req = tx.objectStore(JeroBenchRmNotesDB.STORE_NAME).get(key);
+                req.onsuccess = function(e) {
+                    let record = e.target.result;
+                    if (record && (Date.now() - record.timestamp < 300000)) { // 5-min TTL
+                        resolve(record.data);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                req.onerror = function() { resolve(null); };
+            } catch (e) {
+                resolve(null);
+            }
+        });
+    }
+
+    static async set(key, data) {
+        if (!this.db) await this.init();
+        if (!this.db) return false;
+        return new Promise(function(resolve) {
+            try {
+                let tx = JeroBenchRmNotesDB.db.transaction(JeroBenchRmNotesDB.STORE_NAME, 'readwrite');
+                tx.objectStore(JeroBenchRmNotesDB.STORE_NAME).put({
+                    key: key,
+                    data: data,
+                    timestamp: Date.now()
+                });
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            } catch (e) {
+                resolve(false);
+            }
+        });
+    }
+
+    static async delete(key) {
+        if (!this.db) await this.init();
+        if (!this.db) return false;
+        return new Promise(function(resolve) {
+            try {
+                let tx = JeroBenchRmNotesDB.db.transaction(JeroBenchRmNotesDB.STORE_NAME, 'readwrite');
+                tx.objectStore(JeroBenchRmNotesDB.STORE_NAME).delete(key);
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            } catch (e) {
+                resolve(false);
+            }
+        });
+    }
+
+    static async clear() {
+        if (!this.db) await this.init();
+        if (!this.db) return false;
+        return new Promise(function(resolve) {
+            try {
+                let tx = JeroBenchRmNotesDB.db.transaction(JeroBenchRmNotesDB.STORE_NAME, 'readwrite');
+                tx.objectStore(JeroBenchRmNotesDB.STORE_NAME).clear();
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            } catch (e) {
+                resolve(false);
+            }
+        });
+    }
 }
 
-// Client-First RAM Cache for Single Template Lookups (0ms modal openings & previews)
-function fetchTemplateData(id, callback) {
+// Safely initialize IndexedDB
+JeroBenchRmNotesDB.init();
+
+// ─── Real-Time Multi-Tab Synchronization (BroadcastChannel) ───
+const brmSyncChannel = (typeof window.BroadcastChannel !== 'undefined')
+    ? new BroadcastChannel('jero_superadmin_bench_rm_notes_sync')
+    : null;
+
+function broadcastMutation(action, id, extra) {
+    if (brmSyncChannel) {
+        try {
+            brmSyncChannel.postMessage(Object.assign({
+                action: action,
+                id: id || null,
+                timestamp: Date.now()
+            }, extra || {}));
+        } catch (e) {
+            console.warn('[BenchRmNotesSync] BroadcastChannel error:', e);
+        }
+    }
+}
+
+function invalidateClientCaches(broadcast, action, id, extra) {
+    _clientTemplateCache = {};
+    if (id) {
+        JeroBenchRmNotesDB.delete('template_' + id);
+    } else {
+        JeroBenchRmNotesDB.clear();
+    }
+    if (broadcast) {
+        broadcastMutation(action || 'mutation', id, extra);
+    }
+}
+
+if (brmSyncChannel) {
+    brmSyncChannel.onmessage = function(e) {
+        if (!e.data) return;
+        var msg = e.data;
+        if (msg.action === 'status_toggle' && msg.id) {
+            delete _clientTemplateCache[msg.id];
+            JeroBenchRmNotesDB.delete('template_' + msg.id);
+            var isNowActive = (msg.status == 1);
+            var $card = $('#brmnote-card-' + msg.id);
+            if ($card.length > 0) {
+                $card.attr('data-status', isNowActive ? 'active' : 'inactive');
+                var $switch = $('#switch-' + msg.id);
+                $switch.prop('checked', isNowActive);
+                var $badge = $('#status-badge-' + msg.id);
+                $badge.removeClass('active inactive')
+                      .addClass(isNowActive ? 'active' : 'inactive')
+                      .text(msg.label || (isNowActive ? 'Active' : 'Inactive'));
+                updateKpiCounters();
+                applyFilters();
+            }
+        } else if (msg.action === 'delete' && msg.id) {
+            delete _clientTemplateCache[msg.id];
+            JeroBenchRmNotesDB.delete('template_' + msg.id);
+            var $card = $('#brmnote-card-' + msg.id);
+            if ($card.length > 0) {
+                $card.slideUp(250, function() {
+                    $(this).remove();
+                    updateKpiCounters();
+                    applyFilters();
+                });
+            }
+        } else if (msg.action === 'mutation') {
+            invalidateClientCaches(false);
+        }
+    };
+}
+
+// Real-Time WebSockets Synchronization via Laravel Reverb / Echo
+if (typeof window.Echo !== 'undefined') {
+    try {
+        window.Echo.channel('superadmin.bench-rm-notes')
+            .listen('.bench-rm-note.updated', function() {
+                invalidateClientCaches(false);
+            });
+    } catch (echoErr) {
+        console.warn('[BenchRmNotesEcho] Listener notice:', echoErr);
+    }
+}
+
+// Zero Stale Data: Automatic re-validation on tab focus if data is older than 60 seconds
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        if (Date.now() - _lastActiveTimestamp > 60000) {
+            invalidateClientCaches(false);
+        }
+        _lastActiveTimestamp = Date.now();
+    }
+});
+
+// Client-First Idempotency UUID Generator (bounded to 64 chars)
+function generateIdempotencyKey() {
+    if (window.crypto && window.crypto.randomUUID) {
+        return window.crypto.randomUUID().substring(0, 64);
+    }
+    return ('brmnote_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11)).substring(0, 64);
+}
+
+// Multi-Tier Client Cache for Single Template Lookups (L1 RAM -> L2 IndexedDB -> L3 Network)
+async function fetchTemplateData(id, callback) {
     var now = Date.now();
+    // 1. L1 RAM Cache Check (0ms transition, 0 server strain)
     if (_clientTemplateCache[id] && (now - _clientTemplateCache[id].timestamp < 60000)) {
         callback(_clientTemplateCache[id].data);
         return;
     }
 
+    // 2. L2 IndexedDB Check (<5ms transition, 0 server strain)
+    try {
+        var cachedDb = await JeroBenchRmNotesDB.get('template_' + id);
+        if (cachedDb) {
+            _clientTemplateCache[id] = {
+                data: cachedDb,
+                timestamp: Date.now()
+            };
+            callback(cachedDb);
+            return;
+        }
+    } catch (e) {}
+
+    // In-Flight Request Deduplication: join existing in-flight request if already fetching
+    if (_inFlightDataFetches[id]) {
+        _inFlightDataFetches[id].push(callback);
+        return;
+    }
+    _inFlightDataFetches[id] = [callback];
+
+    // 3. Network Fetch
     $.ajax({
         url: '{{ route("superadmin.rm-note.getData", ["id" => "__ID__"]) }}'.replace('__ID__', id),
         type: 'GET',
@@ -987,17 +1205,25 @@ function fetchTemplateData(id, callback) {
         },
         success: function(res) {
             if (res.status === 'success' && res.data) {
+                // Populate L1 RAM and L2 IndexedDB
                 _clientTemplateCache[id] = {
                     data: res.data,
                     timestamp: Date.now()
                 };
-                callback(res.data);
+                JeroBenchRmNotesDB.set('template_' + id, res.data);
+                var callbacks = _inFlightDataFetches[id] || [];
+                callbacks.forEach(function(cb) {
+                    try { cb(res.data); } catch (cbErr) {}
+                });
             } else {
                 toastr.error(res.message || 'Failed to load template data.');
             }
         },
         error: function() {
             toastr.error('Network error loading template.');
+        },
+        complete: function() {
+            delete _inFlightDataFetches[id];
         }
     });
 }
@@ -1097,6 +1323,8 @@ function toggleTemplateStatus(id, switchEl) {
                       .text(res.status_label);
 
                 delete _clientTemplateCache[id];
+                JeroBenchRmNotesDB.delete('template_' + id);
+                broadcastMutation('status_toggle', id, { status: res.template_status, label: res.status_label });
                 updateKpiCounters();
                 applyFilters();
             } else {
@@ -1146,6 +1374,7 @@ function duplicateTemplate(id) {
             success: function(res) {
                 if (res.status === 'success') {
                     toastr.success(res.message);
+                    invalidateClientCaches(true, 'mutation');
                     setTimeout(function() { location.reload(); }, 600);
                 } else {
                     toastr.error(res.message || 'Duplication failed.');
@@ -1403,6 +1632,9 @@ function saveTemplate() {
                 toastr.success(res.message || 'Saved successfully.');
                 if (id) {
                     delete _clientTemplateCache[id];
+                    JeroBenchRmNotesDB.delete('template_' + id);
+                } else {
+                    invalidateClientCaches(true, 'mutation');
                 }
                 $('#brmModal').modal('hide');
                 setTimeout(function() {
@@ -1463,6 +1695,8 @@ function deleteTemplate(id) {
                 if (res.status === 'success') {
                     toastr.success(res.message || 'Template deleted.');
                     delete _clientTemplateCache[id];
+                    JeroBenchRmNotesDB.delete('template_' + id);
+                    broadcastMutation('delete', id);
                     $('#brmnote-card-' + id).fadeOut(300, function() {
                         $(this).remove();
                         updateKpiCounters();

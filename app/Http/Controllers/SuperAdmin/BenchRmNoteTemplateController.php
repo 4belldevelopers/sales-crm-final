@@ -8,6 +8,7 @@ use App\Services\SuperAdmin\SuperAdminBenchRmNoteMutationService;
 use App\Services\SuperAdmin\SuperAdminBenchRmNoteReadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 /**
  * Class BenchRmNoteTemplateController
@@ -38,7 +39,7 @@ class BenchRmNoteTemplateController extends SuperAdminBaseController
     /**
      * Display the Relationship Manager note templates listing page.
      * Computes live KPI metrics (Total, Active, Inactive) and passes the formatted
-     * collection to the view.
+     * collection to the view. Supports AJAX JSON for client-side background synchronization.
      * Strict CQRS: 0% MySQL reads on web/API request paths.
      */
     public function index(Request $request)
@@ -52,6 +53,18 @@ class BenchRmNoteTemplateController extends SuperAdminBaseController
         $this->activeCount = $result['activeCount'];
         $this->inactiveCount = $result['inactiveCount'];
         $this->templates = $result['templates'];
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'templates' => $this->templates,
+                    'totalCount' => $this->totalCount,
+                    'activeCount' => $this->activeCount,
+                    'inactiveCount' => $this->inactiveCount,
+                ],
+            ]);
+        }
 
         return view('super-admin.rm-note.index', $this->data);
     }
@@ -69,6 +82,8 @@ class BenchRmNoteTemplateController extends SuperAdminBaseController
             $result = $this->mutationService->createTemplate($payload, $idempotencyKey);
 
             return response()->json($result);
+        } catch (HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error('SuperAdmin BenchRmNoteTemplate store failure: '.$e->getMessage(), [
                 'exception' => $e,
@@ -92,6 +107,8 @@ class BenchRmNoteTemplateController extends SuperAdminBaseController
             $result = $this->mutationService->updateTemplate((int) $id, $payload, $idempotencyKey);
 
             return response()->json($result);
+        } catch (HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error('SuperAdmin BenchRmNoteTemplate update failure: '.$e->getMessage(), [
                 'id' => $id,
@@ -114,6 +131,8 @@ class BenchRmNoteTemplateController extends SuperAdminBaseController
             $result = $this->mutationService->deleteTemplate((int) $id, $idempotencyKey);
 
             return response()->json($result);
+        } catch (HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error('SuperAdmin BenchRmNoteTemplate destroy failure: '.$e->getMessage(), [
                 'id' => $id,
@@ -151,6 +170,8 @@ class BenchRmNoteTemplateController extends SuperAdminBaseController
             $result = $this->mutationService->toggleStatus((int) $id, $idempotencyKey);
 
             return response()->json($result);
+        } catch (HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error('SuperAdmin BenchRmNoteTemplate toggleStatus failure: '.$e->getMessage(), [
                 'id' => $id,
@@ -172,6 +193,8 @@ class BenchRmNoteTemplateController extends SuperAdminBaseController
             $result = $this->mutationService->duplicateTemplate((int) $id, $idempotencyKey);
 
             return response()->json($result);
+        } catch (HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error('SuperAdmin BenchRmNoteTemplate duplicate failure: '.$e->getMessage(), [
                 'id' => $id,
