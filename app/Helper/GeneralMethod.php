@@ -4328,31 +4328,40 @@ END:VCALENDAR";
 
     public static function mailTypeSubject($id, $mailType = '')
     {
-        // $companyId = 2;//auth()->user()->company_id;
-        $elasticService = app(ElasticService::class);
+        try {
+            $elasticService = app(ElasticService::class);
 
-        // $data	=	DB::table('(email_notifications)')->where('id',$id)->where('status', 1)->where('mailType', $mailType)->first();
-
-        $params = [
-            'index' => ELASTIC_EMAIL_NOTIFICATIONS,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['id' => (int) $id]],
-                            ['term' => ['mailType' => (int) $mailType]],
+            $params = [
+                'index' => ELASTIC_EMAIL_NOTIFICATIONS,
+                'body' => [
+                    'size' => 10000,
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['id' => (int) $id]],
+                                ['term' => ['mailType' => (int) $mailType]],
+                            ],
                         ],
                     ],
                 ],
-            ],
-        ];
+            ];
 
-        $response = $elasticService->getClient()->search($params);
-        $data = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+            $response = $elasticService->getClient()->search($params);
+            $data = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
 
-        return $data;
+            if ($data) {
+                return $data;
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('[GeneralMethod::mailTypeSubject] ES search failed, falling back to DB: '.$e->getMessage());
+        }
 
+        // Resilient Database Fallback
+        return DB::table('email_notifications')
+            ->where('id', (int) $id)
+            ->where('status', 1)
+            ->where('mailType', (int) $mailType)
+            ->first();
     }
 
     public static function notification($company_id, $type)
@@ -11154,9 +11163,11 @@ END:VCALENDAR";
                 'staffing_company_invitation.to_status',
                 'staffing_company_invitation.job_id',
                 'staffing_company_invitation.to_invitation_status',
+                'staffing_company_invitation.expires_at',
                 'companies.id as company_id',
                 'companies.company_name',
                 'companies.logo as company_logo',
+                'companies.website as company_website',
                 'companies.industries',
                 'clients.id as client_id',
                 'clients.name as client_name',
@@ -11223,6 +11234,8 @@ END:VCALENDAR";
                         'to_status' => $row->to_status,
                         'job_id' => $row->job_id,
                         'to_invitation_status' => $row->to_invitation_status,
+                        'expires_at' => ($row->expires_at) ? Carbon::parse($row->expires_at)->toIso8601String() : null,
+                        'website' => $row->company_website ?? '',
                         'skillArr' => $skillArr ?? [],
                         'city_name' => $city_name,
                     ],
