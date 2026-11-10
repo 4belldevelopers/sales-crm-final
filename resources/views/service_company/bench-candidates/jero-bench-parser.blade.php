@@ -2,7 +2,8 @@
 /**
  * jero-bench-parser.blade.php — 100% Isolated Client-Side Resume Parser Integration Bridge
  *
- * Production URL: https://parser.jero.works/jero-resume-parser-2tURGwDx.js
+ * Production URL: https://parser.jero.works/jero-resume-parser-DW7x_WGm.js
+ * Fallback URL:   https://parser.jero.works/jero-resume-parser.js?v=20261110
  * Master Engineering Spec: docs/V4_Jeroworks_Upgrade/v4_add_talent_audit_and_remediation_plan.md
  * Strict Isolation: Quarantined to Service Company Add/Edit Talent Flow (Rule 17)
  * Zero Strain: 100% Browser Execution (User RAM + WASM) (Rules 1, 2, 3, 4)
@@ -26,7 +27,8 @@
 (function (window, document, $) {
     'use strict';
 
-    var PRODUCTION_PARSER_URL = 'https://parser.jero.works/jero-resume-parser-2tURGwDx.js';
+    var PRODUCTION_PARSER_URL = 'https://parser.jero.works/jero-resume-parser-DW7x_WGm.js';
+    var FALLBACK_PARSER_URL = 'https://parser.jero.works/jero-resume-parser.js?v=20261110';
     var LOAD_TIMEOUT_MS = 30000;
 
     var _parserModulePromise = null;
@@ -64,7 +66,7 @@
     }
 
     /**
-     * Loads production parser module via browser dynamic import.
+     * Loads production parser module via browser dynamic import with automatic fallback.
      */
     function loadParserModule() {
         if (_parserModulePromise) {
@@ -80,20 +82,26 @@
                 reject(timeoutErr);
             }, LOAD_TIMEOUT_MS);
 
+            function verifyAndResolve(mod) {
+                clearTimeout(timeoutId);
+                console.log('[TALENT PARSER] Parser module loaded successfully');
+
+                var parseResumeFn = mod.parseResume || (mod.default && mod.default.parseResume);
+                if (typeof parseResumeFn !== 'function') {
+                    var missingFnErr = new Error('parseResume function not available on imported module');
+                    reportFailure('Verify parseResume', missingFnErr, _activeFile);
+                    throw missingFnErr;
+                }
+
+                console.log('[TALENT PARSER] parseResume available');
+                resolve(mod);
+            }
+
             import(PRODUCTION_PARSER_URL)
-                .then(function (mod) {
-                    clearTimeout(timeoutId);
-                    console.log('[TALENT PARSER] Parser module loaded successfully');
-
-                    var parseResumeFn = mod.parseResume || (mod.default && mod.default.parseResume);
-                    if (typeof parseResumeFn !== 'function') {
-                        var missingFnErr = new Error('parseResume function not available on imported module');
-                        reportFailure('Verify parseResume', missingFnErr, _activeFile);
-                        throw missingFnErr;
-                    }
-
-                    console.log('[TALENT PARSER] parseResume available');
-                    resolve(mod);
+                .then(verifyAndResolve)
+                .catch(function (primaryErr) {
+                    console.warn('[TALENT PARSER] Primary bundle failed, falling back to canonical bundle:', FALLBACK_PARSER_URL, primaryErr);
+                    return import(FALLBACK_PARSER_URL).then(verifyAndResolve);
                 })
                 .catch(function (err) {
                     clearTimeout(timeoutId);
@@ -150,8 +158,8 @@
         }
 
         if (!intervals.length) {
-            // Check if duration text exists in summary (e.g. "2.6 years of experience")
-            var sumMatch = String(summaryText || '').match(/(\d+(?:\.\d+)?)\+?\s*(?:years?|yrs?)\s+(?:of\s+)?experience/i);
+            // Check if duration text exists in summary (e.g. "4+ years of hands-on experience", "2.6 years of experience")
+            var sumMatch = String(summaryText || '').match(/(\d+(?:\.\d+)?)\+?\s*(?:years?|yrs?)\b(?:\s+(?:of\s+)?(?:hands-on\s+|relevant\s+|professional\s+|total\s+|industry\s+|working\s+)?experience)?/i);
             if (sumMatch) {
                 var totalFloat = parseFloat(sumMatch[1]);
                 var y = Math.floor(totalFloat);
@@ -221,8 +229,8 @@
             company.length > 55
         );
 
-        if (isCompanySentence && designation && /[–—\-\u2013\u2014\u2015\u2212\|]/.test(designation)) {
-            var parts = designation.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*/);
+        if ((!company || isCompanySentence) && designation && /[–—\-\u2013\u2014\u2015\u2212\|]|\s+at\s+|\s+@\s+/i.test(designation)) {
+            var parts = designation.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*|\s+at\s+|\s+@\s+/i);
             if (parts.length >= 2) {
                 designation = parts[0].trim();
                 var candidateCompany = parts.slice(1).join(' - ');
@@ -247,8 +255,9 @@
      * - experience[i].company (skipping sentences like "Provided technical support...")
      * - experience[i].description[j] (e.g. "Triotree Pvt. Ltd., Noida (8 Months)")
      * - experience[i].title (e.g. "Software Engineer – Triotree Pvt. Ltd.")
+     * - fallback: scans summary and document text for "<Role> at <Company>" patterns
      */
-    function extractCompanyFromExperience(expList, cand) {
+    function extractCompanyFromExperience(expList, cand, fullResult) {
         var isSentence = function (text) {
             return !text ||
                 /^(provided|worked|responsible|developed|managed|assisted|handled|created|led|designed|engineered|maintaining|coordinating|building|supported|participated)\b/i.test(text) ||
@@ -266,42 +275,54 @@
             var candComp = cleanCompName(cand.currentCompany || cand.company || cand.current_company);
             if (candComp && !isSentence(candComp) && candComp.length >= 2) return candComp;
         }
-        if (!Array.isArray(expList) || !expList.length) return '';
+        if (Array.isArray(expList) && expList.length) {
+            for (var i = 0; i < expList.length; i++) {
+                var item = expList[i];
+                if (!item) continue;
 
-        for (var i = 0; i < expList.length; i++) {
-            var item = expList[i];
-            if (!item) continue;
+                // A. Check item.company
+                var comp = String(item.company || '').trim();
+                if (comp && !isSentence(comp)) {
+                    var c1 = cleanCompName(comp);
+                    if (c1 && c1.length >= 2 && c1.length <= 60) return c1;
+                }
 
-            // A. Check item.company
-            var comp = String(item.company || '').trim();
-            if (comp && !isSentence(comp)) {
-                var c1 = cleanCompName(comp);
-                if (c1 && c1.length >= 2 && c1.length <= 60) return c1;
-            }
-
-            // B. Check item.description array (e.g. "Triotree Pvt. Ltd., Noida (8 Months)")
-            if (Array.isArray(item.description) && item.description.length > 0) {
-                for (var d = 0; d < item.description.length; d++) {
-                    var descLine = String(item.description[d] || '').trim();
-                    if (!descLine) continue;
-                    var looksLikeCompany = /\b(pvt|ltd|limited|inc|llc|technologies|systems|solutions|infotech|services|corp|corporation|group|software|consulting)\b/i.test(descLine) ||
-                        (!isSentence(descLine) && descLine.length < 50 && /[A-Z]/.test(descLine));
-                    if (looksLikeCompany) {
-                        var c2 = cleanCompName(descLine);
-                        if (c2 && c2.length >= 2 && c2.length <= 60 && !isSentence(c2)) {
-                            return c2;
+                // B. Check item.description array (e.g. "Triotree Pvt. Ltd., Noida (8 Months)")
+                if (Array.isArray(item.description) && item.description.length > 0) {
+                    for (var d = 0; d < item.description.length; d++) {
+                        var descLine = String(item.description[d] || '').trim();
+                        if (!descLine) continue;
+                        var looksLikeCompany = /\b(pvt|ltd|limited|inc|llc|technologies|systems|solutions|infotech|services|corp|corporation|group|software|consulting)\b/i.test(descLine) ||
+                            (!isSentence(descLine) && descLine.length < 50 && /[A-Z]/.test(descLine));
+                        if (looksLikeCompany) {
+                            var c2 = cleanCompName(descLine);
+                            if (c2 && c2.length >= 2 && c2.length <= 60 && !isSentence(c2)) {
+                                return c2;
+                            }
                         }
                     }
                 }
-            }
 
-            // C. Check item.title if formatted as "Role – Company" or "Role at Company"
-            var title = String(item.title || '').trim();
-            var titleParts = title.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*|\s+at\s+|\s+@\s+/i);
-            if (titleParts.length >= 2) {
-                var c3 = cleanCompName(titleParts.slice(1).join(' - '));
-                if (c3 && c3.length >= 2 && c3.length <= 60 && !isSentence(c3)) {
-                    return c3;
+                // C. Check item.title if formatted as "Role – Company" or "Role at Company"
+                var title = String(item.title || '').trim();
+                var titleParts = title.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*|\s+at\s+|\s+@\s+/i);
+                if (titleParts.length >= 2) {
+                    var c3 = cleanCompName(titleParts.slice(1).join(' - '));
+                    if (c3 && c3.length >= 2 && c3.length <= 60 && !isSentence(c3)) {
+                        return c3;
+                    }
+                }
+            }
+        }
+
+        // D. Defensive fallback: scan summary or rawText for standard company pattern
+        if (fullResult) {
+            var textToScan = (fullResult.summary || '') + ' ' + (fullResult.rawText || '') + ' ' + ((cand && (cand.summary || cand.objective)) || '');
+            var compMatch = textToScan.match(/(?:at|@)\s+([A-Z][A-Za-z0-9\s.,&-]{2,55}?(?:Pvt\.?\s*Ltd\.?|Private\s+Limited|Limited|Inc\.?|LLC|Corporation|Technologies|Solutions|Consulting|Services|Enterprises|Systems))\b/i);
+            if (compMatch) {
+                var c4 = cleanCompName(compMatch[1]);
+                if (c4 && c4.length >= 2 && c4.length <= 60 && !isSentence(c4)) {
+                    return c4;
                 }
             }
         }
@@ -354,68 +375,85 @@
 
     /**
      * Fuzzy matches parsed education against available qualification dropdown options.
+     * Includes defensive keyword matching across fullResult text if educationList is empty or unmatched.
      */
-    function matchQualification(educationList, selectEl) {
-        if (!Array.isArray(educationList) || !educationList.length) return null;
+    function matchQualification(educationList, selectEl, fullResult) {
         var qualSelect = selectEl || document.getElementById('qualification');
         if (!qualSelect || !qualSelect.options) return null;
 
         var options = qualSelect.options;
 
-        for (var i = 0; i < educationList.length; i++) {
-            var edu = educationList[i];
-            var degreeRaw = String(edu.degree || '').toLowerCase().trim();
-            var fieldRaw = String(edu.field || '').toLowerCase().trim();
-            var combined = (degreeRaw + ' ' + fieldRaw).trim();
+        if (Array.isArray(educationList) && educationList.length) {
+            for (var i = 0; i < educationList.length; i++) {
+                var edu = educationList[i];
+                var degreeRaw = String(edu.degree || '').toLowerCase().trim();
+                var fieldRaw = String(edu.field || '').toLowerCase().trim();
+                var combined = (degreeRaw + ' ' + fieldRaw).trim();
 
-            if (!combined) continue;
+                if (!combined) continue;
 
-            // Smart Global Alias & Synonym Mapping (Canonical Resolution)
-            // Engineering & Technology (B.Tech / B.E)
-            if (/\b(b\.?tech|b\.?e\.?|bachelor of technology|bachelor of engineering|beng)\b/i.test(combined)) return '13';
-            // Master of Technology / Engineering (M.Tech / M.E)
-            if (/\b(m\.?tech|m\.?e\.?|master of technology|master of engineering|meng)\b/i.test(combined)) return '40';
-            // Computer Applications
-            if (/\b(m\.?c\.?a|master of computer applications)\b/i.test(combined)) return '42';
-            if (/\b(b\.?c\.?a|bachelor of computer applications)\b/i.test(combined)) return '16';
-            // Science & Computing (B.S., B.Sc., BSCS, Bachelor of Science)
-            if (/\b(b\.?s\.?|b\.?sc|bachelor of science|bsc(?:\s*\(hons\))?|bscs)\b/i.test(combined)) return '12';
-            // Master of Science (M.S., M.Sc., MSCS, Master of Science)
-            if (/\b(m\.?s\.?|m\.?sc|master of science|msc|mscs)\b/i.test(combined)) return '39';
-            // Business Administration
-            if (/\b(m\.?b\.?a|pgdm|master of business administration)\b/i.test(combined)) return '41';
-            if (/\b(b\.?b\.?a|b\.?m\.?s|bachelor of business administration)\b/i.test(combined)) return '5';
-            // Commerce & Finance
-            if (/\b(b\.?com|bachelor of commerce)\b/i.test(combined)) return '6';
-            if (/\b(m\.?com|master of commerce)\b/i.test(combined)) return '35';
-            // Doctorate & Ph.D.
-            if (/\b(ph\.?d|doctorate|doctor of philosophy|dphil)\b/i.test(combined)) return '52';
-            // Associate Degrees & Diplomas
-            if (/\b(associate(?:'s)? degree|polytechnic|diploma)\b/i.test(combined)) return '22';
-            // Professional & Legal
-            if (/\b(chartered accountant|cpa|acca)\b/i.test(combined)) return '26';
-            if (/\b(ll\.?b|juris doctor|j\.?d\.?|bachelor of laws)\b/i.test(combined)) return '23';
-            if (/\b(ll\.?m|master of laws)\b/i.test(combined)) return '31';
-            // Medicine & Surgery
-            if (/\b(mbbs|medical doctor|m\.?d\.?)\b/i.test(combined)) return '24';
-            // High School & Secondary
-            if (/\b(12th|hsc|senior secondary|high school|a[- ]?levels?)\b/i.test(combined)) return '2';
-            if (/\b(10th|ssc|matriculation|gcse|o[- ]?levels?)\b/i.test(combined)) return '1';
+                // Smart Global Alias & Synonym Mapping (Canonical Resolution)
+                // Engineering & Technology (B.Tech / B.E)
+                if (/\b(b\.?tech|b\.?e\.?|bachelor of technology|bachelor of engineering|beng)\b/i.test(combined)) return '13';
+                // Master of Technology / Engineering (M.Tech / M.E)
+                if (/\b(m\.?tech|m\.?e\.?|master of technology|master of engineering|meng)\b/i.test(combined)) return '40';
+                // Computer Applications
+                if (/\b(m\.?c\.?a|master of computer applications)\b/i.test(combined)) return '42';
+                if (/\b(b\.?c\.?a|bachelor of computer applications)\b/i.test(combined)) return '16';
+                // Science & Computing (B.S., B.Sc., BSCS, Bachelor of Science)
+                if (/\b(b\.?s\.?|b\.?sc|bachelor of science|bsc(?:\s*\(hons\))?|bscs)\b/i.test(combined)) return '12';
+                // Master of Science (M.S., M.Sc., MSCS, Master of Science)
+                if (/\b(m\.?s\.?|m\.?sc|master of science|msc|mscs)\b/i.test(combined)) return '39';
+                // Business Administration
+                if (/\b(m\.?b\.?a|pgdm|master of business administration)\b/i.test(combined)) return '41';
+                if (/\b(b\.?b\.?a|b\.?m\.?s|bachelor of business administration)\b/i.test(combined)) return '5';
+                // Commerce & Finance
+                if (/\b(b\.?com|bachelor of commerce)\b/i.test(combined)) return '6';
+                if (/\b(m\.?com|master of commerce)\b/i.test(combined)) return '35';
+                // Doctorate & Ph.D.
+                if (/\b(ph\.?d|doctorate|doctor of philosophy|dphil)\b/i.test(combined)) return '52';
+                // Associate Degrees & Diplomas
+                if (/\b(associate(?:'s)? degree|polytechnic|diploma)\b/i.test(combined)) return '22';
+                // Professional & Legal
+                if (/\b(chartered accountant|cpa|acca)\b/i.test(combined)) return '26';
+                if (/\b(ll\.?b|juris doctor|j\.?d\.?|bachelor of laws)\b/i.test(combined)) return '23';
+                if (/\b(ll\.?m|master of laws)\b/i.test(combined)) return '31';
+                // Medicine & Surgery
+                if (/\b(mbbs|medical doctor|m\.?d\.?)\b/i.test(combined)) return '24';
+                // High School & Secondary
+                if (/\b(12th|hsc|senior secondary|high school|a[- ]?levels?)\b/i.test(combined)) return '2';
+                if (/\b(10th|ssc|matriculation|gcse|o[- ]?levels?)\b/i.test(combined)) return '1';
 
-            for (var j = 0; j < options.length; j++) {
-                var opt = options[j];
-                if (!opt.value) continue;
-                var optText = opt.textContent.toLowerCase().trim();
-                if (!optText) continue;
+                for (var j = 0; j < options.length; j++) {
+                    var opt = options[j];
+                    if (!opt.value) continue;
+                    var optText = opt.textContent.toLowerCase().trim();
+                    if (!optText) continue;
 
-                if (combined === optText || degreeRaw === optText) {
-                    return opt.value;
-                }
+                    if (combined === optText || degreeRaw === optText) {
+                        return opt.value;
+                    }
 
-                if (combined.indexOf(optText) !== -1 || optText.indexOf(degreeRaw) !== -1) {
-                    return opt.value;
+                    if (combined.indexOf(optText) !== -1 || optText.indexOf(degreeRaw) !== -1) {
+                        return opt.value;
+                    }
                 }
             }
+        }
+
+        // Defensive fallback: scan full text for degree matches
+        if (fullResult) {
+            var textToScan = (fullResult.summary || '') + ' ' + (fullResult.rawText || '') + ' ' + (fullResult.text || '') + ' ' + (fullResult.career_summary || '');
+            if (/\b(?:b\.?tech|b\.?e\b|bachelor of technology|bachelor of engineering)\b/i.test(textToScan)) return '13';
+            if (/\b(?:m\.?tech|m\.?e\b|master of technology|master of engineering)\b/i.test(textToScan)) return '40';
+            if (/\b(?:mba|pgdm)\b/i.test(textToScan)) return '41';
+            if (/\bmca\b/i.test(textToScan)) return '42';
+            if (/\bbca\b/i.test(textToScan)) return '16';
+            if (/\b(?:b\.?sc|b\.?s\b)\b/i.test(textToScan)) return '12';
+            if (/\b(?:m\.?sc|m\.?s\b)\b/i.test(textToScan)) return '39';
+            if (/\bdiploma\b/i.test(textToScan)) return '22';
+            if (/\b(?:12th|hsc|intermediate)\b/i.test(textToScan)) return '2';
+            if (/\b(?:10th|ssc|matric)\b/i.test(textToScan)) return '1';
         }
 
         return null;
@@ -674,7 +712,7 @@
 
                 // 7a. Current Company Extraction & Population
                 try {
-                    var extractedCompany = extractCompanyFromExperience(expList, cand);
+                    var extractedCompany = extractCompanyFromExperience(expList, cand, result);
                     if (!extractedCompany) {
                         extractedCompany = cand.currentCompany || cand.company || cand.current_company || result.company || result.current_company || '';
                     }
@@ -736,7 +774,7 @@
 
                 // 8. Education / Qualification (Select2 Safe Adapter + Custom Combobox Sync)
                 try {
-                    var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
+                    var matchedQualId = matchQualification(result.education, document.getElementById('qualification'), result);
                     if (matchedQualId) {
                         safeSetSelect2('#qualification', String(matchedQualId), 'qualification');
                         var qualSelect = document.getElementById('qualification');
@@ -957,7 +995,8 @@
         cancelActiveParse: cancelActiveParse,
         getLastResult: function () { return _lastParsedResult; },
         getActiveFile: function () { return _activeFile; },
-        PRODUCTION_PARSER_URL: PRODUCTION_PARSER_URL
+        PRODUCTION_PARSER_URL: PRODUCTION_PARSER_URL,
+        FALLBACK_PARSER_URL: FALLBACK_PARSER_URL
     };
 
     // Pre-warm the parser module during idle time from production URL
