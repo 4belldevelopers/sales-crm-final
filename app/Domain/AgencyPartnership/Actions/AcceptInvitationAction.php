@@ -141,6 +141,15 @@ class AcceptInvitationAction
             }
 
             if ($lockedInvitation->expires_at && Carbon::parse($lockedInvitation->expires_at)->isPast()) {
+                // JIT (Just-In-Time) evaluation: lazily mark expired and free active_invite_slot
+                DB::table('staffing_company_invitation')
+                    ->where('id', $lockedInvitation->id)
+                    ->update([
+                        'to_invitation_status' => -2,
+                        'active_invite_slot' => null,
+                        'updated_at' => Carbon::now(),
+                    ]);
+
                 throw new InvalidInvitationTokenException('This invitation expired on '.$lockedInvitation->expires_at);
             }
 
