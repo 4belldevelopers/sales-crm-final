@@ -104,5 +104,7 @@ return [
     'ELASTIC_SMTP_SETTINGS' => env('ELASTIC_SMTP_SETTINGS', 'local_smtp_settings'),
     'ELASTIC_RECRUITER_NOTE_MASTER' => env('ELASTIC_RECRUITER_NOTE_MASTER', 'local_recruiter_note_master'),
     'ELASTIC_BENCH_RM_NOTE_MASTER' => env('ELASTIC_BENCH_RM_NOTE_MASTER', 'local_bench_rm_note_master'),
+    'ELASTIC_ZOOM_SETTING' => env('ELASTIC_ZOOM_SETTING', 'local_zoom_setting'),
+    'ELASTIC_GOOGLE_MEETING_LISTS' => env('ELASTIC_GOOGLE_MEETING_LISTS', 'local_google_meeting_lists'),
     'COUNTRY_INDIA_ID' => 101,
 ];

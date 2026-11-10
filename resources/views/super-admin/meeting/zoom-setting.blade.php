@@ -840,14 +840,95 @@
             }
         });
 
-        // 4. Save Settings Handler (Form Submit)
+        // RFC 4122 v4 UUID generator for Two-Tier Idempotency
+        function generateIdempotencyKey() {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // Client-side Draft Persistence & Autosave (sessionStorage)
+        var DRAFT_STORAGE_KEY = 'jero_zoom_settings_draft';
+        var draftDebounceTimer = null;
+
+        function saveDraft() {
+            try {
+                var draft = {
+                    title: $('#title').val(),
+                    redirect_uri: $('#redirect_uri').val(),
+                    client_id: $('#client_id').val(),
+                    status: $('#status').is(':checked') ? 1 : 0,
+                    saved_at: new Date().toISOString()
+                };
+                sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+            } catch (e) {
+                // Ignore private browsing storage quota exceptions
+            }
+        }
+
+        function restoreDraft() {
+            try {
+                var rawDraft = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+                if (rawDraft) {
+                    var draft = JSON.parse(rawDraft);
+                    // Discard test or placeholder drafts
+                    if (draft.redirect_uri && draft.redirect_uri.indexOf('acc_test_') !== -1) {
+                        clearDraft();
+                        return;
+                    }
+                    // Only restore draft if current form fields are completely unpopulated
+                    if (!$.trim($('#client_id').val()) && !$.trim($('#redirect_uri').val())) {
+                        if (draft.title && !$('#title').val()) $('#title').val(draft.title);
+                        if (draft.redirect_uri) $('#redirect_uri').val(draft.redirect_uri);
+                        if (draft.client_id) $('#client_id').val(draft.client_id);
+                        if (typeof draft.status !== 'undefined') $('#status').prop('checked', draft.status === 1).trigger('change');
+                    }
+                }
+            } catch (e) {
+                // Ignore parse errors
+            }
+        }
+
+        function clearDraft() {
+            try {
+                sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+            } catch (e) {}
+        }
+
+        // Debounced autosave on field inputs
+        $('#title, #redirect_uri, #client_id').on('input', function() {
+            clearTimeout(draftDebounceTimer);
+            draftDebounceTimer = setTimeout(saveDraft, 600);
+        });
+        $('#status').on('change', function() {
+            saveDraft();
+        });
+
+        // Initialize draft restoration
+        restoreDraft();
+
+        // 4. Save Settings Handler with In-Flight Mutation Fencing & Two-Tier Idempotency
+        var isSaveInFlight = false;
+
         function handleSaveSettings($triggerBtn) {
+            if (isSaveInFlight) {
+                return;
+            }
+
             var $form = $('#zoomSettingsForm');
             var $allSaveButtons = $('#save-form, #top-save-btn');
 
+            isSaveInFlight = true;
             $allSaveButtons.attr('data-kt-indicator', 'on').prop('disabled', true);
 
+            var idempotencyKey = generateIdempotencyKey();
             var formData = new FormData($form[0]);
+
+            formData.set('idempotency_key', idempotencyKey);
 
             // Ensure status value is sent if unchecked
             if (!$('#status').is(':checked')) {
@@ -861,12 +942,18 @@
                 processData: false,
                 contentType: false,
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Idempotency-Key': idempotencyKey
+                },
+                complete: function() {
+                    isSaveInFlight = false;
+                    $allSaveButtons.removeAttr('data-kt-indicator').prop('disabled', false);
                 },
                 success: function(response) {
-                    $allSaveButtons.removeAttr('data-kt-indicator').prop('disabled', false);
-
                     if (response.status === 'success') {
+                        // Purge client-side draft on successful persistence
+                        clearDraft();
+
                         // Dynamically update the toolbar badge
                         var isChecked = $('#status').is(':checked');
                         var badgeHtml = isChecked ?
@@ -892,7 +979,16 @@
                     }
                 },
                 error: function(xhr) {
-                    $allSaveButtons.removeAttr('data-kt-indicator').prop('disabled', false);
+                    if (xhr.status === 409) {
+                        Swal.fire({
+                            text: "A Zoom settings update is currently processing. Please wait a moment.",
+                            icon: "info",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, got it!",
+                            customClass: { confirmButton: "btn btn-primary" }
+                        });
+                        return;
+                    }
 
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         var errorList = Object.values(xhr.responseJSON.errors).flat().join('<br>');
@@ -922,7 +1018,9 @@
             handleSaveSettings($(this));
         });
 
-        // 5. Test Connection Diagnostic Handler with Auto-Switch to Terminal
+        // 5. Test Connection Diagnostic Handler with Active XHR Abort & Auto-Switch to Terminal
+        var activeTestConnectionXhr = null;
+
         function handleTestConnection($btn) {
             // Automatically switch to Diagnostic Tab so administrator sees live execution
             var diagnosticTabTrigger = document.querySelector('#tab-diagnostic-nav');
@@ -931,6 +1029,11 @@
                 tab.show();
             } else {
                 $('#tab-diagnostic-nav').tab('show');
+            }
+
+            // Abort any ongoing diagnostic request to prevent connection pile-ups
+            if (activeTestConnectionXhr && activeTestConnectionXhr.readyState !== 4) {
+                activeTestConnectionXhr.abort();
             }
 
             var $allTestButtons = $('#top-test-btn, #card-test-btn, #run-diagnostic-btn');
@@ -956,7 +1059,7 @@
             $('#metric-license').html('<span class="text-muted">--</span>');
             $('#metric-token').html('<span class="text-muted">--</span>');
 
-            $.ajax({
+            activeTestConnectionXhr = $.ajax({
                 url: '{{ route('superadmin.company.zoomTestConnection') }}',
                 type: 'POST',
                 data: {
@@ -965,9 +1068,11 @@
                     client_id: clientId,
                     client_secret: clientSecret
                 },
-                success: function(response) {
+                complete: function() {
+                    activeTestConnectionXhr = null;
                     $allTestButtons.removeAttr('data-kt-indicator').prop('disabled', false);
-
+                },
+                success: function(response) {
                     var latencyMs = response.latency_ms || 0;
                     var latencyBadge = latencyMs + ' ms';
 
@@ -1005,8 +1110,10 @@
                         customClass: { confirmButton: "btn btn-primary" }
                     });
                 },
-                error: function(xhr) {
-                    $allTestButtons.removeAttr('data-kt-indicator').prop('disabled', false);
+                error: function(xhr, status, error) {
+                    if (status === 'abort') {
+                        return; // User or system triggered abort, silence modal
+                    }
 
                     var resp = xhr.responseJSON || {};
                     var latencyMs = resp.latency_ms || 0;

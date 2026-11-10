@@ -57,6 +57,7 @@ class MeetingImport implements OnEachRow, ShouldQueue, WithBatchInserts, WithChu
             $this->data = [];
             if ($this->table === 'google_meeting_lists') {
                 \Illuminate\Support\Facades\Cache::forget('jero:google_meeting_links:active_pool');
+                \App\Services\SuperAdmin\SuperAdminGoogleMeetingCacheManager::flushCaches();
             } elseif ($this->table === 'team_meeting_lists') {
                 \Illuminate\Support\Facades\Cache::forget('jero:team_meeting_links:active_pool');
             }
@@ -70,6 +71,7 @@ class MeetingImport implements OnEachRow, ShouldQueue, WithBatchInserts, WithChu
             DB::table($this->table)->insertOrIgnore($this->data);
             if ($this->table === 'google_meeting_lists') {
                 \Illuminate\Support\Facades\Cache::forget('jero:google_meeting_links:active_pool');
+                \App\Services\SuperAdmin\SuperAdminGoogleMeetingCacheManager::flushCaches();
             } elseif ($this->table === 'team_meeting_lists') {
                 \Illuminate\Support\Facades\Cache::forget('jero:team_meeting_links:active_pool');
             }

@@ -47,19 +47,22 @@ use App\Services\MarketplaceModerationService;
 use App\Services\Notification\NotificationHtmlSanitizer;
 use App\Services\Notification\NotificationTokenRegistry;
 use App\Services\SuperAdmin\EmailThemeCacheManager;
-use App\Services\SuperAdmin\SuperAdminEmailThemeMutationService;
-use App\Services\SuperAdmin\SuperAdminEmailThemeReadService;
 use App\Services\SuperAdmin\SuperAdminBenchMutationService;
 use App\Services\SuperAdmin\SuperAdminCandidateMutationService;
 use App\Services\SuperAdmin\SuperAdminDefaultTermsMutationService;
 use App\Services\SuperAdmin\SuperAdminDefaultTermsReadService;
+use App\Services\SuperAdmin\SuperAdminEmailThemeMutationService;
+use App\Services\SuperAdmin\SuperAdminEmailThemeReadService;
 use App\Services\SuperAdmin\SuperAdminJdMutationService;
 use App\Services\SuperAdmin\SuperAdminMeetingMutationService;
 use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
 use App\Services\SuperAdmin\SuperAdminNotificationReadService;
-use App\Services\SuperAdmin\SuperAdminNotificationCacheManager;
 use App\Services\SuperAdmin\SuperAdminWhatsAppThemeMutationService;
 use App\Services\SuperAdmin\SuperAdminWhatsAppThemeReadService;
+use App\Services\SuperAdmin\SuperAdminGoogleMeetingMutationService;
+use App\Services\SuperAdmin\SuperAdminGoogleMeetingReadService;
+use App\Services\SuperAdmin\SuperAdminZoomSettingMutationService;
+use App\Services\SuperAdmin\SuperAdminZoomSettingReadService;
 use App\Services\SuperAdmin\WhatsAppThemeCacheManager;
 use App\Services\SuperAdminBenchCandidatesCacheManager;
 use App\Services\SuperAdminCandidateListsCacheManager;
@@ -71,7 +74,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -7717,36 +7719,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      *
      * Intent: Loads the singleton Zoom configuration (id = 1) for the Super Admin
      * to manage platform-wide Server-to-Server OAuth credentials used in ATS candidate interview scheduling.
+     * CQRS Architecture: 100% Elasticsearch read pipeline via SuperAdminZoomSettingReadService (0% MySQL reads).
      * Tenancy: Global Super Admin configuration stored in zoomsettings (singleton pattern).
      *
      * @return \Illuminate\Contracts\View\View
      */
     public function zoomSetting(Request $request)
     {
-        $zoom_setting = DB::table('zoomsettings')
-            ->where('id', 1)
-            ->first();
+        $readService = app(SuperAdminZoomSettingReadService::class);
+        $zoom_setting = $readService->getZoomSetting();
 
-        // Fallback to first row if record exists under a non-1 ID, or initialize defaults
-        if (! $zoom_setting) {
-            $zoom_setting = DB::table('zoomsettings')->first();
-        }
-
-        if (! $zoom_setting) {
-            $zoom_setting = (object) [
-                'id' => 1,
-                'title' => '',
-                'redirect_uri' => '', // Stores Zoom Account ID
-                'client_id' => '',
-                'client_secret' => '',
-                'zoom_access_token' => '',
-                'status' => 1,
-            ];
-            $this->isEmptycheck = true;
-        } else {
-            $this->isEmptycheck = false;
-        }
-
+        $this->isEmptycheck = ! $zoom_setting->exists && ! $zoom_setting->is_configured;
         $this->zoom_setting = $zoom_setting;
 
         return view('super-admin.meeting.zoom-setting', $this->data);
@@ -7756,8 +7739,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      * Store or update Zoom Server-to-Server OAuth credentials.
      *
      * Intent: Persists Zoom API credentials ensuring a strict singleton record (id = 1)
-     * to maintain 100% backward compatibility with ATS callers (ServiceCompanyJobApplicationController).
-     * Automatically sanitizes whitespace, updates status, and invalidates cached tokens.
+     * using Two-Tier Idempotency (sys_idempotency_keys), ACID row-locked MySQL transactions (<15ms),
+     * Transactional Outbox (sys_outbox_events), and post-commit fast-path Elasticsearch dual-store synchronization.
      * Tenancy: Global Super Admin configuration (MySQL write path).
      *
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
@@ -7788,306 +7771,76 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             }
         }
 
-        // Active status evaluation: 1 for active, 0 for inactive
-        $status = 0;
-        if ($req->has('status') && in_array($req->input('status'), ['1', 1, 'on', 'true', true], true)) {
-            $status = 1;
-        }
+        $idempotencyKey = $req->header('X-Idempotency-Key', $req->input('idempotency_key'));
+        $adminId = auth()->id();
 
-        $value = [
-            'title' => trim($req->title),
-            'redirect_uri' => trim($req->redirect_uri), // Preserves baked-in column storing Account ID
-            'client_id' => trim($req->client_id),
-            'client_secret' => trim($req->client_secret),
-            'status' => $status,
-        ];
+        $mutationService = app(SuperAdminZoomSettingMutationService::class);
+        $result = $mutationService->updateSettings($req->all(), $idempotencyKey, $adminId);
 
-        // Enforce canonical singleton record (id = 1)
-        // Guaranteed synchronization with ATS caller: ServiceCompanyJobApplicationController::where('id', '=', 1)
-        $existing = DB::table('zoomsettings')->where('id', 1)->first();
-        if (! $existing) {
-            $first = DB::table('zoomsettings')->first();
-            if ($first) {
-                DB::table('zoomsettings')->where('id', $first->id)->update(array_merge($value, ['id' => 1]));
-            } else {
-                DB::table('zoomsettings')->insert(array_merge($value, ['id' => 1]));
-            }
-        } else {
-            DB::table('zoomsettings')->where('id', 1)->update($value);
-        }
-
-        // Multi-Tenant Atomic Cache Invalidation
-        Cache::forget('zoom_access_token:global');
-        Cache::forget('zoom_access_token');
-        Cache::forget('zoomsettings:singleton');
-
-        $message = 'Zoom Meeting settings updated successfully';
-
-        return response()->json([
-            'status' => 'success',
-            'message' => $message,
-            'url' => '',
-            'data' => [
-                'id' => 1,
-                'title' => $value['title'],
-                'redirect_uri' => $value['redirect_uri'],
-                'client_id' => $value['client_id'],
-                'status' => $status,
-            ],
-        ]);
+        return response()->json($result);
     }
 
     /**
-     * Test Zoom Server-to-Server OAuth credentials via live diagnostic handshake.
+     * Test Zoom Server-to-Server OAuth credentials via centralized enterprise ZoomMeetingService.
      *
-     * Intent: Validates supplied credentials (or currently stored credentials if omitted)
-     * by attempting a live OAuth token exchange against https://zoom.us/oauth/token and
-     * querying the user profile API (https://api.zoom.us/v2/users/me).
-     * Measures latency (ms), verifies account type/status, and returns actionable diagnostics.
+     * Intent: Delegates diagnostic handshake and permission verification to App\Services\Zoom\ZoomMeetingService.
+     * Evaluates live OAuth exchange, pinging /users/me, measuring latency, and returning circuit breaker metrics.
+     * CQRS Architecture: 0% MySQL reads; retrieves stored credentials from L2 cache / Elasticsearch.
      * Tenancy: Global Super Admin configuration diagnostic endpoint.
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function testZoomConnection(Request $request)
     {
-        // 1. Resolve credentials from request payload (testing unsaved values) or fall back to database
-        $accountId = trim($request->input('redirect_uri', ''));
-        $clientId = trim($request->input('client_id', ''));
-        $clientSecret = trim($request->input('client_secret', ''));
+        $zoomMeetingService = app(\App\Services\Zoom\ZoomMeetingService::class);
+        $result = $zoomMeetingService->testConnection($request->all());
 
-        if (empty($accountId) || empty($clientId) || empty($clientSecret)) {
-            $setting = DB::table('zoomsettings')->where('id', 1)->first() ?? DB::table('zoomsettings')->first();
-            if ($setting) {
-                $accountId = empty($accountId) ? trim($setting->redirect_uri ?? '') : $accountId;
-                $clientId = empty($clientId) ? trim($setting->client_id ?? '') : $clientId;
-                $clientSecret = empty($clientSecret) ? trim($setting->client_secret ?? '') : $clientSecret;
-            }
-        }
+        $httpStatus = ($result['status'] === 'success') ? 200 : 422;
 
-        if (empty($accountId) || empty($clientId) || empty($clientSecret)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Missing credentials. Please supply Account ID, Client ID, and Client Secret to test.',
-                'latency_ms' => 0,
-            ], 422);
-        }
-
-        try {
-            $startTime = hrtime(true);
-
-            // 2. Execute OAuth handshake with Zoom Server-to-Server endpoint
-            $tokenResponse = Http::asForm()
-                ->timeout(12)
-                ->withBasicAuth($clientId, $clientSecret)
-                ->post('https://zoom.us/oauth/token', [
-                    'grant_type' => 'account_credentials',
-                    'account_id' => $accountId,
-                ]);
-
-            $latencyMs = round((hrtime(true) - $startTime) / 1e6);
-
-            if (! $tokenResponse->successful()) {
-                $status = $tokenResponse->status();
-                $body = $tokenResponse->json() ?? [];
-                $errorDesc = $body['reason'] ?? $body['error_description'] ?? $body['message'] ?? $tokenResponse->body();
-
-                // Human-friendly mapping for common Zoom error codes
-                $helpfulHint = '';
-                if ($status === 401 || (isset($body['error']) && $body['error'] === 'invalid_client')) {
-                    $helpfulHint = 'Invalid Client ID or Client Secret. Please verify your credentials in Zoom App Marketplace.';
-                } elseif (stripos($errorDesc, 'account') !== false || (isset($body['error']) && $body['error'] === 'unauthorized_client')) {
-                    $helpfulHint = 'Invalid Account ID, or the Server-to-Server OAuth application is not activated for this Zoom account.';
-                } else {
-                    $helpfulHint = 'Zoom rejected the authorization request: '.$errorDesc;
-                }
-
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $helpfulHint,
-                    'latency_ms' => $latencyMs,
-                    'error_code' => $body['code'] ?? $status,
-                    'raw_error' => $body,
-                ], 422);
-            }
-
-            $tokenData = $tokenResponse->json();
-            $accessToken = $tokenData['access_token'] ?? null;
-            $expiresIn = $tokenData['expires_in'] ?? 3600;
-            $scope = $tokenData['scope'] ?? 'meeting:write:admin user:read:admin';
-
-            if (! $accessToken) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Zoom authenticated successfully but did not return an access token.',
-                    'latency_ms' => $latencyMs,
-                ], 422);
-            }
-
-            // 3. Verify API access by pinging /users/me
-            $accountEmail = 'Server-to-Server Account';
-            $accountType = 'Licensed / Enterprise';
-
-            try {
-                $userResponse = Http::withToken($accessToken)
-                    ->timeout(8)
-                    ->get('https://api.zoom.us/v2/users/me');
-
-                if ($userResponse->successful()) {
-                    $userData = $userResponse->json();
-                    $accountEmail = $userData['email'] ?? (($userData['first_name'] ?? 'Zoom').' '.($userData['last_name'] ?? 'Admin'));
-                    $typeCode = $userData['type'] ?? 1;
-                    $accountType = ($typeCode == 2) ? 'Pro / Licensed' : (($typeCode == 3) ? 'Corp / Enterprise' : 'Basic');
-                }
-            } catch (\Throwable $userEx) {
-                // Non-fatal if users/me scope is restricted
-                Log::info('Zoom test connection user profile lookup note: '.$userEx->getMessage());
-            }
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Zoom Server-to-Server OAuth handshake verified successfully!',
-                'latency_ms' => $latencyMs,
-                'account_email' => $accountEmail,
-                'account_type' => $accountType,
-                'account_id' => $accountId,
-                'scopes' => is_string($scope) ? explode(' ', $scope) : $scope,
-                'expires_in' => $expiresIn,
-            ]);
-
-        } catch (\Throwable $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Network error connecting to Zoom API: '.$e->getMessage(),
-                'latency_ms' => 0,
-            ], 500);
-        }
+        return response()->json($result, $httpStatus);
     }
 
     /**
      * Display the Google Meeting Link Pool Management Hub.
      * Supports multi-field search (account email + meeting link), status filtering, and real-time pool metrics.
      */
-    public function googleMeetingSetting(Request $request)
+    public function googleMeetingSetting(Request $request, SuperAdminGoogleMeetingReadService $readService)
     {
         $searchTerm = trim((string) $request->input('meeting_link', $request->input('q', '')));
         $statusFilter = $request->input('status', null);
+        $page = max(1, (int) $request->input('page', 1));
 
-        $query = DB::table('google_meeting_lists')
-            ->select('google_meeting_lists.*')
-            ->when($searchTerm !== '', function ($query) use ($searchTerm) {
-                $query->where(function ($sub) use ($searchTerm) {
-                    $sub->where('meeting_link', 'LIKE', '%'.$searchTerm.'%')
-                        ->orWhere('account_name', 'LIKE', '%'.$searchTerm.'%');
-                });
-            })
-            ->when($statusFilter !== null && $statusFilter !== '' && $statusFilter !== 'all', function ($query) use ($statusFilter) {
-                $query->where('status', (int) $statusFilter);
-            })
-            ->orderByDesc('id');
+        $result = $readService->getPaginatedMeetingLists($searchTerm, $statusFilter, $page, 15);
 
-        $this->google_meeting_setting = $query->paginate(15)->withQueryString();
+        $this->google_meeting_setting = $result['paginator'];
         $this->isEmptycheck = ($this->google_meeting_setting->total() === 0);
         $this->meeting_link = $searchTerm;
         $this->statusFilter = $statusFilter;
 
-        // High-level pool metrics for Tier 1 Toolbar
-        $this->totalLinksCount = DB::table('google_meeting_lists')->count();
-        $this->activeLinksCount = DB::table('google_meeting_lists')->where('status', 1)->count();
-        $this->inactiveLinksCount = DB::table('google_meeting_lists')->where('status', 0)->count();
-        $this->scheduledMeetingsCount = DB::table('google_meeting_schedule')->count();
+        // High-level pool metrics for Tier 1 Toolbar served with 0% MySQL reads
+        $this->totalLinksCount = $result['totalLinksCount'];
+        $this->activeLinksCount = $result['activeLinksCount'];
+        $this->inactiveLinksCount = $result['inactiveLinksCount'];
+        $this->scheduledMeetingsCount = $result['scheduledMeetingsCount'];
 
         return view('super-admin.meeting.google-meeting-setting', $this->data);
     }
 
     /**
-     * Store Google Meeting links into the pool (resolves phantom route company.settingGoogleMeetingStore).
+     * Store Google Meeting links into the pool with Two-Tier Idempotency and Transactional Outbox.
      * Supports both multi-row batch insert and single link creation.
      */
-    public function settingGoogleMeetingStore(Request $request)
+    public function settingGoogleMeetingStore(Request $request, SuperAdminGoogleMeetingMutationService $mutationService)
     {
         try {
-            // Case 1: Multi-row dynamic manual entry
-            if ($request->has('holder_email') && is_array($request->holder_email)) {
-                $emails = $request->input('holder_email', []);
-                $links = $request->input('meeting_link', []);
+            $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+            $adminId = auth()->id();
 
-                $insertData = [];
-                foreach ($emails as $key => $email) {
-                    $emailTrim = trim((string) $email);
-                    $linkTrim = trim((string) ($links[$key] ?? ''));
+            $response = $mutationService->storeLinks($request->all(), $idempotencyKey, $adminId);
 
-                    if ($emailTrim === '' || $linkTrim === '') {
-                        continue;
-                    }
+            $statusCode = ($response['status'] ?? false) ? 200 : 422;
 
-                    if (! preg_match('/^https?:\/\//i', $linkTrim)) {
-                        $linkTrim = 'https://'.$linkTrim;
-                    }
-
-                    $insertData[] = [
-                        'account_name' => $emailTrim,
-                        'meeting_link' => $linkTrim,
-                        'status' => 1,
-                    ];
-                }
-
-                if (empty($insertData)) {
-                    return response()->json([
-                        'status' => false,
-                        'type' => 'warning',
-                        'message' => 'Please provide at least one valid account email and meeting link.',
-                    ], 422);
-                }
-
-                DB::table('google_meeting_lists')->insertOrIgnore($insertData);
-                Cache::forget('jero:google_meeting_links:active_pool');
-
-                return response()->json([
-                    'status' => true,
-                    'type' => 'success',
-                    'message' => count($insertData).' meeting link(s) added successfully to the pool.',
-                    'url' => route('superadmin.company.google_meeting_setting'),
-                ]);
-            }
-
-            // Case 2: Single item creation
-            $validated = $request->validate([
-                'account_name' => 'required|string|max:255',
-                'meeting_link' => 'required|string|max:500',
-                'status' => 'nullable|in:0,1',
-            ]);
-
-            $accountName = trim($validated['account_name']);
-            $meetingLink = trim($validated['meeting_link']);
-            if (! preg_match('/^https?:\/\//i', $meetingLink)) {
-                $meetingLink = 'https://'.$meetingLink;
-            }
-            $status = isset($validated['status']) ? (int) $validated['status'] : 1;
-
-            $exists = DB::table('google_meeting_lists')->where('meeting_link', $meetingLink)->exists();
-            if ($exists) {
-                return response()->json([
-                    'status' => false,
-                    'type' => 'warning',
-                    'message' => 'This Google Meeting link already exists in the pool.',
-                ], 422);
-            }
-
-            $id = DB::table('google_meeting_lists')->insertGetId([
-                'account_name' => $accountName,
-                'meeting_link' => $meetingLink,
-                'status' => $status,
-            ]);
-
-            Cache::forget('jero:google_meeting_links:active_pool');
-
-            return response()->json([
-                'status' => true,
-                'type' => 'success',
-                'message' => 'Meeting link created successfully.',
-                'id' => $id,
-                'url' => route('superadmin.company.google_meeting_setting'),
-            ]);
+            return response()->json($response, $statusCode);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -8098,9 +7851,9 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     }
 
     /**
-     * Atomically toggle or update status of a Google Meeting pool link.
+     * Atomically toggle or update status of a Google Meeting pool link with Two-Tier Idempotency and Outbox.
      */
-    public function googleMeetStatusUpdate(Request $request)
+    public function googleMeetStatusUpdate(Request $request, SuperAdminGoogleMeetingMutationService $mutationService)
     {
         $validator = Validator::make($request->all(), [
             'id' => 'required|integer|exists:google_meeting_lists,id',
@@ -8114,25 +7867,20 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ], 422);
         }
 
-        $newStatus = (int) $request->chkStatus;
-        DB::table('google_meeting_lists')
-            ->where('id', $request->id)
-            ->update(['status' => $newStatus]);
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $adminId = auth()->id();
 
-        Cache::forget('jero:google_meeting_links:active_pool');
+        $response = $mutationService->updateStatus((int) $request->id, (int) $request->chkStatus, $idempotencyKey, $adminId);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => $newStatus === 1 ? 'Meeting link activated successfully.' : 'Meeting link paused successfully.',
-            'new_status' => $newStatus,
-            'id' => (int) $request->id,
-        ]);
+        $status = ($response['status'] ?? '') === 'error' ? 422 : 200;
+
+        return response()->json($response, $status);
     }
 
     /**
-     * Update an individual Google Meeting link record (account_name and meeting_link).
+     * Update an individual Google Meeting link record (account_name and meeting_link) with Two-Tier Idempotency.
      */
-    public function updateGoogleMeetingLink(Request $request, $id)
+    public function updateGoogleMeetingLink(Request $request, $id, SuperAdminGoogleMeetingMutationService $mutationService)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -8148,52 +7896,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 ], 422);
             }
 
-            $record = DB::table('google_meeting_lists')->where('id', $id)->first();
-            if (! $record) {
-                return response()->json([
-                    'status' => false,
-                    'type' => 'error',
-                    'message' => 'Meeting link record not found.',
-                ], 404);
-            }
+            $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+            $adminId = auth()->id();
 
-            $accountName = trim($request->account_name);
-            $meetingLink = trim($request->meeting_link);
-            if (! preg_match('/^https?:\/\//i', $meetingLink)) {
-                $meetingLink = 'https://'.$meetingLink;
-            }
+            $response = $mutationService->updateLink((int) $id, $request->only(['account_name', 'meeting_link']), $idempotencyKey, $adminId);
 
-            // Check if meeting_link conflicts with another record
-            $conflict = DB::table('google_meeting_lists')
-                ->where('meeting_link', $meetingLink)
-                ->where('id', '!=', $id)
-                ->exists();
+            $statusCode = ($response['status'] ?? false) ? 200 : 422;
 
-            if ($conflict) {
-                return response()->json([
-                    'status' => false,
-                    'type' => 'warning',
-                    'message' => 'Another record with this meeting link already exists.',
-                ], 422);
-            }
-
-            DB::table('google_meeting_lists')->where('id', $id)->update([
-                'account_name' => $accountName,
-                'meeting_link' => $meetingLink,
-            ]);
-
-            Cache::forget('jero:google_meeting_links:active_pool');
-
-            return response()->json([
-                'status' => true,
-                'type' => 'success',
-                'message' => 'Meeting link updated successfully.',
-                'data' => [
-                    'id' => (int) $id,
-                    'account_name' => $accountName,
-                    'meeting_link' => $meetingLink,
-                ],
-            ]);
+            return response()->json($response, $statusCode);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -8204,26 +7914,12 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     }
 
     /**
-     * Fetch recent schedule allocations for Google Meet links from google_meeting_schedule.
+     * Fetch recent schedule allocations for Google Meet links from L2 cache.
      */
-    public function getGoogleMeetingScheduleHistory(Request $request)
+    public function getGoogleMeetingScheduleHistory(Request $request, SuperAdminGoogleMeetingReadService $readService)
     {
         try {
-            $schedules = DB::table('google_meeting_schedule')
-                ->leftJoin('companies', 'companies.id', '=', 'google_meeting_schedule.company_id')
-                ->leftJoin('users', 'users.id', '=', 'google_meeting_schedule.user_id')
-                ->select(
-                    'google_meeting_schedule.id',
-                    'google_meeting_schedule.meeting_link',
-                    'google_meeting_schedule.interview_date',
-                    'google_meeting_schedule.interview_job_wise_con_id',
-                    'companies.company_name',
-                    'users.name as recruiter_name',
-                    'users.email as recruiter_email'
-                )
-                ->orderByDesc('google_meeting_schedule.id')
-                ->limit(50)
-                ->get();
+            $schedules = $readService->getScheduleHistory();
 
             return response()->json([
                 'status' => true,
@@ -8537,14 +8233,21 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 ]);
             }
 
-            // ✅ Delete query
+            if ($table === 'google_meeting_lists') {
+                $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+                $adminId = auth()->id();
+                $mutationService = app(SuperAdminGoogleMeetingMutationService::class);
+                $res = $mutationService->deleteLinks($ids, $idempotencyKey, $adminId);
+
+                return response()->json($res);
+            }
+
+            // ✅ Delete query for other tables
             $deleted = DB::table($table)
                 ->whereIn('id', $ids)
                 ->delete();
 
-            if ($table === 'google_meeting_lists') {
-                Cache::forget('jero:google_meeting_links:active_pool');
-            } elseif ($table === 'team_meeting_lists') {
+            if ($table === 'team_meeting_lists') {
                 Cache::forget('jero:team_meeting_links:active_pool');
             }
 
@@ -8584,6 +8287,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     'type' => 'error',
                     'message' => 'Invalid table name',
                 ]);
+            }
+
+            if ($table === 'google_meeting_lists') {
+                $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+                $adminId = auth()->id();
+                $mutationService = app(SuperAdminGoogleMeetingMutationService::class);
+                $res = $mutationService->storeLinks($request->all(), $idempotencyKey, $adminId);
+
+                return response()->json($res);
             }
 
             $emails = $request->input('holder_email', []);
