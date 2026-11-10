@@ -83,11 +83,11 @@ class ReindexRecruiterNotesToElasticCommand extends Command
                             'updated_human' => ['type' => 'keyword'],
                             'created_at' => [
                                 'type' => 'date',
-                                'format' => 'yyyy-MM-dd HH:mm:ss||yyyy-MM-dd\'T\'HH:mm:ssZZ||epoch_millis',
+                                'format' => 'yyyy-MM-dd HH:mm:ss||yyyy-MM-dd\'T\'HH:mm:ssZZZZZ||epoch_millis||strict_date_optional_time',
                             ],
                             'updated_at' => [
                                 'type' => 'date',
-                                'format' => 'yyyy-MM-dd HH:mm:ss||yyyy-MM-dd\'T\'HH:mm:ssZZ||epoch_millis',
+                                'format' => 'yyyy-MM-dd HH:mm:ss||yyyy-MM-dd\'T\'HH:mm:ssZZZZZ||epoch_millis||strict_date_optional_time',
                             ],
                         ],
                     ],

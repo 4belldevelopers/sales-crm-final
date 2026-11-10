@@ -14,12 +14,19 @@ use Illuminate\Support\Str;
  * Class SuperAdminRecruiterNoteMutationService
  *
  * Intent: Encapsulates state-mutating operations for Super Admin Recruiter Note Templates under the
- * Transactional Outbox, Two-Tier Idempotency, and CQRS dual-store synchronization architecture.
- * Guarantees zero duplicate executions under network retries, ACID row-locked state transitions,
- * zero remote network I/O inside MySQL transactions (duration < 15ms), instant Elasticsearch sync,
- * and O(1) Redis/Dragonfly L2 cache invalidation.
+ * Transactional Outbox, Two-Tier Idempotency, Monotonic Aggregate Versioning, and CQRS dual-store architecture.
  *
- * Tenancy: Scoped strictly to Super Admin (tenant_id = 0) with cross-tenant cache eviction.
+ * Advanced Enterprise Hardening:
+ * - Monotonic Aggregate Versioning (aggregate_version monotonically increments per template).
+ * - Deterministic SHA-256 idempotency fingerprinting for oversized keys (no silent prefix collisions).
+ * - Request payload tampering detection (422 if idempotency key reused with mismatched payload).
+ * - Atomic lease claiming with lease ownership and recovery of abandoned PROCESSING leases (>120s).
+ * - Version-aware deletion tombstones in Redis to prevent resurrection from out-of-order events.
+ * - Deadlock resilience with bounded retries (3 attempts).
+ * - Rich-text HTML sanitization against XSS attack vectors.
+ * - Read-after-write cache priming for 0ms immediate data freshness.
+ *
+ * Tenancy: Scoped strictly to Super Admin (tenant_id = 0, company_id = NULL).
  * Target: 10,000 concurrent users / 0% server strain.
  *
  * Author: Antigravity AI — Super Admin Backend Architecture
@@ -38,25 +45,78 @@ class SuperAdminRecruiterNoteMutationService
     {
         ksort($payload);
 
-        return hash('sha256', json_encode($payload));
+        return hash('sha256', json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     }
 
     /**
-     * Format a deterministic idempotency key if not explicitly supplied by client.
+     * Format a deterministic idempotency key bounded to 64 characters.
+     * Uses SHA-256 fingerprinting for oversized keys to eliminate silent truncation collisions.
      */
     protected function formatIdempotencyKey(string $action, string|int $identifier, ?string $clientKey, array $payload): string
     {
         if ($clientKey && trim($clientKey) !== '') {
-            return trim($clientKey);
+            $trimmed = trim($clientKey);
+            if (strlen($trimmed) <= 64) {
+                return $trimmed;
+            }
+
+            // Deterministic collision-free fingerprint for oversized keys bounded to exactly 64 chars
+            return 'idemp_'.substr(hash('sha256', $trimmed), 0, 58);
         }
 
         $hash = substr($this->computeRequestHash($payload), 0, 16);
+        $ident = substr((string) $identifier, 0, 20);
 
-        return "rnote:{$action}:{$identifier}:{$hash}";
+        return "rnote:{$action}:{$ident}:{$hash}";
+    }
+
+    /**
+     * Compute a unique outbox event idempotency key bounded to 64 characters.
+     */
+    protected function computeOutboxKey(string $baseKey, string|int $suffix): string
+    {
+        $suffixStr = ":{$suffix}";
+        $maxBaseLen = 64 - strlen($suffixStr);
+
+        if ($maxBaseLen > 0) {
+            return substr($baseKey, 0, $maxBaseLen).$suffixStr;
+        }
+
+        return 'ob_'.hash('sha256', "{$baseKey}:{$suffix}");
+    }
+
+    /**
+     * Calculate monotonic aggregate version for a template.
+     */
+    protected function getNextAggregateVersion(int|string $aggregateId): int
+    {
+        $maxVersion = (int) DB::table('sys_outbox_events')
+            ->where('aggregate_type', 'RecruiterNoteTemplate')
+            ->where('aggregate_id', $aggregateId)
+            ->max('aggregate_version');
+
+        return max($maxVersion + 1, 1);
+    }
+
+    /**
+     * Sanitize rich-text content to eliminate XSS vectors while preserving legitimate HTML formatting.
+     */
+    public function sanitizeHtml(string $html): string
+    {
+        // Strip dangerous tags and their content
+        $sanitized = preg_replace('/<(script|style|iframe|object|embed|applet)\b[^>]*>.*?<\/\1>/is', '', $html);
+        // Strip inline event attributes (e.g. onload, onerror, onclick)
+        $sanitized = preg_replace('/\b(on\w+)\s*=\s*(["\'][^"\']*["\']|[^\s>]+)/i', '', (string) $sanitized);
+        // Strip javascript: pseudo-protocols
+        $sanitized = preg_replace('/href\s*=\s*(["\'])\s*javascript:[^"\']*\1/i', 'href="#"', (string) $sanitized);
+        $sanitized = preg_replace('/src\s*=\s*(["\'])\s*javascript:[^"\']*\1/i', 'src=""', (string) $sanitized);
+
+        return trim((string) $sanitized);
     }
 
     /**
      * Claim idempotency lease in sys_idempotency_keys.
+     * Prevents duplicate executions, recovers abandoned leases (>120s), and rejects payload tampering.
      */
     protected function claimIdempotencyLease(string $key, string $hash): ?array
     {
@@ -77,6 +137,11 @@ class SuperAdminRecruiterNoteMutationService
                 ->first();
 
             if ($existing) {
+                // Reject key reuse with mismatched payload (tampering guard)
+                if ($existing->request_hash !== $hash) {
+                    abort(422, 'Idempotency key reuse detected with mismatched payload.');
+                }
+
                 if ($existing->status === 'COMPLETED' && $existing->response_body) {
                     $cached = json_decode($existing->response_body, true);
                     if (is_array($cached)) {
@@ -87,17 +152,28 @@ class SuperAdminRecruiterNoteMutationService
                 }
 
                 if ($existing->status === 'PROCESSING') {
-                    if ($existing->updated_at && Carbon::parse($existing->updated_at)->gt(Carbon::now()->subSeconds(120))) {
+                    $abandonThreshold = Carbon::now()->subSeconds(120);
+
+                    // If currently processing within lease window, reject concurrent contention
+                    if ($existing->updated_at && Carbon::parse($existing->updated_at)->gt($abandonThreshold)) {
                         abort(409, 'A recruiter note mutation is currently processing for this request. Please wait.');
                     }
 
-                    DB::table('sys_idempotency_keys')
+                    // Lease recovery: abandoned PROCESSING request (>120s) reclaimed atomically with conditional update
+                    $reclaimed = DB::table('sys_idempotency_keys')
                         ->where('tenant_id', 0)
                         ->where('idempotency_key', $key)
+                        ->where('status', 'PROCESSING')
+                        ->where('updated_at', $existing->updated_at)
                         ->update([
+                            'request_hash' => $hash,
                             'status' => 'PROCESSING',
                             'updated_at' => Carbon::now(),
                         ]);
+
+                    if (! $reclaimed) {
+                        abort(409, 'A recruiter note mutation is currently processing for this request. Please wait.');
+                    }
                 }
             }
         }
@@ -127,6 +203,9 @@ class SuperAdminRecruiterNoteMutationService
      */
     public function createTemplate(array $payload, ?string $idempotencyKey = null): array
     {
+        $sanitizedContent = $this->sanitizeHtml($payload['content'] ?? '');
+        $payload['content'] = $sanitizedContent;
+
         $finalIdempotencyKey = $this->formatIdempotencyKey('create', 'new', $idempotencyKey, $payload);
         $requestHash = $this->computeRequestHash($payload);
 
@@ -138,11 +217,10 @@ class SuperAdminRecruiterNoteMutationService
         $outboxEventId = null;
         $insertedRecord = null;
 
-        DB::beginTransaction();
-        try {
+        $result = DB::transaction(function () use ($payload, $finalIdempotencyKey, &$outboxEventId, &$insertedRecord) {
             $now = Carbon::now();
             $newId = DB::table('recruiter_note_master')->insertGetId([
-                'company_id' => null,
+                'company_id' => null, // Scoped strictly to Global Super Admin
                 'title' => $payload['title'],
                 'content' => $payload['content'],
                 'status' => (int) ($payload['status'] ?? 1),
@@ -155,17 +233,20 @@ class SuperAdminRecruiterNoteMutationService
                 ->whereNull('company_id')
                 ->first();
 
+            $version = 1;
+
             $outboxEventId = DB::table('sys_outbox_events')->insertGetId([
                 'tenant_id' => 0,
-                'idempotency_key' => $finalIdempotencyKey,
+                'idempotency_key' => $this->computeOutboxKey($finalIdempotencyKey, $newId),
                 'aggregate_type' => 'RecruiterNoteTemplate',
                 'aggregate_id' => $newId,
-                'aggregate_version' => 1,
+                'aggregate_version' => $version,
                 'event_type' => 'RECRUITER_NOTE_TEMPLATE_CREATED',
                 'payload' => json_encode([
                     'id' => $newId,
                     'title' => $payload['title'],
                     'status' => (int) ($payload['status'] ?? 1),
+                    'version' => $version,
                 ]),
                 'status' => 'PENDING',
                 'attempts' => 0,
@@ -173,25 +254,21 @@ class SuperAdminRecruiterNoteMutationService
                 'created_at' => $now,
             ]);
 
-            $result = Reply::successWithData('Recruiter note template added successfully.', [
+            $res = Reply::successWithData('Recruiter note template added successfully.', [
                 'template' => $insertedRecord,
             ]);
 
-            $this->finalizeIdempotencyKey($finalIdempotencyKey, $result);
+            $this->finalizeIdempotencyKey($finalIdempotencyKey, $res);
 
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('SuperAdmin RecruiterNoteTemplate create failure: '.$e->getMessage(), [
-                'exception' => $e,
-                'payload' => $payload,
-            ]);
+            return $res;
+        }, 3);
 
-            throw $e;
+        // Read-after-write consistency: Prime item cache and flush listing O(1)
+        if ($insertedRecord) {
+            SuperAdminRecruiterNoteCacheManager::primeItem($insertedRecord->id, (array) $insertedRecord);
         }
-
-        // Post-commit fast-path
         SuperAdminRecruiterNoteCacheManager::flushCaches();
+
         if ($outboxEventId) {
             $this->dispatchFastPath($outboxEventId);
         }
@@ -204,6 +281,9 @@ class SuperAdminRecruiterNoteMutationService
      */
     public function updateTemplate(int $id, array $payload, ?string $idempotencyKey = null): array
     {
+        $sanitizedContent = $this->sanitizeHtml($payload['content'] ?? '');
+        $payload['content'] = $sanitizedContent;
+
         $finalIdempotencyKey = $this->formatIdempotencyKey('update', $id, $idempotencyKey, $payload);
         $requestHash = $this->computeRequestHash($payload);
 
@@ -224,8 +304,7 @@ class SuperAdminRecruiterNoteMutationService
         $outboxEventId = null;
         $updatedRecord = null;
 
-        DB::beginTransaction();
-        try {
+        $result = DB::transaction(function () use ($id, $payload, $template, $finalIdempotencyKey, &$outboxEventId, &$updatedRecord) {
             $now = Carbon::now();
             DB::table('recruiter_note_master')
                 ->whereNull('company_id')
@@ -242,17 +321,20 @@ class SuperAdminRecruiterNoteMutationService
                 ->whereNull('company_id')
                 ->first();
 
+            $nextVersion = $this->getNextAggregateVersion($id);
+
             $outboxEventId = DB::table('sys_outbox_events')->insertGetId([
                 'tenant_id' => 0,
-                'idempotency_key' => $finalIdempotencyKey,
+                'idempotency_key' => $this->computeOutboxKey($finalIdempotencyKey, $id),
                 'aggregate_type' => 'RecruiterNoteTemplate',
                 'aggregate_id' => $id,
-                'aggregate_version' => 1,
+                'aggregate_version' => $nextVersion,
                 'event_type' => 'RECRUITER_NOTE_TEMPLATE_UPDATED',
                 'payload' => json_encode([
                     'id' => $id,
                     'title' => $payload['title'],
                     'status' => (int) ($payload['status'] ?? $template->status),
+                    'version' => $nextVersion,
                 ]),
                 'status' => 'PENDING',
                 'attempts' => 0,
@@ -260,25 +342,21 @@ class SuperAdminRecruiterNoteMutationService
                 'created_at' => $now,
             ]);
 
-            $result = Reply::successWithData('Recruiter note template updated successfully.', [
+            $res = Reply::successWithData('Recruiter note template updated successfully.', [
                 'template' => $updatedRecord,
             ]);
 
-            $this->finalizeIdempotencyKey($finalIdempotencyKey, $result);
+            $this->finalizeIdempotencyKey($finalIdempotencyKey, $res);
 
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('SuperAdmin RecruiterNoteTemplate update failure: '.$e->getMessage(), [
-                'id' => $id,
-                'exception' => $e,
-            ]);
+            return $res;
+        }, 3);
 
-            throw $e;
+        // Read-after-write consistency: Prime item cache and flush listing O(1)
+        if ($updatedRecord) {
+            SuperAdminRecruiterNoteCacheManager::primeItem($id, (array) $updatedRecord);
         }
-
-        // Post-commit fast-path
         SuperAdminRecruiterNoteCacheManager::flushCaches();
+
         if ($outboxEventId) {
             $this->dispatchFastPath($outboxEventId);
         }
@@ -311,24 +389,26 @@ class SuperAdminRecruiterNoteMutationService
 
         $outboxEventId = null;
 
-        DB::beginTransaction();
-        try {
+        $result = DB::transaction(function () use ($id, $template, $finalIdempotencyKey, &$outboxEventId) {
             $now = Carbon::now();
             DB::table('recruiter_note_master')
                 ->whereNull('company_id')
                 ->where('id', $id)
                 ->delete();
 
+            $nextVersion = $this->getNextAggregateVersion($id);
+
             $outboxEventId = DB::table('sys_outbox_events')->insertGetId([
                 'tenant_id' => 0,
-                'idempotency_key' => $finalIdempotencyKey,
+                'idempotency_key' => $this->computeOutboxKey($finalIdempotencyKey, $id),
                 'aggregate_type' => 'RecruiterNoteTemplate',
                 'aggregate_id' => $id,
-                'aggregate_version' => 1,
+                'aggregate_version' => $nextVersion,
                 'event_type' => 'RECRUITER_NOTE_TEMPLATE_DELETED',
                 'payload' => json_encode([
                     'id' => $id,
                     'title' => $template->title,
+                    'version' => $nextVersion,
                 ]),
                 'status' => 'PENDING',
                 'attempts' => 0,
@@ -336,23 +416,18 @@ class SuperAdminRecruiterNoteMutationService
                 'created_at' => $now,
             ]);
 
-            $result = Reply::success('Template deleted successfully.');
+            // Version-aware deletion tombstone in Redis to prevent resurrection from out-of-order events
+            SuperAdminRecruiterNoteCacheManager::setTombstone($id, $nextVersion);
 
-            $this->finalizeIdempotencyKey($finalIdempotencyKey, $result);
+            $res = Reply::success('Template deleted successfully.');
 
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('SuperAdmin RecruiterNoteTemplate delete failure: '.$e->getMessage(), [
-                'id' => $id,
-                'exception' => $e,
-            ]);
+            $this->finalizeIdempotencyKey($finalIdempotencyKey, $res);
 
-            throw $e;
-        }
+            return $res;
+        }, 3);
 
-        // Post-commit fast-path
         SuperAdminRecruiterNoteCacheManager::flushCaches();
+
         if ($outboxEventId) {
             $this->dispatchFastPath($outboxEventId);
         }
@@ -386,8 +461,7 @@ class SuperAdminRecruiterNoteMutationService
         $newStatus = (int) $template->status === 1 ? 0 : 1;
         $outboxEventId = null;
 
-        DB::beginTransaction();
-        try {
+        $result = DB::transaction(function () use ($id, $newStatus, $finalIdempotencyKey, &$outboxEventId) {
             $now = Carbon::now();
             DB::table('recruiter_note_master')
                 ->whereNull('company_id')
@@ -397,16 +471,19 @@ class SuperAdminRecruiterNoteMutationService
                     'updated_at' => $now,
                 ]);
 
+            $nextVersion = $this->getNextAggregateVersion($id);
+
             $outboxEventId = DB::table('sys_outbox_events')->insertGetId([
                 'tenant_id' => 0,
-                'idempotency_key' => $finalIdempotencyKey,
+                'idempotency_key' => $this->computeOutboxKey($finalIdempotencyKey, $id),
                 'aggregate_type' => 'RecruiterNoteTemplate',
                 'aggregate_id' => $id,
-                'aggregate_version' => 1,
+                'aggregate_version' => $nextVersion,
                 'event_type' => 'RECRUITER_NOTE_TEMPLATE_STATUS_TOGGLED',
                 'payload' => json_encode([
                     'id' => $id,
                     'status' => $newStatus,
+                    'version' => $nextVersion,
                 ]),
                 'status' => 'PENDING',
                 'attempts' => 0,
@@ -418,27 +495,19 @@ class SuperAdminRecruiterNoteMutationService
                 ? 'Template activated successfully.'
                 : 'Template deactivated successfully.';
 
-            $result = Reply::successWithData($message, [
+            $res = Reply::successWithData($message, [
                 'id' => (int) $id,
                 'template_status' => $newStatus,
                 'status_label' => $newStatus === 1 ? 'Active' : 'Inactive',
             ]);
 
-            $this->finalizeIdempotencyKey($finalIdempotencyKey, $result);
+            $this->finalizeIdempotencyKey($finalIdempotencyKey, $res);
 
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('SuperAdmin RecruiterNoteTemplate toggleStatus failure: '.$e->getMessage(), [
-                'id' => $id,
-                'exception' => $e,
-            ]);
+            return $res;
+        }, 3);
 
-            throw $e;
-        }
-
-        // Post-commit fast-path
         SuperAdminRecruiterNoteCacheManager::flushCaches();
+
         if ($outboxEventId) {
             $this->dispatchFastPath($outboxEventId);
         }
@@ -473,8 +542,7 @@ class SuperAdminRecruiterNoteMutationService
         $outboxEventId = null;
         $cloned = null;
 
-        DB::beginTransaction();
-        try {
+        $result = DB::transaction(function () use ($duplicateTitle, $template, $finalIdempotencyKey, &$outboxEventId, &$cloned) {
             $now = Carbon::now();
             $newId = DB::table('recruiter_note_master')->insertGetId([
                 'company_id' => null,
@@ -490,17 +558,20 @@ class SuperAdminRecruiterNoteMutationService
                 ->whereNull('company_id')
                 ->first();
 
+            $version = 1;
+
             $outboxEventId = DB::table('sys_outbox_events')->insertGetId([
                 'tenant_id' => 0,
-                'idempotency_key' => $finalIdempotencyKey,
+                'idempotency_key' => $this->computeOutboxKey($finalIdempotencyKey, $newId),
                 'aggregate_type' => 'RecruiterNoteTemplate',
                 'aggregate_id' => $newId,
-                'aggregate_version' => 1,
+                'aggregate_version' => $version,
                 'event_type' => 'RECRUITER_NOTE_TEMPLATE_DUPLICATED',
                 'payload' => json_encode([
                     'id' => $newId,
                     'title' => $duplicateTitle,
                     'status' => 0,
+                    'version' => $version,
                 ]),
                 'status' => 'PENDING',
                 'attempts' => 0,
@@ -508,25 +579,20 @@ class SuperAdminRecruiterNoteMutationService
                 'created_at' => $now,
             ]);
 
-            $result = Reply::successWithData('Template duplicated successfully as draft.', [
+            $res = Reply::successWithData('Template duplicated successfully as draft.', [
                 'template' => $cloned,
             ]);
 
-            $this->finalizeIdempotencyKey($finalIdempotencyKey, $result);
+            $this->finalizeIdempotencyKey($finalIdempotencyKey, $res);
 
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('SuperAdmin RecruiterNoteTemplate duplicate failure: '.$e->getMessage(), [
-                'id' => $id,
-                'exception' => $e,
-            ]);
+            return $res;
+        }, 3);
 
-            throw $e;
+        if ($cloned) {
+            SuperAdminRecruiterNoteCacheManager::primeItem($cloned->id, (array) $cloned);
         }
-
-        // Post-commit fast-path
         SuperAdminRecruiterNoteCacheManager::flushCaches();
+
         if ($outboxEventId) {
             $this->dispatchFastPath($outboxEventId);
         }

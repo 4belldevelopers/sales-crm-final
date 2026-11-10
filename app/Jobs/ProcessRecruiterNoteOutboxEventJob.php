@@ -86,12 +86,46 @@ class ProcessRecruiterNoteOutboxEventJob implements ShouldQueue
             return;
         }
 
+        // Aggregate-level sequential ordering: defer if an earlier event for this aggregate is still pending/processing
+        $earlierEventExists = DB::table('sys_outbox_events')
+            ->where('aggregate_type', 'RecruiterNoteTemplate')
+            ->where('aggregate_id', $event->aggregate_id)
+            ->where('id', '<', $eventId)
+            ->whereIn('status', ['PENDING', 'PROCESSING'])
+            ->exists();
+
+        if ($earlierEventExists) {
+            DB::table('sys_outbox_events')
+                ->where('id', $eventId)
+                ->where('status', 'PROCESSING')
+                ->update([
+                    'status' => 'PENDING',
+                    'available_at' => now()->addSeconds(3),
+                ]);
+
+            return;
+        }
+
         try {
             $eventType = (string) $event->event_type;
             $payload = json_decode((string) $event->payload, true) ?: [];
+            $aggregateVersion = (int) ($event->aggregate_version ?? 1);
             $indexName = defined('ELASTIC_RECRUITER_NOTE_MASTER')
                 ? ELASTIC_RECRUITER_NOTE_MASTER
                 : config('constants.ELASTIC_RECRUITER_NOTE_MASTER', 'local_recruiter_note_master');
+
+            // Version-aware tombstone check: prevent resurrection of deleted entities from out-of-order events
+            $tombstoneVersion = SuperAdminRecruiterNoteCacheManager::getTombstone($event->aggregate_id);
+            if ($tombstoneVersion !== null && $aggregateVersion <= $tombstoneVersion && $eventType !== 'RECRUITER_NOTE_TEMPLATE_DELETED') {
+                Log::info("[RECRUITER_NOTE_OUTBOX] Dropping stale upsert event #{$eventId} for aggregate #{$event->aggregate_id} due to tombstone v{$tombstoneVersion}");
+                DB::table('sys_outbox_events')->where('id', $eventId)->update([
+                    'status' => 'COMPLETED',
+                    'processed_at' => now(),
+                    'last_error' => "Dropped: entity tombstoned at v{$tombstoneVersion}",
+                ]);
+
+                return;
+            }
 
             if ($eventType === 'RECRUITER_NOTE_TEMPLATE_DELETED') {
                 $docId = (string) ($payload['id'] ?? $event->aggregate_id);
@@ -113,6 +147,31 @@ class ProcessRecruiterNoteOutboxEventJob implements ShouldQueue
                 // Upsert: CREATED, UPDATED, STATUS_TOGGLED, DUPLICATED
                 $templateId = (int) ($payload['id'] ?? $event->aggregate_id);
 
+                // Out-of-order stale event drop: if document in ES already has newer version, skip overwrite
+                if ($elasticService->indexExists($indexName)) {
+                    try {
+                        $existing = $elasticService->getClient()->get([
+                            'index' => $indexName,
+                            'id' => (string) $templateId,
+                        ]);
+                        if (! empty($existing['_source']['version'])) {
+                            $existingDocVersion = (int) $existing['_source']['version'];
+                            if ($existingDocVersion > $aggregateVersion) {
+                                Log::info("[RECRUITER_NOTE_OUTBOX] Skipping stale out-of-order event #{$eventId} (v{$aggregateVersion}) because ES has newer v{$existingDocVersion}");
+                                DB::table('sys_outbox_events')->where('id', $eventId)->update([
+                                    'status' => 'COMPLETED',
+                                    'processed_at' => now(),
+                                    'last_error' => "Skipped: ES has newer document v{$existingDocVersion}",
+                                ]);
+
+                                return;
+                            }
+                        }
+                    } catch (\Throwable $getEx) {
+                        // 404 or missing document is expected on initial index
+                    }
+                }
+
                 // Fetch latest state from MySQL
                 $record = DB::table('recruiter_note_master')
                     ->where('id', $templateId)
@@ -130,6 +189,7 @@ class ProcessRecruiterNoteOutboxEventJob implements ShouldQueue
                         'title' => (string) $record->title,
                         'content' => (string) $record->content,
                         'status' => (int) $record->status,
+                        'version' => $aggregateVersion,
                         'word_count' => $cleanText !== '' ? str_word_count($cleanText) : 0,
                         'char_count' => mb_strlen($cleanText),
                         'preview_text' => Str::limit($cleanText, 180),
@@ -164,9 +224,9 @@ class ProcessRecruiterNoteOutboxEventJob implements ShouldQueue
             ]);
 
             DB::table('sys_outbox_events')->where('id', $eventId)->update([
-                'status' => $isLastAttempt ? 'FAILED' : 'PENDING',
+                'status' => $isLastAttempt ? 'DEAD_LETTER' : 'PENDING',
                 'available_at' => now()->addSeconds($this->backoff * ($event->attempts + 1)),
-                'last_error' => $e->getMessage(),
+                'last_error' => mb_substr($e->getMessage(), 0, 1000),
             ]);
 
             if ($this->specificEventId !== null && $isLastAttempt) {

@@ -52,6 +52,16 @@ class RecruiterNoteTemplateController extends SuperAdminBaseController
         $this->inactiveCount = $result['inactiveCount'];
         $this->templates = $result['templates'];
 
+        if ($request->ajax() && ! $request->pjax()) {
+            return response()->json([
+                'status' => 'success',
+                'totalCount' => $this->totalCount,
+                'activeCount' => $this->activeCount,
+                'inactiveCount' => $this->inactiveCount,
+                'templates' => $this->templates,
+            ]);
+        }
+
         return view('super-admin.recruiter-note.index', $this->data);
     }
 
@@ -68,6 +78,8 @@ class RecruiterNoteTemplateController extends SuperAdminBaseController
             $result = $this->mutationService->createTemplate($payload, $idempotencyKey);
 
             return response()->json($result);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $httpEx) {
+            throw $httpEx;
         } catch (\Throwable $e) {
             Log::error('SuperAdmin RecruiterNoteTemplate store failure: '.$e->getMessage(), [
                 'exception' => $e,
@@ -91,6 +103,8 @@ class RecruiterNoteTemplateController extends SuperAdminBaseController
             $result = $this->mutationService->updateTemplate((int) $id, $payload, $idempotencyKey);
 
             return response()->json($result);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $httpEx) {
+            throw $httpEx;
         } catch (\Throwable $e) {
             Log::error('SuperAdmin RecruiterNoteTemplate update failure: '.$e->getMessage(), [
                 'id' => $id,
@@ -113,6 +127,8 @@ class RecruiterNoteTemplateController extends SuperAdminBaseController
             $result = $this->mutationService->deleteTemplate((int) $id, $idempotencyKey);
 
             return response()->json($result);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $httpEx) {
+            throw $httpEx;
         } catch (\Throwable $e) {
             Log::error('SuperAdmin RecruiterNoteTemplate destroy failure: '.$e->getMessage(), [
                 'id' => $id,
@@ -150,6 +166,8 @@ class RecruiterNoteTemplateController extends SuperAdminBaseController
             $result = $this->mutationService->toggleStatus((int) $id, $idempotencyKey);
 
             return response()->json($result);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $httpEx) {
+            throw $httpEx;
         } catch (\Throwable $e) {
             Log::error('SuperAdmin RecruiterNoteTemplate toggleStatus failure: '.$e->getMessage(), [
                 'id' => $id,
@@ -171,6 +189,8 @@ class RecruiterNoteTemplateController extends SuperAdminBaseController
             $result = $this->mutationService->duplicateTemplate((int) $id, $idempotencyKey);
 
             return response()->json($result);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $httpEx) {
+            throw $httpEx;
         } catch (\Throwable $e) {
             Log::error('SuperAdmin RecruiterNoteTemplate duplicate failure: '.$e->getMessage(), [
                 'id' => $id,

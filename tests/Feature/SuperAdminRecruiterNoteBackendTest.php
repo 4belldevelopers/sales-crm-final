@@ -54,14 +54,39 @@ class SuperAdminRecruiterNoteBackendTest extends TestCase
 
         $this->superAdmin = User::where('is_superadmin', 1)->first()
             ?? User::first();
+
+        $this->purgeTestArtifacts();
     }
 
     protected function tearDown(): void
     {
-        if (! empty($this->createdTemplateIds)) {
-            DB::table('recruiter_note_master')
-                ->whereNull('company_id')
-                ->whereIn('id', $this->createdTemplateIds)
+        $this->purgeTestArtifacts();
+
+        parent::tearDown();
+    }
+
+    protected function purgeTestArtifacts(): void
+    {
+        $testIds = DB::table('recruiter_note_master')
+            ->whereNull('company_id')
+            ->where(function ($q) {
+                if (! empty($this->createdTemplateIds)) {
+                    $q->whereIn('id', $this->createdTemplateIds);
+                }
+                $q->orWhere('title', 'like', 'Technical Screening Rubric%')
+                    ->orWhere('title', 'like', 'Long Key Rubric%')
+                    ->orWhere('title', 'like', 'Original Payload Title%')
+                    ->orWhere('title', 'like', 'Tampered Title Attack%')
+                    ->orWhere('title', 'like', 'Enterprise Version Test%');
+            })
+            ->pluck('id')
+            ->toArray();
+
+        if (! empty($testIds)) {
+            DB::table('recruiter_note_master')->whereIn('id', $testIds)->delete();
+            DB::table('sys_outbox_events')
+                ->where('aggregate_type', 'RecruiterNoteTemplate')
+                ->whereIn('aggregate_id', $testIds)
                 ->delete();
 
             $elasticService = app(ElasticService::class);
@@ -70,8 +95,8 @@ class SuperAdminRecruiterNoteBackendTest extends TestCase
                 : config('constants.ELASTIC_RECRUITER_NOTE_MASTER', 'local_recruiter_note_master');
 
             if ($elasticService->indexExists($indexName)) {
-                try {
-                    foreach ($this->createdTemplateIds as $tId) {
+                foreach ($testIds as $tId) {
+                    try {
                         if ($elasticService->getClient()->exists(['index' => $indexName, 'id' => (string) $tId])) {
                             $elasticService->getClient()->delete([
                                 'index' => $indexName,
@@ -79,8 +104,8 @@ class SuperAdminRecruiterNoteBackendTest extends TestCase
                                 'refresh' => true,
                             ]);
                         }
+                    } catch (\Throwable) {
                     }
-                } catch (\Throwable $e) {
                 }
             }
         }
@@ -91,11 +116,17 @@ class SuperAdminRecruiterNoteBackendTest extends TestCase
 
         if (! empty($this->createdIdempotencyKeys)) {
             DB::table('sys_idempotency_keys')->whereIn('idempotency_key', $this->createdIdempotencyKeys)->delete();
+            foreach ($this->createdIdempotencyKeys as $k) {
+                $prefix = substr($k, 0, 30);
+                DB::table('sys_outbox_events')->where('idempotency_key', 'like', "{$prefix}%")->delete();
+            }
         }
 
-        SuperAdminRecruiterNoteCacheManager::flushCaches();
+        DB::table('sys_idempotency_keys')
+            ->where('idempotency_key', 'like', 'test-rnote-%')
+            ->delete();
 
-        parent::tearDown();
+        SuperAdminRecruiterNoteCacheManager::flushCaches();
     }
 
     /**
@@ -350,5 +381,99 @@ class SuperAdminRecruiterNoteBackendTest extends TestCase
             // If Elasticsearch server is offline in test runner environment, command logs warning
             $this->assertTrue(true);
         }
+    }
+
+    /**
+     * Test 8: Circuit breaker database fallback functions seamlessly if ES encounters exception.
+     */
+    public function test_recruiter_note_circuit_breaker_database_fallback(): void
+    {
+        $this->actingAs($this->superAdmin);
+
+        $cbTitle = 'CB Recruiter Note '.substr(md5(uniqid()), 0, 8);
+
+        $now = now();
+        $dbId = DB::table('recruiter_note_master')->insertGetId([
+            'company_id' => null,
+            'title' => $cbTitle,
+            'content' => '<p>Circuit breaker fallback test rubric content.</p>',
+            'status' => 1,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        $this->createdTemplateIds[] = $dbId;
+
+        $readService = app(\App\Services\SuperAdmin\SuperAdminRecruiterNoteReadService::class);
+        $reflection = new \ReflectionClass($readService);
+        $fallbackMethod = $reflection->getMethod('fallbackDatabaseRead');
+        $fallbackMethod->setAccessible(true);
+
+        $result = $fallbackMethod->invokeArgs($readService, [
+            $cbTitle, // search
+            'active', // status
+        ]);
+
+        $this->assertGreaterThanOrEqual(1, $result['totalCount']);
+        $this->assertSame($cbTitle, $result['hits'][0]['title']);
+    }
+
+    /**
+     * Test 9: Idempotency keys exceeding 64 chars are safely clamped without throwing DB exceptions.
+     */
+    public function test_recruiter_note_idempotency_key_length_safety(): void
+    {
+        $this->actingAs($this->superAdmin);
+
+        $longKey = 'test-rnote-very-long-idempotency-key-that-exceeds-sixty-four-characters-'.uniqid();
+        $this->createdIdempotencyKeys[] = substr($longKey, 0, 64);
+        $uniqueTitle = 'Long Key Rubric '.substr(md5(uniqid()), 0, 8);
+
+        $response = $this->withHeaders([
+            'X-Idempotency-Key' => $longKey,
+        ])->postJson(route('superadmin.recruiter-note.store'), [
+            'title' => $uniqueTitle,
+            'content' => '<p>Content for long idempotency key test.</p>',
+            'status' => 1,
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSame('success', $response->json('status'));
+
+        $templateId = (int) $response->json('template.id');
+        $this->createdTemplateIds[] = $templateId;
+
+        // Verify stored key in DB is deterministically fingerprinted to <= 64 chars (no silent truncation collisions)
+        $fingerprintedKey = 'idemp_'.substr(hash('sha256', $longKey), 0, 58);
+        $this->createdIdempotencyKeys[] = $fingerprintedKey;
+
+        $storedKey = DB::table('sys_idempotency_keys')
+            ->where('tenant_id', 0)
+            ->where('idempotency_key', $fingerprintedKey)
+            ->first();
+        $this->assertNotNull($storedKey);
+        $this->assertTrue(strlen($storedKey->idempotency_key) <= 64);
+        $this->assertSame('COMPLETED', $storedKey->status);
+    }
+
+    /**
+     * Test 10: AJAX request to index returns structured JSON for real-time synchronization.
+     */
+    public function test_recruiter_note_ajax_index_json_response(): void
+    {
+        $this->actingAs($this->superAdmin);
+
+        $response = $this->getJson(route('superadmin.recruiter-note.index'), [
+            'X-Requested-With' => 'XMLHttpRequest',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('status', 'success')
+            ->assertJsonStructure([
+                'status',
+                'totalCount',
+                'activeCount',
+                'inactiveCount',
+                'templates',
+            ]);
     }
 }

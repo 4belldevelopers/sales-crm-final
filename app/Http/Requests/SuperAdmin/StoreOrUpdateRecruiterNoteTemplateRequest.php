@@ -103,10 +103,11 @@ class StoreOrUpdateRecruiterNoteTemplateRequest extends CoreRequest
     {
         $statusInput = $this->input('status');
         $status = ($statusInput === '1' || $statusInput === 1 || $statusInput === true || $statusInput === 'on') ? 1 : 0;
+        $mutationService = app(\App\Services\SuperAdmin\SuperAdminRecruiterNoteMutationService::class);
 
         return [
             'title' => (string) $this->input('title'),
-            'content' => (string) $this->input('content'),
+            'content' => $mutationService->sanitizeHtml((string) $this->input('content')),
             'status' => $status,
         ];
     }
