@@ -12,7 +12,7 @@
 <div class="cl-pagi-bar">
     {{-- Left: Showing info text --}}
     <div class="cl-pagi-info">
-        Showing {{ $from }} to {{ $to }} of {{ $total }} clients
+        Showing {{ $from }} to {{ $to }} of {{ $total }} {{ $listType === 'request' ? ($total === 1 ? 'request' : 'requests') : ($total === 1 ? 'client' : 'clients') }}
     </div>
 
     {{-- Right: Rows per page + arrows + page numbers --}}
