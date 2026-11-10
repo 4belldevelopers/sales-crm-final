@@ -16,8 +16,16 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
   Redis/Horizon · Octane/FrankenPHP · Reverb · S3 · Stripe/Razorpay/PhonePe/PayPal/Paddle · AI (OpenAI).
 - **Scale goal:** 10,000 companies, 100M+ records/year. See [docs/SCALABILITY.md](../docs/SCALABILITY.md).
 - **Active code folder:** `testing.jero.works` (NOT `hire.jero.works`).
-- **Current focus:** Forward Resume Option 5: Privacy & Anonymization (Anti-Poaching Shield) Forensic Audit & Resolution (100% COMPLETED and VERIFIED).
-- **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `AgencyPartnershipGodAuditTest`, `ForwardResumeSendCopyToSelfTest` (6/6 green, 31 assertions), `ForwardResumeOption5PrivacyAnonymizationTest` (5/5 green, 52 assertions).
+- **Current focus:** Forward Resume Drawer — Mandatory Copy-to-Self Outbox Closure Scope & SES Delivery Fix (100% COMPLETED and VERIFIED).
+- **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `AgencyPartnershipGodAuditTest`, `ForwardResumeSendCopyToSelfTest` (7/7 green, 32 assertions), `ForwardResumeOption5PrivacyAnonymizationTest` (6/6 green, 76 assertions). Total: 13 tests, 108 assertions passing 100% green.
+
+- *2026-11-10* — **Forward Resume Drawer — Transaction Outbox Closure Scope Fix ($copyToSelf) (100% COMPLETED & VERIFIED)**:
+  - **Module & Scope**: `ServiceCompanyCvTrackerController.php` (`test_fwd_resume_send`), Audit Document ([`docs/audit documents/forward_resume/2026-11-10-forward-resume-send-copy-to-self-fix.md`](../docs/audit%20documents/forward_resume/2026-11-10-forward-resume-send-copy-to-self-fix.md)), and Test Suite (`tests/Feature/ForwardResumeSendCopyToSelfTest.php`).
+  - **Root Cause & Problem Solved**:
+    - When recruiters triggered "Send Email" in the Forward Resume Drawer, the UI returned `Error: Undefined variable $copyToSelf`.
+    - `DB::transaction(function () use (...))` at line 5216 omitted `$copyToSelf` from the closure lexical scope while line 5263 referenced `'copy_to_self' => $copyToSelf` for Outbox event logging.
+    - Bound `$copyToSelf` into `use (...)` list and added reflection contract test `test_cvtracker_controller_outbox_transaction_closure_scope` ensuring all required variables are imported.
+  - **Verification Evidence**: All 13 tests passing (108 assertions). Zero PHP syntax errors. Production deployment via GitHub Actions.
 
 - *2026-11-10* — **Forward Resume Drawer — Option 5: Privacy & Anonymization (Anti-Poaching Shield: Formats 48–54) Fix (100% COMPLETED & VERIFIED)**:
   - **Module & Scope**: Forward Resume Engine (`resources/views/service_company/cvtracker/_forward_resume_engine.blade.php`), Fallback and Modern Drawers (`resources/views/service_company/cvtracker/test_fwd_resume.blade.php`, `resources/views/service_company/cvtracker/fwd_resume.blade.php`), Engine Assets (`public/assets/modules/fwd-resume/engine.v4.js`, `public/js/opendoc/AgyForwardResumeEngine.js`), Audit Document ([`docs/audit documents/forward_resume/2026-11-10-forward-resume-option-5-anti-poaching-shield-fix.md`](../docs/audit%20documents/forward_resume/2026-11-10-forward-resume-option-5-anti-poaching-shield-fix.md)), and Test Suite (`tests/Feature/ForwardResumeOption5PrivacyAnonymizationTest.php`).

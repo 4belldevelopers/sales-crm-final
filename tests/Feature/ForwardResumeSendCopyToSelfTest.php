@@ -305,4 +305,26 @@ class ForwardResumeSendCopyToSelfTest extends TestCase
             $this->assertNotNull($att->sent_at);
         }
     }
+
+    /**
+     * Test 7: Verify DB transaction outbox event construction in ServiceCompanyCvTrackerController.
+     * Guarantees all closure variables ($copyToSelf, $cc, $to, etc.) are in scope with zero undefined variable errors.
+     */
+    public function test_cvtracker_controller_outbox_transaction_closure_scope(): void
+    {
+        $reflection = new \ReflectionClass(\App\Http\Controllers\ServiceCompany\ServiceCompanyCvTrackerController::class);
+        $method = $reflection->getMethod('test_fwd_resume_send');
+        $fileName = $method->getFileName();
+        $startLine = $method->getStartLine();
+        $length = $method->getEndLine() - $startLine;
+
+        $source = implode('', array_slice(file($fileName), $startLine - 1, $length));
+
+        // Ensure $copyToSelf is passed into DB::transaction closure use() clause
+        $this->assertMatchesRegularExpression(
+            '/DB::transaction\s*\(\s*function\s*\(\s*\)\s*use\s*\([^)]*\$copyToSelf[^)]*\)/s',
+            $source,
+            'DB::transaction closure must import $copyToSelf in use() statement'
+        );
+    }
 }
