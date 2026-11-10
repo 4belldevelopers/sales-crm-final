@@ -2307,7 +2307,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'total' => $total,
                 'current_page' => $page,
                 'last_page' => (int) ceil($total / max($size, 1)),
-                'listType' => 'allcandidate',
+                'listType' => 'request',
             ];
 
             $rowsDto = [];
@@ -2437,6 +2437,25 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 }
             }
         }
+    }
+
+    /**
+     * Atomically invalidate tenant client cache and counter keys on mutations.
+     * Enforces Multi-Tenant Atomic Cache Invalidation (Rule 6).
+     *
+     * @param int $companyId
+     * @return int New tenant mutation version
+     */
+    public static function invalidateTenantClientCache(int $companyId): int
+    {
+        $oldVersion = (int) cache()->get('tenant_'.$companyId.'_client_version', 1);
+        $newVersion = (int) cache()->increment('tenant_'.$companyId.'_client_version');
+        cache()->forget("ats:v2:client_counters:{$companyId}:{$oldVersion}");
+        cache()->forget("ats:v2:client_counters:{$companyId}:{$newVersion}");
+        cache()->forget("ats:v2:client_counters:{$companyId}:1");
+        cache()->forget("ats:v2:hiring_clients:{$companyId}:{$oldVersion}");
+        cache()->forget("ats:v2:hiring_clients:{$companyId}:{$newVersion}");
+        return $newVersion;
     }
 
     /**
@@ -6174,8 +6193,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ->where('recommendation_relation.to_company_id', $company_id)
                     ->update($updateArr);
 
-                $clientDataCnt = $this->commonclient();
-
                 $cachekeys = [
                     'allclients_version_user_'.$this->user->id,
                     'allclientrequest_version_user_'.$this->user->id,
@@ -6185,8 +6202,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 foreach ($cachekeys as $key) {
                     GeneralMethod::cacheClean($key);
                 }
-                GeneralMethod::cacheClean('tenant_'.$company_id.'_client_version');
-                $newVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+                $newVersion = self::invalidateTenantClientCache($company_id);
+                $clientDataCnt = $this->commonclient();
 
                 return Reply::dataOnly([
                     'status' => 'success',
@@ -6334,9 +6351,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     }
                 }
 
-                $clientDataCnt = $this->commonclient();
-                // dd("kd");
-
                 $cachekeys = [
                     'allclients_version_user_'.$this->user->id,
                     'allclientrequest_version_user_'.$this->user->id,
@@ -6346,8 +6360,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 foreach ($cachekeys as $key) {
                     GeneralMethod::cacheClean($key);
                 }
-                GeneralMethod::cacheClean('tenant_'.$company_id.'_client_version');
-                $newVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
+                $newVersion = self::invalidateTenantClientCache($company_id);
+                $clientDataCnt = $this->commonclient();
 
                 return Reply::dataOnly([
                     'status' => 'success',
