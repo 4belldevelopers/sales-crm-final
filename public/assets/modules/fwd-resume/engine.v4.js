@@ -3418,7 +3418,6 @@
     } finally {
       try { if (doc && typeof doc.destroy === 'function') doc.destroy(); } catch (e) {}
     }
-    }
   }
 
   /**
@@ -3543,6 +3542,7 @@
     buildTurboVectorHighlightedResume: buildTurboVectorHighlightedResume,
     renderAnonymizedPdfBlob: renderAnonymizedPdfBlob,
     rdcAnonymizeRules: rdcAnonymizeRules,
+    rdcDiscoverAllContactsFromText: rdcDiscoverAllContactsFromText,
     fetchResumeBytesFromSources: fetchResumeBytesFromSources,
     fetchResumeBytes: fetchResumeBytes,
     ensureJsZip: ensureJsZip,
