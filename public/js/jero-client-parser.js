@@ -689,6 +689,126 @@
                     console.error('[SFHP] Nationality error:', e);
                 }
 
+                // 5c. Phase 7b: Gender Auto-Detection (Client-First High-Precision Inference Engine)
+                try {
+                    var detectedGender = null;
+
+                    // Tier 1: Candidate object from parser
+                    if (cand.gender && /^(male|female)$/i.test(String(cand.gender).trim())) {
+                        detectedGender = /^female$/i.test(String(cand.gender).trim()) ? 'Female' : 'Male';
+                    }
+
+                    // Tier 2: Salutation / Honorific in Name
+                    var rawCandName = String(cand.name || '').trim();
+                    if (!detectedGender && rawCandName) {
+                        if (/^\s*(mr|shri|master)\b/i.test(rawCandName)) detectedGender = 'Male';
+                        else if (/^\s*(ms|mrs|miss|smt)\b/i.test(rawCandName)) detectedGender = 'Female';
+                    }
+
+                    // Tier 3: Explicit Document Search in rawText or summary
+                    if (!detectedGender) {
+                        var searchCorpus = (result.rawText || '') + ' ' + (result.summary || '') + ' ' + JSON.stringify(result.sections || {});
+                        var explicitMatch = searchCorpus.match(/(?:gender|sex)\s*[:\-–]\s*(male|female)\b/i);
+                        if (explicitMatch) {
+                            detectedGender = /^female$/i.test(explicitMatch[1]) ? 'Female' : 'Male';
+                        }
+                    }
+
+                    // Tier 4: Name Morphological & Dictionary Matcher
+                    if (!detectedGender && rawCandName) {
+                        var cleanCandName = rawCandName.replace(/^(mr|ms|mrs|miss|dr|prof|er|shri|smt)\.?\s+/i, '').trim();
+                        var nameTokens = cleanCandName.split(/[\s,._-]+/).map(function (t) {
+                            return t.toLowerCase().trim();
+                        }).filter(Boolean);
+
+                        // Morphological suffix rules (Indian / South Asian names)
+                        for (var ti = 0; ti < nameTokens.length; ti++) {
+                            var tok = nameTokens[ti];
+                            if (tok.length < 3) continue;
+                            if (/(narayana|prasad|kumar|endra|veer|deep|jeet|singh|nath|dhar|babu|lal|ram|kant|vrat|esh|raj|pal|anshu)$/i.test(tok)) {
+                                detectedGender = 'Male';
+                                break;
+                            }
+                            if (/(kumari|devi|bai|wati|mati|shree|priya)$/i.test(tok)) {
+                                detectedGender = 'Female';
+                                break;
+                            }
+                        }
+
+                        if (!detectedGender) {
+                            var MALE_NAMES = {
+                                'satyanarayana':1,'satya':1,'rahul':1,'amit':1,'rohit':1,'suresh':1,'ramesh':1,'rajesh':1,
+                                'sachin':1,'vikas':1,'vikram':1,'abhishek':1,'gaurav':1,'manish':1,'anil':1,'sunil':1,
+                                'deepak':1,'arun':1,'varun':1,'sanjay':1,'ajay':1,'vijay':1,'pankaj':1,'alok':1,
+                                'ashish':1,'vivek':1,'sandeep':1,'pradeep':1,'kuldeep':1,'anand':1,'arjun':1,'karan':1,
+                                'rohan':1,'mohit':1,'shubham':1,'mayank':1,'ayush':1,'kartik':1,'shivam':1,'harsh':1,
+                                'rishabh':1,'yash':1,'chirag':1,'kunal':1,'tanmay':1,'parth':1,'vibhanshu':1,'john':1,
+                                'david':1,'michael':1,'james':1,'robert':1,'william':1,'richard':1,'thomas':1,'charles':1,
+                                'daniel':1,'matthew':1,'anthony':1,'mark':1,'paul':1,'steven':1,'andrew':1,'joshua':1,
+                                'kevin':1,'brian':1,'george':1,'edward':1,'timothy':1,'jason':1,'ryan':1,'jacob':1,
+                                'eric':1,'stephen':1,'justin':1,'scott':1,'brandon':1,'benjamin':1,'samuel':1,'alexander':1,
+                                'patrick':1,'frank':1,'jack':1,'adam':1,'nathan':1,'henry':1,'peter':1,'mohammed':1,
+                                'mohammad':1,'muhammad':1,'ahmed':1,'ali':1,'omar':1,'hassan':1,'tariq':1,'mustafa':1,
+                                'ibrahim':1,'khalid':1,'abdullah':1,'usman':1,'bilal':1,'hamza':1,'salman':1,'imran':1
+                            };
+                            var FEMALE_NAMES = {
+                                'priya':1,'pooja':1,'ananya':1,'sneha':1,'neha':1,'kavita':1,'sunita':1,'anita':1,
+                                'geeta':1,'rekha':1,'shweta':1,'divya':1,'deepika':1,'ritu':1,'sonia':1,'swati':1,
+                                'aarti':1,'shruti':1,'aditi':1,'jyoti':1,'vandana':1,'chetna':1,'anushka':1,'monika':1,
+                                'pallavi':1,'tanvi':1,'radha':1,'meera':1,'archana':1,'namrata':1,'megha':1,'shreya':1,
+                                'mansi':1,'rashi':1,'simran':1,'komal':1,'kajal':1,'sakshi':1,'ishita':1,'akanksha':1,
+                                'kriti':1,'parul':1,'richa':1,'payal':1,'prerna':1,'ruchi':1,'smriti':1,'mary':1,
+                                'patricia':1,'jennifer':1,'linda':1,'elizabeth':1,'barbara':1,'susan':1,'jessica':1,
+                                'sarah':1,'karen':1,'nancy':1,'lisa':1,'margaret':1,'sandra':1,'ashley':1,'kimberly':1,
+                                'emily':1,'donna':1,'michelle':1,'carol':1,'amanda':1,'melissa':1,'deborah':1,'stephanie':1,
+                                'rebecca':1,'sharon':1,'laura':1,'cynthia':1,'kathleen':1,'amy':1,'shirley':1,'angela':1,
+                                'helen':1,'anna':1,'brenda':1,'pamela':1,'nicole':1,'samantha':1,'katherine':1,'christine':1,
+                                'rachel':1,'catherine':1,'carolyn':1,'janet':1,'ruth':1,'maria':1,'heather':1,'diane':1,
+                                'julie':1,'joyce':1,'victoria':1,'olivia':1,'kelly':1,'christina':1,'lauren':1,'evelyn':1,
+                                'judith':1,'megan':1,'cheryl':1,'andrea':1,'hannah':1,'martha':1,'gloria':1,'ann':1,
+                                'teresa':1,'kathryn':1,'sara':1,'alice':1,'madison':1,'doris':1,'abigail':1,'julia':1,
+                                'grace':1,'amber':1,'danielle':1,'theresa':1,'sophia':1,'fatima':1,'aisha':1,'zainab':1,
+                                'mariam':1,'layla':1,'noor':1,'yasmin':1,'farah':1,'amira':1
+                            };
+
+                            for (var tj = 0; tj < nameTokens.length; tj++) {
+                                if (MALE_NAMES[nameTokens[tj]]) {
+                                    detectedGender = 'Male';
+                                    break;
+                                }
+                                if (FEMALE_NAMES[nameTokens[tj]]) {
+                                    detectedGender = 'Female';
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (detectedGender) {
+                        var $genEl = $('#gender');
+                        if ($genEl.length) {
+                            var curGen = ($genEl.val() || '').trim();
+                            if (!isEditMode || (curGen === '' || curGen === 'Rather Not Say')) {
+                                $genEl.val(detectedGender);
+                                if ($.fn.select2 && $genEl.hasClass('select2-hidden-accessible')) {
+                                    $genEl.trigger('change.select2');
+                                }
+                                $genEl.trigger('change');
+                                var nativeGenEl = document.getElementById('gender');
+                                if (nativeGenEl) {
+                                    nativeGenEl.value = detectedGender;
+                                    nativeGenEl.dispatchEvent(new Event('change', { bubbles: true }));
+                                }
+                                dirtyElements.push($genEl[0]);
+                                populatedFields.push('gender');
+                                console.log('[SFHP] Gender auto-detected and set to:', detectedGender);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('[SFHP] Gender detection error:', e);
+                }
+
                 // 6. Phase 8: Skills Population via Batch Bridge or Tagify Bridge
                 try {
                     var skillsList = Array.isArray(result.skills) ? result.skills : [];
