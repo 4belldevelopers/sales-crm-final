@@ -97,21 +97,26 @@ class SuperAdminRecruiterNoteReadService
         $cached = SuperAdminRecruiterNoteCacheManager::rememberItem($id, function () use ($id) {
             $indexName = $this->getIndexName();
 
-            try {
-                if ($this->elasticService->indexExists($indexName)) {
-                    $response = $this->elasticService->getClient()->get([
-                        'index' => $indexName,
-                        'id' => (string) $id,
-                    ]);
+            if (RecruiterNoteCircuitBreaker::isAvailable()) {
+                try {
+                    if ($this->elasticService->indexExists($indexName)) {
+                        $response = $this->elasticService->getClient()->get([
+                            'index' => $indexName,
+                            'id' => (string) $id,
+                        ]);
 
-                    if (! empty($response['_source'])) {
-                        return $response['_source'];
+                        if (! empty($response['_source'])) {
+                            RecruiterNoteCircuitBreaker::recordSuccess();
+
+                            return $response['_source'];
+                        }
                     }
+                } catch (\Throwable $e) {
+                    RecruiterNoteCircuitBreaker::recordFailure($e);
+                    Log::warning('SuperAdminRecruiterNoteReadService::getTemplateById ES lookup failed, falling back to database: '.$e->getMessage(), [
+                        'id' => $id,
+                    ]);
                 }
-            } catch (\Throwable $e) {
-                Log::warning('SuperAdminRecruiterNoteReadService::getTemplateById ES lookup failed, falling back to database: '.$e->getMessage(), [
-                    'id' => $id,
-                ]);
             }
 
             // Circuit-breaker fallback
@@ -126,6 +131,15 @@ class SuperAdminRecruiterNoteReadService
      */
     protected function fetchFromElasticsearch(string $search, string $status): array
     {
+        $fallbackParams = ['search' => $search, 'status' => $status];
+
+        // Circuit-breaker fast-fail to protected MySQL fallback if circuit is OPEN
+        if (! RecruiterNoteCircuitBreaker::isAvailable()) {
+            return SuperAdminRecruiterNoteCacheManager::rememberDbFallback($fallbackParams, function () use ($search, $status) {
+                return $this->fallbackDatabaseRead($search, $status);
+            });
+        }
+
         $indexName = $this->getIndexName();
 
         try {
@@ -191,6 +205,8 @@ class SuperAdminRecruiterNoteReadService
                 'body' => $body,
             ]);
 
+            RecruiterNoteCircuitBreaker::recordSuccess();
+
             $hits = [];
             foreach ($response['hits']['hits'] as $hit) {
                 $src = $hit['_source'];
@@ -217,9 +233,12 @@ class SuperAdminRecruiterNoteReadService
                 'inactiveCount' => $inactiveCount,
             ];
         } catch (\Throwable $e) {
+            RecruiterNoteCircuitBreaker::recordFailure($e);
             Log::warning('SuperAdminRecruiterNoteReadService ES read failed, invoking circuit-breaker fallback: '.$e->getMessage());
 
-            return $this->fallbackDatabaseRead($search, $status);
+            return SuperAdminRecruiterNoteCacheManager::rememberDbFallback($fallbackParams, function () use ($search, $status) {
+                return $this->fallbackDatabaseRead($search, $status);
+            });
         }
     }
 
@@ -231,39 +250,44 @@ class SuperAdminRecruiterNoteReadService
         return SuperAdminRecruiterNoteCacheManager::rememberKpi(function () {
             $indexName = $this->getIndexName();
 
-            try {
-                if ($this->elasticService->indexExists($indexName)) {
-                    $body = [
-                        'size' => 0,
-                        'track_total_hits' => true,
-                        'query' => [
-                            'bool' => [
-                                'should' => [
-                                    ['bool' => ['must_not' => ['exists' => ['field' => 'company_id']]]],
-                                    ['term' => ['company_id' => 0]],
+            if (RecruiterNoteCircuitBreaker::isAvailable()) {
+                try {
+                    if ($this->elasticService->indexExists($indexName)) {
+                        $body = [
+                            'size' => 0,
+                            'track_total_hits' => true,
+                            'query' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['bool' => ['must_not' => ['exists' => ['field' => 'company_id']]]],
+                                        ['term' => ['company_id' => 0]],
+                                    ],
+                                    'minimum_should_match' => 1,
                                 ],
-                                'minimum_should_match' => 1,
                             ],
-                        ],
-                        'aggs' => [
-                            'active_count' => ['filter' => ['term' => ['status' => 1]]],
-                            'inactive_count' => ['filter' => ['term' => ['status' => 0]]],
-                        ],
-                    ];
+                            'aggs' => [
+                                'active_count' => ['filter' => ['term' => ['status' => 1]]],
+                                'inactive_count' => ['filter' => ['term' => ['status' => 0]]],
+                            ],
+                        ];
 
-                    $res = $this->elasticService->getClient()->search([
-                        'index' => $indexName,
-                        'body' => $body,
-                    ]);
+                        $res = $this->elasticService->getClient()->search([
+                            'index' => $indexName,
+                            'body' => $body,
+                        ]);
 
-                    return [
-                        'totalCount' => (int) ($res['hits']['total']['value'] ?? 0),
-                        'activeCount' => (int) ($res['aggregations']['active_count']['doc_count'] ?? 0),
-                        'inactiveCount' => (int) ($res['aggregations']['inactive_count']['doc_count'] ?? 0),
-                    ];
+                        RecruiterNoteCircuitBreaker::recordSuccess();
+
+                        return [
+                            'totalCount' => (int) ($res['hits']['total']['value'] ?? 0),
+                            'activeCount' => (int) ($res['aggregations']['active_count']['doc_count'] ?? 0),
+                            'inactiveCount' => (int) ($res['aggregations']['inactive_count']['doc_count'] ?? 0),
+                        ];
+                    }
+                } catch (\Throwable $e) {
+                    RecruiterNoteCircuitBreaker::recordFailure($e);
+                    Log::warning('SuperAdminRecruiterNoteReadService::getGlobalKpiAggregations ES failed: '.$e->getMessage());
                 }
-            } catch (\Throwable $e) {
-                Log::warning('SuperAdminRecruiterNoteReadService::getGlobalKpiAggregations ES failed: '.$e->getMessage());
             }
 
             // Fallback DB KPI calculation
@@ -426,6 +450,7 @@ class SuperAdminRecruiterNoteReadService
                                 'analyzer' => 'lowercase_analyzer',
                             ],
                             'status' => ['type' => 'integer'],
+                            'version' => ['type' => 'long'],
                             'word_count' => ['type' => 'integer'],
                             'char_count' => ['type' => 'integer'],
                             'preview_text' => ['type' => 'text'],
@@ -433,11 +458,11 @@ class SuperAdminRecruiterNoteReadService
                             'updated_human' => ['type' => 'keyword'],
                             'created_at' => [
                                 'type' => 'date',
-                                'format' => 'yyyy-MM-dd HH:mm:ss||yyyy-MM-dd\'T\'HH:mm:ssZZ||epoch_millis',
+                                'format' => 'yyyy-MM-dd HH:mm:ss||yyyy-MM-dd\'T\'HH:mm:ssZZZZZ||epoch_millis||strict_date_optional_time',
                             ],
                             'updated_at' => [
                                 'type' => 'date',
-                                'format' => 'yyyy-MM-dd HH:mm:ss||yyyy-MM-dd\'T\'HH:mm:ssZZ||epoch_millis',
+                                'format' => 'yyyy-MM-dd HH:mm:ss||yyyy-MM-dd\'T\'HH:mm:ssZZZZZ||epoch_millis||strict_date_optional_time',
                             ],
                         ],
                     ],
@@ -449,5 +474,89 @@ class SuperAdminRecruiterNoteReadService
         } catch (\Throwable $e) {
             Log::warning("SuperAdminRecruiterNoteReadService::ensureIndexExists check failed: {$e->getMessage()}");
         }
+    }
+
+    /**
+     * Observability: Gather operational health indicators across Circuit Breaker,
+     * Outbox backlog, Elasticsearch connectivity, and Cache generation.
+     *
+     * @return array<string, mixed>
+     */
+    public function getOperationalMetrics(): array
+    {
+        $circuitState = RecruiterNoteCircuitBreaker::getState();
+        $circuitFailures = RecruiterNoteCircuitBreaker::getFailures();
+        $lastFailure = RecruiterNoteCircuitBreaker::getLastFailure();
+
+        // Outbox backlog by status
+        $outboxCounts = DB::table('sys_outbox_events')
+            ->where('aggregate_type', 'RecruiterNoteTemplate')
+            ->select('status', DB::raw('count(*) as aggregate_count'))
+            ->groupBy('status')
+            ->pluck('aggregate_count', 'status')
+            ->toArray();
+
+        $oldestPending = DB::table('sys_outbox_events')
+            ->where('aggregate_type', 'RecruiterNoteTemplate')
+            ->where('status', 'PENDING')
+            ->orderBy('created_at', 'asc')
+            ->value('created_at');
+
+        $oldestPendingDurationSeconds = $oldestPending
+            ? Carbon::now()->diffInSeconds(Carbon::parse($oldestPending))
+            : 0;
+
+        // Check Elasticsearch ping/health
+        $esHealthy = false;
+        $esLatencyMs = null;
+        try {
+            $startTime = microtime(true);
+            $ping = $this->elasticService->getClient()->ping();
+            $esLatencyMs = round((microtime(true) - $startTime) * 1000, 2);
+            $esHealthy = (bool) $ping;
+        } catch (\Throwable $e) {
+            $esHealthy = false;
+        }
+
+        $dbTotal = DB::table('recruiter_note_master')->whereNull('company_id')->count();
+        $esTotal = 0;
+        try {
+            if ($esHealthy && $this->elasticService->indexExists($this->getIndexName())) {
+                $countRes = $this->elasticService->getClient()->count(['index' => $this->getIndexName()]);
+                $esTotal = (int) ($countRes['count'] ?? 0);
+            }
+        } catch (\Throwable) {
+            // ES count non-fatal
+        }
+
+        return [
+            'circuit_breaker' => [
+                'state' => $circuitState,
+                'is_available' => $circuitState === RecruiterNoteCircuitBreaker::STATE_CLOSED || $circuitState === RecruiterNoteCircuitBreaker::STATE_HALF_OPEN,
+                'consecutive_failures' => $circuitFailures,
+                'last_failure_at' => $lastFailure,
+            ],
+            'outbox' => [
+                'pending' => (int) ($outboxCounts['PENDING'] ?? 0),
+                'processing' => (int) ($outboxCounts['PROCESSING'] ?? 0),
+                'completed' => (int) ($outboxCounts['COMPLETED'] ?? 0),
+                'failed' => (int) ($outboxCounts['FAILED'] ?? 0),
+                'dead_letter' => (int) ($outboxCounts['DEAD_LETTER'] ?? 0),
+                'oldest_pending_at' => $oldestPending,
+                'oldest_pending_age_seconds' => $oldestPendingDurationSeconds,
+            ],
+            'elasticsearch' => [
+                'healthy' => $esHealthy,
+                'latency_ms' => $esLatencyMs,
+                'index_name' => $this->getIndexName(),
+                'indexed_documents' => $esTotal,
+                'mysql_records' => $dbTotal,
+                'sync_drift' => abs($dbTotal - $esTotal),
+            ],
+            'cache' => [
+                'generation_version' => SuperAdminRecruiterNoteCacheManager::getVersion(),
+                'driver' => config('cache.default'),
+            ],
+        ];
     }
 }
