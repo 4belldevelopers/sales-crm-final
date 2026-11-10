@@ -18,9 +18,16 @@ use Illuminate\Support\Str;
  * Class ProcessBenchRmNoteOutboxEventJob
  *
  * Intent: Transactional Outbox asynchronous worker for the Super Admin Relationship Manager (RM)
- * Note Templates subsystem. Guarantees at-least-once delivery, dual-store synchronization to
- * Elasticsearch (local_bench_rm_note_master), L2 cache invalidation in Redis/Dragonfly, and atomic
+ * Note Templates subsystem (bench_rm_note_master). Guarantees at-least-once delivery, dual-store synchronization
+ * to Elasticsearch (local_bench_rm_note_master), L2 cache invalidation in Redis/Dragonfly, and atomic
  * status transitions with bounded retry backoff.
+ *
+ * Advanced Enterprise Hardening:
+ * - Aggregate-level sequential ordering: defers concurrent/future events until earlier events for the aggregate complete.
+ * - Version-aware tombstone drop: prevents deleted rubrics from being resurrected by delayed outbox events.
+ * - Out-of-order stale event drop: inspects Elasticsearch document version and drops stale events without overwriting.
+ * - Monotonic aggregate version indexing into Elasticsearch (_source.version).
+ * - Automatic transition to DEAD_LETTER after 3 retry failures with safe manual/CLI replay.
  *
  * Queue: outbox
  * Author: Antigravity AI — Super Admin Backend Architecture
@@ -87,12 +94,62 @@ class ProcessBenchRmNoteOutboxEventJob implements ShouldQueue
             return;
         }
 
+        // Aggregate-level sequential ordering: defer if an earlier event for this aggregate is still pending/processing
+        $earlierEventExists = DB::table('sys_outbox_events')
+            ->where('aggregate_type', 'BenchRmNoteTemplate')
+            ->where('aggregate_id', $event->aggregate_id)
+            ->where('id', '<', $eventId)
+            ->whereIn('status', ['PENDING', 'PROCESSING'])
+            ->exists();
+
+        if ($earlierEventExists) {
+            DB::table('sys_outbox_events')
+                ->where('id', $eventId)
+                ->where('status', 'PROCESSING')
+                ->update([
+                    'status' => 'PENDING',
+                    'available_at' => now()->addSeconds(3),
+                ]);
+
+            return;
+        }
+
         try {
             $eventType = (string) $event->event_type;
-            $payload = json_decode((string) $event->payload, true) ?: [];
+
+            // Poison-Event Quarantine: Detect malformed/unparseable JSON payloads and isolate to DEAD_LETTER immediately
+            $rawPayload = (string) $event->payload;
+            $payload = json_decode($rawPayload, true);
+            if ($rawPayload !== '' && $rawPayload !== 'null' && ! is_array($payload) && json_last_error() !== JSON_ERROR_NONE) {
+                Log::error("[BENCH_RM_NOTE_OUTBOX] Poison event detected for event #{$eventId}. Malformed JSON: ".json_last_error_msg());
+                DB::table('sys_outbox_events')->where('id', $eventId)->update([
+                    'status' => 'DEAD_LETTER',
+                    'processed_at' => now(),
+                    'last_error' => 'POISON_EVENT: Malformed JSON payload - '.json_last_error_msg(),
+                ]);
+
+                return;
+            }
+            $payload = is_array($payload) ? $payload : [];
+
+            $aggregateVersion = (int) ($event->aggregate_version ?? 1);
             $indexName = defined('ELASTIC_BENCH_RM_NOTE_MASTER')
                 ? ELASTIC_BENCH_RM_NOTE_MASTER
                 : config('constants.ELASTIC_BENCH_RM_NOTE_MASTER', 'local_bench_rm_note_master');
+
+            // Version-aware tombstone check: prevent resurrection of deleted entities from out-of-order events
+            // Protected with durable MySQL loss recovery even if Redis was restarted
+            $tombstoneVersion = SuperAdminBenchRmNoteCacheManager::getTombstone($event->aggregate_id);
+            if ($tombstoneVersion !== null && $aggregateVersion <= $tombstoneVersion && $eventType !== 'BENCH_RM_NOTE_TEMPLATE_DELETED') {
+                Log::info("[BENCH_RM_NOTE_OUTBOX] Dropping stale upsert event #{$eventId} for aggregate #{$event->aggregate_id} due to tombstone v{$tombstoneVersion}");
+                DB::table('sys_outbox_events')->where('id', $eventId)->update([
+                    'status' => 'COMPLETED',
+                    'processed_at' => now(),
+                    'last_error' => "Dropped: entity tombstoned at v{$tombstoneVersion}",
+                ]);
+
+                return;
+            }
 
             if ($eventType === 'BENCH_RM_NOTE_TEMPLATE_DELETED') {
                 $docId = (string) ($payload['id'] ?? $event->aggregate_id);
@@ -114,6 +171,31 @@ class ProcessBenchRmNoteOutboxEventJob implements ShouldQueue
                 // Upsert: CREATED, UPDATED, STATUS_TOGGLED, DUPLICATED
                 $templateId = (int) ($payload['id'] ?? $event->aggregate_id);
 
+                // Out-of-order stale event drop: if document in ES already has newer version, skip overwrite
+                if ($elasticService->indexExists($indexName)) {
+                    try {
+                        $existing = $elasticService->getClient()->get([
+                            'index' => $indexName,
+                            'id' => (string) $templateId,
+                        ]);
+                        if (! empty($existing['_source']['version'])) {
+                            $existingDocVersion = (int) $existing['_source']['version'];
+                            if ($existingDocVersion > $aggregateVersion) {
+                                Log::info("[BENCH_RM_NOTE_OUTBOX] Skipping stale out-of-order event #{$eventId} (v{$aggregateVersion}) because ES has newer v{$existingDocVersion}");
+                                DB::table('sys_outbox_events')->where('id', $eventId)->update([
+                                    'status' => 'COMPLETED',
+                                    'processed_at' => now(),
+                                    'last_error' => "Skipped: ES has newer document v{$existingDocVersion}",
+                                ]);
+
+                                return;
+                            }
+                        }
+                    } catch (\Throwable $getEx) {
+                        // 404 or missing document is expected on initial index
+                    }
+                }
+
                 // Fetch latest state from MySQL
                 $record = DB::table('bench_rm_note_master')
                     ->where('id', $templateId)
@@ -131,6 +213,7 @@ class ProcessBenchRmNoteOutboxEventJob implements ShouldQueue
                         'title' => (string) $record->title,
                         'content' => (string) $record->content,
                         'status' => (int) $record->status,
+                        'version' => $aggregateVersion,
                         'word_count' => $cleanText !== '' ? str_word_count($cleanText) : 0,
                         'char_count' => mb_strlen($cleanText),
                         'preview_text' => Str::limit($cleanText, 180),
@@ -164,10 +247,11 @@ class ProcessBenchRmNoteOutboxEventJob implements ShouldQueue
                 'isLastAttempt' => $isLastAttempt,
             ]);
 
+            $backoffSeconds = min(300, (int) (pow(2, (int) $event->attempts) * 5 + mt_rand(1, 5)));
             DB::table('sys_outbox_events')->where('id', $eventId)->update([
-                'status' => $isLastAttempt ? 'FAILED' : 'PENDING',
-                'available_at' => now()->addSeconds($this->backoff * ($event->attempts + 1)),
-                'last_error' => $e->getMessage(),
+                'status' => $isLastAttempt ? 'DEAD_LETTER' : 'PENDING',
+                'available_at' => now()->addSeconds($backoffSeconds),
+                'last_error' => mb_substr($e->getMessage(), 0, 1000),
             ]);
 
             if ($this->specificEventId !== null && $isLastAttempt) {

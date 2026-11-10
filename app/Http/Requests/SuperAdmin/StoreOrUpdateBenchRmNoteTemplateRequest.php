@@ -3,6 +3,7 @@
 namespace App\Http\Requests\SuperAdmin;
 
 use App\Http\Requests\CoreRequest;
+use App\Services\SuperAdmin\SuperAdminBenchRmNoteMutationService;
 
 /**
  * StoreOrUpdateBenchRmNoteTemplateRequest
@@ -10,6 +11,9 @@ use App\Http\Requests\CoreRequest;
  * Intent: Strictly validates and sanitizes creation and modification of global Relationship Manager (RM)
  * note templates used across the Bench Talent ATS (bench_rm_note_master where company_id = NULL).
  * Tenancy: Global Super Admin scope.
+ *
+ * Author: Antigravity AI — Super Admin Backend Architecture
+ * Complies with docs/CODE_DOCUMENTATION_STANDARD.md and docs/AI_RULES.md.
  */
 class StoreOrUpdateBenchRmNoteTemplateRequest extends CoreRequest
 {
@@ -95,7 +99,7 @@ class StoreOrUpdateBenchRmNoteTemplateRequest extends CoreRequest
     }
 
     /**
-     * Returns sanitized data ready for database persistence.
+     * Returns sanitized data ready for database persistence with rich-text XSS sanitization.
      *
      * @return array{title: string, content: string, status: int}
      */
@@ -103,10 +107,12 @@ class StoreOrUpdateBenchRmNoteTemplateRequest extends CoreRequest
     {
         $statusInput = $this->input('status');
         $status = ($statusInput === '1' || $statusInput === 1 || $statusInput === true || $statusInput === 'on') ? 1 : 0;
+        $rawContent = (string) $this->input('content');
+        $sanitizedContent = app(SuperAdminBenchRmNoteMutationService::class)->sanitizeHtml($rawContent);
 
         return [
             'title' => (string) $this->input('title'),
-            'content' => (string) $this->input('content'),
+            'content' => $sanitizedContent,
             'status' => $status,
         ];
     }
