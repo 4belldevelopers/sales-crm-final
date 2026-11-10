@@ -464,13 +464,19 @@ if($snp_mode== 1){
                     </div>
                 </div>
                 <div class="fs fv-row summary-card" style="margin-bottom:0">
-                  <div class="resume-card-header summary-card-header">
+                  <div class="resume-card-header summary-card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div class="summary-title-wrap">
                       <span class="resume-card-icon"><i class="fa-solid fa-file-lines"></i></span>
                       <span class="resume-card-title">
                         <strong>Professional Summary <span class="rq">*</span></strong>
                         <small>A concise summary of this talent's expertise and experience (maximum 100 words).</small>
                       </span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <span id="cs_style_badge" class="badge badge-light-primary fw-semibold fs-8 d-none" style="border: 1px solid rgba(0,158,247,0.3); padding: 4px 8px;">Style 1/5: Technical Focus</span>
+                      <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8 d-inline-flex align-items-center gap-1" id="btn_ai_rewrite_summary" style="font-size: 12px; font-weight: 600; border-radius: 6px;" title="Cycle AI rewrite styles">
+                        <i class="fa-solid fa-wand-magic-sparkles text-primary"></i> <span>AI Rewrite</span>
+                      </button>
                     </div>
                   </div>
                   <div class="fsc summary-card-body">
@@ -2223,11 +2229,17 @@ if($snp_mode== 1){
                 </div>
                 @endif
                 <div class="fg fv-row recruiter-editor-field">
-                  <div class="d-flex align-items-center justify-content-between mb-2">
+                  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
                     <label class="mb-0">Relationship Manager Comments <span class="rq" style="color: #f1416c;">*</span></label>
-                    <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8" id="btn_sync_rm_template" title="Automatically prefill and sync comments with current Designation, Skills, and Availability from form">
-                      <i class="fa-solid fa-arrows-rotate me-1 fs-9"></i> Sync Details from Form
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                      <span id="rn_style_badge" class="badge badge-light-primary fw-semibold fs-8 d-none" style="border: 1px solid rgba(0,158,247,0.3); padding: 4px 8px;">Angle 1/5: Strong Fit</span>
+                      <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8 d-inline-flex align-items-center gap-1" id="btn_ai_rewrite_recruiter_note" style="font-size: 12px; font-weight: 600; border-radius: 6px;" title="Cycle AI rewrite angles for recruiter note">
+                        <i class="fa-solid fa-wand-magic-sparkles text-primary"></i> <span>AI Rewrite</span>
+                      </button>
+                      <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8" id="btn_sync_rm_template" title="Automatically prefill and sync comments with current Designation, Skills, and Availability from form">
+                        <i class="fa-solid fa-arrows-rotate me-1 fs-9"></i> Sync Details from Form
+                      </button>
+                    </div>
                   </div>
                   <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add Relationship Manager comments about this talent (strictly up to 100 words)...">{{ @$application->recruiter_note }}</textarea>
                   <div class="d-flex align-items-center justify-content-between mt-1">
@@ -2360,6 +2372,7 @@ if($snp_mode== 1){
 
 @push('footer-script')
 <script src="{{ asset('js/resume-presign.js') }}?v=20260929-godlevel"></script>
+<script src="{{ asset('js/jero-text-polisher.js') }}?v=20261110"></script>
 @include('service_company.bench-candidates.jero-bench-parser')
 
 <script>
