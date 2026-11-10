@@ -11249,6 +11249,27 @@ END:VCALENDAR";
 
     }
 
+    /**
+     * Intent: Delete a single client request invitation document from Elasticsearch (ELASTIC_CLIENT_REQUEST).
+     * Tenancy: Scoped by staffing_company_invitation ID.
+     */
+    public static function clientRequestDeleteElastic($id)
+    {
+        $elasticService = app(ElasticService::class);
+        try {
+            if ($elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
+                return $elasticService->getClient()->delete([
+                    'index' => ELASTIC_CLIENT_REQUEST,
+                    'id' => (string) $id,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Document already absent or index unreachable
+        }
+
+        return false;
+    }
+
     public static function teamRankElastic($teamRankElastic = [])
     {
         $elasticService = app(ElasticService::class);

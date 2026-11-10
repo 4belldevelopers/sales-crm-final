@@ -568,7 +568,19 @@ class FindAgencyService
                             'normalized_recipient' => $normalizedRecipient,
                         ];
 
-                        $invitationId = (int) DB::table('staffing_company_invitation')->insertGetId($insertArr);
+                        try {
+                            $invitationId = (int) DB::table('staffing_company_invitation')->insertGetId($insertArr);
+                        } catch (\Illuminate\Database\QueryException $qe) {
+                            if ($qe->getCode() === '23000' && str_contains($qe->getMessage(), '1062')) {
+                                $invitationId = (int) DB::table('staffing_company_invitation')
+                                    ->where('from_company_id', $from_company_id)
+                                    ->where('to_company_id', $to_company_id)
+                                    ->where('to_invitation_status', 0)
+                                    ->value('id');
+                            } else {
+                                throw $qe;
+                            }
+                        }
 
                         // Queue email notification with scanner-safe link
                         if (!empty($targetEmail)) {
