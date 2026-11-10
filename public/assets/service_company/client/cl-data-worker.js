@@ -428,6 +428,9 @@ function queryDataset(msg) {
         // 2. Tab filter determines which rows are rendered in the current tab view
         if (tab === 'request' || tab === 'requests') {
             if (!item.is_pending_request) continue;
+        } else if (tab === 'all') {
+            // On Total Clients tab, include both pending requests and approved clients!
+            // Pending requests are prioritized at the top of the client lists.
         } else {
             if (item.is_pending_request) continue;
             if (tab === 'internal' && item.is_direct) continue;
@@ -443,6 +446,12 @@ function queryDataset(msg) {
 
     // Sort
     filtered.sort(function(a, b) {
+        // On Total Clients tab ('all'), pin pending invites strictly to the top of the client list
+        if (tab === 'all') {
+            if (a.item.is_pending_request && !b.item.is_pending_request) return -1;
+            if (!a.item.is_pending_request && b.item.is_pending_request) return 1;
+        }
+
         if (isSearching && Math.abs(b.score - a.score) > 0) {
             return b.score - a.score;
         }
