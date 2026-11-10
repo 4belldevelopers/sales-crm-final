@@ -4074,15 +4074,16 @@
             // Resend Agency Invitation Click Handler
             $(document).on('click', '.resend-agency-invite', function(e) {
                 if (e) { e.preventDefault(); e.stopPropagation(); }
+                const invId = $(this).data('id');
                 const email = $(this).data('email');
                 const agencyCompanyId = $(this).data('company-id') || 0;
-                if (!email && !agencyCompanyId) return;
+                if (!invId && !email && !agencyCompanyId) return;
                 const $btn = $(this);
                 const originalHtml = $btn.html();
                 $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" style="width:11px; height:11px;"></span> Resending...');
 
                 $.ajax({
-                    url: "{{ route('service_company.consultancy.staffing_invitation', 0) }}",
+                    url: "{{ route('service_company.consultancy.re_invite', '') }}/" + invId,
                     type: 'POST',
                     data: {
                         agency_company_id: agencyCompanyId,
@@ -4093,9 +4094,9 @@
                         $btn.prop('disabled', false).html(originalHtml);
                         if (response.status === 'success') {
                             if (typeof Swal !== 'undefined') {
-                                Swal.fire({ icon: 'success', title: 'Invitation Resent', text: response.message || 'Invitation resent successfully.' });
+                                Swal.fire({ icon: 'success', title: 'Invitation Resent', text: response.message || 'Invitation reminder resent successfully.' });
                             } else {
-                                alert('Invitation resent successfully.');
+                                alert('Invitation reminder resent successfully.');
                             }
                             self.loadPage(1, true);
                         } else {
@@ -4132,7 +4133,7 @@
                 $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" style="width:11px; height:11px;"></span> Cancelling...');
 
                 $.ajax({
-                    url: "{{ url('/service/consultancy/cancel_invitation') }}/" + invId,
+                    url: "{{ route('service_company.consultancy.cancel_invitation', '') }}/" + invId,
                     type: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}'

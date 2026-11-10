@@ -24,6 +24,12 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->runInBackground();
 
+        // Agency Partnerships — hourly sweep of expired invitations (releases STORED active_invite_slot)
+        $schedule->command('agency:reconcile-expired-invitations')
+            ->hourly()
+            ->withoutOverlapping(10)
+            ->runInBackground();
+
         // Step 9: keep pipeline_counters (and Redis cache) in sync with MySQL every 5 min.
         $schedule->command('counters:reconcile')
             ->everyFiveMinutes()

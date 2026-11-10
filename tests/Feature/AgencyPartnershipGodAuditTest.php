@@ -63,6 +63,12 @@ class AgencyPartnershipGodAuditTest extends TestCase
 
         $this->withoutMiddleware([EnsureOneDeviceLogin::class]);
 
+        \Illuminate\Support\Facades\Queue::fake([
+            \App\Jobs\QueueNotificationMailService::class,
+            \App\Jobs\ProcessAgencyOutboxEventJob::class,
+        ]);
+        \Illuminate\Support\Facades\Mail::fake();
+
         $this->clientUser = User::withoutGlobalScopes()->where('company_id', $this->clientCompanyId)->where('status', 'active')->first()
             ?? User::withoutGlobalScopes()->first();
 
@@ -788,5 +794,59 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $this->assertStringNotContainsString('Direct Email Outreach', $html);
         $this->assertStringContainsString('Ref:', $html);
         $this->assertStringContainsString('#INV-', $html);
+    }
+
+    /**
+     * T-22: Active pending invitation reminder (Resend Invite) dispatches reminder email with 0 coins deducted.
+     */
+    public function test_controller_resend_active_invitation_reminder_zero_coins(): void
+    {
+        $this->actingAs($this->clientUser);
+        $email = 'stream_test_'.uniqid().'@agency.com';
+
+        $action = app(CreateInvitationAction::class);
+        $res = $action->execute($this->clientCompanyId, $this->clientUser->id, $email);
+        $invId = $res['invitation_id'];
+
+        // Resend Invite on active pending invitation
+        $response = $this->postJson(route('service_company.consultancy.re_invite', $invId));
+        $response->assertStatus(200);
+        $data = $response->json();
+
+        $this->assertEquals('success', $data['status']);
+        $this->assertEquals(0, $data['coins_deducted']);
+        $this->assertEquals($invId, $data['invitation_id']);
+        $this->assertStringContainsString('Invitation reminder resent successfully', $data['message']);
+
+        // Rapid second call should trigger cooling off rate-limit warning
+        $secondResponse = $this->postJson(route('service_company.consultancy.re_invite', $invId));
+        $secondResponse->assertStatus(200);
+        $secondData = $secondResponse->json();
+        $this->assertEquals('warning', $secondData['status']);
+        $this->assertStringContainsString('recently dispatched', $secondData['message']);
+    }
+
+    protected function tearDown(): void
+    {
+        // 🛡️ Forensic Clean-Up: Purge test artifacts created during test runs to prevent dbmaster pollution
+        DB::table('staffing_company_invitation')
+            ->where('from_company_id', $this->clientCompanyId)
+            ->where(function ($q) {
+                $q->where('to_email', 'like', '%_test_%@%')
+                    ->orWhere('to_email', 'like', 'newagency_%@%')
+                    ->orWhere('to_email', 'like', 'partner_%@%')
+                    ->orWhere('to_email', 'like', 'ctrl_%@%')
+                    ->orWhere('to_email', 'like', 'scanner_safe_%@%')
+                    ->orWhere('to_email', 'like', 'bounced_%@%')
+                    ->orWhere('to_email', 'like', 'idemp_test_%@%')
+                    ->orWhere('to_email', 'like', 'cancel_test_%@%')
+                    ->orWhere('to_email', 'like', 'duplicate_test_%@%')
+                    ->orWhere('to_email', 'like', 'decline_test_%@%')
+                    ->orWhere('to_email', 'like', 'quota_blocked_%@%')
+                    ->orWhere('to_email', 'like', 'lowcoin_%@%');
+            })
+            ->delete();
+
+        parent::tearDown();
     }
 }
