@@ -177,6 +177,8 @@ jobs:
             # cleaned up. Keep this in sync with deploy-staging.yml.
             php artisan route:clear
 
+            php artisan view:clear
+
             php artisan view:cache
 
             php artisan event:cache || true
