@@ -18,7 +18,8 @@
                 $invId = $inv->id;
                 $invEmail = $inv->to_email;
                 $isRegistered = !empty($inv->to_company_id);
-                $company_name = !empty($inv->company_name) ? ucwords($inv->company_name) : $invEmail;
+                $hasCustomName = !empty($inv->company_name) && strtolower(trim($inv->company_name)) !== strtolower(trim($invEmail));
+                $company_name = $hasCustomName ? ucwords($inv->company_name) : $invEmail;
                 $ind_name = !empty($inv->ind_name) ? $inv->ind_name : 'Staffing & Recruitment';
                 
                 $logo_path = '';
@@ -37,24 +38,60 @@
                 if (strlen($initials) > 3) {
                     $initials = substr($initials, 0, 2);
                 }
+                if (empty($initials)) {
+                    $initials = 'AG';
+                }
 
                 $city = $inv->city_name ?? '';
                 $state = $inv->state_name ?? '';
                 $country = $inv->country_name ?? '';
-                $dateSent = $inv->from_created_at ? date('d M, Y', strtotime($inv->from_created_at)) : 'Recently';
-                $timeAgo = $inv->from_created_at ? GeneralMethod::timeAgo($inv->from_created_at) : 'Recently';
 
-                $statusLabel = 'Pending Invitation';
+                // Date & Expiry Calculations (7-Day TTL Window)
+                $createdAt = !empty($inv->from_created_at) ? Carbon::parse($inv->from_created_at) : Carbon::now();
+                $expiresAt = !empty($inv->expires_at) ? Carbon::parse($inv->expires_at) : (clone $createdAt)->addDays(7);
+                
+                $dateSentFormatted = $createdAt->format('d M, Y • h:i A');
+                $timeAgo = GeneralMethod::timeAgo($createdAt);
+                
+                $expiryDateFormatted = $expiresAt->format('d M, Y • h:i A');
+                $now = Carbon::now();
+                $isExpired = $now->greaterThan($expiresAt);
+
+                if ($isExpired) {
+                    $expiryCountdown = 'Expired';
+                    $expiryBadgeClass = 'badge-light-danger text-danger';
+                    $ttlLabel = 'TTL Expired';
+                } else {
+                    $diffDays = (int) $now->diffInDays($expiresAt);
+                    $diffHours = (int) $now->diffInHours($expiresAt);
+                    if ($diffDays >= 1) {
+                        $expiryCountdown = $diffDays . ' ' . \Illuminate\Support\Str::plural('day', $diffDays) . ' left';
+                        $expiryBadgeClass = ($diffDays <= 2) ? 'badge-light-warning text-warning' : 'badge-light-success text-success';
+                        $ttlLabel = $diffDays . 'd remaining';
+                    } elseif ($diffHours >= 1) {
+                        $expiryCountdown = $diffHours . ' ' . \Illuminate\Support\Str::plural('hr', $diffHours) . ' left';
+                        $expiryBadgeClass = 'badge-light-danger text-danger';
+                        $ttlLabel = $diffHours . 'h remaining';
+                    } else {
+                        $diffMins = max(1, (int) $now->diffInMinutes($expiresAt));
+                        $expiryCountdown = $diffMins . 'm left';
+                        $expiryBadgeClass = 'badge-light-danger text-danger';
+                        $ttlLabel = $diffMins . 'm remaining';
+                    }
+                }
+
+                // Singular Authoritative Status Pill (Zero Repetition Across Sub-Cards)
+                $statusLabel = 'Pending Registration';
                 $statusClass = 'pill-warning';
                 if ($inv->to_invitation_status == -1) {
                     $statusLabel = 'Declined';
                     $statusClass = 'pill-inactive';
                 } elseif ($isRegistered) {
-                    $statusLabel = 'Awaiting Confirmation';
+                    $statusLabel = 'Awaiting Acceptance';
                     $statusClass = 'pill-active';
-                } else {
-                    $statusLabel = 'Pending Registration';
-                    $statusClass = 'pill-warning';
+                } elseif ($isExpired) {
+                    $statusLabel = 'Expired';
+                    $statusClass = 'pill-inactive';
                 }
             @endphp
 
@@ -66,7 +103,7 @@
                             <span class="cl-subcard-title" title="Invited agency partner details">Agency Identity</span>
                             <div class="cl-subcard-badges">
                                 <span class="cl-scope-pill pill-internal type-internal" title="Outbound partnership invitation">Invited Partner</span>
-                                <span class="cl-status-pill {{ $statusClass }}" title="Invitation status: {{ $statusLabel }}">
+                                <span class="cl-status-pill {{ $statusClass }}" title="Authoritative invitation status: {{ $statusLabel }}">
                                     <span class="cl-status-pill-dot"></span>
                                     <span>{{ $statusLabel }}</span>
                                 </span>
@@ -81,18 +118,29 @@
                                     <span class="cl-initials-fallback {{ $bgTextDecore }}">{{ $initials }}</span>
                                 @endif
                             </div>
-                            <div class="cl-details-box">
-                                <div class="cl-name" title="{{ e($company_name) }}">{{ $company_name }}</div>
-                                <div class="cl-ind" title="Specialization / Industry: {{ e($ind_name) }}">{{ $ind_name }}</div>
-                                <div class="cl-size text-muted" title="Contact Email: {{ e($invEmail) }}">{{ $invEmail }}</div>
+                            <div class="cl-details-box min-w-0">
+                                <div class="cl-name text-truncate" title="{{ e($company_name) }}">{{ $company_name }}</div>
+                                <div class="cl-ind text-truncate" title="Specialization / Industry: {{ e($ind_name) }}">{{ $ind_name }}</div>
+                                @if ($hasCustomName)
+                                    <div class="cl-size text-muted text-truncate" title="Contact Email: {{ e($invEmail) }}">{{ $invEmail }}</div>
+                                @elseif (!empty($inv->website))
+                                    <div class="cl-size text-primary text-truncate d-flex align-items-center gap-1" title="Official Website: {{ e($inv->website) }}">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                        <span>{{ $inv->website }}</span>
+                                    </div>
+                                @else
+                                    <div class="cl-size text-muted text-truncate" title="Direct Email Outreach">
+                                        <span class="badge badge-light-primary py-0 px-1.5" style="font-size:9.5px; font-weight:600;">Direct Email Outreach</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 2: Location -->
+                    <!-- SUB-CARD 2: Location (Clean & Non-Redundant) -->
                     <div class="cl-subcard cl-subcard-loc">
                         <div class="cl-subcard-head">
-                            <span class="cl-subcard-title" title="Agency operating location">Location</span>
+                            <span class="cl-subcard-title" title="Agency primary operating headquarters">Location</span>
                         </div>
                         <div class="cl-loc-body">
                             <svg class="cl-loc-pin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" title="Geographic location">
@@ -101,95 +149,132 @@
                             </svg>
                             <div class="cl-loc-lines">
                                 @if ($city)
-                                    <div class="cl-loc-city" title="City: {{ e($city) }}">{{ $city }}</div>
+                                    <div class="cl-loc-city text-truncate" title="City: {{ e($city) }}">{{ $city }}</div>
                                 @endif
                                 @if ($state)
-                                    <div class="cl-loc-state" title="State: {{ e($state) }}">{{ $state }}</div>
+                                    <div class="cl-loc-state text-truncate" title="State: {{ e($state) }}">{{ $state }}</div>
                                 @endif
                                 @if ($country)
-                                    <div class="cl-loc-country" title="Country: {{ e($country) }}">{{ $country }}</div>
+                                    <div class="cl-loc-country text-truncate" title="Country: {{ e($country) }}">{{ $country }}</div>
                                 @endif
                                 @if (!$city && !$state && !$country)
-                                    <div class="cl-loc-empty" title="Awaiting recipient registration to populate location data">Pending Registration</div>
+                                    <div class="cl-loc-empty" style="color:#64748b; font-size:11px;" title="Location will be populated when the agency accepts and joins">Unspecified</div>
+                                    <div style="font-size:9.5px; color:#94a3b8;">Set on registration</div>
                                 @endif
                             </div>
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 3: Invitation Status -->
+                    <!-- SUB-CARD 3: Network & Escrow Status (Informative & Zero Duplicate Status) -->
                     <div class="cl-subcard cl-subcard-jobs">
                         <div class="cl-subcard-head">
-                            <span class="cl-subcard-title" title="Invitation status details">Invitation Lifecycle</span>
+                            <span class="cl-subcard-title" title="Platform registration & coin escrow status">Network & Escrow</span>
                         </div>
-                        <div class="cl-jobs-body tbl-cell-jobs">
-                            <div class="cl-job-line has-count cl-job-hiring" title="Status: {{ $statusLabel }}">
-                                <span class="cl-job-bullet bullet-hiring"></span>
-                                <span class="cl-job-num" style="font-size:12px; font-weight:600;">{{ $statusLabel }}</span>
+                        <div class="cl-jobs-body tbl-cell-jobs d-flex flex-column justify-content-center" style="gap:5px;">
+                            <div class="d-flex align-items-center gap-1.5" style="font-size:11px;">
+                                @if ($isRegistered)
+                                    <span class="badge badge-light-success py-0 px-1.5 fw-bold" style="font-size:9.5px;">Registered</span>
+                                    <span class="text-gray-700 text-truncate" title="Agency is registered on JERO">On JERO Network</span>
+                                @else
+                                    <span class="badge badge-light-primary py-0 px-1.5 fw-bold" style="font-size:9.5px;">New Agency</span>
+                                    <span class="text-gray-700 text-truncate" title="External agency invited to join JERO">Direct Outreach</span>
+                                @endif
                             </div>
-                            <div class="cl-job-line no-count" title="Registration state">
-                                <span class="cl-job-bullet bullet-neutral"></span>
-                                <span class="cl-job-label">{{ $isRegistered ? 'Registered on JERO' : 'New Agency' }}</span>
+                            <div class="d-flex align-items-center gap-1.5 text-muted" style="font-size:11px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 6v12M15 9.5a3.5 3.5 0 0 0-5 0 3.5 3.5 0 0 0 0 5 3.5 3.5 0 0 0 5 0"></path>
+                                </svg>
+                                <span title="5 JERO Coins held in escrow until invitation response"><strong>5 Coins</strong> Escrowed</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 4: Sent Information -->
+                    <!-- SUB-CARD 4: INVITATION ACTIONS (Resend Invite & Cancel) -->
                     <div class="cl-subcard cl-subcard-pipeline">
-                        <div class="cl-subcard-head">
-                            <div class="cl-subcard-title-wrap">
+                        <div class="cl-subcard-head d-flex align-items-center justify-content-between">
+                            <div class="cl-subcard-title-wrap d-flex align-items-center gap-1">
                                 <svg class="cl-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                                 </svg>
-                                <span class="cl-subcard-title" title="Dispatch timeline">Dispatch Timeline</span>
+                                <span class="cl-subcard-title" title="Quick invitation management actions">Invitation Actions</span>
                             </div>
+                            <span class="badge {{ $expiryBadgeClass }} py-0 px-2" style="font-size:9.5px; font-weight:700;" title="Remaining TTL window">
+                                {{ $expiryCountdown }}
+                            </span>
                         </div>
-                        <div class="cl-pipe-body tbl-cell-pipeline" title="Invitation sent on {{ $dateSent }}">
-                            <div class="d-flex flex-column gap-1 py-1" style="font-size: 11px;">
-                                <div class="d-flex align-items-center gap-2 text-muted">
-                                    <span>Sent:</span>
-                                    <strong class="text-dark">{{ $dateSent }}</strong>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 text-muted">
-                                    <span>Elapsed:</span>
-                                    <strong class="text-primary">{{ $timeAgo }}</strong>
-                                </div>
+                        <div class="cl-pipe-body tbl-cell-pipeline d-flex align-items-center justify-content-center h-100" style="padding:4px 0;">
+                            <!-- Integrated Action Buttons -->
+                            <div class="d-flex align-items-center gap-2 w-100">
+                                <button type="button" 
+                                        class="btn btn-sm btn-light-primary fw-bold resend-agency-invite flex-grow-1" 
+                                        data-id="{{ $invId }}" 
+                                        data-email="{{ e($invEmail) }}" 
+                                        data-company-id="{{ $inv->to_company_id ?? 0 }}"
+                                        style="height:32px; padding:0 10px; font-size:11.5px; display:inline-flex; align-items:center; justify-content:center; gap:5px; border-radius:6px; white-space:nowrap; border:1px solid #bfdbfe; background:#eff6ff;" 
+                                        title="Resend invitation email to {{ e($invEmail) }}">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="23 4 23 10 17 10"/>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                    </svg>
+                                    <span>Resend Invite</span>
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-sm btn-light-danger fw-bold cancel-agency-invite" 
+                                        data-invitation-id="{{ $invId }}" 
+                                        style="height:32px; padding:0 12px; font-size:11.5px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; white-space:nowrap; border:1px solid #fecaca; background:#fef2f2;" 
+                                        title="Cancel this invitation and auto-refund 5 escrowed coins">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                    <span>Cancel</span>
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- BOTTOM STRIP: Sent Date, Last Activity, and Actions -->
-                <div class="cl-card-bottom-strip">
-                    <div class="cl-bottom-meta">
-                        <span class="cl-meta-item" title="Date when partnership invitation was dispatched">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                <line x1="16" y1="2" x2="16" y2="6"/>
-                                <line x1="8" y1="2" x2="8" y2="6"/>
-                                <line x1="3" y1="10" x2="21" y2="10"/>
+                <!-- BOTTOM STRIP (TIER 5): DISPATCH & EXPIRY TIMELINE + ESCROW AUDIT (Moved from Sub-Card 4) -->
+                <div class="cl-card-bottom-strip d-flex align-items-center justify-content-between flex-wrap gap-2" style="padding:7px 14px; background:#fafbfc; border-top:1px solid #f1f5f9; font-size:11px;">
+                    <!-- LEFT: Dispatch & Expiry Timestamps -->
+                    <div class="d-flex align-items-center flex-wrap gap-2 text-muted">
+                        <!-- Dispatched -->
+                        <div class="d-flex align-items-center gap-1.5" title="Dispatched on {{ $dateSentFormatted }}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
-                            <span>Invited: <strong>{{ $dateSent }}</strong></span>
-                        </span>
-                        <span class="cl-meta-dot">•</span>
-                        <span class="cl-meta-item" title="Delivery status">
-                            <span class="cl-dot cl-dot-blue"></span>
-                            <span>Status: <strong>{{ $statusLabel }}</strong></span>
-                        </span>
+                            <span style="color:#64748b;">Dispatched:</span>
+                            <strong class="text-gray-900">{{ $dateSentFormatted }}</strong>
+                            <span class="text-primary fw-semibold" style="font-size:10px;">({{ $timeAgo }})</span>
+                        </div>
+
+                        <span style="color:#cbd5e1; font-weight:bold;">•</span>
+
+                        <!-- Expires -->
+                        <div class="d-flex align-items-center gap-1.5" title="Valid until {{ $expiryDateFormatted }}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{ $isExpired ? '#dc2626' : '#d97706' }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                            <span style="color:#64748b;">Expires:</span>
+                            <strong style="color:{{ $isExpired ? '#dc2626' : '#0f172a' }};">{{ $expiryDateFormatted }}</strong>
+                            <span class="badge {{ $expiryBadgeClass }} ms-1 py-0 px-1.5" style="font-size:9.5px; font-weight:700;">{{ $ttlLabel }}</span>
+                        </div>
                     </div>
-                    <div class="cl-bottom-actions" style="display: flex; gap: 6px; align-items: center;">
-                        <button type="button" class="btn btn-sm btn-light-primary fw-bold px-3 py-1.5 resend-agency-invite" data-id="{{ $invId }}" data-email="{{ e($invEmail) }}" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; white-space: nowrap !important; line-height: 1 !important; font-size: 11px; border-radius: 6px;" title="Resend invitation email to {{ e($invEmail) }}">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="23 4 23 10 17 10"/>
-                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+
+                    <!-- RIGHT: Escrow Auto-Refund Guarantee & Reference ID -->
+                    <div class="d-flex align-items-center gap-2 text-muted" style="font-size:10.5px;">
+                        <span class="d-flex align-items-center gap-1" title="Coin security: 5 coins auto-refunded if cancelled, declined, or expired">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <polyline points="9 12 11 14 15 10"/>
                             </svg>
-                            <span>Resend Invite</span>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-light-danger fw-bold px-3 py-1.5 cancel-agency-invite" data-invitation-id="{{ $invId }}" style="display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; white-space: nowrap !important; line-height: 1 !important; font-size: 11px; border-radius: 6px;" title="Cancel this invitation">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                            <span>Cancel</span>
-                        </button>
+                            <span class="d-none d-md-inline" style="color:#15803d; font-weight:600;">Auto-refund guarantee</span>
+                        </span>
+                        <span style="color:#cbd5e1; font-weight:bold;">•</span>
+                        <span>Ref: <strong class="text-gray-700">#INV-{{ str_pad($invId, 5, '0', STR_PAD_LEFT) }}</strong></span>
                     </div>
                 </div>
             </div>

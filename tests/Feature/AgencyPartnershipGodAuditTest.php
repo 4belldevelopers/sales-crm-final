@@ -752,4 +752,38 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $this->assertNotEmpty($data['invitation_id']);
         $this->assertEquals(5, $data['coins_deducted']);
     }
+
+    /**
+     * T-21: Pending Invites tab stream renders Dispatch Timeline, expiry window, and integrated actions (Zero Redundancy).
+     */
+    public function test_pending_invites_tab_stream_rendering(): void
+    {
+        $this->actingAs($this->clientUser);
+
+        // Ensure at least one pending invitation exists
+        $email = 'stream_test_'.uniqid().'@agency.com';
+        $createResponse = $this->postJson(route('service_company.consultancy.staffing_invitation', 0), [
+            'staffing_partners_email' => $email,
+        ]);
+        $createResponse->assertStatus(200);
+
+        // Fetch Tab 6 (request)
+        $response = $this->getJson(route('service_company.consultancy.data_ajax', ['tab' => 'request']));
+        $response->assertStatus(200);
+        $data = $response->json();
+
+        $this->assertArrayHasKey('html', $data);
+        $html = $data['html'];
+
+        $this->assertStringContainsString('is-pending-invite', $html);
+        $this->assertStringContainsString('Invitation Actions', $html);
+        $this->assertStringContainsString('Dispatched:', $html);
+        $this->assertStringContainsString('Expires:', $html);
+        $this->assertStringContainsString('resend-agency-invite', $html);
+        $this->assertStringContainsString('cancel-agency-invite', $html);
+        $this->assertStringContainsString('5 Coins', $html);
+        $this->assertStringContainsString('Escrowed', $html);
+        $this->assertStringContainsString('Ref:', $html);
+        $this->assertStringContainsString('#INV-', $html);
+    }
 }
