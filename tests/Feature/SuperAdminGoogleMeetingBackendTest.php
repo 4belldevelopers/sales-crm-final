@@ -357,4 +357,50 @@ class SuperAdminGoogleMeetingBackendTest extends TestCase
         GoogleMeetingCircuitBreaker::reset();
         $this->assertEquals(GoogleMeetingCircuitBreaker::STATE_CLOSED, GoogleMeetingCircuitBreaker::getState());
     }
+
+    /**
+     * Test 9: Standard Super Admin pagination structure and AJAX endpoint.
+     */
+    public function test_google_meeting_pagination_structure_and_controls(): void
+    {
+        $this->actingAs($this->superAdmin);
+
+        // 1. Initial Page Load (Blade HTML)
+        $response = $this->get('/super-admin/google-meeting-setting');
+        $response->assertStatus(200);
+
+        $content = $response->getContent();
+        $this->assertStringContainsString('sa-pagination-bar', $content);
+        $this->assertStringContainsString('sa-pagination-info', $content);
+        $this->assertStringContainsString('sa-pagination-controls', $content);
+        $this->assertStringContainsString('Showing 1 to', $content);
+
+        // 2. Page 2 Navigation (if at least 11 records exist)
+        $page2Response = $this->get('/super-admin/google-meeting-setting?page=2');
+        $page2Response->assertStatus(200);
+        $page2Content = $page2Response->getContent();
+        $this->assertStringContainsString('sa-pagination-bar', $page2Content);
+
+        // 3. AJAX JSON Endpoint
+        $ajaxResponse = $this->getJson('/super-admin/google-meeting-setting?page=1');
+        $ajaxResponse->assertStatus(200);
+        $ajaxResponse->assertJsonStructure([
+            'status',
+            'html',
+            'pagination',
+            'total',
+            'counts' => [
+                'total',
+                'active',
+                'inactive',
+                'scheduled',
+            ],
+            'data' => [
+                'items',
+                'total',
+            ],
+        ]);
+        $this->assertSame('success', $ajaxResponse->json('status'));
+        $this->assertStringContainsString('sa-pagination-bar', $ajaxResponse->json('pagination'));
+    }
 }

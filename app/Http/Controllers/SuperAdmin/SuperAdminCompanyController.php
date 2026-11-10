@@ -53,14 +53,14 @@ use App\Services\SuperAdmin\SuperAdminDefaultTermsMutationService;
 use App\Services\SuperAdmin\SuperAdminDefaultTermsReadService;
 use App\Services\SuperAdmin\SuperAdminEmailThemeMutationService;
 use App\Services\SuperAdmin\SuperAdminEmailThemeReadService;
+use App\Services\SuperAdmin\SuperAdminGoogleMeetingMutationService;
+use App\Services\SuperAdmin\SuperAdminGoogleMeetingReadService;
 use App\Services\SuperAdmin\SuperAdminJdMutationService;
 use App\Services\SuperAdmin\SuperAdminMeetingMutationService;
 use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
 use App\Services\SuperAdmin\SuperAdminNotificationReadService;
 use App\Services\SuperAdmin\SuperAdminWhatsAppThemeMutationService;
 use App\Services\SuperAdmin\SuperAdminWhatsAppThemeReadService;
-use App\Services\SuperAdmin\SuperAdminGoogleMeetingMutationService;
-use App\Services\SuperAdmin\SuperAdminGoogleMeetingReadService;
 use App\Services\SuperAdmin\SuperAdminZoomSettingMutationService;
 use App\Services\SuperAdmin\SuperAdminZoomSettingReadService;
 use App\Services\SuperAdmin\WhatsAppThemeCacheManager;
@@ -7802,15 +7802,17 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     /**
      * Display the Google Meeting Link Pool Management Hub.
-     * Supports multi-field search (account email + meeting link), status filtering, and real-time pool metrics.
+     * Supports multi-field search (account email + meeting link), status filtering, real-time pool metrics,
+     * and Super Admin standard pagination with full dual Blade / AJAX JSON responses.
      */
     public function googleMeetingSetting(Request $request, SuperAdminGoogleMeetingReadService $readService)
     {
         $searchTerm = trim((string) $request->input('meeting_link', $request->input('q', '')));
         $statusFilter = $request->input('status', null);
         $page = max(1, (int) $request->input('page', 1));
+        $perPage = max(1, min(100, (int) ($request->input('per_page') ?: $request->input('size') ?: 10)));
 
-        $result = $readService->getPaginatedMeetingLists($searchTerm, $statusFilter, $page, 15);
+        $result = $readService->getPaginatedMeetingLists($searchTerm, $statusFilter, $page, $perPage);
 
         $this->google_meeting_setting = $result['paginator'];
         $this->isEmptycheck = ($this->google_meeting_setting->total() === 0);
@@ -7822,6 +7824,44 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $this->activeLinksCount = $result['activeLinksCount'];
         $this->inactiveLinksCount = $result['inactiveLinksCount'];
         $this->scheduledMeetingsCount = $result['scheduledMeetingsCount'];
+
+        // Standard Super Admin pagination structure
+        $pagination = [
+            'total' => $this->google_meeting_setting->total(),
+            'current_page' => $this->google_meeting_setting->currentPage(),
+            'last_page' => $this->google_meeting_setting->lastPage(),
+            'per_page' => $this->google_meeting_setting->perPage(),
+            'listType' => 'google_meeting_lists',
+        ];
+
+        $paginationHtml = view('super-admin.ajax_pages.pagination', compact('pagination'))->render();
+        $this->paginationHtml = $paginationHtml;
+        $this->pagination = $pagination;
+
+        if ($request->ajax() || $request->wantsJson()) {
+            $html = view('super-admin.meeting.partials.meeting_list_rows', [
+                'google_meeting_setting' => $this->google_meeting_setting,
+                'meeting_link' => $searchTerm,
+                'statusFilter' => $statusFilter,
+            ])->render();
+
+            return response()->json([
+                'status' => 'success',
+                'html' => $html,
+                'pagination' => $paginationHtml,
+                'total' => $this->google_meeting_setting->total(),
+                'counts' => [
+                    'total' => $this->totalLinksCount,
+                    'active' => $this->activeLinksCount,
+                    'inactive' => $this->inactiveLinksCount,
+                    'scheduled' => $this->scheduledMeetingsCount,
+                ],
+                'data' => [
+                    'items' => $this->google_meeting_setting->items(),
+                    'total' => $this->google_meeting_setting->total(),
+                ],
+            ]);
+        }
 
         return view('super-admin.meeting.google-meeting-setting', $this->data);
     }
