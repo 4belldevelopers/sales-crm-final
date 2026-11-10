@@ -24,6 +24,7 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->runInBackground();
 
+
         // Step 9: keep pipeline_counters (and Redis cache) in sync with MySQL every 5 min.
         $schedule->command('counters:reconcile')
             ->everyFiveMinutes()

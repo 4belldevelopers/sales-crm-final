@@ -13276,6 +13276,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 if ($clientInvitationCounter == 0) {
                     $company_row = DB::table('companies')->select('companies.company_email')->where('companies.id', '=', $to_company_id)->first();
+                    $toEmail = $company_row ? (string) $company_row->company_email : '';
+                    $normalizedRecipient = \App\Domain\AgencyPartnership\Services\AgencyRecipientNormalizer::normalize($toEmail);
                     $insertInvitation = [
                         'from_company_id' => $from_company_id,
                         'from_client_id' => $clientRow ? $clientRow->id : 0,
@@ -13283,10 +13285,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         'from_status' => 1,
                         'from_created_at' => date('Y-m-d'),
                         'to_company_id' => $to_company_id,
-                        'to_email' => $company_row ? $company_row->company_email : '',
+                        'to_email' => $toEmail,
                         'to_status' => 0,
                         'job_id' => $jobid,
                         'to_invitation_status' => 0,
+                        'expires_at' => now()->addDays(7),
+                        'delivery_status' => 'PENDING',
+                        'normalized_recipient' => $normalizedRecipient,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ];
                     $invitationId = DB::table('staffing_company_invitation')->insertGetId($insertInvitation);
                     $sendInvitationMail = true;
@@ -13941,6 +13948,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     // Insert invitation if not existing
                     if (! in_array($toCompanyId, $existingInvitations)) {
                         $toEmail = $companiesMap[$toCompanyId] ?? '';
+                        $normalizedRecipient = \App\Domain\AgencyPartnership\Services\AgencyRecipientNormalizer::normalize((string) $toEmail);
                         $invId = DB::table('staffing_company_invitation')->insertGetId([
                             'from_company_id' => $from_company_id,
                             'from_client_id' => $fromClientId,
@@ -13952,6 +13960,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             'to_status' => 0,
                             'job_id' => $jobId,
                             'to_invitation_status' => 0,
+                            'expires_at' => now()->addDays(7),
+                            'delivery_status' => 'PENDING',
+                            'normalized_recipient' => $normalizedRecipient,
+                            'created_at' => now(),
+                            'updated_at' => now(),
                         ]);
                         $createdInvitations[$toCompanyId] = $invId;
                     }

@@ -2236,7 +2236,7 @@
         top: 0;
         right: 0;
         bottom: 0;
-        width: 560px;
+        width: 620px;
         max-width: 95vw;
         height: 100vh;
         background: #ffffff;
@@ -2384,7 +2384,7 @@
                     Share this unique link via WhatsApp, Slack, LinkedIn or email to let agencies self-register:
                 </div>
                 <div class="input-group mb-2" style="border:1.5px solid #cbd5e1; border-radius:8px; overflow:hidden; height:38px; background:#ffffff; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-                    <input id="kt_share_earn_link_input" type="text" class="form-control border-0 shadow-none ps-3 pe-1" value="{{ $shareRegistrationUrl }}" readonly style="background:#ffffff; font-size:11px; font-weight:500; color:#334155; height:36px; white-space:nowrap;" title="{{ $shareRegistrationUrl }}">
+                    <input id="kt_share_earn_link_input" type="text" class="form-control border-0 shadow-none ps-3 pe-1" value="{{ $shareRegistrationUrl }}" readonly style="background:#ffffff; font-size:10.5px; font-weight:500; color:#334155; height:36px; white-space:nowrap; overflow:visible; text-overflow:clip; cursor:pointer;" onclick="this.select();" title="{{ $shareRegistrationUrl }}">
                     <button type="button" id="kt_share_earn_link_copy_button" class="btn fw-bold px-2" data-clipboard-target="#kt_share_earn_link_input" style="background:#059669; color:#ffffff; height:38px; min-width:78px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px; border:none; transition:all 0.2s;">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -3623,7 +3623,7 @@
 
             // Row Click Delegation to Open Drawer (ignoring actions, links, buttons, inputs)
             $(document).on('click', '.tbl-r, .cl-primary-card, .show-detail-direct', function(e) {
-                if ($(e.target).closest('input, button, a, .tbl-cb, .tbl-cell-check, .dropdown-menu, .resend-agency-invite').length > 0) {
+                if ($(e.target).closest('input, button, a, .tbl-cb, .tbl-cell-check, .dropdown-menu, .resend-agency-invite, .cancel-agency-invite').length > 0) {
                     return;
                 }
                 const id = $(this).data('row-id') || $(this).closest('[data-row-id]').data('row-id') || $(this).find('[data-row-id]').first().data('row-id');
@@ -3652,13 +3652,25 @@
                 }
             });
 
-            // ─── Add Agency Drawer: Smart Autocomplete & Search ───
+            // ─── Add Agency Drawer: Smart Autocomplete & Search (Enterprise UI/UX & Privacy Protected) ───
             let agencySearchTimeout = null;
 
+            function highlightAgencyMatch(text, query) {
+                if (!text) return '';
+                if (!query) return escapeAttr(text);
+                const escaped = escapeAttr(text);
+                const cleanQuery = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                if (!cleanQuery) return escaped;
+                const regex = new RegExp(`(${cleanQuery})`, 'gi');
+                return escaped.replace(regex, '<span class="cl-agency-search-mark">$1</span>');
+            }
+
             function clearAgencySelection() {
+                $('#agency_company_id').val('');
                 $('#staffing_partners_search_input').val('');
                 $('#staffing_partners_email').val('');
                 $('#selected_agency_preview').addClass('d-none');
+                $('#selected_agency_website_link').hide().attr('href', '#');
                 $('#agency_autocomplete_dropdown').addClass('d-none').empty();
                 $('#btn_clear_agency_search').addClass('d-none');
                 $('#staffing_email_feedback').hide().empty();
@@ -3702,7 +3714,7 @@
                 $('#staffing_partners_search_input').focus();
             });
 
-            // Live debounced search input
+            // Live debounced search input (Strictly Company Name & Website Search)
             $(document).on('input', '#staffing_partners_search_input', function() {
                 const query = $(this).val().trim();
                 const $dropdown = $('#agency_autocomplete_dropdown');
@@ -3715,6 +3727,7 @@
 
                 if ($('#selected_agency_preview').is(':visible')) {
                     $('#selected_agency_preview').addClass('d-none');
+                    $('#agency_company_id').val('');
                     $('#staffing_partners_email').val('');
                 }
 
@@ -3725,7 +3738,7 @@
                     return;
                 }
 
-                $dropdown.html('<div class="p-3 text-center text-muted fs-8"><span class="spinner-border spinner-border-sm me-2 text-primary" style="width:12px; height:12px;"></span>Searching agencies...</div>').removeClass('d-none');
+                $dropdown.html('<div class="p-3 text-center text-muted fs-8 d-flex align-items-center justify-content-center gap-2"><span class="spinner-border spinner-border-sm text-primary" style="width:14px; height:14px;"></span> Searching registered agencies...</div>').removeClass('d-none');
 
                 agencySearchTimeout = setTimeout(function() {
                     $.ajax({
@@ -3738,14 +3751,19 @@
                             const results = (res && res.data) ? res.data : [];
 
                             if (results.length === 0) {
-                                let noResultHtml = '<div class="p-3 text-muted fs-8 text-center">No registered agencies found.</div>';
+                                let noResultHtml = `
+                                    <div class="p-3 text-muted fs-8 text-center">
+                                        <div class="fw-semibold text-gray-700 mb-1">No matching registered agencies found</div>
+                                        <div class="fs-9 text-muted">Search is conducted strictly by company name or official website.</div>
+                                    </div>
+                                `;
                                 if (query.includes('@')) {
                                     noResultHtml += `
                                         <div class="agency-search-external-opt p-2 px-3 border-top d-flex align-items-center justify-content-between cursor-pointer bg-hover-light-primary" data-email="${escapeAttr(query)}" style="transition:background 0.15s ease;">
                                             <div class="d-flex align-items-center gap-2 min-w-0">
                                                 <div style="width:28px; height:28px; border-radius:6px; background:#eff6ff; color:#009ef7; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0;">✉</div>
                                                 <div class="min-w-0">
-                                                    <div class="fs-8 fw-semibold text-gray-900 text-truncate">Invite external agency</div>
+                                                    <div class="fs-8 fw-semibold text-gray-900 text-truncate">Invite unregistered agency via email</div>
                                                     <div class="fs-9 text-muted text-truncate">${escapeAttr(query)}</div>
                                                 </div>
                                             </div>
@@ -3755,40 +3773,80 @@
                                 }
                                 $dropdown.html(noResultHtml);
                             } else {
+                                // Dropdown Header
+                                let headerHtml = `
+                                    <div class="p-2 px-3 bg-light border-bottom d-flex align-items-center justify-content-between" style="border-top-left-radius:9px; border-top-right-radius:9px;">
+                                        <span class="fs-9 fw-bold text-uppercase text-gray-600" style="letter-spacing:0.5px;">Matching Agencies (${results.length})</span>
+                                        <span class="fs-9 text-muted d-flex align-items-center gap-1">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                            By Name & Website
+                                        </span>
+                                    </div>
+                                `;
+                                $dropdown.append(headerHtml);
+
                                 results.forEach(function(ag) {
                                     let badgeHtml = '';
                                     let itemClass = 'agency-search-item';
                                     if (ag.connection_status === 'connected') {
-                                        badgeHtml = '<span class="badge badge-light-success fs-9 fw-semibold">Connected</span>';
+                                        badgeHtml = '<span class="badge badge-light-success fs-9 fw-semibold py-1 px-2">Connected</span>';
                                         itemClass += ' is-connected opacity-75';
                                     } else if (ag.connection_status === 'pending') {
-                                        badgeHtml = '<span class="badge badge-light-warning fs-9 fw-semibold">Invite Pending</span>';
+                                        badgeHtml = '<span class="badge badge-light-warning fs-9 fw-semibold py-1 px-2">Invite Pending</span>';
                                         itemClass += ' is-pending opacity-75';
                                     } else {
-                                        badgeHtml = '<span class="badge badge-light-primary fs-9 fw-bold">Select Agency</span>';
+                                        badgeHtml = '<span class="badge badge-light-primary fs-9 fw-bold py-1 px-2">Select Agency</span>';
                                     }
 
                                     let avatarHtml = '';
                                     if (ag.logo_url) {
-                                        avatarHtml = `<img src="${escapeAttr(ag.logo_url)}" alt="" style="width:30px; height:30px; border-radius:6px; object-fit:contain; border:1px solid #e2e8f0; flex-shrink:0;">`;
+                                        avatarHtml = `<img src="${escapeAttr(ag.logo_url)}" alt="" style="width:32px; height:32px; border-radius:7px; object-fit:contain; border:1px solid #e2e8f0; background:#ffffff; flex-shrink:0; padding:2px;">`;
                                     } else {
-                                        avatarHtml = `<div style="width:30px; height:30px; border-radius:6px; background:#eef2ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; flex-shrink:0;">${escapeAttr(ag.initials || 'AG')}</div>`;
+                                        avatarHtml = `<div style="width:32px; height:32px; border-radius:7px; background:linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color:#3730a3; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11.5px; flex-shrink:0; border:1px solid #c7d2fe;">${escapeAttr(ag.initials || 'AG')}</div>`;
+                                    }
+
+                                    let websiteSnippet = '';
+                                    if (ag.website) {
+                                        websiteSnippet = `
+                                            <div class="fs-9 text-truncate d-flex align-items-center gap-1 mt-0-5" style="color:#0284c7 !important;">
+                                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; opacity:0.85;">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                                </svg>
+                                                <span class="text-truncate">${highlightAgencyMatch(ag.website, query)}</span>
+                                            </div>
+                                        `;
+                                    } else {
+                                        websiteSnippet = `
+                                            <div class="fs-9 text-truncate d-flex align-items-center gap-1 mt-0-5 fst-italic" style="color:#94a3b8 !important;">
+                                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; opacity:0.5;">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path>
+                                                </svg>
+                                                <span>No official website listed</span>
+                                            </div>
+                                        `;
                                     }
 
                                     const itemHtml = `
-                                        <div class="${itemClass} p-2 px-3 border-bottom d-flex align-items-center justify-content-between cursor-pointer bg-hover-light" 
+                                        <div class="${itemClass} p-2 px-3 border-bottom d-flex align-items-center justify-content-between cursor-pointer" 
                                              data-id="${ag.id}" 
                                              data-name="${escapeAttr(ag.company_name)}" 
-                                             data-email="${escapeAttr(ag.email)}" 
+                                             data-website="${escapeAttr(ag.website || '')}" 
+                                             data-website-url="${escapeAttr(ag.website_url || '')}"
                                              data-logo="${escapeAttr(ag.logo_url || '')}"
                                              data-initials="${escapeAttr(ag.initials || 'AG')}"
                                              data-status="${ag.connection_status}"
-                                             style="transition:background 0.15s ease;">
-                                            <div class="d-flex align-items-center gap-2 min-w-0">
+                                             style="border-color:#f1f5f9 !important;">
+                                            <div class="d-flex align-items-center gap-2 min-w-0" style="flex:1;">
                                                 ${avatarHtml}
-                                                <div class="min-w-0">
-                                                    <div class="fs-8 fw-bold text-gray-900 text-truncate">${escapeAttr(ag.company_name)}</div>
-                                                    <div class="fs-9 text-muted text-truncate">${escapeAttr(ag.email)}</div>
+                                                <div class="min-w-0" style="flex:1;">
+                                                    <div class="fs-8 fw-bold text-gray-900 text-truncate" style="line-height:1.3;">
+                                                        ${highlightAgencyMatch(ag.company_name, query)}
+                                                    </div>
+                                                    ${websiteSnippet}
                                                 </div>
                                             </div>
                                             <div class="ms-2 flex-shrink-0">
@@ -3801,7 +3859,7 @@
 
                                 if (query.includes('@')) {
                                     $dropdown.append(`
-                                        <div class="agency-search-external-opt p-2 px-3 d-flex align-items-center justify-content-between cursor-pointer bg-hover-light-primary" data-email="${escapeAttr(query)}" style="transition:background 0.15s ease;">
+                                        <div class="agency-search-external-opt p-2 px-3 d-flex align-items-center justify-content-between cursor-pointer bg-hover-light-primary border-bottom" data-email="${escapeAttr(query)}" style="transition:background 0.15s ease;">
                                             <div class="d-flex align-items-center gap-2 min-w-0">
                                                 <div style="width:28px; height:28px; border-radius:6px; background:#eff6ff; color:#009ef7; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0;">✉</div>
                                                 <div class="min-w-0">
@@ -3813,6 +3871,15 @@
                                         </div>
                                     `);
                                 }
+
+                                // Enterprise Privacy Footer Badge
+                                const footerHtml = `
+                                    <div class="p-2 px-3 bg-light d-flex align-items-center gap-1 fs-9 text-muted" style="border-bottom-left-radius:9px; border-bottom-right-radius:9px; font-size:10.5px !important;">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                        <span>Privacy Protected: Official agency email is securely routed without public display.</span>
+                                    </div>
+                                `;
+                                $dropdown.append(footerHtml);
                             }
                         },
                         error: function() {
@@ -3822,11 +3889,13 @@
                 }, 300);
             });
 
-            // Select an Agency from Autocomplete list
+            // Select an Agency from Autocomplete list (Zero Email Visibility)
             $(document).on('click', '.agency-search-item', function() {
                 const status = $(this).data('status');
+                const id = $(this).data('id');
                 const name = $(this).data('name');
-                const email = $(this).data('email');
+                const website = $(this).data('website');
+                const websiteUrl = $(this).data('website-url');
                 const logo = $(this).data('logo');
                 const initials = $(this).data('initials');
 
@@ -3841,18 +3910,30 @@
 
                 if (status === 'pending') {
                     if (typeof Swal !== 'undefined') {
-                        Swal.fire({ icon: 'info', title: 'Invite Pending', text: `An invitation has already been sent to "${name}" (${email}) and is pending response.` });
+                        Swal.fire({ icon: 'info', title: 'Invite Pending', text: `An invitation has already been sent to "${name}" and is pending response.` });
                     } else {
                         alert(`An invitation has already been sent to "${name}".`);
                     }
                     return;
                 }
 
-                // Available to select
-                $('#staffing_partners_email').val(email);
+                // Available to select: Set company ID and clear client email
+                $('#agency_company_id').val(id);
+                $('#staffing_partners_email').val('');
                 $('#staffing_partners_search_input').val(name);
                 $('#selected_agency_name').text(name);
-                $('#selected_agency_email').text(email);
+
+                if (website) {
+                    $('#selected_agency_website').text(website);
+                    if (websiteUrl) {
+                        $('#selected_agency_website_link').attr('href', websiteUrl).show();
+                    } else {
+                        $('#selected_agency_website_link').hide();
+                    }
+                } else {
+                    $('#selected_agency_website').text('No official website listed');
+                    $('#selected_agency_website_link').hide();
+                }
 
                 if (logo) {
                     $('#selected_agency_avatar').html(`<img src="${escapeAttr(logo)}" alt="" style="width:100%; height:100%; object-fit:contain; border-radius:6px;">`);
@@ -3869,6 +3950,7 @@
             // Select external email option from dropdown
             $(document).on('click', '.agency-search-external-opt', function() {
                 const email = $(this).data('email');
+                $('#agency_company_id').val('');
                 $('#staffing_partners_email').val(email);
                 $('#staffing_partners_search_input').val(email);
                 $('#agency_autocomplete_dropdown').addClass('d-none').empty();
@@ -3883,21 +3965,26 @@
                 }
             });
 
-            // Submit Agency Invitation via Email
+            // Submit Agency Invitation (Secure Agency ID Resolution or Direct Email)
             $(document).on('click', '#submit_staffing_partners', function(e) {
                 if (e) e.preventDefault();
+                const agencyCompanyId = $('#agency_company_id').val();
                 let email = $('#staffing_partners_email').val().trim();
-                if (!email) {
+                if (!agencyCompanyId && !email) {
                     email = $('#staffing_partners_search_input').val().trim();
                 }
 
-                if (!email || !email.includes('@')) {
+                if (!agencyCompanyId && (!email || !email.includes('@'))) {
                     if (typeof Swal !== 'undefined') {
-                        Swal.fire({ icon: 'warning', title: 'Agency Email Required', text: 'Please search and select a registered agency, or enter a valid email address.' });
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Agency Selection Required',
+                            text: 'Please search and select a registered agency, or enter a valid agency email.'
+                        });
                     } else if (typeof swal !== 'undefined') {
-                        swal({ title: 'Warning!', text: 'Please enter a valid email address.', type: 'warning' });
+                        swal({ title: 'Warning!', text: 'Please search and select a registered agency, or enter a valid agency email.', type: 'warning' });
                     } else {
-                        alert('Please enter a valid email address.');
+                        alert('Please search and select a registered agency, or enter a valid agency email.');
                     }
                     return;
                 }
@@ -3911,6 +3998,7 @@
                     type: 'POST',
                     url: url,
                     data: { 
+                        agency_company_id: agencyCompanyId || 0,
                         staffing_partners_email: email,
                         _token: '{{ csrf_token() }}'
                     },
@@ -3986,16 +4074,19 @@
             // Resend Agency Invitation Click Handler
             $(document).on('click', '.resend-agency-invite', function(e) {
                 if (e) { e.preventDefault(); e.stopPropagation(); }
+                const invId = $(this).data('id');
                 const email = $(this).data('email');
-                if (!email) return;
+                const agencyCompanyId = $(this).data('company-id') || 0;
+                if (!invId && !email && !agencyCompanyId) return;
                 const $btn = $(this);
                 const originalHtml = $btn.html();
                 $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" style="width:11px; height:11px;"></span> Resending...');
 
                 $.ajax({
-                    url: "{{ route('service_company.consultancy.staffing_invitation', 0) }}",
+                    url: "{{ route('service_company.consultancy.re_invite', '') }}/" + invId,
                     type: 'POST',
                     data: {
+                        agency_company_id: agencyCompanyId,
                         staffing_partners_email: email,
                         _token: '{{ csrf_token() }}'
                     },
@@ -4003,10 +4094,11 @@
                         $btn.prop('disabled', false).html(originalHtml);
                         if (response.status === 'success') {
                             if (typeof Swal !== 'undefined') {
-                                Swal.fire({ icon: 'success', title: 'Invitation Resent', text: response.message || 'Invitation resent successfully.' });
+                                Swal.fire({ icon: 'success', title: 'Invitation Resent', text: response.message || 'Invitation reminder resent successfully.' });
                             } else {
-                                alert('Invitation resent successfully.');
+                                alert('Invitation reminder resent successfully.');
                             }
+                            self.loadPage(1, true);
                         } else {
                             if (typeof Swal !== 'undefined') {
                                 Swal.fire({ icon: 'warning', title: 'Notice', text: response.message });
@@ -4041,7 +4133,7 @@
                 $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" style="width:11px; height:11px;"></span> Cancelling...');
 
                 $.ajax({
-                    url: "{{ url('/service/consultancy/cancel_invitation') }}/" + invId,
+                    url: "{{ route('service_company.consultancy.cancel_invitation', '') }}/" + invId,
                     type: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}'

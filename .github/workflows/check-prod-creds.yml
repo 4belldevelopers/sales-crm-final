@@ -41,7 +41,7 @@ jobs:
 
           for pattern in "${PATTERNS[@]}"; do
             # grep -nE across the entire tracked tree.
-            if matches=$(git grep -nE "${pattern}" -- ':!docs/SECURITY.md' ':!scripts/check-prod-creds.sh' || true); then
+            if matches=$(git grep -nE "${pattern}" -- ':!docs/SECURITY.md' ':!scripts/check-prod-creds.sh' ':!.github/workflows/check-prod-creds.yml' || true); then
               if [ -n "${matches}" ]; then
                 echo "❌ BLOCKED: pattern '${pattern}' found:"
                 echo "${matches}"

@@ -4,9 +4,13 @@
  * Strict Page Isolation (Rule 17) - Quarantined to Service Company Add Talent Flow.
  */
 try {
-    importScripts('https://parser.jero.works/jero-resume-parser-2tURGwDx.js');
+    importScripts('https://parser.jero.works/jero-resume-parser-DW7x_WGm.js');
 } catch (e) {
-    console.warn('JeroResumeParser worker failed to importScripts:', e);
+    try {
+        importScripts('https://parser.jero.works/jero-resume-parser.js?v=20261110');
+    } catch (fallbackErr) {
+        console.warn('JeroResumeParser worker failed to importScripts:', fallbackErr);
+    }
 }
 
 self.onmessage = async function(event) {
