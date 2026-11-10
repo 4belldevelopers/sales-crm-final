@@ -15,6 +15,9 @@ class ElasticCompanyIndex implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $comid;
+    public $uuid;
+
     /** Job controls */
     public $tries = 10;                // retry attempts
     public $backoff = 60;              // wait 60s between retries
