@@ -9644,35 +9644,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     private function getZoomAccessToken()
     {
-        return Cache::remember('zoom_access_token:global', 3300, function () {
-            $refreshToken = DB::table('zoomsettings')->where('id', '=', 1)->first() ?? DB::table('zoomsettings')->first();
-
-            if (! $refreshToken || (isset($refreshToken->status) && (int) $refreshToken->status === 0)) {
-                throw new \Exception('Zoom Video Meeting integration is not configured or is currently paused by Super Admin.');
-            }
-
-            $clientId = trim($refreshToken->client_id ?? '');
-            $clientSecret = trim($refreshToken->client_secret ?? '');
-            $accountId = trim($refreshToken->redirect_uri ?? '');
-
-            if (empty($clientId) || empty($clientSecret) || empty($accountId)) {
-                throw new \Exception('Zoom Video Meeting credentials are incomplete in Super Admin settings.');
-            }
-
-            $response = Http::asForm()
-                ->timeout(12)
-                ->withBasicAuth($clientId, $clientSecret)
-                ->post('https://zoom.us/oauth/token', [
-                    'grant_type' => 'account_credentials',
-                    'account_id' => $accountId,
-                ]);
-
-            if ($response->successful()) {
-                return $response->json()['access_token'];
-            }
-
-            throw new \Exception('Could not retrieve Zoom access token: '.$response->body());
-        });
+        return app(\App\Services\Zoom\ZoomTokenManager::class)->getAccessToken();
     }
 
     public function getGoogleVideoUrl(Request $request)
@@ -9722,63 +9694,35 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                 if ($defaultTimeFormat == 1) {
                     $formattedStartTime = Carbon::createFromFormat('d-m-Y h:i A', $eventStartTime)->format('Y-m-d\TH:i');
-
                     $startDateTime = Carbon::createFromFormat('Y-m-d\TH:i', $formattedStartTime);
-
                 } else {
-
                     $formattedStartTime = Carbon::createFromFormat('d-m-Y H:i', $eventStartTime)->format('Y-m-d\TH:i');
                     $startDateTime = Carbon::createFromFormat('Y-m-d\TH:i', $eventStartTime);
-
                 }
 
-                $company_id = auth()->user()->company_id;
+                $company_id = auth()->user()->company_id ?? 0;
+                $applicationId = (string) ($request->applicationId ?? $request->application_id ?? '0');
+                $dedupKey = "ats_meet_{$company_id}_{$applicationId}_".md5($formattedStartTime);
 
-                $refreshToken = DB::table('zoomsettings')->select('zoom_access_token')->first()->zoom_access_token;
+                $zoomMeetingService = app(\App\Services\Zoom\ZoomMeetingService::class);
+                $meetingResult = $zoomMeetingService->createInterviewMeeting([
+                    'topic' => 'Interview Schedule',
+                    'start_time' => $startDateTime,
+                    'duration' => 60,
+                    'timezone' => 'Asia/Kolkata',
+                    'agenda' => 'Test Zoom meeting using Server-to-Server OAuth',
+                    'settings' => [
+                        'host_video' => true,
+                        'participant_video' => true,
+                        'join_before_host' => true,
+                        'mute_upon_entry' => true,
+                        'approval_type' => 1,
+                    ],
+                ], $dedupKey);
 
-                // $newAccessToken = $this->refreshZoomAccessToken($refreshToken);
-                $accessToken = $this->getZoomAccessToken();
-                // dd($newAccessToken);
-
-                $response = Http::withToken($accessToken)
-                    ->post('https://api.zoom.us/v2/users/me/meetings', [
-                        'topic' => 'Interview Schedule',
-                        'type' => 2,
-                        'start_time' => $startDateTime,
-                        'duration' => 60,
-                        'timezone' => 'Asia/Kolkata',
-                        'agenda' => 'Test Zoom meeting using Server-to-Server OAuth',
-                        'settings' => [
-                            'host_video' => true,
-                            'participant_video' => true,
-                            'join_before_host' => true,
-                            'mute_upon_entry' => true,
-                            'approval_type' => 1,
-                        ],
-                    ]);
-
-                // $response = Http::withToken($newAccessToken)->post('https://api.zoom.us/v2/users/me/meetings', [
-                // 	'topic'      => "Interview Schedule",
-                // 	'type'       => 2, // Scheduled meeting
-                // 	'start_time' => $startDateTime, // Static start time
-                // 	'duration'   => 60, // Static duration
-                // 	'timezone'   => 'UTC',
-                // 	'settings'   => [
-                // 		'join_before_host' => true, // Allow participants to join before the host
-                // 	],
-                // ]);
-
-                if ($response->successful()) {
-                    $meetingData = $response->json();
-                    $joinUrl = $meetingData['join_url']; // Get the meeting join URL
-
-                    // dd("1",$joinUrl, $response->status(),$response->body());
-                    return Reply::dataOnly(['status' => 'success', 'getHangoutLink' => $joinUrl, 'mode' => 'zoom']);
+                if ($meetingResult['status'] === 'success') {
+                    return Reply::dataOnly(['status' => 'success', 'getHangoutLink' => $meetingResult['join_url'], 'mode' => 'zoom']);
                 } else {
-                    // Handle errors with more detail
-                    $errorData = $response->json();
-
-                    // dd("2",$errorData,$response->status());
                     return Reply::dataOnly(['status' => 'expired', 'getHangoutLink' => 'Zoom Meet', 'eventId' => '']);
                 }
 

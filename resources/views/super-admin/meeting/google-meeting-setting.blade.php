@@ -1221,25 +1221,88 @@
             showCopiedFeedback($btn);
         }
 
-        // ─── Instant Status Toggle (Zero Page Reload) ───
+        // ─── Two-Tier Idempotency & Enterprise Sync Engine ───
+        function generateUUID() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        const gmeetChannel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('jero_google_meeting_hub') : null;
+        if (gmeetChannel) {
+            gmeetChannel.onmessage = function(e) {
+                const data = e.data;
+                if (!data) return;
+                if (data.action === 'STATUS_UPDATED') {
+                    const $r = $('#row-' + data.id);
+                    if ($r.length) {
+                        const $sw = $r.find('.status-toggle');
+                        const $bc = $r.find('.status-badge-container');
+                        $sw.prop('checked', data.status == 1).data('current', data.status);
+                        if (data.status == 1) {
+                            $bc.html('<span class="badge-status-active">Active</span>');
+                        } else {
+                            $bc.html('<span class="badge-status-inactive">Paused</span>');
+                        }
+                    }
+                } else if (data.action === 'LINK_UPDATED' && data.data) {
+                    const $r = $('#row-' + data.id);
+                    if ($r.length) {
+                        $r.find('.item-account-name').text(data.data.account_name);
+                        $r.find('.item-meeting-link').text(data.data.meeting_link);
+                        $r.find('.meet-link-pill').attr('title', data.data.meeting_link);
+                        $r.find('.btn-copy-clipboard').attr('data-clipboard-text', data.data.meeting_link);
+                        $r.find('a[target="_blank"]').attr('href', data.data.meeting_link);
+                    }
+                } else if (data.action === 'LINKS_DELETED' && Array.isArray(data.ids)) {
+                    data.ids.forEach(function(delId) {
+                        $('#row-' + delId).remove();
+                    });
+                    updateBulkDeleteState();
+                }
+            };
+        }
+
+        const inFlightToggles = new Set();
+        let inFlightBulkDelete = false;
+        let inFlightSingleDelete = false;
+        let activeScheduleXhr = null;
+        const DRAFT_KEY = 'jero_gmeet_manual_draft';
+
+        // ─── Instant Status Toggle (Zero Page Reload + Two-Tier Idempotency) ───
         $(document).on('change', '.status-toggle', function() {
             const $switch = $(this);
             const linkId = $switch.data('id');
+            if (inFlightToggles.has(linkId)) {
+                return;
+            }
+            inFlightToggles.add(linkId);
+
             const newStatus = $switch.is(':checked') ? 1 : 0;
             const $row = $('#row-' + linkId);
             const $badgeContainer = $row.find('.status-badge-container');
 
             $switch.prop('disabled', true);
+            const idempotencyKey = generateUUID();
 
             $.ajax({
                 url: "{{ route('superadmin.company.googleMeetStatusUpdate') }}",
                 type: 'POST',
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: {
                     '_token': '{{ csrf_token() }}',
                     'id': linkId,
-                    'chkStatus': newStatus
+                    'chkStatus': newStatus,
+                    'idempotency_key': idempotencyKey
                 },
                 success: function(res) {
+                    inFlightToggles.delete(linkId);
                     $switch.prop('disabled', false);
                     if (res.status === 'success') {
                         $switch.data('current', newStatus);
@@ -1253,12 +1316,17 @@
                             showNotify('info', res.message || 'Link paused successfully');
                             updateKpiCounts(-1);
                         }
+
+                        if (gmeetChannel) {
+                            gmeetChannel.postMessage({ action: 'STATUS_UPDATED', id: linkId, status: newStatus });
+                        }
                     } else {
                         revertSwitch($switch, $badgeContainer);
                         Swal.fire({ icon: 'error', title: 'Error', text: res.message || 'Failed to update status.' });
                     }
                 },
                 error: function(xhr) {
+                    inFlightToggles.delete(linkId);
                     $switch.prop('disabled', false);
                     revertSwitch($switch, $badgeContainer);
                     const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Server error updating status.';
@@ -1325,8 +1393,10 @@
             updateBulkDeleteState();
         });
 
-        // ─── Bulk Delete Execution ───
+        // ─── Bulk Delete Execution with Idempotency Fencing ───
         $btnBulkDelete.on('click', function() {
+            if (inFlightBulkDelete) return;
+
             const selectedIds = [];
             $('.row-checkbox:checked').each(function() {
                 selectedIds.push($(this).val());
@@ -1347,16 +1417,30 @@
                 confirmButtonText: 'Yes, delete selected!'
             }).then(function(result) {
                 if (result.isConfirmed) {
+                    inFlightBulkDelete = true;
+                    $btnBulkDelete.prop('disabled', true);
+                    const idempotencyKey = generateUUID();
+
                     $.ajax({
                         url: "{{ route('superadmin.company.meetingListDelete') }}",
                         type: 'POST',
+                        headers: {
+                            'X-Idempotency-Key': idempotencyKey
+                        },
                         data: {
                             '_token': '{{ csrf_token() }}',
                             'arr': selectedIds,
-                            'table': 'google_meeting_lists'
+                            'table': 'google_meeting_lists',
+                            'idempotency_key': idempotencyKey
                         },
                         success: function(res) {
+                            inFlightBulkDelete = false;
+                            $btnBulkDelete.prop('disabled', false);
                             if (res.status) {
+                                if (gmeetChannel) {
+                                    gmeetChannel.postMessage({ action: 'LINKS_DELETED', ids: selectedIds });
+                                }
+
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Deleted!',
@@ -1371,6 +1455,8 @@
                             }
                         },
                         error: function(xhr) {
+                            inFlightBulkDelete = false;
+                            $btnBulkDelete.prop('disabled', false);
                             const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Something went wrong on the server.';
                             Swal.fire({ icon: 'error', title: 'Server Error', text: msg });
                         }
@@ -1379,8 +1465,10 @@
             });
         });
 
-        // ─── Single Delete Action ───
+        // ─── Single Delete Action with Idempotency Fencing ───
         $(document).on('click', '.btn-delete-single', function() {
+            if (inFlightSingleDelete) return;
+
             const id = $(this).data('id');
             const $row = $('#row-' + id);
             const isRowActive = $row.find('.status-toggle').is(':checked');
@@ -1395,16 +1483,28 @@
                 confirmButtonText: 'Yes, delete it!'
             }).then(function(result) {
                 if (result.isConfirmed) {
+                    inFlightSingleDelete = true;
+                    const idempotencyKey = generateUUID();
+
                     $.ajax({
                         url: "{{ route('superadmin.company.meetingListDelete') }}",
                         type: 'POST',
+                        headers: {
+                            'X-Idempotency-Key': idempotencyKey
+                        },
                         data: {
                             '_token': '{{ csrf_token() }}',
                             'arr': [id],
-                            'table': 'google_meeting_lists'
+                            'table': 'google_meeting_lists',
+                            'idempotency_key': idempotencyKey
                         },
                         success: function(res) {
+                            inFlightSingleDelete = false;
                             if (res.status) {
+                                if (gmeetChannel) {
+                                    gmeetChannel.postMessage({ action: 'LINKS_DELETED', ids: [id] });
+                                }
+
                                 $row.fadeOut(300, function() {
                                     $(this).remove();
                                     updateBulkDeleteState();
@@ -1427,6 +1527,7 @@
                             }
                         },
                         error: function(xhr) {
+                            inFlightSingleDelete = false;
                             const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Server error occurred.';
                             Swal.fire({ icon: 'error', title: 'Error', text: msg });
                         }
@@ -1435,7 +1536,7 @@
             });
         });
 
-        // ─── Edit Link Modal Handler ───
+        // ─── Edit Link Modal Handler with Idempotency Fencing ───
         const $modalEdit = $('#modalEditMeetingLink');
         const $formEdit = $('#formEditMeetingLink');
         const $btnSubmitEdit = $('#btnSubmitEditLink');
@@ -1458,11 +1559,15 @@
             const url = "{{ url('super-admin/google-meeting-update') }}/" + id;
 
             $btnSubmitEdit.attr('data-kt-indicator', 'on').prop('disabled', true);
+            const idempotencyKey = generateUUID();
 
             $.ajax({
                 url: url,
                 type: 'POST',
-                data: $formEdit.serialize(),
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
+                data: $formEdit.serialize() + '&idempotency_key=' + encodeURIComponent(idempotencyKey),
                 success: function(res) {
                     $btnSubmitEdit.removeAttr('data-kt-indicator').prop('disabled', false);
                     if (res.status) {
@@ -1480,6 +1585,10 @@
                         const initial = (res.data.account_name || 'G').charAt(0).toUpperCase();
                         $row.find('.host-avatar').text(initial);
 
+                        if (gmeetChannel) {
+                            gmeetChannel.postMessage({ action: 'LINK_UPDATED', id: id, data: res.data });
+                        }
+
                         showNotify('success', res.message || 'Meeting link updated successfully');
                     } else {
                         Swal.fire({ icon: res.type || 'warning', title: 'Notice', text: res.message });
@@ -1493,7 +1602,60 @@
             });
         });
 
-        // ─── Dynamic Manual Entry Rows (Tab 2) ───
+        // ─── Dynamic Manual Entry Rows (Tab 2) & Draft Autosave ───
+        function saveManualDraft() {
+            try {
+                const rows = [];
+                $('.manual-input-row').each(function() {
+                    const email = $(this).find('input[name="holder_email[]"]').val() || '';
+                    const link = $(this).find('input[name="meeting_link[]"]').val() || '';
+                    if (email.trim() !== '' || link.trim() !== '') {
+                        rows.push({ email: email, link: link });
+                    }
+                });
+                if (rows.length > 0) {
+                    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(rows));
+                } else {
+                    sessionStorage.removeItem(DRAFT_KEY);
+                }
+            } catch (e) {}
+        }
+
+        function restoreManualDraft() {
+            try {
+                const raw = sessionStorage.getItem(DRAFT_KEY);
+                if (raw) {
+                    const rows = JSON.parse(raw);
+                    if (Array.isArray(rows) && rows.length > 0) {
+                        $('#manualRowsBody').empty();
+                        rows.forEach(function(r) {
+                            $('#manualRowsBody').append(`
+                                <tr class="manual-input-row">
+                                    <td>
+                                        <input type="email" name="holder_email[]" class="form-control form-control-sm" placeholder="e.g. host@jeroworks.com" value="${r.email || ''}">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="meeting_link[]" class="form-control form-control-sm" placeholder="e.g. https://meet.google.com/xxx-xxxx-xxx" value="${r.link || ''}">
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-icon btn-light-danger btn-sm btn-remove-row" title="Remove row">
+                                            <i class="fas fa-trash-alt fs-7"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    }
+                }
+            } catch (e) {}
+        }
+
+        restoreManualDraft();
+
+        $(document).on('input', '.manual-input-row input', function() {
+            saveManualDraft();
+        });
+
         $('#btnAddRow').on('click', function() {
             const rowHtml = `
                 <tr class="manual-input-row">
@@ -1516,6 +1678,7 @@
         $(document).on('click', '.btn-remove-row', function() {
             if ($('.manual-input-row').length > 1) {
                 $(this).closest('tr').remove();
+                saveManualDraft();
             } else {
                 showNotify('warning', 'At least one input row must be maintained.');
             }
@@ -1523,21 +1686,27 @@
 
         $('#btnResetManualForm').on('click', function() {
             $('#formManualAddLinks')[0].reset();
+            sessionStorage.removeItem(DRAFT_KEY);
         });
 
-        // Submit Manual Add Links Form
+        // Submit Manual Add Links Form with Idempotency Fencing
         $('#formManualAddLinks').on('submit', function(e) {
             e.preventDefault();
             const $btn = $('#btnSubmitManualLinks');
             $btn.attr('data-kt-indicator', 'on').prop('disabled', true);
+            const idempotencyKey = generateUUID();
 
             $.ajax({
                 url: "{{ route('superadmin.company.settingGoogleMeetingStore') }}",
                 type: 'POST',
-                data: $(this).serialize(),
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
+                data: $(this).serialize() + '&idempotency_key=' + encodeURIComponent(idempotencyKey),
                 success: function(res) {
                     $btn.removeAttr('data-kt-indicator').prop('disabled', false);
                     if (res.status) {
+                        sessionStorage.removeItem(DRAFT_KEY);
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',
@@ -1613,7 +1782,7 @@
             });
         });
 
-        // ─── Active Allocation & Schedule Monitor (Tab 3) ───
+        // ─── Active Allocation & Schedule Monitor (Tab 3) with Active XHR Abort ───
         let scheduleHistoryLoaded = false;
 
         // Auto-fetch when tab is clicked or refreshed
@@ -1629,10 +1798,14 @@
         });
 
         function loadScheduleHistory() {
+            if (activeScheduleXhr && activeScheduleXhr.readyState !== 4) {
+                activeScheduleXhr.abort();
+            }
+
             const $tbody = $('#scheduleHistoryTbody');
             $tbody.html('<tr><td colspan="6" class="text-center py-8 text-muted"><span class="spinner-border spinner-border-sm text-primary me-2"></span>Loading schedule allocations...</td></tr>');
 
-            $.ajax({
+            activeScheduleXhr = $.ajax({
                 url: "{{ route('superadmin.company.googleMeetingScheduleHistory') }}",
                 type: 'GET',
                 success: function(res) {
@@ -1687,7 +1860,8 @@
                         $tbody.html('<tr><td colspan="6" class="text-center py-8 text-muted"><i class="fas fa-info-circle me-1"></i> No recorded interview allocations found in schedule database.</td></tr>');
                     }
                 },
-                error: function() {
+                error: function(xhr) {
+                    if (xhr.statusText === 'abort') return;
                     $tbody.html('<tr><td colspan="6" class="text-center py-8 text-danger"><i class="fas fa-exclamation-triangle me-1"></i> Failed to load schedule history.</td></tr>');
                 }
             });

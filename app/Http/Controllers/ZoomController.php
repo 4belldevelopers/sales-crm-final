@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Helper\Reply;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -15,84 +14,56 @@ class ZoomController extends Controller
 
     private function getZoomAccessToken()
     {
-        return Cache::remember('zoom_access_token:global', 3300, function () {
-            $setting = DB::table('zoomsettings')->where('id', 1)->first() ?? DB::table('zoomsettings')->first();
-
-            if (! $setting || (isset($setting->status) && (int) $setting->status === 0)) {
-                throw new \Exception('Zoom Video Meeting integration is not configured or is currently paused by Super Admin.');
-            }
-
-            $clientId = trim($setting->client_id ?? '');
-            $clientSecret = trim($setting->client_secret ?? '');
-            $accountId = trim($setting->redirect_uri ?? '');
-
-            if (empty($clientId) || empty($clientSecret) || empty($accountId)) {
-                throw new \Exception('Zoom Video Meeting credentials are incomplete in Super Admin settings.');
-            }
-
-            $response = Http::asForm()
-                ->timeout(12)
-                ->withBasicAuth($clientId, $clientSecret)
-                ->post('https://zoom.us/oauth/token', [
-                    'grant_type' => 'account_credentials',
-                    'account_id' => $accountId,
-                ]);
-
-            if ($response->successful()) {
-                return $response->json()['access_token'];
-            }
-
-            throw new \Exception('Could not retrieve Zoom access token: '.$response->body());
-        });
+        return app(\App\Services\Zoom\ZoomTokenManager::class)->getAccessToken();
     }
 
     public function createZoomMeeting()
     {
         try {
-            $accessToken = $this->getZoomAccessToken();
+            $zoomMeetingService = app(\App\Services\Zoom\ZoomMeetingService::class);
+            $result = $zoomMeetingService->createInterviewMeeting([
+                'topic' => 'Laravel 7 Zoom Meeting',
+                'start_time' => now()->addMinutes(15)->toIso8601String(),
+                'duration' => 60,
+                'timezone' => 'Asia/Kolkata',
+                'agenda' => 'Test Zoom meeting using Server-to-Server OAuth',
+                'settings' => [
+                    'host_video' => true,
+                    'participant_video' => true,
+                    'join_before_host' => true,
+                    'mute_upon_entry' => true,
+                    'approval_type' => 1,
+                ],
+            ]);
 
-            $response = Http::withToken($accessToken)
-                ->post('https://api.zoom.us/v2/users/me/meetings', [
-                    'topic' => 'Laravel 7 Zoom Meeting',
-                    'type' => 2,
-                    'start_time' => now()->addMinutes(15)->toIso8601String(),
-                    'duration' => 60,
-                    'timezone' => 'Asia/Kolkata',
-                    'agenda' => 'Test Zoom meeting using Server-to-Server OAuth',
-                    'settings' => [
-                        'host_video' => true,
-                        'participant_video' => true,
-                        'join_before_host' => true,
-                        'mute_upon_entry' => true,
-                        'approval_type' => 1,
-                    ],
-                ]);
+            if ($result['status'] === 'success') {
+                return response()->json($result['raw'] ?? ['join_url' => $result['join_url']]);
+            }
 
-            return response()->json($response->json());
+            return response()->json(['error' => $result['error'] ?? 'Failed to create Zoom meeting'], 400);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()]);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
     public function redirectToZoom()
     {
-        $zoomsettings = DB::table('zoomsettings')->select('zoomsettings.*')->first();
-        $clientId = $zoomsettings->client_id;
-        $redirect_uri = $zoomsettings->redirect_uri;
+        $configService = app(\App\Services\Zoom\ZoomConfigurationService::class);
+        $config = $configService->getConfiguration();
+        $clientId = $config['client_id'];
+        $redirect_uri = $config['account_id'];
         $authorizeUrl = 'https://zoom.us/oauth/authorize?response_type=code&client_id='.$clientId.'&redirect_uri='.urlencode($redirect_uri);
 
         return Reply::dataOnly(['status' => 'expired', 'authUrl' => $authorizeUrl, 'eventId' => '']);
-
-        return redirect($authorizeUrl);
     }
 
     public function callback(Request $request)
     {
-        // dd("dhjd");
-        $zoomsettings = DB::table('zoomsettings')->select('zoomsettings.*')->first();
-        $clientId = $zoomsettings->client_id;
-        $clientSecret = $zoomsettings->client_secret;
-        $redirect_uri = $zoomsettings->redirect_uri;
+        $configService = app(\App\Services\Zoom\ZoomConfigurationService::class);
+        $config = $configService->getConfiguration();
+        $clientId = $config['client_id'];
+        $clientSecret = $config['client_secret'];
+        $redirect_uri = $config['account_id'];
 
         $code = $request->input('code');
 
@@ -104,56 +75,42 @@ class ZoomController extends Controller
             'client_secret' => $clientSecret,
         ]);
 
-        // dd($newAccessToken,$newRefreshToken);
         if ($response->successful()) {
             $minutes = 15 * 365 * 24 * 60; // 15 years in minutes
             $accessToken = $response->json()['access_token'];
             $newRefreshToken = $response->json()['refresh_token'];
-            DB::table('zoomsettings')->update(['zoom_access_token' => $newRefreshToken]);
+            DB::table('zoomsettings')->where('id', 1)->update(['zoom_access_token' => $newRefreshToken]);
             Cookie::queue(Cookie::make('zoom_access_token', $accessToken, $minutes, '/', null, true, true, false, 'Lax'));
 
-            // session(['zoom_access_token' => $accessToken]);
             return view('access_token', ['status' => true]);
         } else {
             return view('access_token', ['status' => false]);
         }
-
     }
 
     public function createMeeting(Request $request)
     {
-        $accessToken = Cookie::get('zoom_access_token'); // session('zoom_access_token');
-        // $meetingResponse  = Http::withToken($accessToken)->get('https://api.zoom.us/v2/users/me');
-        // dd($meetingResponse->successful());
+        try {
+            $topic = $request->input('topic', 'Interview Meeting');
+            $zoomMeetingService = app(\App\Services\Zoom\ZoomMeetingService::class);
 
-        $response = Http::withToken($accessToken)->post('https://api.zoom.us/v2/users/me/meetings', [
-            'topic' => $request->input('topic'),
-            'type' => 2, // Scheduled meeting
-            'start_time' => '2024-08-30T15:00:00Z', // Static start time
-            'duration' => 60, // Static duration
-            'timezone' => 'UTC',
-            'settings' => [
-                'join_before_host' => true, // Allow participants to join before the host
-            ],
-        ]);
+            $result = $zoomMeetingService->createInterviewMeeting([
+                'topic' => $topic,
+                'start_time' => '2024-08-30T15:00:00Z',
+                'duration' => 60,
+                'timezone' => 'UTC',
+                'settings' => [
+                    'join_before_host' => true,
+                ],
+            ]);
 
-        // Log the entire response for debugging
-        // Log::error('Zoom API response', [
-        //     'status' => $response->status(),
-        //     'body'   => $response->body()
-        // ]);
+            if ($result['status'] === 'success') {
+                return response()->json(['join_url' => $result['join_url']]);
+            }
 
-        if ($response->successful()) {
-            $meetingData = $response->json();
-            $joinUrl = $meetingData['join_url']; // Get the meeting join URL
-
-            return response()->json(['join_url' => $joinUrl]);
-        } else {
-            // Handle errors with more detail
-            $errorData = $response->json();
-
-            return response()->json(['error' => $errorData], $response->status());
+            return response()->json(['error' => $result['error'] ?? 'Meeting creation failed'], 400);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
     }
 }
