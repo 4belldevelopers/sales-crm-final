@@ -119,6 +119,7 @@ Route::get('check-device-session', function () {
 // Register
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('register/activate', [RegisterController::class, 'activateTeamMember'])->name('register.activate');
+Route::post('register/agency-connect', [RegisterController::class, 'connectAgency'])->name('register.agency-connect');
 Route::get('api/team/state/delta', [\App\Http\Controllers\TeamStateDeltaController::class, 'delta'])->middleware('auth')->name('team.state.delta');
 // POST /register removed — RegisterController::register() does not exist; POST would 500 (Finding 1.6)
 

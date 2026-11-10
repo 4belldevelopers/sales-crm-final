@@ -64,9 +64,10 @@ class RegistrationContextResolver
             }
         }
 
-        // 3. Agency onboarding check
-        if ($request->has('agency_code') || $request->route('code')) {
-            return $this->buildAgencyContext((string) ($request->input('agency_code') ?? $request->route('code')));
+        // 3. Agency onboarding check (Option 1 & Option 2)
+        if ($request->has('agency_code') || $request->has('agency_token') || $request->has('direct_user') || $request->route('code')) {
+            $agencyCode = (string) ($request->input('agency_code') ?? $request->input('agency_token') ?? $request->input('direct_user') ?? $request->route('code'));
+            return $this->buildAgencyContext($agencyCode);
         }
 
         // Default: Self-Registration
@@ -177,15 +178,93 @@ class RegistrationContextResolver
      */
     protected function buildAgencyContext(string $code): array
     {
+        $invitingCompany = null;
+        $invitingUser = null;
+        $invitationRecord = null;
+        $directUserEncoded = '';
+
+        $cleanCode = trim($code);
+        $decoded = base64_decode($cleanCode, true);
+
+        // 1. Try resolving as base64-encoded company_id or user_id
+        if ($decoded !== false && is_numeric($decoded)) {
+            $candidateId = (int) $decoded;
+            $invitingCompany = Company::withoutGlobalScopes()->find($candidateId);
+            if ($invitingCompany) {
+                $invitingUser = \Illuminate\Support\Facades\DB::table('users')
+                    ->where('company_id', $invitingCompany->id)
+                    ->where('root_user', 1)
+                    ->first();
+            } else {
+                $invitingUser = \Illuminate\Support\Facades\DB::table('users')->where('id', $candidateId)->first();
+                if ($invitingUser) {
+                    $invitingCompany = Company::withoutGlobalScopes()->find($invitingUser->company_id);
+                }
+            }
+        }
+
+        // 2. Try resolving as plain numeric company_id
+        if (! $invitingCompany && is_numeric($cleanCode)) {
+            $invitingCompany = Company::withoutGlobalScopes()->find((int) $cleanCode);
+            if ($invitingCompany) {
+                $invitingUser = \Illuminate\Support\Facades\DB::table('users')
+                    ->where('company_id', $invitingCompany->id)
+                    ->where('root_user', 1)
+                    ->first();
+            }
+        }
+
+        // 3. Try resolving as staffing_company_invitation token (SHA256 hash or raw token)
+        if (! $invitingCompany && ! empty($cleanCode)) {
+            $tokenHash = hash('sha256', $cleanCode);
+            $invitationRecord = \Illuminate\Support\Facades\DB::table('staffing_company_invitation')
+                ->where('token_hash', $tokenHash)
+                ->orWhere('token_hash', $cleanCode)
+                ->first();
+
+            if ($invitationRecord) {
+                $invitingCompany = Company::withoutGlobalScopes()->find($invitationRecord->from_company_id);
+                $invitingUser = \Illuminate\Support\Facades\DB::table('users')->where('id', $invitationRecord->from_user_id)->first();
+            }
+        }
+
+        if ($invitingUser) {
+            $directUserEncoded = base64_encode($invitingUser->id);
+        } elseif ($invitingCompany) {
+            $directUserEncoded = base64_encode($invitingCompany->id);
+        }
+
+        $invitingCompanyName = $invitingCompany->company_name ?? 'Partner Organization';
+        $invitingCompanyLogo = $invitingCompany->logo_url ?? null;
+
         return [
             'context' => self::CONTEXT_AGENCY,
             'context_version' => 'AGENCY_V2',
-            'agency_code' => $code,
+            'agency_code' => $cleanCode,
+            'direct_user' => $directUserEncoded,
+            'inviting_company' => [
+                'id' => $invitingCompany->id ?? null,
+                'name' => $invitingCompanyName,
+                'email' => $invitingCompany->company_email ?? null,
+                'logo' => $invitingCompanyLogo,
+            ],
+            'inviting_user' => [
+                'id' => $invitingUser->id ?? null,
+                'name' => $invitingUser->name ?? '',
+            ],
+            'invitation_record' => $invitationRecord ? [
+                'id' => $invitationRecord->id,
+                'to_email' => $invitationRecord->to_email ?? null,
+                'expires_at' => $invitationRecord->expires_at ?? null,
+                'status' => $invitationRecord->to_invitation_status ?? null,
+            ] : null,
             'schema' => [
+                'company_type' => 1,
                 'fields' => [
-                    'company_name' => ['type' => 'text', 'label' => 'Agency Name', 'required' => true, 'editable' => true],
-                    'name' => ['type' => 'text', 'label' => 'Contact Person', 'required' => true, 'editable' => true],
-                    'email' => ['type' => 'email', 'label' => 'Email', 'required' => true, 'editable' => true],
+                    'name' => ['type' => 'text', 'label' => 'Contact Person / Full Name', 'required' => true, 'editable' => true],
+                    'email' => ['type' => 'email', 'label' => 'Agency Work Email', 'required' => true, 'editable' => true, 'value' => $invitationRecord->to_email ?? ''],
+                    'contact_number' => ['type' => 'tel', 'label' => 'Phone Number', 'required' => true, 'editable' => true],
+                    'company_type' => ['type' => 'hidden', 'value' => 1],
                     'password' => ['type' => 'password', 'label' => 'Password', 'required' => true, 'editable' => true, 'minlength' => 8],
                 ],
                 'action_url' => route('company-register'),
