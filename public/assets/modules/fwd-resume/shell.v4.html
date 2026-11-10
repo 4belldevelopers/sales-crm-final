@@ -1031,13 +1031,10 @@
         <input type="hidden" name="cc_email" id="test_cc_email" value="" />
         <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;">
           <span>Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</span>
-          <label class="mm-copy-self-label" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11.5px;font-weight:500;color:#374151;margin:0;user-select:none;">
-            <input type="checkbox" id="test_fwd_copy_to_self" name="copy_to_self" value="1" style="width:15px;height:15px;border-radius:4px;cursor:pointer;margin:0;accent-color:#2563EB;" />
-            <span style="display:inline-flex;align-items:center;gap:4px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              Send a copy to myself <span id="test_copy_self_email_display" style="color:#64748B;font-weight:400;"></span>
-            </span>
-          </label>
+          <div class="mm-copy-self-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:3px 8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#009EF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Auto-copy sent to you <span id="test_copy_self_email_display" style="color:#009EF7;font-weight:600;"></span></span>
+          </div>
         </div>
       </div>
     </div>

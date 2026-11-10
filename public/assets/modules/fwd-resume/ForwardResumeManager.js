@@ -825,63 +825,10 @@
                     $('#test_cc_email_typo_hint').slideUp(100, function () { $(this).empty(); });
                 }
             });
-
-            // Toggle 'Send a copy to myself' checkbox
-            $(document).off('change', '#test_fwd_copy_to_self').on('change', '#test_fwd_copy_to_self', function () {
-                var isChecked = $(this).is(':checked');
-                var userEmail = (self._currentUserEmail || '').trim().toLowerCase();
-                if (!userEmail) {
-                    $(this).prop('checked', false);
-                    return;
-                }
-
-                if (isChecked) {
-                    var inTo = (self._emailTags.to || []).some(function (e) {
-                        return e.toLowerCase() === userEmail;
-                    });
-                    if (inTo) {
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                title: 'Already in Recipient List',
-                                text: 'Your email (' + userEmail + ') is already included as a primary recipient in the "To" field. A duplicate copy is not required.',
-                                icon: 'info',
-                                confirmButtonColor: '#0D9488'
-                            });
-                        }
-                        $(this).prop('checked', false);
-                        return;
-                    }
-
-                    var currentTotal = (self._emailTags.to ? self._emailTags.to.length : 0) + (self._emailTags.cc ? self._emailTags.cc.length : 0);
-                    var inCc = (self._emailTags.cc || []).some(function (e) {
-                        return e.toLowerCase() === userEmail;
-                    });
-
-                    if (!inCc && currentTotal >= MAX_TOTAL_RECIPIENTS) {
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                title: 'Recipient Limit Reached',
-                                text: 'Maximum ' + MAX_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed. Please remove an existing recipient to send a copy to yourself.',
-                                icon: 'warning',
-                                confirmButtonColor: '#0D9488'
-                            });
-                        }
-                        $(this).prop('checked', false);
-                        return;
-                    }
-
-                    if (!inCc) {
-                        self.addEmailTag('cc', userEmail);
-                    }
-                } else {
-                    self.removeEmailByAddress('cc', userEmail);
-                }
-            });
         },
 
         _resetDrawerForm: function () {
             var self = this;
-            $('#test_fwd_copy_to_self').prop('checked', false);
             $('#test_fwd_resume_format').val('46');
             $('#test_fwd_trigger_title').text('4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding (Default)');
             $('#test_fwd_trigger_desc').text('Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.');
@@ -2739,7 +2686,6 @@
                     self.removeEmailByAddress('cc', userEmail);
                     inCc = false;
                 }
-                $('#test_fwd_copy_to_self').prop('checked', inCc && !inTo);
             }
         },
 
@@ -3586,7 +3532,7 @@
                     'reply_to_email': replyToEmail,
                     'to_email': toEmail,
                     'cc_email': ccEmail,
-                    'copy_to_self': $('#test_fwd_copy_to_self').is(':checked') ? 1 : 0,
+                    'copy_to_self': 1,
                     'subject': subject,
                     'attached_cv': 1,
                     'attached_cv_format': optId,
