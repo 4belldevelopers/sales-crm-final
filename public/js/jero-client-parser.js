@@ -887,6 +887,11 @@
                 try {
                     var summary = result.summary || result.career_summary || result.objective || (cand && (cand.summary || cand.objective)) || '';
                     if (summary) {
+                        // Strip any trailing raw section dumps (e.g. "Professional Skills:", "PROFESSIONAL EXPERIENCE:")
+                        var cleanSummary = summary.split(/(?:professional\s+(?:skills|experience)|work\s+experience|employment\s+history|roles\s+and\s+responsibilities)/i)[0].trim();
+                        if (cleanSummary && cleanSummary.split(/\s+/).filter(Boolean).length >= 10) {
+                            summary = cleanSummary;
+                        }
                         var words = String(summary).trim().split(/\s+/).filter(Boolean);
                         if (words.length > 100) {
                             summary = words.slice(0, 100).join(' ');
@@ -901,7 +906,7 @@
                             } catch (_) {}
                             var csParent = csEl.closest('.summary-card-body, .candidate-card-body, .fsc') || csEl.parentElement;
                             if (csParent) {
-                                var csCc = csParent.querySelector('.cc');
+                                var csCc = csParent.querySelector('.cc, #summary_counter');
                                 if (csCc) {
                                     var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
                                     csCc.textContent = actualWordCount + ' / 100';
