@@ -1033,7 +1033,19 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           <a href="javascript:;" class="bench-mm-add-email-btn" onclick="openBenchRecipientDrawer('cc')">+ Add Email</a>
         </div>
         <input type="hidden" name="cc_email" id="bench_cc_email" value="{{ $cc_email }}">
-        <div class="bench-mm-hint">Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</div>
+        <div class="bench-mm-hint" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          <span>Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</span>
+          @php
+            $currentLoggedInEmail = auth()->user()->email ?? '';
+          @endphp
+          <label class="bench-mm-copy-self-label" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11.5px;font-weight:500;color:#374151;margin:0;user-select:none;">
+            <input type="checkbox" id="bench_fwd_copy_to_self" name="copy_to_self" value="1" data-user-email="{{ strtolower(trim($currentLoggedInEmail)) }}" style="width:15px;height:15px;border-radius:4px;cursor:pointer;margin:0;accent-color:#2563EB;">
+            <span style="display:inline-flex;align-items:center;gap:4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Send a copy to myself <span style="color:#64748B;font-weight:400;">({{ $currentLoggedInEmail }})</span>
+            </span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -1869,6 +1881,17 @@ function renderBenchTags(target) {
     hiddenInput.val(list.join(','));
     updateBenchRecipientBadges();
     syncBenchRecipientDrawerButtons();
+
+    var currentUserEmail = ($('#bench_fwd_copy_to_self').attr('data-user-email') || '').toLowerCase().trim();
+    if (currentUserEmail) {
+        var inTo = benchToEmails.indexOf(currentUserEmail) !== -1;
+        var inCc = benchCcEmails.indexOf(currentUserEmail) !== -1;
+        if (inTo && inCc) {
+            benchCcEmails = benchCcEmails.filter(function(e) { return e !== currentUserEmail; });
+            inCc = false;
+        }
+        $('#bench_fwd_copy_to_self').prop('checked', inCc && !inTo);
+    }
 }
 
 function addBenchEmailTag(target, rawInput) {
@@ -1981,6 +2004,54 @@ $('#bench_cc_email_input').on('keydown', function(e) {
         e.preventDefault();
         addBenchEmailTag('cc', pasteData);
         $(this).val('');
+    }
+});
+
+// Toggle 'Send a copy to myself' checkbox
+$(document).off('change', '#bench_fwd_copy_to_self').on('change', '#bench_fwd_copy_to_self', function() {
+    var isChecked = $(this).is(':checked');
+    var userEmail = ($('#bench_fwd_copy_to_self').attr('data-user-email') || '').toLowerCase().trim();
+    if (!userEmail) {
+        $(this).prop('checked', false);
+        return;
+    }
+    if (isChecked) {
+        if (benchToEmails.indexOf(userEmail) !== -1) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Already in Recipient List',
+                    text: 'Your email (' + userEmail + ') is already included as a primary recipient in the "To" field. A duplicate copy is not required.',
+                    icon: 'info',
+                    confirmButtonColor: '#0D9488'
+                });
+            }
+            $(this).prop('checked', false);
+            return;
+        }
+        if (benchCcEmails.indexOf(userEmail) === -1) {
+            if (getBenchTotalRecipientCount() >= MAX_BENCH_TOTAL_RECIPIENTS) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Recipient Limit Reached',
+                        text: 'Maximum ' + MAX_BENCH_TOTAL_RECIPIENTS + ' total recipients allowed. Please remove an existing recipient first.',
+                        icon: 'warning',
+                        confirmButtonColor: '#0D9488'
+                    });
+                }
+                $(this).prop('checked', false);
+                return;
+            }
+            benchCcEmails.push(userEmail);
+            renderBenchTags('cc');
+            updateBenchRecipientBadges();
+        }
+    } else {
+        var idx = benchCcEmails.indexOf(userEmail);
+        if (idx !== -1) {
+            benchCcEmails.splice(idx, 1);
+            renderBenchTags('cc');
+            updateBenchRecipientBadges();
+        }
     }
 });
 
@@ -2844,6 +2915,7 @@ async function onBenchFwdSubmitClick(e) {
     formData.set('subject', subject);
     formData.set('to_email', toEmail);
     formData.set('cc_email', $('#bench_cc_email').val());
+    formData.set('copy_to_self', $('#bench_fwd_copy_to_self').is(':checked') ? 1 : 0);
     formData.set('attached_cv_format', formatId);
 
     if (uploadedUuids.length > 0 && uploadedUuids.length === Object.keys(_benchCompiledAttachments).length) {
