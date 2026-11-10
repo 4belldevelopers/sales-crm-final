@@ -211,7 +211,11 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
                 ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
                 ->where('staffing_company_invitation.from_company_id', $company_id)
-                ->where('staffing_company_invitation.to_invitation_status', '!=', 1);
+                ->where('staffing_company_invitation.to_invitation_status', 0)
+                ->where(function ($q) {
+                    $q->whereNull('staffing_company_invitation.expires_at')
+                        ->orWhere('staffing_company_invitation.expires_at', '>', now());
+                });
 
             if (! empty($customSearch)) {
                 $invitationsQuery->where(function ($q) use ($customSearch) {
@@ -815,6 +819,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
     public function re_invite(Request $request, $id, ?CreateInvitationAction $createAction = null)
     {
         $createAction = $createAction ?: app(CreateInvitationAction::class);
+        $tokenService = app(\App\Domain\AgencyPartnership\Services\InvitationTokenService::class);
         $company_id = (int) auth()->user()->company_id;
         $userId = (int) ($this->user->id ?? auth()->id());
         $invitationId = (int) $id;
@@ -828,7 +833,69 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'error', 'message' => 'Original invitation not found.']);
         }
 
+        $isExpired = ! empty($oldInv->expires_at) && Carbon::parse($oldInv->expires_at)->isPast();
+        $isPending = ((int) $oldInv->to_invitation_status === 0 && ! $isExpired);
+
+        // CASE 1: ACTIVE PENDING INVITATION REMINDER (Zero Coin Deduction, Rate-Limited)
+        if ($isPending) {
+            $cooldownKey = "ats:reinvite_cooldown:inv_{$invitationId}";
+            if (cache()->has($cooldownKey)) {
+                return Reply::dataOnly([
+                    'status' => 'warning',
+                    'message' => 'An invitation reminder was recently dispatched. Please wait a moment before sending another (allowed once every 2 minutes).',
+                ]);
+            }
+
+            try {
+                // Generate fresh 256-bit token & extend TTL by 7 days
+                $tokenData = $tokenService->generate();
+                $expiresAt = Carbon::now()->addDays(7);
+
+                DB::table('staffing_company_invitation')
+                    ->where('id', $invitationId)
+                    ->update([
+                        'token_hash' => $tokenData['token_hash'],
+                        'expires_at' => $expiresAt,
+                        'updated_at' => Carbon::now(),
+                    ]);
+
+                // Dispatch notification email
+                $this->sendInvitationNotificationEmail($company_id, (string) $oldInv->to_email, $tokenData['url']);
+
+                // Set 2-minute cooling off to prevent hammer/spamming
+                cache()->put($cooldownKey, true, 120);
+
+                $this->agencyListingService->clearCompanyStatsCache($company_id);
+                $this->agencyListingService->clearUserConsultancyCache($userId);
+                $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
+
+                return Reply::dataOnly([
+                    'status' => 'success',
+                    'message' => 'Invitation reminder resent successfully.',
+                    'invitation_id' => $invitationId,
+                    'spartnerDataCnt' => $spartnerDataCnt,
+                    'coins_deducted' => 0,
+                    'invite_url' => $tokenData['url'],
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('Active invitation reminder failed: '.$e->getMessage(), ['exception' => $e]);
+
+                return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to resend invitation reminder: '.$e->getMessage()]);
+            }
+        }
+
+        // CASE 2: EXPIRED OR CANCELLED INVITATION (Re-Invite with Slot Release & New Creation)
         try {
+            // Release historical active slot if previously unreleased
+            if ((int) $oldInv->to_invitation_status === 0 && $isExpired) {
+                DB::table('staffing_company_invitation')
+                    ->where('id', $invitationId)
+                    ->update([
+                        'to_invitation_status' => -2, // Expired
+                        'updated_at' => Carbon::now(),
+                    ]);
+            }
+
             $idempotencyKey = 'reinvite_'.$invitationId.'_'.time();
             $result = $createAction->execute($company_id, $userId, (string) $oldInv->to_email, $idempotencyKey);
 
@@ -838,7 +905,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
             return Reply::dataOnly([
                 'status' => 'success',
-                'message' => 'Invitation re-sent successfully.',
+                'message' => 'New invitation sent successfully.',
                 'invitation_id' => $result['invitation_id'],
                 'spartnerDataCnt' => $spartnerDataCnt,
                 'coins_deducted' => $result['coins_deducted'] ?? 5,
@@ -851,6 +918,54 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             Log::error('Re-invite failed: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to re-invite agency: '.$e->getMessage()]);
+        }
+    }
+
+    /**
+     * Dispatch invitation email notification via QueueNotificationMailService.
+     */
+    protected function sendInvitationNotificationEmail(int $fromCompanyId, string $recipientEmail, string $inviteUrl): void
+    {
+        try {
+            $company = \App\Models\Company::withoutGlobalScopes()->find($fromCompanyId);
+            $reqDate = date('d M Y');
+            $checkMailPermission = GeneralMethod::mailPermission(40);
+
+            if ($checkMailPermission && $company) {
+                $mailTypeSubject = GeneralMethod::mailTypeSubject(40, 1);
+                $subject = str_replace(
+                    ['[COMPANY_NAME]', '[REQUEST_DATE]'],
+                    [$company->company_name, $reqDate],
+                    $mailTypeSubject->subject ?? "Invitation to Become a Staffing Partner | {$company->company_name} | {$reqDate}"
+                );
+
+                $acceptInviteBtn = '<a href="'.$inviteUrl.'" rel="noopener" style="text-decoration:none;display:inline-block;text-align:center;padding:0.75575rem 1.3rem;font-size:0.925rem;line-height:1.5;border-radius:0.35rem;color:#ffffff;background-color:#009EF7;border:0px;margin-right:0.75rem!important;font-weight:600!important;outline:none!important;vertical-align:middle">Accept Partnership Invitation</a>';
+                $urlLink = '<a href="'.$inviteUrl.'" rel="noopener" style="text-decoration:none;color:#009EF7">'.$inviteUrl.'</a>';
+
+                $template = str_replace(
+                    ['[COMPANY_NAME]', '[ACCEPT_INVITE]', '[URL_LINK]'],
+                    [$company->company_name, $acceptInviteBtn, $urlLink],
+                    $mailTypeSubject->body_description ?? "You have been invited to partner with {$company->company_name}. Click below to accept:\n\n{$inviteUrl}"
+                );
+
+                $baseCompany = GeneralMethod::baseCompany();
+                $senderName = $baseCompany ? ($baseCompany->companyName ?: '') : '';
+                $fromAddress = $baseCompany ? ($baseCompany->companyEmail ?: '') : '';
+
+                \App\Jobs\QueueNotificationMailService::dispatch(
+                    $recipientEmail,
+                    $subject,
+                    'email.common.index',
+                    (object) ['message' => $template],
+                    [],
+                    $fromAddress,
+                    $senderName,
+                    [],
+                    $company->id
+                )->onConnection('emails');
+            }
+        } catch (\Throwable $e) {
+            Log::warning('sendInvitationNotificationEmail: Mail dispatch deferred: '.$e->getMessage());
         }
     }
 

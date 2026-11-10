@@ -90,10 +90,14 @@ class AgencyListingService
                 $counters['spartnerAll'] = count($connectedAgencyIds);
             }
 
-            // 2. Sent Pending Invitations (sentRequest)
+            // 2. Sent Pending Invitations (sentRequest) - Strictly active pending (unexpired)
             $counters['sentRequest'] = DB::table('staffing_company_invitation')
                 ->where('from_company_id', $companyId)
-                ->where('to_invitation_status', '!=', 1)
+                ->where('to_invitation_status', 0)
+                ->where(function ($q) {
+                    $q->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', now());
+                })
                 ->count();
 
             // 3. Agencies added this month

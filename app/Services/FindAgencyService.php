@@ -493,13 +493,16 @@ class FindAgencyService
                 $request, $idempotencyKey, &$outboxId, &$mutationResponse
             ) {
                 if ($event_id === -1) {
-                    // Cancel Invitation workflow
+                    // Cancel Invitation workflow (Update to Cancelled -2, preserving historical audit record)
                     DB::table('staffing_company_invitation')
                         ->where('from_company_id', $from_company_id)
                         ->where('to_company_id', $to_company_id)
                         ->where('to_status', 0)
                         ->where('to_invitation_status', 0)
-                        ->delete();
+                        ->update([
+                            'to_invitation_status' => -2,
+                            'updated_at' => now(),
+                        ]);
 
                     // Insert Outbox Event for durable async processing
                     $outboxId = DB::table('sys_outbox_events')->insertGetId([

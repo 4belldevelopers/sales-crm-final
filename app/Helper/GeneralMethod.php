@@ -7049,12 +7049,16 @@ END:VCALENDAR";
         $clientAll = $clientAll->get();
         $spartnerCounter['spartnerAll'] = count($clientAll);
 
-        // SENT REQUEST INVITATION
+        // SENT REQUEST INVITATION - Strictly active pending (unexpired)
         $spartnerCounter['sentRequest'] = 0;
         $sentRequest = DB::table('staffing_company_invitation')
             ->select('staffing_company_invitation.id')
             ->where('staffing_company_invitation.from_company_id', '=', $company_id)
-            ->where('staffing_company_invitation.to_invitation_status', '!=', 1)
+            ->where('staffing_company_invitation.to_invitation_status', '=', 0)
+            ->where(function ($q) {
+                $q->whereNull('staffing_company_invitation.expires_at')
+                    ->orWhere('staffing_company_invitation.expires_at', '>', now());
+            })
             ->count();
         $spartnerCounter['sentRequest'] = $sentRequest;
 
