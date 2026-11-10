@@ -21,7 +21,6 @@ use App\Models\Client;
 use App\Models\Company;
 use App\Models\Country;
 use App\Models\JobCategory;
-use App\Models\User;
 use App\Services\AgencyListingService;
 use App\Services\CommercialReadModelService;
 use App\Services\CurrencyService;
@@ -689,10 +688,41 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
     public function staffing_invitation(Request $request, $id, ?CreateInvitationAction $createAction = null)
     {
         $createAction = $createAction ?: app(CreateInvitationAction::class);
+        $agencyCompanyId = (int) $request->input('agency_company_id', 0);
         $staffing_partners_email = $request->input('staffing_partners_email', $_REQUEST['staffing_partners_email'] ?? '');
         $staffing_partners_email = trim((string) $staffing_partners_email);
         $company_id = (int) auth()->user()->company_id;
         $userId = (int) ($this->user->id ?? auth()->id());
+
+        // Privacy & Anti-Harvester: Secure server-side resolution for agencies selected by company_id
+        if ($agencyCompanyId > 0) {
+            $targetAgency = DB::table('companies')
+                ->leftJoin('users', function ($join) {
+                    $join->on('users.company_id', '=', 'companies.id')
+                        ->where('users.root_user', '=', 1);
+                })
+                ->select(
+                    'companies.id',
+                    'companies.company_name',
+                    'companies.company_email',
+                    'users.email as root_email'
+                )
+                ->where('companies.id', $agencyCompanyId)
+                ->where('companies.status', '=', 'active')
+                ->where('companies.company_type', '=', 2)
+                ->first();
+
+            if (! $targetAgency) {
+                return Reply::dataOnly(['status' => 'warning', 'message' => 'The selected staffing agency is inactive or could not be found.']);
+            }
+
+            $resolvedEmail = trim((string) ($targetAgency->root_email ?: $targetAgency->company_email));
+            if (empty($resolvedEmail) || ! filter_var($resolvedEmail, FILTER_VALIDATE_EMAIL)) {
+                return Reply::dataOnly(['status' => 'warning', 'message' => "The selected agency ({$targetAgency->company_name}) does not have a verified contact email configured."]);
+            }
+
+            $staffing_partners_email = $resolvedEmail;
+        }
 
         $validator = Validator::make(['staffing_partners_email' => $staffing_partners_email], [
             'staffing_partners_email' => [
@@ -823,8 +853,9 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
     }
 
     /**
-     * Search and autocomplete registered agencies by agency company name, root email, or user email.
-     * Implements strict multi-tenant isolation, CQRS ES-first with MySQL fallback, and pre-enriched connection status.
+     * Search and autocomplete registered agencies strictly by agency company name and official website.
+     * Implements strict multi-tenant isolation, CQRS ES-first with MySQL fallback, pre-enriched connection status,
+     * and enterprise-grade privacy protection (zero email exposure to prevent address harvesting & spam).
      */
     public function searchAgencyAutocomplete(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -838,7 +869,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $superAdminIds = GeneralMethod::superAdminCompanyIds();
         $results = [];
 
-        // 1. Elasticsearch query first (CQRS Universal Read Scope)
+        // 1. Elasticsearch query first (CQRS Universal Read Scope - strictly company_name & website)
         try {
             if ($this->elasticService && $this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
                 $esParams = [
@@ -855,7 +886,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                                             'should' => [
                                                 ['wildcard' => ['company_name' => '*'.strtolower($query).'*']],
                                                 ['match_phrase_prefix' => ['company_name' => $query]],
-                                                ['wildcard' => ['team_members.email' => '*'.strtolower($query).'*']],
+                                                ['wildcard' => ['website' => '*'.strtolower($query).'*']],
                                             ],
                                             'minimum_should_match' => 1,
                                         ],
@@ -878,7 +909,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     $results[$cId] = [
                         'id' => $cId,
                         'company_name' => $src['company_name'] ?? '',
-                        'email' => $src['company_email'] ?? ($src['team_members'][0]['email'] ?? ''),
+                        'website' => $src['website'] ?? '',
                         'logo' => $src['logo'] ?? '',
                     ];
                 }
@@ -887,20 +918,34 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             Log::warning('searchAgencyAutocomplete ES search error: '.$e->getMessage());
         }
 
-        // 2. MySQL DB query to supplement / ensure full coverage of root email and users
+        // 2. Supplement website from MySQL if missing on ES documents
+        $agencyIdsNeedingWebsite = [];
+        foreach ($results as $cId => $res) {
+            if (empty($res['website'])) {
+                $agencyIdsNeedingWebsite[] = $cId;
+            }
+        }
+        if (! empty($agencyIdsNeedingWebsite)) {
+            $dbWebsites = DB::table('companies')
+                ->whereIn('id', $agencyIdsNeedingWebsite)
+                ->pluck('website', 'id')
+                ->toArray();
+
+            foreach ($dbWebsites as $cId => $site) {
+                if (! empty($site) && isset($results[$cId])) {
+                    $results[$cId]['website'] = $site;
+                }
+            }
+        }
+
+        // 3. MySQL DB query to supplement / ensure full coverage strictly on company_name and website (zero email matching)
         if (count($results) < 10) {
             $dbAgencies = DB::table('companies')
-                ->leftJoin('users', function ($join) {
-                    $join->on('users.company_id', '=', 'companies.id')
-                        ->where('users.root_user', '=', 1);
-                })
                 ->select(
                     'companies.id',
                     'companies.company_name',
                     'companies.logo',
-                    'companies.company_email',
-                    'users.email as root_email',
-                    'users.name as root_name'
+                    'companies.website'
                 )
                 ->where('companies.status', '=', 'active')
                 ->where('companies.company_type', '=', 2)
@@ -908,9 +953,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 ->whereNotIn('companies.id', $superAdminIds)
                 ->where(function ($q) use ($query) {
                     $q->where('companies.company_name', 'like', "%{$query}%")
-                        ->orWhere('companies.company_email', 'like', "%{$query}%")
-                        ->orWhere('users.email', 'like', "%{$query}%")
-                        ->orWhere('users.name', 'like', "%{$query}%");
+                        ->orWhere('companies.website', 'like', "%{$query}%");
                 })
                 ->limit(10)
                 ->get();
@@ -921,18 +964,16 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     $results[$cId] = [
                         'id' => $cId,
                         'company_name' => $agency->company_name,
-                        'email' => $agency->root_email ?: $agency->company_email,
+                        'website' => $agency->website ?? '',
                         'logo' => $agency->logo,
                     ];
-                } else {
-                    if (empty($results[$cId]['email'])) {
-                        $results[$cId]['email'] = $agency->root_email ?: $agency->company_email;
-                    }
+                } elseif (empty($results[$cId]['website']) && ! empty($agency->website)) {
+                    $results[$cId]['website'] = $agency->website;
                 }
             }
         }
 
-        // 3. Pre-enrich connection status against current tenant
+        // 4. Pre-enrich connection status against current tenant
         $allAgencyIds = array_keys($results);
         if (! empty($allAgencyIds)) {
             // Check active partnerships in staffing_company_relation
@@ -965,18 +1006,56 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 ->where('to_invitation_status', 0)
                 ->get();
 
-            $pendingEmails = $pendingInvitations->pluck('to_email')->map(fn ($e) => strtolower(trim((string) $e)))->toArray();
-            $pendingCompanyIds = array_filter($pendingInvitations->pluck('to_company_id')->toArray());
+            $pendingCompanyIds = array_filter(array_map('intval', $pendingInvitations->pluck('to_company_id')->toArray()));
+            $pendingEmails = $pendingInvitations->pluck('to_email')->map(fn ($e) => strtolower(trim((string) $e)))->filter()->toArray();
+
+            // Secure server-side cross-check for invitations without exposing email to client
+            if (! empty($pendingEmails)) {
+                $emailMatchedCompanyIds = DB::table('companies')
+                    ->leftJoin('users', function ($join) {
+                        $join->on('users.company_id', '=', 'companies.id')
+                            ->where('users.root_user', '=', 1);
+                    })
+                    ->whereIn('companies.id', $allAgencyIds)
+                    ->where(function ($q) use ($pendingEmails) {
+                        $q->whereIn(DB::raw('LOWER(companies.company_email)'), $pendingEmails)
+                            ->orWhereIn(DB::raw('LOWER(users.email)'), $pendingEmails);
+                    })
+                    ->pluck('companies.id')
+                    ->map(fn ($id) => (int) $id)
+                    ->toArray();
+
+                $pendingCompanyIds = array_unique(array_merge($pendingCompanyIds, $emailMatchedCompanyIds));
+            }
 
             foreach ($results as $cId => &$item) {
-                $email = strtolower(trim((string) ($item['email'] ?? '')));
                 if (in_array($cId, $connectedIds, true)) {
                     $item['connection_status'] = 'connected';
-                } elseif (in_array($cId, $pendingCompanyIds, true) || in_array($email, $pendingEmails, true)) {
+                } elseif (in_array($cId, $pendingCompanyIds, true)) {
                     $item['connection_status'] = 'pending';
                 } else {
                     $item['connection_status'] = 'available';
                 }
+
+                // Format website for clean visual display and valid external link (Privacy & Anti-Harvesting)
+                $rawWebsite = trim((string) ($item['website'] ?? ''));
+                if (! empty($rawWebsite)) {
+                    if (preg_match('~^https?://~i', $rawWebsite)) {
+                        $item['website_url'] = $rawWebsite;
+                        $displayWebsite = preg_replace('~^https?://(www\.)?~i', '', $rawWebsite);
+                        $item['website'] = rtrim($displayWebsite, '/');
+                    } else {
+                        $item['website_url'] = 'https://'.$rawWebsite;
+                        $displayWebsite = preg_replace('~^www\.~i', '', $rawWebsite);
+                        $item['website'] = rtrim($displayWebsite, '/');
+                    }
+                } else {
+                    $item['website'] = null;
+                    $item['website_url'] = null;
+                }
+
+                // Strict Redaction: Completely ensure no email fields are present
+                unset($item['email'], $item['company_email'], $item['root_email']);
 
                 // Format logo URL
                 if (! empty($item['logo'])) {
