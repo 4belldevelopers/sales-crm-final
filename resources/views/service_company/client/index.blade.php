@@ -1207,6 +1207,32 @@
     max-width: 90vw !important;
   }
 }
+.cl-invitation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #7c3aed;
+  line-height: 1.2;
+  transition: all 0.2s ease;
+}
+.cl-invitation-badge:hover {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+}
+.cl-invitation-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  display: inline-block;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
 </style>
 @endpush
 @section('content')
@@ -1220,6 +1246,7 @@
     $pendingRequestsCount = (int)($clientDataCnt['clientRequest'] ?? 0);
 
     $directPercent = ($totalClientsCount > 0) ? round(($directClientsCount / $totalClientsCount) * 100) : 0;
+    $currentTab = ($initialTab === 'requests' || $initialTab === 'request') ? 'request' : ($initialTab ?? 'all');
 @endphp
 
 <script>
@@ -1251,6 +1278,7 @@
         if (internal !== null && !isNaN(internal)) {
             $('#span_clientCustom, #tabBadgeInternal').text(internal);
             window.CLIENT_DATA_COUNTERS.clientCustom = internal;
+            $('#span_clientCustomSub').text(internal > 0 ? (internal + ' active internal') : 'No internal clients yet');
         }
         if (direct !== null && !isNaN(direct)) {
             $('#span_clientDirect, #tabBadgeDirect').text(direct);
@@ -1259,14 +1287,31 @@
         if (hiring !== null && !isNaN(hiring)) {
             $('#span_clientHiring, #tabBadgeHiring').text(hiring);
             window.CLIENT_DATA_COUNTERS.clientHiring = hiring;
+            $('#span_clientHiringSub').text(hiring > 0 ? (hiring + ' active ' + (hiring > 1 ? 'companies' : 'company')) : 'No active jobs');
         }
         if (inactive !== null && !isNaN(inactive)) {
             $('#span_clientInactive, #tabBadgeInactive').text(inactive);
             window.CLIENT_DATA_COUNTERS.clientInactive = inactive;
+            $('#span_clientInactiveSub').text(inactive > 0 ? (inactive + ' inactive ' + (inactive > 1 ? 'companies' : 'company')) : '0 active positions');
         }
         if (request !== null && !isNaN(request)) {
             $('#span_clientRequest, #tabBadgeRequest').text(request);
             window.CLIENT_DATA_COUNTERS.clientRequest = request;
+
+            // Dynamically synchronize invitation count on BOTH Total Clients and Pending Requests tabs
+            var inviteCount = request;
+            var inviteText = inviteCount > 0 ? (inviteCount + ' pending invitation' + (inviteCount > 1 ? 's' : '')) : '0 pending invitations';
+            $('#span_clientAllSub').text(inviteText);
+            $('#span_clientRequestSub').text(inviteCount > 0 ? (inviteCount + ' pending invitation' + (inviteCount > 1 ? 's' : '')) : "You're all caught up");
+
+            if (inviteCount > 0) {
+                $('#badge_clientAllInvites').show();
+                $('#span_clientAllInviteBadge').text(inviteCount + (inviteCount === 1 ? ' invite' : ' invites'));
+                $('#wrap_clientAllSub').css('color', '#7c3aed');
+            } else {
+                $('#badge_clientAllInvites').hide();
+                $('#wrap_clientAllSub').css('color', '#64748b');
+            }
         }
 
         var curAll = (all !== null && !isNaN(all)) ? all : (window.CLIENT_DATA_COUNTERS.clientAll || 0);
@@ -1392,7 +1437,7 @@
         <!-- ── 6 STAT CARDS ── -->
         <div class="cl-stat-grid">
             {{-- Card 1: Total Clients --}}
-            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-card cl-stat-filter active" data-tab="all">
+            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-card cl-stat-filter {{ $currentTab === 'all' ? 'active' : '' }}" data-tab="all">
                 <div class="cl-card-top">
                     <div class="cl-card-icon blue">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1403,18 +1448,28 @@
                         </svg>
                     </div>
                     <div class="cl-card-meta">
-                        <div class="cl-card-num" id="span_clientAll">{{ $totalClientsCount }}</div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="cl-card-num" id="span_clientAll">{{ $totalClientsCount }}</div>
+                            <span class="cl-invitation-badge" id="badge_clientAllInvites" style="{{ $pendingRequestsCount > 0 ? '' : 'display:none;' }}" title="{{ $pendingRequestsCount }} Pending {{ $pendingRequestsCount === 1 ? 'Invitation' : 'Invitations' }}">
+                                <span class="cl-invitation-dot"></span>
+                                <span id="span_clientAllInviteBadge">{{ $pendingRequestsCount }} {{ $pendingRequestsCount === 1 ? 'invite' : 'invites' }}</span>
+                            </span>
+                        </div>
                         <div class="cl-card-lbl">Total Clients</div>
                     </div>
                 </div>
-                <div class="cl-card-sub green">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                    <span>+{{ max($totalClientsCount, 1) }} this month</span>
+                <div class="cl-card-sub" id="wrap_clientAllSub" style="color: {{ $pendingRequestsCount > 0 ? '#7c3aed' : '#64748b' }};">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                    </svg>
+                    <span id="span_clientAllSub">{{ $pendingRequestsCount > 0 ? $pendingRequestsCount . ' pending invitation' . ($pendingRequestsCount > 1 ? 's' : '') : '0 pending invitations' }}</span>
                 </div>
             </a>
 
             {{-- Card 2: Internal Clients --}}
-            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-card cl-stat-filter" data-tab="internal">
+            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-card cl-stat-filter {{ $currentTab === 'internal' ? 'active' : '' }}" data-tab="internal">
                 <div class="cl-card-top">
                     <div class="cl-card-icon indigo">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1429,12 +1484,12 @@
                 </div>
                 <div class="cl-card-sub blue">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                    <span>{{ $internalClientsCount > 0 ? $internalClientsCount . ' active internal' : 'No internal clients yet' }}</span>
+                    <span id="span_clientCustomSub">{{ $internalClientsCount > 0 ? $internalClientsCount . ' active internal' : 'No internal clients yet' }}</span>
                 </div>
             </a>
 
             {{-- Card 3: Direct Clients --}}
-            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-card cl-stat-filter" data-tab="direct">
+            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-card cl-stat-filter {{ $currentTab === 'direct' ? 'active' : '' }}" data-tab="direct">
                 <div class="cl-card-top">
                     <div class="cl-card-icon green">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1464,7 +1519,7 @@
             </a>
 
             {{-- Card 4: Active Companies --}}
-            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-card cl-stat-filter" data-tab="hiring">
+            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-card cl-stat-filter {{ $currentTab === 'hiring' ? 'active' : '' }}" data-tab="hiring">
                 <div class="cl-card-top">
                     <div class="cl-card-icon green">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1485,12 +1540,12 @@
                         <line x1="10" y1="3" x2="8" y2="21"/>
                         <line x1="16" y1="3" x2="14" y2="21"/>
                     </svg>
-                    <span>{{ $activeJobsCount > 0 ? $activeJobsCount . ' active position' . ($activeJobsCount > 1 ? 's' : '') : 'No active jobs' }}</span>
+                    <span id="span_clientHiringSub">{{ $activeJobsCount > 0 ? $activeJobsCount . ' active position' . ($activeJobsCount > 1 ? 's' : '') : 'No active jobs' }}</span>
                 </div>
             </a>
 
             {{-- Card 5: Inactive Companies --}}
-            <a href="#" onclick="setClientTab('inactive', this); return false;" class="cl-card cl-stat-filter" data-tab="inactive">
+            <a href="#" onclick="setClientTab('inactive', this); return false;" class="cl-card cl-stat-filter {{ $currentTab === 'inactive' ? 'active' : '' }}" data-tab="inactive">
                 <div class="cl-card-top">
                     <div class="cl-card-icon pink">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1509,12 +1564,12 @@
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="8" y1="12" x2="16" y2="12"/>
                     </svg>
-                    <span>0 active positions</span>
+                    <span id="span_clientInactiveSub">{{ $inactiveClientsCount > 0 ? $inactiveClientsCount . ' inactive ' . ($inactiveClientsCount > 1 ? 'companies' : 'company') : '0 active positions' }}</span>
                 </div>
             </a>
 
             {{-- Card 6: Pending Requests --}}
-            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-card cl-stat-filter" data-tab="request">
+            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-card cl-stat-filter {{ $currentTab === 'request' ? 'active' : '' }}" data-tab="request">
                 <div class="cl-card-top">
                     <div class="cl-card-icon purple">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1530,12 +1585,12 @@
                         <div class="cl-card-lbl">Pending Requests</div>
                     </div>
                 </div>
-                <div class="cl-card-sub purple">
+                <div class="cl-card-sub purple" id="wrap_clientRequestSub">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 14 14"/>
                     </svg>
-                    <span>{{ $pendingRequestsCount > 0 ? $pendingRequestsCount . ' action needed' : "You're all caught up" }}</span>
+                    <span id="span_clientRequestSub">{{ $pendingRequestsCount > 0 ? $pendingRequestsCount . ' pending invitation' . ($pendingRequestsCount > 1 ? 's' : '') : "You're all caught up" }}</span>
                 </div>
             </a>
         </div>
@@ -1883,7 +1938,7 @@
         <div class="tbl">
             <div class="tbl-w">
                 <div class="tbl-scroll-container">
-                    <div class="tbl-h" id="clientTableHead">
+                    <div class="tbl-h" id="clientTableHead" style="{{ $currentTab === 'request' ? 'display: none;' : '' }}">
                         <div class="tbl-th-subcard tbl-th-check">
                             <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
                         </div>
@@ -4365,36 +4420,11 @@ window.ClientStateManager = {
                 selectSortOption('recent', 'Recently Added', null, true);
             }
             $('.tbl').addClass('tbl-req');
-            $('#clientTableHead').html(`
-                <div class="tbl-th-subcard tbl-th-check">
-                    <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
-                </div>
-                <div class="tbl-th-subcard">
-                    <div class="tbl-th-label">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                        <span>Company Name</span>
-                    </div>
-                </div>
-                <div class="tbl-th-subcard">
-                    <div class="tbl-th-label">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
-                        <span>Location</span>
-                    </div>
-                </div>
-                <div class="tbl-th-subcard">
-                    <div class="tbl-th-label">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        <span>Request Date</span>
-                    </div>
-                </div>
-                <div class="tbl-th-subcard" style="justify-content:flex-end;">
-                    <span class="tbl-th-label">Action</span>
-                </div>
-            `);
+            $('#clientTableHead').hide().empty();
         } else {
             $('#sort-opt-jobs_desc').show();
             $('.tbl').removeClass('tbl-req');
-            $('#clientTableHead').html(`
+            $('#clientTableHead').show().html(`
                 <div class="tbl-th-subcard tbl-th-check">
                     <input class="tbl-cb" type="checkbox" id="clientCheckAll" onclick="toggleSelectAllClients(this)" />
                 </div>
@@ -6470,17 +6500,20 @@ $(document).on('click', '.request_event', function () {
                 </span>
             `);
 
-            // Optimistically decrement request counters
-            var $reqBadges = $('#span_clientRequest, #tabBadgeRequest');
-            var origReqCount = parseInt($reqBadges.first().text(), 10) || 0;
-            if (origReqCount > 0) {
-                $reqBadges.text(origReqCount - 1);
-            }
-            var $dirBadges = $('#span_clientDirect, #tabBadgeDirect');
-            var origDirCount = parseInt($dirBadges.first().text(), 10) || 0;
-            if (event_id == 1) {
-                $dirBadges.text(origDirCount + 1);
-            }
+            // Optimistically decrement request counters and update dynamic subtitles
+            var origReqCount = parseInt($('#span_clientRequest').text(), 10) || 0;
+            var origDirCount = parseInt($('#span_clientDirect').text(), 10) || 0;
+            var origAllCount = parseInt($('#span_clientAll').text(), 10) || 0;
+
+            var newReqCount = Math.max(0, origReqCount - 1);
+            var newDirCount = (event_id == 1) ? (origDirCount + 1) : origDirCount;
+            var newAllCount = (event_id == 1) ? (origAllCount + 1) : origAllCount;
+
+            updateClientTabCounters({
+                clientRequest: newReqCount,
+                clientDirect: newDirCount,
+                clientAll: newAllCount
+            });
 
             var mutationId = 'mut_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             var url = "{{ route('service_company.clients.request_update') }}";
@@ -6557,10 +6590,11 @@ $(document).on('click', '.request_event', function () {
                     // Deterministic Rollback
                     $actionContainer.html(originalActionsHtml);
                     $row.attr('class', originalClasses);
-                    $reqBadges.text(origReqCount);
-                    if (event_id == 1) {
-                        $('#span_clientDirect, #tabBadgeDirect').text(origDirCount);
-                    }
+                    updateClientTabCounters({
+                        clientRequest: origReqCount,
+                        clientDirect: origDirCount,
+                        clientAll: origAllCount
+                    });
 
                     if (xhr.status === 409) {
                         var conflictMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'This request has already been processed by another recruiter.';
