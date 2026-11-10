@@ -2370,7 +2370,7 @@
             <!-- SUB-CARD 2: SHARE DIRECT REGISTRATION LINK (DISTINCT SOFT EMERALD GREEN BACKGROUND) -->
             @php
                 $encodeCompanyId = base64_encode(auth()->user()->company_id);
-                $shareRegistrationUrl = url('/company-registration-invitation/' . $encodeCompanyId);
+                $shareRegistrationUrl = route('register', ['agency_code' => $encodeCompanyId]);
             @endphp
             <div style="background:linear-gradient(135deg, #f0fdf4 0%, #f7fef9 100%); border:1.5px solid #bbf7d0; border-radius:12px; padding:14px 16px; box-shadow:0 1px 3px rgba(16,185,129,0.05);">
                 <div class="d-flex align-items-center justify-content-between mb-1">
