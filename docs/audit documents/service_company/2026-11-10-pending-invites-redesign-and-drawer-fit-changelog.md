@@ -23,11 +23,15 @@ This upgrade resolves the full 3-item UI/UX and privacy punch list across the Se
    - Completely stripped all email fields (`email`, `company_email`, `root_email`) from the autocomplete JSON API payload to prevent email harvesting and spam campaigns.
    - Search queries match exclusively against `company_name` and `website` across Elasticsearch (`ELASTIC_COMPANIES_INDEX`) and MySQL fallback.
 
-3. **Tab 6: Pending Invites Enterprise Card Stream Redesign (Image 3):**
-   - **Dedicated Sub-Card 4: Invitation Actions:** Sub-Card 4 is now exclusively dedicated to invitation management actions (`Resend Invite` and `Cancel` buttons) with clean enterprise padding, clear icons, and remaining TTL window badge.
-   - **Elevated Dispatch & Expiration Timeline to Tier 5 Bottom Strip:** Moved Dispatched timestamp (`d M, Y • h:i A`), elapsed time (`48m ago`), exact Expiration timestamp (`d M, Y • h:i A`), and remaining TTL pill (`7 days left`, `2 days left`, or `Expired`) to the Bottom Tier Card.
-   - **Escrow & Audit Reference Trace:** Bottom tier combines the timeline with coin auto-refund guarantee (`Auto-refund guarantee: 5 coins refunded if cancelled, declined, or expired`) and unique reference ID (`Ref: #INV-00XXX`).
-   - **Eliminated All Redundancy:** Eradicated repetitive *"Pending Registration"* text (from 4 duplicate occurrences down to 1 authoritative status badge in Sub-Card 1) and removed duplicate email lines.
+3. **Tab 6: Pending Invites Enterprise Card Stream Redesign & Noise Elimination:**
+   - **Replaced "Direct Email Outreach" with Official Website:** Extracted and rendered the agency's verified domain/website with a globe icon (e.g. `agency.com`).
+   - **Removed "5 Coins Escrowed" Text Completely:** Sub-Card 3 renamed to `Engagement` with clean, non-truncated partnership badges (`Platform Partner` vs `Direct Outreach`) and zero coin clutter.
+   - **"5 coins deducted":** Replaced "Auto-refund guarantee" with crisp "5 coins deducted" in the bottom tier strip.
+   - **"Cancel Request":** Replaced "Cancel" with "Cancel Request" on the danger action button.
+   - **Equal Button Sizing (50% / 50%):** Enforced `width: 50%; flex: 1 1 50%;` on both `Resend Invite` and `Cancel Request` for identical dimensions and balanced alignment.
+   - **"Invitation Sent:":** Replaced "Dispatched:" with "Invitation Sent:".
+   - **Tenant Timezone Integration:** Date and time timestamps format according to tenant company settings (`\App\Helper\GeneralMethod::defaultTimeZone($company_id)`) and display the timezone abbreviation (e.g. `10 Nov, 2026 • 01:08 PM IST`).
+   - **Enterprise Headers & Palette:** Standardized headers (`AGENCY`, `LOCATION`, `ENGAGEMENT`, `ACTIONS`) with tailored column grid ratio (`2.5fr 1.05fr 1.15fr 2.3fr`) eliminating all label truncation.
 
 ---
 
@@ -39,20 +43,21 @@ This upgrade resolves the full 3-item UI/UX and privacy punch list across the Se
        ▼ (Tab = request / pending invites)
 [staffing_company_invitation Query]
        ├── SELECT: id, from_company_id, to_company_id, to_email, 
-       │           from_created_at, expires_at, to_invitation_status
+       │           from_created_at, expires_at, to_invitation_status, website
        │
        ▼
 [staffing-partner-ajax.blade.php]
-       ├── Carbon Engine:
-       │     - Dispatched: $dateSentFormatted, $timeAgo
-       │     - Expiry: $expiryDateFormatted, $diffDays, $ttlLabel, $isExpired
+       ├── Carbon Engine (Tenant Timezone):
+       │     - Timezone: \App\Helper\GeneralMethod::defaultTimeZone($company_id)
+       │     - Sent: $dateSentFormatted (d M, Y • h:i A T), $timeAgo
+       │     - Expiry: $expiryDateFormatted (d M, Y • h:i A T), $diffDays, $ttlLabel, $isExpired
        │
-       ├── Sub-Card 1: Agency Identity (1 status badge, no duplicate emails)
+       ├── Sub-Card 1: Agency (Logo/Initials + Name/Industry + Official Website Domain)
        ├── Sub-Card 2: Location (Pin + City/State/Country or "Unspecified")
-       ├── Sub-Card 3: Network & Escrow (Registered/New + 5 Coins Escrowed)
-       ├── Sub-Card 4: Invitation Actions (Resend Invite & Cancel Buttons)
+       ├── Sub-Card 3: Engagement (Partner/Outreach status badge, ZERO coin text)
+       ├── Sub-Card 4: Actions (Resend Invite & Cancel Request at exactly 50%/50% width)
        │
-       └── Bottom Activity Strip (Tier 5): Dispatched + Expires Timeline + Auto-Refund + #INV- Ref ID
+       └── Bottom Activity Strip (Tier 5): Invitation Sent + Expires (with TZ) + 5 coins deducted + #INV- Ref ID
 ```
 
 ---

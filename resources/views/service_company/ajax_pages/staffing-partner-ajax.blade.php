@@ -11,6 +11,11 @@
 @endphp
 
 @if (!empty($isRequest))
+    <style>
+        .is-pending-invite .cl-subcards-grid {
+            grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.05fr) minmax(0, 1.15fr) minmax(0, 2.3fr) !important;
+        }
+    </style>
     {{-- ── TAB 6: PENDING INVITATIONS STREAM (Rule 20 Enterprise Card + Sub-Card Design) ── --}}
     @if (count($invitations) > 0)
         @foreach ($invitations as $inv)
@@ -46,21 +51,25 @@
                 $state = $inv->state_name ?? '';
                 $country = $inv->country_name ?? '';
 
-                // Date & Expiry Calculations (7-Day TTL Window)
-                $createdAt = !empty($inv->from_created_at) ? Carbon::parse($inv->from_created_at) : Carbon::now();
-                $expiresAt = !empty($inv->expires_at) ? Carbon::parse($inv->expires_at) : (clone $createdAt)->addDays(7);
+                // Resolve Tenant Timezone from Settings
+                $tenantTimezone = $tenantTimezone ?? GeneralMethod::defaultTimeZone($company_id ?? null);
+
+                // Date & Expiry Calculations (7-Day TTL Window) in Tenant Timezone
+                $createdAt = !empty($inv->from_created_at) ? Carbon::parse($inv->from_created_at)->setTimezone($tenantTimezone) : Carbon::now($tenantTimezone);
+                $expiresAt = !empty($inv->expires_at) ? Carbon::parse($inv->expires_at)->setTimezone($tenantTimezone) : (clone $createdAt)->addDays(7);
                 
-                $dateSentFormatted = $createdAt->format('d M, Y • h:i A');
+                $tzShort = $createdAt->format('T');
+                $dateSentFormatted = $createdAt->format('d M, Y • h:i A') . ' ' . $tzShort;
                 $timeAgo = GeneralMethod::timeAgo($createdAt);
                 
-                $expiryDateFormatted = $expiresAt->format('d M, Y • h:i A');
-                $now = Carbon::now();
+                $expiryDateFormatted = $expiresAt->format('d M, Y • h:i A') . ' ' . $tzShort;
+                $now = Carbon::now($tenantTimezone);
                 $isExpired = $now->greaterThan($expiresAt);
 
                 if ($isExpired) {
                     $expiryCountdown = 'Expired';
                     $expiryBadgeClass = 'badge-light-danger text-danger';
-                    $ttlLabel = 'TTL Expired';
+                    $ttlLabel = 'Expired';
                 } else {
                     $diffDays = (int) $now->diffInDays($expiresAt);
                     $diffHours = (int) $now->diffInHours($expiresAt);
@@ -93,6 +102,12 @@
                     $statusLabel = 'Expired';
                     $statusClass = 'pill-inactive';
                 }
+
+                // Resolve Official Website (Replacing Direct Email Outreach)
+                $displayWebsite = !empty($inv->website) ? $inv->website : (str_contains($invEmail, '@') ? substr(strrchr($invEmail, '@'), 1) : null);
+                if (!empty($displayWebsite)) {
+                    $displayWebsite = rtrim(preg_replace('~^https?://(www\.)?~i', '', $displayWebsite), '/');
+                }
             @endphp
 
             <div class="cl-primary-card tbl-r is-pending-invite" data-invitation-id="{{ $invId }}" data-agency-name="{{ e($company_name) }}">
@@ -100,7 +115,7 @@
                     <!-- SUB-CARD 1: Agency Invitee Identity -->
                     <div class="cl-subcard cl-subcard-identity">
                         <div class="cl-subcard-head">
-                            <span class="cl-subcard-title" title="Invited agency partner details">Agency Identity</span>
+                            <span class="cl-subcard-title" title="Invited agency partner details">Agency</span>
                             <div class="cl-subcard-badges">
                                 <span class="cl-scope-pill pill-internal type-internal" title="Outbound partnership invitation">Invited Partner</span>
                                 <span class="cl-status-pill {{ $statusClass }}" title="Authoritative invitation status: {{ $statusLabel }}">
@@ -121,17 +136,15 @@
                             <div class="cl-details-box min-w-0">
                                 <div class="cl-name text-truncate" title="{{ e($company_name) }}">{{ $company_name }}</div>
                                 <div class="cl-ind text-truncate" title="Specialization / Industry: {{ e($ind_name) }}">{{ $ind_name }}</div>
-                                @if ($hasCustomName)
+                                @if (!empty($displayWebsite))
+                                    <div class="cl-size text-primary text-truncate d-flex align-items-center gap-1 mt-0.5" style="font-size:10.5px; color:#0284c7;" title="Official Website: {{ e($displayWebsite) }}">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                        </svg>
+                                        <span class="text-truncate">{{ $displayWebsite }}</span>
+                                    </div>
+                                @elseif ($hasCustomName)
                                     <div class="cl-size text-muted text-truncate" title="Contact Email: {{ e($invEmail) }}">{{ $invEmail }}</div>
-                                @elseif (!empty($inv->website))
-                                    <div class="cl-size text-primary text-truncate d-flex align-items-center gap-1" title="Official Website: {{ e($inv->website) }}">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                                        <span>{{ $inv->website }}</span>
-                                    </div>
-                                @else
-                                    <div class="cl-size text-muted text-truncate" title="Direct Email Outreach">
-                                        <span class="badge badge-light-primary py-0 px-1.5" style="font-size:9.5px; font-weight:600;">Direct Email Outreach</span>
-                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -165,87 +178,76 @@
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 3: Network & Escrow Status (Informative & Zero Duplicate Status) -->
+                    <!-- SUB-CARD 3: Partnership & Network Scope (Zero Coin Text) -->
                     <div class="cl-subcard cl-subcard-jobs">
                         <div class="cl-subcard-head">
-                            <span class="cl-subcard-title" title="Platform registration & coin escrow status">Network & Escrow</span>
+                            <span class="cl-subcard-title" title="Partnership and onboarding status">Engagement</span>
                         </div>
-                        <div class="cl-jobs-body tbl-cell-jobs d-flex flex-column justify-content-center" style="gap:5px;">
+                        <div class="cl-jobs-body tbl-cell-jobs d-flex flex-column justify-content-center" style="gap:4px;">
                             <div class="d-flex align-items-center gap-1.5" style="font-size:11px;">
                                 @if ($isRegistered)
-                                    <span class="badge badge-light-success py-0 px-1.5 fw-bold" style="font-size:9.5px;">Registered</span>
-                                    <span class="text-gray-700 text-truncate" title="Agency is registered on JERO">On JERO Network</span>
+                                    <span class="badge badge-light-success py-0.5 px-2 fw-bold text-truncate" style="font-size:10px;">Platform Partner</span>
                                 @else
-                                    <span class="badge badge-light-primary py-0 px-1.5 fw-bold" style="font-size:9.5px;">New Agency</span>
-                                    <span class="text-gray-700 text-truncate" title="External agency invited to join JERO">Direct Outreach</span>
+                                    <span class="badge badge-light-primary py-0.5 px-2 fw-bold text-truncate" style="font-size:10px;">Direct Outreach</span>
                                 @endif
                             </div>
-                            <div class="d-flex align-items-center gap-1.5 text-muted" style="font-size:11px;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M12 6v12M15 9.5a3.5 3.5 0 0 0-5 0 3.5 3.5 0 0 0 0 5 3.5 3.5 0 0 0 5 0"></path>
-                                </svg>
-                                <span title="5 JERO Coins held in escrow until invitation response"><strong>5 Coins</strong> Escrowed</span>
+                            <div class="text-muted text-truncate" style="font-size:10.5px; color:#64748b;" title="{{ $isRegistered ? 'Registered on JERO Network' : 'Registration invitation pending' }}">
+                                {{ $isRegistered ? 'Registered Firm' : 'Awaiting sign-up' }}
                             </div>
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 4: INVITATION ACTIONS (Resend Invite & Cancel) -->
+                    <!-- SUB-CARD 4: INVITATION ACTIONS (Equal Size Buttons) -->
                     <div class="cl-subcard cl-subcard-pipeline">
                         <div class="cl-subcard-head d-flex align-items-center justify-content-between">
-                            <div class="cl-subcard-title-wrap d-flex align-items-center gap-1">
-                                <svg class="cl-subcard-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                                </svg>
-                                <span class="cl-subcard-title" title="Quick invitation management actions">Invitation Actions</span>
-                            </div>
-                            <span class="badge {{ $expiryBadgeClass }} py-0 px-2" style="font-size:9.5px; font-weight:700;" title="Remaining TTL window">
+                            <span class="cl-subcard-title" title="Quick invitation management actions">Actions</span>
+                            <span class="badge {{ $expiryBadgeClass }} py-0.5 px-2" style="font-size:9.5px; font-weight:700;" title="Remaining TTL window">
                                 {{ $expiryCountdown }}
                             </span>
                         </div>
                         <div class="cl-pipe-body tbl-cell-pipeline d-flex align-items-center justify-content-center h-100" style="padding:4px 0;">
-                            <!-- Integrated Action Buttons -->
+                            <!-- Equal Size Action Buttons (50% / 50%) -->
                             <div class="d-flex align-items-center gap-2 w-100">
                                 <button type="button" 
-                                        class="btn btn-sm btn-light-primary fw-bold resend-agency-invite flex-grow-1" 
+                                        class="btn btn-sm btn-light-primary fw-bold resend-agency-invite flex-fill text-truncate" 
                                         data-id="{{ $invId }}" 
                                         data-email="{{ e($invEmail) }}" 
                                         data-company-id="{{ $inv->to_company_id ?? 0 }}"
-                                        style="height:32px; padding:0 10px; font-size:11.5px; display:inline-flex; align-items:center; justify-content:center; gap:5px; border-radius:6px; white-space:nowrap; border:1px solid #bfdbfe; background:#eff6ff;" 
+                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:5px; border-radius:6px; white-space:nowrap; border:1.5px solid #bfdbfe; background:#eff6ff; width:50%; flex:1 1 50%; transition:all 0.2s;" 
                                         title="Resend invitation email to {{ e($invEmail) }}">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                                         <polyline points="23 4 23 10 17 10"/>
                                         <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                                     </svg>
-                                    <span>Resend Invite</span>
+                                    <span class="text-truncate">Resend Invite</span>
                                 </button>
                                 <button type="button" 
-                                        class="btn btn-sm btn-light-danger fw-bold cancel-agency-invite" 
+                                        class="btn btn-sm btn-light-danger fw-bold cancel-agency-invite flex-fill text-truncate" 
                                         data-invitation-id="{{ $invId }}" 
-                                        style="height:32px; padding:0 12px; font-size:11.5px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; white-space:nowrap; border:1px solid #fecaca; background:#fef2f2;" 
-                                        title="Cancel this invitation and auto-refund 5 escrowed coins">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; white-space:nowrap; border:1.5px solid #fecaca; background:#fef2f2; width:50%; flex:1 1 50%; transition:all 0.2s;" 
+                                        title="Cancel this invitation request">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                                         <line x1="18" y1="6" x2="6" y2="18"></line>
                                         <line x1="6" y1="6" x2="18" y2="18"></line>
                                     </svg>
-                                    <span>Cancel</span>
+                                    <span class="text-truncate">Cancel Request</span>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- BOTTOM STRIP (TIER 5): DISPATCH & EXPIRY TIMELINE + ESCROW AUDIT (Moved from Sub-Card 4) -->
-                <div class="cl-card-bottom-strip d-flex align-items-center justify-content-between flex-wrap gap-2" style="padding:7px 14px; background:#fafbfc; border-top:1px solid #f1f5f9; font-size:11px;">
-                    <!-- LEFT: Dispatch & Expiry Timestamps -->
+                <!-- BOTTOM STRIP (TIER 5): AUDIT TIMELINE WITH TIMEZONE & DEDUCTED COINS -->
+                <div class="cl-card-bottom-strip d-flex align-items-center justify-content-between flex-wrap gap-2" style="padding:7px 14px; background:#f8fafc; border-top:1px solid #e2e8f0; font-size:11px;">
+                    <!-- LEFT: Invitation Sent & Expiry with Timezone -->
                     <div class="d-flex align-items-center flex-wrap gap-2 text-muted">
-                        <!-- Dispatched -->
-                        <div class="d-flex align-items-center gap-1.5" title="Dispatched on {{ $dateSentFormatted }}">
+                        <!-- Sent -->
+                        <div class="d-flex align-items-center gap-1.5" title="Invitation sent on {{ $dateSentFormatted }}">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
-                            <span style="color:#64748b;">Dispatched:</span>
+                            <span style="color:#64748b;">Invitation Sent:</span>
                             <strong class="text-gray-900">{{ $dateSentFormatted }}</strong>
                             <span class="text-primary fw-semibold" style="font-size:10px;">({{ $timeAgo }})</span>
                         </div>
@@ -264,14 +266,14 @@
                         </div>
                     </div>
 
-                    <!-- RIGHT: Escrow Auto-Refund Guarantee & Reference ID -->
+                    <!-- RIGHT: 5 Coins Deducted & Audit Reference ID -->
                     <div class="d-flex align-items-center gap-2 text-muted" style="font-size:10.5px;">
-                        <span class="d-flex align-items-center gap-1" title="Coin security: 5 coins auto-refunded if cancelled, declined, or expired">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                <polyline points="9 12 11 14 15 10"/>
+                        <span class="d-flex align-items-center gap-1" style="color:#475569;" title="5 JERO Coins deducted for invitation outreach">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v12M15 9.5a3.5 3.5 0 0 0-5 0 3.5 3.5 0 0 0 0 5 3.5 3.5 0 0 0 5 0"></path>
                             </svg>
-                            <span class="d-none d-md-inline" style="color:#15803d; font-weight:600;">Auto-refund guarantee</span>
+                            <span style="font-weight:600; color:#334155;">5 coins deducted</span>
                         </span>
                         <span style="color:#cbd5e1; font-weight:bold;">•</span>
                         <span>Ref: <strong class="text-gray-700">#INV-{{ str_pad($invId, 5, '0', STR_PAD_LEFT) }}</strong></span>

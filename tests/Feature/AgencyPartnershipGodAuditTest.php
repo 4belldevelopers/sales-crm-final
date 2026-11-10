@@ -776,13 +776,16 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $html = $data['html'];
 
         $this->assertStringContainsString('is-pending-invite', $html);
-        $this->assertStringContainsString('Invitation Actions', $html);
-        $this->assertStringContainsString('Dispatched:', $html);
+        $this->assertStringContainsString('Actions', $html);
+        $this->assertStringContainsString('Invitation Sent:', $html);
         $this->assertStringContainsString('Expires:', $html);
         $this->assertStringContainsString('resend-agency-invite', $html);
+        $this->assertStringContainsString('Resend Invite', $html);
         $this->assertStringContainsString('cancel-agency-invite', $html);
-        $this->assertStringContainsString('5 Coins', $html);
-        $this->assertStringContainsString('Escrowed', $html);
+        $this->assertStringContainsString('Cancel Request', $html);
+        $this->assertStringContainsString('5 coins deducted', $html);
+        $this->assertStringNotContainsString('5 Coins Escrowed', $html);
+        $this->assertStringNotContainsString('Direct Email Outreach', $html);
         $this->assertStringContainsString('Ref:', $html);
         $this->assertStringContainsString('#INV-', $html);
     }
