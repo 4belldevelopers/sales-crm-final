@@ -282,4 +282,53 @@ TXT;
         $this->assertNotNull($attempt);
         $this->assertEquals('SENT', $attempt->status);
     }
+
+    /**
+     * Test 6: Verify JavaScript engine syntax across all 3 Forward Resume engine files.
+     * Guarantees 0 syntax errors, valid AST compilation, and public API exports across:
+     * - resources/views/service_company/cvtracker/_forward_resume_engine.blade.php
+     * - public/assets/modules/fwd-resume/engine.v4.js
+     * - public/js/opendoc/AgyForwardResumeEngine.js
+     */
+    public function test_forward_resume_engine_javascript_syntax_validity(): void
+    {
+        $engineFiles = [
+            base_path('public/assets/modules/fwd-resume/engine.v4.js'),
+            base_path('public/js/opendoc/AgyForwardResumeEngine.js'),
+            resource_path('views/service_company/cvtracker/_forward_resume_engine.blade.php'),
+        ];
+
+        foreach ($engineFiles as $filePath) {
+            $this->assertFileExists($filePath);
+            $content = file_get_contents($filePath);
+
+            if (str_ends_with($filePath, '.blade.php')) {
+                if (preg_match('/<script(?![^>]*\bsrc\b)[^>]*>([\s\S]*?)<\/script>/i', $content, $m)) {
+                    $js = $m[1];
+                } else {
+                    $js = $content;
+                }
+            } else {
+                $js = $content;
+            }
+
+            // Verify required core functions are exported
+            $this->assertStringContainsString('generateAttachmentForCandidate', $js);
+            $this->assertStringContainsString('renderAnonymizedPdfBlob', $js);
+            $this->assertStringContainsString('rdcDiscoverAllContactsFromText', $js);
+            $this->assertStringContainsString('enforcePdfSizeLimit', $js);
+            $this->assertStringContainsString('mergePreScreenedReportAndResume', $js);
+
+            // Execute syntax check via Bun runtime
+            $tmpJs = tempnam(sys_get_temp_dir(), 'fwd_eng_') . '.js';
+            file_put_contents($tmpJs, "try { new Function(" . json_encode($js) . "); console.log('SYNTAX_OK'); } catch(e) { console.error('SYNTAX_ERR:' + e.message); process.exit(1); }");
+            $out = [];
+            $code = 0;
+            exec("bun run " . escapeshellarg($tmpJs) . " 2>&1", $out, $code);
+            @unlink($tmpJs);
+
+            $this->assertEquals(0, $code, "JS Syntax Error in {$filePath}: " . implode("\n", $out));
+            $this->assertContains('SYNTAX_OK', $out);
+        }
+    }
 }

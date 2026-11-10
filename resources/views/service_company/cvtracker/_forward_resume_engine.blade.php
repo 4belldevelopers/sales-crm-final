@@ -3205,7 +3205,6 @@
     } finally {
       try { if (doc && typeof doc.destroy === 'function') doc.destroy(); } catch (e) {}
     }
-    }
   }
 
   /**

@@ -2387,6 +2387,35 @@ function updateTestSendButtonState() {
     }
 }
 
+async function ensureTestFwdEngine() {
+    if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.generateAttachmentForCandidate === 'function') {
+        return window.AgyForwardResumeEngine;
+    }
+    if (window.AgyForwardResumeHelper && typeof window.AgyForwardResumeHelper.generateAttachmentForCandidate === 'function') {
+        return window.AgyForwardResumeHelper;
+    }
+    if (typeof window.AgyForwardResumeEngine === 'undefined') {
+        try {
+            await new Promise(function (resolve, reject) {
+                var s = document.createElement('script');
+                s.src = '/assets/modules/fwd-resume/engine.v4.js?v=' + Date.now();
+                s.onload = resolve;
+                s.onerror = function () {
+                    var s2 = document.createElement('script');
+                    s2.src = '/js/opendoc/AgyForwardResumeEngine.js?v=' + Date.now();
+                    s2.onload = resolve;
+                    s2.onerror = reject;
+                    document.head.appendChild(s2);
+                };
+                document.head.appendChild(s);
+            });
+        } catch (e) {
+            console.warn('[test_fwd_resume] Dynamic engine load warning:', e);
+        }
+    }
+    return window.AgyForwardResumeEngine || window.AgyForwardResumeHelper || null;
+}
+
 async function startTestCompilationForOption(optId) {
     if (!optId || optId === 1) return;
     _testFwdIsCompiling = true;
@@ -2408,6 +2437,9 @@ async function startTestCompilationForOption(optId) {
 
     try {
         var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
+        if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
+            engine = await ensureTestFwdEngine();
+        }
         if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
             throw new Error('Forward Resume engine core is not loaded.');
         }
@@ -3698,6 +3730,12 @@ window.onTestFwdSubmitClick = async function (e) {
                     };
                     var jobSkills = @json($jobSkills ?? []);
                     var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
+                    if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
+                        engine = await ensureTestFwdEngine();
+                    }
+                    if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
+                        throw new Error('Forward Resume engine core is not loaded.');
+                    }
                     blob = await engine.generateAttachmentForCandidate(cand, optId, companyData, jobSkills);
                     cached[cand.id] = blob;
                 }
