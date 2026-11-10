@@ -58,9 +58,9 @@ sequenceDiagram
 | `resources/views/service_company/cvtracker/test_fwd_resume.blade.php` | Blade Drawer | Replaced checkbox with static badge indicator, removed event listeners, and set `copy_to_self: 1`. |
 | `resources/views/service_company/cvtracker/fwd_resume.blade.php` | Fallback Drawer | Replaced checkbox with static badge indicator, removed event listeners, and set `copy_to_self: 1`. |
 | `resources/views/service_company/bench-candidates/partials/forward_resume_drawer.blade.php` | Bench Drawer | Replaced checkbox with static badge indicator, removed event listeners, and set `copy_to_self: 1`. |
-| `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` | Backend API | Made recruiter copy to self mandatory by default without checking checkbox boolean; maintained mutual exclusion. |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` | Backend API | Made recruiter copy to self mandatory by default without checking checkbox boolean; maintained mutual exclusion; bound `$copyToSelf` to Outbox `DB::transaction` closure `use()` statement. |
 | `app/Http/Controllers/ServiceCompany/ServiceCompanyBenchCandidatesController.php` | Backend API | Made recruiter copy to self mandatory by default with server-authoritative authenticated user email resolution. |
-| `tests/Feature/ForwardResumeSendCopyToSelfTest.php` | Automated Test Suite | Updated test suite to verify mandatory auto-copy behavior without checkbox requirement (6/6 tests passing). |
+| `tests/Feature/ForwardResumeSendCopyToSelfTest.php` | Automated Test Suite | Updated test suite to verify mandatory auto-copy behavior without checkbox requirement, and added closure variable scope assertion (7/7 tests passing). |
 
 ---
 
@@ -96,3 +96,42 @@ OK (11 tests, 83 assertions)
 4. `test_deliverability_quota_capped_at_five_recipients`: Confirms system enforces the 5-recipient deliverability safeguard with the recruiter copy included.
 5. `test_coins_reservation_charges_strictly_for_to_recipients`: Confirms tenant coins are deducted strictly based on primary `$to` count.
 6. `test_ses_provider_delivers_cc_and_tracks_delivery_attempts`: Confirms SesForwardResumeProvider dispatches to both `$to` and `$cc` and logs delivery attempts.
+7. `test_cvtracker_controller_outbox_transaction_closure_scope`: AST reflection test asserting `$copyToSelf` is imported into `DB::transaction(function () use (...))` closure scope with zero undefined variable exceptions.
+
+---
+
+## 6. Post-Deployment Closure Scope Bugfix
+
+### Issue Identified
+When recruiters triggered "Send Email" in the Forward Resume Drawer on production, a popup error was displayed:
+```text
+Error: Undefined variable $copyToSelf
+```
+
+### Root Cause Analysis
+In `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` around line 5216, the Outbox pattern wraps event payload persistence inside a database transaction:
+```php
+DB::transaction(function () use (
+    $fwdRequestUuid,
+    $companyId,
+    $userId,
+    $to,
+    $subject,
+    $formatId,
+    $outboxPayload,
+    $fromAddress,
+    $senderName,
+    $cc,
+    $replyToEmail
+) {
+    ...
+    'copy_to_self' => $copyToSelf, // Throws Undefined variable $copyToSelf because omitted from use()
+    ...
+});
+```
+PHP anonymous functions enforce strict lexical scope isolation. Since `$copyToSelf` was initialized outside the closure on line 5050 but omitted from the closure's `use (...)` parameter list, referencing it on line 5263 threw a fatal `ErrorException: Undefined variable $copyToSelf`.
+
+### Fix Applied
+1. Added `$copyToSelf` to the `use (...)` declaration list of `DB::transaction(...)` in `ServiceCompanyCvTrackerController.php` (line 5219).
+2. Added contract regression test `test_cvtracker_controller_outbox_transaction_closure_scope` using PHP Reflection to verify that `$copyToSelf` is declared in the closure's `use()` clause.
+3. Verified 100% test pass (13 tests, 108 assertions across Forward Resume test suite).

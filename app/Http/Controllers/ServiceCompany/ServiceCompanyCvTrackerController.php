@@ -5216,6 +5216,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $fromAddress,
             $senderName,
             $cc,
+            $copyToSelf,
             $replyToEmail
         ) {
             $fwdReq = ForwardRequest::where('uuid', $fwdRequestUuid)->first();
