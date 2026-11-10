@@ -2231,8 +2231,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'sort' => $sort,
                     'query' => $boolQuery,
                     '_source' => [
-                        'id', 'company_name', 'logo', 'ind_name', 'city_name', 'country_name',
-                        'created_at', 'to_invitation_status', 'staffing_company_invitation_id',
+                        'id', 'company_name', 'logo', 'website', 'ind_name', 'city_name', 'country_name',
+                        'created_at', 'from_created_at', 'expires_at', 'to_invitation_status', 'staffing_company_invitation_id',
                         'from_company_id', 'client_id', 'tags',
                     ],
                 ],
@@ -2378,6 +2378,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? 0),
                     'from_company_id' => (int) ($rowObj->from_company_id ?? 0),
                     'to_invitation_status' => (int) ($rowObj->to_invitation_status ?? 0),
+                    'website' => (string) ($rowObj->website ?? ''),
+                    'expires_at' => ! empty($rowObj->expires_at) ? (string) $rowObj->expires_at : null,
                     'connected_on' => (string) $newDate,
                     'days_ago' => (string) $daysAgo,
                 ];
