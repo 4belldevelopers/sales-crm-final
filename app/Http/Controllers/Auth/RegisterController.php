@@ -162,7 +162,6 @@ class RegisterController extends SaasFrontBaseController
                     'from_status' => 1,
                     'from_created_at' => now()->toDateString(),
                     'to_company_id' => $user->company_id,
-                    'to_client_id' => $toClientId,
                     'to_email' => $user->email,
                     'to_status' => 1,
                     'to_invitation_status' => 1,
