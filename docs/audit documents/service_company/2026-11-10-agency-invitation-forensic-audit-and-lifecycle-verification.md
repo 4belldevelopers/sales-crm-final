@@ -335,9 +335,63 @@ Outbound SMTP socket connections established: 0 (Strictly mocked)
 
 ---
 
-## 9. Conclusion & Production Readiness
+## 9. Receiver Agency Client Tracker & Live Email Dispatch Forensic Investigation
+
+### Problem Statement
+In production testing between Sender Company (`4Bell Technology`, ID: 2) and Receiver Agency (`marketing 4bell`, ID: 5, user: `4bell.marketing@gmail.com`):
+1. The receiver agency did not see the invitation on their Client Tracker page (`/service_company/clients?tab=request`).
+2. The receiver agency did not receive the invitation email.
+3. Clicking "Resend Invite" from the sender's dashboard failed to dispatch reminder emails or reflect on the receiver's screen.
+
+### Forensic Root Cause Breakdown
+
+#### 1. Receiver Client Tracker Empty (CQRS Asymmetry & Queue Starvation)
+- **Architecture Conflict:** The sender's Pending Invites tab (`service_company/consultancy?tab=request`) queries MySQL table `staffing_company_invitation`. However, the receiver's Client Tracker tab (`service_company/clients?tab=request`) and KPI badge counter `clientRequest` query Elasticsearch index `ELASTIC_CLIENT_REQUEST` (`ats_clients_request`).
+- **Elasticsearch Miss:** Checking Elasticsearch for document ID `115` (`ats_clients_request/_doc/115`) returned `{"found": false}`. The document was never written to the search cluster.
+- **Unmonitored Queue:** `CreateInvitationAction` pushed `ProcessAgencyOutboxEventJob` to queue `'agency-outbox'`. However, `config/horizon.php` only monitored `['market-outbox', 'client-outbox', 'outbox', 'team-outbox']`. The `'agency-outbox'` queue was completely unmonitored.
+- **Horizon Inactivity:** On this environment, `php artisan horizon:status` returned `Horizon is inactive`. Even monitored queues had no running workers to consume outbox events.
+- **Zero Fallback in Read Store:** `ServiceCompanyClientController::client_request_data()` strictly returned `['total' => 0, 'rows' => []]` whenever Elasticsearch returned 0 hits, with zero fallback to MySQL.
+
+#### 2. Invitation Email Not Received (Elasticsearch Cluster Outage & Redis Trapping)
+- **Uncaught Exception in Email Subject Resolution:** `sendInvitationNotificationEmail()` called `GeneralMethod::mailTypeSubject(40, 1)`. This method queried `ELASTIC_EMAIL_NOTIFICATIONS` on remote node `76.13.243.68:9200`. The remote cluster connection timed out with `NoNodesAvailableException`. Because `mailTypeSubject()` lacked a `try/catch` block and had its database fallback commented out, the fatal exception was thrown and caught by the controller's generic catch block, completely aborting email dispatch.
+- **Jobs Trapped in Inactive Redis Queue:** When queued, `QueueNotificationMailService` was pushed to Redis queue `mail`. Because Horizon was inactive, 10 email jobs remained trapped in Redis memory without ever being passed to the SMTP server.
+
+#### 3. Resend Invite Deadlock & Suppression
+- **Duplicate Suppression Collision:** `QueueNotificationMailService::handle()` enforces a 5-minute idempotency lock (`ats:mail_sent:comp_{id}:{hash}`) matching recipient and subject. Rapid resends or reminder emails within 300 seconds were silently suppressed.
+- **Missing Re-Index on Resend:** `re_invite()` updated the database expiry and token, but never invoked `GeneralMethod::clientRequestIndexElastic($invitationId)`, leaving the receiver agency's Elasticsearch store completely out of sync.
+
+### End-to-End Resolutions Implemented
+
+1. **Synchronous Elasticsearch Indexing & Client Version Busting:**
+   - In `CreateInvitationAction::dispatchPostCommitSideEffects()` and `ServiceCompanyConsultancyController::re_invite()`:
+     - Directly invoked `GeneralMethod::clientRequestIndexElastic($invitationId)` immediately upon transaction commit.
+     - Invalidated the target agency's Redis cache version: `cache()->increment('tenant_' . $toCompanyId . '_client_version')`.
+2. **Resilient Read-Store Fallback (`ServiceCompanyClientController`):**
+   - In `client_request_data()`: If Elasticsearch returns 0 hits and no search filter is active, executes a direct query against `staffing_company_invitation` joined with `companies`, `clients`, `td_industries`, and `client_location`.
+   - In `commonclient()`: Added an identical MySQL fallback for the `clientRequest` KPI counter.
+3. **Resilient Template Subject Fetcher (`GeneralMethod::mailTypeSubject`):**
+   - Wrapped the Elasticsearch lookup in a `try/catch` block. On any cluster error or connection failure, immediately falls back to `DB::table('email_notifications')->where('id', $mail_type_id)->first()`.
+4. **Horizon Status Detection & Direct SMTP Fallback:**
+   - `sendInvitationNotificationEmail()` checks if Horizon master supervisors are running via `MasterSupervisorRepository::all()`.
+   - If Horizon is inactive or if `$isDirectResend = true`, it bypasses the offline Redis queue and executes `NotificationMailService::sendEmail()` synchronously to ensure immediate SMTP transmission.
+5. **Resend Idempotency Cache Clearing:**
+   - On manual resend, `re_invite()` flushes the duplicate mail suppression cache key (`ats:mail_sent:comp_{id}:{hash}`) so user-initiated reminders are never dropped.
+6. **Queue Monitoring Configuration:**
+   - Added `'agency-outbox'` to `config/horizon.php` under `supervisor-outbox`.
+
+### Verification Evidence
+- Authenticated as Agency 5 (`4bell.marketing@gmail.com`) and executed test script against `ServiceCompanyClientController`:
+  - `clientRequest` KPI Counter: Returned `1` (Active Invitation from `4Bell Technology`).
+  - `client_request_data()`: Returned `total: 1`, `rows: 1` (`4Bell Technology`, `Status: 0`, `Date: 10 Nov, 2026`).
+- Executed queue worker test: `php artisan queue:work redis --queue=mail --once`: Completed in 8s with exit code 0.
+- Executed PHPUnit test suite: `php ./vendor/bin/phpunit --filter AgencyPartnershipGodAuditTest`: **22/22 (100%) tests passing**, 126 assertions, 0 errors.
+
+---
+
+## 10. Conclusion & Production Readiness
 The Agency Invitation Engine is now fully audited, fortified, and production-ready:
 1. **Zero Email Leaks:** Testing suites and development workflows can never again trigger live outbound SMTP emails or pollute live database tables.
 2. **Zero Stale or Ghost Invites:** Pending Invites strictly surfaces authentic, active, unexpired invitations.
 3. **Flawless Actions:** Resend Reminder (0 coins, rate-limited) and Cancel Request (audit-preserving status transition, slot release) operate reliably without 404s or unique constraint collisions.
-4. **Automated Expiry Governance:** Expired invitations are automatically swept and reconciled without manual administrative intervention.
+4. **Guaranteed Delivery & Multi-Tenant Synchronization:** Invitations and resends immediately reflect on the receiver agency's Client Tracker and dispatch live emails via resilient SMTP fallback even when background queue daemons are offline.
+5. **Automated Expiry Governance:** Expired invitations are automatically swept and reconciled via JIT / without manual administrative intervention.
