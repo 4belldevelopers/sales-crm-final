@@ -193,7 +193,7 @@ class UnifiedRegistrationOption2Test extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('kt_agency_connect_card');
-        $response->assertSee('Accept &amp; Connect Agency', false);
+        $response->assertSee('Accept & Connect Agency');
 
         // 2. POST /register/agency-connect establishes the relationship
         $connectResponse = $this->actingAs($this->existingAgencyUser)
