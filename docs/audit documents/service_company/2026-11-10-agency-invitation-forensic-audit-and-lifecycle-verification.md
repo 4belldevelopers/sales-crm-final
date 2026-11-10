@@ -214,14 +214,14 @@ The system features four distinct entry points where agency invitations are init
 | `-1` | **Declined** | Agency explicitly declined the invitation. | `NULL` | Refunded | No (Historical) |
 | `-2` | **Expired / Cancelled** | Validity period elapsed (7 days) OR cancelled by client. | `NULL` | Refunded | No (Historical) |
 
-### Expiry Mechanics
+### Expiry Mechanics (Pure Zero-Cron / JIT Architecture)
 - **Validity Period:** Exactly **7 days** from dispatch (`expires_at = now()->addDays(7)`).
 - **Timezone Awareness:** Timestamps are formatted per the tenant's configured timezone (`GeneralMethod::defaultTimeZone($company_id)`) with explicit timezone abbreviations (e.g. `10 Nov, 2026 • 01:08 PM IST`).
-- **Automated Reconciler:** `ReconcileExpiredInvitationsCommand` executes hourly:
-  ```bash
-  php artisan agency:reconcile-expired-invitations
-  ```
-  Transitions all invitations where `to_invitation_status = 0` and `expires_at < now()` to status `-2`, clears `active_invite_slot`, and publishes `AGENCY_INVITATION_EXPIRED`.
+- **Zero-Cron / Just-In-Time (JIT) Evaluation Standard (Rule 22):**
+  - **No Background Polling:** In strict compliance with JERO's 0% server/DB strain target, NO scheduled cron job runs to sweep expired invitations.
+  - **On Read (Listings/Counters):** The pending invites query dynamically filters `WHERE to_invitation_status = 0 AND (expires_at IS NULL OR expires_at > NOW())`. Expired invitations disappear from the UI automatically with zero background task overhead.
+  - **On Access / Action:** When an agency opens an expired invitation link in `AcceptInvitationAction`, or when a company creates a new invite to the same agency in `CreateInvitationAction`, the expired slot is lazily transitioned (`to_invitation_status = -2, active_invite_slot = NULL`) within the existing transaction.
+  - **Optional On-Demand CLI Utility:** `ReconcileExpiredInvitationsCommand` (`php artisan agency:reconcile-expired-invitations`) is retained solely as an optional manual maintenance utility and is NOT scheduled in crontab.
 
 ---
 
