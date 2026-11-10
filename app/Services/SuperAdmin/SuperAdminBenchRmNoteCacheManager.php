@@ -83,9 +83,14 @@ class SuperAdminBenchRmNoteCacheManager
         $rawStatus = strtolower(trim((string) ($params['status'] ?? '')));
         $normalizedStatus = in_array($rawStatus, ['active', 'inactive'], true) ? $rawStatus : 'all';
 
+        $page = max(1, (int) ($params['page'] ?? 1));
+        $perPage = max(1, min(100, (int) ($params['per_page'] ?? 10)));
+
         return [
             'q' => $boundedSearch,
             'st' => $normalizedStatus,
+            'p' => $page,
+            'pp' => $perPage,
         ];
     }
 

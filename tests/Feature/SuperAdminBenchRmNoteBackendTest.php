@@ -496,4 +496,49 @@ class SuperAdminBenchRmNoteBackendTest extends TestCase
                 ],
             ]);
     }
+
+    /**
+     * Test 12: Standard Super Admin Pagination: returns rendered pagination controls matching other pages.
+     */
+    public function test_bench_rm_note_pagination_structure_and_controls(): void
+    {
+        $this->actingAs($this->superAdmin);
+
+        // 1. Initial full page load contains pagination bar and stream container
+        $webResponse = $this->get(route('superadmin.rm-note.index', ['page' => 1, 'per_page' => 5]));
+        $webResponse->assertStatus(200);
+        $webResponse->assertSee('brmnotePaginationContainer', false);
+
+        // 2. AJAX pagination endpoint returns JSON with rendered HTML, pagination bar, and metadata
+        $ajaxResponse = $this->getJson(route('superadmin.rm-note.index', ['page' => 1, 'per_page' => 5]), [
+            'X-Requested-With' => 'XMLHttpRequest',
+        ]);
+
+        $ajaxResponse->assertStatus(200)
+            ->assertJsonPath('status', 'success')
+            ->assertJsonStructure([
+                'status',
+                'html',
+                'pagination',
+                'total',
+                'counts' => ['total', 'active', 'inactive'],
+                'data' => [
+                    'templates',
+                    'totalCount',
+                    'activeCount',
+                    'inactiveCount',
+                    'html',
+                    'pagination',
+                    'paginationData',
+                ],
+            ]);
+
+        $json = $ajaxResponse->json();
+        $this->assertLessThanOrEqual(5, count($json['data']['templates']));
+        if ($json['total'] > 0) {
+            $this->assertStringContainsString('sa-pagination-bar', $json['pagination']);
+            $this->assertStringContainsString('sa-pagination-controls', $json['pagination']);
+            $this->assertStringContainsString('page-link', $json['pagination']);
+        }
+    }
 }

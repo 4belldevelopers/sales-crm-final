@@ -46,22 +46,53 @@ class BenchRmNoteTemplateController extends SuperAdminBaseController
     {
         $search = $request->input('search');
         $status = $request->input('status');
+        $page = max(1, (int) $request->input('page', 1));
+        $perPage = max(1, min(100, (int) ($request->input('per_page') ?: $request->input('size') ?: $request->input('limit') ?: 10)));
 
-        $result = $this->readService->getAllTemplates($search, $status);
+        $result = $this->readService->getAllTemplates($search, $status, $page, $perPage);
 
         $this->totalCount = $result['totalCount'];
         $this->activeCount = $result['activeCount'];
         $this->inactiveCount = $result['inactiveCount'];
         $this->templates = $result['templates'];
+        $filteredTotal = $result['filteredTotal'] ?? $result['totalCount'];
+
+        $pagination = [
+            'total' => $filteredTotal,
+            'current_page' => $page,
+            'last_page' => max(1, (int) ceil($filteredTotal / $perPage)),
+            'per_page' => $perPage,
+            'listType' => 'templates',
+        ];
+
+        $paginationHtml = view('super-admin.ajax_pages.pagination', compact('pagination'))->render();
+        $this->paginationHtml = $paginationHtml;
+        $this->pagination = $pagination;
+        $this->filteredTotal = $filteredTotal;
+        $this->currentPage = $page;
+        $this->perPage = $perPage;
 
         if ($request->ajax() || $request->wantsJson()) {
+            $html = view('super-admin.rm-note.card_items', ['templates' => $this->templates])->render();
+
             return response()->json([
                 'status' => 'success',
+                'html' => $html,
+                'pagination' => $paginationHtml,
+                'total' => $filteredTotal,
+                'counts' => [
+                    'total' => $this->totalCount,
+                    'active' => $this->activeCount,
+                    'inactive' => $this->inactiveCount,
+                ],
                 'data' => [
                     'templates' => $this->templates,
                     'totalCount' => $this->totalCount,
                     'activeCount' => $this->activeCount,
                     'inactiveCount' => $this->inactiveCount,
+                    'html' => $html,
+                    'pagination' => $paginationHtml,
+                    'paginationData' => $pagination,
                 ],
             ]);
         }

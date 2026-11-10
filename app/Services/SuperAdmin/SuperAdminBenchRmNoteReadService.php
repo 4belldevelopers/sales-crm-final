@@ -55,19 +55,23 @@ class SuperAdminBenchRmNoteReadService
      * @param  string|null  $status  Optional status filter ('all', 'active', 'inactive')
      * @return array{templates: Collection, totalCount: int, activeCount: int, inactiveCount: int}
      */
-    public function getAllTemplates(?string $search = null, ?string $status = null): array
+    public function getAllTemplates(?string $search = null, ?string $status = null, int $page = 1, int $perPage = 10): array
     {
         $search = trim((string) $search);
         $status = strtolower(trim((string) $status));
+        $page = max(1, $page);
+        $perPage = max(1, min(100, $perPage));
 
         $cacheParams = [
             'search' => $search,
             'status' => $status,
+            'page' => $page,
+            'per_page' => $perPage,
         ];
 
         // L2 In-Memory Cache Lookup (Redis / Dragonfly)
-        $cached = SuperAdminBenchRmNoteCacheManager::rememberList($cacheParams, function () use ($search, $status) {
-            return $this->fetchFromElasticsearch($search, $status);
+        $cached = SuperAdminBenchRmNoteCacheManager::rememberList($cacheParams, function () use ($search, $status, $page, $perPage) {
+            return $this->fetchFromElasticsearch($search, $status, $page, $perPage);
         });
 
         // Hydrate hits into stdClass objects for seamless Blade template compatibility
@@ -86,11 +90,17 @@ class SuperAdminBenchRmNoteReadService
             return $obj;
         });
 
+        $filteredTotal = (int) ($cached['filteredTotal'] ?? $cached['totalCount']);
+
         return [
             'templates' => $templates,
+            'filteredTotal' => $filteredTotal,
             'totalCount' => (int) $cached['totalCount'],
             'activeCount' => (int) $cached['activeCount'],
             'inactiveCount' => (int) $cached['inactiveCount'],
+            'currentPage' => $page,
+            'perPage' => $perPage,
+            'lastPage' => max(1, (int) ceil($filteredTotal / $perPage)),
         ];
     }
 
@@ -132,17 +142,19 @@ class SuperAdminBenchRmNoteReadService
     /**
      * Query Elasticsearch index ELASTIC_BENCH_RM_NOTE_MASTER with aggregations.
      */
-    protected function fetchFromElasticsearch(string $search, string $status): array
+    protected function fetchFromElasticsearch(string $search, string $status, int $page = 1, int $perPage = 10): array
     {
         $indexName = $this->getIndexName();
-        $cacheParams = ['search' => $search, 'status' => $status];
+        $page = max(1, $page);
+        $perPage = max(1, min(100, $perPage));
+        $cacheParams = ['search' => $search, 'status' => $status, 'page' => $page, 'per_page' => $perPage];
 
         // Circuit Breaker Fast-Fail Check: if tripped to OPEN, bypass network timeout and read from fallback cache
         if (! BenchRmNoteCircuitBreaker::isAvailable()) {
             Log::info('[CIRCUIT_BREAKER] Bench RM Note ES circuit is OPEN/unavailable. Fast-failing to DB fallback.');
 
-            return SuperAdminBenchRmNoteCacheManager::rememberDbFallback($cacheParams, function () use ($search, $status) {
-                return $this->fallbackDatabaseRead($search, $status);
+            return SuperAdminBenchRmNoteCacheManager::rememberDbFallback($cacheParams, function () use ($search, $status, $page, $perPage) {
+                return $this->fallbackDatabaseRead($search, $status, $page, $perPage);
             });
         }
 
@@ -183,8 +195,12 @@ class SuperAdminBenchRmNoteReadService
                 $mustClauses[] = ['term' => ['status' => 0]];
             }
 
+            $from = ($page - 1) * $perPage;
+            $size = $perPage;
+
             $body = [
-                'size' => 1000,
+                'from' => $from,
+                'size' => $size,
                 '_source' => ['id', 'company_id', 'title', 'content', 'status', 'version', 'created_at', 'updated_at'],
                 'track_total_hits' => true,
                 'sort' => [
@@ -219,7 +235,8 @@ class SuperAdminBenchRmNoteReadService
                 $hits[] = $src;
             }
 
-            $totalCount = (int) ($response['hits']['total']['value'] ?? count($hits));
+            $filteredTotal = (int) ($response['hits']['total']['value'] ?? count($hits));
+            $totalCount = $filteredTotal;
             $activeCount = (int) ($response['aggregations']['active_count']['doc_count'] ?? 0);
             $inactiveCount = (int) ($response['aggregations']['inactive_count']['doc_count'] ?? 0);
 
@@ -233,6 +250,7 @@ class SuperAdminBenchRmNoteReadService
 
             return [
                 'hits' => $hits,
+                'filteredTotal' => $filteredTotal,
                 'totalCount' => $totalCount,
                 'activeCount' => $activeCount,
                 'inactiveCount' => $inactiveCount,
@@ -241,8 +259,8 @@ class SuperAdminBenchRmNoteReadService
             BenchRmNoteCircuitBreaker::recordFailure($e);
             Log::warning('SuperAdminBenchRmNoteReadService ES read failed, invoking circuit-breaker fallback: '.$e->getMessage());
 
-            return SuperAdminBenchRmNoteCacheManager::rememberDbFallback($cacheParams, function () use ($search, $status) {
-                return $this->fallbackDatabaseRead($search, $status);
+            return SuperAdminBenchRmNoteCacheManager::rememberDbFallback($cacheParams, function () use ($search, $status, $page, $perPage) {
+                return $this->fallbackDatabaseRead($search, $status, $page, $perPage);
             });
         }
     }
@@ -308,7 +326,7 @@ class SuperAdminBenchRmNoteReadService
     /**
      * Circuit breaker fallback database read path when Elasticsearch is unavailable.
      */
-    protected function fallbackDatabaseRead(string $search, string $status): array
+    protected function fallbackDatabaseRead(string $search, string $status, int $page = 1, int $perPage = 10): array
     {
         try {
             BenchRmNoteCircuitBreaker::recordFallbackRead();
@@ -328,7 +346,13 @@ class SuperAdminBenchRmNoteReadService
                 $query->where('status', 0);
             }
 
-            $rows = $query->orderBy('id', 'desc')->get();
+            $filteredTotal = (clone $query)->count();
+
+            if ($perPage > 0) {
+                $rows = $query->orderBy('id', 'desc')->skip(($page - 1) * $perPage)->take($perPage)->get();
+            } else {
+                $rows = $query->orderBy('id', 'desc')->get();
+            }
 
             // Calculate overall totals
             $totalCount = DB::table('bench_rm_note_master')->whereNull('company_id')->count();
@@ -360,6 +384,7 @@ class SuperAdminBenchRmNoteReadService
 
             return [
                 'hits' => $hits,
+                'filteredTotal' => $filteredTotal,
                 'totalCount' => $totalCount,
                 'activeCount' => $activeCount,
                 'inactiveCount' => $inactiveCount,
