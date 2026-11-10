@@ -2484,19 +2484,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $rowsDto[] = [
                     'id' => (int) ($rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0)),
                     'client_id' => (int) ($rowObj->client_id ?? 0),
-<<<<<<< HEAD
                     'target_id' => (int) $rowTargetId,
                     'name' => ucwords($cleanName),
                     'company_name' => ucwords($cleanName),
-=======
-                    'target_id' => (int) ($rowObj->client_id ?: ($rowObj->from_company_id ?: ($rowObj->id ?? 0))),
-                    'name' => ucwords($cleanName),
-                    'company_name' => ucwords($rowObj->company_name ?? ''),
-                    'is_pending_request' => true,
-                    'is_direct' => true,
-                    'client_type' => 'Direct Client',
-                    'client_type_css' => 'show-detail-direct',
->>>>>>> 700edc2d027557ee5a72098b4760228ae84f0bc8
                     'logo_url' => (string) $background_image,
                     'initials' => (string) $initials,
                     'bg_color' => (string) $bgTextDecore,
@@ -2510,7 +2500,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'country' => ! empty($reqCountry) ? ucwords(strtolower((string) $reqCountry)) : '',
                     'city_name' => (string) $reqCity,
                     'country_name' => (string) $reqCountry,
-<<<<<<< HEAD
                     'country_id' => null,
                     'country_ids' => [],
                     'locations' => [],
@@ -2522,8 +2511,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'client_type' => 'Direct Client',
                     'is_active_hiring' => false,
                     'is_inactive' => false,
-=======
->>>>>>> 700edc2d027557ee5a72098b4760228ae84f0bc8
                     'staffing_company_invitation_id' => (int) ($rowObj->staffing_company_invitation_id ?? ($rowObj->id ?? 0)),
                     'from_company_id' => (int) ($rowObj->from_company_id ?? 0),
                     'to_invitation_status' => (int) ($rowObj->to_invitation_status ?? 0),
@@ -2671,11 +2658,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $pendingData = array_map(function ($hit) {
                         $src = $hit['_source'];
                         $src['is_pending_request'] = true;
+
                         return $src;
                     }, $response['hits']['hits']);
                 }
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('[getPendingClientInvitations] ES error: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::warning('[getPendingClientInvitations] ES error: '.$e->getMessage());
                 $pendingData = [];
             }
         }
@@ -2732,6 +2720,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $pendingData = $dbQuery->orderBy('staffing_company_invitation.id', 'desc')->get()->map(function ($row) {
                 $arr = (array) $row;
                 $arr['is_pending_request'] = true;
+
                 return $arr;
             })->toArray();
         }
