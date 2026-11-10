@@ -43,6 +43,11 @@ class UnifiedRegistrationOption2Test extends TestCase
 
         $this->withoutMiddleware([\App\Http\Middleware\EnsureOneDeviceLogin::class]);
 
+        \Illuminate\Support\Facades\Queue::fake([
+            \App\Jobs\ElasticCompanyIndex::class,
+            \App\Jobs\QueueNotificationMailService::class,
+        ]);
+
         $clientUser = User::withoutGlobalScopes()
             ->where('company_id', $this->invitingCompanyId)
             ->where('root_user', 1)
@@ -127,7 +132,8 @@ class UnifiedRegistrationOption2Test extends TestCase
     public function test_scenario_b_new_agency_registration_establishes_partnership(): void
     {
         $code = base64_encode((string) $this->invitingCompanyId);
-        $uniqueEmail = 'new-agency-'.uniqid().'@testagency.com';
+        $uniqueId = uniqid();
+        $uniqueEmail = 'new-agency-'.$uniqueId.'@testagency-'.$uniqueId.'.com';
 
         $payload = [
             'name' => 'John Agency Partner',
@@ -135,7 +141,7 @@ class UnifiedRegistrationOption2Test extends TestCase
             'password' => 'SecurePass123!@#',
             'contact_number' => '9876543210',
             'contact_code' => '+1',
-            'company_name' => 'Apex Talent Staffing',
+            'company_name' => 'Apex Talent Staffing '.$uniqueId,
             'company_type' => 1,
             'agency_code' => $code,
         ];
@@ -172,6 +178,13 @@ class UnifiedRegistrationOption2Test extends TestCase
 
         $this->assertNotNull($relation);
         $this->assertEquals(1, (int) $relation->final_status);
+
+        // Clean up created test entities
+        DB::table('staffing_company_relation')->where('to_company_id', $newCompany->id)->delete();
+        DB::table('staffing_company_invitation')->where('to_company_id', $newCompany->id)->delete();
+        DB::table('users')->where('id', $newUser->id)->delete();
+        DB::table('clients')->where('company_id', $newCompany->id)->delete();
+        DB::table('companies')->where('id', $newCompany->id)->delete();
     }
 
     /**
@@ -193,7 +206,7 @@ class UnifiedRegistrationOption2Test extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('kt_agency_connect_card');
-        $response->assertSee('Accept & Connect Agency');
+        $response->assertSee('Accept &amp; Connect Agency', false);
 
         // 2. POST /register/agency-connect establishes the relationship
         $connectResponse = $this->actingAs($this->existingAgencyUser)

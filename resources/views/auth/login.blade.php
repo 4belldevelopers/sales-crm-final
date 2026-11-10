@@ -1447,7 +1447,7 @@ select.jw-inp option {
                         </a>
                     @else
                         <button type="button" id="kt_agency_connect_submit" class="jw-btn" onclick="jwConnectAgencyPartnership()">
-                            <span class="indicator-label">Accept & Connect Agency</span>
+                            <span class="indicator-label">Accept &amp; Connect Agency</span>
                             <span class="arrow" aria-hidden="true">
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                                     <path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
