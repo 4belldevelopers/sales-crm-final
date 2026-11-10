@@ -4328,31 +4328,40 @@ END:VCALENDAR";
 
     public static function mailTypeSubject($id, $mailType = '')
     {
-        // $companyId = 2;//auth()->user()->company_id;
-        $elasticService = app(ElasticService::class);
+        try {
+            $elasticService = app(ElasticService::class);
 
-        // $data	=	DB::table('(email_notifications)')->where('id',$id)->where('status', 1)->where('mailType', $mailType)->first();
-
-        $params = [
-            'index' => ELASTIC_EMAIL_NOTIFICATIONS,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['id' => (int) $id]],
-                            ['term' => ['mailType' => (int) $mailType]],
+            $params = [
+                'index' => ELASTIC_EMAIL_NOTIFICATIONS,
+                'body' => [
+                    'size' => 10000,
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['id' => (int) $id]],
+                                ['term' => ['mailType' => (int) $mailType]],
+                            ],
                         ],
                     ],
                 ],
-            ],
-        ];
+            ];
 
-        $response = $elasticService->getClient()->search($params);
-        $data = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+            $response = $elasticService->getClient()->search($params);
+            $data = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
 
-        return $data;
+            if ($data) {
+                return $data;
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('[GeneralMethod::mailTypeSubject] ES search failed, falling back to DB: '.$e->getMessage());
+        }
 
+        // Resilient Database Fallback
+        return DB::table('email_notifications')
+            ->where('id', (int) $id)
+            ->where('status', 1)
+            ->where('mailType', (int) $mailType)
+            ->first();
     }
 
     public static function notification($company_id, $type)

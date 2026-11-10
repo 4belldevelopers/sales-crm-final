@@ -354,7 +354,7 @@ class CreateInvitationAction
         }
 
         // Post-commit async mail dispatch & outbox job trigger
-        $this->dispatchPostCommitSideEffects($fromCompanyId, $recipientEmail, $tokenData['url'], $outboxId);
+        $this->dispatchPostCommitSideEffects($fromCompanyId, $recipientEmail, $tokenData['url'], $outboxId, $invitationId, $toCompanyId);
 
         return $responseDto;
     }
@@ -392,8 +392,22 @@ class CreateInvitationAction
     /**
      * Post-commit notification email & worker dispatch.
      */
-    protected function dispatchPostCommitSideEffects(int $fromCompanyId, string $recipientEmail, string $inviteUrl, ?int $outboxId): void
+    protected function dispatchPostCommitSideEffects(int $fromCompanyId, string $recipientEmail, string $inviteUrl, ?int $outboxId, ?int $invitationId = null, ?int $toCompanyId = null): void
     {
+        // 1. Synchronously index invitation into Elasticsearch (ELASTIC_CLIENT_REQUEST) for immediate Client Tracker visibility
+        if ($invitationId) {
+            try {
+                \App\Helper\GeneralMethod::clientRequestIndexElastic($invitationId);
+            } catch (\Throwable $e) {
+                Log::warning('CreateInvitationAction: clientRequestIndexElastic sync deferred: '.$e->getMessage());
+            }
+
+            if ($toCompanyId) {
+                // Invalidate target agency's client tracker cache version
+                cache()->increment('tenant_'.$toCompanyId.'_client_version');
+            }
+        }
+
         if ($outboxId) {
             try {
                 ProcessAgencyOutboxEventJob::dispatch($outboxId)->afterCommit();
@@ -428,17 +442,32 @@ class CreateInvitationAction
                 $senderName = $baseCompany ? ($baseCompany->companyName ?: '') : '';
                 $fromAddress = $baseCompany ? ($baseCompany->companyEmail ?: '') : '';
 
-                QueueNotificationMailService::dispatch(
-                    $recipientEmail,
-                    $subject,
-                    'email.common.index',
-                    (object) ['message' => $template],
-                    [],
-                    $fromAddress,
-                    $senderName,
-                    [],
-                    $company->id
-                )->onConnection('emails');
+                try {
+                    QueueNotificationMailService::dispatch(
+                        $recipientEmail,
+                        $subject,
+                        'email.common.index',
+                        (object) ['message' => $template],
+                        [],
+                        $fromAddress,
+                        $senderName,
+                        [],
+                        $company->id
+                    )->onConnection('emails');
+                } catch (\Throwable $e) {
+                    Log::warning('CreateInvitationAction: Queue dispatch failed, attempting direct send: '.$e->getMessage());
+                    app(NotificationMailService::class)->sendEmail(
+                        $recipientEmail,
+                        $subject,
+                        'email.common.index',
+                        (object) ['message' => $template],
+                        [],
+                        $fromAddress,
+                        $senderName,
+                        [],
+                        $company->id
+                    );
+                }
             }
         } catch (\Throwable $e) {
             Log::warning('CreateInvitationAction: Mail dispatch deferred: '.$e->getMessage());

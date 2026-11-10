@@ -2242,11 +2242,65 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $total = 0;
                 $data = [];
             } else {
-                $response = $this->elasticService->getClient()->search($params);
-                $total = $response['hits']['total']['value'] ?? 0;
-                $data = array_map(function ($hit) {
-                    return $hit['_source'];
-                }, $response['hits']['hits']);
+                try {
+                    $response = $this->elasticService->getClient()->search($params);
+                    $total = $response['hits']['total']['value'] ?? 0;
+                    $data = array_map(function ($hit) {
+                        return $hit['_source'];
+                    }, $response['hits']['hits']);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('[client_request_data] ES search error: '.$e->getMessage());
+                    $total = 0;
+                    $data = [];
+                }
+            }
+
+            // Resilient DB Fallback: If Elasticsearch returned 0 hits or is unreachable, query MySQL directly
+            if ($total === 0 && empty($searchQuery)) {
+                $dbQuery = DB::table('staffing_company_invitation')
+                    ->select(
+                        'staffing_company_invitation.id',
+                        'staffing_company_invitation.id as staffing_company_invitation_id',
+                        'staffing_company_invitation.from_company_id',
+                        'staffing_company_invitation.from_client_id',
+                        'staffing_company_invitation.from_user_id',
+                        'staffing_company_invitation.from_created_at',
+                        'staffing_company_invitation.created_at',
+                        'staffing_company_invitation.to_company_id',
+                        'staffing_company_invitation.to_email',
+                        'staffing_company_invitation.to_invitation_status',
+                        'staffing_company_invitation.expires_at',
+                        'companies.company_name',
+                        'companies.logo',
+                        'companies.website',
+                        'companies.industries',
+                        'td_industries.ind_name',
+                        'city_list.city as city_name',
+                        'countries.country_name',
+                        'clients.id as client_id'
+                    )
+                    ->join('companies', 'companies.id', '=', 'staffing_company_invitation.from_company_id')
+                    ->leftJoin('clients', function ($join) {
+                        $join->on('clients.company_id', '=', 'companies.id')
+                            ->where('clients.self_company', 1);
+                    })
+                    ->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries')
+                    ->leftJoin('client_location', 'client_location.client_id', '=', 'clients.id')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                    ->where('staffing_company_invitation.to_company_id', $company_id)
+                    ->where('staffing_company_invitation.to_invitation_status', 0)
+                    ->where(function ($q) {
+                        $q->whereNull('staffing_company_invitation.expires_at')
+                            ->orWhere('staffing_company_invitation.expires_at', '>', now());
+                    });
+
+                $total = $dbQuery->count();
+                if ($total > 0) {
+                    $data = $dbQuery->skip($from)->take($size)->get()->map(function ($row) {
+                        return (array) $row;
+                    })->toArray();
+                }
             }
 
             $pagination = [
@@ -2540,6 +2594,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 } catch (\Exception $e) {
                     $count = 0;
                 }
+            }
+
+            // DB Fallback for count if ES returns 0
+            if ($count === 0) {
+                $count = DB::table('staffing_company_invitation')
+                    ->where('to_company_id', $company_id)
+                    ->where('to_invitation_status', 0)
+                    ->where(function ($q) {
+                        $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                    })
+                    ->count();
             }
 
             $clientCounter['clientRequest'] = $count;

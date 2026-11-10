@@ -859,8 +859,20 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                         'updated_at' => Carbon::now(),
                     ]);
 
-                // Dispatch notification email
-                $this->sendInvitationNotificationEmail($company_id, (string) $oldInv->to_email, $tokenData['url']);
+                // Synchronously update Elasticsearch ELASTIC_CLIENT_REQUEST for immediate Client Tracker visibility
+                try {
+                    \App\Helper\GeneralMethod::clientRequestIndexElastic($invitationId);
+                } catch (\Throwable $esErr) {
+                    Log::warning('re_invite: clientRequestIndexElastic sync deferred: '.$esErr->getMessage());
+                }
+
+                if (! empty($oldInv->to_company_id)) {
+                    // Invalidate agency client tracker cache version
+                    cache()->increment('tenant_'.$oldInv->to_company_id.'_client_version');
+                }
+
+                // Dispatch notification email (direct send on manual resend ensures instant delivery)
+                $this->sendInvitationNotificationEmail($company_id, (string) $oldInv->to_email, $tokenData['url'], true);
 
                 // Set 2-minute cooling off to prevent hammer/spamming
                 cache()->put($cooldownKey, true, 120);
@@ -922,9 +934,9 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
     }
 
     /**
-     * Dispatch invitation email notification via QueueNotificationMailService.
+     * Dispatch invitation email notification via QueueNotificationMailService with resilient direct send fallback.
      */
-    protected function sendInvitationNotificationEmail(int $fromCompanyId, string $recipientEmail, string $inviteUrl): void
+    protected function sendInvitationNotificationEmail(int $fromCompanyId, string $recipientEmail, string $inviteUrl, bool $isDirectResend = false): void
     {
         try {
             $company = \App\Models\Company::withoutGlobalScopes()->find($fromCompanyId);
@@ -952,17 +964,45 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 $senderName = $baseCompany ? ($baseCompany->companyName ?: '') : '';
                 $fromAddress = $baseCompany ? ($baseCompany->companyEmail ?: '') : '';
 
-                \App\Jobs\QueueNotificationMailService::dispatch(
-                    $recipientEmail,
-                    $subject,
-                    'email.common.index',
-                    (object) ['message' => $template],
-                    [],
-                    $fromAddress,
-                    $senderName,
-                    [],
-                    $company->id
-                )->onConnection('emails');
+                // Clear duplicate mail suppression key on explicit resend
+                $normalizedRecipient = strtolower(trim((string) $recipientEmail));
+                $recipientSubjectHash = md5($normalizedRecipient.':'.$subject);
+                cache()->forget('ats:mail_sent:comp_'.$company->id.':'.$recipientSubjectHash);
+
+                // Check Horizon status: if Horizon is inactive or on manual resend, fallback to direct SMTP transmission
+                $isHorizonActive = false;
+                try {
+                    $isHorizonActive = ! empty(app(\Laravel\Horizon\Contracts\MasterSupervisorRepository::class)->all());
+                } catch (\Throwable $th) {
+                    $isHorizonActive = false;
+                }
+
+                if ($isHorizonActive && ! $isDirectResend) {
+                    \App\Jobs\QueueNotificationMailService::dispatch(
+                        $recipientEmail,
+                        $subject,
+                        'email.common.index',
+                        (object) ['message' => $template],
+                        [],
+                        $fromAddress,
+                        $senderName,
+                        [],
+                        $company->id
+                    )->onConnection('emails');
+                } else {
+                    // Resilient direct send when Horizon is offline or on explicit user resend
+                    app(\App\Services\NotificationMailService::class)->sendEmail(
+                        $recipientEmail,
+                        $subject,
+                        'email.common.index',
+                        (object) ['message' => $template],
+                        [],
+                        $fromAddress,
+                        $senderName,
+                        [],
+                        $company->id
+                    );
+                }
             }
         } catch (\Throwable $e) {
             Log::warning('sendInvitationNotificationEmail: Mail dispatch deferred: '.$e->getMessage());

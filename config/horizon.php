@@ -301,7 +301,7 @@ return [
         // Market Jobs, Clients & Team Member transactional outbox & real-time delta relay supervisor
         'supervisor-outbox' => [
             'connection' => 'redis',
-            'queue' => ['market-outbox', 'client-outbox', 'outbox', 'team-outbox'],
+            'queue' => ['market-outbox', 'client-outbox', 'outbox', 'team-outbox', 'agency-outbox'],
             'balance' => 'simple',
             'maxProcesses' => 6,
             'minProcesses' => 2,
