@@ -188,6 +188,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     'staffing_company_invitation.to_company_id',
                     'staffing_company_invitation.to_invitation_status',
                     'staffing_company_invitation.from_created_at',
+                    'staffing_company_invitation.expires_at',
                     'staffing_company_invitation.job_id',
                     'companies.company_name',
                     'companies.logo',
