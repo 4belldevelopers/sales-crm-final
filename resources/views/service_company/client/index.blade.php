@@ -4789,28 +4789,32 @@ function renderClientRows(rows) {
             const invId = r.staffing_company_invitation_id || r.id;
             const fromComp = r.from_company_id || 0;
             const targetId = r.target_id || r.client_id || fromComp || r.id;
-            const hiringCount = (r.jobs && (r.jobs.hiring || r.jobs.active)) ? (r.jobs.hiring || r.jobs.active) : 0;
-            const expiresFormatted = r.expires_on || 'in 7 days';
+            const expiresFormatted = r.expires_on || (r.expires_at ? r.expires_at.substring(0, 10) : 'in 7 days');
             const daysAgo = r.days_ago || 'Just now';
+            const connectedOn = r.connected_on || '-';
+            const websiteHtml = r.website ? `<div class="cl-size text-primary text-truncate d-flex align-items-center gap-1 mt-0.5" style="font-size:10.5px; color:#0284c7;" title="Official Website: ${escapeAttr(r.website)}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="text-truncate">${escapeAttr(r.website)}</span></div>` : '<div class="cl-size text-muted text-truncate" style="font-size:10px; color:#94a3b8;">Corporate Client</div>';
 
             return `
-            <div class="cl-primary-card tbl-r is-pending-request" data-pending-id="${invId}" data-row-id="${targetId}" data-client-type="request">
+            <div class="cl-primary-card tbl-r is-pending-request is-inbound-invite" data-pending-id="${invId}" data-row-id="${targetId}" data-client-type="request">
                 <div class="cl-subcards-grid">
                     <!-- SUB-CARD 1: Client Identity -->
                     <div class="cl-subcard cl-subcard-identity">
                         <div class="cl-subcard-head">
-                            <span class="cl-subcard-title">Client Identity</span>
+                            <span class="cl-subcard-title" title="Inviting client company details">Client</span>
                             <div class="cl-subcard-badges">
-                                <span class="cl-scope-pill pill-direct type-direct">Direct Client</span>
-                                <span class="badge" style="background:#fef3c7; color:#d97706; font-size:9px; font-weight:700; padding:1.5px 6px; border-radius:4px; border:1px solid #fde68a;">⚡ Request</span>
+                                <span class="cl-scope-pill pill-direct type-direct" title="Inbound direct client partnership request">Direct Client</span>
+                                <span class="cl-status-pill pill-warning" title="Authoritative invitation status: Action Needed">
+                                    <span class="cl-status-pill-dot animate-pulse"></span>
+                                    <span>Action Needed</span>
+                                </span>
                             </div>
                         </div>
                         <div class="cl-identity-body">
-                            <div class="cl-logo-box">${logoHtml}</div>
-                            <div class="cl-details-box">
-                                <div class="cl-name view-request-terms" data-row-id="${targetId}" data-client-type="request">${escapeAttr(r.name)}</div>
-                                ${indHtml || '<div class="cl-ind text-muted">—</div>'}
-                                <div class="cl-size text-muted">—</div>
+                            <div class="cl-logo-box" title="Client company logo or initials">${logoHtml}</div>
+                            <div class="cl-details-box min-w-0">
+                                <div class="cl-name view-request-terms text-truncate" data-row-id="${targetId}" data-client-type="request" title="${escapeAttr(r.name)}" style="cursor:pointer;">${escapeAttr(r.name)}</div>
+                                ${indHtml || '<div class="cl-ind text-muted">Staffing & Recruiting</div>'}
+                                ${websiteHtml}
                             </div>
                         </div>
                     </div>
@@ -4818,10 +4822,10 @@ function renderClientRows(rows) {
                     <!-- SUB-CARD 2: Location -->
                     <div class="cl-subcard cl-subcard-loc">
                         <div class="cl-subcard-head">
-                            <span class="cl-subcard-title">Location</span>
+                            <span class="cl-subcard-title" title="Client headquarters or primary operating location">Location</span>
                         </div>
                         <div class="cl-loc-body">
-                            <svg class="cl-loc-pin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="cl-loc-pin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" title="Geographic location">
                                 <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/>
                                 <circle cx="12" cy="10" r="3"/>
                             </svg>
@@ -4831,71 +4835,107 @@ function renderClientRows(rows) {
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 3: Jobs Status -->
+                    <!-- SUB-CARD 3: Partnership Scope -->
                     <div class="cl-subcard cl-subcard-jobs">
                         <div class="cl-subcard-head">
-                            <span class="cl-subcard-title">Jobs Status</span>
+                            <span class="cl-subcard-title" title="Partnership and engagement scope">Engagement</span>
                         </div>
-                        <div class="cl-jobs-body tbl-cell-jobs">
-                            <div class="cl-job-line ${hiringCount > 0 ? 'has-count cl-job-hiring' : 'no-count'}">
-                                <span class="cl-job-bullet ${hiringCount > 0 ? 'bullet-hiring' : 'bullet-neutral'}"></span>
-                                <span class="cl-job-num">${hiringCount}</span>
-                                <span class="cl-job-label">Hiring</span>
+                        <div class="cl-jobs-body tbl-cell-jobs d-flex flex-column justify-content-center" style="gap:4px;">
+                            <div class="d-flex align-items-center gap-1.5" style="font-size:11px;">
+                                <span class="badge badge-light-primary py-0.5 px-2 fw-bold text-truncate" style="font-size:10px;">Direct Invitation</span>
                             </div>
-                            <div class="cl-job-line no-count">
-                                <span class="cl-job-bullet bullet-neutral"></span>
-                                <span class="cl-job-num">0</span>
-                                <span class="cl-job-label">Hold</span>
-                            </div>
-                            <div class="cl-job-line no-count">
-                                <span class="cl-job-bullet bullet-neutral"></span>
-                                <span class="cl-job-num">0</span>
-                                <span class="cl-job-label">Closed</span>
+                            <div class="text-muted text-truncate" style="font-size:10.5px; color:#64748b;" title="Direct client partnership request">
+                                Talent & Hiring Partner
                             </div>
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 4: Request Status & SLA -->
+                    <!-- SUB-CARD 4: Action Center -->
                     <div class="cl-subcard cl-subcard-pipeline">
-                        <div class="cl-subcard-head">
-                            <span class="cl-subcard-title">Request Status & SLA</span>
+                        <div class="cl-subcard-head d-flex align-items-center justify-content-between">
+                            <span class="cl-subcard-title" title="Partnership decision actions">Actions</span>
+                            <span class="badge badge-light-success py-0.5 px-2" style="font-size:9.5px; font-weight:700;" title="Remaining decision window">
+                                6 days left
+                            </span>
                         </div>
-                        <div class="cl-pipe-body d-flex flex-column gap-1 align-items-start" style="padding-top:2px;">
-                            <div class="d-flex align-items-center gap-1">
-                                <span class="bullet bullet-dot bg-warning animate-pulse" style="width:7px; height:7px;"></span>
-                                <span class="text-warning fw-bold" style="font-size:11px;">Action Needed</span>
+                        <div class="cl-pipe-body tbl-cell-req-actions d-flex align-items-center justify-content-center h-100" style="padding:4px 0;">
+                            <div class="d-flex align-items-center gap-1.5 w-100">
+                                <button type="button" 
+                                        class="btn btn-sm btn-success fw-bold request_event flex-fill text-truncate" 
+                                        data-row-id="${invId}" 
+                                        data-row-event="1" 
+                                        data-row-from_company="${fromComp}" 
+                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#10b981; border:none; color:#ffffff; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
+                                        title="Accept Direct Client Partnership">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span class="text-truncate">Accept</span>
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-sm btn-light-danger fw-bold request_event flex-fill text-truncate" 
+                                        data-row-id="${invId}" 
+                                        data-row-event="-1" 
+                                        data-row-from_company="${fromComp}" 
+                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#fef2f2; border:1.5px solid #fecaca; color:#ef4444; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
+                                        title="Decline Partnership Request">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                    <span class="text-truncate">Decline</span>
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-sm btn-light fw-bold show-detail-direct view-request-terms flex-fill text-truncate" 
+                                        data-row-id="${targetId}" 
+                                        data-client-type="request" 
+                                        style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#eff6ff; border:1.5px solid #bfdbfe; color:#2563eb; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
+                                        title="Review Partnership Terms & Profile">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    </svg>
+                                    <span class="text-truncate">Terms</span>
+                                </button>
                             </div>
-                            <div class="text-danger fw-semibold" style="font-size:10.5px;">Expires ${escapeAttr(expiresFormatted)}</div>
-                            <div class="text-muted" style="font-size:10.5px;">Active in system</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- BOTTOM STRIP: Received date, Last Activity, and Accept/Decline action buttons -->
-                <div class="cl-card-bottom-strip">
-                    <div class="cl-bottom-meta">
-                        <span class="cl-meta-item">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                <line x1="16" y1="2" x2="16" y2="6"/>
-                                <line x1="8" y1="2" x2="8" y2="6"/>
-                                <line x1="3" y1="10" x2="21" y2="10"/>
+                <!-- BOTTOM STRIP (TIER 5): AUDIT TIMELINE -->
+                <div class="cl-card-bottom-strip d-flex align-items-center justify-content-between flex-wrap gap-2" style="padding:7px 14px; background:#f8fafc; border-top:1px solid #e2e8f0; font-size:11px;">
+                    <div class="d-flex align-items-center flex-wrap gap-2 text-muted">
+                        <div class="d-flex align-items-center gap-1.5" title="Request received on ${escapeAttr(connectedOn)}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
-                            <span>Received: <strong>${escapeAttr(r.connected_on || '-')}</strong></span>
-                        </span>
-                        <span class="cl-meta-dot">•</span>
-                        <span class="cl-meta-item">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12 6 12 12 16 14"/>
+                            <span style="color:#64748b;">Request Received:</span>
+                            <strong class="text-gray-900">${escapeAttr(connectedOn)}</strong>
+                            <span class="text-primary fw-semibold" style="font-size:10px;">(${escapeAttr(daysAgo)})</span>
+                        </div>
+                        <span style="color:#cbd5e1; font-weight:bold;">•</span>
+                        <div class="d-flex align-items-center gap-1.5" title="Valid until ${escapeAttr(expiresFormatted)}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
                             </svg>
-                            <span>Activity: <strong>${escapeAttr(daysAgo)}</strong></span>
-                        </span>
+                            <span style="color:#64748b;">Expires:</span>
+                            <strong class="text-gray-900">${escapeAttr(expiresFormatted)}</strong>
+                        </div>
                     </div>
-                    <div class="cl-bottom-actions tbl-cell-req-actions">
-                        <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="1" data-row-from_company="${fromComp}" style="background:#10b981; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Accept Direct Client Partnership">Accept</button>
-                        <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="${invId}" data-row-event="-1" data-row-from_company="${fromComp}" style="background:#ef4444; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Decline Partnership Request">Decline</button>
-                        <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 view-request-terms" data-row-id="${targetId}" data-client-type="request" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0; border-radius:6px; font-size:11px;" title="View Client Details & Terms">Terms</button>
+                    <div class="d-flex align-items-center gap-2 text-muted" style="font-size:10.5px;">
+                        <span class="d-flex align-items-center gap-1" style="color:#15803d; font-weight:600;" title="Authenticated direct client invitation">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <polyline points="9 12 11 14 15 10"/>
+                            </svg>
+                            <span>Verified Client Outreach</span>
+                        </span>
+                        <span style="color:#cbd5e1; font-weight:bold;">•</span>
+                        <span>Ref: <strong class="text-gray-700">#REQ-${String(invId).padStart(5, '0')}</strong></span>
                     </div>
                 </div>
             </div>`;

@@ -141,71 +141,112 @@
                     </div>
                 </div>
 
-                {{-- SUB-CARD 3: Jobs Status --}}
+                {{-- SUB-CARD 3: Partnership Scope --}}
                 <div class="cl-subcard cl-subcard-jobs">
                     <div class="cl-subcard-head">
-                        <span class="cl-subcard-title">Jobs Status</span>
+                        <span class="cl-subcard-title" title="Partnership and engagement scope">Engagement</span>
                     </div>
-                    <div class="cl-jobs-body tbl-cell-jobs">
-                        <div class="cl-job-line {{ $requisitionCount > 0 ? 'has-count cl-job-hiring' : 'no-count' }}">
-                            <span class="cl-job-bullet {{ $requisitionCount > 0 ? 'bullet-hiring' : 'bullet-neutral' }}"></span>
-                            <span class="cl-job-num">{{ $requisitionCount }}</span>
-                            <span class="cl-job-label">Hiring</span>
+                    <div class="cl-jobs-body tbl-cell-jobs d-flex flex-column justify-content-center" style="gap:4px;">
+                        <div class="d-flex align-items-center gap-1.5" style="font-size:11px;">
+                            <span class="badge badge-light-primary py-0.5 px-2 fw-bold text-truncate" style="font-size:10px;">Direct Invitation</span>
                         </div>
-                        <div class="cl-job-line no-count">
-                            <span class="cl-job-bullet bullet-neutral"></span>
-                            <span class="cl-job-num">0</span>
-                            <span class="cl-job-label">Hold</span>
-                        </div>
-                        <div class="cl-job-line no-count">
-                            <span class="cl-job-bullet bullet-neutral"></span>
-                            <span class="cl-job-num">0</span>
-                            <span class="cl-job-label">Closed</span>
+                        <div class="text-muted text-truncate" style="font-size:10.5px; color:#64748b;" title="Direct client partnership request">
+                            Talent & Hiring Partner
                         </div>
                     </div>
                 </div>
 
-                {{-- SUB-CARD 4: Request SLA & Activity --}}
+                {{-- SUB-CARD 4: Action Center (Equal Size Buttons) --}}
                 <div class="cl-subcard cl-subcard-pipeline">
-                    <div class="cl-subcard-head">
-                        <span class="cl-subcard-title">Request Status & SLA</span>
+                    <div class="cl-subcard-head d-flex align-items-center justify-content-between">
+                        <span class="cl-subcard-title" title="Partnership decision actions">Actions</span>
+                        <span class="badge badge-light-success py-0.5 px-2" style="font-size:9.5px; font-weight:700;" title="Remaining decision window">
+                            6 days left
+                        </span>
                     </div>
-                    <div class="cl-pipe-body d-flex flex-column gap-1 align-items-start" style="padding-top:2px;">
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="bullet bullet-dot bg-warning animate-pulse" style="width:7px; height:7px;"></span>
-                            <span class="text-warning fw-bold" style="font-size:11px;">Action Needed</span>
+                    <div class="cl-pipe-body tbl-cell-req-actions d-flex align-items-center justify-content-center h-100" style="padding:4px 0;">
+                        <div class="d-flex align-items-center gap-1.5 w-100">
+                            <!-- Accept Button -->
+                            <button type="button" 
+                                    class="btn btn-sm btn-success fw-bold request_event flex-fill text-truncate" 
+                                    data-row-id="{{ $invitationId }}" 
+                                    data-row-event="1" 
+                                    data-row-from_company="{{ $from_company_id }}" 
+                                    style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#10b981; border:none; color:#ffffff; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
+                                    title="Accept Direct Client Partnership">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span class="text-truncate">Accept</span>
+                            </button>
+
+                            <!-- Decline Button -->
+                            <button type="button" 
+                                    class="btn btn-sm btn-light-danger fw-bold request_event flex-fill text-truncate" 
+                                    data-row-id="{{ $invitationId }}" 
+                                    data-row-event="-1" 
+                                    data-row-from_company="{{ $from_company_id }}" 
+                                    style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#fef2f2; border:1.5px solid #fecaca; color:#ef4444; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
+                                    title="Decline Partnership Request">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                                <span class="text-truncate">Decline</span>
+                            </button>
+
+                            <!-- Terms Button -->
+                            <button type="button" 
+                                    class="btn btn-sm btn-light fw-bold show-detail-direct view-request-terms flex-fill text-truncate" 
+                                    data-row-id="{{ $rowTargetId }}" 
+                                    data-client-type="request" 
+                                    style="height:32px; padding:0 8px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; gap:4px; border-radius:6px; background:#eff6ff; border:1.5px solid #bfdbfe; color:#2563eb; width:33.33%; flex:1 1 33.33%; transition:all 0.2s;" 
+                                    title="Review Partnership Terms & Profile">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                </svg>
+                                <span class="text-truncate">Terms</span>
+                            </button>
                         </div>
-                        <div class="text-danger fw-semibold" style="font-size:10.5px;">Expires {{ $expiresFormatted }}</div>
-                        <div class="text-muted" style="font-size:10.5px;">Active in system</div>
                     </div>
                 </div>
             </div>
 
-            {{-- BOTTOM STRIP: Received date, Last Activity, and Accept/Decline action buttons --}}
-            <div class="cl-card-bottom-strip">
-                <div class="cl-bottom-meta">
-                    <span class="cl-meta-item">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
+            {{-- BOTTOM STRIP: Audit Timeline and Reference ID --}}
+            <div class="cl-card-bottom-strip d-flex align-items-center justify-content-between flex-wrap gap-2" style="padding:7px 14px; background:#f8fafc; border-top:1px solid #e2e8f0; font-size:11px;">
+                <div class="d-flex align-items-center flex-wrap gap-2 text-muted">
+                    <div class="d-flex align-items-center gap-1.5" title="Request received on {{ $newDate }}">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
-                        <span>Received: <strong>{{ $newDate }}</strong></span>
-                    </span>
-                    <span class="cl-meta-dot">•</span>
-                    <span class="cl-meta-item">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
+                        <span style="color:#64748b;">Request Received:</span>
+                        <strong class="text-gray-900">{{ $newDate }}</strong>
+                        <span class="text-primary fw-semibold" style="font-size:10px;">({{ $daysAgo }})</span>
+                    </div>
+                    <span style="color:#cbd5e1; font-weight:bold;">•</span>
+                    <div class="d-flex align-items-center gap-1.5" title="Valid until {{ $expiresFormatted }}">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
                         </svg>
-                        <span>Activity: <strong>{{ $daysAgo }}</strong></span>
-                    </span>
+                        <span style="color:#64748b;">Expires:</span>
+                        <strong class="text-gray-900">{{ $expiresFormatted }}</strong>
+                    </div>
                 </div>
-                <div class="cl-bottom-actions tbl-cell-req-actions">
-                    <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="{{ $invitationId }}" data-row-event="1" data-row-from_company="{{ $from_company_id }}" style="background:#10b981; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Accept Direct Client Partnership">Accept</button>
-                    <button type="button" class="btn btn-sm fw-bold px-3 py-1.5 request_event" data-row-id="{{ $invitationId }}" data-row-event="-1" data-row-from_company="{{ $from_company_id }}" style="background:#ef4444; color:#fff; border:none; border-radius:6px; font-size:11px;" title="Decline Partnership Request">Decline</button>
-                    <button type="button" class="btn btn-sm btn-light fw-bold px-2 py-1.5 view-request-terms" data-row-id="{{ $rowTargetId }}" data-client-type="request" style="background:#f1f5f9; color:#2563eb; border:1px solid #e2e8f0; border-radius:6px; font-size:11px;" title="View Client Details & Terms">Terms</button>
+                <div class="d-flex align-items-center gap-2 text-muted" style="font-size:10.5px;">
+                    <span class="d-flex align-items-center gap-1" style="color:#15803d; font-weight:600;" title="Authenticated direct client invitation">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <polyline points="9 12 11 14 15 10"/>
+                        </svg>
+                        <span>Verified Client Outreach</span>
+                    </span>
+                    <span style="color:#cbd5e1; font-weight:bold;">•</span>
+                    <span>Ref: <strong class="text-gray-700">#REQ-{{ str_pad($invitationId, 5, '0', STR_PAD_LEFT) }}</strong></span>
                 </div>
             </div>
         </div>
