@@ -591,6 +591,14 @@
         border: 1px solid #fde68a !important;
         font-family: monospace !important;
     }
+
+    /* Super Admin Standard Pagination Integration */
+    #brmnotePaginationContainer .sa-pagination-bar {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        margin-top: 10px !important;
+    }
 </style>
 @endpush
 
@@ -687,108 +695,19 @@
 
             <!--begin::Tier 3: Primary RM Note Card Stream-->
             <div id="brmnoteStreamContainer" class="brmnote-stream-container">
-                @if(!$templates->isEmpty())
-                    <!-- Stream Column Header Strip -->
-                    <div class="brmnote-stream-header-strip">
-                        <div class="brmnote-grid-headers">
-                            <div><span class="brmnote-col-label">TEMPLATE & IDENTIFIER</span></div>
-                            <div><span class="brmnote-col-label">EVALUATION RUBRIC & SNIPPET</span></div>
-                            <div><span class="brmnote-col-label">TELEMETRY & DATES</span></div>
-                            <div class="text-center"><span class="brmnote-col-label">BENCH ATS STATUS</span></div>
-                            <div class="text-end"><span class="brmnote-col-label">ACTIONS</span></div>
-                        </div>
+                <!-- Stream Column Header Strip -->
+                <div class="brmnote-stream-header-strip" id="brmnoteHeaderStrip" style="{{ $templates->isEmpty() ? 'display: none;' : '' }}">
+                    <div class="brmnote-grid-headers">
+                        <div><span class="brmnote-col-label">TEMPLATE & IDENTIFIER</span></div>
+                        <div><span class="brmnote-col-label">EVALUATION RUBRIC & SNIPPET</span></div>
+                        <div><span class="brmnote-col-label">TELEMETRY & DATES</span></div>
+                        <div class="text-center"><span class="brmnote-col-label">BENCH ATS STATUS</span></div>
+                        <div class="text-end"><span class="brmnote-col-label">ACTIONS</span></div>
                     </div>
-                @endif
+                </div>
 
                 <div id="brmnoteCardsList">
-                    @forelse($templates as $tpl)
-                        @php
-                            $initial = mb_substr($tpl->title ?? 'T', 0, 1);
-                            $palette = $getPalette($initial);
-                        @endphp
-                        <div class="brmnote-card" id="brmnote-card-{{ $tpl->id }}" data-id="{{ $tpl->id }}" data-status="{{ $tpl->status ? 'active' : 'inactive' }}" data-search="{{ strtolower($tpl->id . ' #' . $tpl->id . ' ' . $tpl->title . ' ' . strip_tags($tpl->content)) }}">
-                            <div class="brmnote-card-grid">
-
-                                <!-- Sub-Card 1: Identity & Avatar -->
-                                <div class="brmnote-subcard-identity">
-                                    <div class="brmnote-avatar-box" style="background-color: {{ $palette['bg'] }}; color: {{ $palette['color'] }}; border: 1px solid {{ $palette['border'] }};">
-                                        {{ strtoupper($initial) }}
-                                    </div>
-                                    <div class="brmnote-info-wrap">
-                                        <div class="brmnote-card-title" onclick="openPreviewModal({{ $tpl->id }})" title="Click to preview note">{{ $tpl->title }}</div>
-                                        <div class="d-flex align-items-center gap-2 mt-1">
-                                            <span class="brmnote-id-pill" title="Template ID">#{{ $tpl->id }}</span>
-                                            <span class="brmnote-scope-pill"><i class="fas fa-globe fs-9 me-1"></i> Bench RM Master</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Sub-Card 2: Content Preview Snippet -->
-                                <div class="brmnote-subcard-content">
-                                    <div class="brmnote-preview-snippet" id="preview-text-{{ $tpl->id }}">
-                                        {{ $tpl->preview_text ?: strip_tags($tpl->content) }}
-                                    </div>
-                                    <a href="javascript:void(0)" class="brmnote-view-full-link" onclick="openPreviewModal({{ $tpl->id }})">
-                                        <i class="fas fa-eye fs-9"></i> View Full Note
-                                    </a>
-                                </div>
-
-                                <!-- Sub-Card 3: Telemetry & Temporal Metrics -->
-                                <div class="brmnote-subcard-telemetry">
-                                    <div class="brmnote-metric-pill">
-                                        <i class="fas fa-file-alt text-muted fs-9"></i>
-                                        <span>{{ $tpl->word_count }} Words • {{ $tpl->char_count }} Chars</span>
-                                    </div>
-                                    <div class="brmnote-date-text">
-                                        <i class="fas fa-calendar-alt text-muted fs-9"></i>
-                                        <span>{{ $tpl->created_formatted }}</span>
-                                    </div>
-                                    <div class="brmnote-date-text text-muted fs-9">
-                                        <i class="fas fa-clock fs-9"></i>
-                                        <span>Updated {{ $tpl->updated_human }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- Sub-Card 4: Live Status Switch -->
-                                <div class="brmnote-subcard-status">
-                                    <div class="form-check form-switch form-check-custom form-check-solid mb-1">
-                                        <input class="form-check-input brmnote-status-toggle" type="checkbox" id="switch-{{ $tpl->id }}" data-id="{{ $tpl->id }}" {{ $tpl->status ? 'checked' : '' }} onchange="toggleTemplateStatus({{ $tpl->id }}, this)">
-                                    </div>
-                                    <span class="brmnote-status-badge {{ $tpl->status ? 'active' : 'inactive' }}" id="status-badge-{{ $tpl->id }}">
-                                        {{ $tpl->status ? 'Active' : 'Inactive' }}
-                                    </span>
-                                </div>
-
-                                <!-- Sub-Card 5: Action Toolbar -->
-                                <div class="brmnote-subcard-actions">
-                                    <button type="button" class="btn btn-sm btn-icon btn-light-primary brmnote-action-btn" onclick="copyTemplateContent({{ $tpl->id }})" title="Copy template content" data-bs-toggle="tooltip">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-icon btn-light-info brmnote-action-btn" onclick="duplicateTemplate({{ $tpl->id }})" title="Duplicate template" data-bs-toggle="tooltip">
-                                        <i class="fas fa-clone"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-icon btn-light-warning brmnote-action-btn" onclick="openEditModal({{ $tpl->id }})" title="Edit template" data-bs-toggle="tooltip">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-icon btn-light-danger brmnote-action-btn" onclick="deleteTemplate({{ $tpl->id }})" title="Delete template" data-bs-toggle="tooltip">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-
-                            </div>
-                        </div>
-                    @empty
-                        <div class="brmnote-empty-card" id="brmnoteEmptyCard">
-                            <div class="brmnote-empty-icon">
-                                <i class="fas fa-user-tag"></i>
-                            </div>
-                            <h5 class="fw-bold text-gray-800 mb-1">No Relationship Manager Templates Found</h5>
-                            <p class="text-muted fs-7 mb-3">Get started by creating your first global Bench Candidate evaluation rubric.</p>
-                            <button type="button" class="btn btn-sm btn-primary" onclick="openAddModal()">
-                                <i class="fas fa-plus me-1"></i> Add First Template
-                            </button>
-                        </div>
-                    @endforelse
+                    @include('super-admin.rm-note.card_items', ['templates' => $templates])
                 </div>
 
                 <!-- No Search Results Found Card -->
@@ -801,6 +720,11 @@
                     <button type="button" class="btn btn-sm btn-light-primary" onclick="resetFilters()">
                         <i class="fas fa-undo me-1"></i> Reset Filters
                     </button>
+                </div>
+
+                <!-- Pagination Bar Container (Super Admin Standard) -->
+                <div id="brmnotePaginationContainer" class="mt-3">
+                    {!! $paginationHtml ?? '' !!}
                 </div>
             </div>
             <!--end::Tier 3: Primary RM Note Card Stream-->
@@ -957,7 +881,10 @@
 <script>
 var _brmEditor = null;
 var _brmActiveFilter = 'all';
+var _brmCurrentPage = {{ $currentPage ?? 1 }};
+var _brmPerPage = {{ $perPage ?? 10 }};
 var _brmSearchTimer = null;
+var _brmActiveAjax = null;
 var _clientTemplateCache = {};
 var _inFlightToggles = {};
 var _inFlightDuplicates = {};
@@ -1228,66 +1155,161 @@ async function fetchTemplateData(id, callback) {
     });
 }
 
+// ─── Super Admin Data List Pagination Engine (Client-First + CQRS) ───
+function fetchTemplatesAjax(page, bypassCache) {
+    page = page || _brmCurrentPage || 1;
+    _brmCurrentPage = page;
+    var search = $.trim($('#brmnoteSearchInput').val());
+    var status = _brmActiveFilter;
+    var cacheKey = 'brm_list_' + status + '_' + search.toLowerCase() + '_p' + page + '_pp' + _brmPerPage;
+
+    // 1. Check L1 RAM Cache (0ms, 0 server strain)
+    if (!bypassCache && _clientTemplateCache[cacheKey] && (Date.now() - _clientTemplateCache[cacheKey].timestamp < 60000)) {
+        renderTemplatesResponse(_clientTemplateCache[cacheKey].data);
+        return;
+    }
+
+    // 2. Check L2 IndexedDB (<5ms, 0 server strain)
+    if (!bypassCache) {
+        JeroBenchRmNotesDB.get(cacheKey).then(function(cachedDb) {
+            if (cachedDb) {
+                _clientTemplateCache[cacheKey] = {
+                    data: cachedDb,
+                    timestamp: Date.now()
+                };
+                renderTemplatesResponse(cachedDb);
+                return;
+            }
+            executeNetworkFetch();
+        }).catch(function() {
+            executeNetworkFetch();
+        });
+    } else {
+        executeNetworkFetch();
+    }
+
+    function executeNetworkFetch() {
+        if (_brmActiveAjax) {
+            try { _brmActiveAjax.abort(); } catch (e) {}
+            _brmActiveAjax = null;
+        }
+
+        $('#brmnoteCardsList').css('opacity', '0.5');
+
+        _brmActiveAjax = $.ajax({
+            url: '{{ route("superadmin.rm-note.index") }}',
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            data: {
+                page: page,
+                per_page: _brmPerPage,
+                search: search,
+                status: status
+            },
+            success: function(res) {
+                $('#brmnoteCardsList').css('opacity', '1');
+                if (res.status === 'success') {
+                    _clientTemplateCache[cacheKey] = {
+                        data: res,
+                        timestamp: Date.now()
+                    };
+                    JeroBenchRmNotesDB.set(cacheKey, res);
+                    renderTemplatesResponse(res);
+                } else {
+                    toastr.error(res.message || 'Failed to load templates.');
+                }
+            },
+            error: function(xhr, statusText) {
+                if (statusText === 'abort') return;
+                $('#brmnoteCardsList').css('opacity', '1');
+                toastr.error('Network error loading templates.');
+            },
+            complete: function() {
+                _brmActiveAjax = null;
+            }
+        });
+    }
+}
+
+function renderTemplatesResponse(res) {
+    var html = res.html || '';
+    var pagination = res.pagination || '';
+    var total = (typeof res.total !== 'undefined') ? res.total : (res.data ? res.data.totalCount : 0);
+
+    $('#brmnoteCardsList').html(html);
+    $('#brmnotePaginationContainer').html(pagination);
+
+    var searchQuery = $.trim($('#brmnoteSearchInput').val());
+    if (total === 0) {
+        if (searchQuery) {
+            $('#brmnoteNoSearchCard').show();
+            $('#brmnoteHeaderStrip').hide();
+        } else {
+            $('#brmnoteNoSearchCard').hide();
+            $('#brmnoteHeaderStrip').hide();
+        }
+    } else {
+        $('#brmnoteNoSearchCard').hide();
+        $('#brmnoteHeaderStrip').show();
+    }
+
+    if (res.counts) {
+        updateKpiCounters(res.counts);
+    } else if (res.data) {
+        updateKpiCounters({
+            total: res.data.totalCount,
+            active: res.data.activeCount,
+            inactive: res.data.inactiveCount
+        });
+    }
+
+    if (typeof $('[data-bs-toggle="tooltip"]').tooltip === 'function') {
+        $('[data-bs-toggle="tooltip"]').tooltip({ trigger: 'hover', placement: 'top' });
+    }
+}
+
+// ─── Super Admin Standard Pagination Click Handling ───
+$(document).on('click', '#brmnotePaginationContainer .page-link', function(e) {
+    e.preventDefault();
+    var page = $(this).data('page');
+    if (!page || $(this).hasClass('disabled') || $(this).hasClass('dots') || $(this).hasClass('pagi-disabled') || $(this).hasClass('active') || $(this).hasClass('pagi-active')) {
+        return;
+    }
+    fetchTemplatesAjax(parseInt(page, 10));
+    var streamElem = document.getElementById('brmnoteStreamContainer');
+    if (streamElem) {
+        streamElem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+});
+
 // Tier 2: Sub-tab filtering
 function filterTemplates(type, btn) {
     _brmActiveFilter = type;
     $('.brmnote-tab-btn').removeClass('active');
     $(btn).addClass('active');
-    applyFilters();
-}
-
-// Tier 1 & 2: Unified Filter Application
-function applyFilters() {
-    var query = $.trim($('#brmnoteSearchInput').val()).toLowerCase();
-    var visibleCount = 0;
-
-    $('.brmnote-card').each(function() {
-        var cardStatus = $(this).attr('data-status');
-        var cardSearch = $(this).attr('data-search') || '';
-
-        var matchesFilter = (_brmActiveFilter === 'all') || (cardStatus === _brmActiveFilter);
-        var matchesSearch = !query || (cardSearch.indexOf(query) !== -1);
-
-        if (matchesFilter && matchesSearch) {
-            $(this).show();
-            visibleCount++;
-        } else {
-            $(this).hide();
-        }
-    });
-
-    if (visibleCount === 0 && $('.brmnote-card').length > 0) {
-        $('#brmnoteNoSearchCard').show();
-    } else {
-        $('#brmnoteNoSearchCard').hide();
-    }
+    fetchTemplatesAjax(1);
 }
 
 function resetFilters() {
     $('#brmnoteSearchInput').val('');
     $('#brmnoteSearchClear').hide();
-    filterTemplates('all', $('.brmnote-tab-btn[data-filter="all"]'));
+    _brmActiveFilter = 'all';
+    $('.brmnote-tab-btn').removeClass('active');
+    $('.brmnote-tab-btn[data-filter="all"]').addClass('active');
+    fetchTemplatesAjax(1);
 }
 
-function updateKpiCounters() {
-    var total = $('.brmnote-card').length;
-    var active = $('.brmnote-card[data-status="active"]').length;
-    var inactive = $('.brmnote-card[data-status="inactive"]').length;
+function updateKpiCounters(counts) {
+    if (counts) {
+        $('#kpiTotalCount').text(counts.total);
+        $('#kpiActiveCount').text(counts.active);
+        $('#kpiInactiveCount').text(counts.inactive);
 
-    $('#kpiTotalCount').text(total);
-    $('#kpiActiveCount').text(active);
-    $('#kpiInactiveCount').text(inactive);
-
-    $('#tabCountAll').text(total);
-    $('#tabCountActive').text(active);
-    $('#tabCountInactive').text(inactive);
-
-    if (total === 0) {
-        $('#brmnoteEmptyCard').show();
-        $('.brmnote-stream-header-strip').hide();
-    } else {
-        $('#brmnoteEmptyCard').hide();
-        $('.brmnote-stream-header-strip').show();
+        $('#tabCountAll').text(counts.total);
+        $('#tabCountActive').text(counts.active);
+        $('#tabCountInactive').text(counts.inactive);
     }
 }
 
@@ -1375,7 +1397,7 @@ function duplicateTemplate(id) {
                 if (res.status === 'success') {
                     toastr.success(res.message);
                     invalidateClientCaches(true, 'mutation');
-                    setTimeout(function() { location.reload(); }, 600);
+                    fetchTemplatesAjax(1, true);
                 } else {
                     toastr.error(res.message || 'Duplication failed.');
                 }
@@ -1421,13 +1443,14 @@ $(document).ready(function() {
 
         clearTimeout(_brmSearchTimer);
         _brmSearchTimer = setTimeout(function() {
-            applyFilters();
+            fetchTemplatesAjax(1);
         }, 300);
     });
 
     $('#brmnoteSearchClear').on('click', function() {
-        $('#brmnoteSearchInput').val('').trigger('input');
+        $('#brmnoteSearchInput').val('');
         $(this).hide();
+        fetchTemplatesAjax(1);
     });
 });
 
@@ -1633,13 +1656,10 @@ function saveTemplate() {
                 if (id) {
                     delete _clientTemplateCache[id];
                     JeroBenchRmNotesDB.delete('template_' + id);
-                } else {
-                    invalidateClientCaches(true, 'mutation');
                 }
+                invalidateClientCaches(true, 'mutation');
                 $('#brmModal').modal('hide');
-                setTimeout(function() {
-                    location.reload();
-                }, 600);
+                fetchTemplatesAjax(id ? _brmCurrentPage : 1, true);
             } else {
                 toastr.error(res.message || 'Failed to save template.');
             }
@@ -1696,11 +1716,10 @@ function deleteTemplate(id) {
                     toastr.success(res.message || 'Template deleted.');
                     delete _clientTemplateCache[id];
                     JeroBenchRmNotesDB.delete('template_' + id);
-                    broadcastMutation('delete', id);
-                    $('#brmnote-card-' + id).fadeOut(300, function() {
+                    invalidateClientCaches(true, 'delete', id);
+                    $('#brmnote-card-' + id).fadeOut(250, function() {
                         $(this).remove();
-                        updateKpiCounters();
-                        applyFilters();
+                        fetchTemplatesAjax(_brmCurrentPage, true);
                     });
                 } else {
                     toastr.error(res.message || 'Failed to delete template.');
