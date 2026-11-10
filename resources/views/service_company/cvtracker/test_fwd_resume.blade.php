@@ -1251,13 +1251,10 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           @php
             $currentLoggedInEmail = auth()->user()->email ?? ($userdata->email ?? '');
           @endphp
-          <label class="mm-copy-self-label" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11.5px;font-weight:500;color:#374151;margin:0;user-select:none;">
-            <input type="checkbox" id="test_fwd_copy_to_self" name="copy_to_self" value="1" data-user-email="{{ strtolower(trim($currentLoggedInEmail)) }}" style="width:15px;height:15px;border-radius:4px;cursor:pointer;margin:0;accent-color:#2563EB;">
-            <span style="display:inline-flex;align-items:center;gap:4px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              Send a copy to myself <span id="test_copy_self_email_display" style="color:#64748B;font-weight:400;">({{ $currentLoggedInEmail }})</span>
-            </span>
-          </label>
+          <div class="mm-copy-self-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:3px 8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#009EF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Auto-copy sent to you <span id="test_copy_self_email_display" style="color:#009EF7;font-weight:600;">({{ $currentLoggedInEmail }})</span></span>
+          </div>
         </div>
       </div>
     </div>
@@ -3786,7 +3783,7 @@ window.onTestFwdSubmitClick = async function (e) {
             'reply_to_email': reply_to_email,
             'to_email': to_email,
             'cc_email': cc_email,
-            'copy_to_self': $('#test_fwd_copy_to_self').is(':checked') ? 1 : 0,
+            'copy_to_self': 1,
             'subject': subject,
             'attached_cv': attached_cv,
             'attached_cv_format': optId,
@@ -4099,7 +4096,7 @@ window.renderTestTags = function(target) {
         window.syncFirstRecipientSalutation();
     }
 
-    var currentUserEmail = ($('#test_fwd_copy_to_self').attr('data-user-email') || '').toLowerCase().trim();
+    var currentUserEmail = '{{ strtolower(trim($currentLoggedInEmail)) }}';
     if (currentUserEmail) {
         var inTo = (window._testEmailTags.to || []).some(function(e) { return e.toLowerCase() === currentUserEmail; });
         var inCc = (window._testEmailTags.cc || []).some(function(e) { return e.toLowerCase() === currentUserEmail; });
@@ -4107,7 +4104,6 @@ window.renderTestTags = function(target) {
             window.removeTestEmailByAddress('cc', currentUserEmail);
             inCc = false;
         }
-        $('#test_fwd_copy_to_self').prop('checked', inCc && !inTo);
     }
 };
 
@@ -4258,61 +4254,6 @@ $(document).off('click', '.apply-email-fix').on('click', '.apply-email-fix', fun
         }
         $(targetSel).val('');
         $(hintSel).slideUp(100, function() { $(this).empty(); });
-    }
-});
-
-// Toggle 'Send a copy to myself' checkbox
-$(document).off('change', '#test_fwd_copy_to_self').on('change', '#test_fwd_copy_to_self', function() {
-    var isChecked = $(this).is(':checked');
-    var userEmail = ($('#test_fwd_copy_to_self').attr('data-user-email') || '').toLowerCase().trim();
-    if (!userEmail) {
-        $(this).prop('checked', false);
-        return;
-    }
-
-    if (isChecked) {
-        var inTo = (window._testEmailTags && window._testEmailTags.to) ? window._testEmailTags.to.some(function(e) {
-            return e.toLowerCase() === userEmail;
-        }) : false;
-
-        if (inTo) {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'Already in Recipient List',
-                    text: 'Your email (' + userEmail + ') is already included as a primary recipient in the "To" field. A duplicate copy is not required.',
-                    icon: 'info',
-                    confirmButtonColor: '#0D9488'
-                });
-            }
-            $(this).prop('checked', false);
-            return;
-        }
-
-        var total = typeof getTestTotalRecipientsCount === 'function' ? getTestTotalRecipientsCount() : 0;
-        var inCc = (window._testEmailTags && window._testEmailTags.cc) ? window._testEmailTags.cc.some(function(e) {
-            return e.toLowerCase() === userEmail;
-        }) : false;
-
-        if (!inCc && total >= MAX_TEST_TOTAL_RECIPIENTS) {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'Recipient Limit Reached',
-                    text: 'Maximum ' + MAX_TEST_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed. Please remove an existing recipient to send a copy to yourself.',
-                    icon: 'warning',
-                    confirmButtonColor: '#0D9488'
-                });
-            }
-            $(this).prop('checked', false);
-            return;
-        }
-
-        if (!inCc && typeof addTestEmailTag === 'function') {
-            addTestEmailTag('cc', userEmail);
-        }
-    } else {
-        if (typeof removeTestEmailByAddress === 'function') {
-            removeTestEmailByAddress('cc', userEmail);
-        }
     }
 });
 

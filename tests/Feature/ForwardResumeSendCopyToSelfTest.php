@@ -42,19 +42,19 @@ class ForwardResumeSendCopyToSelfTest extends TestCase
     }
 
     /**
-     * Test 1: Logged-in user's email is appended to CC when copy_to_self is selected.
+     * Test 1: Logged-in user's email is mandatorily appended to CC without requiring a checkbox.
      */
-    public function test_copy_to_self_appends_logged_in_user_email_to_cc(): void
+    public function test_mandatory_copy_to_recruiter_appends_logged_in_user_email_to_cc(): void
     {
         $loggedInUserEmail = 'recruiter.vibhanshu@4bell.com';
         $toRaw = 'client.manager@techcorp.com, hr.director@techcorp.com';
         $ccRaw = 'team.lead@4bell.com';
-        $copyToSelf = true;
 
         $to = array_values(array_unique(array_filter(array_map([$this, 'cleanEmailDeterministic'], explode(',', $toRaw)))));
         $cc = array_values(array_unique(array_filter(array_map([$this, 'cleanEmailDeterministic'], explode(',', $ccRaw)))));
 
-        if ($copyToSelf && ! empty($loggedInUserEmail) && filter_var($loggedInUserEmail, FILTER_VALIDATE_EMAIL)) {
+        // Mandatory auto-copy to logged-in recruiter
+        if (! empty($loggedInUserEmail) && filter_var($loggedInUserEmail, FILTER_VALIDATE_EMAIL)) {
             if (! in_array($loggedInUserEmail, $to, true)) {
                 if (! in_array($loggedInUserEmail, $cc, true)) {
                     $cc[] = $loggedInUserEmail;
@@ -83,12 +83,12 @@ class ForwardResumeSendCopyToSelfTest extends TestCase
         // Recruiter typed their own email as the primary recipient
         $toRaw = 'recruiter.vibhanshu@4bell.com';
         $ccRaw = 'colleague@4bell.com';
-        $copyToSelf = true;
 
         $to = array_values(array_unique(array_filter(array_map([$this, 'cleanEmailDeterministic'], explode(',', $toRaw)))));
         $cc = array_values(array_unique(array_filter(array_map([$this, 'cleanEmailDeterministic'], explode(',', $ccRaw)))));
 
-        if ($copyToSelf && ! empty($loggedInUserEmail) && filter_var($loggedInUserEmail, FILTER_VALIDATE_EMAIL)) {
+        // Mandatory auto-copy to logged-in recruiter
+        if (! empty($loggedInUserEmail) && filter_var($loggedInUserEmail, FILTER_VALIDATE_EMAIL)) {
             // Must NOT add to CC if already in To
             if (! in_array($loggedInUserEmail, $to, true)) {
                 if (! in_array($loggedInUserEmail, $cc, true)) {
@@ -129,7 +129,7 @@ class ForwardResumeSendCopyToSelfTest extends TestCase
     }
 
     /**
-     * Test 4: Deliverability cap (Max 5 total recipients) enforced when copy_to_self is toggled.
+     * Test 4: Deliverability cap (Max 5 total recipients) enforced with mandatory recruiter auto-copy.
      */
     public function test_deliverability_quota_capped_at_five_recipients(): void
     {
@@ -137,12 +137,11 @@ class ForwardResumeSendCopyToSelfTest extends TestCase
         // 5 primary recipients already provided
         $toRaw = 'u1@client.com, u2@client.com, u3@client.com, u4@client.com, u5@client.com';
         $ccRaw = '';
-        $copyToSelf = true;
 
         $to = array_values(array_unique(array_filter(array_map([$this, 'cleanEmailDeterministic'], explode(',', $toRaw)))));
         $cc = array_values(array_unique(array_filter(array_map([$this, 'cleanEmailDeterministic'], explode(',', $ccRaw)))));
 
-        if ($copyToSelf && ! empty($loggedInUserEmail) && filter_var($loggedInUserEmail, FILTER_VALIDATE_EMAIL)) {
+        if (! empty($loggedInUserEmail) && filter_var($loggedInUserEmail, FILTER_VALIDATE_EMAIL)) {
             if (! in_array($loggedInUserEmail, $to, true)) {
                 if (! in_array($loggedInUserEmail, $cc, true)) {
                     $cc[] = $loggedInUserEmail;

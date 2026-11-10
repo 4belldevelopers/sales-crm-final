@@ -8836,11 +8836,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         }
         $cc = array_values(array_unique($cc));
 
-        // Send a Copy to Myself option resolution (Server-authoritative authenticated user email)
+        // Mandatory Send a Copy to Recruiter (Server-authoritative authenticated user email)
         $userEmail = strtolower(trim((string) auth()->user()->email));
-        $copyToSelf = $request->boolean('copy_to_self') || $request->input('copy_to_self') === '1' || $request->input('copy_to_self') === 1;
+        $copyToSelf = true;
 
-        if ($copyToSelf && ! empty($userEmail) && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+        if (! empty($userEmail) && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
             if (! in_array($userEmail, $to, true)) {
                 if (! in_array($userEmail, $cc, true)) {
                     $cc[] = $userEmail;
