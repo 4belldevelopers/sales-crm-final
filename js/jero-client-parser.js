@@ -1,7 +1,8 @@
 /**
  * jero-client-parser.js — 100% Client-Side Resume Parser Integration Bridge
  *
- * Production URL: https://parser.jero.works/jero-resume-parser-2tURGwDx.js
+ * Production URL: https://parser.jero.works/jero-resume-parser-DW7x_WGm.js
+ * Fallback URL:   https://parser.jero.works/jero-resume-parser.js
  *
  * Architecture:
  *   Browser (User RAM)
@@ -20,7 +21,8 @@
 (function (window, document, $) {
     'use strict';
 
-    var PRODUCTION_PARSER_URL = 'https://parser.jero.works/jero-resume-parser-2tURGwDx.js';
+    var PRODUCTION_PARSER_URL = 'https://parser.jero.works/jero-resume-parser-DW7x_WGm.js';
+    var FALLBACK_PARSER_URL = 'https://parser.jero.works/jero-resume-parser.js?v=20261110';
     var LOAD_TIMEOUT_MS = 30000;
 
     var _parserModulePromise = null;
@@ -58,7 +60,7 @@
     }
 
     /**
-     * Phase 2: Prove dynamic import from https://parser.jero.works/jero-resume-parser-2tURGwDx.js
+     * Phase 2: Dynamic import from production Cloudflare edge with automatic fallback
      */
     function loadParserModule() {
         if (_parserModulePromise) {
@@ -75,22 +77,28 @@
                 reject(timeoutErr);
             }, LOAD_TIMEOUT_MS);
 
+            function verifyAndResolve(mod) {
+                clearTimeout(timeoutId);
+                console.log('[PARSER 4] Parser module loaded');
+                console.log('[PARSER] module loaded');
+
+                var parseResumeFn = mod.parseResume || (mod.default && mod.default.parseResume);
+                if (typeof parseResumeFn !== 'function') {
+                    var missingFnErr = new Error('parseResume function not available on imported module');
+                    reportFailure('Verify parseResume', missingFnErr, _activeFile);
+                    throw missingFnErr;
+                }
+
+                console.log('[PARSER 5] parseResume available');
+                console.log('[PARSER] parseResume available');
+                resolve(mod);
+            }
+
             import(PRODUCTION_PARSER_URL)
-                .then(function (mod) {
-                    clearTimeout(timeoutId);
-                    console.log('[PARSER 4] Parser module loaded');
-                    console.log('[PARSER] module loaded');
-
-                    var parseResumeFn = mod.parseResume || (mod.default && mod.default.parseResume);
-                    if (typeof parseResumeFn !== 'function') {
-                        var missingFnErr = new Error('parseResume function not available on imported module');
-                        reportFailure('Verify parseResume', missingFnErr, _activeFile);
-                        throw missingFnErr;
-                    }
-
-                    console.log('[PARSER 5] parseResume available');
-                    console.log('[PARSER] parseResume available');
-                    resolve(mod);
+                .then(verifyAndResolve)
+                .catch(function (primaryErr) {
+                    console.warn('[PARSER] Primary bundle failed, falling back to canonical bundle:', FALLBACK_PARSER_URL, primaryErr);
+                    return import(FALLBACK_PARSER_URL).then(verifyAndResolve);
                 })
                 .catch(function (err) {
                     clearTimeout(timeoutId);
@@ -147,8 +155,8 @@
         }
 
         if (!intervals.length) {
-            // Check if duration text exists in summary (e.g. "2.6 years of experience")
-            var sumMatch = String(summaryText || '').match(/(\d+(?:\.\d+)?)\+?\s*(?:years?|yrs?)\s+(?:of\s+)?experience/i);
+            // Check if duration text exists in summary (e.g. "4+ years of hands-on experience", "2.6 years of experience")
+            var sumMatch = String(summaryText || '').match(/(\d+(?:\.\d+)?)\+?\s*(?:years?|yrs?)\b(?:\s+(?:of\s+)?(?:hands-on\s+|relevant\s+|professional\s+|total\s+|industry\s+|working\s+)?experience)?/i);
             if (sumMatch) {
                 var totalFloat = parseFloat(sumMatch[1]);
                 var y = Math.floor(totalFloat);
@@ -218,8 +226,8 @@
             company.length > 55
         );
 
-        if (isCompanySentence && designation && /[–—\-\u2013\u2014\u2015\u2212\|]/.test(designation)) {
-            var parts = designation.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*/);
+        if ((!company || isCompanySentence) && designation && /[–—\-\u2013\u2014\u2015\u2212\|]|\s+at\s+|\s+@\s+/i.test(designation)) {
+            var parts = designation.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*|\s+at\s+|\s+@\s+/i);
             if (parts.length >= 2) {
                 designation = parts[0].trim();
                 var candidateCompany = parts.slice(1).join(' - ');
@@ -244,8 +252,9 @@
      * - experience[i].company (skipping sentences like "Provided technical support...")
      * - experience[i].description[j] (e.g. "Triotree Pvt. Ltd., Noida (8 Months)")
      * - experience[i].title (e.g. "Software Engineer – Triotree Pvt. Ltd.")
+     * - fallback: scans summary and document text for "<Role> at <Company>" patterns
      */
-    function extractCompanyFromExperience(expList, cand) {
+    function extractCompanyFromExperience(expList, cand, fullResult) {
         var isSentence = function (text) {
             return !text ||
                 /^(provided|worked|responsible|developed|managed|assisted|handled|created|led|designed|engineered|maintaining|coordinating|building|supported|participated)\b/i.test(text) ||
@@ -263,42 +272,54 @@
             var candComp = cleanCompName(cand.currentCompany || cand.company || cand.current_company);
             if (candComp && !isSentence(candComp) && candComp.length >= 2) return candComp;
         }
-        if (!Array.isArray(expList) || !expList.length) return '';
+        if (Array.isArray(expList) && expList.length) {
+            for (var i = 0; i < expList.length; i++) {
+                var item = expList[i];
+                if (!item) continue;
 
-        for (var i = 0; i < expList.length; i++) {
-            var item = expList[i];
-            if (!item) continue;
+                // A. Check item.company
+                var comp = String(item.company || '').trim();
+                if (comp && !isSentence(comp)) {
+                    var c1 = cleanCompName(comp);
+                    if (c1 && c1.length >= 2 && c1.length <= 60) return c1;
+                }
 
-            // A. Check item.company
-            var comp = String(item.company || '').trim();
-            if (comp && !isSentence(comp)) {
-                var c1 = cleanCompName(comp);
-                if (c1 && c1.length >= 2 && c1.length <= 60) return c1;
-            }
-
-            // B. Check item.description array (e.g. "Triotree Pvt. Ltd., Noida (8 Months)")
-            if (Array.isArray(item.description) && item.description.length > 0) {
-                for (var d = 0; d < item.description.length; d++) {
-                    var descLine = String(item.description[d] || '').trim();
-                    if (!descLine) continue;
-                    var looksLikeCompany = /\b(pvt|ltd|limited|inc|llc|technologies|systems|solutions|infotech|services|corp|corporation|group|software|consulting)\b/i.test(descLine) ||
-                        (!isSentence(descLine) && descLine.length < 50 && /[A-Z]/.test(descLine));
-                    if (looksLikeCompany) {
-                        var c2 = cleanCompName(descLine);
-                        if (c2 && c2.length >= 2 && c2.length <= 60 && !isSentence(c2)) {
-                            return c2;
+                // B. Check item.description array (e.g. "Triotree Pvt. Ltd., Noida (8 Months)")
+                if (Array.isArray(item.description) && item.description.length > 0) {
+                    for (var d = 0; d < item.description.length; d++) {
+                        var descLine = String(item.description[d] || '').trim();
+                        if (!descLine) continue;
+                        var looksLikeCompany = /\b(pvt|ltd|limited|inc|llc|technologies|systems|solutions|infotech|services|corp|corporation|group|software|consulting)\b/i.test(descLine) ||
+                            (!isSentence(descLine) && descLine.length < 50 && /[A-Z]/.test(descLine));
+                        if (looksLikeCompany) {
+                            var c2 = cleanCompName(descLine);
+                            if (c2 && c2.length >= 2 && c2.length <= 60 && !isSentence(c2)) {
+                                return c2;
+                            }
                         }
                     }
                 }
-            }
 
-            // C. Check item.title if formatted as "Role – Company" or "Role at Company"
-            var title = String(item.title || '').trim();
-            var titleParts = title.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*|\s+at\s+|\s+@\s+/i);
-            if (titleParts.length >= 2) {
-                var c3 = cleanCompName(titleParts.slice(1).join(' - '));
-                if (c3 && c3.length >= 2 && c3.length <= 60 && !isSentence(c3)) {
-                    return c3;
+                // C. Check item.title if formatted as "Role – Company" or "Role at Company"
+                var title = String(item.title || '').trim();
+                var titleParts = title.split(/\s*[–—\-\u2013\u2014\u2015\u2212\|]\s*|\s+at\s+|\s+@\s+/i);
+                if (titleParts.length >= 2) {
+                    var c3 = cleanCompName(titleParts.slice(1).join(' - '));
+                    if (c3 && c3.length >= 2 && c3.length <= 60 && !isSentence(c3)) {
+                        return c3;
+                    }
+                }
+            }
+        }
+
+        // D. Defensive fallback: scan summary or rawText for standard company pattern
+        if (fullResult) {
+            var textToScan = (fullResult.summary || '') + ' ' + (fullResult.rawText || '') + ' ' + ((cand && (cand.summary || cand.objective)) || '');
+            var compMatch = textToScan.match(/(?:at|@)\s+([A-Z][A-Za-z0-9\s.,&-]{2,55}?(?:Pvt\.?\s*Ltd\.?|Private\s+Limited|Limited|Inc\.?|LLC|Corporation|Technologies|Solutions|Consulting|Services|Enterprises|Systems))\b/i);
+            if (compMatch) {
+                var c4 = cleanCompName(compMatch[1]);
+                if (c4 && c4.length >= 2 && c4.length <= 60 && !isSentence(c4)) {
+                    return c4;
                 }
             }
         }
@@ -351,62 +372,79 @@
 
     /**
      * Fuzzy matches parsed education against available qualification dropdown options.
+     * Includes defensive keyword matching across fullResult text if educationList is empty or unmatched.
      */
-    function matchQualification(educationList, selectEl) {
-        if (!Array.isArray(educationList) || !educationList.length) return null;
+    function matchQualification(educationList, selectEl, fullResult) {
         var qualSelect = selectEl || document.getElementById('qualification');
         if (!qualSelect || !qualSelect.options) return null;
 
         var options = qualSelect.options;
 
-        for (var i = 0; i < educationList.length; i++) {
-            var edu = educationList[i];
-            var degreeRaw = String(edu.degree || '').toLowerCase().trim();
-            var fieldRaw = String(edu.field || '').toLowerCase().trim();
-            var instRaw = String(edu.institution || '').toLowerCase().trim();
-            var combined = (degreeRaw + ' ' + fieldRaw + ' ' + instRaw).trim();
+        if (Array.isArray(educationList) && educationList.length) {
+            for (var i = 0; i < educationList.length; i++) {
+                var edu = educationList[i];
+                var degreeRaw = String(edu.degree || '').toLowerCase().trim();
+                var fieldRaw = String(edu.field || '').toLowerCase().trim();
+                var instRaw = String(edu.institution || '').toLowerCase().trim();
+                var combined = (degreeRaw + ' ' + fieldRaw + ' ' + instRaw).trim();
 
-            if (!combined) continue;
+                if (!combined) continue;
 
-            for (var j = 0; j < options.length; j++) {
-                var opt = options[j];
-                if (!opt.value) continue;
-                var optText = opt.textContent.toLowerCase().trim();
-                var aliases = (opt.getAttribute('data-aliases') || '').toLowerCase().split(',').map(function (a) { return a.trim(); }).filter(Boolean);
-                if (!optText) continue;
+                for (var j = 0; j < options.length; j++) {
+                    var opt = options[j];
+                    if (!opt.value) continue;
+                    var optText = opt.textContent.toLowerCase().trim();
+                    var aliases = (opt.getAttribute('data-aliases') || '').toLowerCase().split(',').map(function (a) { return a.trim(); }).filter(Boolean);
+                    if (!optText) continue;
 
-                if (combined === optText || degreeRaw === optText) {
-                    return opt.value;
-                }
+                    if (combined === optText || degreeRaw === optText) {
+                        return opt.value;
+                    }
 
-                // Check acronym & alias matching
-                if (/\bb\.?tech\b|\bb\.?e\b|\bbachelor of technology\b/i.test(degreeRaw) && /\bb\.?tech\b|\bb\.?e\b/i.test(optText)) return opt.value;
-                if (/\bm\.?tech\b|\bm\.?e\b|\bmaster of technology\b/i.test(degreeRaw) && /\bm\.?tech\b|\bm\.?e\b/i.test(optText)) return opt.value;
-                if (/\bmba\b|\bpgdm\b/i.test(degreeRaw) && /\bmba\b/i.test(optText)) return opt.value;
-                if (/\bmca\b|\bmaster of computer/i.test(degreeRaw) && /\bmca\b/i.test(optText)) return opt.value;
-                if (/\bbca\b|\bbachelor of computer/i.test(degreeRaw) && /\bbca\b/i.test(optText)) return opt.value;
-                if (/\bb\.?sc\b|\bbs\b|\bbachelor of science\b/i.test(degreeRaw) && /\bb\.?sc\b|\bbs\b/i.test(optText)) return opt.value;
-                if (/\bm\.?sc\b|\bms\b|\bmaster of science\b/i.test(degreeRaw) && /\bm\.?sc\b|\bms\b/i.test(optText)) return opt.value;
-                if (/\bbba\b|\bbms\b/i.test(degreeRaw) && /\bbba\b/i.test(optText)) return opt.value;
-                if (/\bb\.?com\b/i.test(degreeRaw) && /\bb\.?com\b/i.test(optText)) return opt.value;
-                if (/\bm\.?com\b/i.test(degreeRaw) && /\bm\.?com\b/i.test(optText)) return opt.value;
-                if (/\bph\.?d\b|\bdoctorate\b/i.test(degreeRaw) && /\bph\.?d\b|\bdoctorate\b/i.test(optText)) return opt.value;
-                if (/\bdiploma\b|\bpolytechnic\b/i.test(degreeRaw) && /\bdiploma\b|\bpolytechnic\b/i.test(optText)) return opt.value;
-                if (/\b12th\b|\bhsc\b|\bintermediate\b|\bhigh school\b/i.test(degreeRaw) && /\b12th\b/i.test(optText)) return opt.value;
-                if (/\b10th\b|\bssc\b|\bmatric/i.test(degreeRaw) && /\b10th\b/i.test(optText)) return opt.value;
+                    // Check acronym & alias matching
+                    if (/\bb\.?tech\b|\bb\.?e\b|\bbachelor of technology\b/i.test(degreeRaw) && /\bb\.?tech\b|\bb\.?e\b/i.test(optText)) return opt.value;
+                    if (/\bm\.?tech\b|\bm\.?e\b|\bmaster of technology\b/i.test(degreeRaw) && /\bm\.?tech\b|\bm\.?e\b/i.test(optText)) return opt.value;
+                    if (/\bmba\b|\bpgdm\b/i.test(degreeRaw) && /\bmba\b/i.test(optText)) return opt.value;
+                    if (/\bmca\b|\bmaster of computer/i.test(degreeRaw) && /\bmca\b/i.test(optText)) return opt.value;
+                    if (/\bbca\b|\bbachelor of computer/i.test(degreeRaw) && /\bbca\b/i.test(optText)) return opt.value;
+                    if (/\bb\.?sc\b|\bbs\b|\bbachelor of science\b/i.test(degreeRaw) && /\bb\.?sc\b|\bbs\b/i.test(optText)) return opt.value;
+                    if (/\bm\.?sc\b|\bms\b|\bmaster of science\b/i.test(degreeRaw) && /\bm\.?sc\b|\bms\b/i.test(optText)) return opt.value;
+                    if (/\bbba\b|\bbms\b/i.test(degreeRaw) && /\bbba\b/i.test(optText)) return opt.value;
+                    if (/\bb\.?com\b/i.test(degreeRaw) && /\bb\.?com\b/i.test(optText)) return opt.value;
+                    if (/\bm\.?com\b/i.test(degreeRaw) && /\bm\.?com\b/i.test(optText)) return opt.value;
+                    if (/\bph\.?d\b|\bdoctorate\b/i.test(degreeRaw) && /\bph\.?d\b|\bdoctorate\b/i.test(optText)) return opt.value;
+                    if (/\bdiploma\b|\bpolytechnic\b/i.test(degreeRaw) && /\bdiploma\b|\bpolytechnic\b/i.test(optText)) return opt.value;
+                    if (/\b12th\b|\bhsc\b|\bintermediate\b|\bhigh school\b/i.test(degreeRaw) && /\b12th\b/i.test(optText)) return opt.value;
+                    if (/\b10th\b|\bssc\b|\bmatric/i.test(degreeRaw) && /\b10th\b/i.test(optText)) return opt.value;
 
-                // Check data-aliases attribute if present
-                for (var a = 0; a < aliases.length; a++) {
-                    var al = aliases[a];
-                    if (al.length >= 3 && (degreeRaw === al || combined.indexOf(al) !== -1)) {
+                    // Check data-aliases attribute if present
+                    for (var a = 0; a < aliases.length; a++) {
+                        var al = aliases[a];
+                        if (al.length >= 3 && (degreeRaw === al || combined.indexOf(al) !== -1)) {
+                            return opt.value;
+                        }
+                    }
+
+                    if (combined.indexOf(optText) !== -1 || optText.indexOf(degreeRaw) !== -1) {
                         return opt.value;
                     }
                 }
-
-                if (combined.indexOf(optText) !== -1 || optText.indexOf(degreeRaw) !== -1) {
-                    return opt.value;
-                }
             }
+        }
+
+        // Defensive fallback: scan full text for degree matches
+        if (fullResult) {
+            var textToScan = (fullResult.summary || '') + ' ' + (fullResult.rawText || '') + ' ' + (fullResult.text || '') + ' ' + (fullResult.career_summary || '');
+            if (/\b(?:b\.?tech|b\.?e\b|bachelor of technology|bachelor of engineering)\b/i.test(textToScan)) return '13';
+            if (/\b(?:m\.?tech|m\.?e\b|master of technology|master of engineering)\b/i.test(textToScan)) return '40';
+            if (/\b(?:mba|pgdm)\b/i.test(textToScan)) return '41';
+            if (/\bmca\b/i.test(textToScan)) return '42';
+            if (/\bbca\b/i.test(textToScan)) return '16';
+            if (/\b(?:b\.?sc|b\.?s\b)\b/i.test(textToScan)) return '12';
+            if (/\b(?:m\.?sc|m\.?s\b)\b/i.test(textToScan)) return '39';
+            if (/\bdiploma\b/i.test(textToScan)) return '24';
+            if (/\b(?:12th|hsc|intermediate)\b/i.test(textToScan)) return '2';
+            if (/\b(?:10th|ssc|matric)\b/i.test(textToScan)) return '1';
         }
 
         return null;
@@ -769,7 +807,7 @@
 
                 // 7a. Current Company Extraction & Population
                 try {
-                    var extractedCompany = extractCompanyFromExperience(expList, cand);
+                    var extractedCompany = extractCompanyFromExperience(expList, cand, result);
                     if (!extractedCompany) {
                         extractedCompany = cand.currentCompany || cand.company || cand.current_company || result.company || result.current_company || '';
                     }
@@ -805,7 +843,7 @@
 
                 // 8. Education / Qualification (Select2 Safe Adapter + Custom Combobox Sync)
                 try {
-                    var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
+                    var matchedQualId = matchQualification(result.education, document.getElementById('qualification'), result);
                     if (matchedQualId) {
                         safeSetSelect2('#qualification', String(matchedQualId), 'qualification');
                         var qualSelect = document.getElementById('qualification');
@@ -1066,7 +1104,8 @@
         getLastResult: function () { return _lastParsedResult; },
         getActiveFile: function () { return _activeFile; },
         getCurrentRunId: function () { return _currentParserRunId; },
-        PRODUCTION_PARSER_URL: PRODUCTION_PARSER_URL
+        PRODUCTION_PARSER_URL: PRODUCTION_PARSER_URL,
+        FALLBACK_PARSER_URL: FALLBACK_PARSER_URL
     };
 
     // Pre-warm the parser module during idle time from production URL

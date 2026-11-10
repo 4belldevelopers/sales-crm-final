@@ -197,15 +197,26 @@ class CreateInvitationAction
                 throw new CoolingOffPeriodException;
             }
 
-            // 5. Lock Invitation Active Slot / Check active invitation
+            // 5. Lock Invitation Active Slot / Check active invitation with JIT Lazy Expiry
             $slotKey = "{$fromCompanyId}:{$normalizedRecipient}";
-            $activeInvitationExists = DB::table('staffing_company_invitation')
+            $existingActiveSlot = DB::table('staffing_company_invitation')
                 ->where('active_invite_slot', $slotKey)
                 ->lockForUpdate()
-                ->exists();
+                ->first();
 
-            if ($activeInvitationExists) {
-                throw new ActiveInvitationExistsException;
+            if ($existingActiveSlot) {
+                // JIT (Just-In-Time) evaluation: if expired, lazily reconcile and release slot immediately
+                if ($existingActiveSlot->expires_at && Carbon::parse($existingActiveSlot->expires_at)->isPast()) {
+                    DB::table('staffing_company_invitation')
+                        ->where('id', $existingActiveSlot->id)
+                        ->update([
+                            'to_invitation_status' => -2,
+                            'active_invite_slot' => null,
+                            'updated_at' => Carbon::now(),
+                        ]);
+                } else {
+                    throw new ActiveInvitationExistsException;
+                }
             }
 
             // Fetch client primary ID

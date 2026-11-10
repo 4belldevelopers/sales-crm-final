@@ -63,6 +63,12 @@ class AgencyPartnershipGodAuditTest extends TestCase
 
         $this->withoutMiddleware([EnsureOneDeviceLogin::class]);
 
+        \Illuminate\Support\Facades\Queue::fake([
+            \App\Jobs\QueueNotificationMailService::class,
+            \App\Jobs\ProcessAgencyOutboxEventJob::class,
+        ]);
+        \Illuminate\Support\Facades\Mail::fake();
+
         $this->clientUser = User::withoutGlobalScopes()->where('company_id', $this->clientCompanyId)->where('status', 'active')->first()
             ?? User::withoutGlobalScopes()->first();
 
@@ -474,7 +480,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
 
         $response->assertStatus(200);
         $data = $response->json();
-        $this->assertEquals('success', $data['status']);
+        $this->assertEquals('success', $data['status'], 'Response status was not success. Message: '.($data['message'] ?? 'none'));
         $this->assertNotEmpty($data['invitation_id']);
         $this->assertEquals(5, $data['coins_deducted']);
     }
@@ -494,7 +500,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $response = $this->postJson(route('service_company.consultancy.cancel_invitation', $invId));
         $response->assertStatus(200);
         $data = $response->json();
-        $this->assertEquals('success', $data['status']);
+        $this->assertEquals('success', $data['status'], 'Response status was not success. Message: '.($data['message'] ?? 'none'));
 
         // Verify status in DB is -2
         $status = DB::table('staffing_company_invitation')->where('id', $invId)->value('to_invitation_status');
@@ -520,7 +526,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $response = $this->postJson(route('service_company.consultancy.re_invite', $invId));
         $response->assertStatus(200);
         $data = $response->json();
-        $this->assertEquals('success', $data['status']);
+        $this->assertEquals('success', $data['status'], 'Response status was not success. Message: '.($data['message'] ?? 'none'));
         $this->assertNotEquals($invId, $data['invitation_id']);
     }
 
@@ -559,7 +565,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
 
         $response->assertStatus(200);
         $data = $response->json();
-        $this->assertEquals('success', $data['status']);
+        $this->assertEquals('success', $data['status'], 'Response status was not success. Message: '.($data['message'] ?? 'none'));
         $this->assertNotEmpty($data['relation_id']);
     }
 
@@ -593,7 +599,7 @@ class AgencyPartnershipGodAuditTest extends TestCase
 
         $response->assertStatus(200);
         $data = $response->json();
-        $this->assertEquals('success', $data['status']);
+        $this->assertEquals('success', $data['status'], 'Response status was not success. Message: '.($data['message'] ?? 'none'));
 
         // Status is -1
         $status = DB::table('staffing_company_invitation')->where('id', $invId)->value('to_invitation_status');
@@ -601,11 +607,17 @@ class AgencyPartnershipGodAuditTest extends TestCase
     }
 
     /**
-     * T-18: Search agency autocomplete by company name and email address.
+     * T-18: Search agency autocomplete by company name and website with strict privacy protection (zero email exposure).
      */
-    public function test_search_agency_autocomplete_by_name_and_email(): void
+    public function test_search_agency_autocomplete_by_name_and_website_with_privacy_guard(): void
     {
         $this->actingAs($this->clientUser);
+
+        // Ensure target agency has a known website and active status
+        $uniqueWebsite = 'topflight-'.uniqid().'.com';
+        DB::table('companies')->where('id', $this->agencyCompanyId)->update([
+            'website' => 'https://www.'.$uniqueWebsite,
+        ]);
 
         $agencyCompany = DB::table('companies')->where('id', $this->agencyCompanyId)->first();
         $this->assertNotNull($agencyCompany);
@@ -615,19 +627,45 @@ class AgencyPartnershipGodAuditTest extends TestCase
         $response = $this->getJson(route('service_company.consultancy.search_agency_autocomplete', ['q' => $searchTerm]));
         $response->assertStatus(200);
         $data = $response->json();
-        $this->assertEquals('success', $data['status']);
+        $this->assertEquals('success', $data['status'], 'Response status was not success. Message: '.($data['message'] ?? 'none'));
         $this->assertNotEmpty($data['data']);
-        $agency = $data['data'][0];
-        $this->assertStringContainsStringIgnoringCase($searchTerm, $agency['company_name']);
+        $matchedAgency = null;
+        foreach ($data['data'] as $item) {
+            if ($item['id'] == $this->agencyCompanyId) {
+                $matchedAgency = $item;
+                break;
+            }
+        }
+        $this->assertNotNull($matchedAgency, 'Target agency must be found in search results.');
+        $this->assertStringContainsStringIgnoringCase($searchTerm, $matchedAgency['company_name']);
+        $this->assertEquals($uniqueWebsite, $matchedAgency['website']);
+        $this->assertEquals('https://www.'.$uniqueWebsite, $matchedAgency['website_url']);
 
-        // 2. Search by User / Admin Email
+        // Strict Redaction Verification: NO email fields exposed in output payload (Anti-Harvester Protection)
+        foreach ($data['data'] as $item) {
+            $this->assertArrayNotHasKey('email', $item, 'Company email must never be exposed in search results.');
+            $this->assertArrayNotHasKey('company_email', $item, 'Internal company_email must never be exposed.');
+            $this->assertArrayNotHasKey('root_email', $item, 'Root user email must never be exposed.');
+        }
+
+        // 2. Search by Official Website
+        $websiteQuery = substr($uniqueWebsite, 0, 9);
+        $responseWebsite = $this->getJson(route('service_company.consultancy.search_agency_autocomplete', ['q' => $websiteQuery]));
+        $responseWebsite->assertStatus(200);
+        $dataWebsite = $responseWebsite->json();
+        $this->assertEquals('success', $dataWebsite['status']);
+        $this->assertNotEmpty($dataWebsite['data']);
+        $matchedIds = array_column($dataWebsite['data'], 'id');
+        $this->assertContains($this->agencyCompanyId, $matchedIds);
+
+        // 3. Search by User / Admin Email must NOT return results (Anti-Harvester & Anti-Spam protection)
         $responseEmail = $this->getJson(route('service_company.consultancy.search_agency_autocomplete', ['q' => $this->agencyUser->email]));
         $responseEmail->assertStatus(200);
         $dataEmail = $responseEmail->json();
         $this->assertEquals('success', $dataEmail['status']);
-        $this->assertNotEmpty($dataEmail['data']);
+        $this->assertEmpty($dataEmail['data'], 'Email search must be disabled to prevent enumeration attacks.');
 
-        // 3. Short query (<2 chars) returns empty array
+        // 4. Short query (<2 chars) returns empty array
         $shortResponse = $this->getJson(route('service_company.consultancy.search_agency_autocomplete', ['q' => 'a']));
         $shortResponse->assertStatus(200);
         $shortData = $shortResponse->json();
@@ -687,5 +725,128 @@ class AgencyPartnershipGodAuditTest extends TestCase
         }
         $this->assertNotNull($matched);
         $this->assertEquals('connected', $matched['connection_status']);
+    }
+
+    /**
+     * T-20: Controller staffing_invitation with agency_company_id securely resolves email on backend (Privacy Protected).
+     */
+    public function test_controller_staffing_invitation_with_agency_company_id(): void
+    {
+        $this->actingAs($this->clientUser);
+
+        // Ensure unique agency company for this test to avoid collision
+        $partnerCompanyId = DB::table('companies')->insertGetId([
+            'company_name' => 'Agency Partner '.uniqid(),
+            'company_email' => 'partner_'.uniqid().'@agency.com',
+            'website' => 'https://www.agencytestpartner.com',
+            'status' => 'active',
+            'company_type' => 2,
+            'job_opening_title' => 'Jobs',
+            'job_opening_text' => 'We are hiring',
+            'locale' => 'en',
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        $response = $this->postJson(route('service_company.consultancy.staffing_invitation', 0), [
+            'agency_company_id' => $partnerCompanyId,
+        ]);
+
+        $response->assertStatus(200);
+        $data = $response->json();
+        $this->assertEquals('success', $data['status'], 'Response status was not success. Message: '.($data['message'] ?? 'none'));
+        $this->assertNotEmpty($data['invitation_id']);
+        $this->assertEquals(5, $data['coins_deducted']);
+    }
+
+    /**
+     * T-21: Pending Invites tab stream renders Dispatch Timeline, expiry window, and integrated actions (Zero Redundancy).
+     */
+    public function test_pending_invites_tab_stream_rendering(): void
+    {
+        $this->actingAs($this->clientUser);
+
+        // Ensure at least one pending invitation exists
+        $email = 'stream_test_'.uniqid().'@agency.com';
+        $createResponse = $this->postJson(route('service_company.consultancy.staffing_invitation', 0), [
+            'staffing_partners_email' => $email,
+        ]);
+        $createResponse->assertStatus(200);
+
+        // Fetch Tab 6 (request)
+        $response = $this->getJson(route('service_company.consultancy.data_ajax', ['tab' => 'request']));
+        $response->assertStatus(200);
+        $data = $response->json();
+
+        $this->assertArrayHasKey('html', $data);
+        $html = $data['html'];
+
+        $this->assertStringContainsString('is-pending-invite', $html);
+        $this->assertStringContainsString('Actions', $html);
+        $this->assertStringContainsString('Invitation Sent:', $html);
+        $this->assertStringContainsString('Expires:', $html);
+        $this->assertStringContainsString('resend-agency-invite', $html);
+        $this->assertStringContainsString('Resend Invite', $html);
+        $this->assertStringContainsString('cancel-agency-invite', $html);
+        $this->assertStringContainsString('Cancel Request', $html);
+        $this->assertStringContainsString('5 coins deducted', $html);
+        $this->assertStringNotContainsString('5 Coins Escrowed', $html);
+        $this->assertStringNotContainsString('Direct Email Outreach', $html);
+        $this->assertStringContainsString('Ref:', $html);
+        $this->assertStringContainsString('#INV-', $html);
+    }
+
+    /**
+     * T-22: Active pending invitation reminder (Resend Invite) dispatches reminder email with 0 coins deducted.
+     */
+    public function test_controller_resend_active_invitation_reminder_zero_coins(): void
+    {
+        $this->actingAs($this->clientUser);
+        $email = 'stream_test_'.uniqid().'@agency.com';
+
+        $action = app(CreateInvitationAction::class);
+        $res = $action->execute($this->clientCompanyId, $this->clientUser->id, $email);
+        $invId = $res['invitation_id'];
+
+        // Resend Invite on active pending invitation
+        $response = $this->postJson(route('service_company.consultancy.re_invite', $invId));
+        $response->assertStatus(200);
+        $data = $response->json();
+
+        $this->assertEquals('success', $data['status']);
+        $this->assertEquals(0, $data['coins_deducted']);
+        $this->assertEquals($invId, $data['invitation_id']);
+        $this->assertStringContainsString('Invitation reminder resent successfully', $data['message']);
+
+        // Rapid second call should trigger cooling off rate-limit warning
+        $secondResponse = $this->postJson(route('service_company.consultancy.re_invite', $invId));
+        $secondResponse->assertStatus(200);
+        $secondData = $secondResponse->json();
+        $this->assertEquals('warning', $secondData['status']);
+        $this->assertStringContainsString('recently dispatched', $secondData['message']);
+    }
+
+    protected function tearDown(): void
+    {
+        // 🛡️ Forensic Clean-Up: Purge test artifacts created during test runs to prevent dbmaster pollution
+        DB::table('staffing_company_invitation')
+            ->where('from_company_id', $this->clientCompanyId)
+            ->where(function ($q) {
+                $q->where('to_email', 'like', '%_test_%@%')
+                    ->orWhere('to_email', 'like', 'newagency_%@%')
+                    ->orWhere('to_email', 'like', 'partner_%@%')
+                    ->orWhere('to_email', 'like', 'ctrl_%@%')
+                    ->orWhere('to_email', 'like', 'scanner_safe_%@%')
+                    ->orWhere('to_email', 'like', 'bounced_%@%')
+                    ->orWhere('to_email', 'like', 'idemp_test_%@%')
+                    ->orWhere('to_email', 'like', 'cancel_test_%@%')
+                    ->orWhere('to_email', 'like', 'duplicate_test_%@%')
+                    ->orWhere('to_email', 'like', 'decline_test_%@%')
+                    ->orWhere('to_email', 'like', 'quota_blocked_%@%')
+                    ->orWhere('to_email', 'like', 'lowcoin_%@%');
+            })
+            ->delete();
+
+        parent::tearDown();
     }
 }
