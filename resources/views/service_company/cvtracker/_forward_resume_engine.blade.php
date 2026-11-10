@@ -1602,6 +1602,97 @@
     return targets;
   }
 
+  /**
+   * Autonomous Client-Side Contact Discovery Engine
+   * Identifies unlisted phone numbers, emails, LinkedIn handles, and social links
+   * directly from raw document text in User Browser RAM (< 2ms) before redacting.
+   */
+  function rdcDiscoverAllContactsFromText(fullText, rules) {
+    if (!fullText || typeof fullText !== 'string' || !rules) return;
+
+    // 1. Universal Email Address Scanner
+    var emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/gi;
+    var emailMatch;
+    while ((emailMatch = emailRegex.exec(fullText)) !== null) {
+      var em = emailMatch[0].trim();
+      rdcPushUnique(rules.emails, em);
+      rdcPushUnique(rules.exactTerms, em);
+
+      // Handle PDF.js token splitting: add username prefix if >= 4 chars
+      var parts = em.split('@');
+      if (parts[0] && parts[0].length >= 4) {
+        rdcPushUnique(rules.exactTerms, parts[0]);
+      }
+    }
+
+    // 2. Global & Domestic Phone Number Scanner
+    var phoneRegexes = [
+      /(?:\+|00)[1-9]\d{0,3}[\s.-]?(?:\(?\d{1,5}\)?[\s.-]?)?\d{3,5}[\s.-]?\d{3,5}/g,
+      /\b(?:0)?[6-9]\d{4}[\s.-]?\d{5}\b/g, // India 10-digit mobile
+      /\b(?:\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}\b/g, // US/Canada 10-digit
+      /(?:tel|phone|mobile|mob|cell|contact|ph|whatsapp)[\s.:#-]*([+\d\s().-]{7,20})/gi
+    ];
+
+    phoneRegexes.forEach(function (re) {
+      var match;
+      while ((match = re.exec(fullText)) !== null) {
+        var rawPhone = (match[1] || match[0]).trim();
+        var digits = rdcDigitsOnly(rawPhone);
+        if (digits.length >= 7 && digits.length <= 15) {
+          // Guard against years (e.g. 2019-2023)
+          if (/^(?:19|20)\d{2}(?:19|20)\d{2}$/.test(digits)) continue;
+          rdcPushUnique(rules.phones, rawPhone);
+          rdcPushUnique(rules.exactTerms, rawPhone);
+          if (rules.phoneDigits.indexOf(digits) === -1) {
+            rules.phoneDigits.push(digits);
+          }
+          if (digits.length > 10) {
+            var last10 = digits.slice(-10);
+            if (rules.phoneDigits.indexOf(last10) === -1) {
+              rules.phoneDigits.push(last10);
+            }
+          }
+          var pRe = rdcPhoneTextRegex(rawPhone);
+          if (pRe) rules.textRegexes.push(pRe);
+        }
+      }
+    });
+
+    // 3. LinkedIn & Social Handle Scanner
+    var linkedinRegexes = [
+      /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/(?:in|pub|profile|company)\/([A-Za-z0-9_.-]+)(?:\/)?/gi,
+      /\b(?:linkedin|li)[\s.:\/-]+([A-Za-z0-9_.-]{3,50})\b/gi
+    ];
+
+    linkedinRegexes.forEach(function (re) {
+      var match;
+      while ((match = re.exec(fullText)) !== null) {
+        var fullMatch = match[0].trim();
+        var handle = match[1] ? match[1].trim() : '';
+        rdcPushUnique(rules.exactTerms, fullMatch);
+        if (handle && handle.length >= 3 && !/^(?:com|in|profile|company)$/i.test(handle)) {
+          rdcPushUnique(rules.exactTerms, handle);
+          rdcPushUnique(rules.exactTerms, handle.replace(/[-_]+/g, ' '));
+        }
+      }
+    });
+
+    // 4. Other Social Links (GitHub, Twitter/X)
+    var socialRegexes = [
+      /(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9_.-]+)/gi,
+      /(?:https?:\/\/)?(?:www\.)?(?:twitter|x)\.com\/([A-Za-z0-9_.-]+)/gi
+    ];
+    socialRegexes.forEach(function (re) {
+      var match;
+      while ((match = re.exec(fullText)) !== null) {
+        rdcPushUnique(rules.exactTerms, match[0].trim());
+        if (match[1] && match[1].length >= 3) {
+          rdcPushUnique(rules.exactTerms, match[1].trim());
+        }
+      }
+    });
+  }
+
   function rdcAnonymizeRules(data, options) {
     data = data || {};
     options = options || {};
@@ -1710,39 +1801,61 @@
     var bytes = new Uint8Array(sourceBytes);
     var sig = String.fromCharCode.apply(null, bytes.subarray(0, 5));
     if (sig.indexOf('%PDF') === -1) throw new Error('Resume source is not a valid PDF');
-    var jspdf = await ensureJsPdf();
-    var JsPDF = (jspdf && jspdf.jsPDF) || rsGetJsPdfConstructor() || (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-    if (!JsPDF) throw new Error('jsPDF library could not be initialized for anonymization');
-    var outPdf = null;
-    var textItems = 0;
-    var redactions = 0;
-    for (var p = 1; p <= doc.numPages; p++) {
-      var pdfJsPage = await doc.getPage(p);
-      var base = pdfJsPage.getViewport({ scale: 1 });
-      var cssScale = Math.min(1.35, 820 / base.width);
-      var cssViewport = pdfJsPage.getViewport({ scale: cssScale });
-      var renderScale = Math.min(2.0, 1600 / base.width);
-      var renderViewport = pdfJsPage.getViewport({ scale: renderScale });
-      var canvas = document.createElement('canvas');
-      canvas.width = Math.floor(renderViewport.width);
-      canvas.height = Math.floor(renderViewport.height);
-      var ctx = canvas.getContext('2d', { willReadFrequently: true });
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      await pdfJsPage.render({ canvasContext: ctx, viewport: renderViewport }).promise;
-      var tc = await pdfJsPage.getTextContent();
-      textItems += (tc.items || []).length;
-      redactions += rdcDrawAnonymizedBlocks(ctx, tc, renderViewport, rules);
-      var pageW = Math.round(cssViewport.width);
-      var pageH = Math.round(cssViewport.height);
-      var orient = pageW > pageH ? 'l' : 'p';
-      if (!outPdf) outPdf = new JsPDF({ orientation: orient, unit: 'px', format: [pageW, pageH] });
-      else outPdf.addPage([pageW, pageH], orient);
-      outPdf.addImage(canvas.toDataURL('image/jpeg', 0.78), 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+    var doc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+
+    try {
+      // Autonomous Pre-Scan: Extract full text from all pages and discover all unlisted contacts
+      var allPagesText = '';
+      for (var pScan = 1; pScan <= doc.numPages; pScan++) {
+        var scanPage = await doc.getPage(pScan);
+        var scanTc = await scanPage.getTextContent();
+        var scanRuns = rsPageTextRuns(scanTc);
+        if (scanRuns && scanRuns.text) {
+          allPagesText += scanRuns.text + '\n';
+        }
+      }
+      if (typeof rdcDiscoverAllContactsFromText === 'function') {
+        rdcDiscoverAllContactsFromText(allPagesText, rules);
+      }
+
+      var jspdf = await ensureJsPdf();
+      var JsPDF = (jspdf && jspdf.jsPDF) || rsGetJsPdfConstructor() || (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+      if (!JsPDF) throw new Error('jsPDF library could not be initialized for anonymization');
+      var outPdf = null;
+      var textItems = 0;
+      var redactions = 0;
+      for (var p = 1; p <= doc.numPages; p++) {
+        var pdfJsPage = await doc.getPage(p);
+        var base = pdfJsPage.getViewport({ scale: 1 });
+        var cssScale = Math.min(1.35, 820 / base.width);
+        var cssViewport = pdfJsPage.getViewport({ scale: cssScale });
+        var renderScale = Math.min(2.0, 1600 / base.width);
+        var renderViewport = pdfJsPage.getViewport({ scale: renderScale });
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.floor(renderViewport.width);
+        canvas.height = Math.floor(renderViewport.height);
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        await pdfJsPage.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+        var tc = await pdfJsPage.getTextContent();
+        textItems += (tc.items || []).length;
+        redactions += rdcDrawAnonymizedBlocks(ctx, tc, renderViewport, rules);
+        var pageW = Math.round(cssViewport.width);
+        var pageH = Math.round(cssViewport.height);
+        var orient = pageW > pageH ? 'l' : 'p';
+        if (!outPdf) outPdf = new JsPDF({ orientation: orient, unit: 'px', format: [pageW, pageH] });
+        else outPdf.addPage([pageW, pageH], orient);
+        outPdf.addImage(canvas.toDataURL('image/jpeg', 0.78), 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+        canvas.width = 0;
+        canvas.height = 0;
+      }
+      if (!outPdf) throw new Error('No resume pages were rendered');
+      if (!textItems) throw new Error('This resume appears to be scanned/image-only. Browser anonymization needs extractable text.');
+      return outPdf.output('blob');
+    } finally {
+      try { if (doc && typeof doc.destroy === 'function') doc.destroy(); } catch (e) {}
     }
-    if (!outPdf) throw new Error('No resume pages were rendered');
-    if (!textItems) throw new Error('This resume appears to be scanned/image-only. Browser anonymization needs extractable text.');
-    return outPdf.output('blob');
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -3016,10 +3129,12 @@
 
     if (statusCallback) statusCallback('Optimizing document for delivery...');
 
+    var doc = null;
     try {
       await Promise.all([ensurePdfJs(), ensureJsPdf()]);
       var sourceBytes = await pdfBlob.arrayBuffer();
       var bytes = new Uint8Array(sourceBytes);
+      doc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
       var jspdf = await ensureJsPdf();
       var JsPDF = (jspdf && jspdf.jsPDF) || rsGetJsPdfConstructor() || (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
       if (!JsPDF) throw new Error('jsPDF library could not be initialized for size optimization');
@@ -3087,6 +3202,9 @@
     } catch (compressErr) {
       console.warn('[ForwardResumeEngine] Optimization safeguard bypassed:', compressErr);
       return pdfBlob;
+    } finally {
+      try { if (doc && typeof doc.destroy === 'function') doc.destroy(); } catch (e) {}
+    }
     }
   }
 
@@ -3188,6 +3306,7 @@
     buildTurboVectorHighlightedResume: buildTurboVectorHighlightedResume,
     renderAnonymizedPdfBlob: renderAnonymizedPdfBlob,
     rdcAnonymizeRules: rdcAnonymizeRules,
+    rdcDiscoverAllContactsFromText: rdcDiscoverAllContactsFromText,
     fetchResumeBytesFromSources: fetchResumeBytesFromSources,
     fetchResumeBytes: fetchResumeBytes,
     ensureJsZip: ensureJsZip,

@@ -47,18 +47,20 @@ class SesForwardResumeProvider implements ForwardResumeProvider
                 $pass = $smtp->notification_mail_password ?: $smtp->mail_password;
                 $enc  = $smtp->notification_mail_encryption ?: $smtp->mail_encryption;
 
-                config([
-                    'mail.default' => 'smtp',
-                    'mail.mailers.smtp.transport' => 'smtp',
-                    'mail.mailers.smtp.host' => $host,
-                    'mail.mailers.smtp.port' => (int) $port,
-                    'mail.mailers.smtp.username' => $user,
-                    'mail.mailers.smtp.password' => $pass,
-                    'mail.mailers.smtp.encryption' => $enc,
-                    'mail.from.address' => ! empty($smtp->mail_from_email) ? $smtp->mail_from_email : config('mail.from.address'),
-                    'mail.from.name' => $payload->senderName ?: config('mail.from.name', 'JERO Recruitment'),
-                ]);
-                Mail::purge();
+                if (! app()->environment('testing')) {
+                    config([
+                        'mail.default' => 'smtp',
+                        'mail.mailers.smtp.transport' => 'smtp',
+                        'mail.mailers.smtp.host' => $host,
+                        'mail.mailers.smtp.port' => (int) $port,
+                        'mail.mailers.smtp.username' => $user,
+                        'mail.mailers.smtp.password' => $pass,
+                        'mail.mailers.smtp.encryption' => $enc,
+                        'mail.from.address' => ! empty($smtp->mail_from_email) ? $smtp->mail_from_email : config('mail.from.address'),
+                        'mail.from.name' => $payload->senderName ?: config('mail.from.name', 'JERO Recruitment'),
+                    ]);
+                    Mail::purge();
+                }
             }
 
             $mailHost = parse_url(config('app.url', 'jero.works'), PHP_URL_HOST) ?: 'jero.works';
@@ -73,6 +75,18 @@ class SesForwardResumeProvider implements ForwardResumeProvider
             $fromAddress = ! empty($smtp->mail_from_email) ? $smtp->mail_from_email : (config('mail.from.address') ?: 'notify@jeroworks.com');
             $senderName = $payload->senderName ?: config('mail.from.name', 'JERO Recruitment');
             $replyToEmail = ! empty($payload->replyTo) ? $payload->replyTo : ($payload->fromAddress ?: $fromAddress);
+
+            // Deduplicate CC recipients against primary To recipients (Requirement 5)
+            $seenCc = [];
+            if (! empty($payload->cc)) {
+                $toLowerMap = array_map('strtolower', $recipients);
+                foreach ($payload->cc as $ccAddr) {
+                    $cleanCc = strtolower(trim((string) $ccAddr));
+                    if (! empty($cleanCc) && filter_var($cleanCc, FILTER_VALIDATE_EMAIL) && ! in_array($cleanCc, $toLowerMap, true) && ! isset($seenCc[$cleanCc])) {
+                        $seenCc[$cleanCc] = true;
+                    }
+                }
+            }
 
             // Render email using branded JERO template
             try {
@@ -89,7 +103,7 @@ class SesForwardResumeProvider implements ForwardResumeProvider
                 $htmlBody = $payload->body;
             }
 
-            Mail::html($htmlBody, function ($msg) use ($payload, $recipients, $fromAddress, $senderName, $replyToEmail, $canonicalMsgId) {
+            Mail::html($htmlBody, function ($msg) use ($payload, $recipients, $seenCc, $fromAddress, $senderName, $replyToEmail, $canonicalMsgId) {
                 $msg->to($recipients)
                     ->subject($payload->subject)
                     ->from($fromAddress, $senderName);
@@ -102,12 +116,9 @@ class SesForwardResumeProvider implements ForwardResumeProvider
                     $msg->replyTo($replyToEmail, $senderName);
                 }
 
-                if (! empty($payload->cc)) {
-                    foreach ($payload->cc as $ccAddr) {
-                        $cleanCc = strtolower(trim((string) $ccAddr));
-                        if (! empty($cleanCc) && filter_var($cleanCc, FILTER_VALIDATE_EMAIL)) {
-                            $msg->cc($cleanCc);
-                        }
+                if (! empty($seenCc)) {
+                    foreach (array_keys($seenCc) as $ccAddr) {
+                        $msg->cc($ccAddr);
                     }
                 }
 
@@ -122,11 +133,12 @@ class SesForwardResumeProvider implements ForwardResumeProvider
                 }
             });
 
-            // Delivery attempt tracking & multi-recipient tracking
+            // Delivery attempt tracking & multi-recipient tracking (both primary To and copy CC recipients)
             try {
                 $fwd = ForwardRequest::where('uuid', $payload->forwardRequestId)->first();
                 if ($fwd && \Illuminate\Support\Facades\Schema::hasTable('forward_delivery_attempts')) {
-                    foreach ($recipients as $recipient) {
+                    $allDeliveryRecipients = array_values(array_unique(array_merge($recipients, array_keys($seenCc))));
+                    foreach ($allDeliveryRecipients as $recipient) {
                         $attempt = ForwardDeliveryAttempt::firstOrCreate(
                             [
                                 'forward_request_id' => $fwd->id,

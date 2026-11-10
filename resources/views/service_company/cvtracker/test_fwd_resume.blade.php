@@ -1246,7 +1246,19 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         </div>
         <div id="test_cc_email_typo_hint" class="mm-typo-hint" style="display:none;margin-top:4px;"></div>
         <input type="hidden" name="cc_email_panel" id="test_cc_email_panel" value="{{ $cc_email }}">
-        <div class="mm-hint">Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</div>
+        <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          <span>Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</span>
+          @php
+            $currentLoggedInEmail = auth()->user()->email ?? ($userdata->email ?? '');
+          @endphp
+          <label class="mm-copy-self-label" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11.5px;font-weight:500;color:#374151;margin:0;user-select:none;">
+            <input type="checkbox" id="test_fwd_copy_to_self" name="copy_to_self" value="1" data-user-email="{{ strtolower(trim($currentLoggedInEmail)) }}" style="width:15px;height:15px;border-radius:4px;cursor:pointer;margin:0;accent-color:#2563EB;">
+            <span style="display:inline-flex;align-items:center;gap:4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Send a copy to myself <span id="test_copy_self_email_display" style="color:#64748B;font-weight:400;">({{ $currentLoggedInEmail }})</span>
+            </span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -3694,7 +3706,7 @@ window.onTestFwdSubmitClick = async function (e) {
                 }
                 if (blob) {
                     var safeCandName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
-                    var defaultName = (optId === 5) ? ('Prescreen_Report_' + safeCandName + '.pdf') : ('Jeroworks_' + safeCandName + '.pdf');
+                    var defaultName = (optId === 5 || (optId >= 51 && optId <= 54)) ? ('Prescreen_Report_' + safeCandName + '.pdf') : (optId === 49 ? 'Jeroworks_Resume.pdf' : ('Jeroworks_' + safeCandName + '.pdf'));
                     var outName = (blob && blob.filename) ? blob.filename : defaultName;
                     candidateBlobs[cand.id] = { blob: blob, filename: outName };
                     filesToInitiate.push({
@@ -3774,6 +3786,7 @@ window.onTestFwdSubmitClick = async function (e) {
             'reply_to_email': reply_to_email,
             'to_email': to_email,
             'cc_email': cc_email,
+            'copy_to_self': $('#test_fwd_copy_to_self').is(':checked') ? 1 : 0,
             'subject': subject,
             'attached_cv': attached_cv,
             'attached_cv_format': optId,
@@ -4085,6 +4098,17 @@ window.renderTestTags = function(target) {
     if (target === 'to') {
         window.syncFirstRecipientSalutation();
     }
+
+    var currentUserEmail = ($('#test_fwd_copy_to_self').attr('data-user-email') || '').toLowerCase().trim();
+    if (currentUserEmail) {
+        var inTo = (window._testEmailTags.to || []).some(function(e) { return e.toLowerCase() === currentUserEmail; });
+        var inCc = (window._testEmailTags.cc || []).some(function(e) { return e.toLowerCase() === currentUserEmail; });
+        if (inTo && inCc) {
+            window.removeTestEmailByAddress('cc', currentUserEmail);
+            inCc = false;
+        }
+        $('#test_fwd_copy_to_self').prop('checked', inCc && !inTo);
+    }
 };
 
 window.addTestEmailTag = function(target, email) {
@@ -4234,6 +4258,61 @@ $(document).off('click', '.apply-email-fix').on('click', '.apply-email-fix', fun
         }
         $(targetSel).val('');
         $(hintSel).slideUp(100, function() { $(this).empty(); });
+    }
+});
+
+// Toggle 'Send a copy to myself' checkbox
+$(document).off('change', '#test_fwd_copy_to_self').on('change', '#test_fwd_copy_to_self', function() {
+    var isChecked = $(this).is(':checked');
+    var userEmail = ($('#test_fwd_copy_to_self').attr('data-user-email') || '').toLowerCase().trim();
+    if (!userEmail) {
+        $(this).prop('checked', false);
+        return;
+    }
+
+    if (isChecked) {
+        var inTo = (window._testEmailTags && window._testEmailTags.to) ? window._testEmailTags.to.some(function(e) {
+            return e.toLowerCase() === userEmail;
+        }) : false;
+
+        if (inTo) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Already in Recipient List',
+                    text: 'Your email (' + userEmail + ') is already included as a primary recipient in the "To" field. A duplicate copy is not required.',
+                    icon: 'info',
+                    confirmButtonColor: '#0D9488'
+                });
+            }
+            $(this).prop('checked', false);
+            return;
+        }
+
+        var total = typeof getTestTotalRecipientsCount === 'function' ? getTestTotalRecipientsCount() : 0;
+        var inCc = (window._testEmailTags && window._testEmailTags.cc) ? window._testEmailTags.cc.some(function(e) {
+            return e.toLowerCase() === userEmail;
+        }) : false;
+
+        if (!inCc && total >= MAX_TEST_TOTAL_RECIPIENTS) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Recipient Limit Reached',
+                    text: 'Maximum ' + MAX_TEST_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed. Please remove an existing recipient to send a copy to yourself.',
+                    icon: 'warning',
+                    confirmButtonColor: '#0D9488'
+                });
+            }
+            $(this).prop('checked', false);
+            return;
+        }
+
+        if (!inCc && typeof addTestEmailTag === 'function') {
+            addTestEmailTag('cc', userEmail);
+        }
+    } else {
+        if (typeof removeTestEmailByAddress === 'function') {
+            removeTestEmailByAddress('cc', userEmail);
+        }
     }
 });
 

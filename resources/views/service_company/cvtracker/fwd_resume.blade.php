@@ -848,7 +848,19 @@ if($cc_email_count > 0){
         </div>
         <div id="cc_email_typo_hint" class="email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
         <input type="hidden" name="cc_email_panel" id="cc_email_panel" value="{{ $cc_email }}">
-        <div class="mm-hint">Type CC address and press Enter or comma, or click "+ Add Email"</div>
+        <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          <span>Type CC address and press Enter or comma, or click "+ Add Email"</span>
+          @php
+            $currentLoggedInEmail = auth()->user()->email ?? ($userdata->email ?? '');
+          @endphp
+          <label class="mm-copy-self-label" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11.5px;font-weight:500;color:#374151;margin:0;user-select:none;">
+            <input type="checkbox" id="fwd_copy_to_self" name="copy_to_self" value="1" data-user-email="{{ strtolower(trim($currentLoggedInEmail)) }}" style="width:15px;height:15px;border-radius:4px;cursor:pointer;margin:0;accent-color:#2563EB;">
+            <span style="display:inline-flex;align-items:center;gap:4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Send a copy to myself <span style="color:#64748B;font-weight:400;">({{ $currentLoggedInEmail }})</span>
+            </span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -924,6 +936,7 @@ if($cc_email_count > 0){
               <option value="51" data-label="Hide Contact Details + Pre-Screened Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.">51. Hide Contact Details + Pre-Screened Report (Branded)</option>
               <option value="52" data-label="Hide Contact Details + Pre-Screened Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.">52. Hide Contact Details + Pre-Screened Report without Company Branding</option>
               <option value="53" data-label="Hide Contact Details + Pre-Screened Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and pre-screened report dossier.">53. Hide Contact Details + Pre-Screened Report + Highlighted Keywords</option>
+              <option value="54" data-label="Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding" data-desc="Full privacy package without company logo: masked contacts, highlighted skills, and pre-screened report dossier — no branding applied.">54. Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding</option>
             </optgroup>
           </select>
 
@@ -1558,7 +1571,7 @@ function updateRosterFilenames(optId) {
             return;
         }
         var filename = 'Jeroworks_' + safeName + '.pdf';
-        if (optId === 5) {
+        if (optId === 5 || (optId >= 51 && optId <= 54)) {
             filename = 'Prescreen_Report_' + safeName + '.pdf';
             $(this).css('color', '#059669').text(filename);
         } else if (hasResume) {
@@ -2186,6 +2199,7 @@ window.onFwdSubmitClick = async function (e) {
     formData.append('reply_to_email', reply_to_email);
     formData.append('to_email', to_email);
     formData.append('cc_email', cc_email);
+    formData.append('copy_to_self', $('#fwd_copy_to_self').is(':checked') ? 1 : 0);
     formData.append('subject', subject);
     formData.append('attached_cv', attached_cv);
     formData.append('attached_cv_format', optId);
@@ -2541,6 +2555,17 @@ window.renderFwdTags = function(target) {
     }
 
     syncRecipientDrawerState();
+
+    var currentUserEmail = ($('#fwd_copy_to_self').attr('data-user-email') || '').toLowerCase().trim();
+    if (currentUserEmail) {
+        var inTo = (window._fwdEmailTags.to || []).some(function(e) { return e.toLowerCase() === currentUserEmail; });
+        var inCc = (window._fwdEmailTags.cc || []).some(function(e) { return e.toLowerCase() === currentUserEmail; });
+        if (inTo && inCc) {
+            window.removeFwdEmailByAddress('cc', currentUserEmail);
+            inCc = false;
+        }
+        $('#fwd_copy_to_self').prop('checked', inCc && !inTo);
+    }
 };
 
 window.addFwdEmailTag = function(target, email) {
@@ -2667,6 +2692,43 @@ $(document).off('click', '#cc_email_typo_hint .apply-email-fix').on('click', '#c
         addFwdEmailTag('cc', suggestion);
         $('#cc_email_input').val('');
         $('#cc_email_typo_hint').slideUp(100, function() { $(this).empty(); });
+    }
+});
+
+// Toggle 'Send a copy to myself' checkbox
+$(document).off('change', '#fwd_copy_to_self').on('change', '#fwd_copy_to_self', function() {
+    var isChecked = $(this).is(':checked');
+    var userEmail = ($('#fwd_copy_to_self').attr('data-user-email') || '').toLowerCase().trim();
+    if (!userEmail) {
+        $(this).prop('checked', false);
+        return;
+    }
+
+    if (isChecked) {
+        var inTo = (window._fwdEmailTags && window._fwdEmailTags.to) ? window._fwdEmailTags.to.some(function(e) {
+            return e.toLowerCase() === userEmail;
+        }) : false;
+
+        if (inTo) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Already in Recipient List',
+                    text: 'Your email (' + userEmail + ') is already included as a primary recipient in the "To" field. A duplicate copy is not required.',
+                    icon: 'info',
+                    confirmButtonColor: '#0D9488'
+                });
+            }
+            $(this).prop('checked', false);
+            return;
+        }
+
+        if (typeof addFwdEmailTag === 'function') {
+            addFwdEmailTag('cc', userEmail);
+        }
+    } else {
+        if (typeof removeFwdEmailByAddress === 'function') {
+            removeFwdEmailByAddress('cc', userEmail);
+        }
     }
 });
 
