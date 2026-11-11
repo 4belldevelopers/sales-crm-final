@@ -31,6 +31,7 @@ jobs:
             echo ">> Installing PHP deps"
             composer install --no-dev --optimize-autoloader --no-interaction
             echo ">> Building frontend assets"
+            php artisan view:clear || true
             npm ci
             npm run build
             echo ">> Running migrations"
