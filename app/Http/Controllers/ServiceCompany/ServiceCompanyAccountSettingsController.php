@@ -405,19 +405,20 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         $this->accountSettingsService->flushAccountCache($company_id);
 
-        $stageHtml = '<li id="'.@$lastInsertId.'" class="int_block kanban-item d-flex align-items-center justify-content-between '.@$ltb_class.' ui-sortable-handle"> 
-					<span class="fw-bold" style="color:#'.$bg_title_color_code.' !important" >'.$name.'</span>
-					<div class="edit_delete cursor-pointer">
-					<a class="stage_block text-danger delete_process" href="javascript:void(0);" rel="'.@$lastInsertId.'" ><span class="svg-icon svg-icon-danger svg-icon-2x '.$svg_class_name.'" >
-					<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-					<g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-					<rect x="0" y="0" width="24" height="24"></rect>
-					<path d="M6,8 L18,8 L17.106535,19.6150447 C17.04642,20.3965405 16.3947578,21 15.6109533,21 L8.38904671,21 C7.60524225,21 6.95358004,20.3965405 6.89346498,19.6150447 L6,8 Z M8,10 L8.45438229,14.0894406 L15.5517885,14.0339036 L16,10 L8,10 Z" fill="#000000" fill-rule="nonzero"></path>
-					<path d="M14,4.5 L14,3.5 C14,3.22385763 13.7761424,3 13.5,3 L10.5,3 C10.2238576,3 10,3.22385763 10,3.5 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"></path>
-					</g>
-					</svg>
-					</span> </a> </div>
-					</li>';
+        $stageHtml = '<li id="'.@$lastInsertId.'" class="ips-subcard-item kanban-item root_child int_block '.@$ltb_class.' ui-sortable-handle" data-name="'.htmlspecialchars($name).'" data-id="'.@$lastInsertId.'">
+					<div class="ips-subcard-left">
+						<span class="ips-drag-handle" title="Drag to reorder priority"><i class="fas fa-grip-vertical"></i></span>
+						<span class="ips-subcard-seq">Step '.($priority + 1).'</span>
+						<span class="ips-subcard-name">'.htmlspecialchars($name).'</span>
+						<span class="ips-subcard-tag">Custom Sub-Stage</span>
+					</div>
+					<div class="ips-subcard-right">
+						<span class="ips-subcard-badge"><i class="fas fa-check me-1"></i> Active</span>
+						<a class="stage_block ips-btn-del-subcard delete_process" href="javascript:void(0);" rel="'.@$lastInsertId.'" title="Delete Sub-Stage" onclick="event.stopPropagation();">
+							<i class="far fa-trash-alt text-danger"></i>
+						</a>
+					</div>
+				</li>';
 
         $message = '<div class="alert alert-success" id="success-alert">
 					<button type="button" class="close bg-transparent border-0 fw-bold" data-dismiss="alert">x</button>
@@ -434,10 +435,38 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $block = @$request->block;
         if ($block > 0) {
             DB::table('candidate_status')->where('company_id', $company_id)->where('id', $block)->delete();
+            $this->accountSettingsService->flushAccountCache($company_id);
         }
-        $message = '<div class="alert alert-success" id="success-alert"><button type="button" class="close bg-transparent border-0 fw-bold" data-dismiss="alert">x</button><strong>Success! </strong> New Process have added successfully.</div>';
+        $message = '<div class="alert alert-success" id="success-alert"><button type="button" class="close bg-transparent border-0 fw-bold" data-dismiss="alert">x</button><strong>Success! </strong> Process removed successfully.</div>';
 
         return Reply::dataOnly(['status' => 'success', 'message' => $message]);
+    }
+
+    /**
+     * Update Interview Stage Priority (Drag-and-Drop Reordering)
+     * Tenancy Note: Tenant-scoped by auth()->user()->company_id.
+     */
+    public function updatePriority(Request $request)
+    {
+        $company_id = auth()->user()->company_id;
+        $data = (array) $request->data;
+
+        if (! empty($data)) {
+            $i = 0;
+            foreach ($data as $val) {
+                if ($val > 0) {
+                    DB::table('candidate_status')
+                        ->where('company_id', $company_id)
+                        ->where('id', $val)
+                        ->limit(1)
+                        ->update(['priority' => $i]);
+                    $i++;
+                }
+            }
+            $this->accountSettingsService->flushAccountCache($company_id);
+        }
+
+        return Reply::dataOnly(['status' => 'success']);
     }
 
     /**
@@ -1206,21 +1235,27 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             for ($i = 0; $i <= $addressId; $i++) {
                 $work_city = @$request->kt_tagify_work_location[$i];
                 $work_city_all = json_decode($work_city, true);
-                if (@$request->kt_tagify_work_location[$i] != '') {
+                if (! empty($work_city_all) && is_array($work_city_all)) {
                     foreach ($work_city_all as $cityVal) {
-                        $parts = explode('|', $cityVal['value']);
-                        $cityName = trim($parts[0]);
-                        $countrName = trim($parts[2]);
+                        $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                        $cityName = $parts[0] ?? '';
+                        $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                        if (empty($cityName)) {
+                            continue;
+                        }
                         $cityCacheKey = 'city_lookup_'.md5($cityName.'|'.$countrName);
                         $city_row = cache()->remember($cityCacheKey, 86400, function () use ($cityName, $countrName) {
-                            return DB::table('city_list')
+                            $q = DB::table('city_list')
                                 ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                                 ->join('countries', 'countries.id', '=', 'state_list.country_id')
                                 ->select('city_list.city_id', 'countries.id as country_id', 'city_list.state_id')
                                 ->where('city_list.city', '!=', '')
-                                ->where('city_list.city', '=', $cityName)
-                                ->where('countries.country_name', '=', $countrName)
-                                ->first();
+                                ->where('city_list.city', '=', $cityName);
+                            if (! empty($countrName)) {
+                                $q->where('countries.country_name', '=', $countrName);
+                            }
+
+                            return $q->first();
                         });
 
                         if ($city_row && ! empty($city_row->country_id)) {
@@ -1262,21 +1297,27 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             for ($i = 0; $i <= $addressId; $i++) {
                 $work_city = @$request->kt_tagify_work_location[$i];
                 $work_city_all = json_decode($work_city, true);
-                if (@$request->kt_tagify_work_location[$i] != '') {
+                if (! empty($work_city_all) && is_array($work_city_all)) {
                     foreach ($work_city_all as $cityVal) {
-                        $parts = explode('|', $cityVal['value']);
-                        $cityName = trim($parts[0]);
-                        $countrName = trim($parts[2]);
+                        $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                        $cityName = $parts[0] ?? '';
+                        $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                        if (empty($cityName)) {
+                            continue;
+                        }
                         $cityCacheKey = 'city_lookup_'.md5($cityName.'|'.$countrName);
                         $city_row = cache()->remember($cityCacheKey, 86400, function () use ($cityName, $countrName) {
-                            return DB::table('city_list')
+                            $q = DB::table('city_list')
                                 ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                                 ->join('countries', 'countries.id', '=', 'state_list.country_id')
                                 ->select('city_list.city_id', 'countries.id as country_id', 'city_list.state_id')
                                 ->where('city_list.city', '!=', '')
-                                ->where('city_list.city', '=', $cityName)
-                                ->where('countries.country_name', '=', $countrName)
-                                ->first();
+                                ->where('city_list.city', '=', $cityName);
+                            if (! empty($countrName)) {
+                                $q->where('countries.country_name', '=', $countrName);
+                            }
+
+                            return $q->first();
                         });
 
                         if ($city_row && ! empty($city_row->country_id)) {
@@ -1460,21 +1501,27 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 $postcode = '0'; // @$request->postcode[$i];
                 $work_city = @$request->kt_tagify_work_location[$i];
                 $work_city_all = json_decode($work_city, true);
-                if (@$request->kt_tagify_work_location[$i] != '') {
+                if (! empty($work_city_all) && is_array($work_city_all)) {
                     foreach ($work_city_all as $cityVal) {
-                        $parts = explode('|', $cityVal['value']);
-                        $cityName = trim($parts[0]);
-                        $countrName = trim($parts[2]);
+                        $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                        $cityName = $parts[0] ?? '';
+                        $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                        if (empty($cityName)) {
+                            continue;
+                        }
                         $cityCacheKey = 'city_lookup_'.md5($cityName.'|'.$countrName);
                         $city_row = cache()->remember($cityCacheKey, 86400, function () use ($cityName, $countrName) {
-                            return DB::table('city_list')
+                            $q = DB::table('city_list')
                                 ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                                 ->join('countries', 'countries.id', '=', 'state_list.country_id')
                                 ->select('city_list.city_id', 'countries.id as country_id', 'city_list.state_id')
                                 ->where('city_list.city', '!=', '')
-                                ->where('city_list.city', '=', $cityName)
-                                ->where('countries.country_name', '=', $countrName)
-                                ->first();
+                                ->where('city_list.city', '=', $cityName);
+                            if (! empty($countrName)) {
+                                $q->where('countries.country_name', '=', $countrName);
+                            }
+
+                            return $q->first();
                         });
 
                         if ($city_row) {
@@ -1705,20 +1752,24 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $work_city = @$request->kt_tagify_work_location_one;
         $work_city_all = json_decode($work_city[0], true);
         // dd($work_city);
-        if (@$request->kt_tagify_work_location_one != '') {
+        if (! empty($work_city_all) && is_array($work_city_all)) {
             foreach ($work_city_all as $cityVal) {
-                $parts = explode('|', $cityVal['value']);
-                // Trim to remove any leading or trailing whitespace
-                $cityName = trim($parts[0]);
-                $countrName = trim($parts[2]);
-                $city_row = DB::table('city_list')
+                $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                $cityName = $parts[0] ?? '';
+                $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                if (empty($cityName)) {
+                    continue;
+                }
+                $q = DB::table('city_list')
                     ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                     ->join('countries', 'countries.id', '=', 'state_list.country_id')
                     ->select('city_list.city_id', 'countries.id as country_id')
                     ->where('city_list.city', '!=', '')
-                    ->where('city_list.city', '=', $cityName)
-                    ->where('countries.country_name', '=', $countrName)
-                    ->first();
+                    ->where('city_list.city', '=', $cityName);
+                if (! empty($countrName)) {
+                    $q->where('countries.country_name', '=', $countrName);
+                }
+                $city_row = $q->first();
 
                 // dd($city_row);
 
@@ -2193,23 +2244,28 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $campaign_name = request('campaign_name');
         $countryID = null;
         $work_city_all = json_decode($work_city, true);
-        if (\request('kt_tagify_work_location') != '') {
+        if (! empty($work_city_all) && is_array($work_city_all)) {
             foreach ($work_city_all as $cityVal) {
-                $parts = explode('|', $cityVal['value']);
-                // Trim to remove any leading or trailing whitespace
-                $countrName = trim($parts[0]);
+                $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                $cityName = $parts[0] ?? '';
+                $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? ($parts[0] ?? ''));
                 $city_row = DB::table('city_list')
                     ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                     ->join('countries', 'countries.id', '=', 'state_list.country_id')
                     ->select('city_list.city_id', 'countries.id as country_id')
-                    ->where('countries.country_name', '=', $countrName)
+                    ->where(function ($sub) use ($countrName, $cityName) {
+                        if (! empty($countrName)) {
+                            $sub->where('countries.country_name', '=', $countrName);
+                        }
+                        if (! empty($cityName)) {
+                            $sub->orWhere('city_list.city', '=', $cityName);
+                        }
+                    })
                     ->first();
 
                 if ($city_row) {
-
-                    $countryID = (@$city_row) ? $city_row->country_id : '';
+                    $countryID = $city_row->country_id ?? '';
                 }
-
             }
         }
 
