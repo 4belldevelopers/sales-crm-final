@@ -243,8 +243,23 @@
             {{-- Column 5: Action (Send Requirement) --}}
             <td class="align-middle py-3 px-3 text-end" id="agency_action_{{ $id }}" style="min-width: 150px;">
                 @if ($recommendateRow)
-                    @php $final_status = $recommendateRow->final_status ?? null; @endphp
-                    @if ($final_status == 0 || $final_status === '' || $final_status === null)
+                    @php
+                        $final_status = $recommendateRow->final_status ?? null;
+                        $isJobReqExpired = false;
+                        if ((int) $final_status === 3) {
+                            $isJobReqExpired = true;
+                        } elseif (! empty($recommendateRow->expires_at) && \Carbon\Carbon::parse($recommendateRow->expires_at)->isPast()) {
+                            $isJobReqExpired = true;
+                        } elseif (empty($recommendateRow->expires_at) && ! empty($recommendateRow->created_at) && \Carbon\Carbon::parse($recommendateRow->created_at)->addDays(7)->isPast()) {
+                            $isJobReqExpired = true;
+                        }
+                    @endphp
+                    @if ($isJobReqExpired || $final_status == 3)
+                        <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-row-id="{{ $id }}" data-matchcount="" data-row-jobid="{{ $jobid }}" data-row-ename="resend" class="btn btn-sm btn-primary fw-bold resend_job_recommanded_request" style="border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 600; white-space: nowrap; color: #fff; display: inline-flex; align-items: center; gap: 6px;" title="Previous request expired. Click to send a fresh job request.">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                            Send New Request
+                        </a>
+                    @elseif ($final_status == 0 || $final_status === '' || $final_status === null)
                         <span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display: inline-flex; align-items: center; gap: 4px;">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                             Request Sent

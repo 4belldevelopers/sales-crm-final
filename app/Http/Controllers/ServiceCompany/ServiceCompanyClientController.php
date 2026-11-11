@@ -17,6 +17,7 @@ use App\Jobs\QueueNotificationMailService;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Country;
+use App\Models\Job;
 use App\Models\JobCategory;
 use App\Services\Analytics\ClientPerformanceAnalyticsService;
 use App\Services\ElasticService;
@@ -2266,14 +2267,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         try {
-            // Tenancy & Status Filter Context (utilizes ES bitset cache)
+            // Tenancy & Status Filter Context (utilizes ES bitset cache, strictly unexpired active requests)
+            $nowIso = now()->toIso8601String();
             $boolQuery = [
                 'bool' => [
                     'filter' => [
                         ['term' => ['to_company_id' => (int) $company_id]],
-                    ],
-                    'must_not' => [
-                        ['terms' => ['to_invitation_status' => [-1, 1]]],
+                        ['term' => ['to_invitation_status' => 0]],
+                        ['range' => ['expires_at' => ['gt' => $nowIso]]],
                     ],
                 ],
             ];
@@ -2397,8 +2398,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ->where('staffing_company_invitation.to_company_id', $company_id)
                     ->where('staffing_company_invitation.to_invitation_status', 0)
                     ->where(function ($q) {
-                        $q->whereNull('staffing_company_invitation.expires_at')
-                            ->orWhere('staffing_company_invitation.expires_at', '>', now());
+                        $q->where('staffing_company_invitation.expires_at', '>', now())
+                            ->orWhere(function ($sub) {
+                                $sub->whereNull('staffing_company_invitation.expires_at')
+                                    ->whereRaw('DATE_ADD(COALESCE(staffing_company_invitation.from_created_at, staffing_company_invitation.created_at), INTERVAL 7 DAY) > NOW()');
+                            });
                     })
                     ->groupBy('staffing_company_invitation.id');
 
@@ -2406,8 +2410,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ->where('to_company_id', $company_id)
                     ->where('to_invitation_status', 0)
                     ->where(function ($q) {
-                        $q->whereNull('expires_at')
-                            ->orWhere('expires_at', '>', now());
+                        $q->where('expires_at', '>', now())
+                            ->orWhere(function ($sub) {
+                                $sub->whereNull('expires_at')
+                                    ->whereRaw('DATE_ADD(COALESCE(from_created_at, created_at), INTERVAL 7 DAY) > NOW()');
+                            });
                     })
                     ->count();
 
@@ -2609,13 +2616,13 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         if ($this->elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
             try {
+                $nowIso = now()->toIso8601String();
                 $boolQuery = [
                     'bool' => [
                         'filter' => [
                             ['term' => ['to_company_id' => (int) $companyId]],
-                        ],
-                        'must_not' => [
-                            ['terms' => ['to_invitation_status' => [-1, 1]]],
+                            ['term' => ['to_invitation_status' => 0]],
+                            ['range' => ['expires_at' => ['gt' => $nowIso]]],
                         ],
                     ],
                 ];
@@ -2704,8 +2711,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->where('staffing_company_invitation.to_company_id', $companyId)
                 ->where('staffing_company_invitation.to_invitation_status', 0)
                 ->where(function ($q) {
-                    $q->whereNull('staffing_company_invitation.expires_at')
-                        ->orWhere('staffing_company_invitation.expires_at', '>', now());
+                    $q->where('staffing_company_invitation.expires_at', '>', now())
+                        ->orWhere(function ($sub) {
+                            $sub->whereNull('staffing_company_invitation.expires_at')
+                                ->whereRaw('DATE_ADD(COALESCE(staffing_company_invitation.from_created_at, staffing_company_invitation.created_at), INTERVAL 7 DAY) > NOW()');
+                        });
                 });
 
             if (! empty($searchQuery)) {
@@ -2882,14 +2892,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             }
             $clientCounter['clientCustom'] = $clientCustom;
 
-            // Client Requests Count via Elasticsearch (tenant-scoped by to_company_id)
+            // Client Requests Count via Elasticsearch (tenant-scoped by to_company_id, strictly active and unexpired)
+            $nowIso = now()->toIso8601String();
             $boolQuery = [
                 'bool' => [
                     'filter' => [
                         ['term' => ['to_company_id' => (int) $company_id]],
-                    ],
-                    'must_not' => [
-                        ['terms' => ['to_invitation_status' => [-1, 1]]],
+                        ['term' => ['to_invitation_status' => 0]],
+                        ['range' => ['expires_at' => ['gt' => $nowIso]]],
                     ],
                 ],
             ];
@@ -2917,7 +2927,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ->where('to_company_id', $company_id)
                     ->where('to_invitation_status', 0)
                     ->where(function ($q) {
-                        $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                        $q->where('expires_at', '>', now())
+                            ->orWhere(function ($sub) {
+                                $sub->whereNull('expires_at')
+                                    ->whereRaw('DATE_ADD(COALESCE(from_created_at, created_at), INTERVAL 7 DAY) > NOW()');
+                            });
                     })
                     ->count();
             }
@@ -6392,15 +6406,23 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
     public function request_update(Request $request)
     {
-        $company_id = auth()->user()->company_id;
-        $user_id = $this->user->id;
+        $currentUser = $this->user ?? auth()->user();
+        $company_id = (int) ($currentUser ? $currentUser->company_id : (auth()->user()->company_id ?? 0));
+        $user_id = (int) ($currentUser ? $currentUser->id : (auth()->id() ?? 0));
 
-        $event_id = $request->input('event_id', $_REQUEST['event_id'] ?? null);
-        $from_company = $request->input('from_company', $_REQUEST['from_company'] ?? null);
-        $invitation_id = $request->input('invitation_id', $_REQUEST['invitation_id'] ?? null);
+        $event_id = (int) $request->input('event_id', $_REQUEST['event_id'] ?? null);
+        $from_company = (int) $request->input('from_company', $_REQUEST['from_company'] ?? 0);
+        $invitation_id = (int) $request->input('invitation_id', $_REQUEST['invitation_id'] ?? 0);
 
-        if (! $invitation_id || ! $event_id) {
+        if (! $invitation_id || ! in_array($event_id, [1, -1], true)) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Invalid parameters']);
+        }
+
+        if ($company_id === 0 || $user_id === 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthenticated user.',
+            ], 401);
         }
 
         // ── Phase 4 God-Level Concurrency: Redis Atomic Distributed Lock ──
@@ -6418,6 +6440,65 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
 
         try {
+            $existingInv = DB::table('staffing_company_invitation')
+                ->where('id', $invitation_id)
+                ->where('to_company_id', $company_id)
+                ->first();
+
+            if (! $existingInv) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Request not found.',
+                ], 404);
+            }
+
+            $from_company = $from_company ?: (int) $existingInv->from_company_id;
+
+            // ── Expiry Guard: Lazy transition and reject if request expired ──
+            $isExpired = false;
+            if ((int) $existingInv->to_invitation_status === -2) {
+                $isExpired = true;
+            } elseif ($existingInv->expires_at && Carbon::parse($existingInv->expires_at)->isPast()) {
+                $isExpired = true;
+            } elseif (! $existingInv->expires_at && $existingInv->created_at && Carbon::parse($existingInv->created_at)->addDays(7)->isPast()) {
+                $isExpired = true;
+            }
+
+            if ($isExpired) {
+                if ((int) $existingInv->to_invitation_status === 0) {
+                    DB::table('staffing_company_invitation')
+                        ->where('id', $invitation_id)
+                        ->where('to_company_id', $company_id)
+                        ->update([
+                            'to_invitation_status' => -2,
+                            'updated_at' => now(),
+                        ]);
+
+                    try {
+                        if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CLIENT_REQUEST, 'id' => $invitation_id])) {
+                            $this->elasticService->getClient()->update([
+                                'index' => ELASTIC_CLIENT_REQUEST,
+                                'id' => $invitation_id,
+                                'body' => [
+                                    'doc' => [
+                                        'to_invitation_status' => -2,
+                                        'updated_at' => now()->toIso8601String(),
+                                    ],
+                                ],
+                            ]);
+                        }
+                    } catch (\Throwable $e) {
+                    }
+                }
+
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 'REQUEST_EXPIRED',
+                    'message' => 'This partnership request has expired and cannot be processed.',
+                    'clientDataCnt' => $this->commonclient(),
+                ], 422);
+            }
+
             // Tenancy & Current State verification with Atomic CAS (Compare-And-Swap)
             $affected = DB::table('staffing_company_invitation')
                 ->where('id', $invitation_id)
@@ -6425,17 +6506,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ->where('to_invitation_status', 0)
                 ->update([
                     'to_invitation_status' => (int) $event_id,
-                    'to_user_id' => $user_id,
                     'updated_at' => now(),
                 ]);
 
             if ($affected === 0) {
-                try {
-                    $lock->release();
-                } catch (\Throwable $e) {
-                }
                 $existingInv = DB::table('staffing_company_invitation')->where('id', $invitation_id)->first();
-                $alreadyStatus = ($existingInv && (int) $existingInv->to_invitation_status === 1) ? 'Accepted' : 'Ignored';
+                $alreadyStatus = ($existingInv && (int) $existingInv->to_invitation_status === 1) ? 'Accepted' : 'Declined';
 
                 return response()->json([
                     'status' => 'conflict',
@@ -6446,52 +6522,46 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             }
 
             if ($event_id == -1) {
-                // CLIENT INVITATION IGNORE
-                $exists = $this->elasticService->getClient()->exists([
-                    'index' => ELASTIC_CLIENT_REQUEST,
-                    'id' => $invitation_id,
-                ]);
+                // CLIENT INVITATION IGNORE / DECLINE
+                DB::transaction(function () use ($from_company, $company_id) {
+                    // CLIENT RELATION IGNORE (only pending)
+                    DB::table('staffing_company_relation')
+                        ->where('from_company_id', $from_company)
+                        ->where('to_company_id', $company_id)
+                        ->where('final_status', 0)
+                        ->update(['final_status' => -1, 'updated_at' => now()]);
 
-                if ($exists) {
+                    // CLIENT JOB IGNORE (only pending)
+                    DB::table('recommendation_relation')
+                        ->where('from_company_id', $from_company)
+                        ->where('to_company_id', $company_id)
+                        ->where('final_status', 0)
+                        ->update(['final_status' => -1, 'updated_at' => now()]);
+                });
 
-                    // 2. Prepare the update timestamp
-                    $updateTime = now()->toIso8601String();
-
-                    // 3. Execute update with debugging
-                    $updateParams = [
-                        'index' => ELASTIC_CLIENT_REQUEST,
-                        'id' => $invitation_id,
-                        'body' => [
-                            'doc' => [
-                                'to_invitation_status' => -1,
-                                'updated_at' => $updateTime,
+                try {
+                    if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CLIENT_REQUEST, 'id' => $invitation_id])) {
+                        $this->elasticService->getClient()->update([
+                            'index' => ELASTIC_CLIENT_REQUEST,
+                            'id' => $invitation_id,
+                            'body' => [
+                                'doc' => [
+                                    'to_invitation_status' => -1,
+                                    'updated_at' => now()->toIso8601String(),
+                                ],
                             ],
-                            'doc_as_upsert' => false, // Changed to false since we verified existence
-                        ],
-                        'refresh' => false, // Eventual consistency for 10K concurrent scale
-                    ];
-                    $this->elasticService->getClient()->update($updateParams);
-
+                            'refresh' => false,
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("[request_update] ES update failed: " . $e->getMessage());
                 }
 
-                // CLIENT RELATION IGNORE
-                $updateArr = ['final_status' => -1];
-                DB::table('staffing_company_relation')
-                    ->where('staffing_company_relation.from_company_id', $from_company)
-                    ->where('staffing_company_relation.to_company_id', $company_id)
-                    ->update($updateArr);
-                // CLIENT JOB IGNORE
-                $updateArr = ['final_status' => -1];
-                DB::table('recommendation_relation')
-                    ->where('recommendation_relation.from_company_id', $from_company)
-                    ->where('recommendation_relation.to_company_id', $company_id)
-                    ->update($updateArr);
-
                 $cachekeys = [
-                    'allclients_version_user_'.$this->user->id,
-                    'allclientrequest_version_user_'.$this->user->id,
-                    'alldirectclient_version_user_'.$this->user->id,
-                    'allconsultancy_version_user_'.$this->user->id,
+                    'allclients_version_user_'.$user_id,
+                    'allclientrequest_version_user_'.$user_id,
+                    'alldirectclient_version_user_'.$user_id,
+                    'allconsultancy_version_user_'.$user_id,
                 ];
                 foreach ($cachekeys as $key) {
                     GeneralMethod::cacheClean($key);
@@ -6504,152 +6574,134 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'mutation_version' => $newVersion,
                     'projection_status' => 'syncing',
                     'clientDataCnt' => $clientDataCnt,
-                    'message' => 'Request has been Ignored',
+                    'message' => 'Request has been Declined.',
                 ]);
             } elseif ($event_id == 1) {
+                // CLIENT INVITATION ACCEPT
+                $invitationRow = DB::table('staffing_company_invitation')->where('id', $invitation_id)->first();
+                $clientRow = DB::table('clients')->where('company_id', $company_id)->where('self_company', 1)->first();
 
-                $updateArr = ['to_invitation_status' => $event_id];
-                DB::table('staffing_company_invitation')->where('id', $invitation_id)->limit(1)->update($updateArr);
-
-                $exists = $this->elasticService->getClient()->exists([
-                    'index' => ELASTIC_CLIENT_REQUEST,
-                    'id' => $invitation_id,
-                ]);
-
-                if ($exists) {
-
-                    // 2. Prepare the update timestamp
-                    $updateTime = now()->toIso8601String();
-
-                    // 3. Execute update with debugging
-                    $updateParams = [
-                        'index' => ELASTIC_CLIENT_REQUEST,
-                        'id' => $invitation_id,
-                        'body' => [
-                            'doc' => [
-                                'to_invitation_status' => 1,
-                                'updated_at' => $updateTime,
-                            ],
-                            'doc_as_upsert' => false, // Changed to false since we verified existence
-                        ],
-                        'refresh' => false, // Eventual consistency for 10K concurrent scale
-                    ];
-                    $this->elasticService->getClient()->update($updateParams);
-
-                    $cachekeys = [
-                        'allclientrequest_version_user_'.$this->user->id,
-                        'allclients_version_user_'.$this->user->id,
-                        'alldirectclient_version_user_'.$this->user->id,
-                    ];
-                    foreach ($cachekeys as $key) {
-                        GeneralMethod::cacheClean($key);
-                    }
-                    GeneralMethod::cacheClean('tenant_'.$company_id.'_client_version');
-
-                }
-
-                $invitationRow = DB::table('staffing_company_invitation')->select('*')->where('id', $invitation_id)->first();
-
-                $clientRow = DB::table('clients')->select('*')->where('company_id', $company_id)->where('self_company', 1)->first();
-
-                $from_company_id = $invitationRow->from_company_id;
+                $from_company_id = (int) $invitationRow->from_company_id;
                 $from_client_id = $invitationRow->from_client_id;
                 $from_user_id = $invitationRow->from_user_id;
-                $from_status = $invitationRow->from_status;
-                $from_created_at = $invitationRow->from_created_at;
-
-                $to_company_id = $invitationRow->to_company_id;
-                $to_email = $invitationRow->to_email;
-                $to_status = $invitationRow->to_status;
-                $job_id = $invitationRow->job_id;
-                $to_invitation_status = $invitationRow->to_invitation_status;
 
                 $values = [
                     'from_company_id' => $from_company_id,
                     'from_client_id' => $from_client_id,
                     'from_user_id' => $from_user_id,
                     'from_status' => 1,
-                    'from_created_at' => date('Y-m-d'),
+                    'from_created_at' => now(),
 
                     'to_company_id' => $company_id,
-                    'to_client_id' => @$clientRow->id,
-                    'to_user_id' => @$user_id,
+                    'to_client_id' => $clientRow ? $clientRow->id : null,
+                    'to_user_id' => $user_id,
                     'to_status' => 1,
-                    'to_created_at' => date('Y-m-d'),
+                    'to_created_at' => now(),
 
                     'final_status' => 1,
-                    'created_at' => date('Y-m-d'),
-                    'updated_at' => date('Y-m-d'),
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
 
-                // ── Phase 4 Idempotency Protection: Ensure relationship is not duplicated ──
-                $existingRel = DB::table('staffing_company_relation')
-                    ->where('from_company_id', $from_company_id)
-                    ->where('to_company_id', $company_id)
-                    ->first();
+                $relationId = null;
+                DB::transaction(function () use ($from_company_id, $company_id, $values, &$relationId) {
+                    $existingRel = DB::table('staffing_company_relation')
+                        ->where('from_company_id', $from_company_id)
+                        ->where('to_company_id', $company_id)
+                        ->first();
 
-                if (! $existingRel) {
-                    DB::table('staffing_company_relation')->insert($values);
-                    $relationId = DB::getPdo()->lastInsertId();
-                    GeneralMethod::appendClientNestedData($relationId);
-                } else {
-                    DB::table('staffing_company_relation')
-                        ->where('id', $existingRel->id)
-                        ->update(['final_status' => 1, 'updated_at' => date('Y-m-d')]);
+                    if (! $existingRel) {
+                        $relationId = DB::table('staffing_company_relation')->insertGetId($values);
+                    } else {
+                        $relationId = $existingRel->id;
+                        DB::table('staffing_company_relation')
+                            ->where('id', $existingRel->id)
+                            ->update([
+                                'final_status' => 1,
+                                'to_status' => 1,
+                                'to_user_id' => $values['to_user_id'],
+                                'to_client_id' => $values['to_client_id'],
+                                'updated_at' => now(),
+                            ]);
+                    }
+                });
+
+                if ($relationId) {
+                    try {
+                        GeneralMethod::appendClientNestedData($relationId);
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning("[request_update] appendClientNestedData failed: " . $e->getMessage());
+                    }
                 }
 
-                $job = Job::withoutGlobalScopes()->find($invitationRow->job_id);
-                if ($job) {
+                try {
+                    if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CLIENT_REQUEST, 'id' => $invitation_id])) {
+                        $this->elasticService->getClient()->update([
+                            'index' => ELASTIC_CLIENT_REQUEST,
+                            'id' => $invitation_id,
+                            'body' => [
+                                'doc' => [
+                                    'to_invitation_status' => 1,
+                                    'updated_at' => now()->toIso8601String(),
+                                ],
+                            ],
+                            'refresh' => false,
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("[request_update] ES update failed: " . $e->getMessage());
+                }
 
-                    $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
-                    $basecompany = GeneralMethod::baseCompany();
-                    $senderName = (auth()->user()->name) ? auth()->user()->name : '';
-                    $fromAddress = (auth()->user()->email) ? auth()->user()->email : '';
-                    $attachments = [];
+                // Send notification email if permitted
+                if (! empty($invitationRow->job_id)) {
+                    try {
+                        $job = Job::withoutGlobalScopes()->find($invitationRow->job_id);
+                        if ($job) {
+                            $checkMailPermision = GeneralMethod::mailPermission(20);
+                            if ($checkMailPermision) {
+                                $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
+                                $mailTypeSubject = GeneralMethod::mailTypeSubject(20, 1);
+                                if ($mailTypeSubject && $detailsVendorSide) {
+                                    $senderName = $currentUser ? $currentUser->name : '';
+                                    $fromAddress = $currentUser ? $currentUser->email : '';
+                                    $subject = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'], [$detailsVendorSide->vendor_company, $job->title, $job->id], $mailTypeSubject->subject);
+                                    $template_description = $mailTypeSubject->body_description;
+                                    $template_description = str_replace(
+                                        ['[{CLIENT_COMPANY_NAME}]', '[{VENDOR_COMPANY_NAME}]', '[{VENDOR_NAME}]', '[{VENDOR_PHONE}]', '[{VENDOR_EMAIL}]', '[{TERMS}]'],
+                                        [$detailsVendorSide->client_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_email, $detailsVendorSide->vendor_phone, ''],
+                                        $template_description
+                                    );
 
-                    $cc = [];
-                    $checkMailPermision = GeneralMethod::mailPermission(20);
-                    if ($checkMailPermision) {
+                                    $notificationemail = GeneralMethod::notification($from_company_id, 'Recuitment');
+                                    $fromCompRow = DB::table('companies')->where('id', $from_company_id)->first();
+                                    $to_Mail_Id = $notificationemail->email ?? ($fromCompRow ? $fromCompRow->company_email : null);
 
-                        $mailTypeSubject = GeneralMethod::mailTypeSubject(20, 1);
-
-                        $subject = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'], [$detailsVendorSide->vendor_company, @$job->title, @$job->id], $mailTypeSubject->subject);
-
-                        $template_description = $mailTypeSubject->body_description;
-
-                        $template_description = str_replace(['[{CLIENT_COMPANY_NAME}]', '[{VENDOR_COMPANY_NAME}]', '[{VENDOR_NAME}]', '[{VENDOR_PHONE}]', '[{VENDOR_EMAIL}]', '[{TERMS}]'], [$detailsVendorSide->client_company, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_email, $detailsVendorSide->vendor_phone, ''], $template_description);
-
-                        $message = $template_description;
-
-                        $notificationemail = GeneralMethod::notification($from_company_id, 'Recuitment'); // Recuitment Sales
-                        $defailsEmail = DB::table('companies')->where('id', $from_company_id)->first()->company_email;
-                        $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                        //    dd($to_Mail_Id);
-                        $data = [
-                            'message' => $message,
-                        ];
-
-                        QueueNotificationMailService::dispatch(
-                            $to_Mail_Id,
-                            $subject,
-                            'email.common.index',
-                            (object) $data,
-                            $attachments,
-                            $fromAddress,
-                            $senderName,
-                            $cc,
-                            $from_company_id
-                        )->onConnection('emails');
-
-                        // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $data, $attachments, $fromAddress, $senderName, $cc);
+                                    if ($to_Mail_Id) {
+                                        QueueNotificationMailService::dispatch(
+                                            $to_Mail_Id,
+                                            $subject,
+                                            'email.common.index',
+                                            (object) ['message' => $template_description],
+                                            [],
+                                            $fromAddress,
+                                            $senderName,
+                                            [],
+                                            $from_company_id
+                                        )->onConnection('emails');
+                                    }
+                                }
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning("[request_update] Notification mail failed: " . $e->getMessage());
                     }
                 }
 
                 $cachekeys = [
-                    'allclients_version_user_'.$this->user->id,
-                    'allclientrequest_version_user_'.$this->user->id,
-                    'alldirectclient_version_user_'.$this->user->id,
-                    'allconsultancy_version_user_'.$this->user->id,
+                    'allclients_version_user_'.$user_id,
+                    'allclientrequest_version_user_'.$user_id,
+                    'alldirectclient_version_user_'.$user_id,
+                    'allconsultancy_version_user_'.$user_id,
                 ];
                 foreach ($cachekeys as $key) {
                     GeneralMethod::cacheClean($key);
@@ -6662,14 +6714,16 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'mutation_version' => $newVersion,
                     'projection_status' => 'syncing',
                     'clientDataCnt' => $clientDataCnt,
-                    'message' => 'Request has been Accepted',
+                    'message' => 'Request has been Accepted.',
                 ]);
             }
 
         } finally {
-            $lock->release();
+            try {
+                $lock->release();
+            } catch (\Throwable $e) {
+            }
         }
-
     }
 
     /**

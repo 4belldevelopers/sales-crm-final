@@ -1449,17 +1449,19 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function dataCnt()
     {
-        $company_id = auth()->user()->company_id;
-        $userVersionKey = 'alljobslist_version_user_'.$this->user->id;
+        $company_id = auth()->user()->company_id ?? 0;
+        $currentUser = $this->user ?? auth()->user();
+        $userId = $currentUser ? $currentUser->id : (auth()->id() ?? 0);
+        $userVersionKey = 'alljobslist_version_user_'.$userId;
         $companyVersionKey = 'alljobslist_version_company_'.$company_id;
         $version = cache()->get($userVersionKey, 1).'_'.cache()->get($companyVersionKey, 1);
-        $cacheKey = 'ats:jobs_data_cnt:'.$this->user->id.':'.$company_id.':'.$version;
+        $cacheKey = 'ats:jobs_data_cnt:'.$userId.':'.$company_id.':'.$version;
 
         if (cache()->has($cacheKey)) {
             return cache()->get($cacheKey);
         }
 
-        $chkAdminRole = $this->user->hasRole('admin');
+        $chkAdminRole = $currentUser ? $currentUser->hasRole('admin') : false;
         $userPerms = (array) ($this->userPermissions ?? $this->getUserPermissions());
         $isAdmin = ($chkAdminRole > 0) && in_array('all_requisition', $userPerms) && in_array('view_jobs', $userPerms);
         $isNonAdmin = ! $isAdmin;
@@ -1597,18 +1599,57 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // Total Jobs KPI
         $dataCnt['allRequisition'] = $dataCnt['clientRequisition'] + $dataCnt['customRequisition'];
 
-        // 4. Job Requests KPI
-        $jobReqQuery = DB::table('recommendation_relation')
-            ->where('recommendation_relation.to_company_id', '=', $company_id)
-            ->whereIn('recommendation_relation.final_status', [0, 3]);
-        if ($isNonAdmin) {
-            $jobReqQuery->join('job_assign', function ($join) use ($company_id) {
-                $join->on('job_assign.job_id', '=', 'recommendation_relation.job_id')
-                    ->where('job_assign.company_id', '=', $company_id)
-                    ->where('job_assign.user_id', '=', $this->user->id);
-            });
+        // 4. Job Requests KPI: 100% CQRS Elasticsearch Read First with MySQL Fallback (Strict Expiry Guard)
+        $dataCnt['jobRequest'] = 0;
+        $jobReqEsSuccess = false;
+        if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+            try {
+                $jobReqMust = [
+                    ['term' => ['to_company_id' => $company_id]],
+                    ['term' => ['final_status' => 0]],
+                    ['range' => ['expires_at' => ['gt' => now()->toIso8601String()]]],
+                ];
+                if ($isNonAdmin && ! empty($userAssignedJobIds)) {
+                    $jobReqMust[] = ['terms' => ['job_id' => $userAssignedJobIds]];
+                } elseif ($isNonAdmin && empty($userAssignedJobIds)) {
+                    $jobReqMust[] = ['term' => ['job_id' => 0]];
+                }
+                $res_jobReq = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => $jobReqMust,
+                            ],
+                        ],
+                    ],
+                ]);
+                $dataCnt['jobRequest'] = $res_jobReq['count'] ?? 0;
+                $jobReqEsSuccess = true;
+            } catch (\Throwable) {
+            }
         }
-        $dataCnt['jobRequest'] = $jobReqQuery->distinct()->count('recommendation_relation.id');
+
+        if (! $jobReqEsSuccess) {
+            $jobReqQuery = DB::table('recommendation_relation')
+                ->where('recommendation_relation.to_company_id', '=', $company_id)
+                ->where('recommendation_relation.final_status', '=', 0)
+                ->where(function ($q) {
+                    $q->where('recommendation_relation.expires_at', '>', now())
+                        ->orWhere(function ($sub) {
+                            $sub->whereNull('recommendation_relation.expires_at')
+                                ->whereRaw('DATE_ADD(COALESCE(recommendation_relation.from_created_at, recommendation_relation.created_at), INTERVAL 7 DAY) > NOW()');
+                        });
+                });
+            if ($isNonAdmin) {
+                $jobReqQuery->join('job_assign', function ($join) use ($company_id) {
+                    $join->on('job_assign.job_id', '=', 'recommendation_relation.job_id')
+                        ->where('job_assign.company_id', '=', $company_id)
+                        ->where('job_assign.user_id', '=', $this->user->id);
+                });
+            }
+            $dataCnt['jobRequest'] = $jobReqQuery->distinct()->count('recommendation_relation.id');
+        }
 
         // 5. Find Jobs KPI
         $dataCnt['findJobs'] = DB::table('jobs')
@@ -5585,12 +5626,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $boolQuery = [
             'bool' => [
                 'should' => [
-                    // First condition
+                    // Active and Unexpired Job Requests Only
                     [
                         'bool' => [
                             'must' => array_merge([
                                 ['term' => ['to_company_id' => $company_id]],
                                 ['term' => ['final_status' => 0]],
+                                ['range' => ['expires_at' => ['gt' => now()->toIso8601String()]]],
                             ]),
                         ],
                     ],
@@ -10786,7 +10828,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                  * Tenancy: Scoped to from_company_id = $company_id and job_id = $jobId.
                  */
                 $jobRecommendationsMap = DB::table('recommendation_relation')
-                    ->select('id', 'from_company_id', 'to_company_id', 'from_status', 'to_status', 'final_status')
+                    ->select('id', 'from_company_id', 'to_company_id', 'from_status', 'to_status', 'final_status', 'expires_at', 'created_at')
                     ->where('from_company_id', $company_id)
                     ->whereIn('to_company_id', $agencyIds)
                     ->where('job_id', $jobId)
@@ -12607,7 +12649,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 // Batch 9: Recommendation relation per agency for this job
                 $jobRecommendationsMap = DB::table('recommendation_relation')
-                    ->select('id', 'from_company_id', 'to_company_id', 'from_status', 'to_status', 'final_status')
+                    ->select('id', 'from_company_id', 'to_company_id', 'from_status', 'to_status', 'final_status', 'expires_at', 'created_at')
                     ->where('from_company_id', $company_id)
                     ->whereIn('to_company_id', $agencyIds)
                     ->where('job_id', $jobId)
@@ -12823,13 +12865,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function resend_job_recommanded_request(Request $request, $id)
     {
-        $from_company_id = (int) auth()->user()->company_id;
-        $from_user_id = (int) $this->user->id;
+        $currentUser = $this->user ?? auth()->user();
+        $from_company_id = (int) ($currentUser ? $currentUser->company_id : (auth()->user()->company_id ?? 0));
+        $from_user_id = (int) ($currentUser ? $currentUser->id : auth()->id());
         $to_company_id = (int) $request->to_company_id;
         $jobid = (int) $request->current_jobid;
 
         $jobRowCheck = DB::table('jobs')->where('id', $jobid)->first();
-        if (! $jobRowCheck || (! $this->user->hasRole('admin') && (int) $jobRowCheck->company_id !== $from_company_id)) {
+        if (! $jobRowCheck || (! ($currentUser && $currentUser->hasRole('admin')) && (int) $jobRowCheck->company_id !== $from_company_id)) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Unauthorized: Job requisition does not belong to your company.']);
         }
 
@@ -12865,14 +12908,40 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ->where('job_id', $jobid)
                 ->where('to_company_id', $to_company_id)
                 ->where('from_company_id', $from_company_id)
+                ->orderBy('id', 'desc')
                 ->first();
 
             if (! $record) {
                 return Reply::dataOnly(['status' => 'warning', 'message' => 'No previous recommendation relation found to resend.']);
             }
 
-            // Concurrency/Idempotency guard: If already active or pending (final_status 0 or 1), don't deduct coins or resend
-            if (in_array((int) $record->final_status, [0, 1])) {
+            // Expiry Guard (JIT Evaluation): If active but expired, lazily transition to final_status = 3
+            $isActiveAndValid = false;
+            if ((int) $record->final_status === 1) {
+                $isActiveAndValid = true;
+            } elseif ((int) $record->final_status === 0) {
+                $isPast = false;
+                if (! empty($record->expires_at)) {
+                    $isPast = \Carbon\Carbon::parse($record->expires_at)->isPast();
+                } elseif (! empty($record->created_at)) {
+                    $isPast = \Carbon\Carbon::parse($record->created_at)->addDays(7)->isPast();
+                }
+
+                if ($isPast) {
+                    DB::table('recommendation_relation')
+                        ->where('id', $record->id)
+                        ->update([
+                            'final_status' => 3,
+                            'updated_at' => now(),
+                        ]);
+                    GeneralMethod::jobRequestIndexElastic($record->id);
+                    $isActiveAndValid = false;
+                } else {
+                    $isActiveAndValid = true;
+                }
+            }
+
+            if ($isActiveAndValid) {
                 return Reply::dataOnly(['status' => 'warning', 'message' => 'Recommended request already sent and active!']);
             }
 
@@ -12905,22 +12974,61 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             $updatedId = null;
             $outboxId = null;
-            DB::transaction(function () use ($eventId, $to_company_id, $from_company_id, $record, $idempotencyKey, $jobid, &$updatedId, &$outboxId) {
+            DB::transaction(function () use ($eventId, $to_company_id, $from_company_id, $from_user_id, $record, $idempotencyKey, $jobid, &$updatedId, &$outboxId) {
                 if ($eventId) {
                     GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
                 }
 
-                $insertArr = [
-                    'final_status' => 0,
+                // If previous record had final_status 0, lazily ensure it is preserved as expired (3)
+                if ((int) $record->final_status === 0) {
+                    DB::table('recommendation_relation')
+                        ->where('id', $record->id)
+                        ->update([
+                            'final_status' => 3,
+                            'updated_at' => now(),
+                        ]);
+                    GeneralMethod::jobRequestIndexElastic($record->id);
+                }
+
+                // Generate a fresh new request record/identifier rather than reactivating the expired request
+                $insertRecommendation = [
+                    'from_company_id' => $from_company_id,
+                    'from_user_id' => $from_user_id,
+                    'from_status' => 1,
+                    'from_created_at' => date('Y-m-d'),
+                    'to_company_id' => $to_company_id,
                     'to_status' => 0,
+                    'final_status' => 0,
+                    'job_id' => $jobid,
+                    'expires_at' => now()->addDays(7),
+                    'created_at' => now(),
                     'updated_at' => now(),
                 ];
+                $updatedId = DB::table('recommendation_relation')->insertGetId($insertRecommendation);
 
-                DB::table('recommendation_relation')
-                    ->where('id', $record->id)
-                    ->update($insertArr);
+                // Check staffing_company_invitation
+                $existingInv = DB::table('staffing_company_invitation')
+                    ->where('from_company_id', $from_company_id)
+                    ->where('to_company_id', $to_company_id)
+                    ->where('to_invitation_status', 0)
+                    ->first();
 
-                $updatedId = $record->id;
+                if ($existingInv) {
+                    $invExpired = false;
+                    if (! empty($existingInv->expires_at)) {
+                        $invExpired = \Carbon\Carbon::parse($existingInv->expires_at)->isPast();
+                    } elseif (! empty($existingInv->created_at)) {
+                        $invExpired = \Carbon\Carbon::parse($existingInv->created_at)->addDays(7)->isPast();
+                    }
+                    if ($invExpired) {
+                        DB::table('staffing_company_invitation')
+                            ->where('id', $existingInv->id)
+                            ->update([
+                                'to_invitation_status' => -2,
+                                'updated_at' => now(),
+                            ]);
+                    }
+                }
 
                 $outboxId = DB::table('sys_outbox_events')->insertGetId([
                     'tenant_id' => $from_company_id,
@@ -12933,7 +13041,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         'from_company_id' => $from_company_id,
                         'to_company_id' => $to_company_id,
                         'job_id' => $jobid,
-                        'relation_id' => $record->id,
+                        'relation_id' => $updatedId,
+                        'previous_relation_id' => $record->id,
                     ]),
                     'status' => 'PENDING',
                     'attempts' => 0,
@@ -13056,9 +13165,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function send_job_recommanded_request($id)
     {
-        $from_company_id = auth()->user()->company_id;
         $currentUser = $this->user ?? auth()->user();
-        $from_user_id = $currentUser ? $currentUser->id : auth()->id();
+        $from_company_id = (int) ($currentUser ? $currentUser->company_id : (auth()->user()->company_id ?? 0));
+        $from_user_id = (int) ($currentUser ? $currentUser->id : auth()->id());
         $to_company_id = $id;
 
         $jobidGet = (int) ($_REQUEST['current_jobid'] ?? 0);
@@ -13106,15 +13215,36 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 return Reply::dataOnly(['status' => 'warning', 'message' => 'A request is currently being processed for this agency. Please wait a moment.']);
             }
 
-            // Concurrency guard: Ensure idempotent invocation if request was already sent
-            $alreadySent = DB::table('recommendation_relation')
+            // Concurrency guard: Ensure idempotent invocation if request was already sent and is still active/unexpired
+            $existingJobRec = DB::table('recommendation_relation')
                 ->where('from_company_id', $from_company_id)
                 ->where('to_company_id', $to_company_id)
                 ->where('job_id', $jobidGet)
-                ->where('final_status', '!=', -1)
-                ->exists();
-            if ($alreadySent) {
-                return Reply::dataOnly(['status' => 'warning', 'message' => 'Recommended request already sent !']);
+                ->whereIn('final_status', [0, 1])
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if ($existingJobRec) {
+                if ((int) $existingJobRec->final_status === 1) {
+                    return Reply::dataOnly(['status' => 'warning', 'message' => 'Recommended request already accepted and active!']);
+                }
+                $isPast = false;
+                if (! empty($existingJobRec->expires_at)) {
+                    $isPast = \Carbon\Carbon::parse($existingJobRec->expires_at)->isPast();
+                } elseif (! empty($existingJobRec->created_at)) {
+                    $isPast = \Carbon\Carbon::parse($existingJobRec->created_at)->addDays(7)->isPast();
+                }
+                if (! $isPast) {
+                    return Reply::dataOnly(['status' => 'warning', 'message' => 'Recommended request already sent and active!']);
+                }
+                // If expired, lazily transition to final_status = 3
+                DB::table('recommendation_relation')
+                    ->where('id', $existingJobRec->id)
+                    ->update([
+                        'final_status' => 3,
+                        'updated_at' => now(),
+                    ]);
+                GeneralMethod::jobRequestIndexElastic($existingJobRec->id);
             }
 
             $jobid = $jobidGet;
@@ -13344,15 +13474,22 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     }
                 }
 
-                // Check and insert recommendation relation
-                $jobCounter = DB::table('recommendation_relation')
+                // Check and insert recommendation relation: Only block if active unexpired recommendation exists
+                $activeRecCount = DB::table('recommendation_relation')
                     ->where('from_company_id', $from_company_id)
                     ->where('to_company_id', $to_company_id)
                     ->where('job_id', $jobid)
-                    ->where('final_status', '!=', -1)
+                    ->whereIn('final_status', [0, 1])
+                    ->where(function ($q) {
+                        $q->where('expires_at', '>', now())
+                            ->orWhere(function ($sub) {
+                                $sub->whereNull('expires_at')
+                                    ->whereRaw('DATE_ADD(COALESCE(from_created_at, created_at), INTERVAL 7 DAY) > NOW()');
+                            });
+                    })
                     ->count();
 
-                if ($jobCounter == 0) {
+                if ($activeRecCount == 0) {
                     $insertRecommendation = [
                         'from_company_id' => $from_company_id,
                         'from_user_id' => $from_user_id,
@@ -13362,6 +13499,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         'to_status' => 0,
                         'final_status' => 0,
                         'job_id' => $jobid,
+                        'expires_at' => now()->addDays(7),
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
@@ -14181,13 +14319,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $recommendation_relationRow = DB::table('recommendation_relation')
-            ->select('recommendation_relation.from_company_id', 'recommendation_relation.job_id', 'recommendation_relation.from_user_id')
+            ->select('recommendation_relation.*')
             ->where('recommendation_relation.id', '=', $rec_relation_id)
             ->first();
 
         if (empty($recommendation_relationRow) && ! empty($jobId)) {
             $recommendation_relationRow = DB::table('recommendation_relation')
-                ->select('recommendation_relation.from_company_id', 'recommendation_relation.job_id', 'recommendation_relation.from_user_id')
+                ->select('recommendation_relation.*')
                 ->where('recommendation_relation.job_id', '=', $jobId)
                 ->where('recommendation_relation.to_company_id', '=', $current_company_id)
                 ->first();
@@ -14208,6 +14346,37 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         if (empty($recommendation_relationRow)) {
             return Reply::dataOnly(['status' => 'fail', 'message' => 'Job request details not found.', 'dataCnt' => $this->dataCnt()]);
+        }
+
+        $actualRecId = $recommendation_relationRow->id ?? $rec_relation_id;
+
+        // ── Expiry Guard: Reject expired job requests and lazily persist final_status = 3 ──
+        $isJobReqExpired = false;
+        if ((int) ($recommendation_relationRow->final_status ?? 0) === 3) {
+            $isJobReqExpired = true;
+        } elseif (! empty($recommendation_relationRow->expires_at) && \Carbon\Carbon::parse($recommendation_relationRow->expires_at)->isPast()) {
+            $isJobReqExpired = true;
+        } elseif (empty($recommendation_relationRow->expires_at) && ! empty($recommendation_relationRow->created_at) && \Carbon\Carbon::parse($recommendation_relationRow->created_at)->addDays(7)->isPast()) {
+            $isJobReqExpired = true;
+        }
+
+        if ($isJobReqExpired) {
+            if ($actualRecId && (int) ($recommendation_relationRow->final_status ?? 0) === 0) {
+                DB::table('recommendation_relation')
+                    ->where('id', $actualRecId)
+                    ->update([
+                        'final_status' => 3,
+                        'updated_at' => now(),
+                    ]);
+                GeneralMethod::jobRequestIndexElastic($actualRecId);
+            }
+
+            return Reply::dataOnly([
+                'status' => 'error',
+                'code' => 'REQUEST_EXPIRED',
+                'message' => 'This job request has expired and cannot be accepted.',
+                'dataCnt' => $this->dataCnt(),
+            ]);
         }
 
         $jobid = $recommendation_relationRow->job_id ?? $jobId;

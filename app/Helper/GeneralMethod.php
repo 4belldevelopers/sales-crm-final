@@ -11053,6 +11053,7 @@ END:VCALENDAR";
                 'recommendation_relation.to_status',
                 'recommendation_relation.to_created_at',
                 'recommendation_relation.final_status',
+                'recommendation_relation.expires_at',
                 'recommendation_relation.accepterms',
                 'recommendation_relation.conversation_id',
                 'recommendation_relation.add_status',
@@ -11136,6 +11137,7 @@ END:VCALENDAR";
                         'to_status' => $row->to_status,
                         'to_created_at' => ($row->to_created_at) ? Carbon::parse($row->to_created_at)->toIso8601String() : null,
                         'final_status' => $row->final_status,
+                        'expires_at' => ($row->expires_at) ? Carbon::parse($row->expires_at)->toIso8601String() : null,
                         'conversation_id' => $row->conversation_id,
                         'add_status' => $row->add_status,
                         'updated_at_rec' => ($row->updated_at_rec) ? Carbon::parse($row->updated_at_rec)->toIso8601String() : null,
@@ -11273,6 +11275,27 @@ END:VCALENDAR";
             if ($elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
                 return $elasticService->getClient()->delete([
                     'index' => ELASTIC_CLIENT_REQUEST,
+                    'id' => (string) $id,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Document already absent or index unreachable
+        }
+
+        return false;
+    }
+
+    /**
+     * Intent: Delete a single job request relation document from Elasticsearch (ELASTIC_JOB_REQUEST).
+     * Tenancy: Scoped by recommendation_relation ID.
+     */
+    public static function jobRequestDeleteElastic($id)
+    {
+        $elasticService = app(ElasticService::class);
+        try {
+            if ($elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+                return $elasticService->getClient()->delete([
+                    'index' => ELASTIC_JOB_REQUEST,
                     'id' => (string) $id,
                 ]);
             }
