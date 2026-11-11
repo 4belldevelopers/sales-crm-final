@@ -42,7 +42,7 @@ class ServiceCompanyProfileService
                 ->leftJoin('city_list', 'city_list.city_id', '=', 'users_profile.city_id')
                 ->leftJoin('state_list', 'state_list.id', '=', 'users_profile.state')
                 ->select(
-                    'users.id', 'users.company_id', 'users.name', 'users.calling_code', 'users.email', 'users.mobile', 'users.created_at', 'users.image', 'users.status',
+                    'users.id', 'users.company_id', 'users.name', 'users.calling_code', 'users.email', 'users.mobile', 'users.linkedin', 'users.created_at', 'users.image', 'users.status',
                     'companies.company_name', 'companies.website', 'companies.zoom_status', 'companies.google_status', 'companies.microsoft_status', 'companies.company_size',
                     'users_profile.country', 'users_profile.state', 'users_profile.city', 'users_profile.designation', 'users_profile.skills',
                     'city_list.city as city_name',
@@ -219,6 +219,8 @@ class ServiceCompanyProfileService
                 ]);
                 $jobBuckets = $jobResponse['aggregations']['status_counts']['buckets'] ?? [];
                 $jobsCounts = collect($jobBuckets)->mapWithKeys(fn ($item) => [$item['key'] => $item['doc_count']]);
+                $totalJobHits = $jobResponse['hits']['total']['value'] ?? $jobsCounts->sum();
+                $jobsCounts->put('all_jobs', $totalJobHits);
             } catch (\Throwable $e) {
             }
 
