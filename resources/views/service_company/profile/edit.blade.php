@@ -4,7 +4,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link href="https://unpkg.com/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
 @endpush
 
 @section('content')
@@ -24,20 +23,21 @@
         $has_photo        = true;
     }
 
-    /* Build location string once (used by city tagify input) */
-    $return = '';
-    if (!empty(@$city_name) && !empty(@$state_name) && !empty(@$country_name)) {
-        $return = ucwords(@$city_name) . ' | ' . ucwords(@$state_name) . ' | ' . ucwords(@$country_name);
+    /* Build location string & Tagify JSON once (used by city search input) */
+    $display_city = '';
+    $tagify_json_val = '';
+    if (!empty(@$city_name)) {
+        $c = ucwords(trim(@$city_name));
+        $s = !empty(@$state_name) ? ucwords(trim(@$state_name)) : '';
+        $co = !empty(@$country_name) ? ucwords(trim(@$country_name)) : '';
+        $display_city = $c . ($s ? ', ' . $s : '') . ($co ? ', ' . $co : '');
+        $pipe_str = $c . ($s ? ' | ' . $s : '') . ($co ? ' | ' . $co : '');
+        $tagify_json_val = json_encode([['value' => $pipe_str]]);
     }
-
-    $isOrgAdmin = (auth()->check() && (
-        (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('admin')) ||
-        (int)(auth()->user()->root_user ?? 0) === 1
-    ));
 ?>
 
 <!--begin::Content Container-->
-<div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-0" id="kt_content">
   <div id="kt_content_container" class="container-fluid px-2 god-profile-shell">
 
     <!--begin::Form-->
@@ -119,45 +119,40 @@
               </div>
             </div>
 
-            <!-- 2-Column Fields Grid -->
-            <div class="god-fields-grid">
+            <!-- Single-Column Vertical Fields Stack: 1 Box in 1 Row (Order strictly: Name, Designation, Email, Number, Work Location, LinkedIn) -->
+            <div class="god-fields-grid god-fields-single-column">
 
-              <!-- ROW 1, COL 1: Full Name (Locked if non-admin) -->
-              <div class="client-field fv-plugins-icon-container god-field-wrap">
+              <!-- ROW 1: Full Name (Locked / Cannot be edited from edit page) -->
+              <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
                 <div class="god-field-header">
                   <label class="god-field-label" for="name">Full Name <span style="color: #ef4444;">*</span></label>
-                  @if(!$isOrgAdmin)
-                    <span style="font-size: 10px; font-weight: 600; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; border-radius: 999px; padding: 1px 7px; margin-left: auto;">
-                      <i class="bi bi-lock-fill"></i> Admin Assigned
-                    </span>
-                  @endif
+                  <span class="god-badge-locked">
+                    <i class="bi bi-lock-fill"></i> Organization Managed
+                  </span>
                 </div>
-                <div class="god-input-box {{ !empty($team->name) ? 'has-value' : '' }} {{ !$isOrgAdmin ? 'is-readonly' : '' }}">
+                <div class="god-input-box is-readonly has-value">
                   <span class="god-input-left-icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                       <circle cx="12" cy="7" r="4"/>
                     </svg>
                   </span>
-                  @if(!$isOrgAdmin)
-                    <input type="text" class="god-native-input" name="name" id="name" value="{{ $team->name }}" readonly style="background: transparent; color: #64748b; cursor: not-allowed;">
-                  @else
-                    <input type="text" class="god-native-input" name="name" id="name" value="{{ $team->name }}" placeholder="Enter Full name">
-                    <button type="button" class="god-input-clear-btn" id="name_clear_btn" title="Clear name" aria-label="Clear name" style="{{ !empty($team->name) ? 'display:inline-flex;' : 'display:none;' }}">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                  @endif
+                  <input type="text"
+                         class="god-native-input"
+                         name="name"
+                         id="name"
+                         value="{{ $team->name }}"
+                         readonly
+                         style="background: transparent; color: #475569; cursor: not-allowed;">
                 </div>
-                @if(!$isOrgAdmin)
-                  <div style="font-size: 10.5px; color: #64748b; margin-top: 3px; display: flex; align-items: center; gap: 4px;">
-                    <i class="bi bi-info-circle"></i> Assigned by organization administrator and locked for governance.
-                  </div>
-                @endif
+                <div class="god-field-hint">
+                  <i class="bi bi-info-circle"></i> Full name is managed by organization administrator and cannot be modified from this edit page.
+                </div>
                 <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
               </div>
 
-              <!-- ROW 1, COL 2: Designation -->
-              <div class="client-field fv-plugins-icon-container god-field-wrap">
+              <!-- ROW 2: Designation (1st letter capital) -->
+              <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
                 <div class="god-field-header">
                   <label class="god-field-label" for="designation">Designation <span style="color: #ef4444;">*</span></label>
                 </div>
@@ -168,7 +163,13 @@
                       <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                     </svg>
                   </span>
-                  <input type="text" class="god-native-input" name="designation" id="designation" value="{{ $team->designation }}" placeholder="e.g. Lead Talent Specialist / Director">
+                  <input type="text"
+                         class="god-native-input capitalize-input"
+                         name="designation"
+                         id="designation"
+                         value="{{ ucwords(@$team->designation) }}"
+                         placeholder="e.g. Lead Talent Specialist / Director"
+                         style="text-transform: capitalize;">
                   <button type="button" class="god-input-clear-btn" id="designation_clear_btn" title="Clear designation" aria-label="Clear designation" style="{{ !empty($team->designation) ? 'display:inline-flex;' : 'display:none;' }}">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                   </button>
@@ -176,8 +177,8 @@
                 <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
               </div>
 
-              <!-- ROW 2, COL 1: Work Email Address -->
-              <div class="client-field fv-plugins-icon-container god-field-wrap">
+              <!-- ROW 3: Work Email Address -->
+              <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
                 <div class="god-field-header">
                   <label class="god-field-label" for="email">Work Email Address <span style="color: #ef4444;">*</span></label>
                 </div>
@@ -188,18 +189,21 @@
                       <polyline points="22,6 12,13 2,6"/>
                     </svg>
                   </span>
-                  <input type="email" class="god-native-input" name="email" id="email" value="{{ $team->email }}" readonly style="background: transparent; color: #64748b; cursor: not-allowed;">
+                  <input type="email" class="god-native-input" name="email" id="email" value="{{ $team->email }}" readonly style="background: transparent; color: #475569; cursor: not-allowed;">
                   @if(!empty($team->email))
                     <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; border-radius: 999px; padding: 1px 7px; margin-left: auto; flex-shrink: 0;">
                       <i class="bi bi-patch-check-fill"></i> Verified
                     </span>
                   @endif
                 </div>
+                <div class="god-field-hint">
+                  <i class="bi bi-shield-check"></i> Primary authentication address linked to corporate domain.
+                </div>
                 <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
               </div>
 
-              <!-- ROW 2, COL 2: Phone Number -->
-              <div class="client-field fv-plugins-icon-container god-field-wrap">
+              <!-- ROW 4: Phone Number -->
+              <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
                 <div class="god-field-header">
                   <label class="god-field-label" for="mobile">Phone Number <span style="color: #ef4444;">*</span></label>
                 </div>
@@ -218,21 +222,43 @@
                 <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
               </div>
 
-              <!-- ROW 3 (Full Width): Work Location (City) -->
+              <!-- ROW 5: Work Location (City) [Add Internal Client Box & Enterprise Dropdown] -->
               <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
                 <div class="god-field-header">
-                  <label class="god-field-label" for="kt_tagify_work_location">Work Location (City) <span style="color: #ef4444;">*</span></label>
+                  <label class="god-field-label" for="city_search">Work Location (City) <span style="color: #ef4444;">*</span></label>
                 </div>
-                <div class="god-tagify-wrap">
-                  <input class="god-native-input" id="kt_tagify_work_location" name="kt_tagify_work_location" value="{{ $return }}" placeholder="Search your city..."/>
+                <div class="position-relative client-addr-input-wrap">
+                  <span class="position-absolute client-addr-field-icon-left">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                  </span>
+                  <input type="text"
+                         class="form-control client-addr-input client-addr-city-search {{ !empty($display_city) ? 'has-value' : '' }}"
+                         id="city_search"
+                         value="{{ $display_city }}"
+                         placeholder="Search for a city..."
+                         autocomplete="off"
+                         spellcheck="false">
+                  <span class="position-absolute client-addr-field-icon-right" id="city_chevron_icon">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                  <button type="button" class="client-addr-clear-btn" id="city_clear_btn" title="Clear location" aria-label="Clear location" style="{{ !empty($display_city) ? 'display:inline-flex;' : 'display:none;' }}">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                  <div class="client-addr-city-dropdown" id="city_dropdown"></div>
+                  <input type="hidden" name="kt_tagify_work_location" id="kt_tagify_work_location" value='{{ $tagify_json_val }}'>
                 </div>
-                <div style="font-size: 10.5px; color: #64748b; margin-top: 3px; display: flex; align-items: center; gap: 4px;">
-                  <i class="bi bi-search"></i> Instant city auto-suggestion enabled across all verified state and national registries.
+                <div class="god-field-hint">
+                  <i class="bi bi-info-circle"></i> Instant global city database search with automated state & country mapping.
                 </div>
-                <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
+                <div class="fv-plugins-message-container invalid-feedback" id="city_err" style="font-size: 11px; color: #ef4444; margin-top: 3px; display: none;"></div>
               </div>
 
-              <!-- ROW 4 (Full Width): LinkedIn Profile URL -->
+              <!-- ROW 6: LinkedIn Profile URL -->
               <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
                 <div class="god-field-header">
                   <label class="god-field-label" for="linkedin">LinkedIn Profile URL <span style="font-size: 10.5px; color: #94a3b8; font-weight: 400;">(Optional)</span></label>
@@ -352,12 +378,43 @@
 
 <style>
 /* ==========================================================================
+   PAGE LEVEL HEADER GAP REMOVAL (Fix unwanted space between top navbar & edit header)
+   ========================================================================== */
+.header-fixed.toolbar-fixed #kt_wrapper,
+.header-fixed #kt_wrapper,
+#kt_wrapper {
+  padding-top: calc(65px + 8px) !important;
+}
+
+@media (max-width: 991.98px) {
+  .header-tablet-and-mobile-fixed.toolbar-tablet-and-mobile-fixed #kt_wrapper,
+  .header-tablet-and-mobile-fixed #kt_wrapper,
+  #kt_wrapper {
+    padding-top: calc(55px + 6px) !important;
+  }
+}
+
+#kt_content,
+.content {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+#kt_content > .d-flex,
+#kt_content .container-fluid,
+#kt_content_container,
+.god-profile-shell {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* ==========================================================================
    GOD-LEVEL DESIGN SYSTEM (Identical Parity with Add Internal Client Page 1)
    ========================================================================== */
 .god-profile-shell {
   max-width: 1360px !important;
   margin: 0 auto !important;
-  padding: 6px 12px 32px !important;
+  padding: 4px 14px 28px !important;
   font-family: 'Poppins', sans-serif !important;
 }
 .god-profile-shell * {
@@ -373,7 +430,8 @@
   border: 1px solid #e2e8f0 !important;
   border-radius: 12px !important;
   padding: 10px 18px !important;
-  margin-bottom: 16px !important;
+  margin-top: 0 !important;
+  margin-bottom: 14px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
 }
 .god-header-grid {
@@ -498,305 +556,428 @@
   border: 1px solid #e2e8f0 !important;
   border-radius: 12px !important;
   padding: 18px 20px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
-  box-sizing: border-box !important;
-  height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: space-between !important;
-  width: 100% !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
 }
-
-/* Card Header */
 .god-card-header {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
-  margin-bottom: 14px !important;
+  gap: 12px !important;
+  margin-bottom: 18px !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
 }
 .god-card-header-icon {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 8px !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 9px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0 !important;
 }
-.god-card-header-icon.blue-sky-icon {
+.blue-sky-icon {
   background: #eff6ff !important;
   color: #2563eb !important;
-}
-.god-card-header-titles {
-  min-width: 0 !important;
+  border: 1px solid #dbeafe !important;
 }
 .god-card-title {
   font-size: 14px !important;
   font-weight: 700 !important;
   color: #0f172a !important;
-  margin: 0 0 1px 0 !important;
+  margin: 0 !important;
   line-height: 1.25 !important;
 }
 .god-card-subtitle {
   font-size: 11px !important;
   color: #64748b !important;
-  margin: 0 !important;
+  margin: 2px 0 0 !important;
   line-height: 1.3 !important;
-  font-weight: 400 !important;
 }
 
-/* Form Fields Grid */
-.god-fields-grid {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 12px 14px !important;
-  flex: 1 1 auto !important;
-  align-content: space-between !important;
-}
-.god-field-full {
-  grid-column: 1 / -1 !important;
+/* ==========================================================================
+   FIELDS GRID: 1 BOX IN 1 ROW (Clean Single Column Vertical Stack)
+   ========================================================================== */
+.god-fields-single-column {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
   width: 100% !important;
 }
 .god-field-wrap {
-  display: flex !important;
-  flex-direction: column !important;
-  min-width: 0 !important;
+  width: 100% !important;
   margin-bottom: 0 !important;
 }
 .god-field-header {
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  margin-bottom: 4px !important;
+  justify-content: space-between !important;
+  margin-bottom: 5px !important;
 }
 .god-field-label {
-  font-size: 11.5px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
-  color: #0f172a !important;
+  color: #1e293b !important;
   margin: 0 !important;
-  line-height: 1.25 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
 }
-
-/* Input Boxes */
-.god-input-box {
+.god-badge-locked {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  padding: 2px 8px !important;
+  border-radius: 999px !important;
+  border: 1px solid #e2e8f0 !important;
+  margin-left: auto !important;
+}
+.god-field-hint {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  margin-top: 4px !important;
   display: flex !important;
   align-items: center !important;
+  gap: 4px !important;
+}
+
+/* ==========================================================================
+   ENTERPRISE NATIVE INPUT BOXES
+   ========================================================================== */
+.god-input-box {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 38px !important;
   background: #ffffff !important;
   border: 1.5px solid #cbd5e1 !important;
   border-radius: 8px !important;
-  padding: 0 10px !important;
-  height: 38px !important;
-  min-height: 38px !important;
-  position: relative !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
-  box-sizing: border-box !important;
-  width: 100% !important;
-  gap: 4px !important;
+  padding: 0 10px 0 12px !important;
+  transition: all 0.15s ease !important;
 }
 .god-input-box:focus-within {
   border-color: #ffd428 !important;
-  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.22) !important;
-}
-.god-input-box.is-invalid,
-.god-input-box.has-validation-error {
-  border-color: #ef4444 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.25) !important;
 }
 .god-input-box.is-readonly {
   background: #f8fafc !important;
   border-color: #e2e8f0 !important;
 }
-
+.god-input-box.is-invalid {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
 .god-input-left-icon {
-  color: #94a3b8 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin-right: 6px !important;
+  color: #94a3b8 !important;
+  margin-right: 10px !important;
   flex-shrink: 0 !important;
 }
 .god-native-input {
+  flex: 1 !important;
   border: none !important;
   outline: none !important;
   background: transparent !important;
-  color: #0f172a !important;
-  font-size: 12px !important;
+  font-size: 12.5px !important;
   font-weight: 500 !important;
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  height: 100% !important;
+  color: #0f172a !important;
   padding: 0 !important;
-  margin: 0 !important;
-  box-shadow: none !important;
+  height: 100% !important;
+  width: 100% !important;
+  font-family: 'Poppins', sans-serif !important;
 }
 .god-native-input::placeholder {
   color: #94a3b8 !important;
   font-weight: 400 !important;
 }
-
-/* Clear Buttons */
+.god-native-input.capitalize-input {
+  text-transform: capitalize !important;
+}
 .god-input-clear-btn {
-  background: transparent !important;
+  background: #f1f5f9 !important;
   border: none !important;
-  color: #94a3b8 !important;
-  cursor: pointer !important;
-  padding: 0 !important;
-  width: 18px !important;
-  height: 18px !important;
-  display: none !important;
+  color: #64748b !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  border-radius: 50% !important;
-  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  margin-left: 6px !important;
   flex-shrink: 0 !important;
-  margin-right: 2px !important;
-}
-.god-input-clear-btn.is-visible,
-.god-input-box.has-value .god-input-clear-btn {
-  display: inline-flex !important;
+  transition: all 0.15s ease !important;
 }
 .god-input-clear-btn:hover {
-  background: #fee2e2 !important;
-  color: #ef4444 !important;
-}
-
-/* Phone input wrapper */
-.god-phone-wrap .iti {
-  width: 100% !important;
-}
-.god-phone-wrap .iti input {
-  height: 38px !important;
-  border-radius: 8px !important;
-  border: 1.5px solid #cbd5e1 !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-}
-.god-phone-wrap .iti input:focus {
-  border-color: #ffd428 !important;
-  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.22) !important;
-}
-
-/* Tagify wrapper */
-.god-tagify-wrap .tagify {
-  border: 1.5px solid #cbd5e1 !important;
-  border-radius: 8px !important;
-  min-height: 38px !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  --tag-bg: #eff6ff !important;
-  --tag-text-color: #2563eb !important;
-  padding-left: 6px !important;
-}
-.god-tagify-wrap .tagify:focus-within {
-  border-color: #ffd428 !important;
-  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.22) !important;
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
 /* ==========================================================================
-   RIGHT COLUMN: PROFILE PHOTO (Company Logo Exact Parity)
+   WORK LOCATION INPUT & AUTOCOMPLETE DROPDOWN (1:1 from Add Internal Client)
    ========================================================================== */
-.god-logo-column {
+.client-addr-input-wrap {
+  position: relative !important;
+  width: 100% !important;
+}
+.client-addr-field-icon-left {
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #94a3b8 !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+.client-addr-field-icon-right {
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #94a3b8 !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  transition: transform 0.2s ease !important;
+}
+.client-addr-input-wrap.is-open .client-addr-field-icon-right {
+  transform: translateY(-50%) rotate(180deg) !important;
+}
+.client-addr-clear-btn {
+  position: absolute !important;
+  right: 32px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: #f1f5f9 !important;
+  border: none !important;
+  color: #64748b !important;
+  display: none;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  z-index: 3 !important;
+  padding: 0 !important;
+  transition: background 0.15s, color 0.15s !important;
+}
+.client-addr-clear-btn:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+.client-addr-input {
+  width: 100% !important;
+  height: 38px !important;
+  padding: 0 54px 0 36px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  font-size: 12.5px !important;
+  color: #1e293b !important;
+  background: #ffffff !important;
+  font-family: 'Poppins', sans-serif !important;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
+}
+.client-addr-input:focus {
+  outline: none !important;
+  border-color: #ffd428 !important;
+  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.25) !important;
+}
+.client-addr-input.is-invalid {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Autocomplete Dropdown (from Add Internal Client tab-locations.blade.php) */
+.client-addr-city-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 1050;
+}
+.client-addr-city-dropdown.active {
+  display: block;
+}
+.client-addr-dd-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background .15s;
+}
+.client-addr-dd-item:last-child {
+  border-bottom: none;
+}
+.client-addr-dd-item:hover, .client-addr-dd-item.is-highlighted {
+  background: #f8fafc;
+}
+.client-addr-dd-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.client-addr-dd-city {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1e293b;
+}
+.client-addr-dd-sub {
+  font-size: 11px;
+  color: #64748b;
+}
+.client-addr-dd-badge {
+  font-size: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.client-addr-dd-empty {
+  padding: 14px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* ==========================================================================
+   PHONE INPUT OVERRIDES (Metronic intl-tel-input integration)
+   ========================================================================== */
+.god-phone-wrap .iti {
+  width: 100% !important;
+}
+.god-phone-wrap .iti__tel-input {
+  height: 38px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  transition: all 0.15s ease !important;
+}
+.god-phone-wrap .iti__tel-input:focus {
+  border-color: #ffd428 !important;
+  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.25) !important;
+}
+
+/* ==========================================================================
+   RIGHT COLUMN: PROFILE PHOTO CARD (1:1 from Add Internal Company Logo Card)
+   ========================================================================== */
+.god-company-logo-card {
   display: flex !important;
   flex-direction: column !important;
+  height: 100% !important;
 }
 .god-logo-preview-box {
-  border: 1.5px dashed #cbd5e1 !important;
-  border-radius: 10px !important;
-  background: #ffffff !important;
-  padding: 10px !important;
-  min-height: 145px !important;
-  max-height: 145px !important;
+  border: 2px dashed #cbd5e1 !important;
+  border-radius: 12px !important;
+  padding: 24px 16px !important;
+  text-align: center !important;
+  background: #fafcff !important;
+  margin-bottom: 12px !important;
+  transition: all 0.2s ease !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  position: relative !important;
-  box-sizing: border-box !important;
-  transition: all 0.2s ease !important;
+  min-height: 180px !important;
 }
 .god-logo-preview-box:hover,
 .god-logo-preview-box.is-drag {
-  border-color: #2563eb !important;
-  background: #f8fafc !important;
+  border-color: #ffd428 !important;
+  background: #fffdf5 !important;
 }
 .god-logo-surface {
   width: 110px !important;
   height: 110px !important;
-  border-radius: 10px !important;
+  border-radius: 50% !important;
+  background: #f1f5f9 !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
-  background-color: #f8fafc !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
   position: relative !important;
   overflow: hidden !important;
-  transition: all 0.2s ease !important;
 }
-.god-logo-surface.has-image {
-  background-color: #ffffff !important;
-}
-
 .god-logo-placeholder {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 2px !important;
-  color: #94a3b8 !important;
-  text-align: center !important;
   padding: 8px !important;
+  text-align: center !important;
 }
 .god-logo-placeholder .placeholder-title {
-  font-size: 11px !important;
+  font-size: 11.5px !important;
   font-weight: 600 !important;
-  color: #64748b !important;
-  margin-top: 2px !important;
+  color: #334155 !important;
+  margin-top: 4px !important;
 }
 .god-logo-placeholder .placeholder-sub {
   font-size: 9.5px !important;
   color: #94a3b8 !important;
+  margin-top: 1px !important;
 }
 
 /* Status Banner */
 .god-logo-status-banner {
-  width: 100% !important;
-  border-radius: 6px !important;
-  padding: 6px 10px !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 6px !important;
-  margin-top: 8px !important;
-  box-sizing: border-box !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  margin-bottom: 12px !important;
   text-align: center !important;
 }
 .god-logo-status-banner.is-detected {
-  background: #dcfce7 !important;
+  background: #f0fdf4 !important;
+  border: 1px solid #bbf7d0 !important;
   color: #15803d !important;
 }
 .god-logo-status-banner.is-empty {
-  background: #f1f5f9 !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
   color: #64748b !important;
 }
 
-/* Actions */
+/* Actions: Change Photo & Remove Photo */
 .god-logo-actions {
   display: flex !important;
-  flex-direction: row !important;
-  gap: 8px !important;
-  margin-top: 8px !important;
-  width: 100% !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-bottom: 8px !important;
 }
 .god-logo-btn {
-  flex: 1 1 auto !important;
-  height: 34px !important;
-  border-radius: 8px !important;
+  flex: 1 !important;
+  height: 36px !important;
   font-size: 11.5px !important;
   font-weight: 600 !important;
+  border-radius: 8px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -851,9 +1032,6 @@
   }
 }
 @media (max-width: 640px) {
-  .god-fields-grid {
-    grid-template-columns: 1fr !important;
-  }
   .god-header-actions {
     width: 100% !important;
     justify-content: flex-end !important;
@@ -863,9 +1041,6 @@
 @endsection
 
 @push('footer-script')
-<script src="https://unpkg.com/@yaireo/tagify"></script>
-<script src="https://unpkg.com/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
-
 <script>
 $(document).ready(function () {
     if (window.JeroPhoneBox) {
@@ -874,10 +1049,24 @@ $(document).ready(function () {
 });
 
 /* ==========================================================================
-   DYNAMIC CLEAR BUTTONS (Instant value clearing & state toggling)
+   DESIGNATION AUTO-CAPITALIZE & CLEAR BUTTONS
    ========================================================================== */
 (function() {
-    ['name', 'designation', 'linkedin'].forEach(function(fieldId) {
+    var desInput = document.getElementById('designation');
+    if (desInput) {
+        function capitalizeWords(str) {
+            if (!str) return '';
+            return str.replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+        }
+        ['blur', 'change'].forEach(function(ev) {
+            desInput.addEventListener(ev, function() {
+                var c = capitalizeWords(this.value);
+                if (c !== this.value) this.value = c;
+            });
+        });
+    }
+
+    ['designation', 'linkedin'].forEach(function(fieldId) {
         var input = document.getElementById(fieldId);
         var btn   = document.getElementById(fieldId + '_clear_btn');
         if (!input || !btn) return;
@@ -1043,81 +1232,195 @@ $(document).ready(function () {
 })();
 
 /* ==========================================================================
-   TAGIFY CITY LOCATION AUTOSUGGEST & PRELOAD
+   ENTERPRISE CITY LOCATION SEARCH (Matched 1:1 to Add Internal Client)
    ========================================================================== */
-setTimeout(() => {
-    const cities = @json($cities ?? []);
-    let inputId = `#kt_tagify_work_location`;
-    let inputElement = document.querySelector(inputId);
+(function() {
+    var searchInput = document.getElementById('city_search');
+    var hiddenInput = document.getElementById('kt_tagify_work_location');
+    var dd          = document.getElementById('city_dropdown');
+    var clearBtn    = document.getElementById('city_clear_btn');
+    var wrap        = searchInput ? searchInput.closest('.client-addr-input-wrap') : null;
+    var errEl       = document.getElementById('city_err');
 
-    if (inputElement) {
-        let tagifyInstance = new Tagify(inputElement, {
-            whitelist: cities,
-            enforceWhitelist: true,
-            maxTags: 1,
-            dropdown: {
-                maxItems: 20,
-                classname: "",
-                enabled: 0,
-                closeOnSelect: true
-            }
-        });
+    if (!searchInput || !hiddenInput || !dd) return;
 
-        tagifyInstance.on('input', function(e) {
-            tagifyInstance.dropdown.show();
-        });
+    var curatedCities = [
+        { city: 'Noida', state: 'Uttar Pradesh', country: 'India', badge: 'NCR Hub', canonical: 'Noida, Uttar Pradesh, India', pipe: 'Noida | Uttar Pradesh | India' },
+        { city: 'Gurugram', state: 'Haryana', country: 'India', badge: 'NCR Hub', canonical: 'Gurugram, Haryana, India', pipe: 'Gurugram | Haryana | India' },
+        { city: 'New Delhi', state: 'Delhi', country: 'India', badge: 'National Capital', canonical: 'New Delhi, Delhi, India', pipe: 'New Delhi | Delhi | India' },
+        { city: 'Bengaluru', state: 'Karnataka', country: 'India', badge: 'Metro Hub', canonical: 'Bengaluru, Karnataka, India', pipe: 'Bengaluru | Karnataka | India' },
+        { city: 'Mumbai', state: 'Maharashtra', country: 'India', badge: 'Financial Capital', canonical: 'Mumbai, Maharashtra, India', pipe: 'Mumbai | Maharashtra | India' },
+        { city: 'Hyderabad', state: 'Telangana', country: 'India', badge: 'Tech Hub', canonical: 'Hyderabad, Telangana, India', pipe: 'Hyderabad | Telangana | India' },
+        { city: 'Pune', state: 'Maharashtra', country: 'India', badge: 'IT Hub', canonical: 'Pune, Maharashtra, India', pipe: 'Pune | Maharashtra | India' },
+        { city: 'Chennai', state: 'Tamil Nadu', country: 'India', badge: 'SaaS Capital', canonical: 'Chennai, Tamil Nadu, India', pipe: 'Chennai | Tamil Nadu | India' },
+        { city: 'Kolkata', state: 'West Bengal', country: 'India', badge: 'Metro Hub', canonical: 'Kolkata, West Bengal, India', pipe: 'Kolkata | West Bengal | India' },
+        { city: 'Ahmedabad', state: 'Gujarat', country: 'India', badge: 'Commercial Hub', canonical: 'Ahmedabad, Gujarat, India', pipe: 'Ahmedabad | Gujarat | India' },
+        { city: 'San Francisco', state: 'California', country: 'United States', badge: 'Silicon Valley', canonical: 'San Francisco, California, United States', pipe: 'San Francisco | California | United States' },
+        { city: 'New York City', state: 'New York', country: 'United States', badge: 'Global Hub', canonical: 'New York City, New York, United States', pipe: 'New York City | New York | United States' },
+        { city: 'London', state: 'England', country: 'United Kingdom', badge: 'Fintech Hub', canonical: 'London, England, United Kingdom', pipe: 'London | England | United Kingdom' },
+        { city: 'Singapore', state: 'Singapore', country: 'Singapore', badge: 'APAC Hub', canonical: 'Singapore, Singapore, Singapore', pipe: 'Singapore | Singapore | Singapore' },
+        { city: 'Dubai', state: 'Dubai', country: 'United Arab Emirates', badge: 'MENA Hub', canonical: 'Dubai, Dubai, United Arab Emirates', pipe: 'Dubai | Dubai | United Arab Emirates' }
+    ];
 
-        tagifyInstance.on('dropdown:select', function(e) {
-            tagifyInstance.addTags([e.detail.data.value]);
-        });
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function escapeJs(str) {
+        if (!str) return '';
+        return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
 
-        function debounce(func, delay) {
-            let timer;
-            return function (...args) {
-                clearTimeout(timer);
-                timer = setTimeout(() => func.apply(this, args), delay);
-            };
+    function updateCityClearBtn() {
+        if (!clearBtn) return;
+        var val = (searchInput.value || '').trim();
+        if (val.length > 0) {
+            clearBtn.style.display = 'inline-flex';
+        } else {
+            clearBtn.style.display = 'none';
+        }
+    }
+
+    window.selectProfileCity = function(displayVal, pipeVal) {
+        searchInput.value = displayVal;
+        hiddenInput.value = JSON.stringify([{ value: pipeVal }]);
+        dd.classList.remove('active');
+        if (wrap) wrap.classList.remove('is-open');
+        updateCityClearBtn();
+        $(searchInput).removeClass('is-invalid');
+        if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+    };
+
+    function renderDropdown(items, query) {
+        if (!items || items.length === 0) {
+            var safeQ = escapeHtml(query || '');
+            var safePipe = safeQ + ' | | ';
+            dd.innerHTML = '<div class="client-addr-dd-empty">' +
+                '<div>No standard city match found for &ldquo;' + safeQ + '&rdquo;</div>' +
+                '<button type="button" class="btn btn-sm btn-light-primary mt-2" onclick="selectProfileCity(\'' + escapeJs(safeQ) + '\', \'' + escapeJs(safePipe) + '\')">' +
+                'Use &ldquo;' + safeQ + '&rdquo;</button>' +
+                '</div>';
+            dd.classList.add('active');
+            if (wrap) wrap.classList.add('is-open');
+            return;
         }
 
-        const fetchSuggestions = debounce(function(query) {
-            $.ajax({
-                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
-                method: 'GET',
-                success: function(data) {
-                    if (Array.isArray(data)) {
-                        tagifyInstance.settings.whitelist = data;
-                        tagifyInstance.dropdown.show.call(tagifyInstance);
-                    }
-                },
-                error: function(err) {
-                    console.error("Error fetching cities:", err);
-                }
-            });
-        }, 250);
+        var html = '';
+        items.forEach(function(item) {
+            var subText = item.state ? (item.state + ', ' + item.country) : (item.country || '');
+            html += '<div class="client-addr-dd-item" onclick="selectProfileCity(\'' + escapeJs(item.canonical) + '\', \'' + escapeJs(item.pipe) + '\')">' +
+                '<div class="client-addr-dd-left">' +
+                '  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2" style="flex-shrink:0;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                '  <div>' +
+                '    <div class="client-addr-dd-city">' + escapeHtml(item.city) + '</div>' +
+                '    <div class="client-addr-dd-sub">' + escapeHtml(subText) + '</div>' +
+                '  </div>' +
+                '</div>' +
+                (item.badge ? '<span class="client-addr-dd-badge">' + escapeHtml(item.badge) + '</span>' : '') +
+                '</div>';
+        });
+        dd.innerHTML = html;
+        dd.classList.add('active');
+        if (wrap) wrap.classList.add('is-open');
+    }
 
-        tagifyInstance.on('input', function(e) {
-            var query = e.detail.value.trim();
-            if (query.length < 2) return;
-            fetchSuggestions(query);
+    var abortCtrl = null;
+    var searchTimer = null;
+
+    function doSearch(q) {
+        var trimmed = (q || '').trim();
+        if (!trimmed) {
+            renderDropdown(curatedCities, '');
+            return;
+        }
+
+        // Check local curated filter first
+        var localMatches = curatedCities.filter(function(c) {
+            return c.city.toLowerCase().indexOf(trimmed.toLowerCase()) !== -1 ||
+                   c.canonical.toLowerCase().indexOf(trimmed.toLowerCase()) !== -1;
         });
 
-        setTimeout(() => {
-            var city = "{{ @$return }}";
-            if (city != '') {
-                var cityName = city.split(" | ")[0];
-                fetchSuggestions(cityName);
-            }
-        }, 100);
+        if (abortCtrl) abortCtrl.abort();
+        abortCtrl = new AbortController();
 
-        setTimeout(() => {
-            var defaultLocation = {!! json_encode(@$return) !!};
-            if (defaultLocation) {
-                tagifyInstance.addTags([defaultLocation]);
-                tagifyInstance.dropdown.hide();
+        var url = "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(trimmed);
+        fetch(url, {
+            method: 'GET',
+            signal: abortCtrl.signal,
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            var results = [];
+            if (Array.isArray(data)) {
+                data.forEach(function(row) {
+                    var str = typeof row === 'string' ? row : (row.value || '');
+                    if (str) {
+                        var parts = str.split('|').map(function(s) { return s.trim(); });
+                        var cityName = parts[0] || '';
+                        var stateName = parts[1] || '';
+                        var countryName = parts[2] || '';
+                        var canon = cityName + (stateName ? ', ' + stateName : '') + (countryName ? ', ' + countryName : '');
+                        results.push({
+                            city: cityName,
+                            state: stateName,
+                            country: countryName,
+                            badge: '',
+                            canonical: canon,
+                            pipe: cityName + ' | ' + stateName + ' | ' + countryName
+                        });
+                    }
+                });
             }
-        }, 500);
+            if (results.length === 0 && localMatches.length > 0) {
+                results = localMatches;
+            }
+            renderDropdown(results, trimmed);
+        })
+        .catch(function(err) {
+            if (err.name === 'AbortError') return;
+            renderDropdown(localMatches, trimmed);
+        });
     }
-}, 300);
+
+    searchInput.addEventListener('focus', function() {
+        var q = this.value.trim();
+        if (!q) {
+            renderDropdown(curatedCities, '');
+        } else {
+            doSearch(q);
+        }
+    });
+
+    searchInput.addEventListener('input', function() {
+        updateCityClearBtn();
+        var q = this.value;
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() {
+            doSearch(q);
+        }, 180);
+    });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            searchInput.value = '';
+            hiddenInput.value = '';
+            updateCityClearBtn();
+            searchInput.focus();
+            renderDropdown(curatedCities, '');
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dd.contains(e.target) && !(clearBtn && clearBtn.contains(e.target))) {
+            dd.classList.remove('active');
+            if (wrap) wrap.classList.remove('is-open');
+        }
+    });
+
+    updateCityClearBtn();
+})();
 
 /* ==========================================================================
    FORM VALIDATION & AJAX SUBMISSION (Header Submit Button)
@@ -1129,13 +1432,14 @@ $(document).on('click', '#updateProfile', function(e) {
     function reqCheck(id, label) {
         var el = document.getElementById(id);
         var $wrap = el ? $(el).closest('.god-field-wrap') : null;
-        var $box  = el ? $(el).closest('.god-input-box') : null;
+        var $box  = el ? $(el).closest('.god-input-box, .client-addr-input-wrap') : null;
         var val = el ? (el.value || '').trim() : '';
         if (val === '[]') val = '';
 
         if (!val) {
             errors.push(label);
             if ($box) $box.addClass('is-invalid');
+            if (el) $(el).addClass('is-invalid');
             if ($wrap) {
                 var fb = $wrap.find('.invalid-feedback')[0];
                 if (fb) {
@@ -1145,6 +1449,7 @@ $(document).on('click', '#updateProfile', function(e) {
             }
         } else {
             if ($box) $box.removeClass('is-invalid');
+            if (el) $(el).removeClass('is-invalid');
             if ($wrap) {
                 var fb = $wrap.find('.invalid-feedback')[0];
                 if (fb) {
@@ -1155,10 +1460,9 @@ $(document).on('click', '#updateProfile', function(e) {
         }
     }
 
-    reqCheck('name',                    'Full name');
     reqCheck('designation',             'Designation');
     reqCheck('mobile',                  'Phone number');
-    reqCheck('kt_tagify_work_location', 'Location (city)');
+    reqCheck('city_search',             'Work location (city)');
 
     // Optional LinkedIn URL regex validation
     var linkedinEl = document.getElementById('linkedin');
