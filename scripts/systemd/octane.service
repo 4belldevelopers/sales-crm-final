@@ -1,0 +1,37 @@
+[Unit]
+Description=Laravel Octane (FrankenPHP) Application Server for JERO Production
+After=network.target mysql.service redis.service
+Wants=mysql.service redis.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/www/wwwroot/hire.jero.works
+Environment="PATH=/www/server/php/83/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PHPRC=/www/server/php/83/etc/php-cli.ini"
+
+# Ensure socket & orphaned processes are cleared before starting
+ExecStartPre=-/bin/bash -c "pkill -f 'frankenphp' || true"
+
+# Launch Octane on port 8010 with 16 workers and 500 max-requests per worker
+ExecStart=/www/server/php/83/bin/php artisan octane:start --server=frankenphp --host=127.0.0.1 --port=8010 --workers=16 --max-requests=500
+
+# Lifecycle management
+ExecStop=/www/server/php/83/bin/php artisan octane:stop
+ExecReload=/www/server/php/83/bin/php artisan octane:reload
+
+# Self-healing watchdog: auto-restart in 3s if worker or master terminates
+Restart=always
+RestartSec=3s
+
+# High-concurrency limits (prevents file descriptor exhaustion under 10k users)
+LimitNOFILE=65535
+TimeoutStartSec=30
+TimeoutStopSec=15
+
+# Standardized logging
+StandardOutput=append:/www/wwwroot/hire.jero.works/storage/logs/octane-service.log
+StandardError=append:/www/wwwroot/hire.jero.works/storage/logs/octane-service.log
+
+[Install]
+WantedBy=multi-user.target
