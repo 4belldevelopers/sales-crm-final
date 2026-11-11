@@ -10403,6 +10403,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key, $companyId);
             }
+            if ($job_id > 0) {
+                try {
+                    cache()->increment("ats:version:job:{$companyId}:{$job_id}");
+                } catch (\Throwable) {}
+            }
 
             DB::commit();
 
@@ -10564,7 +10569,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // $mail->send(new InterviewTrackerMail((object) $data, $subject, $attachments));
 
-        return Reply::dataOnly(['status' => 'success', 'message' => 'Interview Reschedule successfully !']);
+        return Reply::dataOnly(['status' => 'success', 'message' => 'Interview email sent successfully!']);
 
         // below code old
 

@@ -2347,6 +2347,7 @@
                 }
             };
         })();
+        window.AppTrackerRamStore = AppTrackerRamStore;
 
         window.addEventListener('jero:candidate-added-to-job', function() {
             AppTrackerRamStore.invalidate();
@@ -2620,6 +2621,7 @@
             });
             return _aptkListXhr;
         }
+        window.fetchCandidates = fetchCandidates;
 
         // ── Job Status drawer (same as jobs/index.blade.php) ──────────────────
         $(document).on('click', '#status_sub_stage_close', function () {
