@@ -1530,7 +1530,7 @@ if (empty($isdCompanyAddress)) {
             }, 500);
         }
 
-        $('body').on('click', '#send_email_invies', function() {
+        $('body').off('click.isdSendInvies', '#send_email_invies').on('click.isdSendInvies', '#send_email_invies', function() {
             var interviewDate = $('#interviewDate').val();
             var interview_mode = $('#interview_mode').val();
             var interviewTime = $('#interviewTime').val();
@@ -1561,7 +1561,7 @@ if (empty($isdCompanyAddress)) {
             $('#div_interview_schedule_second').show();
             window.isdShellSetStep('email');
         });
-        $('body').on('click', '.divback', function() {
+        $('body').off('click.isdDivBack', '.divback').on('click.isdDivBack', '.divback', function() {
             $('#div_interview_schedule_first').show();
             $('#div_interview_schedule_second').hide();
             window.isdShellSetStep('main');
@@ -1607,6 +1607,9 @@ if (empty($isdCompanyAddress)) {
         if (window.itRamCache && typeof window.itRamCache.clear === 'function') {
             try { window.itRamCache.clear(); } catch(e){}
         }
+        if (window.AppTrackerRamStore && typeof window.AppTrackerRamStore.invalidate === 'function') {
+            try { window.AppTrackerRamStore.invalidate(); } catch(e){}
+        }
         if (window.indexedDB) {
             try {
                 var req = window.indexedDB.open('jero_interview_schedule_db', 1);
@@ -1649,6 +1652,8 @@ if (empty($isdCompanyAddress)) {
                         window.fetchCandidates(1, '', true);
                     } else if (window.location.pathname.indexOf('interview-schedule') !== -1) {
                         location.reload();
+                    } else {
+                        location.reload();
                     }
                 });
             }
@@ -1682,7 +1687,7 @@ if (empty($isdCompanyAddress)) {
 }
 
     $(document).ready(function() {
-        $(document).on('click', '#sendEmailBtn', function(e) {
+        $(document).off('click.isdSendEmail', '#sendEmailBtn').on('click.isdSendEmail', '#sendEmailBtn', function(e) {
             e.preventDefault();
             var ccEmailVal = ($('#cc_email').val() || '').trim();
             if (ccEmailVal && window.JeroEmailBoxEngine) {
@@ -1718,32 +1723,31 @@ if (empty($isdCompanyAddress)) {
                 success: function(response) {
                     $('.indicator-label').show();
                     $('.indicator-progress').hide();
+                    $('#sendEmailBtn').prop('disabled', false);
                     if (response.status == 'faild') {
-                        Swal.fire("Warning", "The file must not be larger than 2 MB ", "warning").then(function() {});
+                        Swal.fire("Warning", response.message || "The file must not be larger than 2 MB", "warning");
+                        return false;
                     }
                     if (response.status == 'success') {
                         $('#mailstatus').val(1);
                         var email_template = $('#email_template').val();
                         $('#email_template_set').val(email_template);
-                        var savesend = "{{ @$savesend }}";
-                        if (savesend) {
-                            submitForm();
-                        } else {
-                            window.purgeInterviewTrackerCache();
-                            var isResched = ($('#is_reschedule').val() == '1');
-                            var succMsg = isResched ? "Interview rescheduled successfully!" : "Interview scheduled successfully!";
-                            Swal.fire("Success", succMsg, "success").then(function() {
-                                $('#interview_schedule_drawer_close').trigger('click');
-                                if (typeof window.fetchCandidates === 'function') {
-                                    window.fetchCandidates(1, '', true);
-                                } else if (window.location.pathname.indexOf('interview-schedule') !== -1) {
-                                    location.reload();
-                                }
-                            });
-                        }
+                        // Persist the interview schedule to MySQL and Elasticsearch (Critical P0 fix)
+                        submitForm();
                     }
+                },
+                error: function(xhr) {
+                    $('.indicator-label').show();
+                    $('.indicator-progress').hide();
+                    $('#sendEmailBtn').prop('disabled', false);
+                    var errText = "Failed to send interview invitation email. Please check details and try again.";
+                    try {
+                        var json = JSON.parse(xhr.responseText);
+                        if (json.message) errText = json.message;
+                    } catch(e){}
+                    Swal.fire("Error", errText, "error");
                 }
-            })
+            });
         });
     });
 

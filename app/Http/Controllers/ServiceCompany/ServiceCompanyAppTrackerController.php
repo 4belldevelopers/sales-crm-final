@@ -454,24 +454,45 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             }
         }
 
-        // Batch latest interview_schedules per (job_application_id, interview_job_id) (eliminates 2 per-row N+1 queries in all_apptracker.blade.php)
+        // Batch latest interview_schedules per (job_application_id / wise_id, interview_job_id) (eliminates 2 per-row N+1 queries in all_apptracker.blade.php)
         $candIds = collect($data)
-            ->map(fn ($r) => (int) ($r['candidate_id'] ?? $r['id'] ?? 0))
+            ->flatMap(fn ($r) => [(int) ($r['candidate_id'] ?? 0), (int) ($r['id'] ?? 0)])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+        $candWiseIds = collect($data)
+            ->flatMap(fn ($r) => [(int) ($r['wiseId'] ?? 0), (int) ($r['wiseID'] ?? 0), (int) ($r['add_job_wise_condidates_id'] ?? 0), (int) ($r['id'] ?? 0)])
             ->filter()
             ->unique()
             ->values()
             ->all();
         $interviewsMap = [];
-        if (! empty($candIds) && ! empty($jobIds)) {
+        if ((! empty($candIds) || ! empty($candWiseIds)) && ! empty($jobIds)) {
             $intRows = DB::table('interview_schedules')
-                ->whereIn('job_application_id', $candIds)
+                ->where(function ($q) use ($candIds, $candWiseIds) {
+                    if (! empty($candIds)) {
+                        $q->whereIn('job_application_id', $candIds);
+                    }
+                    if (! empty($candWiseIds)) {
+                        $q->orWhereIn('interview_job_wise_con_id', $candWiseIds);
+                    }
+                })
                 ->whereIn('interview_job_id', $jobIds)
                 ->orderBy('id', 'DESC')
                 ->get();
             foreach ($intRows as $ir) {
-                $iKey = $ir->job_application_id.'_'.$ir->interview_job_id;
-                if (! isset($interviewsMap[$iKey])) {
-                    $interviewsMap[$iKey] = $ir;
+                if ($ir->job_application_id > 0) {
+                    $iKey = $ir->job_application_id.'_'.$ir->interview_job_id;
+                    if (! isset($interviewsMap[$iKey])) {
+                        $interviewsMap[$iKey] = $ir;
+                    }
+                }
+                if ($ir->interview_job_wise_con_id > 0) {
+                    $wKey = 'w_'.$ir->interview_job_wise_con_id.'_'.$ir->interview_job_id;
+                    if (! isset($interviewsMap[$wKey])) {
+                        $interviewsMap[$wKey] = $ir;
+                    }
                 }
             }
         }

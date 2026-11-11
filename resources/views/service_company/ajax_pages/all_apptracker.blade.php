@@ -30,12 +30,12 @@
     // dd($row);
     $row->id = $row->candidate_id;
     $row->add_job_wise_condidates_id = $row->wiseId;
+    $rowJobId = (int) ($row->job_id ?: ($row->jobId ?? 0));
     // BUG-04 fix: use pre-fetched map instead of per-row DB query (was N+1 #1)
-    $jobData = isset($rowMaps['jobs'][$row->jobId]) ? (object) $rowMaps['jobs'][$row->jobId] : null;
+    $jobData = isset($rowMaps['jobs'][$rowJobId]) ? (object) $rowMaps['jobs'][$rowJobId] : null;
     $jobMode = $jobData->max_sal_mode ?? @$row->current_ctc_mode;
     $jobCurrency = $jobData->max_salary_currency ?? @$row->current_ctc_cur;
     $symbols = $symbolsValue[$jobCurrency] ?? \App\Services\CurrencyService::resolveCurrencyCode($jobCurrency);
-    $rowJobId = $row->job_id ?: ($row->jobId ?? 0);
     $preSkillRows = $rowMaps['skills'][$rowJobId] ?? [];
     $jobRequiredSkills = collect($preSkillRows)->pluck('skill_name')->toArray();
     $skillArr = explode(',', (string) @$row->skills);
@@ -458,28 +458,35 @@
             <td>
                 @php
                     $schedule_date = $className = '';
-                    $iKey = ($row->id ?? 0) . '_' . ($row->jobId ?? 0);
+                    $candAppId = (int) ($row->id ?: ($row->candidate_id ?? 0));
+                    $wiseConId = (int) ($row->add_job_wise_condidates_id ?: ($row->wiseId ?? 0));
+                    $iKey = $candAppId . '_' . $rowJobId;
+                    $wKey = 'w_' . $wiseConId . '_' . $rowJobId;
                     if (isset($rowMaps['interviews'])) {
-                        $intRow = $rowMaps['interviews'][$iKey] ?? null;
+                        $intRow = $rowMaps['interviews'][$iKey] ?? ($rowMaps['interviews'][$wKey] ?? null);
                         $intRowCount = $intRow ? 1 : 0;
                     } else {
                         $intRow = DB::table('interview_schedules')
                             ->select('*')
-                            ->where('job_application_id', $row->id)
-                            ->where('interview_job_id', $row->jobId)
+                            ->where(function($q) use ($candAppId, $wiseConId) {
+                                if ($candAppId > 0) $q->where('job_application_id', $candAppId);
+                                if ($wiseConId > 0) $q->orWhere('interview_job_wise_con_id', $wiseConId);
+                            })
+                            ->where('interview_job_id', $rowJobId)
                             ->orderBy('interview_schedules.id', 'DESC')
                             ->first();
                         $intRowCount = $intRow ? 1 : 0;
                     }
                     $html = '';
                     $schedule_time = '';
-                    if ($intRowCount > 0) {
-                        $schedule_date = @$intRow->schedule_date;
-                        $schedule_date = date('d M, Y', strtotime($schedule_date));
+                    if ($intRowCount > 0 && !empty($intRow->schedule_date) && $intRow->schedule_date !== '0000-00-00 00:00:00') {
+                        $schedule_date = date('d M, Y', strtotime($intRow->schedule_date));
                         $timezone_abbreviation = ($intRow->timezone_abbreviation) ? ' ('.$intRow->timezone_abbreviation.')' : '';
                         $schedule_time = @$intRow->schedule_to_time. ' '.$timezone_abbreviation;
                     } else {
-                        $html = '<div style="width:150px" id="interview_date">&nbsp;</div>';
+                        $schedule_date = '';
+                        $schedule_time = '';
+                        $html = '<div style="width:150px" id="interview_date"><span class="text-muted fs-7">-</span></div>';
                     }
 
                     // Row 3: interview mode (Face To Face / Video Call / Telecon) until
@@ -516,20 +523,21 @@
                         }
                     }
 
-                    echo '<div class="d-flex flex-column">
-                        		<span class="text-dark fw-bolder fs-6 d-flex align-items-center gap-1">
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#99a1b7;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                                    ' .
-                        @$schedule_date .
-                        '</span>
-								<span class="text-muted fw-bold d-block fs-7 d-flex align-items-center gap-1">
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#99a1b7;flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-                                    ' .
-                        $schedule_time .
-                        '</span>' .
-                        $row3Html .
-                        '
-                    		</div>';
+                    if (!empty($schedule_date)) {
+                        echo '<div class="d-flex flex-column">
+                            <span class="text-dark fw-bolder fs-6 d-flex align-items-center gap-1">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#99a1b7;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                ' . $schedule_date . '
+                            </span>
+                            <span class="text-muted fw-bold d-block fs-7 d-flex align-items-center gap-1">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#99a1b7;flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                                ' . $schedule_time . '
+                            </span>' .
+                            $row3Html . '
+                        </div>';
+                    } else {
+                        echo '<div style="width:150px" id="interview_date"><span class="text-muted fs-7">-</span></div>';
+                    }
                 @endphp
             </td>
             <td>
@@ -569,11 +577,11 @@
                     }
 
                     if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
-                        $spokKey = ($row->jobId ?? 0) . '_' . ($row->ClientComID ?? 0);
+                        $spokKey = $rowJobId . '_' . ($row->ClientComID ?? 0);
                         if (isset($rowMaps['spokperson_map'])) {
                             $spokName = $rowMaps['spokperson_map'][$spokKey] ?? null;
                         } else {
-                            $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
+                            $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $rowJobId)->where('job_assign.company_id', $row->ClientComID)->first();
                             $spokName = @$spokperson->name;
                         }
                         $rowpostedby = (!empty($spokName)) ? ucwords($spokName) : ucwords($row->posted_by);
