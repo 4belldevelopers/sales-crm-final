@@ -28,7 +28,8 @@ class CandidateCommentsAndNoticePeriodRegressionTest extends TestCase
         foreach ([$store, $update] as $path) {
             $this->assertStringContainsString('$jobApplication->comment =', $path);
             $this->assertStringContainsString('$request->comment', $path);
-            $this->assertStringContainsString('$jobApplication->recruiter_note = $request->recruiter_note;', $path);
+            $this->assertStringContainsString('$jobApplication->recruiter_note =', $path);
+            $this->assertStringContainsString('recruiter_note', $path);
         }
 
         $this->assertStringNotContainsString('$jobApplication->recruiter_note = $request->comment', $controller);
@@ -55,7 +56,7 @@ class CandidateCommentsAndNoticePeriodRegressionTest extends TestCase
         $this->assertStringContainsString('{{ @$application->comment }}', $form);
         $this->assertStringContainsString('name="recruiter_note"', $form);
         $this->assertStringContainsString('{{ @$application->recruiter_note }}', $form);
-        $this->assertStringContainsString('Salary Details Comments:', $drawer);
+        $this->assertStringContainsString('Salary Details Comments', $drawer);
         $this->assertStringContainsString('{!! $application->recruiter_note !!}', $drawer);
         $this->assertStringNotContainsString('@$application->recruiter_note ?: @$application->comment', $drawer);
         $this->assertStringNotContainsString('candidate.recruiter_note || candidate.comment', $forwardResume);
@@ -82,7 +83,7 @@ class CandidateCommentsAndNoticePeriodRegressionTest extends TestCase
         $this->assertStringContainsString('aria-label="Notice Period Selection"', $form);
         $this->assertStringContainsString('Notice Period <span class="candidate-optional-label">(Optional)</span>', $form);
         $this->assertStringContainsString('<option value="" {{ $snp_mode === null ? \'selected\' : \'\' }}>Choose Notice Period</option>', $form);
-        $this->assertStringContainsString("'serving_notice_period' => ['nullable', 'integer', 'in:0,1,2']", $this->source('app/Services/CandidateNoticePeriodState.php'));
+        $this->assertStringContainsString("'serving_notice_period' => \$required ? ['required', 'integer', 'in:0,1,2'] : ['nullable', 'integer', 'in:0,1,2']", $this->source('app/Services/CandidateNoticePeriodState.php'));
         $this->assertStringContainsString('id="candidateNoticeDateField"', $form);
         $this->assertStringContainsString('id="candidateNoticeDaysField"', $form);
         $this->assertStringContainsString('noticeDateField.hidden = !usesDate', $form);

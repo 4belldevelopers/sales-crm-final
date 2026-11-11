@@ -36,6 +36,7 @@ use App\Models\User;
 use App\Notifications\CandidateScheduleInterview;
 use App\Notifications\CandidateStatusChange;
 use App\Notifications\ScheduleInterview;
+use App\Services\CandidateNoticePeriodState;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -396,20 +397,14 @@ class AdminJobApplicationController extends AdminBaseController
         if (! empty($submitted_by)) {
             $jobApplication->submitted_by = $submitted_by;
         }
-        $serving_notice_period = '';
-        $serving_notice_period = $request->serving_notice_period;
-        if ($serving_notice_period == 1) {
-            $jobApplication->np_id = 'SNP-LWD-'.$request->calender;
-        } elseif ($serving_notice_period == 2) {
-            $jobApplication->np_id = 'Immediate';
-        } else {
-            $jobApplication->np_id = $request->ddl_np_id;
-        }
+        $noticePeriodState = CandidateNoticePeriodState::fromRequest($request);
+        $jobApplication->np_id = $noticePeriodState['np_id'];
+        $jobApplication->last_working_date = $noticePeriodState['last_working_date'];
+        $jobApplication->serving_notice_period_mode = (int) ($noticePeriodState['serving_notice_period_mode'] ?? 0);
         if (! empty($request->qualification)) {
             $jobApplication->qualification = $request->qualification;
         }
         $jobApplication->company_id = $this->user->company_id;
-        $jobApplication->serving_notice_period_mode = $request->serving_notice_period;
         if ($request->has('gender')) {
             $jobApplication->gender = $request->gender;
         }
@@ -577,20 +572,10 @@ class AdminJobApplicationController extends AdminBaseController
             $jobApplication->rel_exp = @$request->rel_exp;
         }
 
-        $serving_notice_period = '';
-        $serving_notice_period = $request->serving_notice_period;
-        if ($serving_notice_period == 1) {
-            // if (!empty($request->calender)) {
-            //    $jobApplication->np_id 				= 'SNP-LWD-' . $request->calender;
-            // } else {
-            $jobApplication->np_id = $request->np_id;
-            // }
-        } elseif ($serving_notice_period == 2) {
-            $jobApplication->np_id = 'Immediate';
-        } else {
-            $jobApplication->np_id = $request->ddl_np_id;
-        }
-        $jobApplication->serving_notice_period_mode = $request->serving_notice_period;
+        $noticePeriodState = CandidateNoticePeriodState::fromRequest($request);
+        $jobApplication->np_id = $noticePeriodState['np_id'];
+        $jobApplication->last_working_date = $noticePeriodState['last_working_date'];
+        $jobApplication->serving_notice_period_mode = (int) ($noticePeriodState['serving_notice_period_mode'] ?? 0);
         $jobApplication->current_ctc_cur = $request->current_ctc_cur;
         if (! empty($request->ctc)) {
             $jobApplication->ctc = @$request->ctc;

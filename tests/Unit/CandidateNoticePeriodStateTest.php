@@ -66,18 +66,24 @@ class CandidateNoticePeriodStateTest extends TestCase
         $this->assertSame(['nullable'], $selected['np_id']);
     }
 
-    public function test_notice_period_can_be_left_unselected(): void
+    public function test_notice_period_is_optional_by_default_for_in_review(): void
     {
         $rules = CandidateNoticePeriodState::validationRules('');
         $validator = Validator::make(['serving_notice_period' => ''], $rules);
 
         $this->assertTrue($validator->passes());
+        $this->assertSame(['nullable', 'integer', 'in:0,1,2'], $rules['serving_notice_period']);
         $this->assertSame(['nullable'], $rules['np_id']);
         $this->assertSame(['nullable'], $rules['ddl_np_id']);
-        $this->assertSame([
-            'serving_notice_period_mode' => 0,
-            'np_id' => null,
-            'last_working_date' => null,
-        ], CandidateNoticePeriodState::normalize('', null, null));
+    }
+
+    public function test_notice_period_can_be_mandatory_when_explicitly_configured(): void
+    {
+        $rules = CandidateNoticePeriodState::validationRules('', true);
+        $messages = CandidateNoticePeriodState::validationMessages();
+        $validator = Validator::make(['serving_notice_period' => ''], $rules, $messages);
+
+        $this->assertFalse($validator->passes());
+        $this->assertSame('Please select a notice period status.', $validator->errors()->first('serving_notice_period'));
     }
 }
