@@ -31,6 +31,7 @@ jobs:
             echo ">> Installing PHP deps"
             composer install --no-dev --optimize-autoloader --no-interaction
             echo ">> Building frontend assets"
+            php artisan view:clear || true
             npm ci
             npm run build
             echo ">> Running migrations"
@@ -60,14 +61,20 @@ jobs:
             # which re-read the SAME cached bytecode — so new code silently never takes effect
             # (documented in the project's CLAUDE.md). A full process stop/start is required to
             # clear OPcache and actually load the freshly deployed code.
-            php artisan octane:stop || true
-            sleep 3
-            # Relaunch detached (setsid+nohup) so the daemon survives this SSH session closing —
-            # start-octane.sh runs `octane:start` in the foreground. If the process manager
-            # (aaPanel) already auto-relaunched it after the stop, this second start simply fails
-            # to bind port 8000 and exits harmlessly; either way the site comes back up fresh and
-            # there is no window where it is left down without an attempt to restart it.
-            setsid nohup bash start-octane.sh > storage/logs/octane-start.log 2>&1 < /dev/null &
+            if systemctl is-active --quiet octane 2>/dev/null; then
+              echo ">> Restarting supervised Octane systemd service"
+              systemctl restart --no-block octane 2>/dev/null || true
+            else
+              echo ">> Restarting detached Octane background process"
+              php artisan octane:stop || true
+              sleep 3
+              # Relaunch detached (setsid+nohup) so the daemon survives this SSH session closing —
+              # start-octane.sh runs `octane:start` in the foreground. If the process manager
+              # (aaPanel) already auto-relaunched it after the stop, this second start simply fails
+              # to bind port 8000 and exits harmlessly; either way the site comes back up fresh and
+              # there is no window where it is left down without an attempt to restart it.
+              setsid nohup bash start-octane.sh > storage/logs/octane-start.log 2>&1 < /dev/null &
+            fi
             sleep 5
             php artisan octane:status || true
             echo ">> Staging deploy complete"

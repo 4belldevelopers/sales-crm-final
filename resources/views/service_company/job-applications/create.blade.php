@@ -8999,6 +8999,18 @@ function jumpToCandidateField(fieldKey) {
                 } else if (typeof targetEl.focus === 'function') {
                     targetEl.focus();
                 }
+            } else if (fieldKey === 'np_id') {
+                var snpVal = ($('#serving_notice_period').val() || '').trim();
+                if (snpVal === '0') {
+                    var ddl = document.querySelector('#ddl_np_id');
+                    if (ddl && typeof ddl.focus === 'function') ddl.focus();
+                } else if (snpVal === '1' || snpVal === '2') {
+                    var dp = document.querySelector('#np_id_display');
+                    if (dp && typeof dp.focus === 'function') dp.focus();
+                } else {
+                    var optBtn = document.querySelector('.candidate-notice-option');
+                    if (optBtn && typeof optBtn.focus === 'function') optBtn.focus();
+                }
             } else if (typeof targetEl.focus === 'function') {
                 targetEl.focus();
             }
@@ -10104,6 +10116,10 @@ $(document).ready(function() {
             noticeDateLabel.innerHTML = (mode === '1' ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)') + ' <span class="rq">*</span>';
         }
 
+        if (mode) {
+            $('.candidate-notice-options').removeClass('has-validation-error');
+        }
+
         previousNoticeMode = mode;
     }
 
@@ -10128,6 +10144,13 @@ $(document).ready(function() {
         });
         noticeDateInput.addEventListener('change', function () {
             noticeDateDisplay.value = formatNoticeDate(noticeDateInput.value);
+            $('#np_id_display').removeClass('has-validation-error');
+        });
+    }
+
+    if (noticeDaysSelect) {
+        noticeDaysSelect.addEventListener('change', function () {
+            $('#ddl_np_id').removeClass('has-validation-error');
         });
     }
 
