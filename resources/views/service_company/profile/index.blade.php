@@ -4,13 +4,11 @@
 
 ?>
  @php
-      
-    $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(5);
-    $endOfMonthcomman =  Carbon::now()->endOfMonth();
+    $startOfMonthcomman = \Carbon\Carbon::now()->startOfMonth()->subMonths(5);
+    $endOfMonthcomman = \Carbon\Carbon::now()->endOfMonth();
     
-    $endDate = Carbon::today()->endOfDay();
-    $startDate = Carbon::today()->subDays(6)->startOfDay();
-
+    $endDate = \Carbon\Carbon::today()->endOfDay();
+    $startDate = \Carbon\Carbon::today()->subDays(6)->startOfDay();
   @endphp
 @push('head-script')
     <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
@@ -1537,7 +1535,7 @@ if (! empty($str)) {
     }
 }
 
-                  ?>
+?>
           <div class="d-flex flex-wrap flex-sm-nowrap mb-3">
             <!--begin: Pic-->
             <div class="me-7 mb-4">
