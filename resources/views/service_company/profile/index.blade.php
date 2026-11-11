@@ -1,16 +1,14 @@
 @extends('layouts.service_company_layout')
-<?php 
+<?php
    use App\Helper\GeneralMethod;
-   use Carbon\Carbon;
+
 ?>
  @php
-      
-    $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(5);
-    $endOfMonthcomman =  Carbon::now()->endOfMonth();
+    $startOfMonthcomman = \Carbon\Carbon::now()->startOfMonth()->subMonths(5);
+    $endOfMonthcomman = \Carbon\Carbon::now()->endOfMonth();
     
-    $endDate = Carbon::today()->endOfDay();
-    $startDate = Carbon::today()->subDays(6)->startOfDay();
-
+    $endDate = \Carbon\Carbon::today()->endOfDay();
+    $startDate = \Carbon\Carbon::today()->subDays(6)->startOfDay();
   @endphp
 @push('head-script')
     <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
@@ -203,28 +201,36 @@ body
 }
 
 /* ===== Rule 20 Modern Card + Sub-Card Design System for Service Company Profile ===== */
+#kt_content, #kt_post, #kt_content_container, .scp {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
 .scp, .scp * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; box-sizing:border-box; }
-.scp { font-size:13px; color:#0f172a; }
+.scp { font-size:13px; color:#0f172a; width:100% !important; }
 
 /* Tier 1: Top Hero Profile Header Card */
 .scp-hero-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 10px !important;
-  padding: 18px 22px !important;
+  padding: 16px 20px !important;
   margin-bottom: 14px !important;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
   gap: 18px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 .scp-hero-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-  min-width: 280px;
+  gap: 14px;
+  min-width: 260px;
+  flex: 1 1 auto;
 }
 .scp-avatar-wrap {
   position: relative;
@@ -437,25 +443,29 @@ body
   border-color: #cbd5e1;
 }
 
-/* Tier 1.5: High-Density KPI Stats Sub-Cards */
+/* Tier 1.5: High-Density 7-Metric KPI Stats Sub-Cards */
 .scp-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 14px;
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin-bottom: 14px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 .scp-kpi-subcard {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   transition: all 0.15s ease;
   cursor: pointer;
   text-decoration: none;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .scp-kpi-subcard:hover {
   transform: translateY(-1px);
@@ -463,22 +473,23 @@ body
   border-color: #bfdbfe;
 }
 .scp-kpi-ic-box {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 15px;
   flex-shrink: 0;
 }
-.scp-kpi-ic-box svg {
-  width: 18px;
-  height: 18px;
+.scp-kpi-ic-box svg, .scp-kpi-ic-box i {
+  font-size: 15px;
 }
 .scp-kpi-ic-blue { background: #eff6ff; color: #009ef7; }
+.scp-kpi-ic-teal { background: #f0fdfa; color: #0d9488; }
 .scp-kpi-ic-green { background: #ecfdf5; color: #10b981; }
 .scp-kpi-ic-amber { background: #fffbeb; color: #f59e0b; }
+.scp-kpi-ic-indigo { background: #eef2ff; color: #6366f1; }
 .scp-kpi-ic-purple { background: #f5f3ff; color: #7c3aed; }
 .scp-kpi-ic-rose { background: #fff1f2; color: #e11d48; }
 
@@ -486,6 +497,8 @@ body
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 .scp-kpi-lbl {
   font-size: 11px;
@@ -494,82 +507,214 @@ body
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: block;
 }
 .scp-kpi-val {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.2;
+  display: block;
+}
+
+@media (max-width: 1400px) {
+  .scp-kpi-grid { gap: 6px !important; }
+  .scp-kpi-subcard { padding: 8px 10px !important; gap: 6px !important; }
+  .scp-kpi-ic-box { width: 30px !important; height: 30px !important; font-size: 13px !important; }
+  .scp-kpi-val { font-size: 14px !important; }
+  .scp-kpi-lbl { font-size: 10px !important; }
+}
+@media (max-width: 1100px) {
+  .scp-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 768px) {
+  .scp-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }
 
 /* Tier 2: Dedicated Sub-Tabs Card (Rule 20 Mandatory) */
-.scp-tabs-card {
+.scp-tabs-card, ul.nav-tabs.scp-tabs-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
   border-radius: 10px !important;
-  padding: 8px 12px !important;
+  padding: 6px 8px !important;
   margin-bottom: 14px !important;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
   display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
-  gap: 8px !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
   overflow-x: auto !important;
+  overflow-y: hidden !important;
   scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
   list-style: none !important;
   margin-left: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 .scp-tabs-card::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  height: 0 !important;
 }
-.scp-tab-item {
-  display: inline-block;
+.scp-tab-item, .nav-tabs.scp-tabs-card .nav-item {
+  display: inline-flex !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
   margin: 0 !important;
 }
-.scp-tab-link {
+.scp-tab-link, .nav-tabs.scp-tabs-card .nav-link.scp-tab-link {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  padding: 6px 14px !important;
-  font-size: 11.5px !important;
+  padding: 6px 6px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
   color: #475569 !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  justify-content: center !important;
+  gap: 5px !important;
   text-decoration: none !important;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
   transition: all 0.15s ease !important;
   white-space: nowrap !important;
+  width: 100% !important;
+  cursor: pointer !important;
 }
-.scp-tab-link:hover {
+.scp-tab-link span.scp-tab-text {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.scp-tab-link:hover, .nav-tabs.scp-tabs-card .nav-link.scp-tab-link:hover {
   background: #f8fafc !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
 }
-.scp-tab-link.active {
+.scp-tab-link.active, .nav-tabs.scp-tabs-card .nav-link.scp-tab-link.active,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link.active:focus,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link.active:hover {
   background: #009ef7 !important;
   border-color: #009ef7 !important;
   color: #ffffff !important;
   box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
 }
+
+/* Tab Icon: Crisp Slate on White, Light Color / Pure White on Blue Background */
+.scp-tab-link i,
+.scp-tab-link svg,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link i,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link svg {
+  color: #64748b !important;
+  font-size: 13px !important;
+  flex-shrink: 0 !important;
+  transition: color 0.15s ease !important;
+}
+.scp-tab-link:hover i,
+.scp-tab-link:hover svg,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link:hover i,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link:hover svg {
+  color: #009ef7 !important;
+}
+.scp-tab-link.active i,
+.scp-tab-link.active svg,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link.active i,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link.active svg {
+  color: #ffffff !important;
+}
+
 .scp-tab-badge {
-  min-width: 20px;
+  min-width: 18px;
   height: 18px;
-  padding: 0 6px;
-  border-radius: 10px;
-  font-size: 10.5px;
+  padding: 0 4px;
+  border-radius: 9px;
+  font-size: 10px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: #f1f5f9;
   color: #475569;
+  flex-shrink: 0;
 }
-.scp-tab-link.active .scp-tab-badge {
+.scp-tab-link.active .scp-tab-badge,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link.active .scp-tab-badge {
   background: rgba(255, 255, 255, 0.28) !important;
   color: #ffffff !important;
 }
 
+@media (max-width: 1024px) {
+  .scp-tab-item, .nav-tabs.scp-tabs-card .nav-item {
+    flex: 0 0 auto !important;
+  }
+  .scp-tab-link, .nav-tabs.scp-tabs-card .nav-link.scp-tab-link {
+    width: auto !important;
+    padding: 6px 12px !important;
+  }
+}
+
+/* Social & Badge Helpers */
+.scp-hero-social-pill {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #f0f7ff;
+  border: 1px solid #c7ddff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #0a66c2;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  margin-left: 6px;
+}
+.scp-hero-social-pill:hover {
+  background: #0a66c2;
+  color: #ffffff !important;
+  border-color: #0a66c2;
+}
+.scp-pill-tag.linkedin {
+  background: #f0f7ff;
+  color: #0a66c2;
+  border: 1px solid #bfdbfe;
+  text-decoration: none;
+  cursor: pointer;
+}
+.scp-pill-tag.linkedin:hover {
+  background: #0a66c2;
+  color: #ffffff !important;
+}
+.scp-linkedin-btn {
+  background: #f0f7ff;
+  border: 1px solid #c7ddff;
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0a66c2 !important;
+  text-decoration: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.scp-linkedin-btn:hover {
+  background: #0a66c2;
+  color: #ffffff !important;
+  border-color: #0a66c2;
+}
+.scp-email-val {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 175px;
+  display: inline-block;
+  vertical-align: middle;
+}
 /* Tier 3: "My Details" Tab - Balanced 3-Card Enterprise Grid */
 .scp-details-grid {
   display: grid;
@@ -696,8 +841,10 @@ body
   text-align: right;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 6px;
-  word-break: break-all;
+  min-width: 0;
+  flex: 1;
 }
 .scp-tile-right a {
   color: #009ef7;
@@ -764,14 +911,16 @@ body
 
 /* Responsiveness for 15.6" screens and down */
 @media (max-width: 1200px) {
-  .scp-details-grid { grid-template-columns: 1fr 1fr; }
-  .scp-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .scp-details-grid { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 991px) {
+  .scp-hero-card { flex-wrap: wrap !important; }
+  .scp-health-box { flex: 1 1 100% !important; max-width: 100% !important; }
 }
 @media (max-width: 768px) {
-  .scp-details-grid { grid-template-columns: 1fr; }
-  .scp-kpi-grid { grid-template-columns: 1fr 1fr; }
-  .scp-hero-card { flex-direction: column; align-items: stretch; }
-  .scp-hero-actions-col { flex-direction: row; }
+  .scp-details-grid { grid-template-columns: 1fr !important; }
+  .scp-hero-card { flex-direction: column !important; align-items: stretch !important; }
+  .scp-hero-actions-col { flex-direction: row !important; }
 }
 
 /* ===================== Shared icon tints (Settings + Rank) ===================== */
@@ -1183,13 +1332,13 @@ body
 @section('content')
 <!--begin::Toolbar (removed)-->
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content" style="margin-top:-60px;">
+<div class="content d-flex flex-column flex-column-fluid pt-4 w-100" id="kt_content" style="margin-top:-60px;">
   <!--begin::Post-->
-  <div class="post d-flex flex-column-fluid" id="kt_post">
+  <div class="post d-flex flex-column-fluid w-100" id="kt_post">
     <!--begin::Container-->
-    <div id="kt_content_container" class="container-fluid px-3">
+    <div id="kt_content_container" class="container-fluid px-3 w-100">
       <!--begin::Redesigned hero + stats-->
-      <div class="scp px-2">
+      <div class="scp px-0 w-100">
         @php
           $scp_logo = (!empty(@$users->image) && strlen(@$users->image)>10) ? @$users->image : '';
           $scp_initial = '';
@@ -1204,6 +1353,9 @@ body
           $scp_done = count(array_filter($scp_pc));
           $scp_pct  = count($scp_pc) ? round($scp_done/count($scp_pc)*100) : 0;
           $scp_active = isset($counts) ? (int) $counts->get('active',0) : 0;
+          $scp_all_jobs = isset($counts) ? ((int) ($counts->get('all_jobs') ?? $counts->sum())) : 0;
+          $scp_offers   = (int) (@$scpOffersTotal ?? @$offer_count ?? 0);
+          $userLinkedin = @$users->linkedin;
           $scp_cand   = (int) (@$scpCandidatesTotal ?? @$total_candidates ?? 0);
           $scp_intv   = (int) (@$scpInterviewsTotal ?? 0);
           $scp_join   = (int) (@$scpJoiningsTotal ?? 0);
@@ -1228,12 +1380,17 @@ body
             </div>
             <div class="scp-hero-info">
               <span class="scp-greeting">Welcome back,</span>
-              <div class="scp-name-row">
+              <div class="scp-name-row" style="display:flex; align-items:center; gap:6px;">
                 <h1 class="scp-title-name">{{ ucwords(@$users->name) }}</h1>
                 <svg class="scp-verif-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l2.4 1.8 3 .1 1 2.8 2.4 1.7-.9 2.9.9 2.9-2.4 1.7-1 2.8-3 .1L12 2l-2.4-1.8-3-.1-1-2.8L3.2 15.6l.9-2.9-.9-2.9 2.4-1.7 1-2.8 3-.1L12 2z"/>
                   <path d="M10.6 14.6l-2.2-2.2-1.1 1.1 3.3 3.3 5.6-5.6-1.1-1.1z" fill="#fff"/>
                 </svg>
+                @if(!empty($userLinkedin))
+                  <a href="{{ (strpos($userLinkedin, 'http') === 0 ? '' : 'https://') . $userLinkedin }}" target="_blank" class="scp-hero-social-pill" title="LinkedIn Profile">
+                    <i class="bi bi-linkedin"></i>
+                  </a>
+                @endif
               </div>
               <div class="scp-designation-row">
                 <span>{{ ucwords(@$users->designation ?: 'Recruiter') }}</span>
@@ -1243,16 +1400,18 @@ body
                 @endif
               </div>
               <div class="scp-pills-row">
-                <span class="scp-pill-tag verified">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Verified Employer
-                </span>
                 <span class="scp-pill-tag neutral">
-                  User ID: #{{ @$users->id }}
+                  ID: #{{ @$users->id }}
                 </span>
                 @if(!empty(@$city_name))
                   <span class="scp-pill-tag neutral">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> {{ ucwords(@$city_name) }}@if(!empty(@$state_name)), {{ ucwords(@$state_name) }}@endif
+                    <i class="bi bi-geo-alt"></i> {{ ucwords(@$city_name) }}@if(!empty(@$state_name)), {{ ucwords(@$state_name) }}@endif
                   </span>
+                @endif
+                @if(!empty($userLinkedin))
+                  <a href="{{ (strpos($userLinkedin, 'http') === 0 ? '' : 'https://') . $userLinkedin }}" target="_blank" class="scp-pill-tag linkedin" title="Recruiter LinkedIn">
+                    <i class="bi bi-linkedin" style="color:#0a66c2;"></i> LinkedIn
+                  </a>
                 @endif
               </div>
             </div>
@@ -1286,39 +1445,46 @@ body
           <!-- Right: Hero Actions -->
           <div class="scp-hero-actions-col">
             <a href="{{ route('service_company.profile.edit', [GeneralMethod::value_encrypt($user_id)]) }}" class="scp-btn-hero-primary">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg> Edit Profile
-            </a>
-            <a href="javascript:void(0);" class="scp-btn-hero-secondary">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share Company Page
+              <i class="bi bi-pencil-square"></i> Edit Profile
             </a>
           </div>
         </div>
 
-        <!-- Tier 1.5: High-Density KPI Stats Sub-Cards (Rule 20) -->
+        <!-- Tier 1.5: High-Density 7-Metric KPI Stats Sub-Cards (Rule 20) -->
         <div class="scp-kpi-grid">
-          <div class="scp-kpi-subcard" onclick="$('a[href=\'#requisitions\']').tab('show'); if(typeof load_jobs==='function'){ load_jobs('{{ @$users->id }}'); }" title="View My Jobs">
+          <div class="scp-kpi-subcard" onclick="$('.scp-tab-link[href=\'#requisitions\']').trigger('click');" title="View All Jobs">
             <div class="scp-kpi-ic-box scp-kpi-ic-blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <i class="bi bi-briefcase"></i>
             </div>
             <div class="scp-kpi-data">
-              <span class="scp-kpi-lbl">Active Jobs</span>
-              <span class="scp-kpi-val">{{ $scp_active }}</span>
+              <span class="scp-kpi-lbl">All Jobs</span>
+              <span class="scp-kpi-val">{{ number_format($scp_all_jobs) }}</span>
             </div>
           </div>
 
-          <div class="scp-kpi-subcard" onclick="$('a[href=\'#candidate\']').tab('show'); if(typeof load_application==='function'){ load_application('{{ @$users->id }}'); }" title="View My Candidates">
-            <div class="scp-kpi-ic-box scp-kpi-ic-green">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          <div class="scp-kpi-subcard" onclick="$('.scp-tab-link[href=\'#requisitions\']').trigger('click');" title="View Active Jobs">
+            <div class="scp-kpi-ic-box scp-kpi-ic-teal">
+              <i class="bi bi-lightning-charge"></i>
             </div>
             <div class="scp-kpi-data">
-              <span class="scp-kpi-lbl">Candidates Added</span>
+              <span class="scp-kpi-lbl">Active Jobs</span>
+              <span class="scp-kpi-val">{{ number_format($scp_active) }}</span>
+            </div>
+          </div>
+
+          <div class="scp-kpi-subcard" onclick="$('.scp-tab-link[href=\'#candidate\']').trigger('click');" title="View Candidates">
+            <div class="scp-kpi-ic-box scp-kpi-ic-green">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="scp-kpi-data">
+              <span class="scp-kpi-lbl">Candidates</span>
               <span class="scp-kpi-val">{{ number_format($scp_cand) }}</span>
             </div>
           </div>
 
-          <div class="scp-kpi-subcard" onclick="$('a[href=\'#interview_tracker\']').tab('show'); if(typeof load_interviewSchedule==='function'){ load_interviewSchedule('{{ @$users->id }}'); }" title="View Interview Tracker">
+          <div class="scp-kpi-subcard" onclick="$('.scp-tab-link[href=\'#interview_tracker\']').trigger('click');" title="View Interviews">
             <div class="scp-kpi-ic-box scp-kpi-ic-amber">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              <i class="bi bi-calendar-check"></i>
             </div>
             <div class="scp-kpi-data">
               <span class="scp-kpi-lbl">Interviews</span>
@@ -1326,23 +1492,33 @@ body
             </div>
           </div>
 
-          <div class="scp-kpi-subcard" onclick="$('a[href=\'#joinings\']').tab('show'); if(typeof jointableLoad==='function'){ jointableLoad('{{ @$users->id }}'); }" title="View My Joinings">
-            <div class="scp-kpi-ic-box scp-kpi-ic-purple">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11l2 2 4-4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <div class="scp-kpi-subcard" onclick="$('.scp-tab-link[href=\'#candidate\']').trigger('click');" title="View Offers">
+            <div class="scp-kpi-ic-box scp-kpi-ic-indigo">
+              <i class="bi bi-award"></i>
             </div>
             <div class="scp-kpi-data">
-              <span class="scp-kpi-lbl">Joinings</span>
+              <span class="scp-kpi-lbl">Offers</span>
+              <span class="scp-kpi-val">{{ number_format($scp_offers) }}</span>
+            </div>
+          </div>
+
+          <div class="scp-kpi-subcard" onclick="$('.scp-tab-link[href=\'#joinings\']').trigger('click');" title="View Joinings">
+            <div class="scp-kpi-ic-box scp-kpi-ic-purple">
+              <i class="bi bi-person-check"></i>
+            </div>
+            <div class="scp-kpi-data">
+              <span class="scp-kpi-lbl">Joining</span>
               <span class="scp-kpi-val">{{ number_format($scp_join) }}</span>
             </div>
           </div>
 
-          <div class="scp-kpi-subcard" onclick="$('a[href=\'#myRank\']').tab('show');" title="View My Rank">
+          <div class="scp-kpi-subcard" onclick="$('.scp-tab-link[href=\'#myRank\']').trigger('click');" title="View Current Rank">
             <div class="scp-kpi-ic-box scp-kpi-ic-rose">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg>
+              <i class="bi bi-trophy"></i>
             </div>
             <div class="scp-kpi-data">
-              <span class="scp-kpi-lbl">My Rank</span>
-              <span class="scp-kpi-val">#{{ $scp_rank }}</span>
+              <span class="scp-kpi-lbl">Current Rank</span>
+              <span class="scp-kpi-val">{{ $scp_rank != '-' && strpos((string)$scp_rank, '#') === false ? '#' : '' }}{{ $scp_rank }}</span>
             </div>
           </div>
         </div>
@@ -1352,62 +1528,57 @@ body
       <div class="card mb-5 mb-xl-5 mx-2 d-none">
         <div class="card-body pt-5 pb-0 px-5">
           <!--begin::Details-->
-          <?php 
-                  $background_image					=	'';//url('public/user-uploads/team_profile_img/avatar.png'); //'https://preview.keenthemes.com/metronic8/demo1/assets/media/avatars/blank.png';
-                  if(!empty(@$users->image) && strlen(@$users->image)>10){
-                   		//	$background_image			=  url('public/user-uploads/team_profile_img/'.@$users->image);  
-                   				$background_image			=  @$users->image;  
-                   	}
-                  ?>
-          <?php 
-                  $country_id		=	$state	= '';	
-                  $country_id			=	$users->country;	  	//@$application->country;
-                  $state				=	$users->state;    		//@$application->state; users    
-                  if(@$country_id > 0)
-                  {
-                  	   $country_name_Arr	= GeneralMethod::getCountryName($country_id);	
-                   foreach($country_name_Arr as $cval){
-                  // $country_name		= ucwords($cval['name']);	
-                   } 
-                   if($country_id == 101)
-                   {
-                   		// $state_name	= @$users->state_name;
-                      // $city_name	= @$users->city_name; 	
-                   }
-                  	   else
-                   {  			
-                  	if( $state > 0){
-                  		$state_name_Arr		= GeneralMethod::getStateName($country_id, $state);	
-                  		foreach($state_name_Arr as $sval){
-                  			$state_name	= ucwords($sval['name']);	
-                  		}	
-                  	}
-                  	// $city_name	= @$users->city; 
-                   }	
-                  
-                  } 
+          <?php
+                  $background_image = ''; // url('public/user-uploads/team_profile_img/avatar.png'); //'https://preview.keenthemes.com/metronic8/demo1/assets/media/avatars/blank.png';
+if (! empty(@$users->image) && strlen(@$users->image) > 10) {
+    //	$background_image			=  url('public/user-uploads/team_profile_img/'.@$users->image);
+    $background_image = @$users->image;
+}
+?>
+          <?php
+$country_id = $state = '';
+$country_id = $users->country;	  	// @$application->country;
+$state = $users->state;    		// @$application->state; users
+if (@$country_id > 0) {
+    $country_name_Arr = GeneralMethod::getCountryName($country_id);
+    foreach ($country_name_Arr as $cval) {
+        // $country_name		= ucwords($cval['name']);
+    }
+    if ($country_id == 101) {
+        // $state_name	= @$users->state_name;
+        // $city_name	= @$users->city_name;
+    } else {
+        if ($state > 0) {
+            $state_name_Arr = GeneralMethod::getStateName($country_id, $state);
+            foreach ($state_name_Arr as $sval) {
+                $state_name = ucwords($sval['name']);
+            }
+        }
+        // $city_name	= @$users->city;
+    }
 
-                  $str = trim(@$users->name);
-                    if (!empty($str)) {
-                        $str = $strVal = strtolower($str[0]);
-                        $str = ord($str);
-                        if ($str >= 97 && $str <= 101) {
-                            $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                        } elseif ($str >= 102 && $str <= 106) {
-                            $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                        } elseif ($str >= 107 && $str <= 111) {
-                            $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                        } elseif ($str >= 112 && $str <= 116) {
-                            $bgTextDecore = 'fs-3 bg-light-success text-success';
-                        } elseif ($str >= 117 && $str <= 121) {
-                            $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                        } else {
-                            $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                        }
-                    }
+}
 
-                  
-                  ?>
+$str = trim(@$users->name);
+if (! empty($str)) {
+    $str = $strVal = strtolower($str[0]);
+    $str = ord($str);
+    if ($str >= 97 && $str <= 101) {
+        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
+    } elseif ($str >= 102 && $str <= 106) {
+        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
+    } elseif ($str >= 107 && $str <= 111) {
+        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
+    } elseif ($str >= 112 && $str <= 116) {
+        $bgTextDecore = 'fs-3 bg-light-success text-success';
+    } elseif ($str >= 117 && $str <= 121) {
+        $bgTextDecore = 'fs-3 bg-dark text-secondary';
+    } else {
+        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+    }
+}
+
+?>
           <div class="d-flex flex-wrap flex-sm-nowrap mb-3">
             <!--begin: Pic-->
             <div class="me-7 mb-4">
@@ -1481,10 +1652,9 @@ body
                 <div class="d-flex mt-4">
                   <!--begin::Whatsapp-->
                   <!--begin::Svg Icon-->
-                  <?php 
-                              if($users->status == 'active')
-                              {
-                              ?>
+                  <?php
+            if ($users->status == 'active') {
+                ?>
                   <a href="javascript:void(0);" class="btn btn-sm btn-flex btn-light-success fw-bolder me-3 fs-6"> <span class="svg-icon svg-icon-4 me-1">
                   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                     <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -1494,11 +1664,9 @@ body
                     </g>
                   </svg>
                   </span> Active </a>
-                  <?php 
-                              }
-                              else
-                              {
-                              ?>
+                  <?php
+            } else {
+                ?>
                   <a href="javascript:void(0);" class="btn btn-sm btn-light-danger btn-active-danger fw-bolder me-3 fs-6"> <span class="svg-icon svg-icon-4 me-1">
                   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                     <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -1508,9 +1676,9 @@ body
                     </g>
                   </svg>
                   </span> Inactive </a>
-                  <?php 
-                              } 
-                              ?>
+                  <?php
+            }
+?>
                   <!--end::Svg Icon-->
                   <!--end::Whatsapp-->
                   <!--begin::Email-->
@@ -1548,62 +1716,62 @@ body
       </div>
       <!--end::User Details-->
       <!--begin::Tabs-->
-      <div class="card card-custom mx-2">
+      <div class="card card-custom mx-0 w-100 border-0 bg-transparent shadow-none">
         <!--Begin::Tabs Header-->
         <!--Begin::Tier 2 Dedicated Sub-Tabs Card (Rule 20 Mandatory Standard)-->
-        <div class="px-0 pt-2 pb-0">
-          <ul class="scp-tabs-card" role="tablist">
-            <li class="scp-tab-item">
-              <a class="scp-tab-link active show" data-toggle="tab" href="#overview">
+        <div class="px-0 pt-0 pb-0">
+          <ul class="nav nav-tabs scp-tabs-card" role="tablist">
+            <li class="nav-item scp-tab-item">
+              <a class="nav-link scp-tab-link active show" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#overview" title="My Profile Details">
                 <i class="bi bi-person-vcard"></i>
-                <span>My Details</span>
+                <span class="scp-tab-text">My Details</span>
               </a>
             </li>
-            <li class="scp-tab-item" onclick="load_jobs('{{ @$users->id }}')">
-              <a class="scp-tab-link" data-toggle="tab" href="#requisitions">
+            <li class="nav-item scp-tab-item" onclick="if(typeof load_jobs==='function'){ load_jobs('{{ @$users->id }}'); }" title="My Jobs">
+              <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#requisitions">
                 <i class="bi bi-briefcase"></i>
-                <span>My Jobs</span>
+                <span class="scp-tab-text">My Jobs</span>
                 <span class="scp-tab-badge">{{ $scp_active }}</span>
               </a>
             </li>
-            <li class="scp-tab-item" onclick="load_application('{{ @$users->id }}')">
-              <a class="scp-tab-link" data-toggle="tab" href="#candidate">
+            <li class="nav-item scp-tab-item" onclick="if(typeof load_application==='function'){ load_application('{{ @$users->id }}'); }" title="My Candidates">
+              <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#candidate">
                 <i class="bi bi-people"></i>
-                <span>My Candidate</span>
+                <span class="scp-tab-text">Candidates</span>
                 <span class="scp-tab-badge">{{ number_format($scp_cand) }}</span>
               </a>
             </li>
-            <li class="scp-tab-item" onclick="load_interviewSchedule('{{ @$users->id }}')">
-              <a class="scp-tab-link" data-toggle="tab" href="#interview_tracker">
+            <li class="nav-item scp-tab-item" onclick="if(typeof load_interviewSchedule==='function'){ load_interviewSchedule('{{ @$users->id }}'); }" title="Interview Tracker">
+              <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#interview_tracker">
                 <i class="bi bi-calendar-event"></i>
-                <span>My Interview Tracker</span>
+                <span class="scp-tab-text">Interviews</span>
                 <span class="scp-tab-badge">{{ number_format($scp_intv) }}</span>
               </a>
             </li>
-            <li class="scp-tab-item" onclick="jointableLoad('{{ @$users->id }}')">
-              <a class="scp-tab-link" data-toggle="tab" href="#joinings">
+            <li class="nav-item scp-tab-item" onclick="if(typeof jointableLoad==='function'){ jointableLoad('{{ @$users->id }}'); }" title="My Joinings">
+              <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#joinings">
                 <i class="bi bi-person-check"></i>
-                <span>My Joinings</span>
+                <span class="scp-tab-text">Joinings</span>
                 <span class="scp-tab-badge">{{ number_format($scp_join) }}</span>
               </a>
             </li>
-            <li class="scp-tab-item">
-              <a class="scp-tab-link" data-toggle="tab" href="#myRank">
+            <li class="nav-item scp-tab-item" title="Internal Recruiter Ranking">
+              <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#myRank">
                 <i class="bi bi-award"></i>
-                <span>My Rank</span>
-                <span class="scp-tab-badge">#{{ $scp_rank }}</span>
+                <span class="scp-tab-text">My Rank</span>
+                <span class="scp-tab-badge">{{ $scp_rank != '-' && strpos((string)$scp_rank, '#') === false ? '#' : '' }}{{ $scp_rank }}</span>
               </a>
             </li>
-            <li class="scp-tab-item">
-              <a class="scp-tab-link" data-toggle="tab" href="#candidateDashboard">
+            <li class="nav-item scp-tab-item" title="Performance Dashboard">
+              <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#candidateDashboard">
                 <i class="bi bi-speedometer2"></i>
-                <span>My Dashboard</span>
+                <span class="scp-tab-text">Dashboard</span>
               </a>
             </li>
-            <li class="scp-tab-item">
-              <a class="scp-tab-link" data-toggle="tab" href="#settings">
+            <li class="nav-item scp-tab-item" title="Account Settings">
+              <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#settings">
                 <i class="bi bi-gear"></i>
-                <span>My Settings</span>
+                <span class="scp-tab-text">Settings</span>
               </a>
             </li>
           </ul>
@@ -1614,7 +1782,7 @@ body
           <div class="tab-content pt-5">
             <!--begin::Overview Content-->
             <div class="tab-pane active show" id="overview" role="tabpanel">
-              <div class="scp py-5">
+              <div class="scp py-4">
                 @php
                   $whatsappConnectCheck = GeneralMethod::whatsappConnectCheck($users->id);
                   $scp_edit = route('service_company.profile.edit', [GeneralMethod::value_encrypt($user_id)]);
@@ -1627,25 +1795,24 @@ body
                     <div class="scp-card-top-head">
                       <div class="scp-card-head-left">
                         <div class="scp-card-ic blue">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          <i class="bi bi-person"></i>
                         </div>
                         <div class="scp-card-head-titles">
                           <h3>Personal Information</h3>
-                          <p>Your recruiter identity within JERO ATS</p>
                         </div>
                       </div>
-                      <a href="{{ $scp_edit }}" class="scp-card-action-link">
+                      <a href="{{ $scp_edit }}" class="scp-card-action-link" title="Edit Personal Information">
                         <i class="bi bi-pencil-square"></i> Edit
                       </a>
                     </div>
                     <div class="scp-card-body-content">
                       <div class="scp-subcard-tile">
-                        <div class="scp-tile-left"><i class="bi bi-person"></i> Full Name</div>
+                        <div class="scp-tile-left"><i class="bi bi-person"></i> Name</div>
                         <div class="scp-tile-right">{{ ucwords(@$users->name) }}</div>
                       </div>
 
                       <div class="scp-subcard-tile">
-                        <div class="scp-tile-left"><i class="bi bi-hash"></i> User ID</div>
+                        <div class="scp-tile-left"><i class="bi bi-hash"></i> ID</div>
                         <div class="scp-tile-right"><span style="font-family: monospace; font-weight:700;">#{{ @$users->id }}</span></div>
                       </div>
 
@@ -1655,15 +1822,15 @@ body
                       </div>
 
                       <div class="scp-subcard-tile">
-                        <div class="scp-tile-left"><i class="bi bi-envelope"></i> Email Address</div>
-                        <div class="scp-tile-right">
-                          <span>{{ @$users->email }}</span>
+                        <div class="scp-tile-left"><i class="bi bi-envelope"></i> Email</div>
+                        <div class="scp-tile-right" style="overflow: hidden;">
+                          <span class="scp-email-val" title="{{ @$users->email }}">{{ @$users->email }}</span>
                           <span class="scp-status-pill verified"><i class="bi bi-check-circle-fill"></i> Verified</span>
                         </div>
                       </div>
 
                       <div class="scp-subcard-tile">
-                        <div class="scp-tile-left"><i class="bi bi-telephone"></i> Phone Number</div>
+                        <div class="scp-tile-left"><i class="bi bi-telephone"></i> Phone</div>
                         <div class="scp-tile-right">
                           <span id="firstPhoneDisplay" style="display:flex;"></span>
                           <span>{{ @$users->mobile }}</span>
@@ -1678,6 +1845,17 @@ body
                           <a href="javascript:;" data-userid="{{ $users->id }}" class="sendwhatsapp_panel sendwhatsapp_connect_{{ $users->id }} sendwhatsapp_text_{{ $users->id }} {{ $whatsappConnectCheck ? 'd-none' : '' }}" style="background:#25d366;color:#fff;padding:5px 11px;border-radius:7px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-size:11px;"><i class="fab fa-whatsapp"></i> Click to Connect</a>
                         </div>
                       </div>
+
+                      @if(!empty($userLinkedin))
+                        <div class="scp-subcard-tile">
+                          <div class="scp-tile-left"><i class="bi bi-linkedin" style="color: #0a66c2;"></i> LinkedIn</div>
+                          <div class="scp-tile-right">
+                            <a href="{{ (strpos($userLinkedin, 'http') === 0 ? '' : 'https://') . $userLinkedin }}" target="_blank" class="scp-linkedin-btn" title="View LinkedIn Profile">
+                              <i class="bi bi-linkedin"></i> View Profile <i class="bi bi-box-arrow-up-right" style="font-size: 10px;"></i>
+                            </a>
+                          </div>
+                        </div>
+                      @endif
                     </div>
                   </section>
 
@@ -1686,11 +1864,10 @@ body
                     <div class="scp-card-top-head">
                       <div class="scp-card-head-left">
                         <div class="scp-card-ic purple">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01"/></svg>
+                          <i class="bi bi-building"></i>
                         </div>
                         <div class="scp-card-head-titles">
                           <h3>Company Information</h3>
-                          <p>Organization affiliation & corporate presence</p>
                         </div>
                       </div>
                       <a href="{{ Route::has('service_company.account.index') ? route('service_company.account.index') : url('service_company/account') }}" class="scp-card-action-link" title="Manage Company Profile">
@@ -1699,7 +1876,7 @@ body
                     </div>
                     <div class="scp-card-body-content">
                       <div class="scp-subcard-tile">
-                        <div class="scp-tile-left"><i class="bi bi-building"></i> Company Name</div>
+                        <div class="scp-tile-left"><i class="bi bi-building"></i> Company</div>
                         <div class="scp-tile-right">{{ ucwords(@$users->company_name) }}</div>
                       </div>
 
@@ -1727,7 +1904,7 @@ body
                       </div>
 
                       <div class="scp-subcard-tile">
-                        <div class="scp-tile-left"><i class="bi bi-geo-alt"></i> Operating City</div>
+                        <div class="scp-tile-left"><i class="bi bi-geo-alt"></i> City</div>
                         <div class="scp-tile-right">{{ ucwords(@$city_name) }}</div>
                       </div>
                     </div>
@@ -1738,11 +1915,10 @@ body
                     <div class="scp-card-top-head">
                       <div class="scp-card-head-left">
                         <div class="scp-card-ic green">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                          <i class="bi bi-shield-check"></i>
                         </div>
                         <div class="scp-card-head-titles">
                           <h3>Security & Plan Overview</h3>
-                          <p>Credentials, account state, and subscription</p>
                         </div>
                       </div>
                       <a href="{{ Route::has('service_company.subscribe.index') ? route('service_company.subscribe.index') : url('service_company/subscribe') }}" class="scp-card-action-link" title="View Subscription Details">
@@ -2778,8 +2954,8 @@ body
 </div>
 <!--end::Reset password Modal-->
 <input type="hidden" name="userId" id="userId" value="<?php echo @$users->id; ?>" />
-<?php 
-   //echo '<pre>'; print_r($users->name);  
+<?php
+   // echo '<pre>'; print_r($users->name);
 ?>
 <div id="kt_activitiesJob_toggle"></div>
 <div id="kt_activitiesJob" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activitiesJob_close">
@@ -3241,7 +3417,7 @@ $(document).ready(function() {
           // ajax			: {'url' : '{!! route('service_company.cvtracker.alldata') !!}', "data": function ( d ){d.search = $('#inputSearch').val(), d.profile = true, d.status_cus = 6 }}, 
           language:
           {
-              "url": "<?php echo __("app.datatable") ?>"
+              "url": "<?php echo __('app.datatable') ?>"
           },
           "fnDrawCallback": function (oSettings)
           {
@@ -3590,7 +3766,7 @@ $(document).on('click', '.interview_client_stage_sub_stage', function(){
          ajax: '{!! route('service_company.team.appdata') !!}?userId='+userId,  
         // ajax			:	{'url' : '{!! route('service_company.cvtracker.alldata') !!}', "data" : function ( d ) { d.search = $('#inputSearch').val(),d.profile = true} },           
                   language: {
-                      "url": "<?php echo __("app.datatable") ?>"
+                      "url": "<?php echo __('app.datatable') ?>"
                   },
           
                   "fnDrawCallback": function (oSettings) {
@@ -3761,7 +3937,7 @@ table.on('click', '.client_stage_sub_stage', function ()
 	// 															  }
 	// 															},   
   //                             // ajax			: {'url' : '{!! route('service_company.jobs.all_data') !!}', "data": function ( d ){d.search = $('#inputSearch').val(),d.profile = true}},
-	// 													language:{"url": "<?php echo __("app.datatable") ?>"},	  
+	// 													language:{"url": "<?php echo __('app.datatable') ?>"},	  
 	// 													"drawCallback": function( settings ) {   				
 	// 																$('[data-toggle="tooltip1"]').tooltip();
 	// 																$('[data-toggle="tooltip2"]').tooltip();
@@ -4071,6 +4247,28 @@ $(document).ready(function() {
   };
 
   ProfileTabManager.init();
+
+  // Bulletproof Card + Sub-Card Tab Navigation Handler
+  $(document).on('click', '.scp-tab-link', function(e) {
+    e.preventDefault();
+    var $link = $(this);
+    var target = $link.attr('href');
+    if (!target || target === '#' || target.indexOf('javascript') === 0) return;
+
+    // Switch active state on tab links
+    $('.scp-tab-link').removeClass('active show');
+    $link.addClass('active show');
+
+    // Switch active state on tab content panes
+    $('.tab-content > .tab-pane').removeClass('active show');
+    $(target).addClass('active show');
+
+    // Call ProfileTabManager to load pane data if needed
+    var tabKey = target.replace('#', '');
+    if (window.ProfileTabManager && typeof window.ProfileTabManager.onTabActivated === 'function') {
+      window.ProfileTabManager.onTabActivated(tabKey);
+    }
+  });
 
     // Tab Pagination Event Delegation: Bind click events to rendered pagination buttons (.pagi-page, .pagi-arrow, .page-link, .team-page-link)
     $(document).off('click.profilePaginate', '#paginationTeamtjobs .pagi-page, #paginationTeamtjobs .pagi-arrow, #paginationTeamtjobs .page-link, #paginationTeamtjobs .team-page-link')
