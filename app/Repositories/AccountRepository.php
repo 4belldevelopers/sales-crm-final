@@ -42,8 +42,7 @@ class AccountRepository
 
             // 2. Company & Self Client
             $account = DB::table('companies')->select('*')->where('id', $companyId)->first();
-            $client = Client::select('clients.id', 'clients.tags')
-                ->where('clients.company_id', '=', $companyId)
+            $client = Client::where('clients.company_id', '=', $companyId)
                 ->where('clients.self_company', '=', 1)
                 ->first();
 
@@ -74,18 +73,23 @@ class AccountRepository
             $team = DB::table('users')->select('id', 'name', 'image')->where('type', 0)->where('company_id', $companyId)->where('status', 'active')->take(5)->get();
             $teamCount = DB::table('users')->where('type', 0)->where('company_id', $companyId)->where('status', 'active')->count();
 
-            // 5. Client Location
+            // 5. Client Locations & Contacts
             $clientId = @$client->id;
             $clientLocationCount = 0;
             $clientLocation = null;
+            $allLocations = [];
             if ($clientId) {
                 $clientLocations = DB::table('client_location')
-                    ->select('client_location.city', 'client_location.city_id', 'client_location.address', 'client_location.postcode', 'client_location.country_id')
+                    ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                    ->select('client_location.*', 'countries.country_name', 'city_list.city as city_name_resolved', 'state_list.state as state_name')
                     ->where('client_location.client_id', $clientId)
                     ->orderBy('client_location.id', 'ASC')
                     ->get();
                 $clientLocationCount = $clientLocations->count();
                 $clientLocation = $clientLocations->first();
+                $allLocations = $clientLocations->all();
             }
 
             $companyCityName = '';
@@ -105,6 +109,76 @@ class AccountRepository
                     }
                 }
             }
+
+            $clientContacts = ($clientId > 0)
+                ? DB::table('client_contact_info')->where('client_id', $clientId)->orderBy('id', 'ASC')->get()
+                : collect([]);
+
+            // 5b. Authoritative Company KPI Metrics (CQRS via Elasticsearch with DB fallback)
+            $kpiTotalJobs = 0;
+            $kpiActiveJobs = $activeJobs;
+            $kpiCandidatesSubmitted = 0;
+            $kpiInterviews = 0;
+            $kpiOffers = 0;
+            $kpiJoined = 0;
+
+            try {
+                $elasticService = app(\App\Services\ElasticService::class);
+                if ($elasticService->indexExists(ELASTIC_JOBS)) {
+                    $jobAggs = $elasticService->getClient()->search([
+                        'index' => ELASTIC_JOBS,
+                        'request_cache' => true,
+                        'body' => [
+                            'size' => 0,
+                            'query' => [
+                                'term' => ['comId' => (int) $companyId],
+                            ],
+                            'aggs' => [
+                                'total_jobs' => ['value_count' => ['field' => 'id']],
+                                'active_jobs' => ['filter' => ['term' => ['status' => 'active']]],
+                            ],
+                        ],
+                    ]);
+                    $kpiTotalJobs = (int) ($jobAggs['aggregations']['total_jobs']['value'] ?? 0);
+                    $kpiActiveJobs = (int) ($jobAggs['aggregations']['active_jobs']['doc_count'] ?? $activeJobs);
+                } else {
+                    $kpiTotalJobs = DB::table('jobs')->where('company_id', $companyId)->count();
+                }
+
+                if ($clientId > 0) {
+                    $kpiPerf = GeneralMethod::InternalClientCandidatesCountList($clientId, $companyId);
+                    $kpiCandidatesSubmitted = (int) ($kpiPerf->all_candidates ?? 0);
+                    $kpiInterviews = (int) ($kpiPerf->all_interview ?? 0);
+                    $kpiOffers = (int) ($kpiPerf->offers ?? 0);
+                    $kpiJoined = (int) ($kpiPerf->Joined ?? 0);
+                } else {
+                    $kpiCandidatesSubmitted = DB::table('job_applications')->where('company_id', $companyId)->count();
+                }
+            } catch (\Throwable $e) {
+                $kpiTotalJobs = DB::table('jobs')->where('company_id', $companyId)->count();
+                $kpiCandidatesSubmitted = DB::table('job_applications')->where('company_id', $companyId)->count();
+            }
+
+            // 5c. Recent Company Activities (latest 5 active/updated jobs for company)
+            $recentActivities = DB::table('jobs')
+                ->where('company_id', $companyId)
+                ->orderByDesc('id')
+                ->limit(5)
+                ->get()
+                ->map(function ($job) {
+                    $isActive = ($job->status === 'active');
+
+                    return (object) [
+                        'title' => $job->title,
+                        'subtitle' => ($job->total_positions ?? 1).' '.(($job->total_positions ?? 1) == 1 ? 'Opening' : 'Openings'),
+                        'badge_text' => $isActive ? 'Active Requisition' : ucwords($job->status ?? 'Draft'),
+                        'badge_class' => $isActive ? 'cd-tl-badge-green' : 'cd-tl-badge-amber',
+                        'icon' => 'fas fa-briefcase',
+                        'dot_class' => $isActive ? 'cd-tl-dot-green' : 'cd-tl-dot-purple',
+                        'time_ago' => ! empty($job->created_at) ? date('M d, Y', strtotime($job->created_at)) : 'Recently',
+                        'link' => url('service_company/jobs/'.$job->id),
+                    ];
+                });
 
             // 6. Candidate Status Pipeline
             $candidateStatusesGrouped = DB::table('candidate_status')
@@ -270,6 +344,15 @@ class AccountRepository
                 'team_count' => $teamCount,
                 'client_location' => $clientLocation,
                 'client_location_count' => $clientLocationCount,
+                'allLocations' => $allLocations,
+                'clientContacts' => $clientContacts,
+                'kpiTotalJobs' => $kpiTotalJobs,
+                'kpiActiveJobs' => $kpiActiveJobs,
+                'kpiCandidatesSubmitted' => $kpiCandidatesSubmitted,
+                'kpiInterviews' => $kpiInterviews,
+                'kpiOffers' => $kpiOffers,
+                'kpiJoined' => $kpiJoined,
+                'recentActivities' => $recentActivities,
                 'company_city_name' => $companyCityName,
                 'company_country_name' => $companyCountryName,
                 'interviewStage_sourcing' => $interviewStageSourcing,
