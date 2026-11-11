@@ -1163,6 +1163,84 @@
     font-size: 12.5px;
 }
 
+/* Salary Summary Direct Editable Expected Increase (%) */
+.candidate-salary-summary-list .candidate-salary-hike-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 32px;
+    padding: 2px 0;
+}
+.candidate-salary-hike-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 0;
+    cursor: pointer;
+    font-size: 10px;
+    color: #566f65;
+    font-weight: 500;
+}
+.candidate-salary-hike-icon {
+    opacity: 0.7;
+    font-size: 10px;
+    color: #009ef7;
+    transition: opacity 0.15s ease;
+}
+.candidate-salary-hike-row:hover .candidate-salary-hike-icon {
+    opacity: 1;
+}
+.candidate-salary-hike-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 92px;
+}
+.candidate-salary-hike-input {
+    width: 100%;
+    height: 26px;
+    padding: 2px 20px 2px 8px;
+    border: 1px solid #afe1c7;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #08784e;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-align: right;
+    outline: none;
+    transition: all 0.15s ease-in-out;
+    -moz-appearance: textfield;
+}
+.candidate-salary-hike-input::-webkit-outer-spin-button,
+.candidate-salary-hike-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.candidate-salary-hike-input:hover {
+    border-color: #10b981;
+}
+.candidate-salary-hike-input:focus {
+    border-color: #009ef7;
+    background: #ffffff;
+    box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.18);
+    color: #0f172a;
+}
+.candidate-salary-hike-unit {
+    position: absolute;
+    right: 7px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: #08784e;
+    pointer-events: none;
+}
+.candidate-salary-hike-input:focus + .candidate-salary-hike-unit {
+    color: #009ef7;
+}
+
 
 /* ==========================================================================
    HIGHEST QUALIFICATION: 100% BROWSER RAM COMBOBOX & CARD OVERFLOW PROTECTION
@@ -3705,7 +3783,26 @@
                       <div><span id="candidateSalaryCurrentLabel">Current Salary (Annual)</span><strong id="candidateSalaryCurrentSummary">0</strong></div>
                       <div><span id="candidateSalaryExpectedLabel">Expected Salary (Annual)</span><strong id="candidateSalaryExpectedSummary">0</strong></div>
                       <div><span>Difference</span><strong id="candidateSalaryDifferenceSummary">0</strong></div>
-                      <div><span>Expected Increase</span><strong id="candidateSalaryHikeSummary">0%</strong></div>
+                      <div class="candidate-salary-hike-row">
+                        <label for="candidateSalaryHikeInput" class="candidate-salary-hike-label">
+                          <span>Expected Increase</span>
+                          <i class="fa-solid fa-pen-to-square ms-1 text-primary fs-9 candidate-salary-hike-icon" title="Directly editable — enter desired % increase"></i>
+                        </label>
+                        <div class="candidate-salary-hike-wrap">
+                          <input type="number" 
+                                 step="0.01" 
+                                 min="-100" 
+                                 max="1000" 
+                                 id="candidateSalaryHikeInput" 
+                                 class="candidate-salary-hike-input" 
+                                 value="{{ @$application->percentage_hike ? number_format((float)@$application->percentage_hike, 2, '.', '') : '0.00' }}" 
+                                 placeholder="0.00" 
+                                 title="Enter desired percentage increase to calculate Expected Salary" 
+                                 aria-label="Expected salary increase percentage" />
+                          <span class="candidate-salary-hike-unit">%</span>
+                          <strong id="candidateSalaryHikeSummary" class="visually-hidden">0%</strong>
+                        </div>
+                      </div>
                       <div class="candidate-salary-summary-usd-row" id="candidateSalaryUsdEquivalentRow">
                         <span id="candidateSalaryUsdLabel"><i class="fa-solid fa-earth-americas text-primary me-1"></i>USD Equivalent</span>
                         <strong id="candidateSalaryUsdEquivalentSummary">$0.00 / yr</strong>
@@ -10416,6 +10513,49 @@ $(document).ready(function() {
         });
     }
 
+    var _isUpdatingHike = false;
+
+    function applyHikePercentageToExpected() {
+        if (_isUpdating || _isUpdatingHike) return;
+        _isUpdatingHike = true;
+        try {
+            var hikeInputEditable = root.querySelector('#candidateSalaryHikeInput');
+            var hikePct = parseFloat(hikeInputEditable ? hikeInputEditable.value : 0);
+            if (isNaN(hikePct)) hikePct = 0;
+
+            var period = activeSalaryPeriod();
+            var currentAmount = fieldValue(salaryFieldMap.current[period]);
+
+            var hikeInput = root.querySelector('#percentage_hike');
+            var increaseOutput = root.querySelector('#candidateSalaryHikeSummary');
+            if (hikeInput) hikeInput.value = String(Math.round(hikePct * 100) / 100);
+            if (increaseOutput) increaseOutput.textContent = hikePct.toFixed(2) + '%';
+
+            if (currentAmount > 0) {
+                var calculatedExpected = currentAmount * (1 + (hikePct / 100));
+                var roundedExpected;
+                if (period === 'annual' || period === 'monthly') {
+                    roundedExpected = Math.round(calculatedExpected);
+                } else {
+                    roundedExpected = Math.round(calculatedExpected * 100) / 100;
+                }
+
+                var expectedField = root.querySelector('#' + salaryFieldMap.expected[period]);
+                if (expectedField) {
+                    expectedField.value = roundedExpected > 0 ? roundedExpected : '';
+                }
+                syncInputsForGroup('expected', period);
+            }
+
+            updateSalarySummary();
+            if (typeof updateCTCFields === 'function') {
+                updateCTCFields();
+            }
+        } finally {
+            _isUpdatingHike = false;
+        }
+    }
+
     function updateSalarySummary() {
         var period = activeSalaryPeriod();
         var currentAmount = fieldValue(salaryFieldMap.current[period]);
@@ -10427,8 +10567,25 @@ $(document).ready(function() {
         var differenceOutput = root.querySelector('#candidateSalaryDifferenceSummary');
         var increaseOutput = root.querySelector('#candidateSalaryHikeSummary');
         var hikeInput = root.querySelector('#percentage_hike');
+        var hikeInputEditable = root.querySelector('#candidateSalaryHikeInput');
         var usdSummaryTarget = root.querySelector('#candidateSalaryUsdEquivalentSummary');
         var currency = getActiveCurrencyCode();
+
+        // If Current Salary was entered/changed and Expected Salary is currently 0, but user already entered a non-zero % hike:
+        if (currentAmount > 0 && expectedAmount <= 0 && hikeInputEditable && !_isUpdatingHike) {
+            var presetHike = parseFloat(hikeInputEditable.value);
+            if (!isNaN(presetHike) && presetHike !== 0) {
+                var autoExpected = currentAmount * (1 + (presetHike / 100));
+                var roundedAuto = (period === 'hourly') ? Math.round(autoExpected * 100) / 100 : Math.round(autoExpected);
+                var expectedField = root.querySelector('#' + salaryFieldMap.expected[period]);
+                if (expectedField) {
+                    expectedField.value = roundedAuto > 0 ? roundedAuto : '';
+                    syncInputsForGroup('expected', period);
+                    expectedAmount = fieldValue(salaryFieldMap.expected[period]);
+                }
+            }
+        }
+
         var difference = expectedAmount - currentAmount;
         var calculatedIncrease = currentAmount > 0 && expectedAmount > 0
             ? (difference / currentAmount) * 100
@@ -10441,6 +10598,16 @@ $(document).ready(function() {
         if (differenceOutput) differenceOutput.textContent = safeFormat(difference, currency);
         if (increaseOutput) increaseOutput.textContent = calculatedIncrease.toFixed(2) + '%';
         if (hikeInput) hikeInput.value = calculatedIncrease ? String(Math.round(calculatedIncrease * 100) / 100) : '0';
+
+        if (hikeInputEditable && !_isUpdatingHike && document.activeElement !== hikeInputEditable) {
+            if (currentAmount > 0 && expectedAmount > 0) {
+                hikeInputEditable.value = calculatedIncrease.toFixed(2);
+            } else if (expectedAmount <= 0 && currentAmount <= 0) {
+                if (!hikeInputEditable.value || parseFloat(hikeInputEditable.value) === 0) {
+                    hikeInputEditable.value = '0.00';
+                }
+            }
+        }
 
         // USD Equivalent (Annual) in Summary
         if (usdSummaryTarget) {
@@ -10680,6 +10847,30 @@ $(document).ready(function() {
             });
         }
     });
+
+    var hikeInputEditable = root.querySelector('#candidateSalaryHikeInput');
+    if (hikeInputEditable) {
+        hikeInputEditable.addEventListener('input', function () {
+            debounceInput('candidateSalaryHikeInput', function () {
+                applyHikePercentageToExpected();
+            }, 80);
+        });
+        hikeInputEditable.addEventListener('change', function () {
+            applyHikePercentageToExpected();
+            var val = parseFloat(hikeInputEditable.value);
+            if (!isNaN(val)) {
+                hikeInputEditable.value = val.toFixed(2);
+            }
+        });
+        hikeInputEditable.addEventListener('blur', function () {
+            var val = parseFloat(hikeInputEditable.value);
+            if (!isNaN(val)) {
+                hikeInputEditable.value = val.toFixed(2);
+            } else {
+                hikeInputEditable.value = '0.00';
+            }
+        });
+    }
 
     if (salaryCurrencySelect) {
         salaryCurrencySelect.addEventListener('change', syncSalaryCurrency);
