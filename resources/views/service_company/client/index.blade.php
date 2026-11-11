@@ -4898,15 +4898,16 @@ function renderClientRows(rows) {
         }
 
         if (r.is_pending_request) {
+            const isExpired = Boolean(r.is_expired) || (Number(r.to_invitation_status) === -2) || (r.expires_at ? (new Date(r.expires_at).getTime() < Date.now()) : false);
             const invId = r.staffing_company_invitation_id || r.id;
             const fromComp = r.from_company_id || 0;
             const targetId = r.target_id || r.client_id || fromComp || r.id;
             const expiresFormatted = r.expires_on || (r.expires_at ? r.expires_at.substring(0, 10) : 'in 7 days');
             const daysAgo = r.days_ago || 'Just now';
             const connectedOn = r.connected_on || '-';
-            const expiryCountdown = r.expiry_countdown || '6 days left';
-            const expiryBadgeClass = r.expiry_badge_class || 'badge-light-success text-success';
-            const ttlLabel = r.ttl_label ? `<span class="fw-semibold text-success" style="font-size:10px;">${escapeAttr(r.ttl_label)}</span>` : '';
+            const expiryCountdown = isExpired ? 'Expired' : (r.expiry_countdown || '6 days left');
+            const expiryBadgeClass = isExpired ? 'badge-light-danger text-danger' : (r.expiry_badge_class || 'badge-light-success text-success');
+            const ttlLabel = isExpired ? '<span class="fw-semibold text-danger" style="font-size:10px;">Expired</span>' : (r.ttl_label ? `<span class="fw-semibold text-success" style="font-size:10px;">${escapeAttr(r.ttl_label)}</span>` : '');
             const websiteHtml = r.website ? `<div class="cl-size text-primary text-truncate d-flex align-items-center gap-1 mt-0.5" style="font-size:10.5px; color:#0284c7;" title="Official Website: ${escapeAttr(r.website)}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="text-truncate">${escapeAttr(r.website)}</span></div>` : '<div class="cl-size text-muted text-truncate" style="font-size:10px; color:#94a3b8;">Corporate Client</div>';
 
             return `
@@ -4918,9 +4919,9 @@ function renderClientRows(rows) {
                             <span class="cl-subcard-title" title="Inviting client company details">Client</span>
                             <div class="cl-subcard-badges">
                                 <span class="cl-scope-pill pill-direct type-direct" title="Inbound direct client partnership request">Direct Client</span>
-                                <span class="cl-status-pill pill-warning" title="Authoritative invitation status: Action Needed">
-                                    <span class="cl-status-pill-dot animate-pulse"></span>
-                                    <span>Action Needed</span>
+                                <span class="cl-status-pill ${isExpired ? 'pill-inactive' : 'pill-warning'}" title="Authoritative invitation status: ${isExpired ? 'Expired' : 'Action Needed'}">
+                                    <span class="cl-status-pill-dot ${isExpired ? '' : 'animate-pulse'}"></span>
+                                    <span>${isExpired ? 'Expired' : 'Action Needed'}</span>
                                 </span>
                             </div>
                         </div>
@@ -4974,44 +4975,48 @@ function renderClientRows(rows) {
                             </span>
                         </div>
                         <div class="cl-pipe-body tbl-cell-req-actions d-flex align-items-center justify-content-center h-100" style="padding:2px 0;">
-                            <div class="cl-req-btn-group">
-                                <button type="button" 
-                                        class="btn btn-sm cl-req-btn cl-req-btn-accept request_event" 
-                                        data-row-id="${invId}" 
-                                        data-row-event="1" 
-                                        data-row-from_company="${fromComp}" 
-                                        title="Accept Direct Client Partnership">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                    <span>Accept</span>
-                                </button>
-                                <button type="button" 
-                                        class="btn btn-sm cl-req-btn cl-req-btn-decline request_event" 
-                                        data-row-id="${invId}" 
-                                        data-row-event="-1" 
-                                        data-row-from_company="${fromComp}" 
-                                        title="Decline Partnership Request">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                    </svg>
-                                    <span>Decline</span>
-                                </button>
-                                <button type="button" 
-                                        class="btn btn-sm cl-req-btn cl-req-btn-terms show-detail-direct view-request-terms" 
-                                        data-row-id="${targetId}" 
-                                        data-client-type="request" 
-                                        title="Review Partnership Terms & Profile">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    </svg>
-                                    <span>Terms</span>
-                                </button>
-                            </div>
+                            ${isExpired ? `
+                                <span class="badge bg-light-danger text-danger fw-bold px-3 py-1.5" style="font-size:11px;">Expired</span>
+                            ` : `
+                                <div class="cl-req-btn-group">
+                                    <button type="button" 
+                                            class="btn btn-sm cl-req-btn cl-req-btn-accept request_event" 
+                                            data-row-id="${invId}" 
+                                            data-row-event="1" 
+                                            data-row-from_company="${fromComp}" 
+                                            title="Accept Direct Client Partnership">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        <span>Accept</span>
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-sm cl-req-btn cl-req-btn-decline request_event" 
+                                            data-row-id="${invId}" 
+                                            data-row-event="-1" 
+                                            data-row-from_company="${fromComp}" 
+                                            title="Decline Partnership Request">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                        <span>Decline</span>
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-sm cl-req-btn cl-req-btn-terms show-detail-direct view-request-terms" 
+                                            data-row-id="${targetId}" 
+                                            data-client-type="request" 
+                                            title="Review Partnership Terms & Profile">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        </svg>
+                                        <span>Terms</span>
+                                    </button>
+                                </div>
+                            `}
                         </div>
                     </div>
                 </div>
@@ -6551,15 +6556,21 @@ $(document).ready(function() {
     }
 });
 
-$(document).on('click', '.request_event', function () {
+$(document).on('click', '.request_event', function (e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
     var $btn = $(this);
     if ($btn.hasClass('disabled') || $btn.prop('disabled')) return;
 
-    var id = $btn.data('row-id');
-    var event_id = $btn.data('row-event');
-    var from_company = $btn.data('row-from_company');
+    var id = $btn.data('row-id') || $btn.attr('data-row-id');
+    var event_id = $btn.data('row-event') || $btn.attr('data-row-event');
+    var from_company = $btn.data('row-from_company') || $btn.attr('data-row-from_company') || 0;
     var actionText = (event_id == -1) ? 'Decline' : 'Accept';
     var confirmBtnClass = (event_id == -1) ? 'btn btn-danger' : 'btn btn-success';
+
+    $btn.addClass('disabled').prop('disabled', true);
 
     const swalWithBootstrapButtons = Swal.mixin({
         customClass: {
@@ -6578,127 +6589,140 @@ $(document).on('click', '.request_event', function () {
         cancelButtonText: 'No, cancel!',
         reverseButtons: true
     }).then((result) => {
-        if (result.isConfirmed) {
-            var $row = $btn.closest('.tbl-r');
-            var originalRowHtml = $row.html();
-            var originalClasses = $row.attr('class');
-            var $actionContainer = $btn.parent();
-            var originalActionsHtml = $actionContainer.html();
-
-            // Optimistic Perceived 0ms UI Transition
-            $actionContainer.html(`
-                <span class="badge bg-light-${event_id == 1 ? 'success text-success' : 'danger text-danger'} fw-bold px-3 py-1.5 d-inline-flex align-items-center gap-1">
-                    <span class="spinner-border spinner-border-sm me-1" role="status" style="width:10px;height:10px;"></span>
-                    ${event_id == 1 ? 'Accepting...' : 'Declining...'}
-                </span>
-            `);
-
-            // Optimistically decrement request counters and update dynamic subtitles
-            var origReqCount = parseInt($('#span_clientRequest').text(), 10) || 0;
-            var origDirCount = parseInt($('#span_clientDirect').text(), 10) || 0;
-            var origAllCount = parseInt($('#span_clientAll').text(), 10) || 0;
-
-            var newReqCount = Math.max(0, origReqCount - 1);
-            var newDirCount = (event_id == 1) ? (origDirCount + 1) : origDirCount;
-            var newAllCount = (event_id == 1) ? (origAllCount + 1) : origAllCount;
-
-            updateClientTabCounters({
-                clientRequest: newReqCount,
-                clientDirect: newDirCount,
-                clientAll: newAllCount
-            });
-
-            var mutationId = 'mut_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            var url = "{{ route('service_company.clients.request_update') }}";
-
-            $.ajax({
-                type: 'POST',
-                url: url,
-                data: {
-                    '_token': '{{ csrf_token() }}',
-                    'invitation_id': id,
-                    'event_id': event_id,
-                    'from_company': from_company,
-                    'mutation_id': mutationId
-                },
-                success: function (response) {
-                    ClientStore.invalidateTab('request');
-                    ClientStore.invalidateTab('all');
-                    ClientStore.invalidateTab('direct');
-
-                    if (response.mutation_version) {
-                        ClientStore.latestMutationVersion = response.mutation_version;
-                    }
-
-                    if (response.clientDataCnt) {
-                        updateClientTabCounters(response.clientDataCnt);
-                    }
-
-                    if (window.clientSyncChannel) {
-                        window.clientSyncChannel.postMessage({
-                            type: 'CLIENT_REQUEST_MUTATED',
-                            mutationId: mutationId,
-                            invitationId: id,
-                            eventId: event_id,
-                            version: response.mutation_version || null,
-                            clientDataCnt: response.clientDataCnt || null
-                        });
-                    }
-
-                    $actionContainer.html(`
-                        <span class="badge bg-light-${event_id == 1 ? 'success text-success' : 'danger text-danger'} fw-bold px-3 py-1.5 d-inline-flex align-items-center gap-1">
-                            ${event_id == 1 ? '✓ Accepted' : '✕ Declined'}
-                        </span>
-                    `);
-
-                    swalWithBootstrapButtons.fire(
-                        actionText + 'ed!',
-                        response.message || ('Request has been ' + actionText.toLowerCase() + 'ed.'),
-                        'success'
-                    );
-
-                    if (ClientStateManager.state.activeTab === 'request') {
-                        $row.slideUp(250, function() {
-                            $(this).remove();
-                            if ($('#allClients .tbl-r').length === 0) {
-                                $('#allClients').html(`
-                                    <div class="cl-empty-state">
-                                        <div class="cl-empty-icon">
-                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
-                                        </div>
-                                        <div class="cl-empty-title">No Pending Client Requests</div>
-                                        <div class="cl-empty-desc">You're all caught up. New client partnership requests will appear here when received.</div>
-                                    </div>
-                                `);
-                            }
-                        });
-                    } else {
-                        // Refresh after brief delay so ES projection index propagates and row becomes normal Direct Client
-                        setTimeout(function() {
-                            loadClientList(1, false);
-                        }, 500);
-                    }
-                },
-                error: function(xhr) {
-                    // Deterministic Rollback
-                    $actionContainer.html(originalActionsHtml);
-                    $row.attr('class', originalClasses);
-                    updateClientTabCounters({
-                        clientRequest: origReqCount,
-                        clientDirect: origDirCount,
-                        clientAll: origAllCount
-                    });
-
-                    if (xhr.status === 409) {
-                        var conflictMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'This request has already been processed by another recruiter.';
-                        swalWithBootstrapButtons.fire('Already Handled', conflictMsg, 'warning');
-                        loadClientList(1, false);
-                    } else {
-                        swalWithBootstrapButtons.fire('Error', 'Failed to update request status. Please check your connection and try again.', 'error');
-                    }
-                }
-            });
+        if (!result.isConfirmed) {
+            $btn.removeClass('disabled').prop('disabled', false);
+            return;
         }
+
+        var $row = $btn.closest('.tbl-r');
+        var originalRowHtml = $row.html();
+        var originalClasses = $row.attr('class');
+        var $actionContainer = $btn.parent();
+        var originalActionsHtml = $actionContainer.html();
+
+        // Optimistic Perceived 0ms UI Transition
+        $actionContainer.html(`
+            <span class="badge bg-light-${event_id == 1 ? 'success text-success' : 'danger text-danger'} fw-bold px-3 py-1.5 d-inline-flex align-items-center gap-1">
+                <span class="spinner-border spinner-border-sm me-1" role="status" style="width:10px;height:10px;"></span>
+                ${event_id == 1 ? 'Accepting...' : 'Declining...'}
+            </span>
+        `);
+
+        // Optimistically decrement request counters and update dynamic subtitles
+        var origReqCount = parseInt($('#span_clientRequest').text(), 10) || 0;
+        var origDirCount = parseInt($('#span_clientDirect').text(), 10) || 0;
+        var origAllCount = parseInt($('#span_clientAll').text(), 10) || 0;
+
+        var newReqCount = Math.max(0, origReqCount - 1);
+        var newDirCount = (event_id == 1) ? (origDirCount + 1) : origDirCount;
+        var newAllCount = (event_id == 1) ? (origAllCount + 1) : origAllCount;
+
+        updateClientTabCounters({
+            clientRequest: newReqCount,
+            clientDirect: newDirCount,
+            clientAll: newAllCount
+        });
+
+        var mutationId = 'mut_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        var url = "{{ route('service_company.clients.request_update') }}";
+        var csrfToken = $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}';
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            data: {
+                '_token': csrfToken,
+                'invitation_id': id,
+                'event_id': event_id,
+                'from_company': from_company,
+                'mutation_id': mutationId
+            },
+            success: function (response) {
+                ClientStore.invalidateTab('request');
+                ClientStore.invalidateTab('all');
+                ClientStore.invalidateTab('direct');
+
+                if (response.mutation_version) {
+                    ClientStore.latestMutationVersion = response.mutation_version;
+                }
+
+                if (response.clientDataCnt) {
+                    updateClientTabCounters(response.clientDataCnt);
+                }
+
+                if (window.clientSyncChannel) {
+                    window.clientSyncChannel.postMessage({
+                        type: 'CLIENT_REQUEST_MUTATED',
+                        mutationId: mutationId,
+                        invitationId: id,
+                        eventId: event_id,
+                        version: response.mutation_version || null,
+                        clientDataCnt: response.clientDataCnt || null
+                    });
+                }
+
+                $actionContainer.html(`
+                    <span class="badge bg-light-${event_id == 1 ? 'success text-success' : 'danger text-danger'} fw-bold px-3 py-1.5 d-inline-flex align-items-center gap-1">
+                        ${event_id == 1 ? '✓ Accepted' : '✕ Declined'}
+                    </span>
+                `);
+
+                swalWithBootstrapButtons.fire(
+                    actionText + 'ed!',
+                    response.message || ('Request has been ' + actionText.toLowerCase() + 'ed.'),
+                    'success'
+                );
+
+                if (ClientStateManager.state.activeTab === 'request' || event_id == -1) {
+                    $row.slideUp(250, function() {
+                        $(this).remove();
+                        if ($('#allClients .tbl-r').length === 0) {
+                            $('#allClients').html(`
+                                <div class="cl-empty-state">
+                                    <div class="cl-empty-icon">
+                                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+                                    </div>
+                                    <div class="cl-empty-title">No Pending Client Requests</div>
+                                    <div class="cl-empty-desc">You're all caught up. New client partnership requests will appear here when received.</div>
+                                </div>
+                            `);
+                        }
+                    });
+                } else {
+                    // Refresh after brief delay so ES projection index propagates and row becomes normal Direct Client
+                    setTimeout(function() {
+                        loadClientList(1, false);
+                    }, 500);
+                }
+            },
+            error: function(xhr) {
+                // Deterministic Rollback
+                $actionContainer.html(originalActionsHtml);
+                $row.attr('class', originalClasses);
+                updateClientTabCounters({
+                    clientRequest: origReqCount,
+                    clientDirect: origDirCount,
+                    clientAll: origAllCount
+                });
+
+                if (xhr.status === 409) {
+                    var conflictMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'This request has already been processed by another recruiter.';
+                    swalWithBootstrapButtons.fire('Already Handled', conflictMsg, 'warning');
+                    loadClientList(1, false);
+                } else if (xhr.status === 422) {
+                    var expiredMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'This partnership request has expired and cannot be processed.';
+                    swalWithBootstrapButtons.fire('Request Expired', expiredMsg, 'warning');
+                    loadClientList(1, false);
+                } else {
+                    var errDetail = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to update request status. Please check your connection and try again.';
+                    swalWithBootstrapButtons.fire('Error', errDetail, 'error');
+                }
+            }
+        });
     });
 });
 

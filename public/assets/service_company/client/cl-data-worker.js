@@ -157,6 +157,21 @@ function normalizeRow(r) {
         contact_name_lower: contactName.toLowerCase(),
         is_direct: Boolean(r.is_direct),
         is_pending_request: Boolean(r.is_pending_request),
+        is_expired: Boolean(r.is_expired) || (Number(r.to_invitation_status) === -2) || (r.expires_at ? (new Date(r.expires_at).getTime() < Date.now()) : false),
+        expires_at: r.expires_at || null,
+        to_invitation_status: r.to_invitation_status !== undefined ? Number(r.to_invitation_status) : 0,
+        staffing_company_invitation_id: Number(r.staffing_company_invitation_id || (r.raw && r.raw.staffing_company_invitation_id) || r.id),
+        from_company_id: Number(r.from_company_id || (r.raw && r.raw.from_company_id) || 0),
+        logo_url: r.logo_url || (r.raw && r.raw.logo_url) || '',
+        initials: r.initials || (r.raw && r.raw.initials) || '',
+        bg_color: r.bg_color || (r.raw && r.raw.bg_color) || '',
+        website: r.website || (r.raw && r.raw.website) || '',
+        connected_on: r.connected_on || r.date || '-',
+        expires_on: r.expires_on || '',
+        days_ago: r.days_ago || '',
+        expiry_countdown: r.expiry_countdown || '',
+        expiry_badge_class: r.expiry_badge_class || '',
+        ttl_label: r.ttl_label || '',
         client_type: r.client_type || (r.is_direct ? 'Direct Client' : 'Internal Client'),
         industry: indName || r.industry || '',
         industry_lower: (indName || r.industry || '').toLowerCase(),
@@ -409,6 +424,10 @@ function queryDataset(msg) {
 
         // Item belongs to the scoped client universe: evaluate universal tab counters
         if (item.is_pending_request) {
+            // Strict Expiry Guard: Never count or display expired partnership requests in active counters or lists
+            if (item.is_expired) {
+                continue;
+            }
             requestCount++;
         } else {
             allCount++;
@@ -427,10 +446,10 @@ function queryDataset(msg) {
 
         // 2. Tab filter determines which rows are rendered in the current tab view
         if (tab === 'request' || tab === 'requests') {
-            if (!item.is_pending_request) continue;
+            if (!item.is_pending_request || item.is_expired) continue;
         } else if (tab === 'all') {
-            // On Total Clients tab, include both pending requests and approved clients!
-            // Pending requests are prioritized at the top of the client lists.
+            // On Total Clients tab, include unexpired pending requests and approved clients!
+            if (item.is_pending_request && item.is_expired) continue;
         } else {
             if (item.is_pending_request) continue;
             if (tab === 'internal' && item.is_direct) continue;

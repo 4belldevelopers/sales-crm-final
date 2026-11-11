@@ -538,15 +538,45 @@ class FindAgencyService
                     $clientRow = DB::table('clients')->select('id')->where('company_id', $from_company_id)->first();
                     $company_row = DB::table('companies')->select('company_email', 'id')->where('id', $to_company_id)->first();
 
-                    $clientInvitationCounter = DB::table('staffing_company_invitation')
+                    $existingInv = DB::table('staffing_company_invitation')
                         ->where('from_company_id', $from_company_id)
                         ->where('to_company_id', $to_company_id)
-                        ->where('to_invitation_status', '!=', -1)
-                        ->count();
+                        ->whereIn('to_invitation_status', [0, 1])
+                        ->orderBy('id', 'desc')
+                        ->first();
 
+                    $needsNewInvitation = true;
                     $invitationId = 0;
 
-                    if ($clientInvitationCounter === 0) {
+                    if ($existingInv) {
+                        if ((int) $existingInv->to_invitation_status === 1) {
+                            $needsNewInvitation = false;
+                            $invitationId = $existingInv->id;
+                        } elseif ((int) $existingInv->to_invitation_status === 0) {
+                            $isPast = false;
+                            if (! empty($existingInv->expires_at)) {
+                                $isPast = \Carbon\Carbon::parse($existingInv->expires_at)->isPast();
+                            } elseif (! empty($existingInv->created_at)) {
+                                $isPast = \Carbon\Carbon::parse($existingInv->created_at)->addDays(7)->isPast();
+                            }
+
+                            if ($isPast) {
+                                // JIT Lazy Expiry (Rule 22): Lazily transition expired invitation to -2, releasing unique slot constraint
+                                DB::table('staffing_company_invitation')
+                                    ->where('id', $existingInv->id)
+                                    ->update([
+                                        'to_invitation_status' => -2,
+                                        'updated_at' => now(),
+                                    ]);
+                                $needsNewInvitation = true;
+                            } else {
+                                $needsNewInvitation = false;
+                                $invitationId = $existingInv->id;
+                            }
+                        }
+                    }
+
+                    if ($needsNewInvitation) {
                         $targetEmail = $company_row ? (string) $company_row->company_email : '';
                         $normalizedRecipient = AgencyRecipientNormalizer::normalize($targetEmail);
                         $tokenService = app(InvitationTokenService::class);

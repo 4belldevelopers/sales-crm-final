@@ -3847,6 +3847,7 @@ CREATE TABLE `recommendation_relation` (
   `to_status` int(11) DEFAULT NULL,
   `to_created_at` timestamp NULL DEFAULT NULL,
   `final_status` int(11) DEFAULT 0,
+  `expires_at` datetime DEFAULT NULL,
   `conversation_id` int(11) DEFAULT NULL,
   `add_status` int(11) NOT NULL DEFAULT 0 COMMENT '0-recommendation, 1-market_in_added',
   `accepterms` blob DEFAULT NULL,
@@ -3855,6 +3856,7 @@ CREATE TABLE `recommendation_relation` (
   PRIMARY KEY (`id`),
   KEY `idx_rec_from_to` (`from_company_id`,`to_company_id`,`final_status`),
   KEY `idx_rec_to_company_final` (`to_company_id`,`final_status`),
+  KEY `idx_rec_to_final_exp` (`to_company_id`,`final_status`,`expires_at`),
   KEY `idx_rec_job_user` (`job_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;

@@ -135,7 +135,7 @@
             $expiryDateFormatted = $expiresAt->format('d M, Y • h:i A') . ' ' . $tzShort;
             $daysAgo = GeneralMethod::timeAgo($createdAt);
 
-            $isExpired = $now->greaterThan($expiresAt);
+            $isExpired = $now->greaterThan($expiresAt) || ((int) ($rowObj->to_invitation_status ?? 0) === -2);
 
             if ($isExpired) {
                 $expiryCountdown = 'Expired';
