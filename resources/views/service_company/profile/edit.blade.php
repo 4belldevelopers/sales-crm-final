@@ -1,1003 +1,1275 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://unpkg.com/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
 @endpush
+
 @section('content')
 <?php
+    use App\Helper\GeneralMethod;
 
-	 use App\Helper\GeneralMethod;
-   $country_code =  GeneralMethod::countryCodeFun();
-   $phone_code = $team->calling_code ? $team->calling_code : $country_code;
+    $country_code = GeneralMethod::countryCodeFun();
+    $phone_code   = $team->calling_code ? $team->calling_code : $country_code;
 
-	 $background_image		=	url('public/user-uploads/team_profile_img/avatar.png');
-	 $has_photo = false;
-	 if(!empty(@$team->image) && strlen(@$team->image)>10){
-   			$background_image		=  @$team->image;
-   			$has_photo = true;
-   	}
+    // Enterprise default avatar SVG
+    $default_avatar   = asset('default-enterprise-avatar.svg');
+    $background_image = $default_avatar;
+    $has_photo        = false;
 
-   /* Build location string once (used by header, preview and the city input) */
-   $return = '';
-   if(!empty(@$city_name) && !empty(@$state_name) && !empty(@$country_name)){
-      $return = ucwords(@$city_name) . ' | ' . ucwords(@$state_name) . ' | ' . ucwords(@$country_name);
-   }
+    if (!empty(@$team->image) && strlen(@$team->image) > 10) {
+        $background_image = @$team->image;
+        $has_photo        = true;
+    }
 
-   /* Profile completion + "what's missing" computed in PHP — no extra queries / server load */
-   $checks = [
-      'photo'       => $has_photo,
-      'name'        => !empty($team->name),
-      'designation' => !empty($team->designation),
-      'email'       => !empty($team->email),
-      'phone'       => !empty($team->mobile),
-      'location'    => !empty(trim(@$return)),
-      'linkedin'    => !empty(@$team->linkedin),
-   ];
-   $filled       = count(array_filter($checks));
-   $total        = count($checks);
-   $completion   = $total ? (int) round(($filled / $total) * 100) : 0;
+    /* Build location string once (used by city tagify input) */
+    $return = '';
+    if (!empty(@$city_name) && !empty(@$state_name) && !empty(@$country_name)) {
+        $return = ucwords(@$city_name) . ' | ' . ucwords(@$state_name) . ' | ' . ucwords(@$country_name);
+    }
 
-   $location_text = !empty(trim(@$return)) ? trim(@$return) : 'Location not set';
-   $isOrgAdmin = (auth()->check() && (
-       (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('admin')) ||
-       (int)(auth()->user()->root_user ?? 0) === 1
-   ));
+    $isOrgAdmin = (auth()->check() && (
+        (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('admin')) ||
+        (int)(auth()->user()->root_user ?? 0) === 1
+    ));
 ?>
-<!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
-  <div id="kt_content_container" class="container-fluid px-2 jp-wrap">
 
-    <!--begin::Header-->
-    <div class="jp-page-head">
-      <div class="jp-page-head__left">
-        <h1 class="jp-title">Edit Profile</h1>
-        <p class="jp-subtitle">Manage your personal and company information</p>
-      </div>
-      <div class="jp-page-head__right">
-        <div class="jp-completion">
-          <div class="jp-completion__top">
-            <span class="jp-completion__label">Profile Completion </span>
-            <a href="javascript:void(0);" class="jp-completion__link">View Suggestions <i class="bi bi-chevron-right"></i></a>
-          </div>
-          <div class="jp-completion__row">
-            <span class="jp-completion__pct">{{ $completion }}%</span>
-            <div class="jp-progress"><span style="width: {{ $completion }}%"></span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!--end::Header-->
+<!--begin::Content Container-->
+<div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
+  <div id="kt_content_container" class="container-fluid px-2 god-profile-shell">
 
     <!--begin::Form-->
-    <form id="kt_account_profile_details_form" name="kt_account_profile_details_form" method="post" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" enctype="multipart/form-data">
+    <form id="kt_account_profile_details_form" name="kt_account_profile_details_form" method="post" class="form" novalidate="novalidate" enctype="multipart/form-data">
       <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <input type="hidden" name="teamUserId" id="teamUserId" value="{{$team->id}}" />
+      <input type="hidden" name="teamUserId" id="teamUserId" value="{{ $team->id }}" />
+      {{-- Background preserved field to prevent database column nullification --}}
+      <input type="hidden" name="whatsapp_number" id="whatsapp_number" value="{{ @$team->whatsapp_number }}" />
       @csrf
       @method('PUT')
 
-      <div class="jp-grid">
-
-        <!--begin::Main column-->
-        <div class="jp-main">
-
-          <!--begin::Profile Photo-->
-          <section class="jp-card">
-            <div class="jp-photo">
-              <div class="jp-photo__info">
-                <h3 class="jp-card__title">Profile Photo</h3>
-                <p class="jp-card__hint">This will be displayed on your profile and company page.</p>
-              </div>
-              <div class="jp-avatar">
-                <span class="jp-avatar__img" id="jp_avatar_preview" style="background-image:url('{{ $background_image }}')"></span>
-                <label class="jp-avatar__edit" for="avatar" title="Change photo"><i class="bi bi-camera-fill"></i></label>
-              </div>
-              <label class="jp-dropzone" id="jp_dropzone">
-                <i class="bi bi-cloud-arrow-up jp-dropzone__icon"></i>
-                <span class="jp-dropzone__text">Drag &amp; drop your photo here <span class="jp-link">or click to browse</span></span>
-                <span class="jp-dropzone__sub">PNG, JPG or JPEG (Max. 5MB)</span>
-                <input type="file" name="avatar" id="avatar" accept=".png, .jpg, .jpeg" hidden>
-                <input type="hidden" name="avatar_remove">
-              </label>
+      <!-- =========================================================================
+           TOP UNIFIED HEADER CARD (God-Level Navigation Bar with Action Buttons)
+           ========================================================================= -->
+      <div class="card god-top-nav-card" id="god_top_nav_card">
+        <div class="god-header-grid">
+          
+          <!-- LEFT: Title & Recruiter Badge -->
+          <div class="god-header-identity">
+            <div class="god-header-icon-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
             </div>
-          </section>
-          <!--end::Profile Photo-->
+            <div class="god-header-titles">
+              <h1 class="god-header-title">
+                Edit Profile
+                <span class="god-header-badge"><i class="bi bi-shield-check"></i> Recruiter Profile</span>
+              </h1>
+              <p class="god-header-subtitle">Manage your personal information, corporate designation, and primary contact coordinates.</p>
+            </div>
+          </div>
 
-          <!--begin::Personal Information-->
-          <section class="jp-card">
-            <div class="jp-card__head">
-              <span class="jp-card__ico"><i class="bi bi-person"></i></span>
-              <h3 class="jp-card__title">Personal Information</h3>
+          <!-- RIGHT: Action Buttons (Cancel & Save Changes) -->
+          <div class="god-header-actions">
+            <button type="button" class="btn god-top-cancel-btn" onclick="window.location = '<?php echo url('service_company/profile');?>';">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              <span>Cancel</span>
+            </button>
+            <button type="button" class="btn god-top-submit-btn" id="updateProfile">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Save Changes</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+      <!--end::Header-->
+
+      <!-- =========================================================================
+           2-COLUMN GOD-LEVEL LAYOUT (Matched 1:1 to Add Internal Client Page 1)
+           Left (7.2fr): Personal Information | Right (3.8fr): Profile Photo
+           ========================================================================= -->
+      <div class="god-level-profile-layout">
+
+        <!-- ========================== LEFT COLUMN: PERSONAL INFORMATION ========================== -->
+        <div class="client-main-column">
+          <section class="card god-card god-profile-info-card">
+            
+            <!-- Card Header: Blue icon + Title + Subtitle -->
+            <div class="god-card-header">
+              <div class="god-card-header-icon blue-sky-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="8.5" cy="7" r="4"/>
+                  <line x1="20" y1="8" x2="20" y2="14"/>
+                  <line x1="23" y1="11" x2="17" y2="11"/>
+                </svg>
+              </div>
+              <div class="god-card-header-titles">
+                <h3 class="god-card-title">Personal Information</h3>
+                <p class="god-card-subtitle">Update your personal details, corporate designation, and primary contact coordinates.</p>
+              </div>
             </div>
 
-            <div class="jp-form-grid">
-              <div class="jp-field">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                  <label class="jp-label mb-0">Full Name <span class="jp-req">*</span></label>
+            <!-- 2-Column Fields Grid -->
+            <div class="god-fields-grid">
+
+              <!-- ROW 1, COL 1: Full Name (Locked if non-admin) -->
+              <div class="client-field fv-plugins-icon-container god-field-wrap">
+                <div class="god-field-header">
+                  <label class="god-field-label" for="name">Full Name <span style="color: #ef4444;">*</span></label>
                   @if(!$isOrgAdmin)
-                    <span class="jp-badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-size:10.5px; padding:2px 8px; border-radius:999px;">
-                      <i class="bi bi-lock-fill me-1"></i> Admin Assigned
+                    <span style="font-size: 10px; font-weight: 600; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; border-radius: 999px; padding: 1px 7px; margin-left: auto;">
+                      <i class="bi bi-lock-fill"></i> Admin Assigned
                     </span>
                   @endif
                 </div>
-                @if(!$isOrgAdmin)
-                  <input type="text" name="name" id="name" class="jp-input jp-input--readonly" placeholder="Enter Full name" value="{{$team->name}}" readonly style="background-color: #f8fafc; cursor: not-allowed; color: #475569; font-weight: 500;">
-                  <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
-                    <i class="bi bi-info-circle me-1"></i> Full name is assigned by your organization admin and cannot be edited.
-                  </div>
-                @else
-                  <input type="text" name="name" id="name" class="jp-input" placeholder="Enter Full name" value="{{$team->name}}">
-                @endif
-                <div class="fv-plugins-message-container invalid-feedback"></div>
-              </div>
-
-              <div class="jp-field">
-                <label class="jp-label">Designation <span class="jp-req">*</span></label>
-                <input type="text" name="designation" id="designation" class="jp-input" placeholder="Enter Designation" value="{{$team->designation}}">
-                <div class="fv-plugins-message-container invalid-feedback"></div>
-              </div>
-
-              <div class="jp-field">
-                <label class="jp-label">Email Address <span class="jp-req">*</span></label>
-                <div class="jp-input-wrap">
-                  <input type="email" name="email" id="email" class="jp-input jp-input--readonly" placeholder="Enter Email" value="{{$team->email}}" readonly>
-                  @if(!empty($team->email))
-                  <span class="jp-badge jp-badge--verified"><i class="bi bi-check-circle-fill"></i> Verified</span>
+                <div class="god-input-box {{ !empty($team->name) ? 'has-value' : '' }} {{ !$isOrgAdmin ? 'is-readonly' : '' }}">
+                  <span class="god-input-left-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  </span>
+                  @if(!$isOrgAdmin)
+                    <input type="text" class="god-native-input" name="name" id="name" value="{{ $team->name }}" readonly style="background: transparent; color: #64748b; cursor: not-allowed;">
+                  @else
+                    <input type="text" class="god-native-input" name="name" id="name" value="{{ $team->name }}" placeholder="Enter Full name">
+                    <button type="button" class="god-input-clear-btn" id="name_clear_btn" title="Clear name" aria-label="Clear name" style="{{ !empty($team->name) ? 'display:inline-flex;' : 'display:none;' }}">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                   @endif
                 </div>
-                <div class="fv-plugins-message-container invalid-feedback"></div>
+                @if(!$isOrgAdmin)
+                  <div style="font-size: 10.5px; color: #64748b; margin-top: 3px; display: flex; align-items: center; gap: 4px;">
+                    <i class="bi bi-info-circle"></i> Assigned by organization administrator and locked for governance.
+                  </div>
+                @endif
+                <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
               </div>
 
-              <div class="jp-field">
-                <label class="jp-label">Phone Number <span class="jp-req">*</span></label>
-                <x-jero-phone-input
-                    id="mobile"
-                    name="mobile"
-                    countryCodeName="phone_country_code"
-                    countryCodeId="phone_country_code"
-                    :value="$team->mobile"
-                    :countryCode="@$phone_code"
-                    label=""
-                    :required="true"
-                    placeholder="Enter Phone" />
-                <div class="fv-plugins-message-container invalid-feedback"></div>
-              </div>
-            </div>
-          </section>
-          <!--end::Personal Information-->
-
-          <!--begin::Location-->
-          <section class="jp-card">
-            <div class="jp-card__head">
-              <span class="jp-card__ico"><i class="bi bi-geo-alt"></i></span>
-              <h3 class="jp-card__title">Location</h3>
-            </div>
-            <div class="jp-field">
-              <label class="jp-label">City <span class="jp-req">*</span></label>
-              <input class="jp-input" id="kt_tagify_work_location" name="kt_tagify_work_location" value="{{ $return }}" placeholder="Search your city..."/>
-              <div class="fv-plugins-message-container invalid-feedback"></div>
-            </div>
-          </section>
-          <!--end::Location-->
-
-          <!--begin::Social Links-->
-          <section class="jp-card">
-            <div class="jp-card__head">
-              <span class="jp-card__ico"><i class="bi bi-link-45deg"></i></span>
-              <h3 class="jp-card__title">Social Links <span class="jp-card__optional">(Optional)</span></h3>
-            </div>
-
-            <div class="jp-form-grid">
-              <div class="jp-field">
-                <label class="jp-label">LinkedIn Profile</label>
-                <input type="url" name="linkedin" id="linkedin" class="jp-input" placeholder="https://linkedin.com/in/yourprofile" value="{{ @$team->linkedin }}">
-                <div class="fv-plugins-message-container invalid-feedback"></div>
-              </div>
-
-              <div class="jp-field">
-                <label class="jp-label">WhatsApp Number</label>
-                <div class="jp-input-wrap jp-phone">
-                  <input type="number" name="whatsapp_number" id="whatsapp_number" class="jp-input" placeholder="Enter WhatsApp number" value="{{ @$team->whatsapp_number }}">
-                  <span class="jp-wa"><i class="bi bi-whatsapp"></i></span>
+              <!-- ROW 1, COL 2: Designation -->
+              <div class="client-field fv-plugins-icon-container god-field-wrap">
+                <div class="god-field-header">
+                  <label class="god-field-label" for="designation">Designation <span style="color: #ef4444;">*</span></label>
                 </div>
-                <div class="fv-plugins-message-container invalid-feedback"></div>
+                <div class="god-input-box {{ !empty($team->designation) ? 'has-value' : '' }}">
+                  <span class="god-input-left-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    </svg>
+                  </span>
+                  <input type="text" class="god-native-input" name="designation" id="designation" value="{{ $team->designation }}" placeholder="e.g. Lead Talent Specialist / Director">
+                  <button type="button" class="god-input-clear-btn" id="designation_clear_btn" title="Clear designation" aria-label="Clear designation" style="{{ !empty($team->designation) ? 'display:inline-flex;' : 'display:none;' }}">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+                <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
               </div>
+
+              <!-- ROW 2, COL 1: Work Email Address -->
+              <div class="client-field fv-plugins-icon-container god-field-wrap">
+                <div class="god-field-header">
+                  <label class="god-field-label" for="email">Work Email Address <span style="color: #ef4444;">*</span></label>
+                </div>
+                <div class="god-input-box is-readonly has-value">
+                  <span class="god-input-left-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                      <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                  </span>
+                  <input type="email" class="god-native-input" name="email" id="email" value="{{ $team->email }}" readonly style="background: transparent; color: #64748b; cursor: not-allowed;">
+                  @if(!empty($team->email))
+                    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; border-radius: 999px; padding: 1px 7px; margin-left: auto; flex-shrink: 0;">
+                      <i class="bi bi-patch-check-fill"></i> Verified
+                    </span>
+                  @endif
+                </div>
+                <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
+              </div>
+
+              <!-- ROW 2, COL 2: Phone Number -->
+              <div class="client-field fv-plugins-icon-container god-field-wrap">
+                <div class="god-field-header">
+                  <label class="god-field-label" for="mobile">Phone Number <span style="color: #ef4444;">*</span></label>
+                </div>
+                <div class="god-phone-wrap" style="width: 100%;">
+                  <x-jero-phone-input
+                      id="mobile"
+                      name="mobile"
+                      countryCodeName="phone_country_code"
+                      countryCodeId="phone_country_code"
+                      :value="$team->mobile"
+                      :countryCode="@$phone_code"
+                      label=""
+                      :required="true"
+                      placeholder="Enter Phone" />
+                </div>
+                <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
+              </div>
+
+              <!-- ROW 3 (Full Width): Work Location (City) -->
+              <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
+                <div class="god-field-header">
+                  <label class="god-field-label" for="kt_tagify_work_location">Work Location (City) <span style="color: #ef4444;">*</span></label>
+                </div>
+                <div class="god-tagify-wrap">
+                  <input class="god-native-input" id="kt_tagify_work_location" name="kt_tagify_work_location" value="{{ $return }}" placeholder="Search your city..."/>
+                </div>
+                <div style="font-size: 10.5px; color: #64748b; margin-top: 3px; display: flex; align-items: center; gap: 4px;">
+                  <i class="bi bi-search"></i> Instant city auto-suggestion enabled across all verified state and national registries.
+                </div>
+                <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
+              </div>
+
+              <!-- ROW 4 (Full Width): LinkedIn Profile URL -->
+              <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
+                <div class="god-field-header">
+                  <label class="god-field-label" for="linkedin">LinkedIn Profile URL <span style="font-size: 10.5px; color: #94a3b8; font-weight: 400;">(Optional)</span></label>
+                </div>
+                <div class="god-input-box {{ !empty($team->linkedin) ? 'has-value' : '' }}">
+                  <span class="god-input-left-icon" style="color: #0a66c2;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                    </svg>
+                  </span>
+                  <input type="url" class="god-native-input" name="linkedin" id="linkedin" value="{{ @$team->linkedin }}" placeholder="https://linkedin.com/in/yourprofile">
+                  <button type="button" class="god-input-clear-btn" id="linkedin_clear_btn" title="Clear LinkedIn" aria-label="Clear LinkedIn" style="{{ !empty($team->linkedin) ? 'display:inline-flex;' : 'display:none;' }}">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+                <div class="fv-plugins-message-container invalid-feedback" style="font-size: 11px; color: #ef4444; margin-top: 3px;"></div>
+              </div>
+
             </div>
           </section>
-          <!--end::Social Links-->
-
         </div>
-        <!--end::Main column-->
 
-        <!--begin::Side column-->
-        <aside class="jp-side">
-
-          <!--begin::Preview-->
-          <section class="jp-card jp-preview">
-            <div class="jp-card__head jp-card__head--sm">
-              <span class="jp-card__ico"><i class="bi bi-eye"></i></span>
-              <h3 class="jp-card__title">Profile Preview</h3>
-            </div>
-            <div class="jp-preview__body">
-              <span class="jp-preview__avatar" style="background-image:url('{{ $background_image }}')"></span>
-              <div class="jp-preview__name">
-                {{ $team->name ?: 'Your Name' }}
-                @if(!empty($team->email))<i class="bi bi-patch-check-fill jp-preview__verify"></i>@endif
+        <!-- ========================== RIGHT COLUMN: PROFILE PHOTO ========================== -->
+        <div class="client-side-column god-logo-column">
+          <section class="card god-card god-company-logo-card">
+            
+            <!-- Card Header: Blue image icon + Title + Subtitle -->
+            <div class="god-card-header">
+              <div class="god-card-header-icon blue-sky-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
               </div>
-              <div class="jp-preview__role">{{ $team->designation ?: 'Your Designation' }}</div>
-              <div class="jp-preview__loc"><i class="bi bi-geo-alt"></i> {{ $location_text }}</div>
-              <span class="jp-tag jp-tag--green"><i class="bi bi-check-circle-fill"></i> Verified Employer</span>
-            </div>
-          </section>
-          <!--end::Preview-->
-
-          <!--begin::Missing-->
-          <section class="jp-card jp-missing">
-            <div class="jp-missing__head">
-              <span class="jp-missing__ico"><i class="bi bi-pie-chart"></i></span>
-              <div>
-                <h3 class="jp-card__title">What's Missing?</h3>
-                <p class="jp-card__hint">Complete these to boost your profile</p>
+              <div class="god-card-header-titles">
+                <h3 class="god-card-title">Profile Photo</h3>
+                <p class="god-card-subtitle">Set or update your profile photo.</p>
               </div>
             </div>
-            <ul class="jp-missing__list">
-              @unless($checks['photo'])
-              <li><span class="jp-missing__item"><i class="bi bi-person"></i> Profile Photo</span><a href="javascript:void(0);" class="jp-btn-ghost" onclick="document.getElementById('avatar').click();">Add now</a></li>
-              @endunless
-              @unless($checks['linkedin'])
-              <li><span class="jp-missing__item"><i class="bi bi-linkedin"></i> LinkedIn Profile</span><a href="javascript:void(0);" class="jp-btn-ghost" onclick="document.getElementById('linkedin').focus();">Add now</a></li>
-              @endunless
-              <li><span class="jp-missing__item"><i class="bi bi-whatsapp"></i> WhatsApp Automation</span><a href="javascript:void(0);" class="jp-btn-ghost" onclick="document.getElementById('whatsapp_number').focus();">Add now</a></li>
-            </ul>
-          </section>
-          <!--end::Missing-->
 
-          <!--begin::Tips-->
-          <section class="jp-card jp-tips">
-            <div class="jp-tips__head">
-              <span class="jp-tips__ico"><i class="bi bi-lightbulb"></i></span>
-              <h3 class="jp-card__title">Tips</h3>
+            <!-- Hidden Native File & Avatar Remove Inputs -->
+            <input type="file" name="avatar" id="avatar" accept=".png, .jpg, .jpeg, .webp" style="display:none;" />
+            <input type="hidden" name="avatar_remove" id="avatar_remove" value="0" />
+
+            <!-- Large Photo Preview Container (Dashed border rounded box) -->
+            <div class="god-logo-preview-box" id="god_photo_preview_box" title="Click to browse or drop an image here" style="cursor: pointer;">
+              <div class="god-logo-surface {{ $has_photo ? 'has-image' : '' }}"
+                   id="god_avatar_surface"
+                   style="<?php echo $has_photo ? 'background-image: url(' . $background_image . ');' : ''; ?>">
+                @if(!$has_photo)
+                  <div class="god-logo-placeholder" id="avatar_placeholder">
+                    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span class="placeholder-title">Profile Photo</span>
+                    <span class="placeholder-sub">Click Change Photo or drop file</span>
+                  </div>
+                @endif
+              </div>
             </div>
-            <ul class="jp-tips__list">
-              <li><i class="bi bi-check2"></i> A complete profile gets 3x more visibility</li>
-              <li><i class="bi bi-check2"></i> Add your profile photo for trust</li>
-              <li><i class="bi bi-check2"></i> Add LinkedIn to build credibility</li>
-              <li><i class="bi bi-check2"></i> Enable WhatsApp automation to engage faster</li>
-            </ul>
-          </section>
-          <!--end::Tips-->
 
-        </aside>
-        <!--end::Side column-->
+            <!-- Status Banner: matched to Add Internal -->
+            <div class="god-logo-status-banner {{ $has_photo ? 'is-detected' : 'is-empty' }}" id="god_photo_status_banner">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="god_photo_status_svg">
+                @if($has_photo)
+                  <polyline points="20 6 9 17 4 12"/>
+                @else
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                @endif
+              </svg>
+              <span id="god_photo_status_text">{{ $has_photo ? 'Profile photo uploaded' : 'No photo uploaded yet' }}</span>
+            </div>
+
+            <!-- Action Buttons: Change Photo & Remove Photo -->
+            <div class="god-logo-actions">
+              <button type="button" class="btn god-logo-btn god-change-logo-btn" id="god_change_photo_btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>Change Photo</span>
+              </button>
+
+              <button type="button" class="btn god-logo-btn god-remove-logo-btn" id="god_remove_photo_btn" style="{{ $has_photo ? 'display:inline-flex;' : 'display:none;' }}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                <span>Remove Photo</span>
+              </button>
+            </div>
+
+            <!-- Supported formats helper note -->
+            <div class="god-logo-formats-note">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <span>Supported formats: PNG, JPG, WEBP (Max 2MB).<br>Recommended: 400×400px. Used in ATS pipeline & candidate communication.</span>
+            </div>
+
+          </section>
+        </div>
 
       </div>
+      <!--end::2-Column Layout-->
 
-      <!--begin::Sticky footer-->
-      <div class="jp-footbar">
-        <div class="jp-footbar__status">
-          <span class="jp-footbar__title">You have unsaved changes</span>
-          <span class="jp-footbar__sub">Last saved a few seconds ago</span>
-        </div>
-        <div class="jp-footbar__actions">
-          <button type="button" class="jp-btn jp-btn--light" onclick="window.location = '<?php echo url('service_company/profile');?>';">Cancel</button>
-          <button type="button" class="jp-btn jp-btn--outline" id="saveDraft" name="saveDraft">Save Draft</button>
-          <button type="submit" class="jp-btn jp-btn--primary" id="updateProfile" name="updateProfile">Save Changes</button>
-        </div>
-      </div>
-      <!--end::Sticky footer-->
-
-      <input type="hidden">
     </form>
     <!--end::Form-->
 
   </div>
 </div>
-<!--end::Content-->
+<!--end::Content Container-->
 
 <style>
-.jp-wrap{font-family:'Poppins',sans-serif;color:#1f2a37;max-width:1320px;margin:0 auto;padding-bottom:84px;}
-.jp-wrap *{font-family:'Poppins',sans-serif;}
-
-/* Header */
-.jp-page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;margin-bottom:16px;}
-.jp-title{font-size:14px;font-weight:700;color:#1f2a37;margin:0 0 2px;}
-.jp-subtitle{font-size:11.5px;color:#8a94a6;margin:0;}
-.jp-completion{min-width:280px;}
-.jp-completion__top{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:6px;}
-.jp-completion__label{font-size:11.5px;color:#8a94a6;}
-.jp-completion__link{font-size:11.5px;font-weight:600;color:#2b63f6;text-decoration:none;white-space:nowrap;}
-.jp-completion__link i{font-size:9px;}
-.jp-completion__row{display:flex;align-items:center;gap:10px;}
-.jp-completion__pct{font-size:14px;font-weight:700;color:#1f2a37;}
-.jp-progress{flex:1;height:6px;border-radius:6px;background:#e9edf5;overflow:hidden;}
-.jp-progress>span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#2b63f6,#5b8def);}
-
-/* Layout grid */
-.jp-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start;}
-.jp-main{display:flex;flex-direction:column;gap:16px;min-width:0;}
-.jp-side{display:flex;flex-direction:column;gap:16px;position:sticky;top:14px;}
-
-/* Card */
-.jp-card{background:#fff;border:1px solid #eef0f5;border-radius:12px;padding:18px 20px;box-shadow:0 1px 2px rgba(20,30,60,.03);}
-.jp-card__head{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-.jp-card__head--sm{margin-bottom:14px;}
-.jp-card__ico{width:30px;height:30px;border-radius:8px;background:#eef3ff;color:#2b63f6;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;}
-.jp-card__title{font-size:13px;font-weight:600;color:#1f2a37;margin:0;}
-.jp-card__optional{font-size:11px;font-weight:400;color:#9aa3b2;}
-.jp-card__hint{font-size:11px;color:#9aa3b2;margin:2px 0 0;}
-
-/* Photo */
-.jp-photo{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;}
-.jp-photo__info{min-width:0;}
-.jp-avatar{position:relative;width:88px;height:88px;justify-self:center;}
-.jp-avatar__img{display:block;width:88px;height:88px;border-radius:50%;background-size:cover;background-position:center;border:3px solid #eef0f5;}
-.jp-avatar__edit{position:absolute;right:-2px;bottom:2px;width:26px;height:26px;border-radius:50%;background:#2b63f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;border:2px solid #fff;}
-.jp-dropzone{border:1.5px dashed #d7deea;border-radius:10px;padding:14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:.15s;background:#fafbfe;}
-.jp-dropzone.is-drag,.jp-dropzone:hover{border-color:#2b63f6;background:#f4f8ff;}
-.jp-dropzone__icon{font-size:20px;color:#9fb0d0;}
-.jp-dropzone__text{font-size:11.5px;color:#6b7585;}
-.jp-dropzone__sub{font-size:10px;color:#aab2c2;}
-.jp-link{color:#2b63f6;font-weight:600;}
-
-/* Form */
-.jp-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;}
-.jp-field{display:flex;flex-direction:column;min-width:0;}
-.jp-label{font-size:11.5px;font-weight:500;color:#5a6473;margin-bottom:6px;}
-.jp-req{color:#f1416c;}
-.jp-input{width:100%;height:40px;border:1px solid #e6e9f0;border-radius:8px;padding:0 12px;font-size:13px;color:#1f2a37;background:#fff;outline:none;transition:.15s;}
-.jp-input::placeholder{color:#aab2c2;}
-.jp-input:focus{border-color:#2b63f6;box-shadow:0 0 0 3px rgba(43,99,246,.10);}
-.jp-input--readonly{background:#f6f8fc;color:#6b7585;}
-/* Validation states */
-.jp-field .invalid-feedback{display:none;font-size:10.5px;color:#f1416c;margin-top:5px;}
-.jp-field.has-error .invalid-feedback{display:block;}
-.jp-field.has-error .jp-input{border-color:#f1416c;}
-.jp-field.has-error .jp-input:focus{box-shadow:0 0 0 3px rgba(241,65,108,.10);}
-.jp-field.has-error .tagify{border-color:#f1416c !important;}
-.jp-field.is-valid .jp-input{border-color:#1fa463;}
-.jp-input-wrap{position:relative;}
-.jp-input-wrap .jp-input{padding-right:96px;}
-.jp-badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
-.jp-badge--verified{color:#1fa463;}
-.jp-phone .jp-input{padding-right:42px;}
-.jp-wa{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#1fa463;font-size:16px;}
-
-/* intl-tel-input fit */
-.jp-phone .iti{width:100%;}
-.jp-phone .iti__flag-container + input,.jp-phone .iti input{height:40px;}
-
-/* Preview */
-.jp-preview__body{display:flex;flex-direction:column;align-items:center;text-align:center;background:#f7f9fd;border-radius:10px;padding:18px 14px;}
-.jp-preview__avatar{width:64px;height:64px;border-radius:50%;background-size:cover;background-position:center;border:3px solid #fff;box-shadow:0 2px 6px rgba(20,30,60,.10);margin-bottom:10px;}
-.jp-preview__name{font-size:13px;font-weight:700;color:#1f2a37;display:flex;align-items:center;gap:5px;}
-.jp-preview__verify{color:#2b63f6;font-size:12px;}
-.jp-preview__role{font-size:11.5px;color:#6b7585;margin-top:2px;}
-.jp-preview__loc{font-size:11px;color:#8a94a6;margin:6px 0 10px;}
-.jp-tag{font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;}
-.jp-tag--green{background:#e7f7ee;color:#1fa463;}
-
-/* Missing */
-.jp-missing__head{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;}
-.jp-missing__ico{width:30px;height:30px;border-radius:8px;background:#fff4e6;color:#f6a609;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;}
-.jp-missing__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
-.jp-missing__list li{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.jp-missing__item{font-size:11.5px;color:#5a6473;display:flex;align-items:center;gap:8px;}
-.jp-missing__item i{color:#8a94a6;font-size:13px;}
-.jp-btn-ghost{font-size:10.5px;font-weight:600;color:#2b63f6;text-decoration:none;border:1px solid #d7e0f7;border-radius:6px;padding:4px 10px;background:#fff;}
-.jp-btn-ghost:hover{background:#f4f8ff;}
-
-/* Tips */
-.jp-tips__head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.jp-tips__ico{width:30px;height:30px;border-radius:8px;background:#f3eeff;color:#8b5cf6;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;}
-.jp-tips__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;}
-.jp-tips__list li{font-size:11px;color:#6b7585;display:flex;align-items:flex-start;gap:8px;line-height:1.4;}
-.jp-tips__list i{color:#1fa463;font-size:12px;margin-top:1px;}
-
-/* Footer bar */
-.jp-footbar{position:sticky;bottom:0;left:0;right:0;margin-top:18px;background:#fff;border:1px solid #eef0f5;border-radius:12px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 -2px 10px rgba(20,30,60,.05);z-index:20;}
-.jp-footbar__status{display:flex;flex-direction:column;}
-.jp-footbar__title{font-size:12px;font-weight:600;color:#1f2a37;}
-.jp-footbar__sub{font-size:10.5px;color:#9aa3b2;}
-.jp-footbar__actions{display:flex;gap:10px;}
-.jp-btn{height:38px;padding:0 18px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;transition:.15s;}
-.jp-btn--light{background:#f1f3f8;color:#5a6473;}
-.jp-btn--light:hover{background:#e7eaf2;}
-.jp-btn--outline{background:#fff;border-color:#d7e0f7;color:#2b63f6;}
-.jp-btn--outline:hover{background:#f4f8ff;}
-.jp-btn--primary{background:#2b63f6;color:#fff;}
-.jp-btn--primary:hover{background:#1f53e0;}
-.jp-btn--primary:disabled{opacity:.6;cursor:not-allowed;}
-
-/* Tagify fit */
-.jp-wrap .tagify{border:1px solid #e6e9f0;border-radius:8px;min-height:40px;--tag-bg:#eef3ff;--tag-text-color:#2b63f6;font-size:13px;}
-.jp-wrap .tagify:focus-within{border-color:#2b63f6;box-shadow:0 0 0 3px rgba(43,99,246,.10);}
-
-/* Responsive — fits 15.6" laptops and scales down */
-@media (max-width:1100px){
-  .jp-grid{grid-template-columns:1fr;}
-  .jp-side{position:static;}
+/* ==========================================================================
+   GOD-LEVEL DESIGN SYSTEM (Identical Parity with Add Internal Client Page 1)
+   ========================================================================== */
+.god-profile-shell {
+  max-width: 1360px !important;
+  margin: 0 auto !important;
+  padding: 6px 12px 32px !important;
+  font-family: 'Poppins', sans-serif !important;
 }
-@media (max-width:680px){
-  .jp-form-grid{grid-template-columns:1fr;}
-  .jp-photo{grid-template-columns:1fr;text-align:center;}
-  .jp-avatar{justify-self:center;}
-  .jp-page-head{flex-direction:column;}
-  .jp-completion{width:100%;}
-  .jp-footbar{flex-direction:column;align-items:stretch;}
-  .jp-footbar__actions{justify-content:flex-end;}
+.god-profile-shell * {
+  box-sizing: border-box !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+/* ==========================================================================
+   TOP NAV CARD (Add Internal Top Navigation Standard)
+   ========================================================================== */
+.god-top-nav-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 10px 18px !important;
+  margin-bottom: 16px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+.god-header-grid {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+}
+.god-header-identity {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+.god-header-icon-box {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.god-header-title {
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.god-header-subtitle {
+  font-size: 11px !important;
+  color: #64748b !important;
+  margin: 1px 0 0 !important;
+  line-height: 1.3 !important;
+}
+.god-header-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  padding: 1px 8px !important;
+  border-radius: 999px !important;
+  border: 1px solid #bfdbfe !important;
+}
+.god-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-left: auto !important;
+}
+.god-top-cancel-btn {
+  background: #ffffff !important;
+  color: #475569 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  padding: 0 14px !important;
+  height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.god-top-cancel-btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+.god-top-submit-btn {
+  background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%) !important;
+  color: #10143b !important;
+  border: 1px solid #d4a017 !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  padding: 0 16px !important;
+  height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  box-shadow: 0 1px 3px rgba(245, 196, 0, 0.25) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.god-top-submit-btn:hover {
+  background: #f5c400 !important;
+  box-shadow: 0 2px 6px rgba(245, 196, 0, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+.god-top-submit-btn:disabled {
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* ==========================================================================
+   2-COLUMN LAYOUT (7.2fr Left / 3.8fr Right - Exactly from Add Internal)
+   ========================================================================== */
+.god-level-profile-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 7.2fr) minmax(0, 3.8fr) !important;
+  gap: 16px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+}
+.god-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 18px 20px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  box-sizing: border-box !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+/* Card Header */
+.god-card-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-bottom: 14px !important;
+}
+.god-card-header-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.god-card-header-icon.blue-sky-icon {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+}
+.god-card-header-titles {
+  min-width: 0 !important;
+}
+.god-card-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin: 0 0 1px 0 !important;
+  line-height: 1.25 !important;
+}
+.god-card-subtitle {
+  font-size: 11px !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  line-height: 1.3 !important;
+  font-weight: 400 !important;
+}
+
+/* Form Fields Grid */
+.god-fields-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px 14px !important;
+  flex: 1 1 auto !important;
+  align-content: space-between !important;
+}
+.god-field-full {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+}
+.god-field-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  margin-bottom: 0 !important;
+}
+.god-field-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-bottom: 4px !important;
+}
+.god-field-label {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+}
+
+/* Input Boxes */
+.god-input-box {
+  display: flex !important;
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  padding: 0 10px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  position: relative !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  gap: 4px !important;
+}
+.god-input-box:focus-within {
+  border-color: #ffd428 !important;
+  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.22) !important;
+}
+.god-input-box.is-invalid,
+.god-input-box.has-validation-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+}
+.god-input-box.is-readonly {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+.god-input-left-icon {
+  color: #94a3b8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-right: 6px !important;
+  flex-shrink: 0 !important;
+}
+.god-native-input {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  color: #0f172a !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+.god-native-input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 400 !important;
+}
+
+/* Clear Buttons */
+.god-input-clear-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  width: 18px !important;
+  height: 18px !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+  margin-right: 2px !important;
+}
+.god-input-clear-btn.is-visible,
+.god-input-box.has-value .god-input-clear-btn {
+  display: inline-flex !important;
+}
+.god-input-clear-btn:hover {
+  background: #fee2e2 !important;
+  color: #ef4444 !important;
+}
+
+/* Phone input wrapper */
+.god-phone-wrap .iti {
+  width: 100% !important;
+}
+.god-phone-wrap .iti input {
+  height: 38px !important;
+  border-radius: 8px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+.god-phone-wrap .iti input:focus {
+  border-color: #ffd428 !important;
+  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.22) !important;
+}
+
+/* Tagify wrapper */
+.god-tagify-wrap .tagify {
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  min-height: 38px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  --tag-bg: #eff6ff !important;
+  --tag-text-color: #2563eb !important;
+  padding-left: 6px !important;
+}
+.god-tagify-wrap .tagify:focus-within {
+  border-color: #ffd428 !important;
+  box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.22) !important;
+}
+
+/* ==========================================================================
+   RIGHT COLUMN: PROFILE PHOTO (Company Logo Exact Parity)
+   ========================================================================== */
+.god-logo-column {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.god-logo-preview-box {
+  border: 1.5px dashed #cbd5e1 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  padding: 10px !important;
+  min-height: 145px !important;
+  max-height: 145px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+.god-logo-preview-box:hover,
+.god-logo-preview-box.is-drag {
+  border-color: #2563eb !important;
+  background: #f8fafc !important;
+}
+.god-logo-surface {
+  width: 110px !important;
+  height: 110px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-color: #f8fafc !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.2s ease !important;
+}
+.god-logo-surface.has-image {
+  background-color: #ffffff !important;
+}
+
+.god-logo-placeholder {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  color: #94a3b8 !important;
+  text-align: center !important;
+  padding: 8px !important;
+}
+.god-logo-placeholder .placeholder-title {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  margin-top: 2px !important;
+}
+.god-logo-placeholder .placeholder-sub {
+  font-size: 9.5px !important;
+  color: #94a3b8 !important;
+}
+
+/* Status Banner */
+.god-logo-status-banner {
+  width: 100% !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  margin-top: 8px !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+}
+.god-logo-status-banner.is-detected {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+.god-logo-status-banner.is-empty {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+/* Actions */
+.god-logo-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 8px !important;
+  margin-top: 8px !important;
+  width: 100% !important;
+}
+.god-logo-btn {
+  flex: 1 1 auto !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  text-decoration: none !important;
+}
+.god-change-logo-btn {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+.god-change-logo-btn:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+.god-remove-logo-btn {
+  background: #fff1f2 !important;
+  border: 1.5px solid #fecdd3 !important;
+  color: #ef4444 !important;
+}
+.god-remove-logo-btn:hover {
+  background: #fee2e2 !important;
+  border-color: #fda4af !important;
+}
+
+/* Formats Note */
+.god-logo-formats-note {
+  font-size: 10px !important;
+  color: #64748b !important;
+  line-height: 1.35 !important;
+  text-align: center !important;
+  margin-top: 8px !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 4px !important;
+}
+.god-logo-formats-note svg {
+  flex-shrink: 0 !important;
+  margin-top: 1px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .god-level-profile-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .god-header-grid {
+    flex-wrap: wrap !important;
+  }
+}
+@media (max-width: 640px) {
+  .god-fields-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .god-header-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
+  }
 }
 </style>
-
-<script>
-/* Lightweight avatar preview + drag&drop (no server load) */
-(function(){
-  var input = document.getElementById('avatar');
-  var dz    = document.getElementById('jp_dropzone');
-  var prev  = document.getElementById('jp_avatar_preview');
-  var sidePrev = document.querySelector('.jp-preview__avatar');
-  if(!input) return;
-
-  function render(file){
-    if(!file || !file.type.match('image.*')) return;
-    var reader = new FileReader();
-    reader.onload = function(e){
-      var url = "url('" + e.target.result + "')";
-      if(prev) prev.style.backgroundImage = url;
-      if(sidePrev) sidePrev.style.backgroundImage = url;
-    };
-    reader.readAsDataURL(file);
-  }
-  input.addEventListener('change', function(){ if(this.files && this.files[0]) render(this.files[0]); });
-
-  ['dragenter','dragover'].forEach(function(ev){
-    dz.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.add('is-drag'); });
-  });
-  ['dragleave','drop'].forEach(function(ev){
-    dz.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.remove('is-drag'); });
-  });
-  dz.addEventListener('drop', function(e){
-    var files = e.dataTransfer && e.dataTransfer.files;
-    if(files && files.length){ input.files = files; render(files[0]); }
-  });
-})();
-</script>
-
-<script>
-/* Client-side validation (real-time + on submit) — no server load */
-(function(){
-  // Field rules. Each validator returns an error string, or '' when valid.
-  var rules = {
-    name: function(v){ return v.trim() === '' ? 'Full name is required' : ''; },
-    designation: function(v){ return v.trim() === '' ? 'Designation is required' : ''; },
-    mobile: function(v){
-      v = v.trim();
-      if(v === '') return 'Phone number is required';
-      if(!/^[0-9]+$/.test(v)) return 'Phone number can only contain digits';
-      if(v.length < 6 || v.length > 15) return 'Please enter a valid phone number';
-      return '';
-    },
-    kt_tagify_work_location: function(v){ v = v.trim(); return (v === '' || v === '[]') ? 'Please select your city' : ''; },
-    linkedin: function(v){ // optional
-      v = v.trim();
-      if(v === '') return '';
-      return /^https?:\/\/.+\..+/i.test(v) ? '' : 'Enter a valid URL (https://...)';
-    },
-    whatsapp_number: function(v){ // optional
-      v = v.trim();
-      if(v === '') return '';
-      if(!/^[0-9]+$/.test(v)) return 'WhatsApp number can only contain digits';
-      if(v.length !== 10) return 'WhatsApp number must be 10 digits long';
-      return '';
-    }
-  };
-
-  function field(el){ return el ? el.closest('.jp-field') : null; }
-
-  function showError(el, msg){
-    var f = field(el); if(!f) return;
-    var box = f.querySelector('.invalid-feedback');
-    if(msg){
-      f.classList.add('has-error'); f.classList.remove('is-valid');
-      if(box) box.textContent = msg;
-    } else {
-      f.classList.remove('has-error');
-      if(el.value && el.value.trim() !== '') f.classList.add('is-valid');
-      if(box) box.textContent = '';
-    }
-  }
-
-  function validateOne(id){
-    var el = document.getElementById(id);
-    if(!el || !rules[id]) return true;
-    var msg = rules[id](el.value || '');
-    showError(el, msg);
-    return msg === '';
-  }
-
-  // Real-time validation on input / blur
-  Object.keys(rules).forEach(function(id){
-    var el = document.getElementById(id);
-    if(!el) return;
-    var ev = (id === 'mobile') ? 'input change' : 'input blur';
-    ev.split(' ').forEach(function(e){
-      el.addEventListener(e, function(){ validateOne(id); });
-    });
-  });
-  // City uses Tagify — it syncs the original input and fires 'change' on it
-  $(document).on('change', '#kt_tagify_work_location', function(){ validateOne('kt_tagify_work_location'); });
-
-  // Public: validate everything, focus the first invalid field. Returns true when valid.
-  window.jpValidateAll = function(){
-    var firstInvalid = null;
-    Object.keys(rules).forEach(function(id){
-      if(!validateOne(id) && !firstInvalid) firstInvalid = document.getElementById(id);
-    });
-    if(firstInvalid){
-      var f = field(firstInvalid);
-      if(f && f.scrollIntoView) f.scrollIntoView({behavior:'smooth', block:'center'});
-      try { firstInvalid.focus(); } catch(e){}
-      return false;
-    }
-    return true;
-  };
-})();
-</script>
 @endsection
 
 @push('footer-script')
 <script src="https://unpkg.com/@yaireo/tagify"></script>
 <script src="https://unpkg.com/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
-<link href="https://unpkg.com/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
-
 
 <script>
-
-  $(document).ready(function () {
+$(document).ready(function () {
     if (window.JeroPhoneBox) {
-      window.JeroPhoneBox.initAll();
+        window.JeroPhoneBox.initAll();
     }
-  });
+});
 
-  });
+/* ==========================================================================
+   DYNAMIC CLEAR BUTTONS (Instant value clearing & state toggling)
+   ========================================================================== */
+(function() {
+    ['name', 'designation', 'linkedin'].forEach(function(fieldId) {
+        var input = document.getElementById(fieldId);
+        var btn   = document.getElementById(fieldId + '_clear_btn');
+        if (!input || !btn) return;
+        var box   = input.closest('.god-input-box');
 
+        function updateClearState() {
+            var val = (input.value || '').trim();
+            if (val.length > 0) {
+                btn.style.display = 'inline-flex';
+                if (box) box.classList.add('has-value');
+            } else {
+                btn.style.display = 'none';
+                if (box) box.classList.remove('has-value');
+            }
+        }
 
-</script>
+        ['input', 'keyup', 'change'].forEach(function(ev) {
+            input.addEventListener(ev, updateClearState);
+        });
 
-<!--begin::Script-->
-<script>
-    /******/ (() => { // webpackBootstrap
-/******/ 	"use strict";
-var __webpack_exports__ = {};
-/*!*********************************************************************************************!*\
-  !*** FORM VALIDATION***!
-  \*********************************************************************************************/
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            input.value = '';
+            updateClearState();
+            input.focus();
+            $(input).trigger('input').trigger('change');
+        });
 
+        updateClearState();
+    });
+})();
 
-  setTimeout(() => {
+/* ==========================================================================
+   GOD-LEVEL PROFILE PHOTO HANDLERS (Browse, Dropzone, 2MB Guard, Remove)
+   ========================================================================== */
+(function() {
+    var fileInput    = document.getElementById('avatar');
+    var previewBox   = document.getElementById('god_photo_preview_box');
+    var avatarSurface= document.getElementById('god_avatar_surface');
+    var placeholder  = document.getElementById('avatar_placeholder');
+    var statusBanner = document.getElementById('god_photo_status_banner');
+    var statusSvg    = document.getElementById('god_photo_status_svg');
+    var statusText   = document.getElementById('god_photo_status_text');
+    var changeBtn    = document.getElementById('god_change_photo_btn');
+    var removeBtn    = document.getElementById('god_remove_photo_btn');
+    var removeInput  = document.getElementById('avatar_remove');
+    var defaultAvatarUrl = "{{ $default_avatar }}";
 
+    if (!fileInput) return;
 
-  const cities = @json($cities);
-
-  let inputId = `#kt_tagify_work_location`;
-  let inputElement = document.querySelector(inputId);
-
-  if (inputElement) {
-      let tagifyInstance = new Tagify(inputElement, {
-          whitelist: cities,
-          enforceWhitelist: true, // Prevents users from adding custom values
-          maxTags: 1,
-          dropdown: {
-              maxItems: 20,           // maximum allowed rendered suggestions
-              classname: "", // custom classname for this dropdown
-              enabled: 0,             // show suggestions on focus
-              closeOnSelect: true    // do not hide the suggestions dropdown once an item has been selected
-          }
-      });
-
-      // Prevent creating tags on blur or enter key
-      tagifyInstance.on('input', function(e) {
-          tagifyInstance.dropdown.show(); // show the dropdown immediately
-      });
-
-      // Create tags only on select
-      tagifyInstance.on('dropdown:select', function(e) {
-          tagifyInstance.addTags([e.detail.data.value]);
-      });
-
-      tagifyInstance.on('add', function(e) {
-        // Remove the tag if it wasn't selected from the dropdown
-        // if (!cities.includes(e.detail.data.value)) {
-        //   tagifyInstance.removeTag(e.detail.data.value);
-        // }
-      });
-
-
-      function debounce(func, delay) {
-        let timer;
-        return function (...args) {
-            clearTimeout(timer);
-            timer = setTimeout(() => func.apply(this, args), delay);
-        };
+    if (changeBtn) {
+        changeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fileInput.click();
+        });
     }
 
-         // Debounced function to fetch suggestions
-    const fetchSuggestions = debounce(function(query) {
-        $.ajax({
-            url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
-            method: 'GET',
-            success: function(data) {
-                console.warn("Fetched Cities: ", data);
-
-                if (Array.isArray(data)) {
-                    tagifyInstance.settings.whitelist = data; // Update whitelist
-                    // tagifyInstance.dropdown.show(query); // Show suggestions
-                    tagifyInstance.dropdown.show.call(tagifyInstance);
-                } else {
-                    console.error("Invalid API response format: Expected array.");
-                }
-            },
-            error: function(err) {
-                console.error("Error fetching cities:", err);
+    if (previewBox) {
+        previewBox.addEventListener('click', function(e) {
+            if (!e.target.closest('button')) {
+                fileInput.click();
             }
         });
-    }, 200); // 300ms delay
+    }
 
-    // Listen for user input to trigger API call
-    tagifyInstance.on('input', function(e) {
-        var query = e.detail.value.trim();
-        if (query.length < 2) return;
-        fetchSuggestions(query);
+    function processPhoto(file) {
+        if (!file || !file.type.match('image.*')) return;
+
+        // 2MB Client RAM Check (2,097,152 bytes)
+        if (file.size > 2097152) {
+            Swal.fire({
+                icon: "warning",
+                title: "File Size Exceeded",
+                text: "The profile photo size must not exceed 2 MB.",
+                customClass: { confirmButton: "btn btn-primary" }
+            });
+            fileInput.value = '';
+            return false;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            avatarSurface.style.backgroundImage = "url('" + e.target.result + "')";
+            avatarSurface.classList.add('has-image');
+            if (placeholder) placeholder.style.display = 'none';
+
+            if (removeInput) removeInput.value = '0';
+
+            if (statusBanner) {
+                statusBanner.className = 'god-logo-status-banner is-detected';
+                statusSvg.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+                statusText.textContent = 'Profile photo uploaded';
+            }
+            if (removeBtn) removeBtn.style.display = 'inline-flex';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            processPhoto(this.files[0]);
+        }
     });
 
-    setTimeout(() => {
-      var city = "{{@$return}}";
-      if(city !=''){
-        var cityName = city.split(" | ")[0]; // Get the first part (Ballia)
-        fetchSuggestions(cityName);
-      }
-    }, 100);
-    setTimeout(() => {
-        var defaultLocation = {!! json_encode(@$return) !!}; // Ensure proper Blade syntax for JavaScript
-        if (defaultLocation) {
-          tagifyInstance.addTags([defaultLocation]); // Add the default location as a tag
-          tagifyInstance.dropdown.hide();
-        }
-    }, 2000); // 3 seconds delay
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
+            fileInput.value = '';
+            if (removeInput) removeInput.value = '1';
 
-  }
-
-  }, 1500);
-
-
-
-
-// Class definition
-var KTAccountSettingsProfileDetails = function () {
-    // Private variables
-    var form;
-    var submitButton;
-    var validation;
-
-    // Private functions
-    var initValidation = function () {
-        // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
-        validation = FormValidation.formValidation(
-            form,
-            {
-                fields: {
-                    fullname: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Full name is required'
-                            }
-                        }
-                    },
-                    designation: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Designation is required'
-                            }
-                        }
-                    },
-                    email: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Email is required'
-                            }
-                        }
-                    },
-                    mobile: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Phone is required'
-                            },
-                            stringLength: {
-                                min: 6,
-                                max: 15,
-                                message: 'Please enter a valid phone number'
-                            },
-                            regexp: {
-                                regexp: /^[0-9]+$/,
-                                message: 'Phone number can only contain digits'
-                            }
-                        }
-                    },
-                    country: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Please select a country'
-                            }
-                        }
-                    },
-                    state: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Please select a state'
-                            }
-                        }
-                    }
-
-
-                },
-                plugins: {
-                    trigger: new FormValidation.plugins.Trigger(),
-                    submitButton: new FormValidation.plugins.SubmitButton(),
-                    //defaultSubmit: new FormValidation.plugins.DefaultSubmit(), // Uncomment this line to enable normal button submit after form validation
-                    bootstrap: new FormValidation.plugins.Bootstrap5({
-                        rowSelector: '.fv-row',
-                        eleInvalidClass: '',
-                        eleValidClass: ''
-                    })
-                }
+            avatarSurface.style.backgroundImage = "none";
+            avatarSurface.classList.remove('has-image');
+            if (placeholder) {
+                placeholder.style.display = 'flex';
+            } else {
+                avatarSurface.innerHTML = `
+                  <div class="god-logo-placeholder" id="avatar_placeholder">
+                    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span class="placeholder-title">Profile Photo</span>
+                    <span class="placeholder-sub">Click Change Photo or drop file</span>
+                  </div>`;
             }
-        );
 
-        // Select2 validation integration
-        $(form.querySelector('[name="country"]')).on('change', function() {
-            // Revalidate the color field when an option is chosen
-            validation.revalidateField('country');
-        });
-
-        $(form.querySelector('[name="state"]')).on('change', function() {
-            // Revalidate the color field when an option is chosen
-            validation.revalidateField('state');
-        });
-
-        $(form.querySelector('[name="city"]')).on('change', function() {
-            // Revalidate the color field when an option is chosen
-            validation.revalidateField('city');
+            if (statusBanner) {
+                statusBanner.className = 'god-logo-status-banner is-empty';
+                statusSvg.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>';
+                statusText.textContent = 'Photo marked for removal';
+            }
+            removeBtn.style.display = 'none';
         });
     }
 
-    var handleForm = function () {
-        submitButton.addEventListener('click', function (e) {
-            e.preventDefault();
-
-            validation.validate().then(function (status) {
-                if (status == 'Valid') {
-
-                    swal.fire({
-                        text: "Thank you! You've updated your basic info",
-                        icon: "success",
-                        buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
-                        customClass: {
-                            confirmButton: "btn fw-bold btn-light-primary"
-                        }
-                    });
-
-                } else {
-                    swal.fire({
-                        text: "Sorry, looks like there are some errors detected, please try again.",
-                        icon: "error",
-                        buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
-                        customClass: {
-                            confirmButton: "btn fw-bold btn-light-primary"
-                        }
-                    });
-                }
+    // Drag and Drop
+    if (previewBox) {
+        ['dragenter', 'dragover'].forEach(function(ev) {
+            previewBox.addEventListener(ev, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                previewBox.classList.add('is-drag');
             });
         });
+        ['dragleave', 'drop'].forEach(function(ev) {
+            previewBox.addEventListener(ev, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                previewBox.classList.remove('is-drag');
+            });
+        });
+        previewBox.addEventListener('drop', function(e) {
+            var files = e.dataTransfer && e.dataTransfer.files;
+            if (files && files.length) {
+                fileInput.files = files;
+                processPhoto(files[0]);
+            }
+        });
     }
+})();
 
-    // Public methods
-    return {
-        init: function () {
-            form = document.getElementById('kt_account_profile_details_form');
-            submitButton = form.querySelector('#kt_account_profile_details_submit');
+/* ==========================================================================
+   TAGIFY CITY LOCATION AUTOSUGGEST & PRELOAD
+   ========================================================================== */
+setTimeout(() => {
+    const cities = @json($cities ?? []);
+    let inputId = `#kt_tagify_work_location`;
+    let inputElement = document.querySelector(inputId);
 
-            initValidation();
+    if (inputElement) {
+        let tagifyInstance = new Tagify(inputElement, {
+            whitelist: cities,
+            enforceWhitelist: true,
+            maxTags: 1,
+            dropdown: {
+                maxItems: 20,
+                classname: "",
+                enabled: 0,
+                closeOnSelect: true
+            }
+        });
+
+        tagifyInstance.on('input', function(e) {
+            tagifyInstance.dropdown.show();
+        });
+
+        tagifyInstance.on('dropdown:select', function(e) {
+            tagifyInstance.addTags([e.detail.data.value]);
+        });
+
+        function debounce(func, delay) {
+            let timer;
+            return function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => func.apply(this, args), delay);
+            };
         }
+
+        const fetchSuggestions = debounce(function(query) {
+            $.ajax({
+                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
+                method: 'GET',
+                success: function(data) {
+                    if (Array.isArray(data)) {
+                        tagifyInstance.settings.whitelist = data;
+                        tagifyInstance.dropdown.show.call(tagifyInstance);
+                    }
+                },
+                error: function(err) {
+                    console.error("Error fetching cities:", err);
+                }
+            });
+        }, 250);
+
+        tagifyInstance.on('input', function(e) {
+            var query = e.detail.value.trim();
+            if (query.length < 2) return;
+            fetchSuggestions(query);
+        });
+
+        setTimeout(() => {
+            var city = "{{ @$return }}";
+            if (city != '') {
+                var cityName = city.split(" | ")[0];
+                fetchSuggestions(cityName);
+            }
+        }, 100);
+
+        setTimeout(() => {
+            var defaultLocation = {!! json_encode(@$return) !!};
+            if (defaultLocation) {
+                tagifyInstance.addTags([defaultLocation]);
+                tagifyInstance.dropdown.hide();
+            }
+        }, 500);
     }
-}();
+}, 300);
 
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTAccountSettingsProfileDetails.init();
-});
+/* ==========================================================================
+   FORM VALIDATION & AJAX SUBMISSION (Header Submit Button)
+   ========================================================================== */
+$(document).on('click', '#updateProfile', function(e) {
+    e.preventDefault();
 
-/******/ })()
-;
-//# FORM VALIDATION
-</script>
-<!--end::Script-->
-<script>
-
-$( document ).ready(function() {
-
-		 $('.country').change(function(){
-
-					var cid				=	$(this).val() ;
-					if(cid == 101){
-						$('#city_id').show();
-						$('#city').hide();
-					}else{
-						$('#city').show();
-						$('#city_id').hide();
-					}
-
-   					var url 			=	"{{ route('service_company.job-applications.statelist',':cid') }}";
-   					url 				=	url.replace(':cid', cid);
-   					$.ajax({
-   									type	: 'GET',
-   									url		: url,
-   									success	: function (response) {
-   																		$('#state').html(response.data);
-
-   																   }
-   					});
-   		});
-
-		$(document).on('change', '.change_state', function() {
-
-				var country				=	$('#country').val();
-   				var state_id			=	this.value;
-				if(country == 101){
-					$('#city_id').show();
-					$('#city').hide();
-				}else{
-					$('#city').show();
-					$('#city_id').hide();
-				}
-				var url 			=	"{{ route('service_company.clients.citylist',':state_id') }}";
-				url 				=	url.replace(':state_id', state_id);
-				$.ajax({
-								type	: 'GET',
-								url		: url,
-								success	: function (response) {
-																	$('#city_id').html(response.data);
-															   }
-				});
-   		});
-
-
-
-    	$(document).on('change', '.country123', function() {
-
-   					cid						=	this.value;
-   					var url 			=	"{{ route('service_company.job-applications.statelist',':cid') }}";
-   					url 				=	url.replace(':cid', cid);
-   					$.ajax({
-   									type	: 'GET',
-   									url		: url,
-   									success	: function (response) {
-   																		$('#state').html(response.data);
-   																   }
-   					      });
-
-   	});
-
-});
-
-</script>
-<script>
-
-
-
-
-$(document).on('click', '#updateProfile', function() {
-
-    // ── Required field validation ──
     var errors = [];
     function reqCheck(id, label) {
         var el = document.getElementById(id);
-        var $field = el ? $(el).closest('.jp-field') : null;
+        var $wrap = el ? $(el).closest('.god-field-wrap') : null;
+        var $box  = el ? $(el).closest('.god-input-box') : null;
         var val = el ? (el.value || '').trim() : '';
-        // tagify stores JSON array — treat [] as empty
         if (val === '[]') val = '';
+
         if (!val) {
             errors.push(label);
-            if ($field) {
-                $field.addClass('has-error');
-                var box = $field.find('.invalid-feedback')[0];
-                if (box) box.textContent = label + ' is required';
+            if ($box) $box.addClass('is-invalid');
+            if ($wrap) {
+                var fb = $wrap.find('.invalid-feedback')[0];
+                if (fb) {
+                    fb.textContent = label + ' is required';
+                    fb.style.display = 'block';
+                }
             }
         } else {
-            if ($field) {
-                $field.removeClass('has-error');
-                var box = $field.find('.invalid-feedback')[0];
-                if (box) box.textContent = '';
+            if ($box) $box.removeClass('is-invalid');
+            if ($wrap) {
+                var fb = $wrap.find('.invalid-feedback')[0];
+                if (fb) {
+                    fb.textContent = '';
+                    fb.style.display = 'none';
+                }
             }
         }
     }
-    reqCheck('name',                      'Full name');
-    reqCheck('designation',               'Designation');
-    reqCheck('mobile',                    'Phone number');
-    reqCheck('kt_tagify_work_location',   'Location (city)');
+
+    reqCheck('name',                    'Full name');
+    reqCheck('designation',             'Designation');
+    reqCheck('mobile',                  'Phone number');
+    reqCheck('kt_tagify_work_location', 'Location (city)');
+
+    // Optional LinkedIn URL regex validation
+    var linkedinEl = document.getElementById('linkedin');
+    if (linkedinEl && linkedinEl.value.trim() !== '') {
+        var lval = linkedinEl.value.trim();
+        var $lwrap = $(linkedinEl).closest('.god-field-wrap');
+        var $lbox  = $(linkedinEl).closest('.god-input-box');
+        if (!/^https?:\/\/.+\..+/i.test(lval)) {
+            errors.push('LinkedIn URL');
+            if ($lbox) $lbox.addClass('is-invalid');
+            if ($lwrap) {
+                var lfb = $lwrap.find('.invalid-feedback')[0];
+                if (lfb) {
+                    lfb.textContent = 'Please enter a valid URL (https://...)';
+                    lfb.style.display = 'block';
+                }
+            }
+        } else {
+            if ($lbox) $lbox.removeClass('is-invalid');
+            if ($lwrap) {
+                var lfb = $lwrap.find('.invalid-feedback')[0];
+                if (lfb) {
+                    lfb.textContent = '';
+                    lfb.style.display = 'none';
+                }
+            }
+        }
+    }
 
     if (errors.length > 0) {
-        // Scroll to first error
-        var $first = $('.jp-field.has-error').first();
-        if ($first.length) $first[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        var $first = $('.is-invalid').first();
+        if ($first.length) {
+            $first[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         return false;
     }
 
-   	var data 			=	new FormData();
-   	var form_data 		=	$('#kt_account_profile_details_form').serializeArray();
-   	$.each(form_data, function (key, input) {
-       		data.append(input.name, input.value);
-   	});
-
-   	var file_data 		= $('input[name="avatar"]')[0].files;
-   	for (var i = 0; i < file_data.length; i++) {
-       		data.append("logo", file_data[i]);
-   	}
-
-    const fileInput = document.getElementById('avatar'); // Replace with your file input ID
-    const file = fileInput.files[0];
-    // Check if a file is selected
-    if (file) {
-          if (file.size > 2097152) {
-            Swal.fire("Failed", "The file size must not exceed 2 MB", "warning");
-            e.preventDefault(); // Stop form submission
+    // Check file size if a file is selected
+    const fileInput = document.getElementById('avatar');
+    if (fileInput && fileInput.files[0]) {
+        if (fileInput.files[0].size > 2097152) {
+            Swal.fire({
+                icon: "warning",
+                title: "File Size Exceeded",
+                text: "The profile photo size must not exceed 2 MB."
+            });
             return false;
         }
     }
 
-    // Check file size (2 MB = 2097152 bytes)
+    var $btn = $('#updateProfile');
+    $btn.prop('disabled', true);
+    $btn.html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...');
 
+    var data = new FormData();
+    var form_data = $('#kt_account_profile_details_form').serializeArray();
+    $.each(form_data, function (key, input) {
+        data.append(input.name, input.value);
+    });
 
+    if (fileInput && fileInput.files.length > 0) {
+        data.append("logo", fileInput.files[0]);
+    }
 
-   	/*var kt_docs_tinymce_hidden	=	tinymce.get("kt_docs_tinymce_hidden").getContent();
-    	data.append("description", kt_docs_tinymce_hidden);
-   	data.append('key', 'value');*/
-    $('#updateProfile').prop('disabled',true);
-    $('#updateProfile').text('Waiting...');
+    $.ajax({
+        url: "{{ route('service_company.profile.update', @$team->id) }}",
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        method: "POST",
+        processData: false,
+        contentType: false,
+        data: data,
+        success: function (response) {
+            $btn.prop('disabled', false);
+            $btn.html('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>Save Changes</span>');
 
-   	$.ajax({
-       			//url					: '{{route('service_company.clients.store')}}',
-   				url					: '{{route('service_company.profile.update', @$team->id)}}',
-   				headers				: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-       			method				: "POST",
-       			processData			: false,
-       			contentType			: false,
-      		 	data				: data,
-   				redirect			: true,
-       			success				: function (data) {
-              $('#updateProfile').prop('disabled',false);
-              $('#updateProfile').text('Save Changes');
-   										//alert(data.status);
-   										if(data.status == 'success'){
-												Swal.fire("Success", "Profile update successfully!", "success");
-                        if(data.team_page){
-                           window.location = '{{ route('service_company.team.index') }}' ;
-                        }else{
-                          window.location = '{{ route('service_company.profile.index') }}' ;
-                        }
-
-   												//{"status":"success","message":"menu.clients created successfully.","action":"redirect","url":"https:\/\/rm.vibhanshujaiswal.com\/service_company\/clients"}
-   										}
-
-       			}
-       			//error: function (e) {
-           				//error
-       			//}
-   			});
-
-   });
-
-
-
-
-
+            if (response.status == 'success') {
+                Swal.fire({
+                    icon: "success",
+                    title: "Profile Updated",
+                    text: "Your profile details have been successfully updated!",
+                    timer: 1800,
+                    showConfirmButton: false
+                }).then(function() {
+                    if (response.team_page) {
+                        window.location = '{{ route('service_company.team.index') }}';
+                    } else {
+                        window.location = '{{ route('service_company.profile.index') }}';
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Update Failed",
+                    text: response.message || "Failed to update profile. Please try again."
+                });
+            }
+        },
+        error: function (xhr) {
+            $btn.prop('disabled', false);
+            $btn.html('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>Save Changes</span>');
+            var msg = "An unexpected error occurred while saving profile.";
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            }
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: msg
+            });
+        }
+    });
+});
 </script>
 @endpush

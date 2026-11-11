@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Company — User Profile View Page Redesign Preview | JERO ATS</title>
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <style>
+    /* ==========================================================================
+       JERO ATS DESIGN SYSTEM TOKENS & BASE (Rule 20 Modern Card + Sub-Card)
+       Optimized for 15.6" Screens (1366x768 & 1920x1080)
+       ========================================================================== */
+    :root {
+      --primary: #009ef7;
+      --primary-hover: #0086d4;
+      --primary-active: #0073b6;
+      --primary-light: #eff6ff;
+      --primary-border: #bfdbfe;
+      
+      --brand-blue: #2563eb;
+      --brand-blue-hover: #1d4ed8;
+      
+      --bg-page: #f8fafc;
+      --surface-card: #ffffff;
+      --border-card: #e2e8f0;
+      --border-subcard: #edf2f7;
+      --border-focus: #009ef7;
+      
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      
+      --success: #10b981;
+      --success-light: #ecfdf5;
+      --success-border: #a7f3d0;
+      
+      --warning: #f59e0b;
+      --warning-light: #fffbeb;
+      --warning-border: #fde68a;
+      
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --danger-border: #fecaca;
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-full: 9999px;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+      --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+      --shadow-float: 0 10px 25px -5px rgba(15, 23, 42, 0.10), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+      
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    html, body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Top Demo Control Banner */
+    .demo-bar {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 8px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      border-bottom: 1px solid #1e293b;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .demo-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .demo-tag {
+      background: #009ef7;
+      color: #fff;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .demo-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .demo-toggle-btn {
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid #334155;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-fast);
+    }
+    .demo-toggle-btn:hover {
+      background: #334155;
+      color: #fff;
+    }
+
+    /* Simulated App Shell Layout */
+    .app-shell {
+      display: flex;
+      min-height: calc(100vh - 35px);
+    }
+
+    /* Left Sidebar Mock */
+    .app-sidebar-mock {
+      width: 220px;
+      background: #10143b;
+      color: #fff;
+      flex-shrink: 0;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .mock-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 12px;
+    }
+    .mock-brand-logo {
+      width: 28px;
+      height: 28px;
+      background: #009ef7;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #fff;
+    }
+    .mock-brand-text {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .mock-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: var(--transition-fast);
+    }
+    .mock-nav-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+    .mock-nav-item.active {
+      background: #009ef7;
+      color: #fff;
+      font-weight: 600;
+    }
+    .mock-nav-item i {
+      font-size: 14px;
+    }
+
+    /* Main Content Area */
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-page);
+      min-width: 0;
+      position: relative;
+    }
+
+    /* Topbar Mock */
+    .app-topbar-mock {
+      height: 52px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+    .topbar-center-mock {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .topbar-pill-btn {
+      padding: 5px 12px;
+      background: #f8fafc;
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-full);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .topbar-right-mock {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .user-pill-mock {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      background: #f1f5f9;
+      border-radius: var(--radius-full);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .user-avatar-tiny {
+      width: 26px;
+      height: 26px;
+      background: #009ef7;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Page Container */
+    .page-container {
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 20px 48px 20px;
+    }
+
+    /* ==========================================================================
+       TIER 1: TOP HERO PROFILE HEADER CARD (Rule 20 Enterprise Standard)
+       ========================================================================== */
+    .hero-profile-card {
+      background: #ffffff;
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 18px 22px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+    .hero-left-block {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 280px;
+    }
+    .hero-avatar-wrap {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      flex-shrink: 0;
+    }
+    .hero-avatar-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #eff6ff;
+      border: 3px solid #ffffff;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 700;
+      color: #009ef7;
+    }
+    .hero-avatar-circle img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .hero-presence-dot {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 14px;
+      height: 14px;
+      background: var(--success);
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+    }
+    .hero-identity-details {
+      display: flex;
+      flex-direction: column;
+    }
+    .hero-greeting {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-light);
+    }
+    .hero-name-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 1px;
+    }
+    .hero-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.25;
+    }
+    .hero-verify-badge {
+      color: #009ef7;
+      font-size: 15px;
+    }
+    .hero-designation-row {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hero-company-dot {
+      color: var(--text-light);
+    }
+    .hero-pills-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .hero-pill-tag {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .hero-pill-tag.verified {
+      background: var(--success-light);
+      color: #065f46;
+      border: 1px solid var(--success-border);
+    }
+    .hero-pill-tag.neutral {
+      background: #f1f5f9;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-card);
+    }
+
+    /* Center Health Tracker */
+    .hero-health-box {
+      background: #f8fafc;
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 10px 16px;
+      min-width: 290px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .health-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+    }
+    .health-label {
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .health-pct {
+      font-weight: 700;
+      color: #009ef7;
+    }
+    .health-progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .health-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #009ef7 0%, #2563eb 100%);
+      border-radius: 4px;
+      width: 75%;
+    }
+    .health-items-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
+      margin-top: 2px;
+    }
+    .health-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .health-item.done {
+      color: #065f46;
+    }
+    .health-item i {
+      font-size: 11px;
+    }
+    .health-item.done i {
+      color: var(--success);
+    }
+
+    /* Right Action Buttons */
+    .hero-actions-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 170px;
+    }
+    .btn-hero-primary {
+      height: 36px;
+      background: #009ef7;
+      color: #ffffff;
+      border: 1px solid #009ef7;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2);
+      transition: var(--transition-fast);
+      cursor: pointer;
+    }
+    .btn-hero-primary:hover {
+      background: #0086d4;
+      color: #fff;
+    }
+    .btn-hero-secondary {
+      height: 34px;
+      background: #ffffff;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: var(--transition-fast);
+      cursor: pointer;
+    }
+    .btn-hero-secondary:hover {
+      background: #f8fafc;
+      color: var(--text-main);
+      border-color: #cbd5e1;
+    }
+
+    /* ==========================================================================
+       TIER 1.5: HIGH-DENSITY KPI STATS METRIC STRIP (Rule 20 Sub-Cards)
+       ========================================================================== */
+    .kpi-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .kpi-metric-card {
+      background: #ffffff;
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition-fast);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .kpi-metric-card:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-card);
+      border-color: var(--primary-border);
+    }
+    .kpi-icon-container {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .kpi-icon-blue { background: #eff6ff; color: #009ef7; }
+    .kpi-icon-green { background: #ecfdf5; color: var(--success); }
+    .kpi-icon-amber { background: #fffbeb; color: var(--warning); }
+    .kpi-icon-purple { background: #f5f3ff; color: #7c3aed; }
+    .kpi-icon-rose { background: #fff1f2; color: #e11d48; }
+
+    .kpi-data-block {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .kpi-data-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .kpi-data-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    /* ==========================================================================
+       TIER 2: SUB-TABS CARD (Strict Rule 20 Compliance)
+       ========================================================================== */
+    .tabs-container-card {
+      background: #ffffff !important;
+      border: 1px solid var(--border-card) !important;
+      border-radius: 10px !important;
+      padding: 8px 12px !important;
+      margin-bottom: 14px !important;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs-container-card::-webkit-scrollbar {
+      display: none;
+    }
+    .tab-pill-btn {
+      background: #ffffff;
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #475569;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: var(--transition-fast);
+    }
+    .tab-pill-btn:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+    /* Active Tab Highlight Rule (Rule 20 Strict) */
+    .tab-pill-btn.is-active {
+      background: #009ef7 !important;
+      border-color: #009ef7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+    }
+    .tab-badge {
+      min-width: 20px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 10px;
+      font-size: 10.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .tab-pill-btn.is-active .tab-badge {
+      background: rgba(255, 255, 255, 0.28) !important;
+      color: #ffffff !important;
+    }
+
+    /* ==========================================================================
+       TIER 3: "MY DETAILS" TAB — MODERN CARD + SUB-CARD STREAM
+       ========================================================================== */
+    .details-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      align-items: stretch;
+    }
+    .god-overview-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: var(--transition-fast);
+    }
+    .god-overview-card:hover {
+      box-shadow: var(--shadow-card);
+    }
+    .card-top-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-subcard);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+    }
+    .card-top-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-header-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .card-header-icon.blue { background: #eff6ff; color: #009ef7; }
+    .card-header-icon.purple { background: #f5f3ff; color: #7c3aed; }
+    .card-header-icon.green { background: #ecfdf5; color: var(--success); }
+    .card-header-icon.amber { background: #fffbeb; color: var(--warning); }
+
+    .card-header-titles h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.25;
+    }
+    .card-header-titles p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+    .card-action-link {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #009ef7;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      transition: var(--transition-fast);
+    }
+    .card-action-link:hover {
+      background: #eff6ff;
+    }
+
+    .card-content-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      background: #ffffff;
+    }
+
+    /* Modern Sub-Card Tiles (Rule 20) */
+    .data-subcard-tile {
+      background: #f8fafc;
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: var(--transition-fast);
+    }
+    .data-subcard-tile:hover {
+      background: #fafcfe;
+      border-color: #cbd5e1;
+    }
+    .data-tile-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .data-tile-left i {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    .data-tile-right {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      text-align: right;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      word-break: break-all;
+    }
+    .data-tile-right a {
+      color: #009ef7;
+      text-decoration: none;
+    }
+    .data-tile-right a:hover {
+      text-decoration: underline;
+    }
+
+    /* Status Pills */
+    .status-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .status-pill.verified {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+    .status-pill.active {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .status-pill.plan {
+      background: #eff6ff;
+      color: #009ef7;
+      border: 1px solid #bfdbfe;
+    }
+
+    /* WhatsApp Connect Button */
+    .btn-wa-connect {
+      background: #25d366;
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: var(--transition-fast);
+    }
+    .btn-wa-connect:hover {
+      background: #1eb757;
+      color: #fff;
+    }
+
+    /* Plan Upgrade Block */
+    .plan-action-tile {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subcard);
+    }
+    .btn-upgrade-plan {
+      width: 100%;
+      height: 34px;
+      background: #eff6ff;
+      color: #009ef7;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: var(--transition-fast);
+      cursor: pointer;
+    }
+    .btn-upgrade-plan:hover {
+      background: #009ef7;
+      color: #ffffff;
+      border-color: #009ef7;
+    }
+
+    /* ==========================================================================
+       RESPONSIVE BREAKPOINTS (15.6" Laptop, 1366x768 & Tablets)
+       ========================================================================== */
+    @media (max-width: 1200px) {
+      .details-cards-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .kpi-metrics-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 992px) {
+      .app-sidebar-mock {
+        display: none;
+      }
+      .details-cards-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-profile-card {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .hero-actions-box {
+        flex-direction: row;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Demo Control Toolbar -->
+  <div class="demo-bar">
+    <div class="demo-bar-left">
+      <span class="demo-tag">Visual Preview</span>
+      <strong>Service Company – User Profile View Page Redesign (Rule 20 Modern Card + Sub-Card)</strong>
+    </div>
+    <div class="demo-bar-right">
+      <span>Target Route:</span>
+      <code style="background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #38bdf8;">service_company.profile.index</code>
+      <button type="button" class="demo-toggle-btn" onclick="alert('This preview demonstrates the proposed modern card and sub-card layout for the profile view page.')">
+        <i class="bi bi-info-circle"></i> Design Details
+      </button>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    
+    <!-- Sidebar Mock for Context -->
+    <aside class="app-sidebar-mock">
+      <div class="mock-brand">
+        <div class="mock-brand-logo"><i class="bi bi-umbrella-fill"></i></div>
+        <div class="mock-brand-text">jero.works</div>
+      </div>
+      <a href="#" class="mock-nav-item"><i class="bi bi-grid-fill"></i> Dashboard</a>
+      <a href="#" class="mock-nav-item"><i class="bi bi-people-fill"></i> CRM</a>
+      <a href="#" class="mock-nav-item"><i class="bi bi-briefcase-fill"></i> Hiring</a>
+      <a href="#" class="mock-nav-item"><i class="bi bi-person-lines-fill"></i> Candidates</a>
+      <a href="#" class="mock-nav-item"><i class="bi bi-buildings-fill"></i> Agencies</a>
+      <a href="#" class="mock-nav-item"><i class="bi bi-building"></i> Company Profile</a>
+      <a href="#" class="mock-nav-item active"><i class="bi bi-person-circle"></i> My Profile</a>
+      <a href="#" class="mock-nav-item"><i class="bi bi-gear-fill"></i> Settings</a>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="app-main">
+
+      <!-- Topbar Mock -->
+      <header class="app-topbar-mock">
+        <div class="topbar-center-mock">
+          <span class="topbar-pill-btn"><i class="bi bi-lock-fill text-muted"></i> Find Jobs</span>
+          <span class="topbar-pill-btn"><i class="bi bi-person-workspace text-muted"></i> Find Talent</span>
+          <span class="topbar-pill-btn"><i class="bi bi-buildings text-muted"></i> Find Agency</span>
+        </div>
+        <div class="topbar-right-mock">
+          <div class="user-pill-mock">
+            <span class="user-avatar-tiny">V</span>
+            <span>Vibhanshu Jaiswal</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Page Container -->
+      <div class="page-container">
+
+        <!-- ====================================================================
+             TIER 1: TOP HERO PROFILE HEADER CARD (Rule 20 Enterprise Standard)
+             ==================================================================== -->
+        <div class="hero-profile-card">
+          
+          <!-- Left: Identity Block -->
+          <div class="hero-left-block">
+            <div class="hero-avatar-wrap">
+              <div class="hero-avatar-circle">V</div>
+              <span class="hero-presence-dot" title="Active on JERO ATS"></span>
+            </div>
+            <div class="hero-identity-details">
+              <span class="hero-greeting">Welcome back,</span>
+              <div class="hero-name-row">
+                <h1 class="hero-name">Vibhanshu Jaiswal</h1>
+                <i class="bi bi-patch-check-fill hero-verify-badge" title="Verified ATS Recruiter"></i>
+              </div>
+              <div class="hero-designation-row">
+                <span>Directors</span>
+                <span class="hero-company-dot">•</span>
+                <span style="color: var(--text-main); font-weight: 600;">4Bell Technology</span>
+              </div>
+              <div class="hero-pills-row">
+                <span class="hero-pill-tag verified">
+                  <i class="bi bi-shield-fill-check"></i> Verified Employer
+                </span>
+                <span class="hero-pill-tag neutral">
+                  User ID: #2
+                </span>
+                <span class="hero-pill-tag neutral">
+                  <i class="bi bi-geo-alt-fill text-primary"></i> Noida, UP
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center: Profile Health Tracker -->
+          <div class="hero-health-box">
+            <div class="health-top-row">
+              <span class="health-label"><i class="bi bi-shield-check text-primary"></i> Profile Completion</span>
+              <span class="health-pct">75%</span>
+            </div>
+            <div class="health-progress-bar">
+              <div class="health-progress-fill"></div>
+            </div>
+            <div class="health-items-row">
+              <div class="health-item done"><i class="bi bi-check-circle-fill"></i> Basic Information</div>
+              <div class="health-item done"><i class="bi bi-check-circle-fill"></i> Company Details</div>
+              <div class="health-item done"><i class="bi bi-check-circle-fill"></i> Contact Information</div>
+              <div class="health-item" style="color: var(--text-light);"><i class="bi bi-circle"></i> Profile Image</div>
+            </div>
+          </div>
+
+          <!-- Right: Hero Actions -->
+          <div class="hero-actions-box">
+            <a href="https://testing.jero.works/service_company/profile/edit" class="btn-hero-primary">
+              <i class="bi bi-pencil-square"></i> Edit Profile
+            </a>
+            <a href="javascript:void(0);" class="btn-hero-secondary">
+              <i class="bi bi-share"></i> Share Company Page
+            </a>
+          </div>
+
+        </div>
+
+        <!-- ====================================================================
+             TIER 1.5: HIGH-DENSITY KPI STATS METRIC STRIP (Rule 20 Sub-Cards)
+             ==================================================================== -->
+        <div class="kpi-metrics-grid">
+          
+          <div class="kpi-metric-card" onclick="selectTab('requisitions')">
+            <div class="kpi-icon-container kpi-icon-blue">
+              <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <div class="kpi-data-block">
+              <span class="kpi-data-label">Active Jobs</span>
+              <span class="kpi-data-value">43</span>
+            </div>
+          </div>
+
+          <div class="kpi-metric-card" onclick="selectTab('candidate')">
+            <div class="kpi-icon-container kpi-icon-green">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="kpi-data-block">
+              <span class="kpi-data-label">Candidates Added</span>
+              <span class="kpi-data-value">18</span>
+            </div>
+          </div>
+
+          <div class="kpi-metric-card" onclick="selectTab('interview_tracker')">
+            <div class="kpi-icon-container kpi-icon-amber">
+              <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div class="kpi-data-block">
+              <span class="kpi-data-label">Interviews</span>
+              <span class="kpi-data-value">2</span>
+            </div>
+          </div>
+
+          <div class="kpi-metric-card" onclick="selectTab('joinings')">
+            <div class="kpi-icon-container kpi-icon-purple">
+              <i class="bi bi-person-check-fill"></i>
+            </div>
+            <div class="kpi-data-block">
+              <span class="kpi-data-label">Joinings</span>
+              <span class="kpi-data-value">0</span>
+            </div>
+          </div>
+
+          <div class="kpi-metric-card" onclick="selectTab('myRank')">
+            <div class="kpi-icon-container kpi-icon-rose">
+              <i class="bi bi-trophy-fill"></i>
+            </div>
+            <div class="kpi-data-block">
+              <span class="kpi-data-label">My Rank</span>
+              <span class="kpi-data-value">#1</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ====================================================================
+             TIER 2: SUB-TABS CARD (Strict Rule 20 Compliance)
+             ==================================================================== -->
+        <div class="tabs-container-card" role="tablist">
+          
+          <button type="button" class="tab-pill-btn is-active" id="tab-overview" onclick="switchTab(this, 'overview')">
+            <i class="bi bi-person-vcard"></i>
+            <span>My Details</span>
+          </button>
+
+          <button type="button" class="tab-pill-btn" id="tab-requisitions" onclick="switchTab(this, 'requisitions')">
+            <i class="bi bi-briefcase"></i>
+            <span>My Jobs</span>
+            <span class="tab-badge">43</span>
+          </button>
+
+          <button type="button" class="tab-pill-btn" id="tab-candidate" onclick="switchTab(this, 'candidate')">
+            <i class="bi bi-people"></i>
+            <span>My Candidate</span>
+            <span class="tab-badge">18</span>
+          </button>
+
+          <button type="button" class="tab-pill-btn" id="tab-interview_tracker" onclick="switchTab(this, 'interview_tracker')">
+            <i class="bi bi-calendar-event"></i>
+            <span>My Interview Tracker</span>
+            <span class="tab-badge">2</span>
+          </button>
+
+          <button type="button" class="tab-pill-btn" id="tab-joinings" onclick="switchTab(this, 'joinings')">
+            <i class="bi bi-person-check"></i>
+            <span>My Joinings</span>
+            <span class="tab-badge">0</span>
+          </button>
+
+          <button type="button" class="tab-pill-btn" id="tab-myRank" onclick="switchTab(this, 'myRank')">
+            <i class="bi bi-award"></i>
+            <span>My Rank</span>
+            <span class="tab-badge">#1</span>
+          </button>
+
+          <button type="button" class="tab-pill-btn" id="tab-candidateDashboard" onclick="switchTab(this, 'candidateDashboard')">
+            <i class="bi bi-speedometer2"></i>
+            <span>My Dashboard</span>
+          </button>
+
+          <button type="button" class="tab-pill-btn" id="tab-settings" onclick="switchTab(this, 'settings')">
+            <i class="bi bi-gear"></i>
+            <span>My Settings</span>
+          </button>
+
+        </div>
+
+        <!-- ====================================================================
+             TIER 3: "MY DETAILS" TAB — MODERN CARD + SUB-CARD STREAM
+             ==================================================================== -->
+        <div class="details-cards-grid" id="pane-overview">
+          
+          <!-- CARD 1: PERSONAL & IDENTITY DETAILS -->
+          <section class="god-overview-card">
+            <div class="card-top-header">
+              <div class="card-top-left">
+                <div class="card-header-icon blue"><i class="bi bi-person-badge-fill"></i></div>
+                <div class="card-header-titles">
+                  <h3>Personal Information</h3>
+                  <p>Your recruiter identity within JERO ATS</p>
+                </div>
+              </div>
+              <a href="https://testing.jero.works/service_company/profile/edit" class="card-action-link">
+                <i class="bi bi-pencil-square"></i> Edit
+              </a>
+            </div>
+            <div class="card-content-body">
+              
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-person"></i> Full Name</div>
+                <div class="data-tile-right">Vibhanshu Jaiswal</div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-hash"></i> User ID</div>
+                <div class="data-tile-right"><span style="font-family: monospace; font-weight: 700;">#2</span></div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-briefcase"></i> Designation</div>
+                <div class="data-tile-right">Directors</div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-envelope"></i> Email Address</div>
+                <div class="data-tile-right">
+                  <span>Vibhanshu@4bell.com</span>
+                  <span class="status-pill verified"><i class="bi bi-check-circle-fill"></i> Verified</span>
+                </div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-telephone"></i> Phone Number</div>
+                <div class="data-tile-right">
+                  <span>🇮🇳 +91 7217860087</span>
+                </div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-whatsapp"></i> WhatsApp</div>
+                <div class="data-tile-right">
+                  <a href="javascript:void(0);" class="btn-wa-connect">
+                    <i class="bi bi-whatsapp"></i> Click to Connect
+                  </a>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- CARD 2: COMPANY & TENANT CONTEXT -->
+          <section class="god-overview-card">
+            <div class="card-top-header">
+              <div class="card-top-left">
+                <div class="card-header-icon purple"><i class="bi bi-buildings-fill"></i></div>
+                <div class="card-header-titles">
+                  <h3>Company Information</h3>
+                  <p>Organization affiliation & corporate presence</p>
+                </div>
+              </div>
+              <a href="https://testing.jero.works/service_company/company-profile" class="card-action-link">
+                <i class="bi bi-box-arrow-up-right"></i> Manage
+              </a>
+            </div>
+            <div class="card-content-body">
+              
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-building"></i> Company Name</div>
+                <div class="data-tile-right">4Bell Technology</div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-globe"></i> Website</div>
+                <div class="data-tile-right">
+                  <a href="https://4belltechnology.com" target="_blank">
+                    4belltechnology.com <i class="bi bi-arrow-up-right" style="font-size: 10px;"></i>
+                  </a>
+                </div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-flag"></i> Country</div>
+                <div class="data-tile-right">India</div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-map"></i> State</div>
+                <div class="data-tile-right">Uttar Pradesh</div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-geo-alt"></i> Operating City</div>
+                <div class="data-tile-right">Noida</div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- CARD 3: ACCOUNT SECURITY & SUBSCRIPTION -->
+          <section class="god-overview-card">
+            <div class="card-top-header">
+              <div class="card-top-left">
+                <div class="card-header-icon green"><i class="bi bi-shield-lock-fill"></i></div>
+                <div class="card-header-titles">
+                  <h3>Security & Plan Overview</h3>
+                  <p>Credentials, account state, and subscription</p>
+                </div>
+              </div>
+              <a href="https://testing.jero.works/service_company/subscribe" class="card-action-link">
+                <i class="bi bi-arrow-right"></i> Plans
+              </a>
+            </div>
+            <div class="card-content-body">
+              
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-key"></i> Password</div>
+                <div class="data-tile-right">
+                  <a href="javascript:void(0);" onclick="alert('Password reset modal triggered.')" style="font-weight: 600;">
+                    Reset Password
+                  </a>
+                </div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-shield-check"></i> Account Status</div>
+                <div class="data-tile-right">
+                  <span class="status-pill active"><i class="bi bi-dot" style="font-size: 18px;"></i> Active</span>
+                </div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-boxes"></i> Operational Plan</div>
+                <div class="data-tile-right">
+                  <span class="status-pill plan">Silver Plan</span>
+                </div>
+              </div>
+
+              <div class="data-subcard-tile">
+                <div class="data-tile-left"><i class="bi bi-cart3"></i> Sales Plan</div>
+                <div class="data-tile-right">
+                  <span class="status-pill plan">Free Sales Plan</span>
+                </div>
+              </div>
+
+              <div class="plan-action-tile">
+                <a href="https://testing.jero.works/service_company/subscribe" class="btn-upgrade-plan">
+                  <i class="bi bi-lightning-charge-fill"></i> Upgrade Subscription Plan
+                </a>
+              </div>
+
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    function switchTab(btn, tabId) {
+      document.querySelectorAll('.tab-pill-btn').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      
+      const pane = document.getElementById('pane-overview');
+      if (tabId === 'overview') {
+        pane.style.display = 'grid';
+      } else {
+        pane.style.display = 'none';
+        alert(`Switched to "${btn.innerText.trim()}" tab. In the live application, this tab activates existing AJAX views (#${tabId}).`);
+      }
+    }
+
+    function selectTab(tabId) {
+      const btn = document.getElementById(`tab-${tabId}`);
+      if (btn) btn.click();
+    }
+  </script>
+
+</body>
+</html>
