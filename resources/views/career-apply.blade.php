@@ -4060,7 +4060,7 @@ textarea.has-validation-error:focus,
               </div>
               <div class="fsc candidate-card-body aw-body">
                 <div class="candidate-notice-status-block fv-row">
-                  <label>Notice Period <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
+                  <label>Notice Period <span class="rq">*</span></label>
                   <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
                     <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
@@ -4088,7 +4088,7 @@ textarea.has-validation-error:focus,
 
                 <div class="candidate-notice-details-grid">
                   <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ !in_array($snp_mode, [1, 2], true) ? 'hidden' : '' }}>
-                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)' }} <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
+                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)' }} <span class="rq">*</span></label>
                     <div class="candidate-notice-input-shell">
                       <i class="fa-regular fa-calendar" aria-hidden="true"></i>
                       <div class="candidate-date-picker">
@@ -4098,7 +4098,7 @@ textarea.has-validation-error:focus,
                     </div>
                   </div>
                   <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDaysField" {{ $snp_mode !== 0 ? 'hidden' : '' }}>
-                    <label>Notice Period <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
+                    <label>Notice Period <span class="rq">*</span></label>
                     <div class="candidate-notice-input-shell">
                       <i class="fa-regular fa-clock" aria-hidden="true"></i>
                       <select class="form-select form-select-solid" aria-label="Select Notice Period" id="ddl_np_id" name="ddl_np_id" {{ $snp_mode !== 0 ? 'disabled' : '' }}>
@@ -8303,22 +8303,22 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
         if (billAnnual <= 0 && billMonthly <= 0 && ectcVal <= 0) {
             addMissing('ectc', 'Expected Salary', '.candidate-salary-panel--expected', 'Expected salary details are required for experienced candidates.');
         }
+    }
 
-        // 17. Notice Period & Joining Details * (Optional for Freshers)
-        var snpMode = ($('#serving_notice_period').val() || '').trim();
-        if (!snpMode && snpMode !== '0') {
-            addMissing('np_id', 'Notice Period & Joining Details', '.candidate-notice-options', 'Please select a notice period option.');
-        } else if (snpMode === '0') {
-            var npDays = ($('#ddl_np_id').val() || '').trim();
-            if (!npDays || npDays === '0') {
-                addMissing('np_id', 'Notice Period Days', '#ddl_np_id', 'Please select notice period days.');
-            }
-        } else if (snpMode === '1' || snpMode === '2') {
-            var npDate = ($('#np_id').val() || '').trim();
-            if (!npDate) {
-                var lwdLabel = snpMode === '1' ? 'Expected Last Working Date (LWD)' : 'Joining Date';
-                addMissing('np_id', lwdLabel, '#np_id_display', lwdLabel + ' is required.');
-            }
+    // 17. Notice Period & Joining Details * (MANDATORY for all direct candidate applications on Career Page)
+    var snpMode = ($('#serving_notice_period').val() || '').trim();
+    if (!snpMode && snpMode !== '0') {
+        addMissing('np_id', 'Notice Period & Joining Details', '.candidate-notice-options', 'Please select a notice period option.');
+    } else if (snpMode === '0') {
+        var npDays = ($('#ddl_np_id').val() || '').trim();
+        if (!npDays || npDays === '0') {
+            addMissing('np_id', 'Notice Period Days', '#ddl_np_id', 'Please select notice period days.');
+        }
+    } else if (snpMode === '1' || snpMode === '2') {
+        var npDate = ($('#np_id').val() || '').trim();
+        if (!npDate) {
+            var lwdLabel = snpMode === '1' ? 'Expected Last Working Date (LWD)' : 'Joining Date';
+            addMissing('np_id', lwdLabel, '#np_id_display', lwdLabel + ' is required.');
         }
     }
 
@@ -8794,7 +8794,6 @@ function syncFresherUIState() {
         clearCandidateFieldValidationErrors('current_company');
         clearCandidateFieldValidationErrors('ctc');
         clearCandidateFieldValidationErrors('ectc');
-        clearCandidateFieldValidationErrors('np_id');
     } else {
         $('.candidate-experienced-only-rq').show();
         $('.candidate-fresher-note').hide();
