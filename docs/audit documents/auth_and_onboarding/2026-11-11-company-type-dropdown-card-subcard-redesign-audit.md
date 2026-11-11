@@ -1,9 +1,9 @@
-# UI/UX Audit & Enterprise Implementation Specification: Registration Company Type (Pattern B: 2x2 Grid Cards)
+# UI/UX Audit & Enterprise Implementation Specification: Registration Company Type (Pattern A: Card Combobox)
 
-> **Document Version:** 3.0.0 (Pattern B: 2x2 Enterprise Grid Cards Production Edition)  
+> **Document Version:** 4.0.0 (Pattern A: Enterprise Card Combobox Authoritative Standard)  
 > **Date:** November 11, 2026  
 > **Module / Scope:** `auth_and_onboarding` / Registration Page (`resources/views/auth/login.blade.php`)  
-> **Selected Pattern:** **Pattern B: Modern 2x2 Grid Sub-Cards** (100% Upfront Visibility, Zero Dropdown Click Friction)  
+> **Selected Pattern:** **Pattern A: Enterprise Card Combobox** (Compact 54px Trigger + Floating Card Popover)  
 > **Ordering:** **1. Product Company** &rarr; **2. IT Services Company** &rarr; **3. Recruitment Company** (Independent Recruiter removed)  
 > **Compliance Standard:** Rule 20 (Mandatory Card + Sub-Card Enterprise Design System), Rule 21 (Audit Documents Storage Standard), 15.6" Screen Fit (`1366×768` & `1920×1080`), Strict CQRS (0% MySQL Reads, Zero Business Logic Regression).  
 > **Target Audience:** Engineering Leads, UI/UX Architects, Frontend Engineers, Product Managers.
@@ -12,72 +12,95 @@
 
 ## 1. Executive Summary & Design Decision
 
-Per executive direction, **Pattern B: 2x2 Grid Cards** has been chosen and implemented as the authoritative design system for the **Company Type** selection on the registration page (`resources/views/auth/login.blade.php`):
+Following browser testing of Pattern B (2x2 Grid Cards), it was determined that rendering multi-column cards inside the compact registration form container (`max-width: 520px`) caused horizontal overflow on the right margin and pushed the password input below the fold on standard 15.6" displays.
+
+Per user instruction, **Pattern A: Card Combobox** has been deployed as the authoritative enterprise design standard for the **Company Type** selection on the registration page (`resources/views/auth/login.blade.php`):
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ COMPANY TYPE SELECTION (Pattern B: High-Density 2x2 Grid Cards)                         │
+│ CLOSED STATE (54px Standard Input Height - 100% Width Containment)                     │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [🚀] Product Company (Direct Employer)                       [ATS Only]   ( ● ) Selected│
-│ Hiring exclusively for your own in-house departments & teams (Pure ATS, no CRM bloat). │
-├───────────────────────────────────────────┬────────────────────────────────────────────┤
-│ [💻] IT Services & Consulting  [ATS] [CRM]│ [👥] Recruitment & Staffing    [ATS] [CRM] │
-│ IT consultancies & staff augmentation.    │ Staffing agencies & search firms.          │
-│ (Bench talent + Client accounts)     ( ○ )│ (Candidate sourcing + Client jobs)    ( ○ )│
-└───────────────────────────────────────────┴────────────────────────────────────────────┘
+│ [🚀] Product Company (Direct Employer)                       [ATS ONLY]   [ ▾ Chevron ]│
+│      Hiring exclusively for in-house teams & departments                               │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ OPEN STATE (Floating Card Popover - z-index 1050)                                      │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ BUSINESS MODEL & CAPABILITIES                                    [ 3 ENTERPRISE PROFILES]│
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ [🚀] 1. Product Company (Direct Employer)                    [ATS ONLY]       ( ✓ )    │
+│      Direct employers, SaaS, startups & corporate enterprises hiring in-house.         │
+│      ✓ Pure ATS Pipeline: Requisitions, stages & interviews (No CRM bloat).            │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ [💻] 2. IT Services & Consulting Company                     [ATS] [CRM]      (   )    │
+│      IT consulting, software services, project delivery & staff augmentation.          │
+│      ✓ Included: Bench talent deployment, client accounts & contractor billing.        │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ [👥] 3. Recruitment & Staffing Company                      [ATS] [CRM]      (   )    │
+│      Sourcing, vetting & delivering candidates to external client employers.           │
+│      ✓ Included: Candidate sourcing, resume parsing, pipeline & client accounts.       │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Advantages of Pattern B over Dropdown Pattern A
+## 2. Why Pattern A Resolves Real-World Production Issues
 
-| Feature | Legacy Native `<select>` | Pattern A (Card Combobox) | **Pattern B (2x2 Grid Cards) — IMPLEMENTED** |
-|---|---|---|---|
-| **Clicks to Decide** | 2 clicks (Open native menu + select) | 2 clicks (Open popover + select) | **1 click directly on the desired card** |
-| **Cognitive Load** | High (plain text, no context) | Medium (hidden behind trigger) | **Zero (all 3 models & tags visible upfront)** |
-| **Entitlement Visibility** | 0% (No badges) | Visible only on menu expansion | **100% visible immediately upon page load** |
-| **Mobile / Touch Fit** | Native OS spinner | Popover positioning edge cases | **Large finger-friendly touch targets (`>54px`)** |
-| **Visual Polish** | Low (Windows blue bar) | High | **World-Class (Metronic 8 + Poppins + Rule 20)** |
+| Evaluation Metric | Pattern B: 2x2 Grid Cards (Deprecated) | **Pattern A: Card Combobox (Authoritative)** |
+|---|---|---|
+| **Container Fit** | Spilled past right card margin in ~440px form | **100% width containment inside `.jw-field`** |
+| **Vertical Space** | Consumed ~160px permanently | **Consumes only 54px when closed (standard input height)** |
+| **Viewport Ergonomics** | Pushed Password & Submit below the fold | **Entire signup card fits comfortably on 1366×768 / 1080p** |
+| **Visual Hierarchy** | Cluttered dense text alongside radio buttons | **Clean, uncluttered, focused popover card selection** |
+| **Responsiveness** | Required brittle multi-breakpoint column switches | **Naturally responsive from 320px mobile to 4K monitors** |
 
 ---
 
-## 3. Implemented Grid Card Taxonomy & Hierarchy
+## 3. Implemented Taxonomy & Hierarchy (Exact Requested Order)
 
-### Row 1 (Span 2 Columns): Product Company (Direct Employer)
-- **Value:** `3`
-- **Icon Accent:** Emerald Tint (`#ecfdf5`, border `#a7f3d0`, icon `#059669`)
+### 1st: Product Company (Direct Employer)
+- **Database Value:** `3`
+- **Icon:** Emerald Layer Polygon (`#ecfdf5`, border `#a7f3d0`, text `#059669`)
 - **Capability Badge:** `<span class="jw-cap-tag jw-tag-ats-only">ATS Only</span>`
-- **Subtext:** *"Direct Employer"*
-- **Description:** *"Hiring exclusively for your own in-house departments & teams (Pure ATS, no CRM bloat)."*
-- **Entitlement Logic:** Gives full in-house ATS (jobs, candidate stages, interviews, offers). Completely omits external client CRM from the sidebar.
+- **Subtitle:** *"Hiring exclusively for in-house teams & departments"*
+- **Included Capabilities:** *"✓ Pure ATS Pipeline: Requisitions, stages & interviews (No CRM bloat)."*
+- **Entitlement Scope:** In-house ATS enabled. External Client CRM omitted from sidebar.
 
-### Row 2 Left Column: IT Services & Consulting Company
-- **Value:** `2`
-- **Icon Accent:** Blue Tint (`#eff6ff`, border `#bfdbfe`, icon `#2563eb`)
+### 2nd: IT Services & Consulting Company
+- **Database Value:** `2`
+- **Icon:** Blue Monitor (`#eff6ff`, border `#bfdbfe`, text `#2563eb`)
 - **Capability Badges:** `<span class="jw-cap-tag jw-tag-ats">ATS</span> <span class="jw-cap-tag jw-tag-crm">CRM</span>`
-- **Description:** *"IT consultancies, digital services & staff augmentation (Bench talent + Client accounts)."*
-- **Entitlement Logic:** Gives ATS + external Client CRM (bench deployment, client accounts, contractor billing).
+- **Subtitle:** *"Manage client accounts, requisitions & deploy consultants"*
+- **Included Capabilities:** *"✓ Included: Bench talent deployment, client accounts & contractor billing."*
+- **Entitlement Scope:** Full ATS + external Client CRM enabled.
 
-### Row 2 Right Column: Recruitment & Staffing Company
-- **Value:** `1`
-- **Icon Accent:** Purple Tint (`#faf5ff`, border `#f3e8ff`, icon `#9333ea`)
+### 3rd: Recruitment & Staffing Company
+- **Database Value:** `1`
+- **Icon:** Purple Users (`#faf5ff`, border `#f3e8ff`, text `#9333ea`)
 - **Capability Badges:** `<span class="jw-cap-tag jw-tag-ats">ATS</span> <span class="jw-cap-tag jw-tag-crm">CRM</span>`
-- **Description:** *"Staffing agencies & search firms (Candidate sourcing + Client job orders)."*
-- **Entitlement Logic:** Gives ATS + external Client CRM (candidate sourcing, client requisitions, agency talent marketplace).
+- **Subtitle:** *"Agency talent placement, candidate sourcing & client billing"*
+- **Included Capabilities:** *"✓ Included: Candidate sourcing, resume parsing, pipeline & client accounts."*
+- **Entitlement Scope:** Full ATS + external Client CRM enabled.
+
+*Note: Option 4 ("Freelancer / Individual Recruiter") has been completely removed.*
 
 ---
 
-## 4. Technical Implementation & Zero-Error Verification
+## 4. Technical Architecture & Invariants
 
-1. **DOM Elements:**
-   - Hidden input `<input type="hidden" name="company_type" id="jw-signup-company-type" value="{{ old('company_type', '') }}" required>` maintains 100% backward compatibility with `SaasFrontController::companyRegister()` and form serialization.
-   - Interactive cards use `role="radio"`, `aria-checked="true|false"`, and `tabindex="0"`.
-2. **Keyboard Accessibility:**
-   - Users can Tab through each card and press `Enter` or `Space` to select.
-3. **Form Validation:**
-   - If submitted without a selection, `#jw-type-grid` receives `.is-invalid`, flashes a clear helper alert, and smoothly scrolls to the card grid.
-   - Clicking any card immediately removes the invalid state and clears alerts.
+1. **Hidden Payload Input:**
+   - `<input type="hidden" name="company_type" id="jw-signup-company-type" value="{{ old('company_type', '') }}" required>`
+   - Dispatches native `change` event on update, guaranteeing 100% compatibility with Laravel backend validation (`in:1,2,3,4`) and form serialization.
+2. **Accessible Keyboard & Dismissal Handlers:**
+   - `Enter` / `Space` toggles the combobox menu.
+   - `Escape` dismisses the floating popover.
+   - Document-level outside click listener dismisses the popover when clicking anywhere else on the screen.
+3. **Form Validation & Auto-Scroll:**
+   - On empty form submit, `#jw-combobox-trigger` receives `.is-invalid` (crimson border + shadow), alerts the user via `#jw_signup_alert`, and smoothly scrolls the trigger into view.
+   - Selecting any option immediately clears the invalid state and hides the alert.
 4. **Agency Invitation Lock:**
-   - Direct agency invitation links (`$isAgencyInvite = true`) automatically display a locked, read-only card with `Recruitment & Staffing Company`, badges `[ATS] [CRM]`, and the `Auto-Selected` pill badge.
-5. **Syntax & Linter Verification:**
-   - Verified via `php -l resources/views/auth/login.blade.php`: **No syntax errors detected.**
+   - Direct agency invitation links (`$isAgencyInvite = true`) render an auto-selected, locked, read-only trigger card for `Recruitment & Staffing Company` with badges `[ATS] [CRM]` and the `Auto-Selected` tag.
+5. **Code Freeze Compliance:**
+   - Zero changes made to `product_company/` or `staffing_company/` views (Rule 18).
+   - Zero MySQL reads added (Rule 1 & Rule 2).
