@@ -2435,12 +2435,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
     public function create()
     {
-        // abort_if(! $this->user->can('add_team'), 403);
-        // abort_if(Gate::denies('add_team'), 403);
-
-        $this->roles = Role::all();
-
-        return view('service_company.team.create', $this->data);
+        return redirect()->route('service_company.team.index', ['action' => 'invite']);
     }
 
     /**

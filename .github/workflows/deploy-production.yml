@@ -207,7 +207,16 @@ jobs:
 
             php artisan horizon:terminate || true
 
-            php artisan reverb:restart || true
+            # Auto-install or update Reverb systemd unit file
+            if [ -f scripts/systemd/reverb.service ]; then
+              echo ">> Installing / updating /etc/systemd/system/reverb.service"
+              cp scripts/systemd/reverb.service /etc/systemd/system/reverb.service 2>/dev/null || true
+              systemctl daemon-reload 2>/dev/null || true
+              systemctl enable reverb 2>/dev/null || true
+              systemctl restart --no-block reverb 2>/dev/null || true
+            else
+              php artisan reverb:restart || true
+            fi
 
             echo ""
             echo ">> Ensuring Octane systemd service is installed and active"

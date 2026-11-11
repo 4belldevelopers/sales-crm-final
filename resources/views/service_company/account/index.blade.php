@@ -1689,7 +1689,7 @@ input[type="radio"]:checked {
       </a>
       @endif
       @if(in_array('add_team', $userPermissions) || empty($userPermissions))
-      <a href="{{ route('service_company.team.create') }}" class="cd-hdr-btn cd-hdr-btn-outline" title="Add Team Member">
+      <a href="{{ route('service_company.team.index', ['action' => 'invite']) }}" class="cd-hdr-btn cd-hdr-btn-outline" title="Add / Invite Team Member">
         <i class="fas fa-user-plus fa-solid text-success me-1"></i> Add Team
       </a>
       @endif
