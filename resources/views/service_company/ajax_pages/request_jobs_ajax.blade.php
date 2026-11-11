@@ -8,351 +8,253 @@
     $currency = GeneralMethod::currency();
     $job_status_arr = GeneralMethod::job_status();
     $job_status = GeneralMethod::job_status();
-    // dd(count($data));
 @endphp
-@if (count($data) > 0)
-    @foreach ($data as $rowArr)
-     @php
-        $row = (object) $rowArr;
-        $row->id = $row->job_id;
-        // ── 0% in-Blade DB reads: retrieved from ES projection or batch-prehydrated map ──
-        $clientLocCity = @$row->city_name ?: (@$locationsMap[$row->id]->city_name ?? '');
-        $clientLocCountry = @$row->country_name ?: (@$locationsMap[$row->id]->country_name ?? '');
-        $city = mb_substr($clientLocCity, 0, 21);
-        $country_name = mb_substr($clientLocCountry, 0, 6);
 
+@if (!empty($data) && count($data) > 0)
+    <div class="cd-jobs-container">
+        @foreach ($data as $rowArr)
+            @php
+                $row = (object) $rowArr;
+                $row->id = $row->job_id;
+                // ── 0% in-Blade DB reads: retrieved from ES projection or batch-prehydrated map ──
+                $clientLocCity = @$row->city_name ?: (@$locationsMap[$row->id]->city_name ?? '');
+                $clientLocCountry = @$row->country_name ?: (@$locationsMap[$row->id]->country_name ?? '');
+                $city = mb_substr($clientLocCity, 0, 21);
+                $country_name = mb_substr($clientLocCountry, 0, 6);
 
-        $profile_detail_class = "client-show-detail";
-        $bgTextDecore = $strVal = '';
-        $str = trim(@$row->title);
-        $str = $strVal = strtolower($str[0]);
-        $str = ord($str);
-        if ($str >= 97 && $str <= 101) {
-            $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-        } elseif ($str >= 102 && $str <= 106) {
-            $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-        } elseif ($str >= 107 && $str <= 111) {
-            $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-        } elseif ($str >= 112 && $str <= 116) {
-            $bgTextDecore = 'fs-3 bg-light-success text-success';
-        } elseif ($str >= 117 && $str <= 121) {
-            $bgTextDecore = 'fs-3 bg-dark text-secondary';
-        } else {
-            $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-        }
-        $logo_path = ''; //url('img/client-default.png');
-        if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
-            $logo_path = @$row->logo;
-        }
-        $skillArrFinal =[];
-        $skillArr = [];
-        $skilltag = '';
-        $skilltagclass = '';
-        if (empty($limit)) {
-            $skillArr = $row->skillArr;
-            if (!empty($skillArr)) {
-                foreach ($skillArr as $sval) {
-                    $skilltag .=
-                        '<span class="badge badge-light my-1">' . ucfirst($sval) . '</span>  ';
-                    array_push($skillArrFinal,ucfirst($sval));
+                $profile_detail_class = "client-show-detail";
+                $bgTextDecore = $strVal = '';
+                $str = trim(@$row->title);
+                $str = $strVal = strtolower($str[0] ?? 'j');
+                $strOrd = ord($str);
+                if ($strOrd >= 97 && $strOrd <= 101) {
+                    $bgTextDecore = 'fs-3 bg-light-danger text-danger';
+                } elseif ($strOrd >= 102 && $strOrd <= 106) {
+                    $bgTextDecore = 'fs-3 bg-light-warning text-warning';
+                } elseif ($strOrd >= 107 && $strOrd <= 111) {
+                    $bgTextDecore = 'fs-3 bg-light-primary text-primary';
+                } elseif ($strOrd >= 112 && $strOrd <= 116) {
+                    $bgTextDecore = 'fs-3 bg-light-success text-success';
+                } elseif ($strOrd >= 117 && $strOrd <= 121) {
+                    $bgTextDecore = 'fs-3 bg-dark text-secondary';
+                } else {
+                    $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
                 }
-            }
-        } else {
-            $skilltagclass = 'd-none';
-        }
-            
-        $department = @$row->department ?: (@$categoriesMap[@$row->category_id] ?? '');
+                $logo_path = '';
+                if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
+                    $logo_path = @$row->logo;
+                }
+                
+                $department = @$row->department ?: (@$categoriesMap[@$row->category_id] ?? 'Information Technology');
 
-        $min_sal_mode = $max_sal_mode = $min_salary_currency = $max_salary_currency = '';
-        // $min_sal_mode = $salaryMode[$row->min_sal_mode];
-        // $max_sal_mode = $salaryMode[$row->max_sal_mode];
-        
-        // Full suffix (/Annum, /Month, /Hour) instead of a single letter — clearer at a glance.
-        $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode] ?? '';
-        $max_sal_mode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
+                $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode ?? 0] ?? '';
+                $min_salary_currency = $currencySymbole[@$row->min_salary_currency] ?? '$';
 
-        $min_salary_currency = $currencySymbole[@$row->min_salary_currency];
-        $max_salary_currency = $currencySymbole[@$row->max_salary_currency];
+                $max_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->max_salary ?? 0));
+                $min_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0));
 
-        $max_salary = '';
-        $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
-        $min_salary = '';
-        $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
-        $max_salary = GeneralMethod::formatAmount($max_salary);
-        $min_salary = GeneralMethod::formatAmount($min_salary);
+                $status = ucwords($row->status ?? 'active');
+                if ($status == 'Active') {
+                    $status = 'Hiring';
+                } elseif ($status == 'Inactive') {
+                    $status = 'Closed';
+                }
 
-        $recommendation_text = __('messages.clinet_tag');
-        $badge ="badge-client";
-        // Direct Client only: handshake icon, same green as .badge-client's own text
-        // colour (#09b760) — same icon/colour used on the bench "Placed" listing for
-        // this exact concept (bench-place-candidate-ajax.blade.php).
-        $svg = '<i class="fas fa-handshake" style="color:#09b760;"></i>';
+                $statusCls = 'status-hiring';
+                if ($status === 'Hold') {
+                    $statusCls = 'status-hold';
+                } elseif ($status === 'Closed') {
+                    $statusCls = 'status-closed';
+                }
 
-        $status = $active = $hold = $inactive = $class = $recommendation_id = '';
-        $status = ucwords($row->status);
-        $class = $job_status[$row->status];
-        $recommendation_id = $row->recommendation_relation_id;
+                $recommendation_id = $row->recommendation_relation_id ?? 0;
+                $isDirectClientJob = ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id);
 
-        if ($status == 'Active') {
-            $status = 'Hiring';
-        }
-        if ($status == 'Inactive') {
-            $status = 'Closed';
-        }
-        // Every job on this tab is recommended to this agency, not owned by it — the click
-        // handler in jobs/index.blade.php reads data-direct-client and shows a message
-        // instead of opening the status drawer (enforced server-side too, in
-        // ServiceCompanyJobsController::newUpdateJobstatus()).
-        $isDirectClientJob = $recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id;
-        // Same status icons as the Job Status drawer's cards (Hiring/Hold/Closed).
-        $statusIcon = $status == 'Hiring' ? 'fa-user-group' : ($status == 'Hold' ? 'fa-pause' : 'fa-box-archive');
-        $ulink ='<span data-row-id="' .@$row->id .'" data-direct-client="' .($isDirectClientJob ? '1' : '0').'" class="badge-hiring ' .@$class .' status_stage"><i class="fas ' .$statusIcon .'"></i>' . $status .'</span>';
-        $final_status = '';
-        if (
-            ($row->final_status == 2 || $row->final_status == 3) &&
-            @$row->to_company_id == auth()->user()->company_id
-        ) {
-            $status = 'Removed';
-            $class = 'closed-bg';
-            $ulink ='<span class="badge-hiring ' .@$class .'">' .$status .'</span>';
-        }
-        
-        $work_type = 'Office';
-        if(@$row->work_type=='no'){
-            $work_type = "Office";
-        }elseif(@$row->work_type=='yes'){
-            $work_type = "Remote";
-        }elseif(@$row->work_type=='other'){
-            $work_type = "Hybrid";
-        }
-        $employment_type = 'Full-time';
-        if ($row->employment_type == 1) {
-            $employment_type = 'Contract';
-        }
+                if (
+                    ($row->final_status == 2 || $row->final_status == 3) &&
+                    @$row->to_company_id == auth()->user()->company_id
+                ) {
+                    $status = 'Removed';
+                    $statusCls = 'status-inactive';
+                }
+                
+                $work_type = 'Work From Office';
+                if (@$row->work_type == 'yes' || @$row->work_type == 'remote') {
+                    $work_type = "Remote";
+                } elseif (@$row->work_type == 'other' || @$row->work_type == 'hybrid') {
+                    $work_type = "Hybrid";
+                }
+                
+                $employment_type = ((int) (@$row->employment_type ?? 0) === 1) ? 'Contract' : 'Full-Time';
 
-        $hiringManager = $hiringManagerdesignation ='--------';
-                    
-        // ── 0% in-Blade DB reads: retrieved from pre-hydrated captain map or ES projection ──
-        $captain = @$captainsMap[$row->id] ?? null;
-        if($captain){
-            $hiringManager = $captain->name ?? null;
-            $hiringManagerdesignation = $captain->designation ?? null;
-        } elseif(!empty(@$row->hiring_manager)) {
-            $hiringManager = $row->hiring_manager;
-            $hiringManagerdesignation = $row->hiring_manager_designation ?? '--------';
-        }
+                $hiringManager = '--------';
+                $hiringManagerdesignation = '--------';
+                            
+                $captain = @$captainsMap[$row->id] ?? null;
+                if ($captain) {
+                    $hiringManager = $captain->name ?? '--------';
+                    $hiringManagerdesignation = $captain->designation ?? '--------';
+                } elseif (!empty(@$row->hiring_manager)) {
+                    $hiringManager = $row->hiring_manager;
+                    $hiringManagerdesignation = $row->hiring_manager_designation ?? '--------';
+                }
 
+                $isSalConf = (\App\Services\SalaryVisibilityPolicy::normalize(@$row->salary_visibility) === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
+                    || ((empty($row->min_salary) || (float)$row->min_salary === 0.0) && (empty($row->max_salary) || (float)$row->max_salary === 0.0) && (@$row->salary_visibility === 'confidential'));
 
+                $total_positions = number_format((float) (@$row->total_positions ?? 1));
+                $newDate = GeneralMethod::ymdTodmyNotTime($row->created_at ?? now());
 
-    @endphp
+                $skills = $row->skillArr ?? [];
+            @endphp
 
-    <!-- ══ ROW 1: Java Developer ══ -->
-            <div class="job-row" data-job-id="JB001" data-status="active" data-location="pune" data-job-type="full-time" style="position: relative; min-height: 111px;">
-
-                <!-- Col 1: Job Details -->
-              <div style="display: flex; gap: 8px; align-items: flex-start">
-                <div class="drag-col">
-                  <div class="drag-handle">
-                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
-                      <circle cx="9" cy="5" r="1.5" fill="currentColor" />
-                      <circle cx="15" cy="5" r="1.5" fill="currentColor" />
-                      <circle cx="9" cy="12" r="1.5" fill="currentColor" />
-                      <circle cx="15" cy="12" r="1.5" fill="currentColor" />
-                      <circle cx="9" cy="19" r="1.5" fill="currentColor" />
-                      <circle cx="15" cy="19" r="1.5" fill="currentColor" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="col-job {{ $profile_detail_class }}" data-row-id="{{ $row->id }}">
-                  <!-- FIX 3: logo aligned to cover title + dept + company -->
-                  <div class="job-logo {{ $bgTextDecore }}" style="min-height: 48px;align-self: flex-start;">
-                    @if(!empty($logo_path)) 
-                        <img src="{{ str_replace('index.php', '', @$logo_path) }}" alt="Company Logo" class="border-radius-5 w-100">
-                    @else
-                     {{ ucwords($strVal) }}
-                    @endif
-                  </div>
-                  <div class="job-info">
-                    <div class="job-title">{{ ucwords(mb_substr(@$row->title, 0, 30)) }}</div>
-                    <div class="job-dept">{{ @$department }}</div>
-                    <div class="job-client">{{ ucwords(mb_substr(@$row->company_name, 0, 15)) }}</div>
-                  </div>
-                </div>
-              </div>
-              <!-- Col 2: Experience + Salary + FIX 4: badge -->
-              <div class="col-exp">
-                <div class="exp-row">
-                  <svg fill="none" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
-                    <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8"/>
-                  </svg>
-                  {{ @$row->min_exp }} - {{ @$row->max_exp }} Years
-                </div>
-                <div class="sal-row">
-                  @php
-                    $isSalConf = (\App\Services\SalaryVisibilityPolicy::normalize(@$row->salary_visibility) === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
-                        || ((empty($row->min_salary) || (float)$row->min_salary === 0.0) && (empty($row->max_salary) || (float)$row->max_salary === 0.0) && (@$row->salary_visibility === 'confidential'));
-                  @endphp
-                  @if($isSalConf)
-                    <span class="sal-amount sal-amount-confidential" style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span>
-                  @else
-                    {!! $min_salary_currency !!} {{ $min_salary }} - {{ $max_salary }} <span class="sal-mode">{{ $min_sal_mode }}</span>
-                  @endif
-                </div>
-                <!-- FIX 4: job type badge here -->
-                <span class="badge-type {{ $badge }}">
-                  {!! $svg !!}
-                  {{ $recommendation_text }}
-                </span>
-              </div>
-
-              <!-- Col 3: Hiring & Location — FIX 1: no bracket, clean -->
-              <div class="col-hl">
-                {!! $ulink !!}
-                <div class="loc-row">
-                  <svg fill="none" viewBox="0 0 24 24">
-                    <path
-                      d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                    />
-                    <circle
-                      cx="12"
-                      cy="10"
-                      r="3"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                    />
-                  </svg>
-                  {{ ucwords(mb_substr(@$city, 0, 10)) }}
-                </div>
-                <div class="mode-row">
-                  <svg fill="none" viewBox="0 0 24 24">
-                    <path
-                      d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                    />
-                    <polyline
-                      points="9,22 9,12 15,12 15,22"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                    />
-                  </svg>
-                  {{ $work_type }}
-                </div>
-              </div>
-
-              <!-- Col 4 -->
-              <div class="col-hm client-hm-listing" data-row-id="{{ $row->id  }}">
-                <div class="hm-name">{{ ucwords(mb_substr(@$hiringManager, 0, 10)) }}</div>
-                <div class="hm-title">{{ @$hiringManagerdesignation }}</div>
-                <div class="hm-company">{{ ucwords(@$employment_type) }}</div>
-              </div>
-
-              <!-- Col 5 -->
-              <div class="col-hm">
-                @php
-
-                    $total_positions = '';
-                    $total_positions = number_format($row->total_positions);
-                    $created_at = $row->created_at;
-                    $newDate = GeneralMethod::ymdTodmyNotTime($created_at); 
-                    
-                @endphp
-                <div class="add-date" style="display:flex;">
-                    <svg fill="none" viewBox="0 0 24 24" style="width: 10%;">
-                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
-                    <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/>
-                    </svg> 
-                    <span>&nbsp;{{ $newDate }}</span>
-                </div>
-                <div class="hm-title">{{$total_positions }} Openings</div>
-              </div>
-              <!-- Col 5 -->
-              <div class="col-hm">
-                @php
-
-                    $html =
-                        '<div data-row-id="' .
-                        $row->id .
-                        '" data-row-recommendation_relation_id="' .
-                        $row->recommendation_relation_id .
-                        '" class="client-terms-listing"><a href="javascript:;" class="btn btn-sm btn-light">View</a></div>';
-                    echo $html;
-                @endphp
-              </div>
-              <!-- Col 5 -->
-              <div class="col-action">
-                @php
-                    if($row->final_status==1){
-                      echo '<div class="d-flex my-4">  
-                        <a href="javascript:void(0);" data-row-status="accept" class="btn btn-sm btn-success">
-                            Accepted
-                        </a> 
-                        </div>';
-                    }elseif($row->final_status==-1){
-                    echo '<div class="d-flex my-4">  
-                        <a href="javascript:void(0);" data-row-status="accept" class="btn btn-sm btn-danger">
-                            Rejected
-                        </a> 
-                        </div>';
-                    }elseif($row->final_status==2){
-                      echo '<div class="d-flex my-4">  
-                        <a href="javascript:void(0);" data-row-status="accept" class="btn btn-sm btn-danger">
-                            Removed
-                        </a> 
-                        </div>';
-                    }elseif($row->final_status==3){
-                    echo '<div class="d-flex my-4">  
-                        <a href="javascript:void(0);" data-row-status="accept" class="btn btn-sm btn-danger">
-                            Expired
-                        </a> 
-                        </div>';
-                    }else{
-                    echo '<div class="d-flex my-4"> 
-                        <a href="javascript:void(0);" data-row-status="ignore" data-row-id="' .
-                                $row->id .
-                                '"  data-row-recommendation_relation_id="' .
-                                $row->recommendation_relation_id .
-                                '" class="btn btn-sm btn-light me-2 request_reject">
-                            Reject
-                        </a> 
-                        <a href="javascript:void(0);" data-row-status="accept" data-row-id="' .
-                                $row->id .
-                                '" data-row-recommendation_relation_id="' .
-                                $row->recommendation_relation_id .
-                                '" class="btn btn-sm btn-primary request_approval">
-                            Accept
-                        </a> 
-                        </div>';
-                    }
-                    
-                @endphp
-              </div>
-
-              
-
-              <div class="" style="position: absolute; bottom: 5px; left: 30px;white-space: nowrap; width: 90%; overflow: hidden;">
-                <!-- FIX 2: all on one line -->
-                    <div class="job-meta-line">
-                        <span class="skills-inline" style="">
-                            <b>Skills:</b> {!! $skilltag !!}
-                        </span>
-
+            <!-- Master Primary Card for Job Request -->
+            <div class="cd-job-card js-job-card-clickable" data-entity="job" data-job-id="{{ $row->id }}" style="border-left: 3.5px solid #8b5cf6 !important; cursor: pointer;">
+                <!-- Upper Sub-Cards Grid (5 Sections) -->
+                <div class="cd-job-card-grid">
+                    <!-- Sub-Card 1: Job Details -->
+                    <div class="cd-job-subcard cd-subcard-details">
+                        <div class="cd-subcard-header">
+                            <span class="cd-subcard-label">Job Details</span>
+                            <div class="cd-header-badges">
+                                <span class="cd-badge-client-type type-direct"><i class="fas fa-handshake me-1"></i>Direct Client</span>
+                                <span class="cd-status-badge {{ $statusCls }}">{{ $status }}</span>
+                            </div>
+                        </div>
+                        <div class="cd-details-body">
+                            <div class="cd-logo-box {{ $bgTextDecore }}">
+                                @if(!empty($logo_path)) 
+                                    <img src="{{ str_replace('index.php', '', @$logo_path) }}" alt="Company Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <span style="display:none; color: #009ef7; font-weight: 700;">{{ strtoupper($strVal) }}</span>
+                                @else
+                                    <span style="color: #009ef7; font-weight: 700;">{{ strtoupper($strVal) }}</span>
+                                @endif
+                            </div>
+                            <div class="cd-details-text">
+                                <a href="javascript:void(0);" class="cd-job-title {{ $profile_detail_class }}" data-row-id="{{ $row->id }}" title="{{ $row->title }}">
+                                    {{ ucwords(mb_substr(@$row->title, 0, 32)) }}
+                                </a>
+                                <div class="cd-job-meta">
+                                    <span class="cd-job-id">#{{ $row->id }}</span>
+                                    <span class="cd-bullet">&bull;</span>
+                                    <span class="cd-job-dept" title="{{ $department }}">{{ $department }}</span>
+                                </div>
+                                <div class="cd-job-client-row">
+                                    <span class="cd-job-client-name" title="{{ @$row->company_name }}">{{ ucwords(mb_substr(@$row->company_name, 0, 20)) }}</span>
+                                    <span class="cd-bullet">&bull;</span>
+                                    <span class="cd-job-emp-type"><i class="fas fa-briefcase text-primary me-1"></i>{{ $employment_type }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-              </div>
 
+                    <!-- Sub-Card 2: Compensation & Experience -->
+                    <div class="cd-job-subcard cd-subcard-comp-loc">
+                        <div class="cd-subcard-header">
+                            <span class="cd-subcard-label">Compensation &amp; Exp</span>
+                        </div>
+                        <div class="cd-subcard-body">
+                            <div class="cd-val-salary">
+                                @if($isSalConf)
+                                    <span class="text-danger" style="font-weight: 600;"><i class="fas fa-lock me-1"></i>Confidential</span>
+                                @else
+                                    <strong>{{ $min_salary_currency }} {{ $min_salary }} - {{ $max_salary }} {{ $min_sal_mode }}</strong>
+                                @endif
+                            </div>
+                            <div class="cd-val-exp">
+                                <i class="far fa-clock text-muted me-1"></i><span>🕒 {{ @$row->min_exp }} - {{ @$row->max_exp }} Yrs</span>
+                            </div>
+                            <div class="cd-val-loc" title="{{ $city }} &bull; {{ $work_type }}">
+                                <i class="fas fa-map-marker-alt text-muted me-1"></i>{{ ucwords(mb_substr(@$city, 0, 16)) }}
+                                <span class="cd-bullet">&bull;</span>
+                                <span>{{ $work_type }}</span>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- Sub-Card 3: Hiring Manager -->
+                    <div class="cd-job-subcard cd-subcard-team">
+                        <div class="cd-subcard-header">
+                            <span class="cd-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>Hiring Manager</span>
+                        </div>
+                        <div class="cd-subcard-body">
+                            <div class="cd-val-name client-hm-listing" data-row-id="{{ $row->id }}" title="{{ $hiringManager }}">
+                                <strong>{{ ucwords(mb_substr(@$hiringManager, 0, 18)) }}</strong>
+                            </div>
+                            <div class="cd-val-sub">{{ $hiringManagerdesignation !== '--------' ? $hiringManagerdesignation : 'Client SPOC' }}</div>
+                            <a href="javascript:void(0);" class="cd-action-link client-hm-listing" data-row-id="{{ $row->id }}">+ View HM Details</a>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 4: Positions & Terms -->
+                    <div class="cd-job-subcard cd-subcard-agency">
+                        <div class="cd-subcard-header">
+                            <span class="cd-subcard-label"><i class="fa fa-file-contract me-1 text-muted"></i>Positions &amp; Terms</span>
+                        </div>
+                        <div class="cd-subcard-body">
+                            <div class="cd-agency-val"><strong>{{ $total_positions }} Openings</strong></div>
+                            <div data-row-id="{{ $row->id }}" data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}" class="client-terms-listing mt-1">
+                                <a href="javascript:;" class="btn btn-xs btn-light-primary py-1 px-2" style="font-size: 11px;">
+                                    <i class="fas fa-file-contract me-1"></i>View Terms
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Card 5: Approval / Action -->
+                    <div class="cd-job-subcard cd-subcard-pipeline">
+                        <div class="cd-subcard-header">
+                            <span class="cd-subcard-label">Request Status / Action</span>
+                        </div>
+                        <div class="cd-subcard-body d-flex flex-column justify-content-center">
+                            @if ($row->final_status == 1)
+                                <div><span class="badge badge-light-success fw-bold py-2 px-3 fs-7"><i class="fas fa-check-circle text-success me-1"></i>Accepted</span></div>
+                            @elseif ($row->final_status == -1)
+                                <div><span class="badge badge-light-danger fw-bold py-2 px-3 fs-7"><i class="fas fa-times-circle text-danger me-1"></i>Rejected</span></div>
+                            @elseif ($row->final_status == 2)
+                                <div><span class="badge badge-light-secondary fw-bold py-2 px-3 fs-7">Removed</span></div>
+                            @elseif ($row->final_status == 3)
+                                <div><span class="badge badge-light-danger fw-bold py-2 px-3 fs-7">Expired</span></div>
+                            @else
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <button type="button" class="btn btn-sm btn-primary request_approval fw-bold py-1 px-3" data-row-status="accept" data-row-id="{{ $row->id }}" data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}">
+                                        <i class="fas fa-check me-1"></i>Accept
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-light-danger request_reject fw-bold py-1 px-3" data-row-status="ignore" data-row-id="{{ $row->id }}" data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}">
+                                        <i class="fas fa-times me-1"></i>Reject
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-Card 6: Bottom Activity Strip -->
+                <div class="cd-job-card-bottom">
+                    <div class="cd-bottom-left">
+                        <span><i class="far fa-calendar-alt text-muted me-1"></i>Requested on: <strong>{{ $newDate }}</strong></span>
+                        @if(!empty($hiringManager) && $hiringManager !== '--------')
+                            <span class="cd-bullet">&bull;</span>
+                            <span><i class="far fa-id-badge text-primary me-1"></i>Client Contact: <strong>{{ $hiringManager }}</strong></span>
+                        @endif
+                    </div>
+                    <div class="cd-bottom-skills">
+                        @if (!empty($skills))
+                            @foreach ($skills as $sval)
+                                <span class="cd-skill-pill">{{ ucfirst($sval) }}</span>
+                            @endforeach
+                        @else
+                            <span class="text-muted" style="font-size: 10.5px;">No key skills specified</span>
+                        @endif
+                    </div>
+                </div>
             </div>
-            
-    @endforeach
+        @endforeach
+    </div>
 @else
-    {{-- <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="10" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr> --}}
+    <div class="cd-jobs-empty text-center py-16 px-6 my-4" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px;">
+        <i class="fas fa-handshake fa-2x mb-3 text-muted d-block"></i>
+        <div class="fw-bold fs-6 text-gray-700 mb-1">No Inbound Job Requests Found</div>
+        <div class="text-muted fs-7">There are no pending or active client requisition requests matching your filter.</div>
+    </div>
 @endif
