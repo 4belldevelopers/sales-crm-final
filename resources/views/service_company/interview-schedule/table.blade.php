@@ -658,9 +658,12 @@ $(document).on('hidden.bs.modal', '#interview_feedback', function () {
 $(document).on('click', '#app_interview_schedule_reschedule', function(){
     $("#interview_feedback .close").click();
     var id = $(this).attr('rel');
-    var url = "{{ route('service_company.job-applications.create-schedule',':id') }}?reschedule=1";
+    var intId = $(this).data('interview-id') || $(this).attr('data-interview-id') || '';
+    var url = "{{ route('service_company.job-applications.create-schedule',':id') }}?reschedule=1" + (intId ? '&interview_id=' + intId : '');
     url = url.replace(':id', id);
     var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+    if (typeof window.isdShellSetStep === 'function') window.isdShellSetStep('main');
     $.ajax({
         type: 'GET',
         url: url,
@@ -668,7 +671,7 @@ $(document).on('click', '#app_interview_schedule_reschedule', function(){
             $('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
         },
         success: function (response) {
-            $('#app_interview_schedule_content').html(response.view);
+            $('#app_interview_schedule_content').html(response.view || response);
         }
     });
 });
@@ -927,7 +930,8 @@ const JeroInterviewScheduleLocalStore = (function() {
                     const req = store.get(key);
                     req.onsuccess = function() {
                         const res = req.result;
-                        if (res && (Date.now() - res.timestamp < CACHE_TTL_MS)) {
+                        const lastMut = parseInt(localStorage.getItem('jero_it_last_mutation') || '0', 10);
+                        if (res && (Date.now() - res.timestamp < CACHE_TTL_MS) && (!lastMut || res.timestamp > lastMut)) {
                             resolve(res.payload);
                         } else {
                             resolve(null);
@@ -1245,6 +1249,14 @@ async function fetchCandidates(page, search, forceRefresh) {
             await window.JeroInterviewScheduleLocalStore.purge();
         }
     } else {
+        var lastMut = parseInt(localStorage.getItem('jero_it_last_mutation') || '0', 10);
+        if (window._jero_it_ram_mounted_at && lastMut > window._jero_it_ram_mounted_at) {
+            itRamCache.clear();
+            window._jero_it_ram_mounted_at = Date.now();
+        } else if (!window._jero_it_ram_mounted_at) {
+            window._jero_it_ram_mounted_at = Date.now();
+        }
+
         // 1. Layer 1: Browser RAM lookup first (0ms instantaneous page turn / tab switch)
         if (itRamCache.has(cacheKey)) {
             renderInterviewData(itRamCache.get(cacheKey));
@@ -1445,14 +1457,14 @@ $(document).ready(function() {
                 // Realtime delta stat counter update
                 var curUpcoming = parseInt($('#stat-upcoming').text(), 10) || 0;
                 $('#stat-upcoming').text(curUpcoming + 1);
-                fetchCandidates(itCurrentPage);
+                fetchCandidates(itCurrentPage, null, true);
             })
             .listen('.candidate.drawer.updated', function(e) {
                 itRamCache.clear();
                 if (window.JeroInterviewScheduleLocalStore) {
                     window.JeroInterviewScheduleLocalStore.purge();
                 }
-                fetchCandidates(itCurrentPage);
+                fetchCandidates(itCurrentPage, null, true);
             });
 
         // 2. Disconnect / Reconnect State Machine (Section 12 Compliance)
@@ -1466,7 +1478,7 @@ $(document).ready(function() {
                         if (window.JeroInterviewScheduleLocalStore) {
                             window.JeroInterviewScheduleLocalStore.purge();
                         }
-                        fetchCandidates(itCurrentPage);
+                        fetchCandidates(itCurrentPage, null, true);
                     }
                 });
             }

@@ -9155,19 +9155,38 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->cc_email_assignData = $assignDataFinal;
         $this->update = false;
         $this->savesend = true;
-        if ($request->relint) {
-            $interviewSchedule = InterviewSchedule::join('updatetimeline', 'updatetimeline.interview_schedules_id', 'interview_schedules.id')->select('interview_schedules.*', 'updatetimeline.interview_mention_link')->where('interview_schedules.id', $request->relint)->first();
-            // dd($interviewSchedule);
-            $this->scheduledate = $interviewSchedule->schedule_date;
-            $this->emailtemplateset = $interviewSchedule->email_template;
-            $this->interviewmode = $interviewSchedule->interview_mode;
-            $this->interviewmodelavel = $interviewSchedule->interview_mode_lavel;
-            $this->interviewers = $interviewSchedule->interviewers;
-            $this->interviewmentionlink = $interviewSchedule->interview_mention_link;
-            $this->update = true;
-            $this->savesend = false;
 
+        $interview_id = (int) ($request->interview_id ?? $request->relint ?? 0);
+        $isRescheduleParam = ! empty($request->reschedule) || ! empty($_REQUEST['reschedule']);
+        if (! $interview_id && $isRescheduleParam && ! empty($this->application->id)) {
+            $interview_id = (int) DB::table('interview_schedules')
+                ->where('job_application_id', $this->application->id)
+                ->where('company_id', auth()->user()->company_id)
+                ->orderBy('id', 'desc')
+                ->value('id');
         }
+
+        if ($interview_id > 0) {
+            $interviewSchedule = InterviewSchedule::leftJoin('updatetimeline', 'updatetimeline.interview_schedules_id', 'interview_schedules.id')
+                ->select('interview_schedules.*', 'updatetimeline.interview_mention_link')
+                ->where('interview_schedules.id', $interview_id)
+                ->first();
+            if ($interviewSchedule) {
+                $this->scheduledate = $interviewSchedule->schedule_date;
+                $this->emailtemplateset = $interviewSchedule->email_template;
+                $this->interviewmode = $interviewSchedule->interview_mode;
+                $this->interviewmodelavel = $interviewSchedule->interview_mode_lavel;
+                $this->interviewers = $interviewSchedule->interviewers;
+                $this->interviewmentionlink = $interviewSchedule->interview_mention_link;
+                $this->interviewSchedule = $interviewSchedule;
+                $this->interview_id = $interviewSchedule->id;
+                $this->update = true;
+                $this->savesend = false;
+            }
+        }
+        $this->interview_id = $this->interview_id ?? $interview_id;
+        $this->reschedule = ($isRescheduleParam || ! empty($this->interview_id)) ? 1 : 0;
+
         $this->timezone = DB::table('master_timezone')->select('*')->orderByDesc('master_timezone.priority')->get();
 
         // Real, company-scoped interview round master data (App\InterviewProcess model
@@ -9177,7 +9196,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->orderBy('name', 'ASC')
             ->get();
 
-        $this->reschedule = @$_REQUEST['reschedule'];
         $view = view('service_company.job-applications.interview-create', $this->data)->render();
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
@@ -10099,14 +10117,40 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $companyId = (int) auth()->user()->company_id;
         $userId = (int) auth()->user()->id;
 
-        // Idempotency guard: prevent duplicate records from rapid double submissions within 15 seconds
-        $existingRecent = InterviewSchedule::where('company_id', $companyId)
-            ->where('interview_job_wise_con_id', $AddJobWiseCondidate->id)
-            ->where('schedule_date', $interviewDate)
-            ->where('created_at', '>=', Carbon::now()->subSeconds(15))
-            ->first();
-        if ($existingRecent) {
-            return Reply::dataOnly(['status' => 'success', 'message' => 'Interview already scheduled!']);
+        $interview_id = (int) ($request->interview_id ?? $request->relint ?? 0);
+        $isRescheduleReq = ($interview_id > 0) || ((int) $request->interview_type === 2) || (! empty($request->reschedule)) || (! empty($request->is_reschedule));
+
+        $existingSchedule = null;
+        if ($interview_id > 0) {
+            $existingSchedule = InterviewSchedule::where('company_id', $companyId)->find($interview_id);
+        }
+        if (! $existingSchedule && $isRescheduleReq) {
+            $existingSchedule = InterviewSchedule::where('company_id', $companyId)
+                ->where('interview_job_wise_con_id', $AddJobWiseCondidate->id)
+                ->orderBy('id', 'desc')
+                ->first();
+            if ($existingSchedule) {
+                $interview_id = $existingSchedule->id;
+            }
+        }
+        $isUpdating = ($existingSchedule !== null);
+
+        // Idempotency guard: prevent duplicate fresh records from rapid double submissions within 10 seconds
+        if (! $isUpdating) {
+            $existingRecent = InterviewSchedule::where('company_id', $companyId)
+                ->where('interview_job_wise_con_id', $AddJobWiseCondidate->id)
+                ->where('schedule_date', $interviewDate)
+                ->where('created_at', '>=', Carbon::now()->subSeconds(10))
+                ->first();
+            if ($existingRecent) {
+                return Reply::dataOnly([
+                    'status' => 'success',
+                    'interview_id' => $existingRecent->id,
+                    'schedule_date' => $interviewDate,
+                    'is_reschedule' => 0,
+                    'message' => 'Interview already scheduled!',
+                ]);
+            }
         }
 
         $packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
@@ -10121,12 +10165,23 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         DB::beginTransaction();
         try {
-            // INTERVIEW SCHEDULE
-            $interviewSchedule = new InterviewSchedule;
-            $interviewSchedule->job_application_id = $application_id;
-            if (! empty($request->interview_type)) {
-                $interviewSchedule->reschedule = $interview_type;
+            // INTERVIEW SCHEDULE — Update existing record on reschedule, or create new on fresh schedule
+            if ($isUpdating) {
+                $interviewSchedule = $existingSchedule;
+                $interviewSchedule->interview_type = 2; // Rescheduled
+                $interviewSchedule->reschedule = Carbon::now()->format('Y-m-d H:i:s');
+                $interviewSchedule->available_status = 3; // Rescheduled
+                $interviewSchedule->status = 'pending';
+            } else {
+                $interviewSchedule = new InterviewSchedule;
+                $interviewSchedule->job_application_id = $application_id;
+                $interviewSchedule->interview_created_by = $userId;
+                $interviewSchedule->interview_type = 1; // Fresh
+                $interviewSchedule->reschedule = null;
+                $interviewSchedule->available_status = 0;
+                $interviewSchedule->status = 'pending';
             }
+
             if (! empty($interview_mode)) {
                 $interviewSchedule->interview_mode = $interview_mode;
             }
@@ -10140,10 +10195,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $interviewSchedule->substage = $child_status_id;
             }
             if (! empty($panellist)) {
-                $interviewSchedule->interviewers = $panellist;   // implode(',', $panellist);
+                $interviewSchedule->interviewers = $panellist; // implode(',', $panellist);
             }
-            // CRITICAL TENANT/RBAC FIX: Explicitly set creator ID so non-admin recruiters see their scheduled interviews
-            $interviewSchedule->interview_created_by = $userId;
 
             $interviewSchedule->schedule_date = $interviewDate;
             $interviewSchedule->schedule_to_time = $interviewTime;
@@ -10170,7 +10223,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     'doc_as_upsert' => true,
                     'detect_noop' => false,
                 ],
-                'refresh' => false, // Eventual consistency for 10K concurrent scale
+                'refresh' => true, // Immediate consistency for zero stale data (Rule 5)
             ];
 
             try {
@@ -10183,22 +10236,30 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $subModeId = (int) ($request->interview_mode_lavel ?? 0);
 
             if ($interview_mode == 2 && $subModeId == 2) {
-                DB::table('google_meeting_schedule')->insert([
-                    'meeting_link' => $request->url,
-                    'user_id' => $userId,
-                    'company_id' => $companyId,
-                    'interview_job_wise_con_id' => $AddJobWiseCondidate->id,
-                    'interview_date' => $interviewDate,
-                ]);
+                DB::table('google_meeting_schedule')->updateOrInsert(
+                    [
+                        'company_id' => $companyId,
+                        'interview_job_wise_con_id' => $AddJobWiseCondidate->id,
+                    ],
+                    [
+                        'meeting_link' => $request->url,
+                        'user_id' => $userId,
+                        'interview_date' => $interviewDate,
+                    ]
+                );
             }
             if ($interview_mode == 2 && $subModeId == 5) {
-                DB::table('team_meeting_schedule')->insert([
-                    'meeting_link' => $request->url,
-                    'user_id' => $userId,
-                    'company_id' => $companyId,
-                    'interview_job_wise_con_id' => $AddJobWiseCondidate->id,
-                    'interview_date' => $interviewDate,
-                ]);
+                DB::table('team_meeting_schedule')->updateOrInsert(
+                    [
+                        'company_id' => $companyId,
+                        'interview_job_wise_con_id' => $AddJobWiseCondidate->id,
+                    ],
+                    [
+                        'meeting_link' => $request->url,
+                        'user_id' => $userId,
+                        'interview_date' => $interviewDate,
+                    ]
+                );
             }
 
             $jobApplication = JobApplication::withoutGlobalScopes()->find($request->application_id);
@@ -10216,13 +10277,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $date = date('Y-m-d H:i:s');
             $values = [
-                'event_id' => 3,
+                'event_id' => $isUpdating ? 4 : 3,
                 'event_by_company_id' => $companyId,
                 'event_by_user_id' => $userId,
                 'application_id' => @$request->application_id ? @$request->application_id : null,
                 'application_email' => @$jobApplication->email ? @$jobApplication->email : null,
                 'job_id' => @$AddJobWiseCondidate->job_id ? @$AddJobWiseCondidate->job_id : $request->jobId,
-                'note' => 'Interview Schedule',
+                'note' => $isUpdating ? 'Interview Rescheduled' : 'Interview Schedule',
                 'create_at' => @$date ? @$date : null,
                 'update_at' => @$date ? @$date : null,
                 'interview_schedule_date' => $interviewDate,
@@ -10358,7 +10419,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 \Log::warning('Broadcast of InterviewScheduled failed: '.$bcEx->getMessage());
             }
 
-            return Reply::dataOnly(['status' => 'success', 'message' => 'Interview Reschedule successfully !']);
+            return Reply::dataOnly([
+                'status' => 'success',
+                'interview_id' => $interviewSchedule_id,
+                'schedule_date' => $interviewDate,
+                'is_reschedule' => $isUpdating ? 1 : 0,
+                'message' => $isUpdating ? 'Interview rescheduled successfully!' : 'Interview scheduled successfully!',
+            ]);
 
         } catch (\Throwable $e) {
             DB::rollBack();
