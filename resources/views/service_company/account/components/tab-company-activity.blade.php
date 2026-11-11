@@ -1,545 +1,41 @@
-<style>
-/* ==========================================================================
-   Company Activity & Audit Timeline — Master Enterprise Card + Sub-Card Design
-   Strictly Optimized for 15.6" Screens (1366x768 & 1920x1080) and Smaller
-   Complies with Rule 20: Modern Card + Sub-Card Enterprise Design System
-   ========================================================================== */
+@include('service_company.client.components.tab-activity-style')
 
-.coa-wrapper {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
-}
+<div class="cd-activity-wrapper" id="coaWrapper">
 
-/* ── Tier 1: Top Header Toolbar Card ── */
-.coa-header-card {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 10px !important;
-  padding: 10px 16px !important;
-  margin-bottom: 10px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 12px !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-  flex-wrap: wrap !important;
-  width: 100% !important;
-}
-
-.coa-header-left {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  min-width: 0 !important;
-}
-
-.coa-header-icon {
-  width: 34px !important;
-  height: 34px !important;
-  border-radius: 8px !important;
-  background: #eff6ff !important;
-  color: #2563eb !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 14px !important;
-  flex-shrink: 0 !important;
-}
-
-.coa-header-title {
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  color: #0f172a !important;
-  line-height: 1.2 !important;
-  margin: 0 !important;
-}
-
-.coa-header-sub {
-  font-size: 11px !important;
-  color: #64748b !important;
-  margin-top: 2px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
-}
-
-.coa-health-pill {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-  background: #ecfdf5 !important;
-  color: #059669 !important;
-  border: 1px solid #a7f3d0 !important;
-  padding: 1px 7px !important;
-  border-radius: 999px !important;
-  font-size: 10px !important;
-  font-weight: 600 !important;
-}
-
-.coa-pulse-dot {
-  width: 6px !important;
-  height: 6px !important;
-  border-radius: 50% !important;
-  background: #10b981 !important;
-  animation: coaPulse 2s infinite !important;
-}
-
-@keyframes coaPulse {
-  0% { transform: scale(0.95); opacity: 1; }
-  50% { transform: scale(1.3); opacity: 0.6; }
-  100% { transform: scale(0.95); opacity: 1; }
-}
-
-.coa-header-right {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
-}
-
-.coa-search-subcard {
-  position: relative !important;
-  display: flex !important;
-  align-items: center !important;
-  background: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 8px !important;
-  padding: 0 10px !important;
-  height: 32px !important;
-  width: 220px !important;
-  transition: all 0.15s ease-in-out !important;
-}
-
-.coa-search-subcard:focus-within {
-  background: #ffffff !important;
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
-}
-
-.coa-search-subcard i.fa-search {
-  color: #94a3b8 !important;
-  font-size: 11px !important;
-  margin-right: 6px !important;
-}
-
-.coa-search-input {
-  border: none !important;
-  background: transparent !important;
-  outline: none !important;
-  font-size: 11.5px !important;
-  color: #1e293b !important;
-  width: 100% !important;
-  padding: 0 !important;
-  font-family: inherit !important;
-}
-
-.coa-search-clear {
-  display: none !important;
-  background: none !important;
-  border: none !important;
-  color: #94a3b8 !important;
-  font-size: 11px !important;
-  cursor: pointer !important;
-  padding: 0 !important;
-  margin-left: 4px !important;
-}
-
-.coa-search-clear.visible {
-  display: inline-flex !important;
-}
-
-.coa-select {
-  height: 32px !important;
-  font-size: 11.5px !important;
-  border-radius: 8px !important;
-  border: 1px solid #e2e8f0 !important;
-  font-weight: 500 !important;
-  background-color: #ffffff !important;
-  padding: 0 10px !important;
-  color: #1e293b !important;
-}
-
-.coa-btn-refresh {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 8px !important;
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #475569 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
-  transition: all 0.15s ease-in-out !important;
-  font-size: 12px !important;
-}
-
-.coa-btn-refresh:hover {
-  background: #f8fafc !important;
-  color: #2563eb !important;
-  border-color: #bfdbfe !important;
-}
-
-/* ── Tier 2: Filter Sub-Tabs Card ── */
-.coa-tabs-card {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 10px !important;
-  padding: 6px 10px !important;
-  margin-bottom: 12px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  overflow-x: auto !important;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
-  scrollbar-width: none !important;
-}
-
-.coa-tabs-card::-webkit-scrollbar {
-  display: none !important;
-}
-
-.coa-tab-btn {
-  background: transparent !important;
-  border: none !important;
-  border-radius: 7px !important;
-  padding: 6px 12px !important;
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
-  color: #64748b !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 7px !important;
-  cursor: pointer !important;
-  transition: all 0.15s ease-in-out !important;
-  white-space: nowrap !important;
-  font-family: inherit !important;
-}
-
-.coa-tab-btn:hover {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
-}
-
-.coa-tab-btn.active {
-  background: #009ef7 !important;
-  color: #ffffff !important;
-}
-
-.coa-tab-badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  padding: 1px 6px !important;
-  border-radius: 999px !important;
-  background: #e2e8f0 !important;
-  color: #475569 !important;
-  line-height: 1.2 !important;
-}
-
-.coa-tab-btn.active .coa-tab-badge {
-  background: rgba(255, 255, 255, 0.25) !important;
-  color: #ffffff !important;
-}
-
-/* ── Tier 3: Timeline Stream Container ── */
-.coa-stream {
-  width: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 10px !important;
-}
-
-.coa-timeline-item {
-  display: flex !important;
-  gap: 14px !important;
-  position: relative !important;
-}
-
-.coa-timeline-node {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  width: 36px !important;
-  flex-shrink: 0 !important;
-}
-
-.coa-actor-avatar {
-  width: 34px !important;
-  height: 34px !important;
-  border-radius: 50% !important;
-  background: #e0f2fe !important;
-  border: 2px solid #ffffff !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-  z-index: 2 !important;
-}
-
-.coa-actor-avatar img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-}
-
-.coa-actor-initials {
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  color: #0284c7 !important;
-  letter-spacing: -0.02em !important;
-}
-
-.coa-timeline-track {
-  width: 2px !important;
-  flex-grow: 1 !important;
-  background: #e2e8f0 !important;
-  margin-top: 4px !important;
-  margin-bottom: -10px !important;
-}
-
-.coa-timeline-item:last-child .coa-timeline-track {
-  display: none !important;
-}
-
-/* Timeline Sub-Card */
-.coa-card {
-  flex: 1 !important;
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 10px !important;
-  padding: 12px 16px !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-  transition: all 0.15s ease-in-out !important;
-  min-width: 0 !important;
-}
-
-.coa-card:hover {
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.07) !important;
-}
-
-.coa-card-head {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 10px !important;
-  margin-bottom: 6px !important;
-  flex-wrap: wrap !important;
-}
-
-.coa-card-head-left {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
-}
-
-.coa-badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  padding: 2px 7px !important;
-  border-radius: 6px !important;
-  line-height: 1.25 !important;
-}
-
-.coa-action-title {
-  font-size: 12.5px !important;
-  font-weight: 600 !important;
-  color: #0f172a !important;
-}
-
-.coa-card-time {
-  font-size: 11px !important;
-  color: #64748b !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-}
-
-.coa-bullet {
-  color: #94a3b8 !important;
-}
-
-.coa-card-body {
-  margin-bottom: 8px !important;
-}
-
-.coa-entity-title {
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  color: #1e293b !important;
-  margin: 0 0 3px 0 !important;
-  line-height: 1.3 !important;
-}
-
-.coa-description {
-  font-size: 11.5px !important;
-  color: #475569 !important;
-  margin: 0 !important;
-  line-height: 1.4 !important;
-}
-
-.coa-card-foot {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 10px !important;
-  padding-top: 8px !important;
-  border-top: 1px dashed #f1f5f9 !important;
-  font-size: 11px !important;
-}
-
-.coa-actor-info {
-  display: flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-  color: #64748b !important;
-}
-
-.coa-actor-name {
-  font-weight: 600 !important;
-  color: #1e293b !important;
-}
-
-.coa-link-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  color: #2563eb !important;
-  text-decoration: none !important;
-  transition: color 0.15s ease-in-out !important;
-}
-
-.coa-link-btn:hover {
-  color: #1d4ed8 !important;
-  text-decoration: underline !important;
-}
-
-/* Empty State */
-.coa-empty-state {
-  background: #ffffff !important;
-  border: 1px dashed #cbd5e1 !important;
-  border-radius: 10px !important;
-  padding: 36px 20px !important;
-  text-align: center !important;
-  width: 100% !important;
-}
-
-.coa-empty-icon {
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 50% !important;
-  background: #f1f5f9 !important;
-  color: #94a3b8 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 18px !important;
-  margin-bottom: 10px !important;
-}
-
-.coa-empty-title {
-  font-size: 13.5px !important;
-  font-weight: 700 !important;
-  color: #1e293b !important;
-  margin-bottom: 4px !important;
-}
-
-.coa-empty-sub {
-  font-size: 11.5px !important;
-  color: #64748b !important;
-  max-width: 420px !important;
-  margin: 0 auto !important;
-  line-height: 1.4 !important;
-}
-
-/* Skeleton Loaders */
-.coa-skeleton-card {
-  background: #ffffff !important;
-  border: 1px solid #f1f5f9 !important;
-  border-radius: 10px !important;
-  padding: 14px 18px !important;
-  margin-bottom: 10px !important;
-}
-
-.coa-skeleton-line {
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%) !important;
-  background-size: 200% 100% !important;
-  animation: coaSkeleton 1.5s infinite !important;
-  border-radius: 4px !important;
-  margin-bottom: 8px !important;
-}
-
-@keyframes coaSkeleton {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.coa-load-more-wrap {
-  text-align: center !important;
-  margin-top: 14px !important;
-}
-
-.coa-btn-load-more {
-  background: #ffffff !important;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 8px !important;
-  padding: 7px 18px !important;
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
-  color: #334155 !important;
-  cursor: pointer !important;
-  transition: all 0.15s ease-in-out !important;
-}
-
-.coa-btn-load-more:hover {
-  background: #f8fafc !important;
-  border-color: #94a3b8 !important;
-  color: #0f172a !important;
-}
-</style>
-
-<div class="coa-wrapper" id="coaWrapper">
-  {{-- ── Tier 1: Top Header Toolbar Card ── --}}
-  <div class="coa-header-card">
-    <div class="coa-header-left">
-      <div class="coa-header-icon">
-        <i class="fas fa-clock-rotate-left fa-solid"></i>
+  {{-- ── TIER 1: TOP HEADER TOOLBAR CARD ── --}}
+  <div class="cd-activity-header-card">
+    <div class="cd-activity-header-left">
+      <div class="cd-activity-header-icon">
+        <i class="fas fa-clock-rotate-left"></i>
       </div>
       <div>
-        <h3 class="coa-header-title">Company Activity &amp; Audit Timeline</h3>
-        <div class="coa-header-sub">
-          <span>Live recruitment lifecycle &amp; team actions across the organization</span>
-          <span class="coa-health-pill" id="coaHealthPill">
-            <span class="coa-pulse-dot"></span>
+        <div class="cd-activity-header-title">Company Activity &amp; Audit Timeline</div>
+        <div class="cd-activity-header-sub">
+          <span>Live recruitment lifecycle &amp; team activity across organization</span>
+          <span class="cd-activity-health-pill health-active" id="coaHealthPill" title="Company Activity Freshness Health">
+            <span class="cd-activity-pulse-dot"></span>
             <span id="coaHealthText">Active</span>
+          </span>
+          <span id="coaSyncPill" class="badge badge-light-primary" style="font-size: 10px; padding: 2px 7px; font-weight: 600;" title="Live Real-Time Activity">
+            <i class="fas fa-wifi me-1 text-success"></i>
+            <span id="coaSyncText">Live</span>
           </span>
         </div>
       </div>
     </div>
 
-    <div class="coa-header-right">
-      {{-- 300ms Debounced Search Sub-Card --}}
-      <div class="coa-search-subcard">
+    <div class="cd-activity-header-right">
+      {{-- Dynamic 300ms Debounced Search Sub-Card --}}
+      <div class="cd-activity-search-subcard">
         <i class="fas fa-search"></i>
-        <input type="text" class="coa-search-input" id="coaSearchInput" placeholder="Search Company Activity..." autocomplete="off" />
-        <button type="button" class="coa-search-clear" id="coaSearchClear" title="Clear Search">
+        <input type="text" id="coaSearchInput" placeholder="Search Activity..." autocomplete="off">
+        <button type="button" class="cd-activity-search-clear" id="coaSearchClear" title="Clear search">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
-      {{-- Timeframe Dropdown --}}
-      <select class="form-select form-select-sm coa-select" id="coaTimeframeSelect">
+      {{-- Timeframe Filter Dropdown (Date) --}}
+      <select id="coaTimeframeSelect" class="form-select form-select-sm" style="width: 120px; height: 34px; font-size: 11.5px; border-radius: 8px; border: 1px solid #e2e8f0; font-weight: 500;">
         <option value="all">All Time</option>
         <option value="today">Today</option>
         <option value="7d">Last 7 Days</option>
@@ -547,72 +43,244 @@
       </select>
 
       {{-- Refresh Button --}}
-      <button type="button" class="coa-btn-refresh" id="coaRefreshBtn" title="Refresh Activity Feed">
+      <button type="button" class="cd-activity-btn-refresh" id="coaRefreshBtn" title="Refresh Activity Feed">
         <i class="fas fa-sync-alt"></i>
       </button>
     </div>
   </div>
 
-  {{-- ── Tier 2: Filter Sub-Tabs Card ── --}}
-  <div class="coa-tabs-card" id="coaFilterTabs">
-    <button type="button" class="coa-tab-btn active" data-category="all">
+  {{-- ── TIER 2: FILTER SUB-TABS CARD ── --}}
+  <div class="cd-activity-tabs-card" id="coaFilterTabs">
+    <button type="button" class="cd-activity-tab-btn active" data-category="all">
       <span>All Events</span>
-      <span class="coa-tab-badge" id="coaCountAll">0</span>
+      <span class="cd-activity-tab-badge" id="coaCountAll">0</span>
     </button>
-    <button type="button" class="coa-tab-btn" data-category="pipeline">
+    <button type="button" class="cd-activity-tab-btn" data-category="pipeline">
       <span>Pipeline</span>
-      <span class="coa-tab-badge" id="coaCountPipeline">0</span>
+      <span class="cd-activity-tab-badge" id="coaCountPipeline">0</span>
     </button>
-    <button type="button" class="coa-tab-btn" data-category="interviews">
+    <button type="button" class="cd-activity-tab-btn" data-category="interviews">
       <span>Interviews</span>
-      <span class="coa-tab-badge" id="coaCountInterviews">0</span>
+      <span class="cd-activity-tab-badge" id="coaCountInterviews">0</span>
     </button>
-    <button type="button" class="coa-tab-btn" data-category="offers">
+    <button type="button" class="cd-activity-tab-btn" data-category="offers">
       <span>Offers &amp; Joining</span>
-      <span class="coa-tab-badge" id="coaCountOffers">0</span>
+      <span class="cd-activity-tab-badge" id="coaCountOffers">0</span>
     </button>
-    <button type="button" class="coa-tab-btn" data-category="jobs">
-      <span>Requisitions</span>
-      <span class="coa-tab-badge" id="coaCountJobs">0</span>
+    <button type="button" class="cd-activity-tab-btn" data-category="jobs">
+      <span>Jobs</span>
+      <span class="cd-activity-tab-badge" id="coaCountJobs">0</span>
     </button>
-    <button type="button" class="coa-tab-btn" data-category="team">
-      <span>Team &amp; Access</span>
-      <span class="coa-tab-badge" id="coaCountTeam">0</span>
+    <button type="button" class="cd-activity-tab-btn" data-category="team">
+      <span>Team</span>
+      <span class="cd-activity-tab-badge" id="coaCountTeam">0</span>
     </button>
   </div>
 
-  {{-- ── Tier 3: Primary Activity Stream Container ── --}}
+  {{-- ── TIER 3: ACTIVITY STREAM CONTAINER ── --}}
+  {{-- Skeleton Placeholders --}}
   <div id="coaSkeletonLoader" style="display: none;">
-    <div class="coa-skeleton-card">
-      <div class="coa-skeleton-line" style="width: 35%; height: 14px;"></div>
-      <div class="coa-skeleton-line" style="width: 75%; height: 11px;"></div>
-      <div class="coa-skeleton-line" style="width: 50%; height: 11px;"></div>
+    <div class="cd-activity-skeleton" style="background:#fff; border:1px solid #f1f5f9; border-radius:10px; padding:16px 20px; margin-bottom:12px;">
+      <div style="background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size:200% 100%; animation:cdPulseGreen 1.5s infinite; border-radius:4px; height:14px; width:35%; margin-bottom:10px;"></div>
+      <div style="background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size:200% 100%; animation:cdPulseGreen 1.5s infinite; border-radius:4px; height:11px; width:70%; margin-bottom:8px;"></div>
+      <div style="background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size:200% 100%; animation:cdPulseGreen 1.5s infinite; border-radius:4px; height:11px; width:50%;"></div>
     </div>
-    <div class="coa-skeleton-card">
-      <div class="coa-skeleton-line" style="width: 40%; height: 14px;"></div>
-      <div class="coa-skeleton-line" style="width: 80%; height: 11px;"></div>
-      <div class="coa-skeleton-line" style="width: 45%; height: 11px;"></div>
+    <div class="cd-activity-skeleton" style="background:#fff; border:1px solid #f1f5f9; border-radius:10px; padding:16px 20px; margin-bottom:12px;">
+      <div style="background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size:200% 100%; animation:cdPulseGreen 1.5s infinite; border-radius:4px; height:14px; width:40%; margin-bottom:10px;"></div>
+      <div style="background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size:200% 100%; animation:cdPulseGreen 1.5s infinite; border-radius:4px; height:11px; width:80%; margin-bottom:8px;"></div>
+      <div style="background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size:200% 100%; animation:cdPulseGreen 1.5s infinite; border-radius:4px; height:11px; width:45%;"></div>
     </div>
   </div>
 
-  <div class="coa-stream" id="coaCardsStream">
-    {{-- Injected via AJAX from company-activity-cards-ajax --}}
+  {{-- Continuous Connecting Line & Activity Cards Stream --}}
+  <div class="cd-activity-stream" id="coaCardsStream">
+    {{-- Mapped AJAX Activity Cards Injected Here --}}
   </div>
 
-  <div class="coa-load-more-wrap" id="coaLoadMoreWrap" style="display: none;">
-    <button type="button" class="coa-btn-load-more" id="coaLoadMoreBtn">Load More Activities</button>
+  {{-- Pagination / Load More --}}
+  <div id="coaLoadMoreWrap" class="text-center py-3" style="display: none;">
+    <button type="button" class="btn btn-sm btn-light fw-bold" id="coaLoadMoreBtn" style="border: 1px solid #e2e8f0; border-radius: 8px; color: #475569; font-size: 11.5px; padding: 7px 18px;">
+      <i class="fas fa-angle-double-down me-1"></i> Load Older Activities
+    </button>
   </div>
+
 </div>
 
 <script>
 /**
- * CompanyActivityManager
- *
- * Dedicated client-side engine managing the Company Profile Activity Timeline and Overview stream.
- * 100% scoped to company users' actions across all departments and requisitions.
- * Zero dependency on client_id.
+ * Master Sliding Drawer Controllers & Company Activity Timeline Engine
+ * Guarantees zero page navigation when viewing Requisition or Candidate profiles.
  */
 (function() {
+
+  // 1. DEDICATED READ-ONLY JOB DRAWER CONTROLLER
+  window.openJobDrawer = function(jobId, options) {
+    if (!jobId) return;
+    var isReadOnly = true;
+    if (typeof options === 'object' && options !== null && options.readOnly !== undefined) {
+      isReadOnly = !!options.readOnly;
+    } else if (typeof options === 'boolean') {
+      isReadOnly = options;
+    }
+
+    var $drawer = $('#kt_activitiesJob_show');
+    if (!$drawer.length) {
+      $('body').append(`
+        <div id="kt_activitiesJob_show_toggle" style="display:none;"></div>
+        <div id="kt_activitiesJob_show" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end"
+            data-kt-drawer-toggle="#kt_activitiesJob_show_toggle" data-kt-drawer-close="#kt_activitiesJob_close">
+          <div class="card shadow-none rounded-0 w-100">
+            <div class="card-body position-relative px-0 py-0" id="kt_activitiesJob_show_body"></div>
+          </div>
+        </div>
+      `);
+      $drawer = $('#kt_activitiesJob_show');
+    }
+
+    if (isReadOnly) {
+      $drawer.addClass('drawer-readonly-view');
+    } else {
+      $drawer.removeClass('drawer-readonly-view');
+    }
+
+    // Immediate fresh skeleton loader
+    $('#kt_activitiesJob_show_body').html(
+      '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
+      '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
+      '  <div class="text-gray-800 fw-bold fs-5 mb-1">Loading Requisition Details…</div>' +
+      '  <div class="text-muted fs-7">Retrieving verified requisition details</div>' +
+      '</div>'
+    );
+
+    // Metronic Drawer Activation
+    if (typeof KTDrawer !== 'undefined') {
+      var drawerInst = KTDrawer.getInstance(document.getElementById('kt_activitiesJob_show'));
+      if (drawerInst) {
+        drawerInst.show();
+      } else {
+        $('#kt_activitiesJob_show_toggle').trigger('click');
+      }
+    } else {
+      $('#kt_activitiesJob_show_toggle').trigger('click');
+    }
+
+    $drawer.css('z-index', '999999');
+
+    var url = "{{ route('service_company.jobs.viewmore', ':id') }}?viewmore=viewmore" + (isReadOnly ? '&readonly=1&read_only=1' : '');
+    url = url.replace(':id', jobId);
+
+    $.ajax({
+      type: 'GET',
+      url: url,
+      success: function(response) {
+        if (response && response.view) {
+          $('#kt_activitiesJob_show_body').html(response.view);
+        } else if (typeof response === 'string') {
+          $('#kt_activitiesJob_show_body').html(response);
+        }
+        if (isReadOnly) {
+          $drawer.addClass('drawer-readonly-view');
+          $drawer.find('.job-action-btn.edit, a[href*="jobs/edit"], a[href*="/edit"], .info-card-edit, .btn-edit, .spartner-listing, .hm-listing, .status_stage, .job-drawer-add-candidate, .btn-primary:contains("Add Team"), .btn-primary:contains("Add Agency")').remove();
+        }
+      },
+      error: function() {
+        $('#kt_activitiesJob_show_body').html(
+          '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+          '  <div class="text-danger fw-bold fs-4 mb-2">Error</div>' +
+          '  <div class="text-gray-700 fs-6">Unable to load requisition details. Please try again.</div>' +
+          '</div>'
+        );
+      }
+    });
+  };
+
+  // 2. DEDICATED READ-ONLY CANDIDATE DRAWER CONTROLLER
+  window.openCandidateDrawer = function(candidateId, options) {
+    if (!candidateId) return;
+    var isReadOnly = true;
+    if (typeof options === 'object' && options !== null && options.readOnly !== undefined) {
+      isReadOnly = !!options.readOnly;
+    } else if (typeof options === 'boolean') {
+      isReadOnly = options;
+    }
+
+    var $drawer = $('#kt_activitiesApplication');
+    if (!$drawer.length) {
+      $('body').append(`
+        <div id="kt_activitiesApplication_toggle" style="display:none;"></div>
+        <div id="kt_activitiesApplication" class="bg-body bg-custom-bar" data-kt-drawer="true" data-kt-drawer-name="activitiesApplication" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesApplication_toggle" data-kt-drawer-close="#kt_activitiesApplication_close">
+          <div class="card shadow-none rounded-0 w-100" id="application_show_right_bar"></div>
+        </div>
+      `);
+      $drawer = $('#kt_activitiesApplication');
+    }
+
+    var sid = String(candidateId);
+    $('#application_show_right_bar').html(
+      '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
+      '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
+      '  <div class="text-gray-800 fw-bold fs-5 mb-1">Loading Candidate Profile…</div>' +
+      '  <div class="text-muted fs-7">Retrieving verified application details</div>' +
+      '</div>'
+    );
+
+    if (isReadOnly) {
+      $drawer.addClass('drawer-readonly-view');
+    } else {
+      $drawer.removeClass('drawer-readonly-view');
+    }
+
+    // Metronic Drawer Activation
+    if (typeof KTDrawer !== 'undefined') {
+      var drawerInst = KTDrawer.getInstance(document.getElementById('kt_activitiesApplication'));
+      if (drawerInst) {
+        drawerInst.show();
+      } else {
+        $('#kt_activitiesApplication_toggle').trigger('click');
+      }
+    } else {
+      $('#kt_activitiesApplication_toggle').trigger('click');
+    }
+
+    $drawer.css('z-index', '999999');
+
+    var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
+    var url = "{{ route('service_company.job-applications.show', ':id') }}";
+    url = url.replace(':id', sid) + "?read_only=" + (isReadOnly ? 1 : 0) + "&currentPage=" + currentPage;
+
+    $.ajax({
+      type: 'GET',
+      url: url,
+      success: function(response) {
+        if (response && response.view) {
+          $('#application_show_right_bar').html(response.view);
+          if (isReadOnly) {
+            $drawer.addClass('drawer-readonly-view');
+            $drawer.find('.cdr-btn-primary, a[href*="job-applications/edit"], a[href*="/edit"], .jw-card-edit-btn, .edit-note, .delete-note, #hdr_move_stage_btn, .btn-edit, [data-action="edit"]').hide();
+          }
+          if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+        } else if (response && response.status === 'error') {
+          $('#application_show_right_bar').html(
+            '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+            '  <div class="text-danger fw-bold fs-4 mb-2">Notice</div>' +
+            '  <div class="text-gray-700 fs-6">' + (response.message || 'Candidate details could not be loaded.') + '</div>' +
+            '</div>'
+          );
+        }
+      },
+      error: function(xhr) {
+        var msg = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to connect to server. Please refresh and try again.';
+        $('#application_show_right_bar').html(
+          '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+          '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
+          '  <div class="text-gray-700 fs-6">' + msg + '</div>' +
+          '</div>'
+        );
+      }
+    });
+  };
+
+  // 3. MASTER COMPANY ACTIVITY MANAGER
   window.CompanyActivityManager = {
     endpoint: "{{ route('service_company.account.activity_data_ajax') }}",
     activeCategory: 'all',
@@ -632,10 +300,12 @@
       var self = this;
       if (append) {
         self.currentPage++;
+        $('#coaLoadMoreBtn').html('<i class="fas fa-spinner fa-spin me-1"></i> Loading...');
       } else {
         self.currentPage = 1;
         $('#coaSkeletonLoader').show();
         $('#coaCardsStream').hide();
+        $('#coaRefreshBtn').find('i').addClass('fa-spin');
       }
 
       if (self.inFlightXhr && typeof self.inFlightXhr.abort === 'function') {
@@ -659,6 +329,8 @@
         success: function(res) {
           $('#coaSkeletonLoader').hide();
           $('#coaCardsStream').show();
+          $('#coaRefreshBtn').find('i').removeClass('fa-spin');
+          $('#coaLoadMoreBtn').html('<i class="fas fa-angle-double-down me-1"></i> Load Older Activities');
 
           if (res && res.success) {
             self.hasMore = res.pagination ? !!res.pagination.has_more : false;
@@ -692,7 +364,7 @@
               $('#coaLoadMoreWrap').hide();
             }
 
-            // Sync with Overview Tab: Render top 5 activities into #cdOverviewRecentActivityList
+            // Sync with Overview Tab Recent Activity
             self.renderOverviewTimeline(self.cachedItems);
           }
         },
@@ -700,12 +372,15 @@
           if (status === 'abort') return;
           $('#coaSkeletonLoader').hide();
           $('#coaCardsStream').show();
+          $('#coaRefreshBtn').find('i').removeClass('fa-spin');
+          $('#coaLoadMoreBtn').html('<i class="fas fa-angle-double-down me-1"></i> Load Older Activities');
+
           if (!append) {
             $('#coaCardsStream').html(
-              '<div class="coa-empty-state">' +
-              '  <div class="coa-empty-icon text-danger"><i class="fas fa-exclamation-triangle"></i></div>' +
-              '  <div class="coa-empty-title">Unable to Load Company Activities</div>' +
-              '  <div class="coa-empty-sub">An unexpected error occurred while fetching company events. Please click refresh to try again.</div>' +
+              '<div class="cd-activity-empty-state">' +
+              '  <div class="cd-activity-empty-icon text-danger"><i class="fas fa-exclamation-triangle"></i></div>' +
+              '  <div class="cd-activity-empty-title">Unable to Load Company Activities</div>' +
+              '  <div class="cd-activity-empty-text">An unexpected error occurred while fetching company events. Please click refresh to try again.</div>' +
               '</div>'
             );
           }
@@ -729,48 +404,67 @@
       var topItems = (items || []).slice(0, 5);
       if (!topItems.length) {
         $container.html(
-          '<div class="p-3 text-center text-muted" style="font-size:11.5px;">No recent company activities found.</div>'
+          '<div class="p-4 text-center text-muted" style="font-size:11.5px;">No recent company activities recorded.</div>'
         );
         return;
       }
 
-      var html = '<div class="cd-timeline-stream">';
+      var html = '<div class="cd-activity-stream" style="padding-left:14px; margin-top:0;">';
       topItems.forEach(function(act) {
-        var dotColor = act.badge_color || '#3b82f6';
-        var badgeBg = act.badge_bg || '#eff6ff';
-        var badgeColor = act.badge_color || '#2563eb';
-        var linkHtml = act.link ? ' href="' + act.link + '" target="_blank"' : '';
+        var cat = act.category || 'pipeline';
+        var job = act.job || {};
+        var cand = act.candidate || {};
+        var actor = act.actor || {};
+        var title = (cat === 'jobs') ? (job.title || 'Requisition') : (cand.name || 'Candidate');
+        var subtext = act.activity_label || (act.description || 'Activity logged');
+        var timeAgo = act.time_ago || act.formatted_date || 'Recently';
+        var badgeText = act.status_text || 'Active';
+        var dotClass = matchDot(cat);
 
-        html += '<div class="cd-tl-card">' +
-          '  <div class="cd-tl-card-header">' +
-          '    <div class="cd-tl-card-left">' +
-          '      <span class="cd-tl-dot" style="background:' + dotColor + ';"></span>' +
-          '      <a' + linkHtml + ' class="cd-tl-title text-hover-primary">' + (act.title || 'Company Event') + '</a>' +
-          '      <span class="cd-tl-sub">' + (act.description || '') + '</span>' +
-          '    </div>' +
-          '    <div class="cd-tl-card-right">' +
-          '      <span class="badge" style="background:' + badgeBg + '; color:' + badgeColor + '; font-size:10px; font-weight:600; padding:2px 7px; border-radius:6px;">' + (act.badge_text || 'Active') + '</span>' +
-          '      <span class="cd-tl-time">' + (act.time_ago || 'Recently') + '</span>' +
-          '    </div>' +
-          '  </div>' +
-          '  <div class="d-flex align-items-center justify-content-between mt-2 pt-1 border-top border-dashed border-gray-200" style="font-size:10.5px; color:#64748b;">' +
-          '    <span>Performed by <strong style="color:#1e293b;">' + (act.actor_name || 'Team Member') + '</strong></span>' +
-          '    <span>' + (act.formatted_date || '') + '</span>' +
-          '  </div>' +
-          '</div>';
+        var drawerClick = '';
+        if (cat === 'jobs' && job.id) {
+          drawerClick = 'onclick="if(window.openJobDrawer){window.openJobDrawer(\'' + job.id + '\', {readOnly:true});}"';
+        } else if (cand.id || cand.wise_id) {
+          var cid = cand.wise_id || cand.id;
+          drawerClick = 'onclick="if(window.openCandidateDrawer){window.openCandidateDrawer(\'' + cid + '\', {readOnly:true});}"';
+        }
+
+        html += `
+          <div class="cd-activity-card" style="margin-bottom:8px; cursor:pointer;" ${drawerClick}>
+            <div class="cd-activity-node-dot ${dotClass}" style="left:-16px; top:12px; width:13px; height:13px;"></div>
+            <div style="padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="min-width:0; flex:1;">
+                <div style="font-size:12.5px; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+                <div style="font-size:11px; color:#64748b; margin-top:2px;">${subtext} &bull; <span style="color:#1e293b; font-weight:600;">${actor.name || 'Team Member'}</span></div>
+              </div>
+              <div style="flex-shrink:0; text-align:right;">
+                <span class="cd-status-badge status-active" style="font-size:9.5px; padding:2px 6px;">${badgeText}</span>
+                <div style="font-size:10px; color:#94a3b8; font-weight:500; margin-top:3px;">${timeAgo}</div>
+              </div>
+            </div>
+          </div>
+        `;
       });
       html += '</div>';
 
       $container.html(html);
+
+      function matchDot(c) {
+        if (c === 'jobs') return 'dot-status-active stream-jobs';
+        if (c === 'interviews') return 'dot-status-interview stream-interviews';
+        if (c === 'offers') return 'dot-status-active stream-offers';
+        if (c === 'team') return 'dot-status-crm stream-crm';
+        return 'dot-status-pipeline stream-pipeline';
+      }
     }
   };
 
-  // Event Handlers
+  // Event Listeners
   $(document).ready(function() {
     // Category Sub-tabs Click
-    $(document).on('click', '#coaFilterTabs .coa-tab-btn', function() {
+    $(document).on('click', '#coaFilterTabs .cd-activity-tab-btn', function() {
       var $btn = $(this);
-      $('#coaFilterTabs .coa-tab-btn').removeClass('active');
+      $('#coaFilterTabs .cd-activity-tab-btn').removeClass('active');
       $btn.addClass('active');
       CompanyActivityManager.activeCategory = $btn.data('category') || 'all';
       CompanyActivityManager.loadActivity(false);
@@ -814,6 +508,24 @@
       $(this).removeClass('visible');
       CompanyActivityManager.searchQuery = '';
       CompanyActivityManager.loadActivity(false);
+    });
+
+    // Delegated click for Job drawer
+    $(document).on('click', '.show-detail-open, [data-entity-type="job"]', function(e) {
+      var jobId = $(this).data('id') || $(this).data('entity-id');
+      if (jobId && window.openJobDrawer) {
+        e.preventDefault();
+        window.openJobDrawer(jobId, { readOnly: true });
+      }
+    });
+
+    // Delegated click for Candidate drawer
+    $(document).on('click', '.show-application-detail, [data-entity-type="candidate"]', function(e) {
+      var candId = $(this).data('row-id') || $(this).data('id') || $(this).data('entity-id');
+      if (candId && window.openCandidateDrawer) {
+        e.preventDefault();
+        window.openCandidateDrawer(candId, { readOnly: true });
+      }
     });
 
     // Initialize CompanyActivityManager
