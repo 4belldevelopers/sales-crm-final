@@ -295,38 +295,7 @@ input[type="radio"]:checked {
 @media (max-width:1100px){ .cad-hero { grid-template-columns:1fr; } .cad-stats { grid-template-columns:repeat(2,1fr); } .cad-grid2 { grid-template-columns:1fr; } .cad-grid3 { grid-template-columns:1fr 1fr; } }
 @media (max-width:768px){ .cad-stats { grid-template-columns:1fr 1fr; } .cad-grid3 { grid-template-columns:1fr; } }
 
-/* ===== Interview Pipeline Builder (scoped .ips) ===== */
-.ips, .ips * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; }
-.ips-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin:4px 2px 6px; }
-.ips-title { font-size:14px; font-weight:700; color:#0f172a; }
-.ips-sub { font-size:12px; color:#94a3b8; margin-top:3px; max-width:580px; }
-.ips-sys { display:flex; gap:10px; align-items:center; background:#f8f9fc; border:1px solid #eef0f5; border-radius:11px; padding:10px 13px; max-width:340px; }
-.ips-sys-ic { width:32px; height:32px; flex:0 0 32px; border-radius:9px; background:#eef2ff; color:#3b55e6; display:inline-flex; align-items:center; justify-content:center; }
-.ips-sys-ic svg { width:16px; height:16px; }
-.ips-sys-t { font-size:12px; font-weight:700; color:#0f172a; }
-.ips-sys-s { font-size:10.5px; color:#94a3b8; line-height:1.4; }
-.ips #kt_docs_jkanban_basic1 .kanban-container { display:block; padding-bottom:10px; }
-.ips #kt_docs_jkanban_basic1 .kanban-container .row { display:grid !important; grid-template-columns:repeat(3,1fr); gap:16px; margin:0 0 16px !important; align-items:start; }
-.ips #kt_docs_jkanban_basic1 .kanban-board { width:auto !important; max-width:none !important; margin:0 !important; padding:0 !important; background:#fff !important; border:1px solid #eef0f5; border-radius:14px; box-shadow:0 1px 3px rgba(20,30,60,.04); overflow:hidden; display:flex; flex-direction:column; }
-@media (max-width:992px){ .ips #kt_docs_jkanban_basic1 .kanban-container .row { grid-template-columns:repeat(2,1fr); } }
-@media (max-width:600px){ .ips #kt_docs_jkanban_basic1 .kanban-container .row { grid-template-columns:1fr; } }
-.ips #kt_docs_jkanban_basic1 .kanban-board-header { position:relative !important; top:auto !important; left:auto !important; width:100% !important; height:auto !important; min-height:auto !important; margin:0 !important; padding:11px 13px !important; border-radius:0 !important; display:flex !important; align-items:center; justify-content:space-between; box-shadow:none !important; }
-.ips #kt_docs_jkanban_basic1 .kanban-title-board { color:#fff !important; font-size:13px !important; font-weight:700 !important; }
-.ips #kt_docs_jkanban_basic1 .kanban-board-header .plus-button .btn { background:rgba(255,255,255,.22) !important; color:#fff !important; border:0 !important; border-radius:7px; font-size:11px !important; font-weight:600; padding:4px 9px !important; display:inline-flex; align-items:center; gap:2px; }
-.ips #kt_docs_jkanban_basic1 .kanban-board-header .plus-button .btn:hover { background:rgba(255,255,255,.36) !important; }
-.ips #kt_docs_jkanban_basic1 .kanban-board-header .plus-button .btn .svg-icon svg [fill] { fill:#fff !important; }
-.ips #kt_docs_jkanban_basic1 .kanban-drag { background:#fff !important; margin:0 !important; padding:12px !important; min-height:44px; position:relative !important; list-style:none; }
-.ips #kt_docs_jkanban_basic1 .kanban-drag::before { content:"Sub Stages"; display:block; font-size:10.5px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:#94a3b8; margin-bottom:9px; }
-.ips #kt_docs_jkanban_basic1 .kanban-item { background:#fff !important; border:1px solid #eef0f5 !important; border-radius:9px !important; padding:9px 11px !important; margin-bottom:8px !important; box-shadow:0 1px 2px rgba(20,30,60,.04) !important; display:flex !important; align-items:center; justify-content:space-between; }
-.ips #kt_docs_jkanban_basic1 .kanban-item span.fw-bold { font-size:12px !important; color:#1f2937 !important; font-weight:600 !important; }
-.ips #kt_docs_jkanban_basic1 .kanban-item .edit_delete .svg-icon svg { width:16px; height:16px; }
-.ips-foot { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:18px 2px 4px; padding-top:16px; border-top:1px solid #eef0f5; }
-.ips-foot-item { display:flex; gap:11px; align-items:flex-start; }
-.ips-foot-ic { width:36px; height:36px; flex:0 0 36px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; }
-.ips-foot-ic svg { width:18px; height:18px; }
-.ips-foot-t { font-size:12.5px; font-weight:700; color:#0f172a; }
-.ips-foot-s { font-size:11px; color:#94a3b8; line-height:1.45; margin-top:2px; }
-@media (max-width:992px){ .ips-foot { grid-template-columns:1fr; } }
+/* ===== Interview Pipeline Builder (scoped in components/tab-interview-stages.blade.php) ===== */
 
 /* ===== Agency Terms & Conditions template (scoped .atc) ===== */
 .atc, .atc * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; }
@@ -2673,354 +2642,7 @@ input[type="radio"]:checked {
 <!--end::Recent Activity Content-->
 <!--begin::Interview Stage Content-->
 <div class="tab-pane ips" id="interview_Stage" role="tabpanel">
-  <!--begin::Pipeline Builder header-->
-  <div class="ips-head">
-    <div>
-      <div class="ips-title">Interview Pipeline Builder</div>
-      <div class="ips-sub">Design and manage your interview pipeline. Configure stages and sub-stages for your hiring process.</div>
-    </div>
-    <div class="ips-sys">
-      <span class="ips-sys-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-      <div><div class="ips-sys-t">System Stage</div><div class="ips-sys-s">Some stages are system defined and cannot be edited or deleted.</div></div>
-    </div>
-  </div>
-  <!--end::Pipeline Builder header-->
-  <div class="card-body px-0 py-7">
-    <div id="kt_docs_jkanban_basic1">
-      <div class="kanban-container" style="">
-        <div class="row w-100" style="">
-          <div data-id="Sourcing" data-order="1" class="col-md-4 kanban-board px-0" id="base_sourcing" >
-            <header class="kanban-board-header dark d-flex align-items-center justify-content-between position-absolute bg-transparent" style="background-color:#318ebb !important" >
-              <div class="kanban-title-board">Sourcing</div>
-              <div class="plus-button"> @if(in_array("add_settings", $userPermissions)) <a class="btn btn-sm btn-light interview_stage" data-class="bg-secondary" data-title="Sourcing" data-id="1" data-root="root_sourcing" data-toggle="modal" data-target="#add_interview_sub_stage" style="color:#318ebb !important"> <span class="svg-icon svg-icon svg-icon me-0" >
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                    <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"></rect>
-                  </g>
-                </svg>
-                </span> Add </a> @endif </div>
-            </header>
-            @if(in_array("view_settings", $userPermissions))
-            <ul class="kanban-drag bg-light" id="root_sourcing" style="margin-top:80px;" >
-                @if(!empty($interviewStage_sourcing))
-                    @foreach($interviewStage_sourcing as $val)									  				
-                    {!! '<li id ="'.@$val->id.'" class="kanban-item d-flex align-items-center justify-content-between bg-secondary root_child">
-                                <span class="fw-bold" style="color:#318ebb !important" >'.@$val->name.'</span>
-                                <div class="edit_delete cursor-pointer">                 
-                                  <a class="stage_block text-danger delete_process" href="javascript:void(0);" rel="'.@$val->id.'" >
-                                    <span class="svg-icon svg-icon-danger svg-icon-2x svg-icon-danger-Sourcing">
-                                      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                        <rect x="0" y="0" width="24" height="24"/>
-                                        <path d="M6,8 L18,8 L17.106535,19.6150447 C17.04642,20.3965405 16.3947578,21 15.6109533,21 L8.38904671,21 C7.60524225,21 6.95358004,20.3965405 6.89346498,19.6150447 L6,8 Z M8,10 L8.45438229,14.0894406 L15.5517885,14.0339036 L16,10 L8,10 Z" fill="#000000" fill-rule="nonzero"/>
-                                        <path d="M14,4.5 L14,3.5 C14,3.22385763 13.7761424,3 13.5,3 L10.5,3 C10.2238576,3 10,3.22385763 10,3.5 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"/>
-                                      </g>
-                                      </svg>
-                                    </span>
-                                  </a>          											 
-                                </div>
-                                </li>' !!}
-                    @endforeach
-                @endif	
-
-            </ul>
-            @endif 
-          </div>
-          <div data-id="Screening" data-order="2" class="col-md-4 kanban-board px-0" >
-            <header class="kanban-board-header screening d-flex align-items-center justify-content-between" style="background-color:#c000ff !important" >
-              <div class="kanban-title-board text-white">Screening</div>
-              <div class="plus-button"> @if(in_array("add_settings", $userPermissions)) <a class="btn btn-sm bg-light-info interview_stage" data-class="screening-light" data-title="Screening" data-id="2" data-root="root_screening" data-toggle="modal" data-target="#add_interview_sub_stage" style="background-color:#fae9ff !important; color:#c000ff !important">
-                <!--begin::Svg Icon-->
-                <span class="svg-icon svg-icon svg-icon me-0">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                    <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"></rect>
-                  </g>
-                </svg>
-                </span>
-                <!--end::Svg Icon-->
-                Add </a> @endif </div>
-            </header>
-            @if(in_array("view_settings", $userPermissions))
-            <ul class="kanban-drag bg-light" id="root_screening">
-                @if(!empty($interviewStage_screening))
-                    @foreach($interviewStage_screening as $val)
-                      {!! '<li id ="'.@$val->id.'" class="kanban-item d-flex align-items-center justify-content-between screening-light" data-class="">
-                            <span class="fw-bold">'.@$val->name.'</span>
-                            <div class="edit_delete cursor-pointer">
-                              <a class=" stage_block text-danger" href="javascript:void(0);" rel="'.@$val->id.'">
-                                <span class="svg-icon svg-icon-danger svg-icon-2x svg-icon-danger-Screening">
-                                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24"/>
-                                    <path d="M6,8 L18,8 L17.106535,19.6150447 C17.04642,20.3965405 16.3947578,21 15.6109533,21 L8.38904671,21 C7.60524225,21 6.95358004,20.3965405 6.89346498,19.6150447 L6,8 Z M8,10 L8.45438229,14.0894406 L15.5517885,14.0339036 L16,10 L8,10 Z" fill="#000000" fill-rule="nonzero"/>
-                                    <path d="M14,4.5 L14,3.5 C14,3.22385763 13.7761424,3 13.5,3 L10.5,3 C10.2238576,3 10,3.22385763 10,3.5 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"/>
-                                  </g>
-                                  </svg>
-                                </span>
-                              </a>              
-                            </div>
-                            </li>' !!}
-                    @endforeach
-                @endif
-            </ul>
-            @endif 
-          </div>
-          <div data-id="Evaluation" data-order="3" class="col-md-4 kanban-board px-0">
-            <header class="kanban-board-header primary d-flex align-items-center justify-content-between">
-              <div class="kanban-title-board text-white">Evaluation</div>
-              <div class="plus-button"> @if(in_array("add_settings", $userPermissions)) <a class="btn btn-sm btn btn-sm bg-light-primary interview_stage" data-class="bg-light-primary" data-title="Evaluation" data-id="3" data-root="root_evaluation" data-toggle="modal" data-target="#add_interview_sub_stage" style="color: #009ef7 !important">
-                <!--begin::Svg Icon-->
-                <span class="svg-icon svg-icon svg-icon me-0">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                    <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"></rect>
-                  </g>
-                </svg>
-                </span>
-                <!--end::Svg Icon-->
-                Add </a> @endif </div>
-            </header>
-            @if(in_array("view_settings", $userPermissions))
-            <ul class="kanban-drag bg-light" id="root_evaluation" style="position: relative;" >
-              @if(!empty($interviewStage_evaluation))
-                @foreach($interviewStage_evaluation as $val)
-                  {!! '<li id ="'.@$val->id.'" class="kanban-item d-flex align-items-center justify-content-between bg-light-primary" data-class="">
-                    <span class="fw-bold" style="color:#009ef7">'.$val->name.'</span>
-                    <div class="edit_delete cursor-pointer">
-                      <a class=" stage_block text-danger" href="javascript:void(0);" rel="'.@$val->id.'" >
-                        <span class="svg-icon svg-icon-danger svg-icon-2x svg-icon-danger-Evaluation">
-                          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                          <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                            <rect x="0" y="0" width="24" height="24"/>
-                            <path d="M6,8 L18,8 L17.106535,19.6150447 C17.04642,20.3965405 16.3947578,21 15.6109533,21 L8.38904671,21 C7.60524225,21 6.95358004,20.3965405 6.89346498,19.6150447 L6,8 Z M8,10 L8.45438229,14.0894406 L15.5517885,14.0339036 L16,10 L8,10 Z" fill="#000000" fill-rule="nonzero"/>
-                            <path d="M14,4.5 L14,3.5 C14,3.22385763 13.7761424,3 13.5,3 L10.5,3 C10.2238576,3 10,3.22385763 10,3.5 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"/>
-                          </g>
-                          </svg>
-                        </span>				
-                      </a>          
-                    </div>
-                    </li>' !!}
-                @endforeach
-              @endif
-            </ul>
-            @endif 
-          </div>
-        </div>
-        <div class="row w-100" style="">
-          <div data-id="Negotation" data-order="4" class="col-md-4 kanban-board px-0">
-            <header class="kanban-board-header negotation d-flex align-items-center justify-content-between">
-              <div class="kanban-title-board text-white">Negotiation</div>
-              <div class="plus-button"> @if(in_array("add_settings", $userPermissions)) <a class="btn btn-sm btn btn-sm negotation-light interview_stage" data-class="negotation-light" data-title="Negotation" data-id="4" data-root="root_negotation"  data-toggle="modal" data-target="#add_interview_sub_stage">
-                <!--begin::Svg Icon-->
-                <span class="svg-icon svg-icon svg-icon me-0">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                    <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"></rect>
-                  </g>
-                </svg>
-                </span>
-                <!--end::Svg Icon-->
-                Add </a> @endif </div>
-            </header>
-            @if(in_array("view_settings", $userPermissions))
-            <ul class="kanban-drag bg-light" id="root_negotation" style="position: relative;">
-              @if(!empty($interviewStage_negotiation))
-                @foreach($interviewStage_negotiation as $val)
-                  {!! '<li id ="'.@$val->id.'" class="kanban-item d-flex align-items-center justify-content-between negotation-light" data-class="">
-                        <span class="fw-bold">'.$val->name.'</span>
-                        <div class="edit_delete cursor-pointer">						
-                          <a class=" stage_block text-danger" href="javascript:void(0);" rel="'.@$val->id.'">
-                            <span class="svg-icon svg-icon-danger svg-icon-2x svg-icon-danger-Negotiation">
-                              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                <rect x="0" y="0" width="24" height="24"/>
-                                <path d="M6,8 L18,8 L17.106535,19.6150447 C17.04642,20.3965405 16.3947578,21 15.6109533,21 L8.38904671,21 C7.60524225,21 6.95358004,20.3965405 6.89346498,19.6150447 L6,8 Z M8,10 L8.45438229,14.0894406 L15.5517885,14.0339036 L16,10 L8,10 Z" fill="#000000" fill-rule="nonzero"/>
-                                <path d="M14,4.5 L14,3.5 C14,3.22385763 13.7761424,3 13.5,3 L10.5,3 C10.2238576,3 10,3.22385763 10,3.5 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"/>
-                              </g>
-                              </svg>
-                            </span>
-                          </a>             						
-                        </div>
-                        </li>' !!}
-                @endforeach
-              @endif
-            </ul>
-            @endif 
-          </div>
-          <div data-id="Offer" data-order="5" class="col-md-4 kanban-board px-0" >
-            <header class="kanban-board-header offer d-flex align-items-center justify-content-between" style="background-color:#ffab00!important;">
-              <div class="kanban-title-board text-white">Offer</div>
-              <div class="plus-button"> @if(in_array("add_settings", $userPermissions)) <a class="btn btn-sm btn btn-sm offer-light interview_stage" data-class="offer-light" data-title="Offer" data-id="5" data-root="root_offer" data-toggle="modal" data-target="#add_interview_sub_stage">
-                <!--begin::Svg Icon-->
-                <span class="svg-icon svg-icon svg-icon me-0">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                    <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"></rect>
-                  </g>
-                </svg>
-                </span>
-                <!--end::Svg Icon-->
-                Add </a> @endif </div>
-            </header>
-            @if(in_array("view_settings", $userPermissions))
-            <ul class="kanban-drag bg-light" id="root_offer" style="position: relative;">
-                @if(!empty($interviewStage_offered))
-                  @foreach($interviewStage_offered as $val)
-                    {!! '<li id ="'.@$val->id.'" class="kanban-item d-flex align-items-center justify-content-between offer-light" data-class="">
-                          <span class="fw-bold">'.$val->name.'</span>
-                          <div class="edit_delete cursor-pointer">
-                            <a class=" stage_block text-danger" href="javascript:void(0);" rel="'.@$val->id.'">
-                              <span class="svg-icon svg-icon-danger svg-icon-2x svg-icon-danger-Offer">
-                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                  <rect x="0" y="0" width="24" height="24"/>
-                                  <path d="M6,8 L18,8 L17.106535,19.6150447 C17.04642,20.3965405 16.3947578,21 15.6109533,21 L8.38904671,21 C7.60524225,21 6.95358004,20.3965405 6.89346498,19.6150447 L6,8 Z M8,10 L8.45438229,14.0894406 L15.5517885,14.0339036 L16,10 L8,10 Z" fill="#000000" fill-rule="nonzero"/>
-                                  <path d="M14,4.5 L14,3.5 C14,3.22385763 13.7761424,3 13.5,3 L10.5,3 C10.2238576,3 10,3.22385763 10,3.5 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"/>
-                                </g>
-                                </svg>
-                              </span> 
-                            </a>     
-                          </div>
-                          </li>' !!}
-                @endforeach
-                @endif
-            </ul>
-            @endif 
-          </div>
-          <div data-id="Joined" data-order="5" class="col-md-4 kanban-board px-0">
-            <header class="kanban-board-header success d-flex align-items-center justify-content-between">
-              <div class="kanban-title-board text-white">Joined</div>
-              <div class="plus-button"> @if(in_array("add_settings", $userPermissions)) <a class="btn btn-sm btn btn-sm joined-light interview_stage" data-class="joined-light" data-title="Joined" data-id="6" data-root="root_joined" data-toggle="modal" data-target="#add_interview_sub_stage">
-                <!--begin::Svg Icon-->
-                <span class="svg-icon svg-icon svg-icon me-0">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                    <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"></rect>
-                  </g>
-                </svg>
-                </span>
-                <!--end::Svg Icon-->
-                Add </a> @endif </div>
-            </header>
-            @if(in_array("view_settings", $userPermissions))
-            <ul class="kanban-drag bg-light" id="root_joined" style="position: relative;">
-                @if(!empty($interviewStage_joined))
-                  @foreach($interviewStage_joined as $val)
-                  @php
-                    $delete_hide = '';
-                    if($val->delete_status==0){
-                      $delete_hide = 'd-none';
-                    }
-                  @endphp
-                  
-                 
-                    {!! '<li id ="'.@$val->id.'" class="kanban-item d-flex align-items-center justify-content-between joined-light" data-class="">
-                          <span class="fw-bold">'.$val->name.'</span>
-                         
-                          <div class="edit_delete cursor-pointer '.$delete_hide.'">
-                            <a class=" stage_block text-danger" href="javascript:void(0);" rel="'.@$val->id.'">
-                              <span class="svg-icon svg-icon-danger svg-icon-2x svg-icon-danger-Joined">
-                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                  <rect x="0" y="0" width="24" height="24"/>
-                                  <path d="M6,8 L18,8 L17.106535,19.6150447 C17.04642,20.3965405 16.3947578,21 15.6109533,21 L8.38904671,21 C7.60524225,21 6.95358004,20.3965405 6.89346498,19.6150447 L6,8 Z M8,10 L8.45438229,14.0894406 L15.5517885,14.0339036 L16,10 L8,10 Z" fill="#000000" fill-rule="nonzero"/>
-                                  <path d="M14,4.5 L14,3.5 C14,3.22385763 13.7761424,3 13.5,3 L10.5,3 C10.2238576,3 10,3.22385763 10,3.5 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"/>
-                                </g>
-                                </svg>
-                              </span> 
-                            </a>     
-                          </div>
-                         
-
-                          </li>' !!}
-                  @endforeach
-                @endif 
-            </ul>
-            @endif 
-          </div>
-        </div>
-        <div class="row w-100" style="">
-          <div data-id="Rejected" data-order="7" class="col-md-4 kanban-board px-0">
-            <header class="kanban-board-header rejectedset d-flex align-items-center justify-content-between">
-              <div class="kanban-title-board text-white">Rejected</div>
-              <div class="plus-button"> @if(in_array("add_settings", $userPermissions)) <a class="btn btn-sm btn btn-sm rejectedset-light interview_stage" data-class="rejected-light" data-title="Rejected" data-id="7" data-root="root_rejected"  data-toggle="modal" data-target="#add_interview_sub_stage">
-                <!--begin::Svg Icon-->
-                <span class="svg-icon svg-icon svg-icon me-0">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                    <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                    <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"></rect>
-                  </g>
-                </svg>
-                </span>
-                <!--end::Svg Icon-->
-                Add </a> @endif </div>
-            </header>
-            @if(in_array("view_settings", $userPermissions))
-            <ul class="kanban-drag bg-light" id="root_rejected" style="position: relative;">
-              @if(!empty($interviewStage_reject))
-                @foreach($interviewStage_reject as $val)
-                @php
-                $delete_hide = '';
-                 if($val->delete_status==0){
-                  $delete_hide = 'd-none';
-                 }
-                @endphp
-                  
-          
-                  {!! '<li id ="'.@$val->id.'" class="kanban-item d-flex align-items-center justify-content-between rejectedset-light" data-class="">
-                        <span class="fw-bold">'.$val->name.'</span>
-                       
-                        <div class="edit_delete cursor-pointer '.$delete_hide.'">						
-                          <a class=" stage_block text-danger" href="javascript:void(0);" rel="'.@$val->id.'">
-                            <span class="svg-icon svg-icon-danger svg-icon-2x svg-icon-danger-Negotiation">
-                              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                <rect x="0" y="0" width="24" height="24"/>
-                                <path d="M6,8 L18,8 L17.106535,19.6150447 C17.04642,20.3965405 16.3947578,21 15.6109533,21 L8.38904671,21 C7.60524225,21 6.95358004,20.3965405 6.89346498,19.6150447 L6,8 Z M8,10 L8.45438229,14.0894406 L15.5517885,14.0339036 L16,10 L8,10 Z" fill="#000000" fill-rule="nonzero"/>
-                                <path d="M14,4.5 L14,3.5 C14,3.22385763 13.7761424,3 13.5,3 L10.5,3 C10.2238576,3 10,3.22385763 10,3.5 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"/>
-                              </g>
-                              </svg>
-                            </span>
-                          </a>             						
-                        </div>
-                        
-                        </li>' !!}
-                @endforeach
-              @endif
-            </ul>
-            @endif 
-          </div>
-        </div>
-
-
-      </div>
-    </div>
-    <!--begin::Pipeline footer-->
-    <div class="ips-foot">
-      <div class="ips-foot-item">
-        <span class="ips-foot-ic cad-bl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
-        <div><div class="ips-foot-t">Manage Sub-Stages</div><div class="ips-foot-s">Add or remove sub-stages under each stage to match your hiring process.</div></div>
-      </div>
-      <div class="ips-foot-item">
-        <span class="ips-foot-ic cad-pu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2a10 10 0 0 0 0 20 2.5 2.5 0 0 0 2.5-2.5c0-.7-.3-1.3-.7-1.7-.4-.4-.7-1-.7-1.7A2.5 2.5 0 0 1 15.6 14H17a5 5 0 0 0 5-5c0-3.9-4.5-7-10-7z"/></svg></span>
-        <div><div class="ips-foot-t">Color-Coded Stages</div><div class="ips-foot-s">Each stage is color-coded to stay consistent with candidate pipeline views.</div></div>
-      </div>
-      <div class="ips-foot-item">
-        <span class="ips-foot-ic cad-am"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-        <div><div class="ips-foot-t">System Stage</div><div class="ips-foot-s">Some stages are system defined and cannot be edited or deleted.</div></div>
-      </div>
-    </div>
-    <!--end::Pipeline footer-->
-  </div>
-  <!--end::Interview stage Content-->
+  @include('service_company.account.components.tab-interview-stages')
 </div>
 <!--end::Interview Stage Content-->
 
@@ -5052,41 +4674,54 @@ input[type="radio"]:checked {
 </div>
 
 
-<!--begin::Add Interview Sub-Stage modal-->
-<div class="modal fade show" id="add_interview_sub_stage" tabindex="-1" aria-modal="true" role="dialog">
-  <div class="modal-dialog modal-dialog-centered mw-650px">
-    <div class="modal-content rounded">
-      <div class="modal-header pb-0 border-0 justify-content-end">
-        <div class="btn btn-sm btn-icon btn-active-color-primary" data-dismiss="modal">
-          <span class="svg-icon svg-icon-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"></rect>
-            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black"></rect>
-          </svg>
-          </span>
+<!--begin::Add Interview Sub-Stage modal (Rule 20 Modern Card Standard)-->
+<div class="modal fade" id="add_interview_sub_stage" tabindex="-1" aria-modal="true" role="dialog">
+  <div class="modal-dialog modal-dialog-centered mw-550px">
+    <div class="modal-content rounded-3 shadow border-0" style="border-radius:12px;">
+      <div class="modal-header border-bottom py-4 px-6 d-flex align-items-center justify-content-between">
+        <h3 class="modal-title fw-bold text-dark fs-5 d-flex align-items-center gap-2 mb-0">
+          <i class="fas fa-plus-circle text-primary fs-5"></i>
+          <span class="h1_title">Add Pipeline Sub-Stage</span>
+        </h3>
+        <div class="btn btn-sm btn-icon btn-active-light-primary" data-dismiss="modal" data-bs-dismiss="modal" style="cursor:pointer;">
+          <i class="fas fa-times fs-6 text-muted"></i>
         </div>
       </div>
-      <div class="modal-body scroll-y px-5 px-lg-5 pt-0 pb-5">
-        <form id="add_interview_sub_stage_form" class="form fv-plugins-bootstrap5 fv-plugins-framework" action="post">
-          <input type="hidden" name="ltb_stage" id="ltb_stage" value="" />
-          <input type="hidden" name="ltb_root" id="ltb_root" value="" />
-          <input type="hidden" name="ltb_class" id="ltb_class" value="" />
-          <div class="mb-11 text-center">
-            <h1 class="h1_title">&nbsp;</h1>
+      <div class="modal-body py-5 px-6">
+        <form id="add_interview_sub_stage_form" class="form" onsubmit="return false;">
+          <input type="hidden" name="ltb_stage" id="ltb_stage" value="1" />
+          <input type="hidden" name="ltb_root" id="ltb_root" value="root_sourcing" />
+          <input type="hidden" name="ltb_class" id="ltb_class" value="bg-secondary" />
+          
+          <div class="mb-4">
+            <label class="form-label fs-7 fw-bolder text-dark mb-2">Master Pipeline Stage <span class="text-danger">*</span></label>
+            <select class="form-select form-select-solid" id="ips_modal_stage_picker">
+              <option value="1" data-root="root_sourcing" data-class="bg-secondary">01 - Sourcing</option>
+              <option value="2" data-root="root_screening" data-class="screening-light">02 - Screening</option>
+              <option value="3" data-root="root_evaluation" data-class="evaluation-light">03 - Evaluation</option>
+              <option value="4" data-root="root_negotation" data-class="negotation-light">04 - Negotiation</option>
+              <option value="5" data-root="root_offer" data-class="offer-light">05 - Offer</option>
+              <option value="6" data-root="root_joined" data-class="joined-light">06 - Joined</option>
+              <option value="7" data-root="root_rejected" data-class="rejected-light">07 - Rejected</option>
+            </select>
           </div>
-          <div class="d-flex flex-column mb-8 fv-row fv-plugins-icon-container fv-plugins-bootstrap5-row-invalid">
-            <label class="d-flex align-items-center fs-6 fw-bold mb-2"> <span class="required lbl_title">&nbsp;</span> </label>
-            <input type="text" class="form-control form-control-solid" placeholder="Enter Sub Stage" name="ltb_stage_name" id="ltb_stage_name">
-            <div class="fv-plugins-message-container invalid-feedback">
-            </div>
+
+          <div class="mb-4">
+            <label class="form-label fs-7 fw-bolder text-dark mb-2"> <span class="required lbl_title">Sub-Stage Name</span> <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-solid" placeholder="e.g. L1 Technical Interview, Client Assessment..." name="ltb_stage_name" id="ltb_stage_name" autocomplete="off">
           </div>
-          <div class="text-center">
-            <button type="button" class="btn btn-secondary me-3" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="ltb_submit">Submit</button>
+
+          <div class="alert alert-light-primary d-flex align-items-center p-3 mb-4 rounded border border-primary border-opacity-20" style="background:#f0f9ff; border:1px solid #bae6fd;">
+            <i class="fas fa-info-circle text-primary fs-5 me-3"></i>
+            <div class="fs-8 text-gray-700">Sub-stages appear immediately across Candidate Tracking, Kanban workflows, and Client Drawers.</div>
           </div>
-          <div></div>
+
+          <div class="d-flex justify-content-end gap-3 pt-2">
+            <button type="button" class="btn btn-light" data-dismiss="modal" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="ltb_submit"><i class="fas fa-save me-1"></i> Save Sub-Stage</button>
+          </div>
         </form>
-        <div id="add_interview_sub_stage_form_loader">&nbsp;</div>
+        <div id="add_interview_sub_stage_form_loader" class="text-center py-5" style="display:none;"></div>
       </div>
     </div>
   </div>
@@ -5900,75 +5535,120 @@ new Tagify(input)
 
   
 
-      $('body').on('click', '.interview_stage', function(){
-    
-            $('#add_interview_sub_stage_form').show();
-            $('#add_interview_sub_stage_form_loader').hide();
-            
-            $('.h1_title').html('');	
-            $('.lbl_title').html('');	
-            $('#ltb_stage_name').val('');	
-            
-            var id 				=	$(this).data('id');
-            var root			=	$(this).data('root');	
-            var ltb_class		=	$(this).data('class');
-            
-            if(id == 1){
-              $('.h1_title').html('Add Sourcing Sub-Stage');	
-            $('.lbl_title').html('Sourcing Sub stage Name')
-            }else if(id == 2){
-              $('.h1_title').html('Add Screening Sub-Stage');	
-            $('.lbl_title').html('Screening Sub stage Name')
-            }else if(id == 3){
-              $('.h1_title').html('Add Evaluation Sub-Stage');	
-            $('.lbl_title').html('Evaluation Sub stage Name')
-            }else if(id == 4){
-              $('.h1_title').html('Add Negotation Sub-Stage');	
-            $('.lbl_title').html('Negotation Sub stage Name')
-            }else if(id == 5){
-              $('.h1_title').html('Add Offer Sub-Stage');	
-            $('.lbl_title').html('Offer Sub stage Name')
-            }else if(id == 6){
-              $('.h1_title').html('Add Joined Sub-Stage');	
-            $('.lbl_title').html('Joined Sub stage Name')
-            }else if(id == 7){
-              $('.h1_title').html('Add Rejected Sub-Stage');	
-            $('.lbl_title').html('Rejected Sub stage Name')
-            }
-            $('#ltb_stage').val(id);
-            $('#ltb_root').val(root); 
-            $('#ltb_class').val(ltb_class); 
+      // ── Interview Pipeline Builder: Modern Stack-Based Card + Sub-Card System (Rule 20) ──
+      var ipsStageNameMap = {
+          1: { name: 'Sourcing', root: 'root_sourcing', cls: 'bg-secondary' },
+          2: { name: 'Screening', root: 'root_screening', cls: 'screening-light' },
+          3: { name: 'Evaluation', root: 'root_evaluation', cls: 'evaluation-light' },
+          4: { name: 'Negotiation', root: 'root_negotation', cls: 'negotation-light' },
+          5: { name: 'Offer', root: 'root_offer', cls: 'offer-light' },
+          6: { name: 'Joined', root: 'root_joined', cls: 'joined-light' },
+          7: { name: 'Rejected', root: 'root_rejected', cls: 'rejected-light' }
+      };
+
+      $('body').on('click', '.interview_stage', function(e) {
+          $('#add_interview_sub_stage_form').show();
+          $('#add_interview_sub_stage_form_loader').hide();
+          $('#ltb_stage_name').val('');
+
+          var id = $(this).data('id') || 1;
+          var stageInfo = ipsStageNameMap[id] || ipsStageNameMap[1];
+          var root = $(this).data('root') || stageInfo.root;
+          var ltb_class = $(this).data('class') || stageInfo.cls;
+
+          $('.h1_title').html('Add ' + stageInfo.name + ' Sub-Stage');
+          $('.lbl_title').html(stageInfo.name + ' Sub-Stage Name');
+
+          $('#ltb_stage').val(id);
+          $('#ltb_root').val(root);
+          $('#ltb_class').val(ltb_class);
+          $('#ips_modal_stage_picker').val(id);
       });
 
-      $('body').on('click', '#ltb_submit', function(e){
-          
-          var ltb_stage			=	$('#ltb_stage').val();
-          var ltb_root			=	$('#ltb_root').val();
-          var ltb_stage_name		=	$('#ltb_stage_name').val();
-          var ltb_class			=	$('#ltb_class').val();
-          var url 				=	"{{ route('service_company.account.addIntStage') }}";
-          var token 				=	"{{ csrf_token() }}";
-          var baseurl    			=	"{{ asset('assets/images/Loading2.gif') }}"; 
-                      
+      $('body').on('change', '#ips_modal_stage_picker', function() {
+          var id = parseInt($(this).val()) || 1;
+          var stageInfo = ipsStageNameMap[id] || ipsStageNameMap[1];
+          $('#ltb_stage').val(id);
+          $('#ltb_root').val(stageInfo.root);
+          $('#ltb_class').val(stageInfo.cls);
+          $('.h1_title').html('Add ' + stageInfo.name + ' Sub-Stage');
+          $('.lbl_title').html(stageInfo.name + ' Sub-Stage Name');
+      });
+
+      $('body').on('click', '#ltb_submit', function(e) {
+          e.preventDefault();
+          var ltb_stage = $('#ltb_stage').val();
+          var ltb_root = $('#ltb_root').val();
+          var ltb_stage_name = $.trim($('#ltb_stage_name').val());
+          var ltb_class = $('#ltb_class').val();
+          var url = "{{ route('service_company.account.addIntStage') }}";
+          var token = "{{ csrf_token() }}";
+
+          if (!ltb_stage_name) {
+              if (typeof Swal !== 'undefined') {
+                  Swal.fire({
+                      icon: 'warning',
+                      title: 'Sub-Stage Name Required',
+                      text: 'Please enter a valid sub-stage name.',
+                      confirmButtonColor: '#009ef7'
+                  });
+              } else {
+                  alert('Please enter a valid sub-stage name.');
+              }
+              $('#ltb_stage_name').focus();
+              return;
+          }
+
           $.ajax({
-                type		: 'POST',
-                url			: url,
-                beforeSend	: function() {
-                              $('#add_interview_sub_stage_form').hide();
-                              $('#add_interview_sub_stage_form_loader').show();
-                              $('#add_interview_sub_stage_form_loader').html('<img src="'+baseurl+'" height="60%" width="100%">');
-                            },
-                data		: {'_token': token, 'ltb_stage':ltb_stage, 'ltb_stage_name':ltb_stage_name, 'ltb_class':ltb_class },
-                success		: function (response) {
-                                    if (response.status == "success") {
-                                                        $("#"+ltb_root).last().append(response.stageHtml);
-                                                        $('#add_interview_sub_stage_form_loader').show();
-                                                        $('#add_interview_sub_stage_form').hide();
-                                                        $('#add_interview_sub_stage_form_loader').html(response.message);
-                                                      }
-                                }
-            });
-              
+              type: 'POST',
+              url: url,
+              beforeSend: function() {
+                  $('#add_interview_sub_stage_form').hide();
+                  $('#add_interview_sub_stage_form_loader').show().html(
+                      '<div class="d-flex flex-column align-items-center py-5"><div class="spinner-border text-primary mb-3" role="status"><span class="visually-hidden">Saving...</span></div><div class="text-muted fs-7">Saving new sub-stage...</div></div>'
+                  );
+              },
+              data: {
+                  '_token': token,
+                  'ltb_stage': ltb_stage,
+                  'ltb_stage_name': ltb_stage_name,
+                  'ltb_class': ltb_class
+              },
+              success: function(response) {
+                  if (response.status == "success") {
+                      var $targetList = $("#" + ltb_root);
+                      if ($targetList.length) {
+                          $targetList.append(response.stageHtml);
+                      }
+                      var stageKey = ltb_root.replace('root_', '');
+                      $('#ipsEmpty_' + stageKey).hide();
+
+                      if (typeof updateIpsCounters === 'function') {
+                          updateIpsCounters();
+                      }
+
+                      $('#add_interview_sub_stage_form_loader').html(
+                          '<div class="alert alert-success d-flex align-items-center p-4 rounded mb-0"><i class="fas fa-check-circle text-success fs-3 me-3"></i><div><strong>Success!</strong> Sub-stage added successfully.</div></div>'
+                      );
+
+                      setTimeout(function() {
+                          $('#add_interview_sub_stage').modal('hide');
+                          $('#add_interview_sub_stage_form').show();
+                          $('#add_interview_sub_stage_form_loader').hide();
+                          $('#ltb_stage_name').val('');
+                      }, 900);
+                  } else {
+                      $('#add_interview_sub_stage_form').show();
+                      $('#add_interview_sub_stage_form_loader').hide();
+                      alert('Error adding sub-stage. Please try again.');
+                  }
+              },
+              error: function() {
+                  $('#add_interview_sub_stage_form').show();
+                  $('#add_interview_sub_stage_form_loader').hide();
+                  alert('Server error occurred while adding sub-stage.');
+              }
+          });
       });	  
       
       
@@ -6037,55 +5717,67 @@ new Tagify(input)
                   });
       });
     
-      $('#kt_docs_jkanban_basic1').on('click', '.stage_block', function() { 
-        
-        var block 		=	$(this).attr('rel');		
-          if(block > 0){
-                  var url 				= "{{ route('service_company.account.delIntStage') }}";
-                  var token 				= "{{ csrf_token() }}";							
-                  var baseurl    			= "{{ asset('assets/images/Loading2.gif') }}"; 
-                
-                      const swalWithBootstrapButtons = Swal.mixin({
-                                      customClass		: {	confirmButton	: 'btn btn-success',	cancelButton	: 'btn btn-danger'},
-                                      buttonsStyling	: false
-                      })
-                      swalWithBootstrapButtons.fire({
-                                title				: 'Are you sure?',
-                                text				: "You won't be able to revert this!",
-                                icon				: 'warning',
-                                showCancelButton	: true,
-                                confirmButtonText	: 'Yes, Delete it!',
-                                cancelButtonText	: 'No, cancel!',
-                                reverseButtons	: true
-                      }).then((result) => {					
-                              if (result.isConfirmed) {
-                              
-                                $.ajax({
-                                      type		: 'POST',
-                                      url			: url,
-                                      beforeSend	: function() {},
-                                      data		: {'_token': token, 'block':block},
-                                      success		: function (response) {
-                                        if (response.status == "success") {
-                                                          $('#'+block).remove();	 
-                                                          swalWithBootstrapButtons.fire
-                                                        ('Deleted!',	'Selected request has been Deleted successfully.',	'success')																														
-                                        }
-                                        else
-                                        {
-                                          swalWithBootstrapButtons.fire
-                                          ( 'Opps Error, Please try again!', 'Something wrong, please try again.', 'success' )
-                                        }								  
-                                      }
-                                });
+      $(document).on('click', '.stage_block', function(e) { 
+          e.preventDefault();
+          e.stopPropagation();
+          var block = $(this).attr('rel');		
+          if (block > 0) {
+              var url = "{{ route('service_company.account.delIntStage') }}";
+              var token = "{{ csrf_token() }}";							
+            
+              const swalWithBootstrapButtons = Swal.mixin({
+                  customClass: { confirmButton: 'btn btn-danger', cancelButton: 'btn btn-secondary me-3' },
+                  buttonsStyling: false
+              });
 
-                              } 
-                              else if (result.dismiss === Swal.DismissReason.cancel) {
-                                swalWithBootstrapButtons.fire('Cancelled', 'Selected request is safe :)', 'error' )
-                              }				
-                    })
+              swalWithBootstrapButtons.fire({
+                  title: 'Delete Sub-Stage?',
+                  text: "You won't be able to revert this sub-stage!",
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Yes, Delete it!',
+                  cancelButtonText: 'No, cancel!',
+                  reverseButtons: true
+              }).then((result) => {					
+                  if (result.isConfirmed) {
+                      $.ajax({
+                          type: 'POST',
+                          url: url,
+                          data: { '_token': token, 'block': block },
+                          success: function (response) {
+                              if (response.status == "success") {
+                                  $('#' + block).fadeOut(200, function() {
+                                      $(this).remove();
+                                      if (typeof updateIpsCounters === 'function') {
+                                          updateIpsCounters();
+                                      }
+                                  });
+                                  swalWithBootstrapButtons.fire(
+                                      'Deleted!',
+                                      'Selected sub-stage has been deleted successfully.',
+                                      'success'
+                                  );
+                              } else {
+                                  swalWithBootstrapButtons.fire(
+                                      'Error!',
+                                      'Something went wrong, please try again.',
+                                      'error'
+                                  );
+                              }								  
+                          },
+                          error: function() {
+                              swalWithBootstrapButtons.fire(
+                                  'Server Error!',
+                                  'Unable to process deletion at this time.',
+                                  'error'
+                              );
+                          }
+                      });
+                  } else if (result.dismiss === Swal.DismissReason.cancel) {
+                      swalWithBootstrapButtons.fire('Cancelled', 'Selected sub-stage is safe :)', 'info');
+                  }				
+              });
           } 
-                  
       });  
 			 
       $('body').on('click', '.google_config', function(){
@@ -7418,6 +7110,149 @@ $(document).ready(function(){
             }
         });
     })();
+
+    // ── Interview Pipeline Builder (Stack-Based Architecture Rule 20) Helpers ──
+    window.ipsToggleStage = function(cardId, event) {
+        if ($(event.target).closest('.ips-btn-add-sub, .ips-btn-del-subcard, .ips-drag-handle, a, button').length) {
+            return;
+        }
+        $('#' + cardId).toggleClass('collapsed');
+    };
+
+    window.ipsFilterStage = function(stageKey, btn) {
+        $('#ipsFilterTabs .ips-tab-btn').removeClass('active');
+        $(btn).addClass('active');
+
+        if (stageKey === 'all') {
+            $('.ips-stack-card').show().removeClass('collapsed');
+        } else {
+            $('.ips-stack-card').each(function() {
+                if ($(this).data('stage') === stageKey) {
+                    $(this).show().removeClass('collapsed');
+                    $('html, body').animate({
+                        scrollTop: $(this).offset().top - 90
+                    }, 200);
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+    };
+
+    window.ipsUpdatePriority = function(data) {
+        if (!data || !data.length) return;
+        $.ajax({
+            type: 'POST',
+            url: "{{ route('service_company.account.updatePriority') }}",
+            data: {
+                '_token': "{{ csrf_token() }}",
+                'data': data
+            },
+            success: function(res) {}
+        });
+    };
+
+    window.updateIpsCounters = function() {
+        var globalTotal = 0;
+        var stageKeys = ['sourcing', 'screening', 'evaluation', 'negotation', 'offer', 'joined', 'rejected'];
+        stageKeys.forEach(function(key) {
+            var rootId = 'root_' + key;
+            var count = $('#' + rootId + ' > li.ips-subcard-item').length;
+            globalTotal += count;
+
+            // Update tab badge
+            $('#ipsTabCount_' + key).text(count);
+
+            // Update stage card count pill
+            var $pill = $('#ipsCountPill_' + key);
+            if ($pill.length) {
+                $pill.html('<i class="fas fa-layer-group"></i> <span class="count-num">' + count + '</span> Sub-Stage' + (count === 1 ? '' : 's'));
+                if (count > 0) {
+                    $pill.addClass('has-items');
+                    $('#ipsEmpty_' + key).hide();
+                } else {
+                    $pill.removeClass('has-items');
+                    $('#ipsEmpty_' + key).show();
+                }
+            }
+
+            // Re-index steps
+            $('#' + rootId + ' > li.ips-subcard-item').each(function(idx) {
+                $(this).find('.ips-subcard-seq').text('Step ' + (idx + 1));
+            });
+        });
+
+        $('#ipsTabCountAll').text(globalTotal);
+        $('#ipsGlobalTotalBadge').text(globalTotal + ' Sub-Stages Defined');
+    };
+
+    // Live 300ms Debounced Search for Pipeline Builder
+    (function() {
+        var searchTimer = null;
+        $(document).on('input', '#ipsSearchInput', function() {
+            clearTimeout(searchTimer);
+            var q = $(this).val().trim().toLowerCase();
+            if (q.length > 0) {
+                $('#ipsSearchClear').addClass('visible');
+            } else {
+                $('#ipsSearchClear').removeClass('visible');
+            }
+            searchTimer = setTimeout(function() {
+                ipsPerformSearch(q);
+            }, 250);
+        });
+
+        $(document).on('click', '#ipsSearchClear', function() {
+            $('#ipsSearchInput').val('');
+            $(this).removeClass('visible');
+            ipsPerformSearch('');
+        });
+
+        function ipsPerformSearch(q) {
+            $('.ips-stack-card').each(function() {
+                var $card = $(this);
+                var title = $card.find('.ips-stack-title').text().toLowerCase();
+                var desc = $card.find('.ips-stack-desc').text().toLowerCase();
+                var hasSubMatch = false;
+
+                $card.find('.ips-subcard-item').each(function() {
+                    var name = ($(this).data('name') || $(this).text()).toLowerCase();
+                    if (q === '' || name.indexOf(q) !== -1) {
+                        $(this).show();
+                        hasSubMatch = true;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                if (q === '' || title.indexOf(q) !== -1 || desc.indexOf(q) !== -1 || hasSubMatch) {
+                    $card.show().removeClass('collapsed');
+                } else {
+                    $card.hide();
+                }
+            });
+        }
+    })();
+
+    // Initialize jQuery UI sortable on sub-cards if loaded
+    $(document).ready(function() {
+        if (typeof $.fn.sortable === 'function') {
+            ['root_sourcing', 'root_screening', 'root_evaluation', 'root_negotation', 'root_offer', 'root_joined', 'root_rejected'].forEach(function(rootId) {
+                $('#' + rootId).sortable({
+                    handle: '.ips-drag-handle',
+                    items: '> li.ips-subcard-item',
+                    update: function(event, ui) {
+                        var order = [];
+                        $('#' + rootId + ' > li.ips-subcard-item').each(function(idx) {
+                            order.push($(this).data('id') || $(this).attr('id'));
+                            $(this).find('.ips-subcard-seq').text('Step ' + (idx + 1));
+                        });
+                        ipsUpdatePriority(order);
+                    }
+                });
+            });
+        }
+    });
 
 
 </script>	

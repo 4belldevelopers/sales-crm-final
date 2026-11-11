@@ -1280,20 +1280,24 @@ class SuperAdminTeamController extends SuperAdminBaseController
 				$work_city = @$request->kt_tagify_work_location;
 				$work_city_all = json_decode($work_city, true);
 				// dd($work_city_all);
-				if (@$request->kt_tagify_work_location != "") {
+				if (! empty($work_city_all) && is_array($work_city_all)) {
 					foreach ($work_city_all as $cityVal) {
-						$parts = explode('|', $cityVal['value']);
-						// Trim to remove any leading or trailing whitespace
-						$cityName = trim($parts[0]);
-						$countrName = trim($parts[2]);
-						$city_row = DB::table('city_list')
+						$parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+						$cityName = $parts[0] ?? '';
+						$countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+						if (empty($cityName)) {
+							continue;
+						}
+						$q = DB::table('city_list')
 						->join('state_list', 'state_list.id', '=', 'city_list.state_id')
 						->join('countries', 'countries.id', '=', 'state_list.country_id')
 						->select('city_list.city_id', 'countries.id as country_id')
 						->where('city_list.city','!=','')
-						->where('city_list.city', '=', $cityName)
-						->where('countries.country_name', '=', $countrName)
-						->first();
+						->where('city_list.city', '=', $cityName);
+						if (! empty($countrName)) {
+							$q->where('countries.country_name', '=', $countrName);
+						}
+						$city_row = $q->first();
 						if($city_row){
 							$cityID = (@$city_row) ? $city_row->city_id : '';
 							$countryID = (@$city_row) ? $city_row->country_id : '';

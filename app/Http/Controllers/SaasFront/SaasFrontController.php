@@ -1087,33 +1087,45 @@ class SaasFrontController extends SaasFrontBaseController
                 $designationArr = '';
                 $designationArr = GeneralMethod::department();
                 if (! empty($designationArr)) {
+                    $bulkEsBody = [];
+                    $nowDate = date('Y-m-d');
+                    $nowIso = now()->toIso8601String();
                     foreach ($designationArr as $dval) {
                         if (! empty($dval)) {
                             $values = [
                                 'company_id' => $company->id,
                                 'name' => $dval,
-                                'created_at' => date('Y-m-d'),
-                                'updated_at' => date('Y-m-d'),
+                                'created_at' => $nowDate,
+                                'updated_at' => $nowDate,
                             ];
                             $insertGetId = DB::table('job_categories')->insertGetId($values);
 
-                            $response = $this->elasticService->getClient()->update([
-                                'index' => ELASTIC_JOB_CATEGORIES,
-                                'id' => $insertGetId,
-                                'retry_on_conflict' => 5,
-                                'body' => [
-                                    'doc' => [
-                                        'id' => $insertGetId,
-                                        'company_id' => (int) $company->id,
-                                        'name' => $dval,
-                                        'created_at' => now()->toIso8601String(),
-                                        'updated_at' => now()->toIso8601String(),
-                                    ],
-                                    'doc_as_upsert' => true,
-                                    'detect_noop' => false,
+                            $bulkEsBody[] = [
+                                'update' => [
+                                    '_index' => ELASTIC_JOB_CATEGORIES,
+                                    '_id' => (string) $insertGetId,
+                                    'retry_on_conflict' => 5,
                                 ],
-                            ]);
+                            ];
+                            $bulkEsBody[] = [
+                                'doc' => [
+                                    'id' => (int) $insertGetId,
+                                    'company_id' => (int) $company->id,
+                                    'name' => $dval,
+                                    'created_at' => $nowIso,
+                                    'updated_at' => $nowIso,
+                                ],
+                                'doc_as_upsert' => true,
+                                'detect_noop' => false,
+                            ];
+                        }
+                    }
 
+                    if (! empty($bulkEsBody)) {
+                        try {
+                            $this->elasticService->getClient()->bulk(['body' => $bulkEsBody]);
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::warning('Elasticsearch bulk job categories index warning: '.$e->getMessage());
                         }
                     }
                 }
@@ -1178,14 +1190,26 @@ class SaasFrontController extends SaasFrontBaseController
             }
 
             $custom_role_arr = ['Admin', 'Sub Administrator', 'Team Lead', 'Recruiter', 'Interviewer', 'Sales', 'Default'];
-            $role_company_id = '';
             $role_company_id = $company->id;
-            // Single priority lookup before the loop — replaces 7 per-iteration queries with 1. (Sprint 3 task 3.5)
             $role_priority = DB::table('roles')->where('company_id', $role_company_id)->max('priority') ?? 0;
+
+            if ($request->company_type == 3) {
+                $rolePermissionsMaster = DB::table('permissions')
+                    ->where('status', 1)
+                    ->where('product_based', 1)
+                    ->orderBy('priority', 'ASC')
+                    ->get();
+            } else {
+                $rolePermissionsMaster = DB::table('permissions')
+                    ->where('status', 1)
+                    ->orderBy('priority', 'ASC')
+                    ->get();
+            }
+
+            $bulkRolePermissions = [];
             foreach ($custom_role_arr as $rolename) {
                 $role_priority++;
 
-                $lastInsertId = '';
                 $values = [
                     'company_id' => $role_company_id,
                     'name' => strtolower($rolename),
@@ -1201,35 +1225,20 @@ class SaasFrontController extends SaasFrontBaseController
                     DB::table('role_user')->insertOrIgnore($valuesrole);
                 }
 
-                if ($lastInsertId > 0) {
-                    if ($request->company_type == 3) {
-                        $roleId = DB::table('permissions')
-                            ->select('*')
-                            ->where('permissions.status', 1)
-                            ->where('permissions.product_based', 1)
-                            ->orderBy('permissions.priority', 'ASC')
-                            ->get();
-                    } else {
-                        $roleId = DB::table('permissions')
-                            ->select('*')
-                            ->where('permissions.status', 1)
-                            ->orderBy('permissions.priority', 'ASC')
-                            ->get();
+                if ($lastInsertId > 0 && ! empty($rolePermissionsMaster)) {
+                    foreach ($rolePermissionsMaster as $roleVal) {
+                        $bulkRolePermissions[] = [
+                            'permission_id' => $roleVal->id,
+                            'role_id' => $lastInsertId,
+                        ];
                     }
-
-                    if (! empty($roleId)) {
-                        foreach ($roleId as $roleVal) {
-                            $values = [
-                                'permission_id' => $roleVal->id,
-                                'role_id' => $lastInsertId,
-                            ];
-                            DB::table('role_has_permissions')->insertOrIgnore($values);
-                        }
-
-                    }
-
                 }
+            }
 
+            if (! empty($bulkRolePermissions)) {
+                foreach (array_chunk($bulkRolePermissions, 500) as $chunk) {
+                    DB::table('role_has_permissions')->insertOrIgnore($chunk);
+                }
             }
 
             // STAFFING COMPANY INVITATION
@@ -1324,10 +1333,14 @@ class SaasFrontController extends SaasFrontBaseController
             $default_rates = DB::table('default_rates')->first();
             if (! empty($work_city_all) && is_array($work_city_all) && count($work_city_all) > 0) {
                 // Single batched city lookup — replaces N×3 per-city queries with 1 whereIn. (Sprint 3 task 3.4)
-                $_batchCityNames = array_unique(array_map(
-                    fn ($v) => trim(explode('|', $v['value'])[0]),
+                $_batchCityNames = array_unique(array_filter(array_map(
+                    function ($v) {
+                        $p = explode('|', $v['value'] ?? '');
+
+                        return trim($p[0] ?? '');
+                    },
                     $work_city_all
-                ));
+                )));
                 $_batchCityRows = DB::table('city_list')
                     ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                     ->join('countries', 'countries.id', '=', 'state_list.country_id')
@@ -1336,8 +1349,12 @@ class SaasFrontController extends SaasFrontBaseController
                     ->whereIn('city_list.city', $_batchCityNames)
                     ->get();
                 $cityLookupMap = [];
+                $cityOnlyLookupMap = [];
                 foreach ($_batchCityRows as $_row) {
                     $cityLookupMap[$_row->city.'|'.$_row->country_name] = $_row;
+                    if (! isset($cityOnlyLookupMap[$_row->city])) {
+                        $cityOnlyLookupMap[$_row->city] = $_row;
+                    }
                 }
                 if (! DB::table('commericials')->where('rateType', 1)->where('company_id', $company_id)->exists()) {
 
@@ -1361,23 +1378,18 @@ class SaasFrontController extends SaasFrontBaseController
                     }
 
                     foreach ($work_city_all as $cityVal) {
-
-                        $parts = explode('|', $cityVal['value']);
-                        // Trim to remove any leading or trailing whitespace
-                        $cityName = trim($parts[0]);
-                        $countrName = trim($parts[2]);
-                        // Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
-                        $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? null;
+                        $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                        $cityName = $parts[0] ?? '';
+                        $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                        $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? ($cityOnlyLookupMap[$cityName] ?? null);
 
                         if ($city_row) {
-                            $countryID = (@$city_row) ? $city_row->country_id : '';
+                            $countryID = $city_row->country_id ?? '';
 
                             $valueCountry = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => 1, 'country_id' => $countryID];
 
                             DB::table('commericial_countries')->insert($valueCountry);
-
                         }
-
                     }
 
                 }
@@ -1400,37 +1412,31 @@ class SaasFrontController extends SaasFrontBaseController
                     }
 
                     foreach ($work_city_all as $cityVal) {
-                        $parts = explode('|', $cityVal['value']);
-                        // Trim to remove any leading or trailing whitespace
-                        $cityName = trim($parts[0]);
-                        $countrName = trim($parts[2]);
-                        // Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
-                        $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? null;
+                        $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                        $cityName = $parts[0] ?? '';
+                        $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                        $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? ($cityOnlyLookupMap[$cityName] ?? null);
 
                         if ($city_row) {
-                            $countryID = (@$city_row) ? $city_row->country_id : '';
+                            $countryID = $city_row->country_id ?? '';
 
                             $valueCountry = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => 2, 'country_id' => $countryID];
                             DB::table('commericial_countries')->insert($valueCountry);
-
                         }
-
                     }
 
                 }
 
                 foreach ($work_city_all as $cityVal) {
-                    $parts = explode('|', $cityVal['value']);
-                    // Trim to remove any leading or trailing whitespace
-                    $cityName = trim($parts[0]);
-                    $countrName = trim($parts[2]);
-                    // Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
-                    $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? null;
+                    $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                    $cityName = $parts[0] ?? '';
+                    $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                    $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? ($cityOnlyLookupMap[$cityName] ?? null);
 
                     if ($city_row) {
-                        $cityID = (@$city_row) ? $city_row->city_id : '';
-                        $countryID = (@$city_row) ? $city_row->country_id : '';
-                        $stateId = (@$city_row) ? $city_row->stateID : '';
+                        $cityID = $city_row->city_id ?? '';
+                        $countryID = $city_row->country_id ?? '';
+                        $stateId = $city_row->stateID ?? '';
 
                         $values = [
                             'company_id' => 0,
@@ -1442,21 +1448,19 @@ class SaasFrontController extends SaasFrontBaseController
                             'postcode' => 123456,
                             'state' => $stateId,
                         ];
-                        // dd($values);
                         DB::table('client_location')->insert($values);
-
                     }
-
                 }
 
                 // Intent: make the registration-selected city country immediately eligible for Service/Staffing commercial matching.
                 $selectedCountryIds = collect($work_city_all)
-                    ->map(function ($cityVal) use ($cityLookupMap) {
-                        $parts = explode('|', $cityVal['value']);
-                        $cityName = trim($parts[0] ?? '');
-                        $countryName = trim($parts[2] ?? '');
+                    ->map(function ($cityVal) use ($cityLookupMap, $cityOnlyLookupMap) {
+                        $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                        $cityName = $parts[0] ?? '';
+                        $countryName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                        $row = $cityLookupMap[$cityName.'|'.$countryName] ?? ($cityOnlyLookupMap[$cityName] ?? null);
 
-                        return $cityLookupMap[$cityName.'|'.$countryName]->country_id ?? null;
+                        return $row->country_id ?? null;
                     })
                     ->filter(fn ($countryId) => (int) $countryId > 0)
                     ->map(fn ($countryId) => (int) $countryId)
@@ -1470,14 +1474,25 @@ class SaasFrontController extends SaasFrontBaseController
                 GeneralMethod::clientStaffingPartner($client_id);
             }
 
-            // Option 2 & Agency Registration Linkage (Scenario B)
-            if ($request->has('agency_code') || $request->has('direct_user')) {
-                $code = (string) ($request->agency_code ?: $request->direct_user);
+            // Option 1 & Option 2 Agency Registration Linkage
+            if ($request->has('agency_code') || $request->has('agency_token') || $request->has('direct_user')) {
+                $code = (string) ($request->agency_code ?: ($request->agency_token ?: $request->direct_user));
                 $decoded = base64_decode(trim($code), true);
                 $from_company_id = null;
                 $from_user_id = null;
+                $existingInvite = null;
 
-                if ($decoded !== false && is_numeric($decoded)) {
+                // 1. Check if token matches a staffing_company_invitation (Option 1 raw or hashed token)
+                $tokenHash = hash('sha256', trim($code));
+                $existingInvite = DB::table('staffing_company_invitation')
+                    ->where('token_hash', $tokenHash)
+                    ->orWhere('token_hash', trim($code))
+                    ->first();
+
+                if ($existingInvite) {
+                    $from_company_id = $existingInvite->from_company_id;
+                    $from_user_id = $existingInvite->from_user_id;
+                } elseif ($decoded !== false && is_numeric($decoded)) {
                     $candId = (int) $decoded;
                     $fromComp = DB::table('companies')->where('id', $candId)->first();
                     if ($fromComp) {
@@ -1508,20 +1523,33 @@ class SaasFrontController extends SaasFrontBaseController
                         $from_user_id = $rootU ? $rootU->id : 0;
                     }
 
-                    // Insert staffing_company_invitation record (Option 2 invitation record)
-                    DB::table('staffing_company_invitation')->insert([
-                        'from_client_id' => $from_client_id,
-                        'from_company_id' => $from_company_id,
-                        'from_user_id' => $from_user_id ?: 0,
-                        'from_status' => 1,
-                        'from_created_at' => now()->toDateString(),
-                        'to_company_id' => $company->id,
-                        'to_email' => $user->email,
-                        'to_status' => 1,
-                        'to_invitation_status' => 1,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+                    if ($existingInvite) {
+                        // Mark existing Option 1 invitation accepted and bind to the new agency company
+                        DB::table('staffing_company_invitation')
+                            ->where('id', $existingInvite->id)
+                            ->update([
+                                'to_company_id' => $company->id,
+                                'to_status' => 1,
+                                'to_invitation_status' => 1,
+                                'active_invite_slot' => null,
+                                'updated_at' => now(),
+                            ]);
+                    } else {
+                        // Insert staffing_company_invitation record (Option 2 invitation record)
+                        DB::table('staffing_company_invitation')->insert([
+                            'from_client_id' => $from_client_id,
+                            'from_company_id' => $from_company_id,
+                            'from_user_id' => $from_user_id ?: 0,
+                            'from_status' => 1,
+                            'from_created_at' => now()->toDateString(),
+                            'to_company_id' => $company->id,
+                            'to_email' => $user->email,
+                            'to_status' => 1,
+                            'to_invitation_status' => 1,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
 
                     // Insert relation if not exists (Scenario C Idempotency)
                     if (! DB::table('staffing_company_relation')->where('from_company_id', $from_company_id)->where('to_company_id', $company->id)->exists()) {
@@ -2128,14 +2156,27 @@ class SaasFrontController extends SaasFrontBaseController
             }
 
             $custom_role_arr = ['Admin', 'Sub Administrator', 'Team Lead', 'Recruiter', 'Interviewer', 'Sales', 'Default'];
-            $role_company_id = '';
             $role_company_id = $company->id;
             // Sprint 3.5 — single max() before loop replaces 7×SELECT inside loop (N+1 → 1 query).
             $role_priority_base = (int) (DB::table('roles')->where('company_id', $role_company_id)->max('priority') ?? 0);
+
+            if ($request->company_type == 3) {
+                $rolePermissionsMaster = DB::table('permissions')
+                    ->where('status', 1)
+                    ->where('product_based', 1)
+                    ->orderBy('priority', 'ASC')
+                    ->get();
+            } else {
+                $rolePermissionsMaster = DB::table('permissions')
+                    ->where('status', 1)
+                    ->orderBy('priority', 'ASC')
+                    ->get();
+            }
+
+            $bulkRolePermissions = [];
             foreach ($custom_role_arr as $role_loop_index => $rolename) {
                 $role_priority = $role_priority_base + $role_loop_index + 1;
 
-                $lastInsertId = '';
                 $values = [
                     'company_id' => $role_company_id,
                     'name' => strtolower($rolename),
@@ -2151,34 +2192,20 @@ class SaasFrontController extends SaasFrontBaseController
                     DB::table('role_user')->insertOrIgnore($valuesrole);
                 }
 
-                if ($lastInsertId > 0) {
-                    if ($request->company_type == 3) {
-                        $roleId = DB::table('permissions')
-                            ->select('*')
-                            ->where('permissions.status', 1)
-                            ->where('permissions.product_based', 1)
-                            ->orderBy('permissions.priority', 'ASC')
-                            ->get();
-                    } else {
-                        $roleId = DB::table('permissions')
-                            ->select('*')
-                            ->where('permissions.status', 1)
-                            ->orderBy('permissions.priority', 'ASC')
-                            ->get();
-                    }
-
-                    if (! empty($roleId)) {
-                        foreach ($roleId as $roleVal) {
-                            $values = [
-                                'permission_id' => $roleVal->id,
-                                'role_id' => $lastInsertId,
-                            ];
-                            // DB::table('permission_role')->insert($values);
-                            DB::table('role_has_permissions')->insertOrIgnore($values);
-                        }
+                if ($lastInsertId > 0 && ! empty($rolePermissionsMaster)) {
+                    foreach ($rolePermissionsMaster as $roleVal) {
+                        $bulkRolePermissions[] = [
+                            'permission_id' => $roleVal->id,
+                            'role_id' => $lastInsertId,
+                        ];
                     }
                 }
+            }
 
+            if (! empty($bulkRolePermissions)) {
+                foreach (array_chunk($bulkRolePermissions, 500) as $chunk) {
+                    DB::table('role_has_permissions')->insertOrIgnore($chunk);
+                }
             }
 
             if ($client_id > 0) {
@@ -3081,33 +3108,45 @@ class SaasFrontController extends SaasFrontBaseController
                 $designationArr = '';
                 $designationArr = GeneralMethod::department();
                 if (! empty($designationArr)) {
+                    $bulkEsBody = [];
+                    $nowDate = date('Y-m-d');
+                    $nowIso = now()->toIso8601String();
                     foreach ($designationArr as $dval) {
                         if (! empty($dval)) {
                             $values = [
                                 'company_id' => $company->id,
                                 'name' => $dval,
-                                'created_at' => date('Y-m-d'),
-                                'updated_at' => date('Y-m-d'),
+                                'created_at' => $nowDate,
+                                'updated_at' => $nowDate,
                             ];
                             $insertGetId = DB::table('job_categories')->insertGetId($values);
 
-                            $response = $this->elasticService->getClient()->update([
-                                'index' => ELASTIC_JOB_CATEGORIES,
-                                'id' => $insertGetId,
-                                'retry_on_conflict' => 5,
-                                'body' => [
-                                    'doc' => [
-                                        'id' => $insertGetId,
-                                        'company_id' => (int) $company->id,
-                                        'name' => $dval,
-                                        'created_at' => now()->toIso8601String(),
-                                        'updated_at' => now()->toIso8601String(),
-                                    ],
-                                    'doc_as_upsert' => true,
-                                    'detect_noop' => false,
+                            $bulkEsBody[] = [
+                                'update' => [
+                                    '_index' => ELASTIC_JOB_CATEGORIES,
+                                    '_id' => (string) $insertGetId,
+                                    'retry_on_conflict' => 5,
                                 ],
-                            ]);
+                            ];
+                            $bulkEsBody[] = [
+                                'doc' => [
+                                    'id' => (int) $insertGetId,
+                                    'company_id' => (int) $company->id,
+                                    'name' => $dval,
+                                    'created_at' => $nowIso,
+                                    'updated_at' => $nowIso,
+                                ],
+                                'doc_as_upsert' => true,
+                                'detect_noop' => false,
+                            ];
+                        }
+                    }
 
+                    if (! empty($bulkEsBody)) {
+                        try {
+                            $this->elasticService->getClient()->bulk(['body' => $bulkEsBody]);
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::warning('Elasticsearch bulk job categories index warning: '.$e->getMessage());
                         }
                     }
                 }
@@ -3242,14 +3281,27 @@ class SaasFrontController extends SaasFrontBaseController
             }
 
             $custom_role_arr = ['Admin', 'Sub Administrator', 'Team Lead', 'Recruiter', 'Interviewer', 'Sales', 'Default'];
-            $role_company_id = '';
             $role_company_id = $company->id;
             // Sprint 3.5 — single max() before loop replaces 7×SELECT inside loop (N+1 → 1 query).
             $role_priority_base = (int) (DB::table('roles')->where('company_id', $role_company_id)->max('priority') ?? 0);
+
+            if ($request->company_type == 3) {
+                $rolePermissionsMaster = DB::table('permissions')
+                    ->where('status', 1)
+                    ->where('product_based', 1)
+                    ->orderBy('priority', 'ASC')
+                    ->get();
+            } else {
+                $rolePermissionsMaster = DB::table('permissions')
+                    ->where('status', 1)
+                    ->orderBy('priority', 'ASC')
+                    ->get();
+            }
+
+            $bulkRolePermissions = [];
             foreach ($custom_role_arr as $role_loop_index => $rolename) {
                 $role_priority = $role_priority_base + $role_loop_index + 1;
 
-                $lastInsertId = '';
                 $values = [
                     'company_id' => $role_company_id,
                     'name' => strtolower($rolename),
@@ -3265,34 +3317,20 @@ class SaasFrontController extends SaasFrontBaseController
                     DB::table('role_user')->insertOrIgnore($valuesrole);
                 }
 
-                if ($lastInsertId > 0) {
-                    if ($request->company_type == 3) {
-                        $roleId = DB::table('permissions')
-                            ->select('*')
-                            ->where('permissions.status', 1)
-                            ->where('permissions.product_based', 1)
-                            ->orderBy('permissions.priority', 'ASC')
-                            ->get();
-                    } else {
-                        $roleId = DB::table('permissions')
-                            ->select('*')
-                            ->where('permissions.status', 1)
-                            ->orderBy('permissions.priority', 'ASC')
-                            ->get();
-                    }
-
-                    if (! empty($roleId)) {
-                        foreach ($roleId as $roleVal) {
-                            $values = [
-                                'permission_id' => $roleVal->id,
-                                'role_id' => $lastInsertId,
-                            ];
-                            // DB::table('permission_role')->insert($values);
-                            DB::table('role_has_permissions')->insertOrIgnore($values);
-                        }
+                if ($lastInsertId > 0 && ! empty($rolePermissionsMaster)) {
+                    foreach ($rolePermissionsMaster as $roleVal) {
+                        $bulkRolePermissions[] = [
+                            'permission_id' => $roleVal->id,
+                            'role_id' => $lastInsertId,
+                        ];
                     }
                 }
+            }
 
+            if (! empty($bulkRolePermissions)) {
+                foreach (array_chunk($bulkRolePermissions, 500) as $chunk) {
+                    DB::table('role_has_permissions')->insertOrIgnore($chunk);
+                }
             }
 
             if (! empty($request->direct_user)) {
@@ -3321,6 +3359,30 @@ class SaasFrontController extends SaasFrontBaseController
             }
             $default_rates = DB::table('default_rates')->first();
             if (! empty($work_city_all) && is_array($work_city_all) && count($work_city_all) > 0) {
+                $_batchCityNames = array_unique(array_filter(array_map(
+                    function ($v) {
+                        $p = explode('|', $v['value'] ?? '');
+
+                        return trim($p[0] ?? '');
+                    },
+                    $work_city_all
+                )));
+                $_batchCityRows = DB::table('city_list')
+                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                    ->select('city_list.city_id', 'city_list.city', 'countries.id as country_id', 'countries.country_name', 'state_list.id as stateID')
+                    ->where('city_list.city', '!=', '')
+                    ->whereIn('city_list.city', $_batchCityNames)
+                    ->get();
+                $cityLookupMap = [];
+                $cityOnlyLookupMap = [];
+                foreach ($_batchCityRows as $_row) {
+                    $cityLookupMap[$_row->city.'|'.$_row->country_name] = $_row;
+                    if (! isset($cityOnlyLookupMap[$_row->city])) {
+                        $cityOnlyLookupMap[$_row->city] = $_row;
+                    }
+                }
+
                 if (! DB::table('commericials')->where('rateType', 1)->where('company_id', $company_id)->exists()) {
 
                     $status = 0;
@@ -3343,23 +3405,18 @@ class SaasFrontController extends SaasFrontBaseController
                     }
 
                     foreach ($work_city_all as $cityVal) {
-
-                        $parts = explode('|', $cityVal['value']);
-                        // Trim to remove any leading or trailing whitespace
-                        $cityName = trim($parts[0]);
-                        $countrName = trim($parts[2]);
-                        // Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
-                        $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? null;
+                        $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                        $cityName = $parts[0] ?? '';
+                        $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                        $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? ($cityOnlyLookupMap[$cityName] ?? null);
 
                         if ($city_row) {
-                            $countryID = (@$city_row) ? $city_row->country_id : '';
+                            $countryID = $city_row->country_id ?? '';
 
                             $valueCountry = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => 1, 'country_id' => $countryID];
 
                             DB::table('commericial_countries')->insert($valueCountry);
-
                         }
-
                     }
 
                 }
@@ -3382,37 +3439,31 @@ class SaasFrontController extends SaasFrontBaseController
                     }
 
                     foreach ($work_city_all as $cityVal) {
-                        $parts = explode('|', $cityVal['value']);
-                        // Trim to remove any leading or trailing whitespace
-                        $cityName = trim($parts[0]);
-                        $countrName = trim($parts[2]);
-                        // Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
-                        $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? null;
+                        $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                        $cityName = $parts[0] ?? '';
+                        $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                        $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? ($cityOnlyLookupMap[$cityName] ?? null);
 
                         if ($city_row) {
-                            $countryID = (@$city_row) ? $city_row->country_id : '';
+                            $countryID = $city_row->country_id ?? '';
 
                             $valueCountry = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => 2, 'country_id' => $countryID];
                             DB::table('commericial_countries')->insert($valueCountry);
-
                         }
-
                     }
 
                 }
 
                 foreach ($work_city_all as $cityVal) {
-                    $parts = explode('|', $cityVal['value']);
-                    // Trim to remove any leading or trailing whitespace
-                    $cityName = trim($parts[0]);
-                    $countrName = trim($parts[2]);
-                    // Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
-                    $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? null;
+                    $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                    $cityName = $parts[0] ?? '';
+                    $countrName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                    $city_row = $cityLookupMap[$cityName.'|'.$countrName] ?? ($cityOnlyLookupMap[$cityName] ?? null);
 
                     if ($city_row) {
-                        $cityID = (@$city_row) ? $city_row->city_id : '';
-                        $countryID = (@$city_row) ? $city_row->country_id : '';
-                        $stateId = (@$city_row) ? $city_row->stateID : '';
+                        $cityID = $city_row->city_id ?? '';
+                        $countryID = $city_row->country_id ?? '';
+                        $stateId = $city_row->stateID ?? '';
 
                         $values = [
                             'company_id' => 0,
@@ -3424,21 +3475,19 @@ class SaasFrontController extends SaasFrontBaseController
                             'postcode' => 123456,
                             'state' => $stateId,
                         ];
-                        // dd($values);
                         DB::table('client_location')->insert($values);
-
                     }
-
                 }
 
                 // Intent: retain commercial-country eligibility for invitation registrations after default records already exist.
                 $selectedCountryIds = collect($work_city_all)
-                    ->map(function ($cityVal) use ($cityLookupMap) {
-                        $parts = explode('|', $cityVal['value']);
-                        $cityName = trim($parts[0] ?? '');
-                        $countryName = trim($parts[2] ?? '');
+                    ->map(function ($cityVal) use ($cityLookupMap, $cityOnlyLookupMap) {
+                        $parts = array_values(array_filter(array_map('trim', explode('|', $cityVal['value'] ?? ''))));
+                        $cityName = $parts[0] ?? '';
+                        $countryName = count($parts) >= 3 ? end($parts) : ($parts[1] ?? '');
+                        $row = $cityLookupMap[$cityName.'|'.$countryName] ?? ($cityOnlyLookupMap[$cityName] ?? null);
 
-                        return $cityLookupMap[$cityName.'|'.$countryName]->country_id ?? null;
+                        return $row->country_id ?? null;
                     })
                     ->filter(fn ($countryId) => (int) $countryId > 0)
                     ->map(fn ($countryId) => (int) $countryId)
@@ -3489,6 +3538,14 @@ class SaasFrontController extends SaasFrontBaseController
         $this->headerData = FrontCmsHeader::first();
         $this->frontTheme = ThemeSetting::whereNull('company_id')->first();
 
+        // 1. If user is already authenticated in this session and verified, seamlessly proceed to onboarding
+        if (\Illuminate\Support\Facades\Auth::check()) {
+            $currentUser = \Illuminate\Support\Facades\Auth::user();
+            if ($currentUser->email_verified_at) {
+                return redirect(route('service_company.account.onboarding'));
+            }
+        }
+
         // Sprint 5 task 5.13 — lockForUpdate makes double-click idempotent at the SQL level (audit H3).
         $user = DB::transaction(function () use ($code) {
             $found = User::where('email_verification_code', $code)
@@ -3508,6 +3565,9 @@ class SaasFrontController extends SaasFrontBaseController
                 'working_status' => 1,
             ])->save();
 
+            // Cache token to prevent email-scanner / double-click failures
+            \Illuminate\Support\Facades\Cache::put('verified_email_code_'.$code, $found->id, 86400);
+
             return $found;
         });
 
@@ -3519,6 +3579,17 @@ class SaasFrontController extends SaasFrontBaseController
             \Illuminate\Support\Facades\Auth::loginUsingId($user->id);
 
             return redirect(route('service_company.account.onboarding'));
+        }
+
+        // 3. Resilience check: Did an automated email scanner verify this token moments ago?
+        $cachedUserId = \Illuminate\Support\Facades\Cache::get('verified_email_code_'.$code);
+        if ($cachedUserId) {
+            $cachedUser = User::find($cachedUserId);
+            if ($cachedUser) {
+                \Illuminate\Support\Facades\Auth::loginUsingId($cachedUser->id);
+
+                return redirect(route('service_company.account.onboarding'));
+            }
         }
 
         // Invalid, missing, or expired token — redirect to login page with error flash message.

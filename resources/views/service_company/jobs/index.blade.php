@@ -91,10 +91,11 @@
   display: block; /* Show the button on hover */
 }
 
-/* Prevent filter bar and table from compressing when the job-detail drawer opens */
+/* 15.6" Screen Fit: Guaranteed Zero Horizontal Overflow per Rule 14 & Rule 20 */
 #kt_content_container {
-  min-width: 760px;
-  overflow-x: auto;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
 }
 .filter-bar {
   flex-wrap: nowrap !important;
@@ -252,17 +253,194 @@
   font-weight: 600;
 }
 
+/* ==========================================================================
+   Executive Requisition Source Metric Strip (4 Responsive Metric Cards)
+   ========================================================================== */
+.cd-jobs-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+}
+
+@media (max-width: 991.98px) {
+    .cd-jobs-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+.cd-kpi-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    text-decoration: none !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    transition: all 0.15s ease-in-out !important;
+    cursor: pointer !important;
+}
+
+.cd-kpi-card:hover {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    transform: translateY(-1px);
+}
+
+.cd-kpi-card.cd-kpi-active,
+.cd-kpi-card.jh-card-active {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.2) !important;
+}
+
+.cd-kpi-icon {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 15px !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-kpi-icon.icon-blue {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+}
+
+.cd-kpi-icon.icon-emerald {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+}
+
+.cd-kpi-icon.icon-amber {
+    background: #fffbeb !important;
+    color: #d97706 !important;
+}
+
+.cd-kpi-icon.icon-purple {
+    background: #f5f3ff !important;
+    color: #7c3aed !important;
+}
+
+.cd-kpi-info {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+}
+
+.cd-kpi-label {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.cd-kpi-num {
+    font-size: 19px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.2 !important;
+    font-variant-numeric: tabular-nums !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.cd-kpi-card.cd-kpi-active .cd-kpi-num,
+.cd-kpi-card.jh-card-active .cd-kpi-num {
+    color: #009ef7 !important;
+}
+
+/* ==========================================================================
+   Tier 2 Filters Group (Dropdown Pills inside Tabs Card)
+   ========================================================================== */
+.cd-jobs-filters-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+}
+
+.cd-filter-pill-wrap {
+    display: flex !important;
+    align-items: center !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 2px 8px !important;
+    height: 32px !important;
+    gap: 6px !important;
+    transition: all 0.15s ease !important;
+}
+
+.cd-filter-pill-wrap:focus-within,
+.cd-filter-pill-wrap:hover {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+}
+
+.cd-filter-label {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+}
+
+.cd-filter-select {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    padding: 0 16px 0 0 !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    cursor: pointer !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.cd-action-link {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #009ef7 !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    margin-top: 2px !important;
+    transition: color 0.15s ease !important;
+    cursor: pointer !important;
+}
+
+.cd-action-link:hover {
+    color: #0077b6 !important;
+    text-decoration: underline !important;
+}
+
+.cd-jobs-stream-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    min-height: 200px !important;
+}
+
+.cd-track-badge {
+    text-decoration: none !important;
+}
 </style>
 
-    
+@include('service_company.client.components.tab-jobs-style')
 <link href="{{ asset('demo/css/joblist.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-
-
-
-
-
 @endpush
 
 @section('content')
@@ -316,68 +494,166 @@
       <!-- CONTENT -->
         <div class="content">        
 
-          <!-- HERO -->
-           @include('sections.service_company.jobHeader',['tabactive'=>array_merge($tabactive, ['showTabs' => false])])
+          <!-- ══════════════════════════════════════════════════════════════
+               REQUISITION SOURCE EXECUTIVE METRIC STRIP
+               ══════════════════════════════════════════════════════════════ -->
+          <div class="cd-jobs-kpi-grid">
+            <a href="javascript:void(0);" data-kpi="all" onclick="filterJobsByKpi('all'); return false;" class="cd-kpi-card jh-card jh-card-source-all {{ ($currentKpi === 'all' || empty($currentKpi)) ? 'cd-kpi-active jh-card-active' : '' }}">
+              <div class="cd-kpi-icon icon-blue">
+                <i class="fas fa-briefcase"></i>
+              </div>
+              <div class="cd-kpi-info">
+                <span class="cd-kpi-label">Total Jobs</span>
+                <span class="cd-kpi-num" id="top_card_all_jobs_count">{{ $tabactive['allRequisition'] ?? 0 }}</span>
+              </div>
+            </a>
 
-          <!-- FILTER BAR -->
-          @include('sections.service_company.jobFilterBar',['searchbar'=>$searchbar])
+            @if($tabactive['productAllowCompany'])
+            <a href="javascript:void(0);" data-kpi="direct" onclick="filterJobsByKpi('direct'); return false;" class="cd-kpi-card jh-card jh-card-source-direct {{ ($currentKpi === 'direct') ? 'cd-kpi-active jh-card-active' : '' }}">
+              <div class="cd-kpi-icon icon-emerald">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <div class="cd-kpi-info">
+                <span class="cd-kpi-label">Direct Client Jobs</span>
+                <span class="cd-kpi-num" id="top_card_client_requisition_count">{{ $tabactive['clientRequisition'] ?? 0 }}</span>
+              </div>
+            </a>
 
-          <!-- STATUS TABS -->
-          <div class="jh-tabs-card">
-            <a href="#" class="jh-tab jh-tab-active" data-status="all" onclick="filterJobsByStatus('all'); return false;">
-                <span class="jh-tab-icon jh-tab-icon-blue">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                    </svg>
-                </span>
-                All Statuses
-                <span class="jh-badge jh-badge-blue">{{ $tabactive['allTabCount'] ?? $tabactive['allRequisition'] }}</span>
+            <a href="javascript:void(0);" data-kpi="internal" onclick="filterJobsByKpi('internal'); return false;" class="cd-kpi-card jh-card jh-card-source-internal {{ ($currentKpi === 'internal') ? 'cd-kpi-active jh-card-active' : '' }}">
+              <div class="cd-kpi-icon icon-amber">
+                <i class="fas fa-building"></i>
+              </div>
+              <div class="cd-kpi-info">
+                <span class="cd-kpi-label">Internal Jobs</span>
+                <span class="cd-kpi-num" id="top_card_custom_requisition_count">{{ $tabactive['customRequisition'] ?? 0 }}</span>
+              </div>
             </a>
-            <div class="jh-tab-divider"></div>
-            <a href="#" class="jh-tab" data-status="active" onclick="filterJobsByStatus('active'); return false;">
-                <span class="jh-tab-icon jh-tab-icon-green">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
-                </span>
-                Hiring
-                <span class="jh-badge jh-badge-green">{{ $tabactive['hiringCount'] ?? 0 }}</span>
+
+            <a href="javascript:void(0);" data-kpi="job_request" onclick="filterJobsByKpi('job_request'); return false;" class="cd-kpi-card jh-card jh-card-source-request {{ ($currentKpi === 'job_request' || $currentKpi === 'request') ? 'cd-kpi-active jh-card-active' : '' }}">
+              <div class="cd-kpi-icon icon-purple">
+                <i class="fas fa-handshake"></i>
+              </div>
+              <div class="cd-kpi-info">
+                <span class="cd-kpi-label">Job Requests</span>
+                <span class="cd-kpi-num" id="top_card_job_request_count">{{ $tabactive['jobRequest'] ?? 0 }}</span>
+              </div>
             </a>
-            <div class="jh-tab-divider"></div>
-            <a href="#" class="jh-tab" data-status="hold" onclick="filterJobsByStatus('hold'); return false;">
-                <span class="jh-tab-icon jh-tab-icon-orange">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/>
-                    </svg>
-                </span>
-                On Hold
-                <span class="jh-badge jh-badge-orange">{{ $tabactive['holdCount'] ?? 0 }}</span>
-            </a>
-            <div class="jh-tab-divider"></div>
-            <a href="#" class="jh-tab" data-status="inactive" onclick="filterJobsByStatus('inactive'); return false;">
-                <span class="jh-tab-icon jh-tab-icon-red">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                </span>
-                Closed
-                <span class="jh-badge jh-badge-red">{{ $tabactive['closedCount'] ?? 0 }}</span>
-            </a>
-            <div class="jh-tab-divider"></div>
-            <a href="#" class="jh-tab" data-status="removed" onclick="filterJobsByStatus('removed'); return false;">
-                <span class="jh-tab-icon" style="background:#f1f1f4;color:#7e8299;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                    </svg>
-                </span>
-                Removed
-                <span class="jh-badge" style="background:#f1f1f4;color:#7e8299;">{{ $tabactive['removedCount'] ?? 0 }}</span>
-            </a>
+            @endif
           </div>
 
-          <!-- TABLE -->
-          @include('sections.service_company.jobListTable', ['listId' => 'allJobList'])
+          <!-- ══════════════════════════════════════════════════════════════
+               TIER 1: TOP HEADER TOOLBAR CARD (Pure White #ffffff, Radius 10px)
+               ══════════════════════════════════════════════════════════════ -->
+          <div class="cd-jobs-header-card">
+            <div class="cd-jobs-header-left">
+              <div class="cd-jobs-header-icon">
+                <i class="fas fa-briefcase"></i>
+              </div>
+              <div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="cd-jobs-header-title">Jobs Tracker</span>
+                  <span class="badge badge-light-primary fw-bold" id="all_jobs_count" style="font-size: 11px; padding: 3px 8px; border-radius: 10px;">{{ $tabactive['allTabCount'] ?? $tabactive['allRequisition'] }}</span>
+                </div>
+                <div class="cd-jobs-header-sub">Manage, track and hire candidates faster.</div>
+              </div>
+            </div>
+            <div class="cd-jobs-header-right">
+              <div class="cd-jobs-search-subcard">
+                <i class="fas fa-search"></i>
+                <input type="text" class="inputJobSearch" id="inputJobSearch" name="inputJobSearch" placeholder="Search jobs by title, skills, client, ID..." autocomplete="off">
+                <button type="button" class="cd-jobs-search-clear" id="btnJobSearchClear" style="display: none;" title="Clear search">✕</button>
+              </div>
+              @if(in_array("add_jobs", $tabactive['userPermissions'] ?? []))
+                <button type="button" class="btn btn-sm btn-primary fw-bold cd-jobs-add-btn" data-toggle="modal" data-target="#add_staffing_partners" id="AddjobSection">
+                  <i class="fas fa-plus me-1"></i> Add Job
+                </button>
+              @endif
+              <button type="button" id="jobSearchBtn" style="display: none;" aria-hidden="true"></button>
+            </div>
+          </div>
+
+          <!-- ══════════════════════════════════════════════════════════════
+               TIER 2: DEDICATED SUB-TABS & FILTERS CARD (Pure White #ffffff)
+               ══════════════════════════════════════════════════════════════ -->
+          <div class="cd-jobs-tabs-card">
+            <div class="cd-jobs-tabs-group">
+              <button type="button" class="cd-jobs-tab-btn jh-tab jh-tab-active" data-status="all" onclick="filterJobsByStatus('all'); return false;">
+                <span>All Statuses</span>
+                <span class="cd-jobs-tab-badge" id="filterCountAll">{{ $tabactive['allTabCount'] ?? $tabactive['allRequisition'] }}</span>
+              </button>
+              <button type="button" class="cd-jobs-tab-btn jh-tab" data-status="active" onclick="filterJobsByStatus('active'); return false;">
+                <span>Hiring</span>
+                <span class="cd-jobs-tab-badge badge-hiring" id="filterCountHiring">{{ $tabactive['hiringCount'] ?? 0 }}</span>
+              </button>
+              <button type="button" class="cd-jobs-tab-btn jh-tab" data-status="hold" onclick="filterJobsByStatus('hold'); return false;">
+                <span>On Hold</span>
+                <span class="cd-jobs-tab-badge badge-hold" id="filterCountHold">{{ $tabactive['holdCount'] ?? 0 }}</span>
+              </button>
+              <button type="button" class="cd-jobs-tab-btn jh-tab" data-status="inactive" onclick="filterJobsByStatus('inactive'); return false;">
+                <span>Closed</span>
+                <span class="cd-jobs-tab-badge badge-closed" id="filterCountClosed">{{ $tabactive['closedCount'] ?? 0 }}</span>
+              </button>
+              <button type="button" class="cd-jobs-tab-btn jh-tab" data-status="removed" onclick="filterJobsByStatus('removed'); return false;">
+                <span>Removed</span>
+                <span class="cd-jobs-tab-badge badge-inactive" id="filterCountRemoved">{{ $tabactive['removedCount'] ?? 0 }}</span>
+              </button>
+            </div>
+
+            <div class="cd-jobs-filters-group">
+              <input type="hidden" id="status" value="all">
+              
+              <!-- Job Type Filter Pill -->
+              <div class="cd-filter-pill-wrap">
+                <span class="cd-filter-label"><i class="fas fa-briefcase me-1 text-muted"></i>Type:</span>
+                <select class="form-select form-select-sm cd-filter-select" id="employment_type" onchange="fetchCandidates(1)">
+                  <option value="all" selected>All Types</option>
+                  <option value="0">Full-time</option>
+                  <option value="1">Contract</option>
+                  <option value="2">Freelance</option>
+                  <option value="3">Part Time</option>
+                </select>
+              </div>
+
+              <!-- Experience Filter Pill -->
+              <div class="cd-filter-pill-wrap">
+                <span class="cd-filter-label"><i class="far fa-clock me-1 text-muted"></i>Exp:</span>
+                <select class="form-select form-select-sm cd-filter-select" id="experience_filter" onchange="fetchCandidates(1)">
+                  <option value="all" selected>All Exp.</option>
+                  <option value="0-1">0-1 yr</option>
+                  <option value="1-3">1-3 yrs</option>
+                  <option value="3-5">3-5 yrs</option>
+                  <option value="5+">5+ yrs</option>
+                </select>
+              </div>
+
+              <!-- Sort By Filter Pill -->
+              <div class="cd-filter-pill-wrap">
+                <span class="cd-filter-label"><i class="fas fa-sort-amount-down me-1 text-muted"></i>Sort:</span>
+                <select class="form-select form-select-sm cd-filter-select" id="hiringtype" onchange="fetchCandidates(1)">
+                  <option value="1" selected>Newest First</option>
+                  <option value="2">Oldest First</option>
+                  <option value="3">Low-High (Salary)</option>
+                  <option value="4">High-Low (Salary)</option>
+                  <option value="5">A-Z (Company)</option>
+                  <option value="6">Z-A (Company)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══════════════════════════════════════════════════════════════
+               TIER 3: PRIMARY ENTITY CARD STREAM (Modern Card + Sub-Cards)
+               ══════════════════════════════════════════════════════════════ -->
+          <div class="cd-jobs-stream-wrapper">
+            <div class="loadingMessage" style="display: none; position: absolute; z-index: 10; background: rgba(255,255,255,0.85); padding: 8px 16px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 12px; font-weight: 600; color: #009ef7;">
+              <i class="fas fa-spinner fa-spin me-2"></i>Processing...
+            </div>
+            <div id="allJobList" class="cd-jobs-stream"></div>
+            <div id="pagination" class="mt-4"></div>
+            <div class="pipeline-legend-card mt-4">
+              @include('sections.service_company.pipeline')
+            </div>
+          </div>
         </div>
         <!-- /content -->
     </div>
@@ -827,24 +1103,18 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
     function updateKpiViewToggle(kpiType) {
         if (kpiType === 'job_request' || kpiType === 'request') {
-            $('.jh-filter-bar').hide();
-            $('.jh-tabs-card').hide();
+            $('.cd-jobs-tabs-card, .jh-filter-bar, .jh-tabs-card').hide();
             $('.pipeline-legend-card').hide();
-            $('.table-header-standard').hide();
-            $('.table-header-request').show();
         } else {
-            $('.jh-filter-bar').show();
-            $('.jh-tabs-card').show();
+            $('.cd-jobs-tabs-card, .jh-filter-bar, .jh-tabs-card').show();
             $('.pipeline-legend-card').show();
-            $('.table-header-standard').show();
-            $('.table-header-request').hide();
         }
     }
 
     function filterJobsByKpi(kpiType) {
         window.currentKpiFilter = kpiType;
-        $('.jh-card').removeClass('jh-card-active');
-        $(`.jh-card[data-kpi="${kpiType}"]`).addClass('jh-card-active');
+        $('.jh-card, .cd-kpi-card').removeClass('jh-card-active cd-kpi-active');
+        $(`.jh-card[data-kpi="${kpiType}"], .cd-kpi-card[data-kpi="${kpiType}"]`).addClass('jh-card-active cd-kpi-active');
 
         $('.jh-radio-input').prop('checked', false);
         $(`.jh-card[data-kpi="${kpiType}"] .jh-radio-input`).prop('checked', true);
@@ -875,14 +1145,28 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         fetchCandidates(1);
     }
 
+    // Dynamic Search Clear Handler (300ms Debounce Integration)
+    $(document).on('click', '#btnJobSearchClear', function() {
+        $('.inputJobSearch, #inputJobSearch').val('');
+        $(this).hide();
+        executeJobSearch(1);
+    });
 
+    $(document).on('input', '.inputJobSearch, #inputJobSearch', function() {
+        var sVal = $(this).val();
+        if (sVal && sVal.trim().length > 0) {
+            $('#btnJobSearchClear').show();
+        } else {
+            $('#btnJobSearchClear').hide();
+        }
+    });
 
-    // Called from the tab row in jobHeader — filters table and marks tab active
+    // Called from the tab row — filters table and marks tab active
     function filterJobsByStatus(status) {
         $('#status').val(status);
         syncJobCustomSelect('status');
-        $('.jh-tab').removeClass('jh-tab-active');
-        $('.jh-tab[data-status="' + status + '"]').addClass('jh-tab-active');
+        $('.jh-tab, .cd-jobs-tab-btn').removeClass('jh-tab-active active');
+        $('.jh-tab[data-status="' + status + '"], .cd-jobs-tab-btn[data-status="' + status + '"]').addClass('jh-tab-active active');
         localStorage.setItem('currentPageJobs', 1);
         fetchCandidates(1);
     }

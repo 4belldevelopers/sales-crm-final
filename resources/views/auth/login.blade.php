@@ -2709,6 +2709,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (emailInput) emailInput.focus();
                 return;
             }
+            var phoneInput = document.getElementById('signup_phone');
+            if (!phoneInput || !phoneInput.value.trim() || phoneInput.value.trim().replace(/\D/g, '').length < 6) {
+                if (signupAlert) { signupAlert.textContent = 'Please enter a valid phone number.'; signupAlert.style.display = 'block'; }
+                if (phoneInput) phoneInput.focus();
+                return;
+            }
             if (!typeInput || !typeInput.value) {
                 if (signupAlert) { signupAlert.textContent = 'Please select your company type.'; signupAlert.style.display = 'block'; }
                 if (typeInput) { typeInput.classList.add('is-invalid'); }
