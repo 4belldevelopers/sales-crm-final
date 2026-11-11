@@ -2,9 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Company;
-use App\Models\JobCategory;
-use App\Models\User;
 use Illuminate\Support\Facades\View;
 use Tests\TestCase;
 
