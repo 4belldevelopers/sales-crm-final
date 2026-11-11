@@ -1531,7 +1531,7 @@ class SaasFrontController extends SaasFrontBaseController
                                 'to_company_id' => $company->id,
                                 'to_status' => 1,
                                 'to_invitation_status' => 1,
-                                'active_invite_slot' => null,
+                                'consumed_at' => now(),
                                 'updated_at' => now(),
                             ]);
                     } else {
