@@ -2688,34 +2688,43 @@ $(document).ready(function(){
        
     
         $(document).on('click', '.book-btn', function(){
-         			var id    		=	$(this).attr('rel');
-              var datadate    		=	$(this).attr('data-date');
-              var datatime    		=	$(this).attr('data-time');
-              var datatmode    		=	$(this).attr('data-mode');
-         			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
-         			url     		=	url.replace(':id', id);
-              if (datadate && datatime) {
-                  let query = [];
-                  if (datadate) query.push('datadate=' + encodeURIComponent(datadate));
-                  if (datatime) query.push('datatime=' + encodeURIComponent(datatime));
-                  if (datatmode) query.push('datatmode=' + encodeURIComponent(datatmode));
-                  url += '?' + query.join('&');
-              }
-         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
-              window.isdShellSetStep('main');
-         			$.ajax({
-         							type  		: 'GET',
-         							url   		: url,
-         							beforeSend	: function() {
-         														$('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
-         							},
-         							success : function (response)
-         							{
-         								$('#app_interview_schedule_content').html(response.view);
-         							}
-         				});
-         });
+            var $btn = $(this);
+            var id = $btn.attr('rel');
+            var datadate = $btn.attr('data-date');
+            var datatime = $btn.attr('data-time');
+            var datatmode = $btn.attr('data-mode');
+            var wiseId = $btn.attr('data-wise-id') || $btn.data('wise-id') || id;
+            var jobId = $btn.attr('data-job-id') || $btn.data('job-id') || '';
+            var appId = $btn.attr('data-app-id') || $btn.data('app-id') || '';
+
+            var url = "{{ route('service_company.job-applications.create-schedule',':id') }}";
+            url = url.replace(':id', id);
+
+            let query = [];
+            if (datadate) query.push('datadate=' + encodeURIComponent(datadate));
+            if (datatime) query.push('datatime=' + encodeURIComponent(datatime));
+            if (datatmode) query.push('datatmode=' + encodeURIComponent(datatmode));
+            if (wiseId) query.push('wiseId=' + encodeURIComponent(wiseId));
+            if (jobId) query.push('jobId=' + encodeURIComponent(jobId));
+            if (appId) query.push('application_id=' + encodeURIComponent(appId));
+            if (query.length > 0) {
+                url += '?' + query.join('&');
+            }
+            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
+            window.isdShellSetStep('main');
+            $.ajax({
+                type : 'GET',
+                url   : url,
+                beforeSend : function() {
+                    $('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
+                },
+                success : function (response)
+                {
+                    $('#app_interview_schedule_content').html(response.view);
+                }
+            });
+        });
 
 
     $(document).on('click','.in_tr_email_panel', function(){
@@ -4808,27 +4817,42 @@ $( document ).ready(function() {
           }
       });
   });   
-        $('body').on('click', '#app_interview_schedule', function(){
-         			var id    		=	$(this).attr('rel');
-         			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
-         			url     		=	url.replace(':id', id);
-         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
-              window.isdShellSetStep('main');
-         			$.ajax({
-         							type  		:	'GET',
-         							url   		:	url,
-         							beforeSend	:	function() {
-         														$('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
-         											},
-         							success 	:	function (response) {
-         																$('#app_interview_schedule_content').html(response.view);
-                                        setTimeout(() => {
-                                          $('#kt_activities_scroll').removeAttr('style');
-                                        }, 500);
-         											}
-         				});
-         });
+        $(document).on('click', '#app_interview_schedule, .cdr-btn-interview, .app_interview_schedule', function(e){
+            e.preventDefault();
+            var $btn = $(this);
+            var id = $btn.attr('rel');
+            var wiseId = $btn.attr('data-wise-id') || $btn.data('wise-id') || '';
+            var jobId = $btn.attr('data-job-id') || $btn.data('job-id') || '';
+            var appId = $btn.attr('data-app-id') || $btn.data('app-id') || '';
+
+            var url = "{{ route('service_company.job-applications.create-schedule',':id') }}";
+            url = url.replace(':id', id);
+
+            let query = [];
+            if (wiseId) query.push('wiseId=' + encodeURIComponent(wiseId));
+            if (jobId) query.push('jobId=' + encodeURIComponent(jobId));
+            if (appId) query.push('application_id=' + encodeURIComponent(appId));
+            if (query.length > 0) {
+                url += (url.indexOf('?') === -1 ? '?' : '&') + query.join('&');
+            }
+
+            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
+            window.isdShellSetStep('main');
+            $.ajax({
+                type : 'GET',
+                url : url,
+                beforeSend : function() {
+                    $('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
+                },
+                success : function (response) {
+                    $('#app_interview_schedule_content').html(response.view);
+                    setTimeout(() => {
+                        $('#kt_activities_scroll').removeAttr('style');
+                    }, 500);
+                }
+            });
+        });
 
          $('body').on('click', '.app_mail_schedule', function(){
                     localStorage.setItem('toggleOpen', 'true');
