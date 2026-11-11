@@ -201,62 +201,577 @@ body
     margin-top: 2px !important;
 }
 
-/* ===== Redesigned profile (scoped .scp-) ===== */
+/* ===== Rule 20 Modern Card + Sub-Card Design System for Service Company Profile ===== */
 .scp, .scp * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; box-sizing:border-box; }
-.scp { font-size:13px; color:#1f2937; }
-.scp-hero { background:linear-gradient(135deg,#eef2ff 0%,#eaf2ff 55%,#f5f8ff 100%); border:1px solid #e6ecf5; border-radius:14px; padding:16px 20px; display:flex; flex-wrap:wrap; gap:18px; align-items:center; margin-bottom:14px; }
-.scp-hero-avatar { width:74px; height:74px; border-radius:50%; overflow:hidden; flex-shrink:0; background:#dbe4f5; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#3b55e6; border:3px solid #fff; box-shadow:0 4px 14px rgba(0,0,0,.08); }
-.scp-hero-avatar img { width:100%; height:100%; object-fit:cover; }
-.scp-hero-main { flex:1; min-width:220px; }
-.scp-hello { font-size:12px; color:#64748b; }
-.scp-name { font-size:14px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:7px; line-height:1.3; }
-.scp-name .scp-verif { width:14px; height:14px; color:#2563eb; }
-.scp-role { font-size:12px; color:#475569; margin-top:2px; }
-.scp-emp-badge { display:inline-flex; align-items:center; gap:6px; margin-top:8px; background:#e8fff3; color:#15803d; font-size:11px; font-weight:600; padding:4px 11px; border-radius:30px; }
-.scp-pc { flex:1; min-width:220px; }
-.scp-pc-top { display:flex; align-items:baseline; justify-content:space-between; }
-.scp-pc-label { font-size:12px; color:#64748b; font-weight:600; }
-.scp-pc-pct { font-size:14px; font-weight:800; color:#0f172a; }
-.scp-pc-bar { height:7px; background:#dbe4f5; border-radius:6px; overflow:hidden; margin:7px 0 10px; }
-.scp-pc-fill { height:100%; background:linear-gradient(90deg,#3b55e6,#6d8bff); border-radius:6px; }
-.scp-pc-list { display:grid; grid-template-columns:1fr 1fr; gap:5px 16px; }
-.scp-pc-item { display:flex; align-items:center; gap:7px; font-size:11.5px; color:#475569; }
-.scp-pc-item .ic { width:14px; height:14px; flex-shrink:0; }
-.scp-pc-item.done { color:#15803d; }
-.scp-hero-actions { display:flex; flex-direction:column; gap:7px; min-width:170px; }
-.scp-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:8px 14px; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer; border:1px solid #e2e8f0; background:#fff; color:#334155; text-decoration:none; transition:all .15s; }
-.scp-btn svg { width:14px; height:14px; }
-.scp-btn:hover { background:#f1f5f9; color:#334155; }
-.scp-btn-primary { background:#3b55e6; color:#fff; border-color:#3b55e6; box-shadow:0 4px 12px rgba(59,85,230,.25); }
-.scp-btn-primary:hover { background:#2f46c4; color:#fff; }
-.scp-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:14px; }
-.scp-stat { background:#fff; border:1px solid #eef2f7; border-radius:12px; padding:13px 14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
-.scp-stat-ic { width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.scp-stat-ic svg { width:19px; height:19px; }
-.ic-blue { background:#eef2ff; color:#3b55e6; } .ic-green { background:#e8fff3; color:#16a34a; } .ic-amber { background:#fff8e6; color:#d97706; } .ic-purple { background:#f5efff; color:#7c3aed; } .ic-rose { background:#fff1f3; color:#e11d48; }
-.scp-stat-lbl { font-size:11.5px; color:#64748b; font-weight:500; }
-.scp-stat-num { font-size:14px; font-weight:800; color:#0f172a; line-height:1.2; }
-.scp-stat-sub { font-size:11px; font-weight:600; color:#16a34a; }
-.scp-tabs .nav-link { font-size:13px !important; font-weight:600; color:#64748b; padding:12px 6px; }
-.scp-tabs .nav-link.active { color:#3b55e6 !important; }
-.scp-grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-.scp-card { background:#fff; border:1px solid #eef2f7; border-radius:14px; padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
-.scp-card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-.scp-card-title { display:flex; align-items:center; gap:9px; font-size:14px; font-weight:700; color:#0f172a; }
-.scp-card-title .ci { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
-.scp-card-title .ci svg { width:16px; height:16px; }
-.scp-edit { font-size:12px; font-weight:600; color:#3b55e6; cursor:pointer; text-decoration:none; }
-.scp-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px dashed #eef2f7; }
-.scp-row:last-child { border-bottom:none; }
-.scp-row .k { display:flex; align-items:center; gap:7px; font-size:12px; color:#94a3b8; }
-.scp-row .k svg { width:14px; height:14px; }
-.scp-row .v { font-size:12.5px; font-weight:600; color:#1f2937; text-align:right; word-break:break-word; }
-.scp-row .v a { color:#3b55e6; text-decoration:none; }
-.scp-pill { display:inline-flex; align-items:center; gap:4px; background:#e8fff3; color:#15803d; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; }
-.scp-pill.free { background:#eef2ff; color:#3b55e6; }
-.scp-upgrade { display:block; width:100%; text-align:center; margin-top:12px; padding:9px; border:0; border-radius:9px; background:#eef2ff; color:#3b55e6; font-size:13px; font-weight:700; cursor:pointer; }
-@media (max-width:1200px){ .scp-stats { grid-template-columns:repeat(3,1fr); } .scp-grid3 { grid-template-columns:1fr 1fr; } }
-@media (max-width:768px){ .scp-stats { grid-template-columns:1fr 1fr; } .scp-grid3 { grid-template-columns:1fr; } .scp-pc-list { grid-template-columns:1fr; } }
+.scp { font-size:13px; color:#0f172a; }
+
+/* Tier 1: Top Hero Profile Header Card */
+.scp-hero-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 18px 22px !important;
+  margin-bottom: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 18px !important;
+}
+.scp-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 280px;
+}
+.scp-avatar-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+}
+.scp-avatar-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #eff6ff;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #009ef7;
+}
+.scp-avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.scp-online-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  background: #10b981;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+}
+.scp-hero-info {
+  display: flex;
+  flex-direction: column;
+}
+.scp-greeting {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+.scp-name-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 1px;
+}
+.scp-title-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+  margin: 0;
+}
+.scp-verif-icon {
+  width: 16px;
+  height: 16px;
+  color: #009ef7;
+}
+.scp-designation-row {
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.scp-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.scp-pill-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.scp-pill-tag.verified {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+.scp-pill-tag.neutral {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+/* Center Health Progress */
+.scp-health-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  min-width: 290px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.scp-health-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+.scp-health-lbl {
+  color: #64748b;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.scp-health-pct {
+  font-weight: 700;
+  color: #009ef7;
+}
+.scp-health-bar {
+  width: 100%;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.scp-health-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #009ef7 0%, #2563eb 100%);
+  border-radius: 4px;
+}
+.scp-health-items {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  margin-top: 2px;
+}
+.scp-health-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #475569;
+}
+.scp-health-item.done {
+  color: #065f46;
+}
+.scp-health-item svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+/* Right Hero Actions */
+.scp-hero-actions-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 170px;
+}
+.scp-btn-hero-primary {
+  height: 36px;
+  background: #009ef7;
+  color: #ffffff !important;
+  border: 1px solid #009ef7;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.scp-btn-hero-primary:hover {
+  background: #0086d4;
+  color: #ffffff !important;
+}
+.scp-btn-hero-secondary {
+  height: 34px;
+  background: #ffffff;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.scp-btn-hero-secondary:hover {
+  background: #f8fafc;
+  color: #0f172a !important;
+  border-color: #cbd5e1;
+}
+
+/* Tier 1.5: High-Density KPI Stats Sub-Cards */
+.scp-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.scp-kpi-subcard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+.scp-kpi-subcard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+  border-color: #bfdbfe;
+}
+.scp-kpi-ic-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.scp-kpi-ic-box svg {
+  width: 18px;
+  height: 18px;
+}
+.scp-kpi-ic-blue { background: #eff6ff; color: #009ef7; }
+.scp-kpi-ic-green { background: #ecfdf5; color: #10b981; }
+.scp-kpi-ic-amber { background: #fffbeb; color: #f59e0b; }
+.scp-kpi-ic-purple { background: #f5f3ff; color: #7c3aed; }
+.scp-kpi-ic-rose { background: #fff1f2; color: #e11d48; }
+
+.scp-kpi-data {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.scp-kpi-lbl {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scp-kpi-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+/* Tier 2: Dedicated Sub-Tabs Card (Rule 20 Mandatory) */
+.scp-tabs-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+  margin-bottom: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  list-style: none !important;
+  margin-left: 0 !important;
+}
+.scp-tabs-card::-webkit-scrollbar {
+  display: none;
+}
+.scp-tab-item {
+  display: inline-block;
+  margin: 0 !important;
+}
+.scp-tab-link {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 6px 14px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.scp-tab-link:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+.scp-tab-link.active {
+  background: #009ef7 !important;
+  border-color: #009ef7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+}
+.scp-tab-badge {
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #475569;
+}
+.scp-tab-link.active .scp-tab-badge {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+}
+
+/* Tier 3: "My Details" Tab - Balanced 3-Card Enterprise Grid */
+.scp-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+.scp-god-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+.scp-god-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.06);
+}
+.scp-card-top-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid #edf2f7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+}
+.scp-card-head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.scp-card-ic {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.scp-card-ic svg {
+  width: 16px;
+  height: 16px;
+}
+.scp-card-ic.blue { background: #eff6ff; color: #009ef7; }
+.scp-card-ic.purple { background: #f5f3ff; color: #7c3aed; }
+.scp-card-ic.green { background: #ecfdf5; color: #10b981; }
+.scp-card-ic.amber { background: #fffbeb; color: #f59e0b; }
+.scp-card-head-titles h3 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+  margin: 0;
+}
+.scp-card-head-titles p {
+  font-size: 11px;
+  color: #64748b;
+  margin: 1px 0 0 0;
+}
+.scp-card-action-link {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #009ef7;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+.scp-card-action-link:hover {
+  background: #eff6ff;
+  color: #0086d4;
+}
+
+.scp-card-body-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  background: #ffffff;
+}
+
+/* Sub-Card Data Tiles (Rule 20) */
+.scp-subcard-tile {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+.scp-subcard-tile:hover {
+  background: #fafcfe;
+  border-color: #cbd5e1;
+}
+.scp-tile-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #64748b;
+  flex-shrink: 0;
+}
+.scp-tile-left svg, .scp-tile-left i {
+  color: #94a3b8;
+  font-size: 13px;
+  width: 14px;
+}
+.scp-tile-right {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  word-break: break-all;
+}
+.scp-tile-right a {
+  color: #009ef7;
+  text-decoration: none;
+}
+.scp-tile-right a:hover {
+  text-decoration: underline;
+}
+
+/* Status Pills */
+.scp-status-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.scp-status-pill.verified {
+  background: #ecfdf5;
+  color: #10b981;
+  border: 1px solid #a7f3d0;
+}
+.scp-status-pill.active {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.scp-status-pill.plan {
+  background: #eff6ff;
+  color: #009ef7;
+  border: 1px solid #bfdbfe;
+}
+
+/* Upgrade Plan Action */
+.scp-plan-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #edf2f7;
+}
+.scp-btn-upgrade-plan {
+  width: 100%;
+  height: 36px;
+  background: #eff6ff;
+  color: #009ef7 !important;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.scp-btn-upgrade-plan:hover {
+  background: #009ef7;
+  color: #ffffff !important;
+  border-color: #009ef7;
+}
+
+/* Responsiveness for 15.6" screens and down */
+@media (max-width: 1200px) {
+  .scp-details-grid { grid-template-columns: 1fr 1fr; }
+  .scp-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 768px) {
+  .scp-details-grid { grid-template-columns: 1fr; }
+  .scp-kpi-grid { grid-template-columns: 1fr 1fr; }
+  .scp-hero-card { flex-direction: column; align-items: stretch; }
+  .scp-hero-actions-col { flex-direction: row; }
+}
 
 /* ===================== Shared icon tints (Settings + Rank) ===================== */
 .sst-wrap, .sst-wrap *, .srk-wrap, .srk-wrap * { font-family:'Poppins',sans-serif !important; box-sizing:border-box; }

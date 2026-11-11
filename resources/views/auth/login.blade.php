@@ -561,6 +561,170 @@ select.jw-inp option {
     line-height: 1.45;
 }
 
+/* ==========================================================================
+   ENTERPRISE COMPANY TYPE SELECTOR (Pattern B: 2x2 Grid Cards - Rule 20)
+   ========================================================================== */
+.jw-type-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-top: 6px;
+}
+@media (max-width: 520px) {
+    .jw-type-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .jw-type-grid-card.jw-span-full {
+        grid-column: span 1 !important;
+    }
+}
+.jw-type-grid-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px 13px;
+    background: #ffffff;
+    border: 1.5px solid #d7ddea;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all .18s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    user-select: none;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+.jw-type-grid-card.jw-span-full {
+    grid-column: span 2;
+}
+.jw-type-grid-card:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.06);
+}
+.jw-type-grid-card:focus-visible {
+    border-color: var(--jw-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+.jw-type-grid-card.is-selected {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    box-shadow: 0 4px 14px rgba(0, 158, 247, 0.12) !important;
+}
+.jw-type-grid.is-invalid .jw-type-grid-card {
+    border-color: #fca5a5;
+}
+.jw-type-grid-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.jw-type-card-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+.jw-type-card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.jw-type-card-name {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.jw-type-grid-card.is-selected .jw-type-card-name {
+    color: #009ef7;
+}
+.jw-type-card-subtag {
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+}
+.jw-type-card-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.jw-type-radio-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid #cbd5e1;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .16s ease;
+    flex-shrink: 0;
+}
+.jw-type-grid-card.is-selected .jw-type-radio-dot {
+    border-color: #009ef7;
+    background: #009ef7;
+}
+.jw-type-radio-dot::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ffffff;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all .16s ease;
+}
+.jw-type-grid-card.is-selected .jw-type-radio-dot::after {
+    opacity: 1;
+    transform: scale(1);
+}
+.jw-type-card-desc {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.35;
+    margin-top: 2px;
+}
+.jw-type-grid-card.is-selected .jw-type-card-desc {
+    color: #334155;
+}
+.jw-cap-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 1.5px 6px;
+    border-radius: 4px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+.jw-tag-ats {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+.jw-tag-crm {
+    background: #fdf2f8;
+    color: #be185d;
+    border: 1px solid #fbcfe8;
+}
+.jw-tag-ats-only {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
 /* Scoped styling to ensure x-jero-phone-input harmonizes with master shell */
 .jw-card-form .jero-phone-field-group {
     margin-bottom: 0 !important;
@@ -1320,37 +1484,106 @@ select.jw-inp option {
                         <span class="jw-err" id="jw-signup-phone-err" style="display:none;"></span>
                     </div>
 
-                    <!-- Field 4: Company Type -->
-                    <div class="jw-field">
-                        <label for="jw-signup-company-type">Company Type</label>
-                        <div class="jw-iw">
-                            <span class="il" aria-hidden="true">
-                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-                                    <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            @if($isAgencyInvite)
-                                <input type="hidden" name="company_type" id="jw-signup-company-type" value="1">
-                                <input class="jw-inp" type="text" value="Recruitment or Staffing Agency" readonly style="background-color:#f8fafc; color:#1e293b; font-weight:600; cursor:not-allowed; border-color:#cbd5e1; padding-right:110px;">
-                                <span class="ok-mark" style="display:flex;" aria-hidden="true">
-                                    <span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:10.5px; font-weight:600; border-radius:6px; padding:3px 8px; border:1px solid #bae6fd;">Auto-Selected</span>
-                                </span>
-                            @else
-                                <select class="jw-inp jw-select" name="company_type" id="jw-signup-company-type" required>
-                                    <option value="" disabled selected>Select company business model...</option>
-                                    <option value="2">Consulting or Services Company</option>
-                                    <option value="1">Recruitment or Staffing Agency</option>
-                                    <option value="3">Product or Manufacturing Company (Direct Employer)</option>
-                                    <option value="4">Freelancer / Individual Recruiter</option>
-                                </select>
-                                <span class="ir" style="pointer-events:none;" aria-hidden="true">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <path d="M6 9l6 6 6-6" stroke="#8b95af" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <!-- Field 4: Company Type (Enterprise Card Combobox with ATS/CRM Entitlements) -->
+                    <div class="jw-field" style="position:relative;">
+                        <div class="jw-field-row" style="margin-bottom:8px;">
+                            <label for="jw-signup-company-type" style="margin:0;">Company Type</label>
+                            <span class="jw-type-hint" style="font-size:11px; font-weight:600; color:#2563eb;">Select your business model</span>
+                        </div>
+
+                        @if($isAgencyInvite)
+                            <div class="jw-iw">
+                                <span class="il" aria-hidden="true">
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
                                     </svg>
                                 </span>
-                            @endif
-                        </div>
+                                <input type="hidden" name="company_type" id="jw-signup-company-type" value="1">
+                                <div class="jw-inp" style="display:flex; align-items:center; justify-content:space-between; background-color:#f8fafc; cursor:not-allowed; border-color:#cbd5e1; padding-left:48px; padding-right:16px;">
+                                    <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                                        <span style="font-weight:700; color:#0f172a; font-size:13.5px; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Recruitment &amp; Staffing Company</span>
+                                        <span class="jw-cap-tag jw-tag-ats">ATS</span>
+                                        <span class="jw-cap-tag jw-tag-crm">CRM</span>
+                                    </div>
+                                    <span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:10.5px; font-weight:600; border-radius:6px; padding:3px 8px; border:1px solid #bae6fd; white-space:nowrap;">Auto-Selected</span>
+                                </div>
+                            </div>
+                        @else
+                            <!-- Hidden input for 100% backward compatible form submission -->
+                            <input type="hidden" name="company_type" id="jw-signup-company-type" value="{{ old('company_type', '') }}" required>
+
+                            <!-- Pattern B: 2x2 Grid Cards (Rule 20 Enterprise Standard) -->
+                            <div class="jw-type-grid" id="jw-type-grid" role="radiogroup" aria-label="Company Type Selection">
+
+                                <!-- Card 1: Product Company (Direct Employer) (value: 3 - Top Full Row) -->
+                                <div class="jw-type-grid-card jw-span-full {{ old('company_type') == '3' ? 'is-selected' : '' }}" data-value="3" onclick="jwSelectGridType(3)" id="jw-type-card-3" role="radio" aria-checked="{{ old('company_type') == '3' ? 'true' : 'false' }}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jwSelectGridType(3);}">
+                                    <div class="jw-type-grid-card-head">
+                                        <div class="jw-type-card-title-group">
+                                            <span class="jw-type-card-icon" style="background:#ecfdf5; color:#059669; border-color:#a7f3d0;">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                                    <polyline points="2 17 12 22 22 17"></polyline>
+                                                    <polyline points="2 12 12 17 22 12"></polyline>
+                                                </svg>
+                                            </span>
+                                            <div class="jw-type-card-name">Product Company <span class="jw-type-card-subtag">(Direct Employer)</span></div>
+                                        </div>
+                                        <div class="jw-type-card-right">
+                                            <span class="jw-cap-tag jw-tag-ats-only">ATS Only</span>
+                                            <span class="jw-type-radio-dot"></span>
+                                        </div>
+                                    </div>
+                                    <div class="jw-type-card-desc">Hiring exclusively for your own in-house departments &amp; teams (Pure ATS, no CRM bloat).</div>
+                                </div>
+
+                                <!-- Card 2: IT Services & Consulting Company (value: 2 - Bottom Left) -->
+                                <div class="jw-type-grid-card {{ old('company_type') == '2' ? 'is-selected' : '' }}" data-value="2" onclick="jwSelectGridType(2)" id="jw-type-card-2" role="radio" aria-checked="{{ old('company_type') == '2' ? 'true' : 'false' }}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jwSelectGridType(2);}">
+                                    <div class="jw-type-grid-card-head">
+                                        <div class="jw-type-card-title-group">
+                                            <span class="jw-type-card-icon" style="background:#eff6ff; color:#2563eb; border-color:#bfdbfe;">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                                                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                                                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                                                </svg>
+                                            </span>
+                                            <div class="jw-type-card-name">IT Services &amp; Consulting</div>
+                                        </div>
+                                        <div class="jw-type-card-right">
+                                            <span class="jw-cap-tag jw-tag-ats">ATS</span>
+                                            <span class="jw-cap-tag jw-tag-crm">CRM</span>
+                                            <span class="jw-type-radio-dot"></span>
+                                        </div>
+                                    </div>
+                                    <div class="jw-type-card-desc">IT consultancies, digital services &amp; staff augmentation (Bench talent + Client accounts).</div>
+                                </div>
+
+                                <!-- Card 3: Recruitment & Staffing Company (value: 1 - Bottom Right) -->
+                                <div class="jw-type-grid-card {{ old('company_type') == '1' ? 'is-selected' : '' }}" data-value="1" onclick="jwSelectGridType(1)" id="jw-type-card-1" role="radio" aria-checked="{{ old('company_type') == '1' ? 'true' : 'false' }}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jwSelectGridType(1);}">
+                                    <div class="jw-type-grid-card-head">
+                                        <div class="jw-type-card-title-group">
+                                            <span class="jw-type-card-icon" style="background:#faf5ff; color:#9333ea; border-color:#f3e8ff;">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                                    <circle cx="9" cy="7" r="4"></circle>
+                                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                                </svg>
+                                            </span>
+                                            <div class="jw-type-card-name">Recruitment &amp; Staffing</div>
+                                        </div>
+                                        <div class="jw-type-card-right">
+                                            <span class="jw-cap-tag jw-tag-ats">ATS</span>
+                                            <span class="jw-cap-tag jw-tag-crm">CRM</span>
+                                            <span class="jw-type-radio-dot"></span>
+                                        </div>
+                                    </div>
+                                    <div class="jw-type-card-desc">Staffing agencies &amp; search firms (Candidate sourcing + Client job orders).</div>
+                                </div>
+
+                            </div>
+                        @endif
                         <span class="jw-err" id="jw-signup-company-type-err" style="display:none;"></span>
                     </div>
 
@@ -2046,10 +2279,54 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (signupPwd) signupPwd.addEventListener('input', evalPasswordStrength);
 
+    /* Enterprise Company Type Grid Controller (Pattern B: 2x2 Grid Cards - Rule 20) */
+    window.jwSelectGridType = function(val) {
+        var hiddenInput = document.getElementById('jw-signup-company-type');
+        var grid = document.getElementById('jw-type-grid');
+        var errEl = document.getElementById('jw-signup-company-type-err');
+        var alertEl = document.getElementById('jw_signup_alert');
+
+        if (hiddenInput) {
+            hiddenInput.value = val;
+            hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // Toggle selected styling and ARIA state across the 3 cards
+        [1, 2, 3].forEach(function(i) {
+            var card = document.getElementById('jw-type-card-' + i);
+            if (card) {
+                if (i === val) {
+                    card.classList.add('is-selected');
+                    card.setAttribute('aria-checked', 'true');
+                } else {
+                    card.classList.remove('is-selected');
+                    card.setAttribute('aria-checked', 'false');
+                }
+            }
+        });
+
+        if (grid) grid.classList.remove('is-invalid');
+        if (errEl) errEl.style.display = 'none';
+        if (alertEl) alertEl.style.display = 'none';
+    };
+
+    // Auto-select if old value exists
+    (function initGridCompanyType() {
+        var hiddenVal = document.getElementById('jw-signup-company-type');
+        if (hiddenVal && hiddenVal.value) {
+            var valInt = parseInt(hiddenVal.value, 10);
+            if ([1, 2, 3].indexOf(valInt) !== -1) {
+                jwSelectGridType(valInt);
+            }
+        }
+    })();
+
     var typeSelect = document.getElementById('jw-signup-company-type');
     if (typeSelect) {
         typeSelect.addEventListener('change', function() {
             typeSelect.classList.remove('is-invalid');
+            var grid = document.getElementById('jw-type-grid');
+            if (grid) grid.classList.remove('is-invalid');
             var alertEl = document.getElementById('jw_signup_alert');
             if (alertEl) alertEl.style.display = 'none';
         });
@@ -2093,7 +2370,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if (!typeInput || !typeInput.value) {
                 if (signupAlert) { signupAlert.textContent = 'Please select your company type.'; signupAlert.style.display = 'block'; }
-                if (typeInput) { typeInput.focus(); typeInput.classList.add('is-invalid'); }
+                if (typeInput) { typeInput.classList.add('is-invalid'); }
+                var grid = document.getElementById('jw-type-grid');
+                if (grid) {
+                    grid.classList.add('is-invalid');
+                    grid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
                 return;
             }
             if (!pwdInput || pwdInput.value.length < 8) {
