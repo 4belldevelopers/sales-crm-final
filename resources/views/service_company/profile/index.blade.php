@@ -537,14 +537,15 @@ body
   border: 1px solid #e2e8f0 !important;
   border-bottom: 1px solid #e2e8f0 !important;
   border-radius: 10px !important;
-  padding: 8px 12px !important;
+  padding: 6px 8px !important;
   margin-bottom: 14px !important;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
-  gap: 8px !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
   overflow-x: auto !important;
   overflow-y: hidden !important;
   scrollbar-width: none !important;
@@ -560,26 +561,33 @@ body
 }
 .scp-tab-item, .nav-tabs.scp-tabs-card .nav-item {
   display: inline-flex !important;
-  flex-shrink: 0 !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
   margin: 0 !important;
 }
 .scp-tab-link, .nav-tabs.scp-tabs-card .nav-link.scp-tab-link {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  padding: 6px 14px !important;
-  font-size: 11.5px !important;
+  padding: 6px 6px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
   color: #475569 !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  justify-content: center !important;
+  gap: 5px !important;
   text-decoration: none !important;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
   transition: all 0.15s ease !important;
   white-space: nowrap !important;
-  flex-shrink: 0 !important;
+  width: 100% !important;
   cursor: pointer !important;
+}
+.scp-tab-link span.scp-tab-text {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 .scp-tab-link:hover, .nav-tabs.scp-tabs-card .nav-link.scp-tab-link:hover {
   background: #f8fafc !important;
@@ -594,23 +602,58 @@ body
   color: #ffffff !important;
   box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
 }
+
+/* Tab Icon: Crisp Slate on White, Light Color / Pure White on Blue Background */
+.scp-tab-link i,
+.scp-tab-link svg,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link i,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link svg {
+  color: #64748b !important;
+  font-size: 13px !important;
+  flex-shrink: 0 !important;
+  transition: color 0.15s ease !important;
+}
+.scp-tab-link:hover i,
+.scp-tab-link:hover svg,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link:hover i,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link:hover svg {
+  color: #009ef7 !important;
+}
+.scp-tab-link.active i,
+.scp-tab-link.active svg,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link.active i,
+.nav-tabs.scp-tabs-card .nav-link.scp-tab-link.active svg {
+  color: #ffffff !important;
+}
+
 .scp-tab-badge {
-  min-width: 20px;
+  min-width: 18px;
   height: 18px;
-  padding: 0 6px;
-  border-radius: 10px;
-  font-size: 10.5px;
+  padding: 0 4px;
+  border-radius: 9px;
+  font-size: 10px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: #f1f5f9;
   color: #475569;
+  flex-shrink: 0;
 }
 .scp-tab-link.active .scp-tab-badge,
 .nav-tabs.scp-tabs-card .nav-link.scp-tab-link.active .scp-tab-badge {
   background: rgba(255, 255, 255, 0.28) !important;
   color: #ffffff !important;
+}
+
+@media (max-width: 1024px) {
+  .scp-tab-item, .nav-tabs.scp-tabs-card .nav-item {
+    flex: 0 0 auto !important;
+  }
+  .scp-tab-link, .nav-tabs.scp-tabs-card .nav-link.scp-tab-link {
+    width: auto !important;
+    padding: 6px 12px !important;
+  }
 }
 
 /* Social & Badge Helpers */
@@ -1679,56 +1722,56 @@ if (! empty($str)) {
         <div class="px-0 pt-0 pb-0">
           <ul class="nav nav-tabs scp-tabs-card" role="tablist">
             <li class="nav-item scp-tab-item">
-              <a class="nav-link scp-tab-link active show" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#overview">
+              <a class="nav-link scp-tab-link active show" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#overview" title="My Profile Details">
                 <i class="bi bi-person-vcard"></i>
-                <span>My Details</span>
+                <span class="scp-tab-text">My Details</span>
               </a>
             </li>
-            <li class="nav-item scp-tab-item" onclick="if(typeof load_jobs==='function'){ load_jobs('{{ @$users->id }}'); }">
+            <li class="nav-item scp-tab-item" onclick="if(typeof load_jobs==='function'){ load_jobs('{{ @$users->id }}'); }" title="My Jobs">
               <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#requisitions">
                 <i class="bi bi-briefcase"></i>
-                <span>My Jobs</span>
+                <span class="scp-tab-text">My Jobs</span>
                 <span class="scp-tab-badge">{{ $scp_active }}</span>
               </a>
             </li>
-            <li class="nav-item scp-tab-item" onclick="if(typeof load_application==='function'){ load_application('{{ @$users->id }}'); }">
+            <li class="nav-item scp-tab-item" onclick="if(typeof load_application==='function'){ load_application('{{ @$users->id }}'); }" title="My Candidates">
               <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#candidate">
                 <i class="bi bi-people"></i>
-                <span>My Candidate</span>
+                <span class="scp-tab-text">Candidates</span>
                 <span class="scp-tab-badge">{{ number_format($scp_cand) }}</span>
               </a>
             </li>
-            <li class="nav-item scp-tab-item" onclick="if(typeof load_interviewSchedule==='function'){ load_interviewSchedule('{{ @$users->id }}'); }">
+            <li class="nav-item scp-tab-item" onclick="if(typeof load_interviewSchedule==='function'){ load_interviewSchedule('{{ @$users->id }}'); }" title="Interview Tracker">
               <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#interview_tracker">
                 <i class="bi bi-calendar-event"></i>
-                <span>My Interview Tracker</span>
+                <span class="scp-tab-text">Interviews</span>
                 <span class="scp-tab-badge">{{ number_format($scp_intv) }}</span>
               </a>
             </li>
-            <li class="nav-item scp-tab-item" onclick="if(typeof jointableLoad==='function'){ jointableLoad('{{ @$users->id }}'); }">
+            <li class="nav-item scp-tab-item" onclick="if(typeof jointableLoad==='function'){ jointableLoad('{{ @$users->id }}'); }" title="My Joinings">
               <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#joinings">
                 <i class="bi bi-person-check"></i>
-                <span>My Joinings</span>
+                <span class="scp-tab-text">Joinings</span>
                 <span class="scp-tab-badge">{{ number_format($scp_join) }}</span>
               </a>
             </li>
-            <li class="nav-item scp-tab-item">
+            <li class="nav-item scp-tab-item" title="Internal Recruiter Ranking">
               <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#myRank">
                 <i class="bi bi-award"></i>
-                <span>My Rank</span>
+                <span class="scp-tab-text">My Rank</span>
                 <span class="scp-tab-badge">{{ $scp_rank != '-' && strpos((string)$scp_rank, '#') === false ? '#' : '' }}{{ $scp_rank }}</span>
               </a>
             </li>
-            <li class="nav-item scp-tab-item">
+            <li class="nav-item scp-tab-item" title="Performance Dashboard">
               <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#candidateDashboard">
                 <i class="bi bi-speedometer2"></i>
-                <span>My Dashboard</span>
+                <span class="scp-tab-text">Dashboard</span>
               </a>
             </li>
-            <li class="nav-item scp-tab-item">
+            <li class="nav-item scp-tab-item" title="Account Settings">
               <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#settings">
                 <i class="bi bi-gear"></i>
-                <span>My Settings</span>
+                <span class="scp-tab-text">Settings</span>
               </a>
             </li>
           </ul>

@@ -101,6 +101,7 @@ Following live review on `testing.jero.works`, a second-phase forensic audit and
 3. **Single-Row Horizontal Sub-Tabs (Rule 20):** Enforced `display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; overflow-x: auto !important; overflow-y: hidden !important;` on `.scp-tabs-card`, with `flex-shrink: 0 !important;` on all tab items.
 4. **Hero Header Desktop Alignment:** Enforced `flex-wrap: nowrap !important;` on `.scp-hero-card` for screens $\ge 992px$, ensuring the identity block, profile health tracker, and "Edit Profile" button remain on a single horizontal row across all 15.6" screens (`1366×768` and `1920×1080`).
 5. **Fully-Qualified Carbon Resolution:** Replaced unqualified `Carbon::now()` calls with `\Carbon\Carbon` to guarantee permanent namespace resolution without depending on top-level `use` blocks stripped by automated linters.
+6. **Sub-Tabs 100% Equal Fit & Light Active Icon (Rule 20):** Enforced `flex: 1 1 0 !important;` on every tab item to distribute all 8 tabs evenly across 100% of the toolbar card without truncation, overflow, or cut-off labels on 15.6" screens (`1366×768` and `1920×1080`). Added explicit `.scp-tab-link.active i { color: #ffffff !important; }` so icons render in crisp bright white over the primary blue background.
 
 ---
 
