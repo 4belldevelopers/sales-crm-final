@@ -997,6 +997,10 @@
                 sender_name: data.sender_name || data.senderName || '',
                 sender_email: data.sender_email || data.senderEmail || ''
             };
+            self._currentUserEmail = (data.sender_email || data.senderEmail || (self._companyData && self._companyData.sender_email) || data.from_email || data.reply_to_email || '').trim().toLowerCase();
+            if (self._currentUserEmail) {
+                $('#test_copy_self_email_display').text('(' + self._currentUserEmail + ')');
+            }
             if (self._companyData.companyLogo && typeof window.AgyForwardResumeEngine !== 'undefined' && typeof window.AgyForwardResumeEngine.preloadLogo === 'function') {
                 window.AgyForwardResumeEngine.preloadLogo(self._companyData.companyLogo).catch(function () {});
             }
@@ -2673,6 +2677,16 @@
             if (target === 'to') {
                 self.syncFirstRecipientSalutation();
             }
+
+            var userEmail = (self._currentUserEmail || '').trim().toLowerCase();
+            if (userEmail) {
+                var inTo = (self._emailTags.to || []).some(function (e) { return e.toLowerCase() === userEmail; });
+                var inCc = (self._emailTags.cc || []).some(function (e) { return e.toLowerCase() === userEmail; });
+                if (inTo && inCc) {
+                    self.removeEmailByAddress('cc', userEmail);
+                    inCc = false;
+                }
+            }
         },
 
         addEmailTag: function (target, email) {
@@ -3518,6 +3532,7 @@
                     'reply_to_email': replyToEmail,
                     'to_email': toEmail,
                     'cc_email': ccEmail,
+                    'copy_to_self': 1,
                     'subject': subject,
                     'attached_cv': 1,
                     'attached_cv_format': optId,

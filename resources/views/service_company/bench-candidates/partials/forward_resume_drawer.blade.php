@@ -1033,7 +1033,16 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           <a href="javascript:;" class="bench-mm-add-email-btn" onclick="openBenchRecipientDrawer('cc')">+ Add Email</a>
         </div>
         <input type="hidden" name="cc_email" id="bench_cc_email" value="{{ $cc_email }}">
-        <div class="bench-mm-hint">Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</div>
+        <div class="bench-mm-hint" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          <span>Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</span>
+          @php
+            $currentLoggedInEmail = auth()->user()->email ?? '';
+          @endphp
+          <div class="bench-mm-copy-self-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:3px 8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#009EF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Auto-copy sent to you <span style="color:#009EF7;font-weight:600;">({{ $currentLoggedInEmail }})</span></span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1869,6 +1878,16 @@ function renderBenchTags(target) {
     hiddenInput.val(list.join(','));
     updateBenchRecipientBadges();
     syncBenchRecipientDrawerButtons();
+
+    var currentUserEmail = '{{ strtolower(trim($currentLoggedInEmail)) }}';
+    if (currentUserEmail) {
+        var inTo = benchToEmails.indexOf(currentUserEmail) !== -1;
+        var inCc = benchCcEmails.indexOf(currentUserEmail) !== -1;
+        if (inTo && inCc) {
+            benchCcEmails = benchCcEmails.filter(function(e) { return e !== currentUserEmail; });
+            inCc = false;
+        }
+    }
 }
 
 function addBenchEmailTag(target, rawInput) {
@@ -2844,6 +2863,7 @@ async function onBenchFwdSubmitClick(e) {
     formData.set('subject', subject);
     formData.set('to_email', toEmail);
     formData.set('cc_email', $('#bench_cc_email').val());
+    formData.set('copy_to_self', 1);
     formData.set('attached_cv_format', formatId);
 
     if (uploadedUuids.length > 0 && uploadedUuids.length === Object.keys(_benchCompiledAttachments).length) {

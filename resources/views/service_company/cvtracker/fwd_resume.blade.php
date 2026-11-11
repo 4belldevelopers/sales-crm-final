@@ -848,7 +848,16 @@ if($cc_email_count > 0){
         </div>
         <div id="cc_email_typo_hint" class="email-typo-hint" style="display: none; margin-top: 5px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"></div>
         <input type="hidden" name="cc_email_panel" id="cc_email_panel" value="{{ $cc_email }}">
-        <div class="mm-hint">Type CC address and press Enter or comma, or click "+ Add Email"</div>
+        <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          <span>Type CC address and press Enter or comma, or click "+ Add Email"</span>
+          @php
+            $currentLoggedInEmail = auth()->user()->email ?? ($userdata->email ?? '');
+          @endphp
+          <div class="mm-copy-self-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:3px 8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#009EF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Auto-copy sent to you <span style="color:#009EF7;font-weight:600;">({{ $currentLoggedInEmail }})</span></span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -924,6 +933,7 @@ if($cc_email_count > 0){
               <option value="51" data-label="Hide Contact Details + Pre-Screened Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.">51. Hide Contact Details + Pre-Screened Report (Branded)</option>
               <option value="52" data-label="Hide Contact Details + Pre-Screened Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.">52. Hide Contact Details + Pre-Screened Report without Company Branding</option>
               <option value="53" data-label="Hide Contact Details + Pre-Screened Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and pre-screened report dossier.">53. Hide Contact Details + Pre-Screened Report + Highlighted Keywords</option>
+              <option value="54" data-label="Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding" data-desc="Full privacy package without company logo: masked contacts, highlighted skills, and pre-screened report dossier — no branding applied.">54. Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding</option>
             </optgroup>
           </select>
 
@@ -1558,7 +1568,7 @@ function updateRosterFilenames(optId) {
             return;
         }
         var filename = 'Jeroworks_' + safeName + '.pdf';
-        if (optId === 5) {
+        if (optId === 5 || (optId >= 51 && optId <= 54)) {
             filename = 'Prescreen_Report_' + safeName + '.pdf';
             $(this).css('color', '#059669').text(filename);
         } else if (hasResume) {
@@ -1731,6 +1741,35 @@ function updateSendButtonState() {
     }
 }
 
+async function ensureFwdResumeEngine() {
+    if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.generateAttachmentForCandidate === 'function') {
+        return window.AgyForwardResumeEngine;
+    }
+    if (window.AgyForwardResumeHelper && typeof window.AgyForwardResumeHelper.generateAttachmentForCandidate === 'function') {
+        return window.AgyForwardResumeHelper;
+    }
+    if (typeof window.AgyForwardResumeEngine === 'undefined') {
+        try {
+            await new Promise(function (resolve, reject) {
+                var s = document.createElement('script');
+                s.src = '/assets/modules/fwd-resume/engine.v4.js?v=' + Date.now();
+                s.onload = resolve;
+                s.onerror = function () {
+                    var s2 = document.createElement('script');
+                    s2.src = '/js/opendoc/AgyForwardResumeEngine.js?v=' + Date.now();
+                    s2.onload = resolve;
+                    s2.onerror = reject;
+                    document.head.appendChild(s2);
+                };
+                document.head.appendChild(s);
+            });
+        } catch (e) {
+            console.warn('[fwd_resume] Dynamic engine load warning:', e);
+        }
+    }
+    return window.AgyForwardResumeEngine || window.AgyForwardResumeHelper || null;
+}
+
 async function startCompilationForOption(optId) {
     if (!optId || optId === 1) return;
     _fwdIsCompiling = true;
@@ -1753,6 +1792,9 @@ async function startCompilationForOption(optId) {
 
     try {
         var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
+        if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
+            engine = await ensureFwdResumeEngine();
+        }
         if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
             throw new Error('Forward Resume engine is not initialized');
         }
@@ -2186,6 +2228,7 @@ window.onFwdSubmitClick = async function (e) {
     formData.append('reply_to_email', reply_to_email);
     formData.append('to_email', to_email);
     formData.append('cc_email', cc_email);
+    formData.append('copy_to_self', 1);
     formData.append('subject', subject);
     formData.append('attached_cv', attached_cv);
     formData.append('attached_cv_format', optId);
@@ -2226,6 +2269,9 @@ window.onFwdSubmitClick = async function (e) {
                         companyLogoRaw: @json($companyLogoRaw ?? '')
                     };
                     var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
+                    if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
+                        engine = await ensureFwdResumeEngine();
+                    }
                     if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
                         throw new Error('Forward Resume engine not available');
                     }
@@ -2541,6 +2587,16 @@ window.renderFwdTags = function(target) {
     }
 
     syncRecipientDrawerState();
+
+    var currentUserEmail = '{{ strtolower(trim($currentLoggedInEmail)) }}';
+    if (currentUserEmail) {
+        var inTo = (window._fwdEmailTags.to || []).some(function(e) { return e.toLowerCase() === currentUserEmail; });
+        var inCc = (window._fwdEmailTags.cc || []).some(function(e) { return e.toLowerCase() === currentUserEmail; });
+        if (inTo && inCc) {
+            window.removeFwdEmailByAddress('cc', currentUserEmail);
+            inCc = false;
+        }
+    }
 };
 
 window.addFwdEmailTag = function(target, email) {
