@@ -132,6 +132,7 @@ jobs:
               echo ""
               echo ">> Building frontend"
 
+              php artisan view:clear || true
               export NODE_ENV=production
 
               npm run build
