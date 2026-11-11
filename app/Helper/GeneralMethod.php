@@ -5753,7 +5753,7 @@ END:VCALENDAR";
      * 2. jobs.qualification column (joining qualification_master)
      * 3. Default to 'Any Qualification' if job exists but has no qualifications recorded
      *
-     * @param int|string $jobyID
+     * @param  int|string  $jobyID
      * @return string
      */
     public static function allQualificationSelected($jobyID)
@@ -9863,32 +9863,33 @@ END:VCALENDAR";
     {
         $elasticService = app(ElasticService::class);
         $response = '';
-        $interviewShedule = DB::table('interview_schedules')
-            ->join('job_applications', 'job_applications.id', 'interview_schedules.job_application_id')
-            ->join('add_job_wise_condidates', 'interview_schedules.interview_job_wise_con_id', 'add_job_wise_condidates.id')
-                // ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->join('jobs', function ($join) {
-                $join->on('jobs.id', 'add_job_wise_condidates.job_id');
+        $singleSchedule = DB::table('interview_schedules')
+            ->leftJoin('add_job_wise_condidates', 'interview_schedules.interview_job_wise_con_id', '=', 'add_job_wise_condidates.id')
+            ->leftJoin('job_applications', function ($join) {
+                $join->on('job_applications.id', '=', 'interview_schedules.job_application_id')
+                    ->orOn('job_applications.id', '=', 'add_job_wise_condidates.job_application_id');
+            })
+            ->leftJoin('jobs', function ($join) {
+                $join->on('jobs.id', '=', 'interview_schedules.interview_job_id')
+                    ->orOn('jobs.id', '=', 'add_job_wise_condidates.job_id');
             })
             ->leftJoin('companies', function ($join) {
-                $join->on('companies.id', 'jobs.company_id');
+                $join->on('companies.id', '=', 'jobs.company_id');
             })
-            ->leftjoin('clients', 'clients.id', 'jobs.client_id')
-            ->leftjoin('users', 'users.id', 'add_job_wise_condidates.submitted_by')
-            ->leftjoin('countries', 'countries.id', 'job_applications.country')
-            ->leftjoin('state_list', 'state_list.id', 'job_applications.state')
-            ->leftjoin('city_list', 'city_list.city_id', 'job_applications.city_id')
-            ->leftjoin('companies as uc', 'uc.id', '=', 'users.company_id')
-            ->leftjoin('companies as can_c', 'can_c.id', '=', 'job_applications.company_id')
-            ->leftjoin('interview_feedback', 'interview_feedback.interview_id', 'interview_schedules.id')
-                // 'interview_schedules.stage'
-                // ->leftjoin('companies', 'companies.id', 'jobs.company_id')
-            ->leftjoin('master_status', 'master_status.id', 'interview_schedules.stage')
-            ->leftjoin('interview_mode', 'interview_mode.id', 'interview_schedules.interview_mode')
-            ->leftjoin('interview_mode_lavel', 'interview_mode_lavel.id', 'interview_schedules.interview_mode_lavel')
-            ->leftjoin('candidate_status', 'candidate_status.id', 'interview_schedules.substage')
+            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+            ->leftJoin('users', 'users.id', '=', 'add_job_wise_condidates.submitted_by')
+            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
+            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+            ->leftJoin('companies as uc', 'uc.id', '=', 'users.company_id')
+            ->leftJoin('companies as can_c', 'can_c.id', '=', 'job_applications.company_id')
+            ->leftJoin('interview_feedback', 'interview_feedback.interview_id', '=', 'interview_schedules.id')
+            ->leftJoin('master_status', 'master_status.id', '=', 'interview_schedules.stage')
+            ->leftJoin('interview_mode', 'interview_mode.id', '=', 'interview_schedules.interview_mode')
+            ->leftJoin('interview_mode_lavel', 'interview_mode_lavel.id', '=', 'interview_schedules.interview_mode_lavel')
+            ->leftJoin('candidate_status', 'candidate_status.id', '=', 'interview_schedules.substage')
             ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->leftJoin('updatetimeline', 'updatetimeline.interview_schedules_id', 'interview_schedules.id')
+            ->leftJoin('updatetimeline', 'updatetimeline.interview_schedules_id', '=', 'interview_schedules.id')
             ->select(
                 'interview_schedules.id',
                 'job_applications.full_name',
@@ -9955,8 +9956,9 @@ END:VCALENDAR";
                 'uc.company_name as uc_company_name',
                 'updatetimeline.interview_mention_link'
             )->where('interview_schedules.id', '=', $id)
-            ->groupBy('interview_schedules.id')
-            ->cursor();
+            ->first();
+
+        $interviewShedule = $singleSchedule ? [$singleSchedule] : [];
 
         foreach ($interviewShedule as $row) {
 
@@ -10003,23 +10005,30 @@ END:VCALENDAR";
                 })
                 ->toArray();
 
-            $exists = $elasticService->getClient()->exists([
-                'index' => ELASTIC_CANDIDATES,
-                'id' => $row->wiseID,
-            ]);
-            if ($exists) {
-                $params = [
-                    'index' => ELASTIC_CANDIDATES,
-                    'id' => $row->wiseID,
-                ];
+            $candWiseId = (int) ($row->wiseID ?: ($row->interview_job_wise_con_id ?? 0));
+            if ($candWiseId > 0) {
+                try {
+                    $exists = $elasticService->getClient()->exists([
+                        'index' => ELASTIC_CANDIDATES,
+                        'id' => $candWiseId,
+                    ]);
+                    if ($exists) {
+                        $params = [
+                            'index' => ELASTIC_CANDIDATES,
+                            'id' => $candWiseId,
+                        ];
 
-                $response = $elasticService->getClient()->get($params);
-                $data = (object) $response['_source'];
-                $row->full_name = $data->full_name;
-                $row->email = $data->email;
-                $row->phone = $data->phone;
-                $row->current_designation = $data->current_designation;
-                $row->condidate_type = $data->condidate_type;
+                        $candResponse = $elasticService->getClient()->get($params);
+                        $data = (object) $candResponse['_source'];
+                        $row->full_name = $data->full_name ?? $row->full_name;
+                        $row->email = $data->email ?? $row->email;
+                        $row->phone = $data->phone ?? $row->phone;
+                        $row->current_designation = $data->current_designation ?? $row->current_designation;
+                        $row->condidate_type = $data->condidate_type ?? $row->condidate_type;
+                    }
+                } catch (\Throwable $esCandEx) {
+                    \Log::warning('Elasticsearch candidate get notice in interviewTrackerAddEditUpload: '.$esCandEx->getMessage());
+                }
             }
 
             $response = $elasticService->getClient()->update([
@@ -16151,174 +16160,174 @@ END:VCALENDAR";
                     ],
                 ];
 
-                    $params = [
-                        'index' => ELASTIC_CANDIDATES,
-                        'request_cache' => true,
-                        'body' => [
-                            'size' => 0,
-                            'query' => $query,
-                            'aggs' => [
-                                'all_candidates' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'should' => [
-                                                ['terms' => ['job_master_status_id' => [1, 2, 3, 4, 5, 6, 7]]],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [['terms' => ['master_status_id' => [1, 2, 3, 4, 5, 6, 7]]]],
-                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                    ],
+                $params = [
+                    'index' => ELASTIC_CANDIDATES,
+                    'request_cache' => true,
+                    'body' => [
+                        'size' => 0,
+                        'query' => $query,
+                        'aggs' => [
+                            'all_candidates' => [
+                                'filter' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['terms' => ['job_master_status_id' => [1, 2, 3, 4, 5, 6, 7]]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['terms' => ['master_status_id' => [1, 2, 3, 4, 5, 6, 7]]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                                 ],
                                             ],
-                                            'minimum_should_match' => 1,
                                         ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
-                                'sourced' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'should' => [
-                                                ['term' => ['job_master_status_id' => 1]],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [['term' => ['master_status_id' => 1]]],
-                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                    ],
+                            ],
+                            'sourced' => [
+                                'filter' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_master_status_id' => 1]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['term' => ['master_status_id' => 1]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                                 ],
                                             ],
-                                            'minimum_should_match' => 1,
                                         ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
-                                'sourcing' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'should' => [
-                                                ['term' => ['job_master_status_id' => 1]],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [['term' => ['master_status_id' => 1]]],
-                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                    ],
+                            ],
+                            'sourcing' => [
+                                'filter' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_master_status_id' => 1]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['term' => ['master_status_id' => 1]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                                 ],
                                             ],
-                                            'minimum_should_match' => 1,
                                         ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
-                                'screening' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'should' => [
-                                                ['term' => ['job_master_status_id' => 2]],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [['term' => ['master_status_id' => 2]]],
-                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                    ],
+                            ],
+                            'screening' => [
+                                'filter' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_master_status_id' => 2]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['term' => ['master_status_id' => 2]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                                 ],
                                             ],
-                                            'minimum_should_match' => 1,
                                         ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
-                                'evaluated' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'should' => [
-                                                ['term' => ['job_master_status_id' => 3]],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [['term' => ['master_status_id' => 3]]],
-                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                    ],
+                            ],
+                            'evaluated' => [
+                                'filter' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_master_status_id' => 3]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['term' => ['master_status_id' => 3]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                                 ],
                                             ],
-                                            'minimum_should_match' => 1,
                                         ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
-                                'negotiations' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'should' => [
-                                                ['term' => ['job_master_status_id' => 4]],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [['term' => ['master_status_id' => 4]]],
-                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                    ],
+                            ],
+                            'negotiations' => [
+                                'filter' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_master_status_id' => 4]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['term' => ['master_status_id' => 4]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                                 ],
                                             ],
-                                            'minimum_should_match' => 1,
                                         ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
-                                'offers' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'should' => [
-                                                ['term' => ['job_master_status_id' => 5]],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [['term' => ['master_status_id' => 5]]],
-                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                    ],
+                            ],
+                            'offers' => [
+                                'filter' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_master_status_id' => 5]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['term' => ['master_status_id' => 5]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                                 ],
                                             ],
-                                            'minimum_should_match' => 1,
                                         ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
-                                'joined' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'should' => [
-                                                ['term' => ['job_master_status_id' => 6]],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [['term' => ['master_status_id' => 6]]],
-                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                    ],
+                            ],
+                            'joined' => [
+                                'filter' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_master_status_id' => 6]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['term' => ['master_status_id' => 6]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                                 ],
                                             ],
-                                            'minimum_should_match' => 1,
                                         ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
-                                'rejected' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'should' => [
-                                                ['term' => ['job_master_status_id' => 7]],
-                                                [
-                                                    'bool' => [
-                                                        'must' => [['term' => ['master_status_id' => 7]]],
-                                                        'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
-                                                    ],
+                            ],
+                            'rejected' => [
+                                'filter' => [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['job_master_status_id' => 7]],
+                                            [
+                                                'bool' => [
+                                                    'must' => [['term' => ['master_status_id' => 7]]],
+                                                    'must_not' => [['range' => ['job_master_status_id' => ['gt' => 0]]]],
                                                 ],
                                             ],
-                                            'minimum_should_match' => 1,
                                         ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
                             ],
                         ],
-                    ];
+                    ],
+                ];
 
-                    $response = $elasticService->getClient()->search($params);
-                    $aggs = $response['aggregations'] ?? [];
+                $response = $elasticService->getClient()->search($params);
+                $aggs = $response['aggregations'] ?? [];
 
-                    $sourced = (int) ($aggs['sourced']['doc_count'] ?? ($aggs['sourcing']['doc_count'] ?? 0));
-                    $screening = (int) ($aggs['screening']['doc_count'] ?? 0);
-                    $evaluated = (int) ($aggs['evaluated']['doc_count'] ?? 0);
-                    $negotiations = (int) ($aggs['negotiations']['doc_count'] ?? 0);
-                    $offers = (int) ($aggs['offers']['doc_count'] ?? 0);
-                    $joined = (int) ($aggs['joined']['doc_count'] ?? 0);
-                    $rejected = (int) ($aggs['rejected']['doc_count'] ?? 0);
-                    $allCandidates = isset($response['aggregations']['all_candidates']['doc_count'])
-                        ? (int) $response['aggregations']['all_candidates']['doc_count']
-                        : ($sourced + $screening + $evaluated + $negotiations + $offers + $joined + $rejected);
+                $sourced = (int) ($aggs['sourced']['doc_count'] ?? ($aggs['sourcing']['doc_count'] ?? 0));
+                $screening = (int) ($aggs['screening']['doc_count'] ?? 0);
+                $evaluated = (int) ($aggs['evaluated']['doc_count'] ?? 0);
+                $negotiations = (int) ($aggs['negotiations']['doc_count'] ?? 0);
+                $offers = (int) ($aggs['offers']['doc_count'] ?? 0);
+                $joined = (int) ($aggs['joined']['doc_count'] ?? 0);
+                $rejected = (int) ($aggs['rejected']['doc_count'] ?? 0);
+                $allCandidates = isset($response['aggregations']['all_candidates']['doc_count'])
+                    ? (int) $response['aggregations']['all_candidates']['doc_count']
+                    : ($sourced + $screening + $evaluated + $negotiations + $offers + $joined + $rejected);
             }
 
             if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {

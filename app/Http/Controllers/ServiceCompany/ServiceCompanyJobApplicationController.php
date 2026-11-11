@@ -10071,19 +10071,21 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate application not found.']);
         }
 
-        $application_id = @$request->application_id;
-        $interview_type = @$request->interview_type;
-        $interviewDate = @$request->interviewDate;
-        $interviewTime = @$request->interviewTime;
-        $interview_mode = @$request->interview_mode;
-        $interview_mode_lavel = @$request->interview_mode_lavel;
-        $master_status_id = @$request->master_status_id;
-        $child_status_id = @$request->child_status_id;
-        $interviewers = @$request->interviewers;
-        $panellist = @$request->panellist;
-        $mailstatus = @$request->mailstatus;
-        $email_template = @$request->email_template_set;
-        $timezone = @$request->timezone;
+        $application_id = (int) ($request->application_id ?: ($AddJobWiseCondidate->job_application_id ?? 0));
+        $interview_type = (int) ($request->interview_type ?? 1);
+        $interviewDate = (string) ($request->interviewDate ?? '');
+        $interviewTime = (string) ($request->interviewTime ?? '');
+        $interview_mode = (int) ($request->interview_mode ?? 0);
+        $interview_mode_lavel = (int) ($request->interview_mode_lavel ?? 0);
+        $master_status_id = (int) ($request->master_status_id ?? 0);
+        $child_status_id = (int) ($request->child_status_id ?? 0);
+        $interviewers = $request->interviewers;
+        $panellist = $request->panellist;
+        $panellistStr = is_array($panellist) ? implode(',', $panellist) : (string) ($panellist ?? '');
+        $panellistStr = trim($panellistStr);
+        $mailstatus = (int) ($request->mailstatus ?? 0);
+        $email_template = (int) ($request->email_template_set ?? 0);
+        $timezone = mb_substr(trim((string) ($request->timezone ?? '')), 0, 11);
 
         // CC emails come in as a comma-separated string e.g. "Pooja@yopmail.com , Shobha@4bell.com , ...".
         // Explode, trim, lowercase, keep only valid emails, and drop duplicates before storing.
@@ -10172,6 +10174,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $interviewSchedule->reschedule = Carbon::now()->format('Y-m-d H:i:s');
                 $interviewSchedule->available_status = 3; // Rescheduled
                 $interviewSchedule->status = 'pending';
+                if ((empty($interviewSchedule->job_application_id) || $interviewSchedule->job_application_id == 0) && $application_id > 0) {
+                    $interviewSchedule->job_application_id = $application_id;
+                }
             } else {
                 $interviewSchedule = new InterviewSchedule;
                 $interviewSchedule->job_application_id = $application_id;
@@ -10194,20 +10199,21 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             if (! empty($child_status_id)) {
                 $interviewSchedule->substage = $child_status_id;
             }
-            if (! empty($panellist)) {
-                $interviewSchedule->interviewers = $panellist; // implode(',', $panellist);
+            if ($panellistStr !== '') {
+                $interviewSchedule->interviewers = mb_substr($panellistStr, 0, 55);
             }
 
             $interviewSchedule->schedule_date = $interviewDate;
-            $interviewSchedule->schedule_to_time = $interviewTime;
-            $interviewSchedule->interview_job_id = $AddJobWiseCondidate->job_id;
+            $interviewSchedule->schedule_to_time = mb_substr($interviewTime, 0, 10);
+            $targetJobId = (int) ($AddJobWiseCondidate->job_id ?: ($request->jobId ?: ($request->job_id ?? 0)));
+            $interviewSchedule->interview_job_id = $targetJobId;
             $interviewSchedule->interview_job_wise_con_id = $AddJobWiseCondidate->id;
             $interviewSchedule->mailstatus = ! empty($mailstatus) ? (int) $mailstatus : 0;
             $interviewSchedule->email_template = ! empty($email_template) ? (int) $email_template : 0;
             $interviewSchedule->company_id = $companyId;
-            $interviewSchedule->url_link = $request->url;
+            $interviewSchedule->url_link = mb_substr((string) ($request->url ?? ''), 0, 255);
             $interviewSchedule->timezone_abbreviation = $timezone;
-            $interviewSchedule->other_email = $ccEmailClean; // cleaned, de-duplicated CC email list
+            $interviewSchedule->other_email = mb_substr($ccEmailClean, 0, 255); // cleaned, de-duplicated CC email list
             $interviewSchedule->save();
 
             $updateParams = [
@@ -10262,8 +10268,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 );
             }
 
-            $jobApplication = JobApplication::withoutGlobalScopes()->find($request->application_id);
-            $statusRow = ApplicationStatus::withoutGlobalScopes()->find($request->master_status_id);
+            $jobApplication = JobApplication::withoutGlobalScopes()->find($application_id);
+            $statusRow = ApplicationStatus::withoutGlobalScopes()->find($master_status_id);
 
             // Correct sub-mode level resolution from interview_mode_lavel table
             $interview_mode_sub_name = '';
@@ -10280,47 +10286,54 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'event_id' => $isUpdating ? 4 : 3,
                 'event_by_company_id' => $companyId,
                 'event_by_user_id' => $userId,
-                'application_id' => @$request->application_id ? @$request->application_id : null,
-                'application_email' => @$jobApplication->email ? @$jobApplication->email : null,
-                'job_id' => @$AddJobWiseCondidate->job_id ? @$AddJobWiseCondidate->job_id : $request->jobId,
-                'note' => $isUpdating ? 'Interview Rescheduled' : 'Interview Schedule',
+                'application_id' => $application_id ?: null,
+                'application_email' => @$jobApplication->email ? mb_substr($jobApplication->email, 0, 55) : null,
+                'job_id' => $targetJobId ?: null,
+                'note' => mb_substr((string) (@$comment ?: ($isUpdating ? 'Interview Rescheduled' : 'Interview Schedule')), 0, 100),
                 'create_at' => @$date ? @$date : null,
                 'update_at' => @$date ? @$date : null,
-                'interview_schedule_date' => $interviewDate,
-                'interview_mode' => $interview_mode,
-                'interview_mode_child_level' => ($request->interview_mode != 3) ? $interview_mode_sub_name : '',
+                'interview_schedule_date' => mb_substr($interviewDate, 0, 20),
+                'interview_mode' => mb_substr((string) $interview_mode, 0, 10),
+                'interview_mode_child_level' => mb_substr(($request->interview_mode != 3) ? $interview_mode_sub_name : '', 0, 20),
             ];
 
             if ($jobApplication && $jobApplication->master_status_id > 0) {
                 $masterStatus = DB::table('master_status')->select('master_status.name')->where('id', $jobApplication->master_status_id)->first();
-                $values['master_process_name'] = @$masterStatus->name;
+                if ($masterStatus) {
+                    $values['master_process_name'] = mb_substr($masterStatus->name, 0, 55);
+                }
             }
             if ($jobApplication && $jobApplication->child_status_id > 0) {
                 $masterStatus = DB::table('candidate_status')->select('candidate_status.name')->where('candidate_status.id', $jobApplication->child_status_id)->first();
-                $values['child_process_name'] = @$masterStatus->name;
+                if ($masterStatus) {
+                    $values['child_process_name'] = mb_substr($masterStatus->name, 0, 55);
+                }
             }
             if (! empty(@$comment)) {
-                $values['note'] = @$comment;
+                $values['note'] = mb_substr((string) $comment, 0, 100);
             }
 
             if (! empty($request->url) && $request->url != '') {
-                $values['interview_mention_link'] = @$request->url;
+                $values['interview_mention_link'] = mb_substr((string) $request->url, 0, 255);
             }
-            if (! empty($request->panellist) && $request->panellist != '') {
-                $values['interviewers'] = @$request->panellist;
+            if ($panellistStr !== '') {
+                $values['interviewers'] = mb_substr($panellistStr, 0, 255);
             }
             $values['interview_schedules_id'] = $interviewSchedule_id;
             $values['timezone_abbreviation'] = $timezone;
-            $values['interview_to_time'] = $interviewTime;
+            $values['interview_to_time'] = mb_substr($interviewTime, 0, 10);
 
             GeneralMethod::UpdateTimeline($values);
 
-            $InterviewSchedule = InterviewSchedule::join('add_job_wise_condidates', 'add_job_wise_condidates.id', '=', 'interview_schedules.interview_job_wise_con_id')
-                ->join('companies', 'companies.id', '=', 'interview_schedules.company_id')
+            $InterviewSchedule = InterviewSchedule::leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.id', '=', 'interview_schedules.interview_job_wise_con_id')
+                ->leftJoin('companies', 'companies.id', '=', 'interview_schedules.company_id')
                 ->leftJoin('clients', 'clients.company_id', '=', 'companies.id')
                 ->leftJoin('client_location', 'client_location.client_id', '=', 'clients.id')
-                ->join('jobs', 'jobs.id', '=', 'interview_schedules.interview_job_id')
-                ->join('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
+                ->leftJoin('jobs', 'jobs.id', '=', 'interview_schedules.interview_job_id')
+                ->leftJoin('job_applications', function ($join) {
+                    $join->on('job_applications.id', '=', 'interview_schedules.job_application_id')
+                        ->orOn('job_applications.id', '=', 'add_job_wise_condidates.job_application_id');
+                })
                 ->leftJoin('updatetimeline', 'updatetimeline.interview_schedules_id', '=', 'interview_schedules.id')
                 ->select('interview_schedules.*', 'updatetimeline.interview_mention_link', 'updatetimeline.interview_mode_child_level as mode_child', 'companies.company_name', 'companies.description', 'companies.website', 'client_location.address as c_address', 'job_applications.full_name', 'job_applications.email as cond_email', 'job_applications.current_designation', 'jobs.employment_type', 'jobs.title', 'jobs.job_description', 'jobs.id as jobID', 'jobs.total_positions')
                 ->where('interview_schedules.id', '=', $interviewSchedule_id)->first();
@@ -10407,7 +10420,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             if ($targetJobId > 0) {
                 try {
                     cache()->increment("ats:version:job:{$companyId}:{$targetJobId}");
-                } catch (\Throwable) {}
+                } catch (\Throwable) {
+                }
             }
 
             DB::commit();
