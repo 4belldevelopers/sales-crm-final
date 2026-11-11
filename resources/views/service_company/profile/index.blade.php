@@ -15,6 +15,7 @@
 @push('head-script')
     <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
 <link rel="stylesheet" href="{{ asset('assets/node_modules/dropify/dist/css/dropify.min.css') }}<?php echo TM_VERSION; ?>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript"></script>
 <style>
 body
@@ -1211,41 +1212,139 @@ body
           $__rkey     = $__rmonths->get(0);                              // current month — matches the My Rank tab
           if($__rkey !== null){ $scp_rank = @$rankings['internalRanks'][$__rkey]['rank'] ?? '-'; }
         @endphp
-        <div class="scp-hero">
-          <div class="scp-hero-avatar">@if($scp_logo)<img src="{{ $scp_logo }}" alt="">@else{{ $scp_initial }}@endif</div>
-          <div class="scp-hero-main">
-            <div class="scp-hello">Welcome back,</div>
-            <div class="scp-name">{{ ucwords(@$users->name) }}
-              <svg class="scp-verif" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 1.8 3 .1 1 2.8 2.4 1.7-.9 2.9.9 2.9-2.4 1.7-1 2.8-3 .1L12 22l-2.4-1.8-3-.1-1-2.8L3.2 15.6l.9-2.9-.9-2.9 2.4-1.7 1-2.8 3-.1L12 2z"/><path d="M10.6 14.6l-2.2-2.2-1.1 1.1 3.3 3.3 5.6-5.6-1.1-1.1z" fill="#fff"/></svg>
+        <!-- Tier 1: Top Hero Profile Header Card (Rule 20 Enterprise Standard) -->
+        <div class="scp-hero-card">
+          <!-- Left: Identity Block -->
+          <div class="scp-hero-left">
+            <div class="scp-avatar-wrap">
+              <div class="scp-avatar-circle">
+                @if($scp_logo)
+                  <img src="{{ $scp_logo }}" alt="{{ $scp_n }}">
+                @else
+                  {{ $scp_initial ?: 'U' }}
+                @endif
+              </div>
+              <span class="scp-online-dot" title="Active on JERO ATS"></span>
             </div>
-            <div class="scp-role">{{ ucwords(@$users->designation) }}@if(!empty(@$users->company_name)) · {{ ucwords(@$users->company_name) }}@endif</div>
-            <span class="scp-emp-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> Verified Employer</span>
+            <div class="scp-hero-info">
+              <span class="scp-greeting">Welcome back,</span>
+              <div class="scp-name-row">
+                <h1 class="scp-title-name">{{ ucwords(@$users->name) }}</h1>
+                <svg class="scp-verif-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l2.4 1.8 3 .1 1 2.8 2.4 1.7-.9 2.9.9 2.9-2.4 1.7-1 2.8-3 .1L12 2l-2.4-1.8-3-.1-1-2.8L3.2 15.6l.9-2.9-.9-2.9 2.4-1.7 1-2.8 3-.1L12 2z"/>
+                  <path d="M10.6 14.6l-2.2-2.2-1.1 1.1 3.3 3.3 5.6-5.6-1.1-1.1z" fill="#fff"/>
+                </svg>
+              </div>
+              <div class="scp-designation-row">
+                <span>{{ ucwords(@$users->designation ?: 'Recruiter') }}</span>
+                @if(!empty(@$users->company_name))
+                  <span style="color:#cbd5e1;">•</span>
+                  <span style="color:#0f172a; font-weight:600;">{{ ucwords(@$users->company_name) }}</span>
+                @endif
+              </div>
+              <div class="scp-pills-row">
+                <span class="scp-pill-tag verified">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Verified Employer
+                </span>
+                <span class="scp-pill-tag neutral">
+                  User ID: #{{ @$users->id }}
+                </span>
+                @if(!empty(@$city_name))
+                  <span class="scp-pill-tag neutral">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> {{ ucwords(@$city_name) }}@if(!empty(@$state_name)), {{ ucwords(@$state_name) }}@endif
+                  </span>
+                @endif
+              </div>
+            </div>
           </div>
-          <div class="scp-pc">
-            <div class="scp-pc-top"><span class="scp-pc-label">Profile Completion</span><span class="scp-pc-pct">{{ $scp_pct }}%</span></div>
-            <div class="scp-pc-bar"><div class="scp-pc-fill" style="width:{{ $scp_pct }}%"></div></div>
-            <div class="scp-pc-list">
+
+          <!-- Center: Profile Health Tracker -->
+          <div class="scp-health-box">
+            <div class="scp-health-head">
+              <span class="scp-health-lbl">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#009ef7" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Profile Health
+              </span>
+              <span class="scp-health-pct">{{ $scp_pct }}%</span>
+            </div>
+            <div class="scp-health-bar">
+              <div class="scp-health-fill" style="width:{{ $scp_pct }}%"></div>
+            </div>
+            <div class="scp-health-items">
               @foreach($scp_pc as $label => $done)
-                <div class="scp-pc-item {{ $done ? 'done' : '' }}">
-                  @if($done)<svg class="ic" viewBox="0 0 24 24" fill="#16a34a"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1 14.4l-3.7-3.7 1.4-1.4 2.3 2.3 4.6-4.6 1.4 1.4z"/></svg>
-                  @else<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>@endif
+                <div class="scp-health-item {{ $done ? 'done' : '' }}">
+                  @if($done)
+                    <svg viewBox="0 0 24 24" fill="#10b981"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1 14.4l-3.7-3.7 1.4-1.4 2.3 2.3 4.6-4.6 1.4 1.4z"/></svg>
+                  @else
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+                  @endif
                   {{ $label }}
                 </div>
               @endforeach
             </div>
           </div>
-          <div class="scp-hero-actions">
-            <a href="{{ route('service_company.profile.edit', [GeneralMethod::value_encrypt($user_id)]) }}" class="scp-btn scp-btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg> Edit Profile</a>
-            <a href="javascript:void(0);" class="scp-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share Company Page</a>
-            <a href="{{ route('service_company.profile.edit', [GeneralMethod::value_encrypt($user_id)]) }}" class="scp-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M12 11v4M10 13h4" stroke-width="1.5"/></svg> Upload Profile</a>
+
+          <!-- Right: Hero Actions -->
+          <div class="scp-hero-actions-col">
+            <a href="{{ route('service_company.profile.edit', [GeneralMethod::value_encrypt($user_id)]) }}" class="scp-btn-hero-primary">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg> Edit Profile
+            </a>
+            <a href="javascript:void(0);" class="scp-btn-hero-secondary">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share Company Page
+            </a>
           </div>
         </div>
-        <div class="scp-stats">
-          <div class="scp-stat"><div class="scp-stat-ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div><div class="scp-stat-lbl">Active Jobs</div><div class="scp-stat-num">{{ $scp_active }}</div></div></div>
-          <div class="scp-stat"><div class="scp-stat-ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div><div class="scp-stat-lbl">Candidates Added</div><div class="scp-stat-num">{{ number_format($scp_cand) }}</div></div></div>
-          <div class="scp-stat"><div class="scp-stat-ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="scp-stat-lbl">Interviews</div><div class="scp-stat-num">{{ number_format($scp_intv) }}</div></div></div>
-          <div class="scp-stat"><div class="scp-stat-ic ic-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11l2 2 4-4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div><div class="scp-stat-lbl">Joinings</div><div class="scp-stat-num">{{ number_format($scp_join) }}</div></div></div>
-          <div class="scp-stat"><div class="scp-stat-ic ic-rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg></div><div><div class="scp-stat-lbl">My Rank</div><div class="scp-stat-num">#{{ $scp_rank }}</div></div></div>
+
+        <!-- Tier 1.5: High-Density KPI Stats Sub-Cards (Rule 20) -->
+        <div class="scp-kpi-grid">
+          <div class="scp-kpi-subcard" onclick="$('a[href=\'#requisitions\']').tab('show'); if(typeof load_jobs==='function'){ load_jobs('{{ @$users->id }}'); }" title="View My Jobs">
+            <div class="scp-kpi-ic-box scp-kpi-ic-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </div>
+            <div class="scp-kpi-data">
+              <span class="scp-kpi-lbl">Active Jobs</span>
+              <span class="scp-kpi-val">{{ $scp_active }}</span>
+            </div>
+          </div>
+
+          <div class="scp-kpi-subcard" onclick="$('a[href=\'#candidate\']').tab('show'); if(typeof load_application==='function'){ load_application('{{ @$users->id }}'); }" title="View My Candidates">
+            <div class="scp-kpi-ic-box scp-kpi-ic-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+            </div>
+            <div class="scp-kpi-data">
+              <span class="scp-kpi-lbl">Candidates Added</span>
+              <span class="scp-kpi-val">{{ number_format($scp_cand) }}</span>
+            </div>
+          </div>
+
+          <div class="scp-kpi-subcard" onclick="$('a[href=\'#interview_tracker\']').tab('show'); if(typeof load_interviewSchedule==='function'){ load_interviewSchedule('{{ @$users->id }}'); }" title="View Interview Tracker">
+            <div class="scp-kpi-ic-box scp-kpi-ic-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </div>
+            <div class="scp-kpi-data">
+              <span class="scp-kpi-lbl">Interviews</span>
+              <span class="scp-kpi-val">{{ number_format($scp_intv) }}</span>
+            </div>
+          </div>
+
+          <div class="scp-kpi-subcard" onclick="$('a[href=\'#joinings\']').tab('show'); if(typeof jointableLoad==='function'){ jointableLoad('{{ @$users->id }}'); }" title="View My Joinings">
+            <div class="scp-kpi-ic-box scp-kpi-ic-purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11l2 2 4-4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div class="scp-kpi-data">
+              <span class="scp-kpi-lbl">Joinings</span>
+              <span class="scp-kpi-val">{{ number_format($scp_join) }}</span>
+            </div>
+          </div>
+
+          <div class="scp-kpi-subcard" onclick="$('a[href=\'#myRank\']').tab('show');" title="View My Rank">
+            <div class="scp-kpi-ic-box scp-kpi-ic-rose">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l1.5 8-5-3-5 3 1.5-8"/></svg>
+            </div>
+            <div class="scp-kpi-data">
+              <span class="scp-kpi-lbl">My Rank</span>
+              <span class="scp-kpi-val">#{{ $scp_rank }}</span>
+            </div>
+          </div>
         </div>
       </div>
       <!--end::Redesigned hero + stats-->
@@ -1451,19 +1550,63 @@ body
       <!--begin::Tabs-->
       <div class="card card-custom mx-2">
         <!--Begin::Tabs Header-->
-        <div class="card-header card-header-tabs-line">
-          <div class="card-toolbar">
-            <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x scp-tabs" role="tablist">
-              <li class="nav-item me-3"> <a class="nav-link active show" data-toggle="tab" href="#overview"> <span class="nav-text font-weight-bold">My Details</span> </a> </li>
-              <li class="nav-item me-3"  onclick="load_jobs('{{ @$users->id }}')"> <a class="nav-link" data-toggle="tab" href="#requisitions"> <span class="nav-text font-weight-bold">My Jobs</span> </a> </li>
-              <li class="nav-item me-3" onclick="load_application('{{ @$users->id }}')""> <a class="nav-link" data-toggle="tab" href="#candidate"> <span class="nav-text font-weight-bold">My Candidate</span> </a> </li>
-              <li class="nav-item me-3"  onclick="load_interviewSchedule('{{ @$users->id }}')"> <a class="nav-link" data-toggle="tab" href="#interview_tracker"> <span class="nav-text font-weight-bold">My Interview Tracker</span> </a> </li>
-              <li class="nav-item me-3" onclick="jointableLoad('{{ @$users->id }}')"> <a class="nav-link" data-toggle="tab" href="#joinings"> <span class="nav-text font-weight-bold">My Joinings</span> </a> </li>
-              <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#myRank"> <span class="nav-text font-weight-bold">My Rank</span> </a> </li>
-              <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#candidateDashboard"> <span class="nav-text font-weight-bold">My Dashboard</span> </a> </li>
-              <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#settings"> <span class="nav-text font-weight-bold">My Settings</span> </a> </li>
-            </ul>
-          </div>
+        <!--Begin::Tier 2 Dedicated Sub-Tabs Card (Rule 20 Mandatory Standard)-->
+        <div class="px-0 pt-2 pb-0">
+          <ul class="scp-tabs-card" role="tablist">
+            <li class="scp-tab-item">
+              <a class="scp-tab-link active show" data-toggle="tab" href="#overview">
+                <i class="bi bi-person-vcard"></i>
+                <span>My Details</span>
+              </a>
+            </li>
+            <li class="scp-tab-item" onclick="load_jobs('{{ @$users->id }}')">
+              <a class="scp-tab-link" data-toggle="tab" href="#requisitions">
+                <i class="bi bi-briefcase"></i>
+                <span>My Jobs</span>
+                <span class="scp-tab-badge">{{ $scp_active }}</span>
+              </a>
+            </li>
+            <li class="scp-tab-item" onclick="load_application('{{ @$users->id }}')">
+              <a class="scp-tab-link" data-toggle="tab" href="#candidate">
+                <i class="bi bi-people"></i>
+                <span>My Candidate</span>
+                <span class="scp-tab-badge">{{ number_format($scp_cand) }}</span>
+              </a>
+            </li>
+            <li class="scp-tab-item" onclick="load_interviewSchedule('{{ @$users->id }}')">
+              <a class="scp-tab-link" data-toggle="tab" href="#interview_tracker">
+                <i class="bi bi-calendar-event"></i>
+                <span>My Interview Tracker</span>
+                <span class="scp-tab-badge">{{ number_format($scp_intv) }}</span>
+              </a>
+            </li>
+            <li class="scp-tab-item" onclick="jointableLoad('{{ @$users->id }}')">
+              <a class="scp-tab-link" data-toggle="tab" href="#joinings">
+                <i class="bi bi-person-check"></i>
+                <span>My Joinings</span>
+                <span class="scp-tab-badge">{{ number_format($scp_join) }}</span>
+              </a>
+            </li>
+            <li class="scp-tab-item">
+              <a class="scp-tab-link" data-toggle="tab" href="#myRank">
+                <i class="bi bi-award"></i>
+                <span>My Rank</span>
+                <span class="scp-tab-badge">#{{ $scp_rank }}</span>
+              </a>
+            </li>
+            <li class="scp-tab-item">
+              <a class="scp-tab-link" data-toggle="tab" href="#candidateDashboard">
+                <i class="bi bi-speedometer2"></i>
+                <span>My Dashboard</span>
+              </a>
+            </li>
+            <li class="scp-tab-item">
+              <a class="scp-tab-link" data-toggle="tab" href="#settings">
+                <i class="bi bi-gear"></i>
+                <span>My Settings</span>
+              </a>
+            </li>
+          </ul>
         </div>
         <!--end::Tabs Header-->
         <!--Begin::Body-->
@@ -1476,58 +1619,175 @@ body
                   $whatsappConnectCheck = GeneralMethod::whatsappConnectCheck($users->id);
                   $scp_edit = route('service_company.profile.edit', [GeneralMethod::value_encrypt($user_id)]);
                 @endphp
-                <div class="scp-grid3">
-                  <!-- Personal Information -->
-                  <div class="scp-card">
-                    <div class="scp-card-head">
-                      <div class="scp-card-title"><span class="ci ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Personal Information</div>
-                      <a href="{{ $scp_edit }}" class="scp-edit">Edit</a>
-                    </div>
-                    <div class="scp-row"><span class="k">Full Name</span><span class="v">{{ ucwords(@$users->name) }}</span></div>
-                    <div class="scp-row"><span class="k">User ID</span><span class="v">{{ @$users->id }}</span></div>
-                    <div class="scp-row"><span class="k">Designation</span><span class="v">{{ ucwords(@$users->designation) }}</span></div>
-                    <div class="scp-row"><span class="k">Email</span><span class="v">{{ @$users->email }} <span class="scp-pill">Verified</span></span></div>
-                    <div class="scp-row"><span class="k">Phone</span><span class="v" style="display:flex;align-items:center;gap:4px;justify-content:flex-end;"><span id="firstPhoneDisplay" style="display:flex;"></span>{{ @$users->mobile }}</span></div>
-                    <div class="scp-row"><span class="k">WhatsApp</span><span class="v" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                      <a href="javascript:;" class="sendwhatsapp_connected_{{ $users->id }} {{ $whatsappConnectCheck ? '' : 'd-none' }}" style="color:#16a34a;background:#50cd890d;padding:3px 9px;border-radius:7px;text-decoration:none;"><i class="fab fa-whatsapp text-success"></i> <span id="f_phone_user{{ $users->id }}">{{ $whatsappConnectCheck }}</span></a>
-                      <a href="javascript:;" data-userid="{{ $users->id }}" class="deleteBtn sendwhatsapp_connected_{{ $users->id }} {{ $whatsappConnectCheck ? '' : 'd-none' }}" style="color:#e11d48;background:#f1416c0a;padding:3px 9px;border-radius:7px;cursor:pointer;text-decoration:none;"><i class="fa fa-power-off text-danger"></i> Disconnect</a>
-                      <a href="javascript:;" data-userid="{{ $users->id }}" class="sendwhatsapp_panel sendwhatsapp_connect_{{ $users->id }} sendwhatsapp_text_{{ $users->id }} {{ $whatsappConnectCheck ? 'd-none' : '' }}" style="background:#009ef7;color:#fff;padding:5px 11px;border-radius:7px;cursor:pointer;font-weight:600;text-decoration:none;"><i class="fab fa-whatsapp"></i> Click to Connect</a>
-                    </span></div>
-                  </div>
-                  <!-- Company Information -->
-                  <div class="scp-card">
-                    <div class="scp-card-head">
-                      <div class="scp-card-title"><span class="ci ic-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01"/></svg></span>Company Information</div>
-                      <a href="{{ $scp_edit }}" class="scp-edit">Edit</a>
-                    </div>
-                    <div class="scp-row"><span class="k">Company Name</span><span class="v">{{ ucwords(@$users->company_name) }}</span></div>
-                    <div class="scp-row"><span class="k">Website</span><span class="v">@if(!empty(@$users->website))<a href="{{ (strpos($users->website,'http')===0?'':'//').$users->website }}" target="_blank">{{ $users->website }}</a>@else—@endif</span></div>
-                    <div class="scp-row"><span class="k">Country</span><span class="v">{{ ucwords(@$country_name) }}</span></div>
-                    <div class="scp-row"><span class="k">State</span><span class="v">{{ ucwords(@$state_name) }}</span></div>
-                    <div class="scp-row"><span class="k">City</span><span class="v">{{ ucwords(@$city_name) }}</span></div>
-                  </div>
-                  <!-- Account Security + Subscription -->
-                  <div style="display:flex;flex-direction:column;gap:16px;">
-                    <div class="scp-card">
-                      <div class="scp-card-head">
-                        <div class="scp-card-title"><span class="ci ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>Account Security</div>
+                <!-- Tier 3: "My Details" Tab - Balanced 3-Card Enterprise Grid (Rule 20) -->
+                <div class="scp-details-grid">
+                  
+                  <!-- CARD 1: PERSONAL INFORMATION -->
+                  <section class="scp-god-card">
+                    <div class="scp-card-top-head">
+                      <div class="scp-card-head-left">
+                        <div class="scp-card-ic blue">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
+                        <div class="scp-card-head-titles">
+                          <h3>Personal Information</h3>
+                          <p>Your recruiter identity within JERO ATS</p>
+                        </div>
                       </div>
-                      <div class="scp-row"><span class="k">Password</span><span class="v"><a href="javascript:void(0);" class="reset_password" data-toggle="modal" data-target="#reset_password" style="color:#3b55e6;">Reset Password</a></span></div>
-                      <div class="scp-row"><span class="k">Email</span><span class="v">{{ @$users->email }}</span></div>
-                      <div class="scp-row"><span class="k">Status</span><span class="v">{{ ucfirst(@$users->status) }}</span></div>
+                      <a href="{{ $scp_edit }}" class="scp-card-action-link">
+                        <i class="bi bi-pencil-square"></i> Edit
+                      </a>
                     </div>
-                    <div class="scp-card">
-                      <div class="scp-card-head">
-                        <div class="scp-card-title"><span class="ci ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></span>Subscription Plan</div>
-                        <a href="{{ route('service_company.subscribe.index') }}" class="scp-edit">View Plan</a>
+                    <div class="scp-card-body-content">
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-person"></i> Full Name</div>
+                        <div class="scp-tile-right">{{ ucwords(@$users->name) }}</div>
                       </div>
-                      <div class="scp-row"><span class="k">Operational Plan</span><span class="v"><span class="scp-pill free">{{ ucwords(@$operational_package_name ?? 'Free Plan') }}</span></span></div>
-                      <div class="scp-row"><span class="k">Sales Plan</span><span class="v"><span class="scp-pill free">{{ ucwords(@$sales_package_name ?? 'Free Plan') }}</span></span></div>
-                      <div class="scp-row"><span class="k">Active Jobs</span><span class="v">{{ $scp_active }}</span></div>
-                      <div class="scp-row"><span class="k">Candidates</span><span class="v">{{ number_format($scp_cand) }}</span></div>
-                      <a href="{{ route('service_company.subscribe.index') }}" class="scp-upgrade">Upgrade Plan</a>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-hash"></i> User ID</div>
+                        <div class="scp-tile-right"><span style="font-family: monospace; font-weight:700;">#{{ @$users->id }}</span></div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-briefcase"></i> Designation</div>
+                        <div class="scp-tile-right">{{ ucwords(@$users->designation ?: 'Recruiter') }}</div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-envelope"></i> Email Address</div>
+                        <div class="scp-tile-right">
+                          <span>{{ @$users->email }}</span>
+                          <span class="scp-status-pill verified"><i class="bi bi-check-circle-fill"></i> Verified</span>
+                        </div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-telephone"></i> Phone Number</div>
+                        <div class="scp-tile-right">
+                          <span id="firstPhoneDisplay" style="display:flex;"></span>
+                          <span>{{ @$users->mobile }}</span>
+                        </div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="fab fa-whatsapp" style="color: #25d366; font-size: 14px;"></i> WhatsApp</div>
+                        <div class="scp-tile-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                          <a href="javascript:;" class="sendwhatsapp_connected_{{ $users->id }} {{ $whatsappConnectCheck ? '' : 'd-none' }}" style="color:#16a34a;background:#50cd890d;padding:3px 9px;border-radius:7px;text-decoration:none;"><i class="fab fa-whatsapp text-success"></i> <span id="f_phone_user{{ $users->id }}">{{ $whatsappConnectCheck }}</span></a>
+                          <a href="javascript:;" data-userid="{{ $users->id }}" class="deleteBtn sendwhatsapp_connected_{{ $users->id }} {{ $whatsappConnectCheck ? '' : 'd-none' }}" style="color:#e11d48;background:#f1416c0a;padding:3px 9px;border-radius:7px;cursor:pointer;text-decoration:none;"><i class="fa fa-power-off text-danger"></i> Disconnect</a>
+                          <a href="javascript:;" data-userid="{{ $users->id }}" class="sendwhatsapp_panel sendwhatsapp_connect_{{ $users->id }} sendwhatsapp_text_{{ $users->id }} {{ $whatsappConnectCheck ? 'd-none' : '' }}" style="background:#25d366;color:#fff;padding:5px 11px;border-radius:7px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-size:11px;"><i class="fab fa-whatsapp"></i> Click to Connect</a>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </section>
+
+                  <!-- CARD 2: COMPANY INFORMATION -->
+                  <section class="scp-god-card">
+                    <div class="scp-card-top-head">
+                      <div class="scp-card-head-left">
+                        <div class="scp-card-ic purple">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01"/></svg>
+                        </div>
+                        <div class="scp-card-head-titles">
+                          <h3>Company Information</h3>
+                          <p>Organization affiliation & corporate presence</p>
+                        </div>
+                      </div>
+                      <a href="{{ route('service_company.company-profile') }}" class="scp-card-action-link" title="Manage Company Profile">
+                        <i class="bi bi-box-arrow-up-right"></i> Manage
+                      </a>
+                    </div>
+                    <div class="scp-card-body-content">
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-building"></i> Company Name</div>
+                        <div class="scp-tile-right">{{ ucwords(@$users->company_name) }}</div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-globe"></i> Website</div>
+                        <div class="scp-tile-right">
+                          @if(!empty(@$users->website))
+                            <a href="{{ (strpos($users->website,'http')===0?'':'//').$users->website }}" target="_blank">
+                              {{ $users->website }} <i class="bi bi-arrow-up-right" style="font-size: 10px;"></i>
+                            </a>
+                          @else
+                            —
+                          @endif
+                        </div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-flag"></i> Country</div>
+                        <div class="scp-tile-right">{{ ucwords(@$country_name) }}</div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-map"></i> State</div>
+                        <div class="scp-tile-right">{{ ucwords(@$state_name) }}</div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-geo-alt"></i> Operating City</div>
+                        <div class="scp-tile-right">{{ ucwords(@$city_name) }}</div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <!-- CARD 3: ACCOUNT SECURITY & SUBSCRIPTION -->
+                  <section class="scp-god-card">
+                    <div class="scp-card-top-head">
+                      <div class="scp-card-head-left">
+                        <div class="scp-card-ic green">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <div class="scp-card-head-titles">
+                          <h3>Security & Plan Overview</h3>
+                          <p>Credentials, account state, and subscription</p>
+                        </div>
+                      </div>
+                      <a href="{{ route('service_company.subscribe.index') }}" class="scp-card-action-link" title="View Subscription Details">
+                        <i class="bi bi-arrow-right"></i> Plans
+                      </a>
+                    </div>
+                    <div class="scp-card-body-content">
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-key"></i> Password</div>
+                        <div class="scp-tile-right">
+                          <a href="javascript:void(0);" class="reset_password" data-toggle="modal" data-target="#reset_password" style="font-weight: 600;">
+                            Reset Password
+                          </a>
+                        </div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-shield-check"></i> Account Status</div>
+                        <div class="scp-tile-right">
+                          <span class="scp-status-pill active"><i class="bi bi-dot" style="font-size: 16px;"></i> {{ ucfirst(@$users->status ?: 'Active') }}</span>
+                        </div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-boxes"></i> Operational Plan</div>
+                        <div class="scp-tile-right">
+                          <span class="scp-status-pill plan">{{ ucwords(@$operational_package_name ?? 'Free Plan') }}</span>
+                        </div>
+                      </div>
+
+                      <div class="scp-subcard-tile">
+                        <div class="scp-tile-left"><i class="bi bi-cart3"></i> Sales Plan</div>
+                        <div class="scp-tile-right">
+                          <span class="scp-status-pill plan">{{ ucwords(@$sales_package_name ?? 'Free Plan') }}</span>
+                        </div>
+                      </div>
+
+                      <div class="scp-plan-footer">
+                        <a href="{{ route('service_company.subscribe.index') }}" class="scp-btn-upgrade-plan">
+                          <i class="bi bi-lightning-charge-fill" style="color: #f59e0b;"></i> Upgrade Subscription Plan
+                        </a>
+                      </div>
+                    </div>
+                  </section>
+
                 </div>
               </div>
               <div class="d-none">
