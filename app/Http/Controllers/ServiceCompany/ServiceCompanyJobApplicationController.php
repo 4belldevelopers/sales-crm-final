@@ -10403,9 +10403,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key, $companyId);
             }
-            if ($job_id > 0) {
+            $targetJobId = (int) ($AddJobWiseCondidate->job_id ?? $request->jobId ?? $request->job_id ?? 0);
+            if ($targetJobId > 0) {
                 try {
-                    cache()->increment("ats:version:job:{$companyId}:{$job_id}");
+                    cache()->increment("ats:version:job:{$companyId}:{$targetJobId}");
                 } catch (\Throwable) {}
             }
 
