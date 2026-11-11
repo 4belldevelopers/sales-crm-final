@@ -1,0 +1,95 @@
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Support\Facades\View;
+use Tests\TestCase;
+
+/**
+ * ServiceCompanyNotificationsTest
+ *
+ * Verifies that the Notifications & Alert Routing tab renders according to the
+ * Rule 20 Modern Card + Sub-Card Enterprise Design System and preserves 100%
+ * of email routing inputs, validation hooks, and triggers.
+ */
+class ServiceCompanyNotificationsTest extends TestCase
+{
+    /**
+     * Test 1: Verify the notifications blade partial exists cleanly.
+     */
+    public function test_notifications_blade_component_exists(): void
+    {
+        $this->assertTrue(View::exists('service_company.account.components.tab-notifications'));
+    }
+
+    /**
+     * Test 2: Verify tab-notifications renders Tier 1, Tier 2, Tier 3 structures and email inputs.
+     */
+    public function test_tab_notifications_renders_three_tier_cards_and_routing_inputs(): void
+    {
+        $fakeAccount = (object) [
+            'id' => 99,
+            'company_email' => 'contact@company.com',
+        ];
+
+        $fakeNotification = [
+            'Recuitment' => (object) ['email' => 'talent@company.com'],
+            'Sales' => (object) ['email' => 'business@company.com'],
+        ];
+
+        $html = View::make('service_company.account.components.tab-notifications', [
+            'account' => $fakeAccount,
+            'notification' => $fakeNotification,
+            'userPermissions' => ['view_settings', 'add_settings', 'edit_settings'],
+        ])->render();
+
+        // Tier 1 Toolbar
+        $this->assertStringContainsString('tier1-toolbar-card', $html);
+        $this->assertStringContainsString('notifications_search', $html);
+        $this->assertStringContainsString('saveNotificationSettingsHeader', $html);
+
+        // Tier 2 Sub-Tabs
+        $this->assertStringContainsString('tier2-subtabs-card', $html);
+        $this->assertStringContainsString('data-target="card_notif_routing"', $html);
+        $this->assertStringContainsString('data-target="card_notif_recruitment"', $html);
+        $this->assertStringContainsString('data-target="card_notif_sales"', $html);
+
+        // Tier 3 Card 1: Routing
+        $this->assertStringContainsString('id="card_notif_routing"', $html);
+        $this->assertStringContainsString('id="recuitment_email"', $html);
+        $this->assertStringContainsString('value="talent@company.com"', $html);
+        $this->assertStringContainsString('id="recuitment_email_typo_hint"', $html);
+        $this->assertStringContainsString('id="sales_email"', $html);
+        $this->assertStringContainsString('value="business@company.com"', $html);
+        $this->assertStringContainsString('id="sales_email_typo_hint"', $html);
+
+        // Tier 3 Card 2: Recruitment Triggers
+        $this->assertStringContainsString('id="card_notif_recruitment"', $html);
+        $this->assertStringContainsString('Candidate Stages', $html);
+        $this->assertStringContainsString('Offers Update', $html);
+
+        // Tier 3 Card 3: Sales Triggers
+        $this->assertStringContainsString('id="card_notif_sales"', $html);
+        $this->assertStringContainsString('New Job Request from Direct Client', $html);
+        $this->assertStringContainsString('Invoice &amp; Payment Status', $html);
+
+        // Form & Action Button
+        $this->assertStringContainsString('id="notification_content"', $html);
+        $this->assertStringContainsString('id="saveNotificationSettings"', $html);
+    }
+
+    /**
+     * Test 3: Verify permission block prevents form rendering when view_settings is absent.
+     */
+    public function test_tab_notifications_enforces_view_settings_permission(): void
+    {
+        $html = View::make('service_company.account.components.tab-notifications', [
+            'account' => (object) [],
+            'notification' => [],
+            'userPermissions' => [],
+        ])->render();
+
+        $this->assertStringContainsString('You do not have permission to view notification settings', $html);
+        $this->assertStringNotContainsString('id="notification_content"', $html);
+    }
+}
