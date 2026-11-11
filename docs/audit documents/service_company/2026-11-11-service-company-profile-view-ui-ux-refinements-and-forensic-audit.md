@@ -100,6 +100,7 @@ Following live review on `testing.jero.works`, a second-phase forensic audit and
 2. **Strict Full-Width Enforcement:** Added `width: 100% !important; max-width: 100% !important; box-sizing: border-box !important;` across `#kt_content`, `#kt_post`, `#kt_content_container`, `.scp`, `.scp-hero-card`, `.scp-kpi-grid`, and `.scp-tabs-card`.
 3. **Single-Row Horizontal Sub-Tabs (Rule 20):** Enforced `display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; overflow-x: auto !important; overflow-y: hidden !important;` on `.scp-tabs-card`, with `flex-shrink: 0 !important;` on all tab items.
 4. **Hero Header Desktop Alignment:** Enforced `flex-wrap: nowrap !important;` on `.scp-hero-card` for screens $\ge 992px$, ensuring the identity block, profile health tracker, and "Edit Profile" button remain on a single horizontal row across all 15.6" screens (`1366×768` and `1920×1080`).
+5. **Fully-Qualified Carbon Resolution:** Replaced unqualified `Carbon::now()` calls with `\Carbon\Carbon` to guarantee permanent namespace resolution without depending on top-level `use` blocks stripped by automated linters.
 
 ---
 
