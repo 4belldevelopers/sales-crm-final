@@ -4689,12 +4689,35 @@
                 closeInviteRoleDropdown();
                 document.body.style.overflow = '';
                 isInviteSubmitting = false;
+                try {
+                    var url = new URL(window.location);
+                    if (url.searchParams.has('action') || url.searchParams.has('invite') || url.searchParams.has('drawer') || url.hash === '#invite') {
+                        url.searchParams.delete('action');
+                        url.searchParams.delete('invite');
+                        url.searchParams.delete('drawer');
+                        if (url.hash === '#invite') {
+                            url.hash = '';
+                        }
+                        var newSearch = url.searchParams.toString();
+                        window.history.replaceState({}, document.title, url.pathname + (newSearch ? '?' + newSearch : ''));
+                    }
+                } catch (e) {}
             }
 
             $('#openInviteDrawer').on('click', openInviteDrawer);
             $('#inviteDrawerClose, #inviteCancelBtn').on('click', closeInviteDrawer);
             $('#inviteOverlay').on('click', closeInviteDrawer);
             $(document).on('keydown', function(e) { if (e.key === 'Escape') closeInviteDrawer(); });
+
+            // Auto-open Add/Invite Members drawer when navigated with ?action=invite, ?invite=1, or #invite
+            try {
+                var urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('action') === 'invite' || urlParams.get('invite') === '1' || urlParams.get('drawer') === 'invite' || window.location.hash === '#invite') {
+                    setTimeout(function() {
+                        openInviteDrawer();
+                    }, 120);
+                }
+            } catch (e) {}
 
             // Paste & Blur deterministic clean and typo hints for Team Invite Email
             $(document).on('paste', '#inviteEmail', function () {
