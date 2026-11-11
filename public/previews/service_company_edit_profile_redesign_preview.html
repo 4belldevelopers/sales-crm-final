@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Service Company — Edit User Profile Redesign Preview | JERO ATS</title>
+  <title>Service Company — Edit User Profile (God-Level 2-Column Redesign Preview) | JERO ATS</title>
   <!-- Google Fonts: Poppins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,20 +17,21 @@
        Optimized for 15.6" Screens (1366x768 & 1920x1080)
        ========================================================================== */
     :root {
-      --primary: #009ef7;
-      --primary-hover: #0086d4;
-      --primary-active: #0073b6;
-      --primary-light: #eff6ff;
-      --primary-border: #bfdbfe;
+      --primary: #ffd428;
+      --primary-hover: #f5c400;
+      --primary-gradient: linear-gradient(180deg, #ffd428 0%, #f5c400 100%);
+      --primary-text: #10143b;
+      --primary-border: #d4a017;
       
       --brand-blue: #2563eb;
       --brand-blue-hover: #1d4ed8;
+      --brand-blue-light: #eff6ff;
+      --brand-blue-border: #bfdbfe;
       
       --bg-page: #f8fafc;
       --surface-card: #ffffff;
       --border-card: #e2e8f0;
       --border-subcard: #edf2f7;
-      --border-focus: #009ef7;
       
       --text-main: #0f172a;
       --text-secondary: #475569;
@@ -41,26 +42,17 @@
       --success-light: #ecfdf5;
       --success-border: #a7f3d0;
       
-      --warning: #f59e0b;
-      --warning-light: #fffbeb;
-      --warning-border: #fde68a;
-      
-      --danger: #ef4444;
-      --danger-light: #fef2f2;
-      --danger-border: #fecaca;
-      
       --radius-sm: 6px;
       --radius-md: 10px;
-      --radius-lg: 14px;
+      --radius-lg: 12px;
       --radius-full: 9999px;
       
       --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
-      --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+      --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
       --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
       --shadow-float: 0 10px 25px -5px rgba(15, 23, 42, 0.10), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
       
       --transition-fast: 0.15s ease;
-      --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     *, *::before, *::after {
@@ -84,11 +76,11 @@
     .demo-bar {
       background: #0f172a;
       color: #e2e8f0;
-      padding: 8px 24px;
+      padding: 6px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 11.5px;
+      font-size: 11px;
       border-bottom: 1px solid #1e293b;
       position: sticky;
       top: 0;
@@ -97,7 +89,7 @@
     .demo-bar-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
     .demo-tag {
       background: #2563eb;
@@ -112,1080 +104,751 @@
     .demo-bar-right {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
-    .demo-toggle-btn {
-      background: #1e293b;
-      color: #f1f5f9;
-      border: 1px solid #334155;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      cursor: pointer;
-      font-weight: 500;
+    .demo-badge-verified {
+      background: #064e3b;
+      color: #a7f3d0;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 600;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: var(--transition-fast);
-    }
-    .demo-toggle-btn:hover {
-      background: #334155;
-      color: #fff;
-    }
-    .demo-toggle-btn.is-active {
-      background: #2563eb;
-      border-color: #2563eb;
-      color: #fff;
+      gap: 5px;
     }
 
     /* Simulated App Shell Layout */
     .app-shell {
       display: flex;
-      min-height: calc(100vh - 35px);
+      min-height: calc(100vh - 31px);
     }
 
     /* Left Sidebar Mock */
     .app-sidebar-mock {
       width: 220px;
       background: #10143b;
-      color: #fff;
+      color: #a0aec0;
       flex-shrink: 0;
       padding: 16px 12px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 20px;
     }
-    .mock-brand {
+    .app-brand {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      margin-bottom: 12px;
-    }
-    .mock-brand-logo {
-      width: 28px;
-      height: 28px;
-      background: #2563eb;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      color: #fff;
-    }
-    .mock-brand-text {
-      font-size: 15px;
+      padding: 0 8px;
+      color: #ffffff;
       font-weight: 700;
-      letter-spacing: -0.3px;
+      font-size: 17px;
     }
-    .mock-nav-item {
+    .app-brand i {
+      color: #ffd428;
+      font-size: 20px;
+    }
+    .app-nav {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .app-nav-item a {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 9px 12px;
-      border-radius: 8px;
-      color: #94a3b8;
+      padding: 8px 12px;
+      color: #cbd5e1;
+      text-decoration: none;
       font-size: 12px;
       font-weight: 500;
-      text-decoration: none;
+      border-radius: 6px;
       transition: var(--transition-fast);
     }
-    .mock-nav-item:hover {
-      background: rgba(255, 255, 255, 0.06);
-      color: #fff;
+    .app-nav-item a:hover,
+    .app-nav-item.active a {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
     }
-    .mock-nav-item.active {
-      background: #2563eb;
-      color: #fff;
+    .app-nav-item.active a {
+      color: #ffd428;
       font-weight: 600;
     }
-    .mock-nav-item i {
-      font-size: 14px;
-    }
 
-    /* Main Content Area */
+    /* App Main Area */
     .app-main {
       flex: 1;
       display: flex;
       flex-direction: column;
-      background: var(--bg-page);
       min-width: 0;
-      position: relative;
+      background: #f8fafc;
     }
 
-    /* Topbar Mock */
-    .app-topbar-mock {
-      height: 52px;
+    /* Simulated Top Header Bar (Fixed height 65px) */
+    .app-topbar {
+      height: 65px;
       background: #ffffff;
       border-bottom: 1px solid var(--border-card);
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 24px;
+      position: sticky;
+      top: 31px;
+      z-index: 900;
     }
-    .topbar-search-mock {
+    .topbar-center-pills {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      margin: 0 auto;
+    }
+    .topbar-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
       background: #f8fafc;
       border: 1px solid var(--border-card);
-      border-radius: 8px;
-      padding: 6px 12px;
+      border-radius: 50px;
       font-size: 12px;
-      color: var(--text-light);
-      width: 260px;
+      font-weight: 500;
+      color: #475569;
+      text-decoration: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
-    .topbar-right-mock {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .user-pill-mock {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 10px;
-      background: #f1f5f9;
-      border-radius: var(--radius-full);
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-    .user-avatar-tiny {
-      width: 26px;
-      height: 26px;
-      background: #2563eb;
-      color: #fff;
+    .topbar-pill-icon {
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid var(--border-card);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 11px;
+      color: #2563eb;
+    }
+    .topbar-right-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-avatar-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #eff6ff;
+      color: #2563eb;
       font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #bfdbfe;
     }
 
-    /* Page Container */
-    .page-container {
+    /* App Content Viewport (Unwanted gap completely eliminated: only 8px upper gap) */
+    .app-content-viewport {
+      padding: 8px 18px 28px;
       max-width: 1400px;
       width: 100%;
       margin: 0 auto;
-      padding: 16px 20px 96px 20px;
     }
 
     /* ==========================================================================
-       TIER 1: TOP HEADER TOOLBAR CARD (Rule 20 & Add Internal Client Standard)
+       TOP UNIFIED HEADER CARD (Navigation & Action Bar)
        ========================================================================== */
-    .header-toolbar-card {
+    .god-top-nav-card {
       background: #ffffff;
       border: 1px solid var(--border-card);
-      border-radius: var(--radius-md);
-      padding: 14px 20px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow-sm);
+      border-radius: var(--radius-lg);
+      padding: 10px 18px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-card);
+    }
+    .god-header-grid {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 14px;
+      gap: 16px;
     }
-    .header-left-group {
+    .god-header-identity {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
-    .header-back-btn {
+    .god-header-icon-box {
       width: 36px;
       height: 36px;
       border-radius: 8px;
-      background: #f8fafc;
-      border: 1px solid var(--border-card);
-      display: flex;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-secondary);
-      text-decoration: none;
-      font-size: 14px;
-      transition: var(--transition-fast);
-      cursor: pointer;
-    }
-    .header-back-btn:hover {
-      background: #eff6ff;
-      border-color: var(--primary-border);
-      color: var(--brand-blue);
-    }
-    .header-title-box {
-      display: flex;
-      flex-direction: column;
-    }
-    .header-breadcrumbs {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: var(--text-light);
-      margin-bottom: 2px;
-    }
-    .header-breadcrumbs a {
-      color: var(--text-muted);
-      text-decoration: none;
-    }
-    .header-breadcrumbs a:hover {
-      color: var(--brand-blue);
-    }
-    .header-title {
+      flex-shrink: 0;
       font-size: 16px;
+    }
+    .god-header-title {
+      font-size: 15px;
       font-weight: 700;
       color: var(--text-main);
+      margin: 0;
+      line-height: 1.25;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .header-badge-role {
+    .god-header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       font-size: 10.5px;
       font-weight: 600;
-      padding: 2px 8px;
+      background: #eff6ff;
+      color: #2563eb;
+      padding: 1px 8px;
       border-radius: var(--radius-full);
-      background: var(--primary-light);
-      color: var(--brand-blue);
-      border: 1px solid var(--primary-border);
+      border: 1px solid #bfdbfe;
     }
-    .header-subtitle {
-      font-size: 11.5px;
+    .god-header-subtitle {
+      font-size: 11px;
       color: var(--text-muted);
       margin-top: 1px;
     }
-
-    /* Right Header Health Tracker */
-    .header-right-group {
+    .god-header-actions {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 10px;
+      margin-left: auto;
     }
-    .completion-card-mini {
-      background: #f8fafc;
-      border: 1px solid var(--border-card);
+    .god-top-cancel-btn {
+      background: #ffffff;
+      color: #475569;
+      border: 1.5px solid #cbd5e1;
+      font-size: 11.5px;
+      font-weight: 600;
       border-radius: 8px;
-      padding: 8px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 220px;
-    }
-    .completion-head {
-      display: flex;
+      padding: 0 14px;
+      height: 34px;
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
-      font-size: 11px;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      text-decoration: none;
     }
-    .completion-label {
-      color: var(--text-muted);
-      font-weight: 500;
+    .god-top-cancel-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+      border-color: #94a3b8;
     }
-    .completion-value {
+    .god-top-submit-btn {
+      background: linear-gradient(180deg, #ffd428 0%, #f5c400 100%);
+      color: #10143b;
+      border: 1px solid #d4a017;
+      font-size: 11.5px;
       font-weight: 700;
-      color: var(--brand-blue);
-    }
-    .completion-progress-track {
-      width: 100%;
-      height: 6px;
-      background: #e2e8f0;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .completion-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #2563eb 0%, #009ef7 100%);
-      border-radius: 4px;
-      transition: width 0.3s ease;
-    }
-
-    /* ==========================================================================
-       2-COLUMN RESPONSIVE LAYOUT (15.6" Screen Fit: 69% Main / 31% Sidebar)
-       ========================================================================== */
-    .content-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 340px;
-      gap: 18px;
-      align-items: start;
-    }
-    .main-form-stream {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      min-width: 0;
-    }
-    .sidebar-stream {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      position: sticky;
-      top: 50px;
-    }
-
-    /* ==========================================================================
-       TIER 2 & 3: ENTERPRISE CARD & SUB-CARD ARCHITECTURE (Rule 20)
-       ========================================================================== */
-    .god-card {
-      background: var(--surface-card);
-      border: 1px solid var(--border-card);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
+      border-radius: 8px;
+      padding: 0 16px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(245, 196, 0, 0.25);
+      cursor: pointer;
       transition: var(--transition-fast);
     }
-    .god-card:hover {
+    .god-top-submit-btn:hover {
+      background: #f5c400;
+      box-shadow: 0 2px 6px rgba(245, 196, 0, 0.35);
+      transform: translateY(-1px);
+    }
+
+    /* ==========================================================================
+       2-COLUMN GOD-LEVEL LAYOUT (7.2fr Left / 3.8fr Right - Add Internal Page 1)
+       ========================================================================== */
+    .god-level-profile-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 7.2fr) minmax(0, 3.8fr);
+      gap: 16px;
+      align-items: stretch;
+      width: 100%;
+    }
+    .god-card {
+      background: #ffffff;
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
       box-shadow: var(--shadow-card);
     }
-    .god-card-head {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--border-subcard);
+    .god-card-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      background: #ffffff;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
     }
-    .god-card-head-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .god-icon-box {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      background: var(--primary-light);
-      color: var(--brand-blue);
-      display: flex;
+    .god-card-header-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 15px;
       flex-shrink: 0;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #dbeafe;
     }
-    .god-icon-box.green {
-      background: var(--success-light);
-      color: var(--success);
-    }
-    .god-icon-box.amber {
-      background: var(--warning-light);
-      color: var(--warning);
-    }
-    .god-icon-box.purple {
-      background: #f5f3ff;
-      color: #7c3aed;
-    }
-    .god-card-title-group h3 {
-      font-size: 13.5px;
+    .god-card-title {
+      font-size: 14px;
       font-weight: 700;
       color: var(--text-main);
+      margin: 0;
       line-height: 1.25;
     }
-    .god-card-title-group p {
+    .god-card-subtitle {
       font-size: 11px;
       color: var(--text-muted);
-      margin-top: 1px;
-    }
-    .god-card-badge {
-      font-size: 10.5px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: var(--radius-full);
-      background: #f1f5f9;
-      color: var(--text-secondary);
-      border: 1px solid var(--border-card);
+      margin-top: 2px;
     }
 
-    .god-card-body {
-      padding: 18px;
-      background: #ffffff;
-    }
-
-    /* Sub-Card Layout Inside Primary Cards */
-    .subcard-grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* ==========================================================================
+       FIELDS: 1 BOX IN 1 ROW (Clean Single Column Stack)
+       ========================================================================== */
+    .god-fields-single-column {
+      display: flex;
+      flex-direction: column;
       gap: 14px;
+      width: 100%;
     }
-    .subcard-grid-1 {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
+    .god-field-wrap {
+      width: 100%;
     }
-    .god-subcard {
-      background: #f8fafc;
-      border: 1px solid var(--border-card);
-      border-radius: 8px;
-      padding: 12px 14px;
-      transition: var(--transition-fast);
-      position: relative;
-    }
-    .god-subcard:hover {
-      border-color: #cbd5e1;
-      background: #fafcfe;
-    }
-    .god-subcard.is-locked {
-      background: #fafafa;
-      border-color: #e2e8f0;
-    }
-    .subcard-label-row {
+    .god-field-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
-    .subcard-label {
-      font-size: 11.5px;
+    .god-field-label {
+      font-size: 12px;
       font-weight: 600;
-      color: var(--text-secondary);
-      display: flex;
+      color: #1e293b;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
     }
-    .required-star {
-      color: var(--danger);
-      font-weight: 700;
-    }
-    .subcard-badge-pill {
+    .god-badge-locked {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       font-size: 10px;
       font-weight: 600;
-      padding: 2px 7px;
-      border-radius: var(--radius-full);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .subcard-badge-pill.verified {
-      background: var(--success-light);
-      color: var(--success);
-      border: 1px solid var(--success-border);
-    }
-    .subcard-badge-pill.locked {
-      background: var(--warning-light);
-      color: #b45309;
-      border: 1px solid var(--warning-border);
-    }
-
-    /* Input Field Styling with Glyph Left Icons */
-    .god-input-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    .god-input-icon {
-      position: absolute;
-      left: 12px;
-      color: var(--text-light);
-      font-size: 13px;
-      pointer-events: none;
-      transition: var(--transition-fast);
-    }
-    .god-input {
-      width: 100%;
-      height: 40px;
-      padding: 0 12px 0 36px;
-      background: #ffffff;
-      border: 1px solid var(--border-card);
-      border-radius: 6px;
-      font-size: 12.5px;
-      color: var(--text-main);
-      outline: none;
-      transition: var(--transition-fast);
-    }
-    .god-input::placeholder {
-      color: var(--text-light);
-    }
-    .god-input:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
-      background: #ffffff;
-    }
-    .god-input:focus + .god-input-icon,
-    .god-input:focus ~ .god-input-icon {
-      color: var(--brand-blue);
-    }
-    .god-input.is-readonly {
       background: #f1f5f9;
-      color: #64748b;
-      cursor: not-allowed;
-      border-color: #e2e8f0;
+      color: #475569;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      border: 1px solid #e2e8f0;
+      margin-left: auto;
     }
-    .subcard-help-note {
+    .god-field-hint {
       font-size: 10.5px;
       color: var(--text-muted);
-      margin-top: 5px;
+      margin-top: 4px;
       display: flex;
       align-items: center;
       gap: 4px;
     }
 
-    /* Phone Input with Country Code Selector */
-    .phone-input-group {
-      display: flex;
-      gap: 8px;
-    }
-    .country-code-select-wrap {
-      width: 110px;
-      flex-shrink: 0;
+    /* Native Input Boxes */
+    .god-input-box {
       position: relative;
-    }
-    .country-code-select {
+      display: flex;
+      align-items: center;
       width: 100%;
-      height: 40px;
+      height: 38px;
       background: #ffffff;
-      border: 1px solid var(--border-card);
-      border-radius: 6px;
-      padding: 0 10px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-main);
-      outline: none;
-      cursor: pointer;
-    }
-    .country-code-select:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
-    }
-
-    /* Photo Upload Dual Sub-Card */
-    .photo-subcard-grid {
-      display: grid;
-      grid-template-columns: 140px minmax(0, 1fr);
-      gap: 16px;
-      align-items: center;
-    }
-    .avatar-preview-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #f8fafc;
-      border: 1px solid var(--border-card);
+      border: 1.5px solid #cbd5e1;
       border-radius: 8px;
-      padding: 16px 10px;
-    }
-    .avatar-circle-wrapper {
-      position: relative;
-      width: 88px;
-      height: 88px;
-    }
-    .avatar-circle-img {
-      width: 88px;
-      height: 88px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid #ffffff;
-      box-shadow: var(--shadow-md);
-      background-color: #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      font-weight: 700;
-      color: #2563eb;
-    }
-    .avatar-camera-btn {
-      position: absolute;
-      bottom: 2px;
-      right: 2px;
-      width: 26px;
-      height: 26px;
-      background: var(--brand-blue);
-      color: #fff;
-      border-radius: 50%;
-      border: 2px solid #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
+      padding: 0 10px 0 12px;
       transition: var(--transition-fast);
     }
-    .avatar-camera-btn:hover {
-      background: var(--brand-blue-hover);
-      transform: scale(1.05);
+    .god-input-box:focus-within {
+      border-color: #ffd428;
+      box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.25);
     }
-
-    .dropzone-subcard {
-      border: 1.5px dashed #cbd5e1;
+    .god-input-box.is-readonly {
       background: #f8fafc;
-      border-radius: 8px;
-      padding: 20px 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      cursor: pointer;
-      transition: var(--transition-fast);
+      border-color: #e2e8f0;
     }
-    .dropzone-subcard:hover, .dropzone-subcard.is-dragover {
-      border-color: var(--brand-blue);
-      background: #eff6ff;
-    }
-    .dropzone-cloud-icon {
-      font-size: 26px;
-      color: var(--brand-blue);
-      margin-bottom: 6px;
-    }
-    .dropzone-main-text {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-    .dropzone-main-text span {
-      color: var(--brand-blue);
-      text-decoration: underline;
-    }
-    .dropzone-sub-text {
-      font-size: 10.5px;
-      color: var(--text-light);
-      margin-top: 3px;
-    }
-    .dropzone-action-buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .btn-action-ghost {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 6px;
-      background: #fff;
-      border: 1px solid var(--border-card);
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: var(--transition-fast);
+    .god-input-left-icon {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      justify-content: center;
+      color: #94a3b8;
+      margin-right: 10px;
+      flex-shrink: 0;
     }
-    .btn-action-ghost:hover {
-      background: #f1f5f9;
-      color: var(--text-main);
-    }
-    .btn-action-ghost.danger {
-      color: var(--danger);
-      border-color: var(--danger-border);
-    }
-    .btn-action-ghost.danger:hover {
-      background: var(--danger-light);
-    }
-
-    /* Tagify Location Pill Simulation */
-    .tagify-simulation-box {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 5px 10px 5px 34px;
-      min-height: 40px;
-      background: #ffffff;
-      border: 1px solid var(--border-card);
-      border-radius: 6px;
-      transition: var(--transition-fast);
-      position: relative;
-    }
-    .tagify-simulation-box:focus-within {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
-    }
-    .tagify-location-icon {
-      position: absolute;
-      left: 10px;
-      color: var(--text-light);
-      font-size: 13px;
-    }
-    .tagify-pill {
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: var(--brand-blue);
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11.5px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .tagify-pill-remove {
-      cursor: pointer;
-      font-size: 11px;
-      color: #60a5fa;
-      transition: var(--transition-fast);
-    }
-    .tagify-pill-remove:hover {
-      color: #1d4ed8;
-    }
-    .tagify-fake-input {
+    .god-native-input {
+      flex: 1;
       border: none;
       outline: none;
-      font-size: 12px;
-      color: var(--text-main);
-      flex: 1;
-      min-width: 140px;
       background: transparent;
-    }
-
-    /* Company Information Read-Only Card */
-    .company-info-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-    .company-metric-tile {
-      background: #f8fafc;
-      border: 1px solid var(--border-card);
-      border-radius: 6px;
-      padding: 10px 12px;
-    }
-    .company-metric-label {
-      font-size: 10.5px;
+      font-size: 12.5px;
       font-weight: 500;
-      color: var(--text-light);
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    .company-metric-val {
-      font-size: 12px;
-      font-weight: 600;
       color: var(--text-main);
-      margin-top: 2px;
-      word-break: break-all;
-    }
-    .company-metric-val a {
-      color: var(--brand-blue);
-      text-decoration: none;
-    }
-    .company-metric-val a:hover {
-      text-decoration: underline;
-    }
-
-    /* ==========================================================================
-       RIGHT SIDEBAR: LIVE PREVIEW & HEALTH MATRIX
-       ========================================================================== */
-    /* Sidebar Card 1: Live Identity Preview */
-    .preview-card-body {
-      padding: 18px 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    }
-    .preview-avatar-wrap {
-      position: relative;
-      margin-bottom: 12px;
-    }
-    .preview-avatar-circle {
-      width: 76px;
-      height: 76px;
-      border-radius: 50%;
-      border: 3px solid #ffffff;
-      box-shadow: var(--shadow-md);
-      background: #2563eb;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      font-weight: 700;
-      object-fit: cover;
-    }
-    .preview-online-dot {
-      position: absolute;
-      bottom: 4px;
-      right: 4px;
-      width: 14px;
-      height: 14px;
-      background: var(--success);
-      border: 2px solid #fff;
-      border-radius: 50%;
-    }
-    .preview-name {
-      font-size: 14.5px;
-      font-weight: 700;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .preview-name i {
-      color: var(--brand-blue);
-      font-size: 14px;
-    }
-    .preview-role {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-    .preview-loc {
-      font-size: 11px;
-      color: var(--text-light);
-      margin-top: 4px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .preview-badge-verified {
-      margin-top: 10px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--success-light);
-      color: #065f46;
-      border: 1px solid var(--success-border);
-      padding: 4px 10px;
-      border-radius: var(--radius-full);
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .preview-contact-strip {
+      padding: 0;
+      height: 100%;
       width: 100%;
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid var(--border-card);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      text-align: left;
     }
-    .preview-contact-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      color: var(--text-secondary);
+    .god-native-input.capitalize-input {
+      text-transform: capitalize;
     }
-    .preview-contact-item i {
-      font-size: 12px;
-      color: var(--text-light);
-      width: 16px;
-    }
-    .preview-contact-item.wa i {
-      color: #25d366;
-    }
-    .preview-contact-item.li i {
-      color: #0a66c2;
-    }
-
-    /* Sidebar Card 2: Health Checklist */
-    .missing-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .missing-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 10px;
-      background: #f8fafc;
-      border: 1px solid var(--border-card);
-      border-radius: 6px;
-      transition: var(--transition-fast);
-    }
-    .missing-item:hover {
-      background: #eff6ff;
-      border-color: var(--primary-border);
-    }
-    .missing-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11.5px;
-      font-weight: 500;
-      color: var(--text-secondary);
-    }
-    .missing-check-icon {
-      font-size: 13px;
-      color: var(--success);
-    }
-    .missing-action-btn {
-      font-size: 10.5px;
-      font-weight: 600;
-      color: var(--brand-blue);
-      background: #ffffff;
-      border: 1px solid #bfdbfe;
-      padding: 2px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: var(--transition-fast);
-    }
-    .missing-action-btn:hover {
-      background: var(--brand-blue);
-      color: #ffffff;
-    }
-
-    /* Sidebar Card 3: Tips */
-    .tips-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .tip-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-    .tip-item i {
-      color: var(--brand-blue);
-      font-size: 13px;
-      margin-top: 1px;
-      flex-shrink: 0;
-    }
-
-    /* ==========================================================================
-       TIER 3: DOCKED STICKY ACTION FOOTER BAR
-       ========================================================================== */
-    .docked-footer-bar {
-      position: fixed;
-      bottom: 0;
-      left: 220px;
-      right: 0;
-      height: 60px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border-top: 1px solid var(--border-card);
-      padding: 0 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.05);
-      z-index: 100;
-      transition: var(--transition-normal);
-    }
-    .footer-status-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .pulse-dot {
-      width: 9px;
-      height: 9px;
-      background: var(--warning);
+    .god-input-clear-btn {
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
-      animation: pulseAnim 2s infinite;
-    }
-    @keyframes pulseAnim {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
-      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
-    }
-    .footer-status-text {
-      display: flex;
-      flex-direction: column;
-    }
-    .footer-status-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-    .footer-status-sub {
-      font-size: 10.5px;
-      color: var(--text-light);
-    }
-
-    .footer-actions-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .btn-footer {
-      height: 38px;
-      padding: 0 16px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 6px;
+      flex-shrink: 0;
       transition: var(--transition-fast);
-      border: 1px solid transparent;
-      text-decoration: none;
     }
-    .btn-footer-secondary {
-      background: #f1f5f9;
-      color: var(--text-secondary);
-      border-color: #e2e8f0;
-    }
-    .btn-footer-secondary:hover {
+    .god-input-clear-btn:hover {
       background: #e2e8f0;
-      color: var(--text-main);
-    }
-    .btn-footer-primary {
-      background: var(--brand-blue);
-      color: #ffffff;
-      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
-    }
-    .btn-footer-primary:hover {
-      background: var(--brand-blue-hover);
-      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
-    }
-    .btn-footer-primary.is-loading {
-      opacity: 0.8;
-      pointer-events: none;
+      color: #0f172a;
     }
 
-    /* Validation Highlighting State */
-    .god-subcard.has-error {
-      border-color: var(--danger) !important;
-      background: #fffafa !important;
+    /* Work Location Box & Autocomplete Dropdown (From Add Internal Client tab-locations) */
+    .client-addr-input-wrap {
+      position: relative;
+      width: 100%;
     }
-    .god-subcard.has-error .god-input {
-      border-color: var(--danger) !important;
+    .client-addr-field-icon-left {
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      pointer-events: none;
+      position: absolute;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
     }
-    .error-msg {
-      font-size: 10.5px;
-      color: var(--danger);
-      margin-top: 4px;
+    .client-addr-field-icon-right {
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      pointer-events: none;
+      position: absolute;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      transition: transform 0.2s ease;
+    }
+    .client-addr-input-wrap.is-open .client-addr-field-icon-right {
+      transform: translateY(-50%) rotate(180deg);
+    }
+    .client-addr-clear-btn {
+      position: absolute;
+      right: 32px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
       display: none;
       align-items: center;
-      gap: 4px;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 3;
+      padding: 0;
+      transition: var(--transition-fast);
     }
-    .god-subcard.has-error .error-msg {
+    .client-addr-clear-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .client-addr-input {
+      width: 100%;
+      height: 38px;
+      padding: 0 54px 0 36px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 12.5px;
+      color: #1e293b;
+      background: #ffffff;
+      outline: none;
+      transition: var(--transition-fast);
+    }
+    .client-addr-input:focus {
+      border-color: #ffd428;
+      box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.25);
+    }
+
+    /* Autocomplete Dropdown */
+    .client-addr-city-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      box-shadow: var(--shadow-float);
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 1050;
+    }
+    .client-addr-city-dropdown.active {
+      display: block;
+    }
+    .client-addr-dd-item {
       display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.15s;
+    }
+    .client-addr-dd-item:last-child {
+      border-bottom: none;
+    }
+    .client-addr-dd-item:hover, .client-addr-dd-item.is-highlighted {
+      background: #f8fafc;
+    }
+    .client-addr-dd-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .client-addr-dd-city {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .client-addr-dd-sub {
+      font-size: 11px;
+      color: #64748b;
+    }
+    .client-addr-dd-badge {
+      font-size: 10px;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .client-addr-dd-empty {
+      padding: 14px 12px;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    /* Mock Phone Input */
+    .mock-phone-box {
+      display: flex;
+      align-items: center;
+      height: 38px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      overflow: hidden;
+      transition: var(--transition-fast);
+    }
+    .mock-phone-box:focus-within {
+      border-color: #ffd428;
+      box-shadow: 0 0 0 3px rgba(255, 212, 40, 0.25);
+    }
+    .mock-phone-flag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 10px;
+      background: #f8fafc;
+      border-right: 1px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      height: 100%;
+    }
+    .mock-phone-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 0 12px;
+      font-size: 12.5px;
+      color: var(--text-main);
     }
 
     /* ==========================================================================
-       RESPONSIVE BREAKPOINTS (15.6" Laptop, 1366x768 & Tablets)
+       RIGHT COLUMN: PROFILE PHOTO CARD
        ========================================================================== */
-    @media (max-width: 1200px) {
-      .content-grid {
-        grid-template-columns: minmax(0, 1fr) 300px;
-        gap: 14px;
-      }
-      .company-info-row {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    .god-company-logo-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .god-logo-preview-box {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 24px 16px;
+      text-align: center;
+      background: #fafcff;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      cursor: pointer;
+    }
+    .god-logo-preview-box:hover,
+    .god-logo-preview-box.is-drag {
+      border-color: #ffd428;
+      background: #fffdf5;
+    }
+    .god-logo-surface {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .god-logo-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      text-align: center;
+    }
+    .placeholder-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #334155;
+      margin-top: 4px;
+    }
+    .placeholder-sub {
+      font-size: 9.5px;
+      color: #94a3b8;
+      margin-top: 1px;
     }
 
-    @media (max-width: 992px) {
-      .app-sidebar-mock {
-        display: none;
-      }
-      .docked-footer-bar {
-        left: 0;
-      }
-      .content-grid {
-        grid-template-columns: 1fr;
-      }
-      .sidebar-stream {
-        position: static;
-      }
-      .subcard-grid-2 {
+    /* Status Banner */
+    .god-logo-status-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .god-logo-status-banner.is-detected {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #15803d;
+    }
+    .god-logo-status-banner.is-empty {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #64748b;
+    }
+
+    /* Actions: Change Photo & Remove Photo */
+    .god-logo-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .god-logo-btn {
+      flex: 1;
+      height: 36px;
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      text-decoration: none;
+    }
+    .god-change-logo-btn {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      color: #0f172a;
+    }
+    .god-change-logo-btn:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+    .god-remove-logo-btn {
+      background: #fff1f2;
+      border: 1.5px solid #fecdd3;
+      color: #ef4444;
+    }
+    .god-remove-logo-btn:hover {
+      background: #fee2e2;
+      border-color: #fda4af;
+    }
+
+    /* Formats Note */
+    .god-logo-formats-note {
+      font-size: 10px;
+      color: #64748b;
+      line-height: 1.35;
+      text-align: center;
+      margin-top: 8px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 4px;
+    }
+    .god-logo-formats-note svg {
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Responsive */
+    @media (max-width: 991px) {
+      .god-level-profile-layout {
         grid-template-columns: 1fr;
       }
     }
@@ -1193,764 +856,473 @@
 </head>
 <body>
 
-  <!-- Top Demo Control Toolbar for Review -->
-  <div class="demo-bar">
+  <!-- Top Demo Control Bar -->
+  <header class="demo-bar">
     <div class="demo-bar-left">
-      <span class="demo-tag">Visual Preview</span>
-      <strong>Service Company – Edit User Profile Page Redesign (Rule 20 Modern Card + Sub-Card)</strong>
+      <span class="demo-tag">LIVE PREVIEW</span>
+      <span><strong>Service Company &mdash; Edit Profile Redesign</strong> &bull; Rule 20 Card Standard</span>
     </div>
     <div class="demo-bar-right">
-      <span>Role Simulation:</span>
-      <button type="button" class="demo-toggle-btn is-active" id="btnRecruiterMode" onclick="setRoleMode('recruiter')">
-        <i class="bi bi-person-fill"></i> Regular Recruiter (Name Locked)
-      </button>
-      <button type="button" class="demo-toggle-btn" id="btnAdminMode" onclick="setRoleMode('admin')">
-        <i class="bi bi-shield-fill-check"></i> Org Admin (Name Editable)
-      </button>
-      <button type="button" class="demo-toggle-btn" onclick="testValidation()">
-        <i class="bi bi-exclamation-triangle"></i> Test Validation
-      </button>
+      <span class="demo-badge-verified"><i class="bi bi-patch-check-fill"></i> 100% Client-First &bull; 15.6" Screen Fit</span>
     </div>
-  </div>
+  </header>
 
+  <!-- App Shell -->
   <div class="app-shell">
     
-    <!-- Sidebar Mock for Context -->
+    <!-- Left Navigation Sidebar Mock -->
     <aside class="app-sidebar-mock">
-      <div class="mock-brand">
-        <div class="mock-brand-logo"><i class="bi bi-umbrella-fill"></i></div>
-        <div class="mock-brand-text">jero.works</div>
+      <div class="app-brand">
+        <i class="bi bi-umbrella-fill"></i>
+        <span>jero.works</span>
       </div>
-      <a href="#" class="mock-nav-item"><i class="bi bi-grid-fill"></i> Dashboard</a>
-      <a href="#" class="mock-nav-item"><i class="bi bi-people-fill"></i> CRM</a>
-      <a href="#" class="mock-nav-item"><i class="bi bi-briefcase-fill"></i> Hiring</a>
-      <a href="#" class="mock-nav-item"><i class="bi bi-person-lines-fill"></i> Candidates</a>
-      <a href="#" class="mock-nav-item"><i class="bi bi-buildings-fill"></i> Agencies</a>
-      <a href="#" class="mock-nav-item"><i class="bi bi-building"></i> Company Profile</a>
-      <a href="#" class="mock-nav-item active"><i class="bi bi-person-circle"></i> My Profile</a>
-      <a href="#" class="mock-nav-item"><i class="bi bi-gear-fill"></i> Settings</a>
+      <ul class="app-nav">
+        <li class="app-nav-item"><a href="javascript:void(0);"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+        <li class="app-nav-item"><a href="javascript:void(0);"><i class="bi bi-briefcase-fill"></i> Hiring</a></li>
+        <li class="app-nav-item"><a href="javascript:void(0);"><i class="bi bi-people-fill"></i> Candidates</a></li>
+        <li class="app-nav-item"><a href="javascript:void(0);"><i class="bi bi-building"></i> Agencies</a></li>
+        <li class="app-nav-item active"><a href="javascript:void(0);"><i class="bi bi-person-circle"></i> My Profile</a></li>
+        <li class="app-nav-item"><a href="javascript:void(0);"><i class="bi bi-gear-fill"></i> Settings</a></li>
+      </ul>
     </aside>
 
-    <!-- Main Workspace -->
+    <!-- Main Content Stream -->
     <main class="app-main">
 
-      <!-- Topbar Mock -->
-      <header class="app-topbar-mock">
-        <div class="topbar-search-mock">
-          <i class="bi bi-search"></i> Search candidate, job, or agency...
+      <!-- Simulated Metronic Topbar (Header height: 65px) -->
+      <div class="app-topbar">
+        <div class="topbar-center-pills">
+          <a href="javascript:void(0);" class="topbar-pill">
+            <span class="topbar-pill-icon"><i class="bi bi-briefcase"></i></span>
+            <span>Find Jobs</span>
+          </a>
+          <a href="javascript:void(0);" class="topbar-pill">
+            <span class="topbar-pill-icon"><i class="bi bi-mortarboard"></i></span>
+            <span>Find Talent</span>
+          </a>
+          <a href="javascript:void(0);" class="topbar-pill">
+            <span class="topbar-pill-icon"><i class="bi bi-building"></i></span>
+            <span>Find Agency</span>
+          </a>
         </div>
-        <div class="topbar-right-mock">
-          <div class="user-pill-mock">
-            <span class="user-avatar-tiny">V</span>
-            <span>Vibhanshu Jaiswal</span>
-          </div>
+        <div class="topbar-right-user">
+          <div class="user-avatar-badge" title="Vibhanshu Jaiswal">V</div>
         </div>
-      </header>
-
-      <!-- Main Page Container -->
-      <div class="page-container">
-
-        <!-- ====================================================================
-             TIER 1: TOP HEADER TOOLBAR CARD (Add Internal Standard)
-             ==================================================================== -->
-        <div class="header-toolbar-card">
-          <div class="header-left-group">
-            <a href="https://testing.jero.works/service_company/profile" class="header-back-btn" title="Back to Profile">
-              <i class="bi bi-arrow-left"></i>
-            </a>
-            <div class="header-title-box">
-              <div class="header-breadcrumbs">
-                <a href="#">Service Company</a>
-                <i class="bi bi-chevron-right" style="font-size: 9px;"></i>
-                <a href="#">Profile</a>
-                <i class="bi bi-chevron-right" style="font-size: 9px;"></i>
-                <span>Edit Profile</span>
-              </div>
-              <div class="header-title">
-                Edit Recruiter Profile
-                <span class="header-badge-role">Service Company</span>
-              </div>
-              <div class="header-subtitle">Manage your personal identity, contact coordinates, and candidate-facing ATS presence</div>
-            </div>
-          </div>
-
-          <div class="header-right-group">
-            <div class="completion-card-mini">
-              <div class="completion-head">
-                <span class="completion-label"><i class="bi bi-shield-check"></i> Profile Health</span>
-                <span class="completion-value" id="profileCompletionValue">75%</span>
-              </div>
-              <div class="completion-progress-track">
-                <div class="completion-progress-fill" id="profileProgressBar" style="width: 75%;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ====================================================================
-             2-COLUMN LAYOUT: MAIN FORM STREAM & STICKY SIDEBAR
-             ==================================================================== -->
-        <div class="content-grid">
-
-          <!-- LEFT COLUMN: Main Form Cards Stream -->
-          <div class="main-form-stream">
-
-            <!-- CARD 1: PROFILE PHOTO & VISUAL IDENTITY -->
-            <section class="god-card">
-              <div class="god-card-head">
-                <div class="god-card-head-left">
-                  <div class="god-icon-box"><i class="bi bi-camera-fill"></i></div>
-                  <div class="god-card-title-group">
-                    <h3>Profile Photo & Visual Identity</h3>
-                    <p>This image represents you in candidate emails, interview invitations, and team channels.</p>
-                  </div>
-                </div>
-                <span class="god-card-badge">Public ATS Display</span>
-              </div>
-              <div class="god-card-body">
-                <div class="photo-subcard-grid">
-                  
-                  <!-- Sub-Card 1A: Avatar Preview -->
-                  <div class="avatar-preview-box">
-                    <div class="avatar-circle-wrapper">
-                      <div class="avatar-circle-img" id="mainAvatarDisplay">V</div>
-                      <label for="avatarUploadInput" class="avatar-camera-btn" title="Upload new photo">
-                        <i class="bi bi-camera"></i>
-                      </label>
-                    </div>
-                    <span style="font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-top: 8px;">Recruiter Avatar</span>
-                  </div>
-
-                  <!-- Sub-Card 1B: Modern Dropzone -->
-                  <label class="dropzone-subcard" id="dropzoneLabel" for="avatarUploadInput">
-                    <input type="file" id="avatarUploadInput" name="avatar" accept=".png, .jpg, .jpeg" style="display: none;" onchange="handleFileSelect(this)">
-                    <i class="bi bi-cloud-arrow-up-fill dropzone-cloud-icon"></i>
-                    <div class="dropzone-main-text">Drag & drop your photo here, or <span>Browse files</span></div>
-                    <div class="dropzone-sub-text">Recommended: Square format (PNG, JPG or JPEG) • Max 2.0 MB</div>
-                    <div class="dropzone-action-buttons">
-                      <span class="btn-action-ghost"><i class="bi bi-upload"></i> Upload Photo</span>
-                      <button type="button" class="btn-action-ghost danger" onclick="event.preventDefault(); removePhoto();"><i class="bi bi-trash"></i> Remove</button>
-                    </div>
-                  </label>
-
-                </div>
-              </div>
-            </section>
-
-            <!-- CARD 2: PERSONAL & PROFESSIONAL DETAILS -->
-            <section class="god-card">
-              <div class="god-card-head">
-                <div class="god-card-head-left">
-                  <div class="god-icon-box"><i class="bi bi-person-badge-fill"></i></div>
-                  <div class="god-card-title-group">
-                    <h3>Personal & Contact Coordinates</h3>
-                    <p>Core identity attributes used across candidate pipeline records and interview schedules.</p>
-                  </div>
-                </div>
-                <span class="god-card-badge">Essential Details</span>
-              </div>
-              <div class="god-card-body">
-                <div class="subcard-grid-2">
-
-                  <!-- Sub-Card 2A: Full Name (Governed Field) -->
-                  <div class="god-subcard" id="subcardName">
-                    <div class="subcard-label-row">
-                      <label class="subcard-label" for="inputName">Full Name <span class="required-star">*</span></label>
-                      <span class="subcard-badge-pill locked" id="badgeNameLocked">
-                        <i class="bi bi-lock-fill"></i> Admin Assigned
-                      </span>
-                      <span class="subcard-badge-pill" id="badgeNameEditable" style="display: none; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">
-                        <i class="bi bi-pencil-fill"></i> Editable by Org Admin
-                      </span>
-                    </div>
-                    <div class="god-input-wrap">
-                      <input type="text" id="inputName" name="name" class="god-input is-readonly" value="Vibhanshu Jaiswal" readonly oninput="syncLivePreview()">
-                      <i class="bi bi-person god-input-icon"></i>
-                    </div>
-                    <div class="subcard-help-note" id="nameHelpNote">
-                      <i class="bi bi-info-circle"></i> Assigned by your organization admin. Contact admin to modify.
-                    </div>
-                    <div class="error-msg"><i class="bi bi-exclamation-circle"></i> Full name is required</div>
-                  </div>
-
-                  <!-- Sub-Card 2B: Professional Designation -->
-                  <div class="god-subcard" id="subcardDesignation">
-                    <div class="subcard-label-row">
-                      <label class="subcard-label" for="inputDesignation">Designation <span class="required-star">*</span></label>
-                      <span class="subcard-badge-pill" style="background: #f1f5f9; color: #475569;">Public Role</span>
-                    </div>
-                    <div class="god-input-wrap">
-                      <input type="text" id="inputDesignation" name="designation" class="god-input" value="Directors" placeholder="e.g. Senior Talent Partner" oninput="syncLivePreview()">
-                      <i class="bi bi-briefcase god-input-icon"></i>
-                    </div>
-                    <div class="subcard-help-note">
-                      <i class="bi bi-check2"></i> Displayed under your name on job requisitions and candidate offers.
-                    </div>
-                    <div class="error-msg"><i class="bi bi-exclamation-circle"></i> Designation is required</div>
-                  </div>
-
-                  <!-- Sub-Card 2C: Work Email (Verified) -->
-                  <div class="god-subcard">
-                    <div class="subcard-label-row">
-                      <label class="subcard-label" for="inputEmail">Work Email Address <span class="required-star">*</span></label>
-                      <span class="subcard-badge-pill verified">
-                        <i class="bi bi-patch-check-fill"></i> Verified
-                      </span>
-                    </div>
-                    <div class="god-input-wrap">
-                      <input type="email" id="inputEmail" name="email" class="god-input is-readonly" value="Vibhanshu@4bell.com" readonly>
-                      <i class="bi bi-envelope god-input-icon"></i>
-                    </div>
-                    <div class="subcard-help-note">
-                      <i class="bi bi-shield-check"></i> Account authentication & primary communication inbox.
-                    </div>
-                  </div>
-
-                  <!-- Sub-Card 2D: Mobile Phone with Country Code -->
-                  <div class="god-subcard" id="subcardPhone">
-                    <div class="subcard-label-row">
-                      <label class="subcard-label" for="inputMobile">Phone Number <span class="required-star">*</span></label>
-                      <span class="subcard-badge-pill" style="background: #eef2ff; color: #4338ca;">Recruiter Direct</span>
-                    </div>
-                    <div class="phone-input-group">
-                      <div class="country-code-select-wrap">
-                        <select class="country-code-select" name="phone_country_code" id="phoneCountryCode" onchange="syncLivePreview()">
-                          <option value="91" selected>🇮🇳 +91 (IN)</option>
-                          <option value="1">🇺🇸 +1 (US)</option>
-                          <option value="44">🇬🇧 +44 (UK)</option>
-                          <option value="971">🇦🇪 +971 (UAE)</option>
-                          <option value="65">🇸🇬 +65 (SG)</option>
-                        </select>
-                      </div>
-                      <div class="god-input-wrap" style="flex: 1;">
-                        <input type="tel" id="inputMobile" name="mobile" class="god-input" value="7217860087" placeholder="Enter 10-digit number" oninput="syncLivePreview()">
-                        <i class="bi bi-telephone god-input-icon"></i>
-                      </div>
-                    </div>
-                    <div class="subcard-help-note">
-                      <i class="bi bi-info-circle"></i> Modifying phone number will require re-verification.
-                    </div>
-                    <div class="error-msg"><i class="bi bi-exclamation-circle"></i> Valid phone number is required</div>
-                  </div>
-
-                </div>
-              </div>
-            </section>
-
-            <!-- CARD 3: BASE LOCATION & WORKSPACE -->
-            <section class="god-card">
-              <div class="god-card-head">
-                <div class="god-card-head-left">
-                  <div class="god-icon-box green"><i class="bi bi-geo-alt-fill"></i></div>
-                  <div class="god-card-title-group">
-                    <h3>Base Location & Operating Hub</h3>
-                    <p>Used to determine timezone alignment for candidate interview bookings and team rosters.</p>
-                  </div>
-                </div>
-                <span class="god-card-badge">Timezone & Geolocation</span>
-              </div>
-              <div class="god-card-body">
-                <div class="subcard-grid-1">
-                  
-                  <!-- Sub-Card 3A: Tagify Work Location -->
-                  <div class="god-subcard" id="subcardLocation">
-                    <div class="subcard-label-row">
-                      <label class="subcard-label">Primary City & Region <span class="required-star">*</span></label>
-                      <span class="subcard-badge-pill" style="background: #ecfdf5; color: #047857;">Auto-Suggest</span>
-                    </div>
-                    <div class="tagify-simulation-box">
-                      <i class="bi bi-geo-alt tagify-location-icon"></i>
-                      <div class="tagify-pill" id="locationPill">
-                        <span id="locationPillText">Noida | Uttar Pradesh | India</span>
-                        <i class="bi bi-x tagify-pill-remove" onclick="clearLocationTag()"></i>
-                      </div>
-                      <input type="text" class="tagify-fake-input" id="inputLocationSearch" placeholder="Type to search city..." onfocus="showLocationSuggestions()" oninput="handleLocationInput(this)">
-                    </div>
-                    <div class="subcard-help-note">
-                      <i class="bi bi-check-circle-fill" style="color: var(--success);"></i> Geolocation verified across 60,000+ global corporate hubs.
-                    </div>
-                    <div class="error-msg"><i class="bi bi-exclamation-circle"></i> Please select a valid city from the suggestions</div>
-                  </div>
-
-                </div>
-              </div>
-            </section>
-
-            <!-- CARD 4: PROFESSIONAL COMMUNICATION CHANNELS (OPTIONAL) -->
-            <section class="god-card">
-              <div class="god-card-head">
-                <div class="god-card-head-left">
-                  <div class="god-icon-box purple"><i class="bi bi-share-fill"></i></div>
-                  <div class="god-card-title-group">
-                    <h3>Professional Communication Channels <span style="font-weight: 400; color: var(--text-light); font-size: 11px;">(Optional)</span></h3>
-                    <p>Connect your recruiter social handles for automated candidate outreach and 1-click WhatsApp chats.</p>
-                  </div>
-                </div>
-                <span class="god-card-badge">Direct Engagement</span>
-              </div>
-              <div class="god-card-body">
-                <div class="subcard-grid-2">
-
-                  <!-- Sub-Card 4A: LinkedIn Profile -->
-                  <div class="god-subcard" id="subcardLinkedin">
-                    <div class="subcard-label-row">
-                      <label class="subcard-label" for="inputLinkedin">LinkedIn Profile</label>
-                      <span class="subcard-badge-pill" style="background: #eff6ff; color: #0a66c2;">
-                        <i class="bi bi-linkedin"></i> Verified URL
-                      </span>
-                    </div>
-                    <div class="god-input-wrap">
-                      <input type="url" id="inputLinkedin" name="linkedin" class="god-input" placeholder="https://linkedin.com/in/vibhanshu-jaiswal" oninput="syncLivePreview()">
-                      <i class="bi bi-linkedin god-input-icon" style="color: #0a66c2;"></i>
-                    </div>
-                    <div class="subcard-help-note">
-                      <i class="bi bi-lightbulb"></i> Candidates are 68% more likely to respond to recruiters with linked profiles.
-                    </div>
-                  </div>
-
-                  <!-- Sub-Card 4B: WhatsApp Number -->
-                  <div class="god-subcard" id="subcardWhatsapp">
-                    <div class="subcard-label-row">
-                      <label class="subcard-label" for="inputWhatsapp">WhatsApp Direct Number</label>
-                      <span class="subcard-badge-pill" style="background: #f0fdf4; color: #16a34a;">
-                        <i class="bi bi-whatsapp"></i> Quick Connect
-                      </span>
-                    </div>
-                    <div class="god-input-wrap">
-                      <input type="tel" id="inputWhatsapp" name="whatsapp_number" class="god-input" placeholder="Enter 10-digit number" oninput="syncLivePreview()">
-                      <i class="bi bi-whatsapp god-input-icon" style="color: #25d366;"></i>
-                    </div>
-                    <div class="subcard-help-note">
-                      <i class="bi bi-lightning-charge-fill" style="color: var(--warning);"></i> Powers the 1-click candidate WhatsApp update button.
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </section>
-
-            <!-- CARD 5: ORGANIZATION CONTEXT (READ-ONLY) -->
-            <section class="god-card">
-              <div class="god-card-head">
-                <div class="god-card-head-left">
-                  <div class="god-icon-box" style="background: #f1f5f9; color: #334155;"><i class="bi bi-buildings-fill"></i></div>
-                  <div class="god-card-title-group">
-                    <h3>Associated Organization Information</h3>
-                    <p>Your tenant company profile within JERO ATS (managed via Company Profile settings).</p>
-                  </div>
-                </div>
-                <a href="#" class="btn-action-ghost" style="font-size: 11px;"><i class="bi bi-box-arrow-up-right"></i> Manage Company</a>
-              </div>
-              <div class="god-card-body">
-                <div class="company-info-row">
-                  <div class="company-metric-tile">
-                    <div class="company-metric-label">Company Name</div>
-                    <div class="company-metric-val">4Bell Technology</div>
-                  </div>
-                  <div class="company-metric-tile">
-                    <div class="company-metric-label">Website</div>
-                    <div class="company-metric-val"><a href="https://4belltechnology.com" target="_blank">4belltechnology.com</a></div>
-                  </div>
-                  <div class="company-metric-tile">
-                    <div class="company-metric-label">Country & State</div>
-                    <div class="company-metric-val">India, Uttar Pradesh</div>
-                  </div>
-                  <div class="company-metric-tile">
-                    <div class="company-metric-label">Headquarters City</div>
-                    <div class="company-metric-val">Noida</div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-          </div>
-
-          <!-- RIGHT COLUMN: STICKY LIVE PREVIEW & HEALTH SIDEBAR -->
-          <aside class="sidebar-stream">
-
-            <!-- SIDEBAR CARD 1: LIVE RECRUITER IDENTITY PREVIEW (ATS Candidate View) -->
-            <div class="god-card">
-              <div class="god-card-head">
-                <div class="god-card-head-left">
-                  <div class="god-icon-box"><i class="bi bi-eye-fill"></i></div>
-                  <div class="god-card-title-group">
-                    <h3>Live ATS Card Preview</h3>
-                    <p>How candidates and clients view your profile</p>
-                  </div>
-                </div>
-              </div>
-              <div class="preview-card-body">
-                <div class="preview-avatar-wrap">
-                  <div class="preview-avatar-circle" id="previewAvatarCircle">V</div>
-                  <span class="preview-online-dot" title="Active on JERO ATS"></span>
-                </div>
-                <div class="preview-name" id="previewName">
-                  Vibhanshu Jaiswal
-                  <i class="bi bi-patch-check-fill" title="Verified Recruiter Identity"></i>
-                </div>
-                <div class="preview-role" id="previewRole">Directors • 4Bell Technology</div>
-                <div class="preview-loc" id="previewLocation">
-                  <i class="bi bi-geo-alt-fill"></i> Noida | Uttar Pradesh | India
-                </div>
-                <div class="preview-badge-verified">
-                  <i class="bi bi-shield-fill-check"></i> Verified Employer
-                </div>
-
-                <div class="preview-contact-strip">
-                  <div class="preview-contact-item">
-                    <i class="bi bi-envelope-fill"></i>
-                    <span id="previewEmail">Vibhanshu@4bell.com</span>
-                  </div>
-                  <div class="preview-contact-item">
-                    <i class="bi bi-telephone-fill"></i>
-                    <span id="previewPhone">+91 7217860087</span>
-                  </div>
-                  <div class="preview-contact-item li" id="previewLinkedinRow" style="display: none;">
-                    <i class="bi bi-linkedin"></i>
-                    <span id="previewLinkedin">linkedin.com/in/profile</span>
-                  </div>
-                  <div class="preview-contact-item wa" id="previewWhatsappRow" style="display: none;">
-                    <i class="bi bi-whatsapp"></i>
-                    <span id="previewWhatsapp">+91 7217860087</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- SIDEBAR CARD 2: PROFILE HEALTH MATRIX -->
-            <div class="god-card">
-              <div class="god-card-head">
-                <div class="god-card-head-left">
-                  <div class="god-icon-box amber"><i class="bi bi-lightning-charge-fill"></i></div>
-                  <div class="god-card-title-group">
-                    <h3>Profile Health Matrix</h3>
-                    <p>Complete these items to reach 100%</p>
-                  </div>
-                </div>
-              </div>
-              <div class="god-card-body" style="padding: 14px;">
-                <ul class="missing-list">
-                  <li class="missing-item">
-                    <div class="missing-left">
-                      <i class="bi bi-check-circle-fill missing-check-icon"></i>
-                      <span>Personal Info & Role</span>
-                    </div>
-                    <span style="font-size: 10.5px; font-weight: 600; color: var(--success);">Done</span>
-                  </li>
-                  <li class="missing-item">
-                    <div class="missing-left">
-                      <i class="bi bi-check-circle-fill missing-check-icon"></i>
-                      <span>Verified Work Email</span>
-                    </div>
-                    <span style="font-size: 10.5px; font-weight: 600; color: var(--success);">Done</span>
-                  </li>
-                  <li class="missing-item">
-                    <div class="missing-left">
-                      <i class="bi bi-check-circle-fill missing-check-icon"></i>
-                      <span>Operating City</span>
-                    </div>
-                    <span style="font-size: 10.5px; font-weight: 600; color: var(--success);">Done</span>
-                  </li>
-                  <li class="missing-item" id="itemMissingPhoto">
-                    <div class="missing-left">
-                      <i class="bi bi-circle text-muted" id="iconMissingPhoto"></i>
-                      <span>Recruiter Photo</span>
-                    </div>
-                    <button type="button" class="missing-action-btn" onclick="document.getElementById('avatarUploadInput').click();">Upload</button>
-                  </li>
-                  <li class="missing-item" id="itemMissingLinkedin">
-                    <div class="missing-left">
-                      <i class="bi bi-circle text-muted" id="iconMissingLinkedin"></i>
-                      <span>LinkedIn Profile</span>
-                    </div>
-                    <button type="button" class="missing-action-btn" onclick="focusField('inputLinkedin')">Add Link</button>
-                  </li>
-                  <li class="missing-item" id="itemMissingWhatsapp">
-                    <div class="missing-left">
-                      <i class="bi bi-circle text-muted" id="iconMissingWhatsapp"></i>
-                      <span>WhatsApp Connect</span>
-                    </div>
-                    <button type="button" class="missing-action-btn" onclick="focusField('inputWhatsapp')">Add</button>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <!-- SIDEBAR CARD 3: ATS RECRUITER BEST PRACTICES -->
-            <div class="god-card">
-              <div class="god-card-head">
-                <div class="god-card-head-left">
-                  <div class="god-icon-box green"><i class="bi bi-lightbulb-fill"></i></div>
-                  <div class="god-card-title-group">
-                    <h3>Recruiter Best Practices</h3>
-                    <p>ATS candidate conversion insights</p>
-                  </div>
-                </div>
-              </div>
-              <div class="god-card-body" style="padding: 14px;">
-                <ul class="tips-list">
-                  <li class="tip-item">
-                    <i class="bi bi-shield-check"></i>
-                    <span>Profiles with a real photo build 3x higher trust during initial candidate outreach.</span>
-                  </li>
-                  <li class="tip-item">
-                    <i class="bi bi-whatsapp"></i>
-                    <span>Connecting WhatsApp enables rapid 1-click status updates for shortlisted candidates.</span>
-                  </li>
-                  <li class="tip-item">
-                    <i class="bi bi-linkedin"></i>
-                    <span>Adding LinkedIn validates your employer brand to senior tech talent.</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-          </aside>
-
-        </div>
-
       </div>
 
-      <!-- ====================================================================
-           TIER 3: DOCKED STICKY ACTION FOOTER BAR (Rule 20)
-           ==================================================================== -->
-      <footer class="docked-footer-bar">
-        <div class="footer-status-box">
-          <div class="pulse-dot"></div>
-          <div class="footer-status-text">
-            <span class="footer-status-title" id="footerStatusTitle">You have unsaved changes</span>
-            <span class="footer-status-sub" id="footerStatusSub">Draft securely cached in browser memory • 0% MySQL reads</span>
+      <!-- App Content Viewport (Unwanted Gap Eliminated: Only 8px padding-top!) -->
+      <div class="app-content-viewport">
+
+        <!-- =========================================================================
+             TOP UNIFIED HEADER CARD (Navigation & Action Bar)
+             ========================================================================= -->
+        <div class="god-top-nav-card">
+          <div class="god-header-grid">
+            
+            <!-- LEFT: Title & Recruiter Badge -->
+            <div class="god-header-identity">
+              <div class="god-header-icon-box">
+                <i class="bi bi-person-gear"></i>
+              </div>
+              <div class="god-header-titles">
+                <h1 class="god-header-title">
+                  Edit Profile
+                  <span class="god-header-badge"><i class="bi bi-shield-check"></i> Recruiter Profile</span>
+                </h1>
+                <p class="god-header-subtitle">Manage your personal information, corporate designation, and primary contact coordinates.</p>
+              </div>
+            </div>
+
+            <!-- RIGHT: Action Buttons (Cancel & Save Changes) -->
+            <div class="god-header-actions">
+              <button type="button" class="god-top-cancel-btn" onclick="alert('Navigating back to Profile View');">
+                <i class="bi bi-x-lg"></i>
+                <span>Cancel</span>
+              </button>
+              <button type="button" class="god-top-submit-btn" id="previewSubmitBtn" onclick="alert('Profile details saved successfully!');">
+                <i class="bi bi-check-lg" style="font-size: 15px;"></i>
+                <span>Save Changes</span>
+              </button>
+            </div>
+
           </div>
         </div>
+        <!--end::Top Nav Card-->
 
-        <div class="footer-actions-group">
-          <a href="https://testing.jero.works/service_company/profile" class="btn-footer btn-footer-secondary">
-            Cancel
-          </a>
-          <button type="button" class="btn-footer btn-footer-secondary" onclick="saveDraftNotification()">
-            <i class="bi bi-bookmark"></i> Save Draft
-          </button>
-          <button type="button" class="btn-footer btn-footer-primary" id="btnSaveChanges" onclick="handleSaveAction()">
-            <i class="bi bi-check2"></i> Save Changes
-          </button>
+        <!-- =========================================================================
+             2-COLUMN GOD-LEVEL LAYOUT (Matched 1:1 to Add Internal Client Page 1)
+             ========================================================================= -->
+        <div class="god-level-profile-layout">
+
+          <!-- ========================== LEFT COLUMN: PERSONAL INFORMATION ========================== -->
+          <div class="client-main-column">
+            <section class="card god-card">
+              
+              <!-- Card Header -->
+              <div class="god-card-header">
+                <div class="god-card-header-icon">
+                  <i class="bi bi-person-lines-fill"></i>
+                </div>
+                <div class="god-card-header-titles">
+                  <h3 class="god-card-title">Personal Information</h3>
+                  <p class="god-card-subtitle">Update your personal details, corporate designation, and primary contact coordinates.</p>
+                </div>
+              </div>
+
+              <!-- Single-Column Vertical Fields Stack: 1 Box in 1 Row (Order strictly: Name, Designation, Email, Number, Work Location, LinkedIn) -->
+              <div class="god-fields-single-column">
+
+                <!-- ROW 1: Full Name (Locked / Readonly) -->
+                <div class="god-field-wrap">
+                  <div class="god-field-header">
+                    <label class="god-field-label" for="preview_name">Full Name <span style="color: #ef4444;">*</span></label>
+                    <span class="god-badge-locked">
+                      <i class="bi bi-lock-fill"></i> Organization Managed
+                    </span>
+                  </div>
+                  <div class="god-input-box is-readonly">
+                    <span class="god-input-left-icon">
+                      <i class="bi bi-person"></i>
+                    </span>
+                    <input type="text"
+                           class="god-native-input"
+                           id="preview_name"
+                           value="Vibhanshu Jaiswal"
+                           readonly
+                           style="background: transparent; color: #475569; cursor: not-allowed;">
+                  </div>
+                  <div class="god-field-hint">
+                    <i class="bi bi-info-circle"></i> Full name is managed by organization administrator and cannot be modified from this edit page.
+                  </div>
+                </div>
+
+                <!-- ROW 2: Designation (1st letter capital) -->
+                <div class="god-field-wrap">
+                  <div class="god-field-header">
+                    <label class="god-field-label" for="preview_designation">Designation <span style="color: #ef4444;">*</span></label>
+                  </div>
+                  <div class="god-input-box">
+                    <span class="god-input-left-icon">
+                      <i class="bi bi-briefcase"></i>
+                    </span>
+                    <input type="text"
+                           class="god-native-input capitalize-input"
+                           id="preview_designation"
+                           value="Directors"
+                           placeholder="e.g. Lead Talent Specialist / Director"
+                           style="text-transform: capitalize;">
+                    <button type="button" class="god-input-clear-btn" id="preview_des_clear" title="Clear designation" style="display: inline-flex;">
+                      <i class="bi bi-x-lg" style="font-size: 10px;"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- ROW 3: Work Email Address -->
+                <div class="god-field-wrap">
+                  <div class="god-field-header">
+                    <label class="god-field-label" for="preview_email">Work Email Address <span style="color: #ef4444;">*</span></label>
+                  </div>
+                  <div class="god-input-box is-readonly">
+                    <span class="god-input-left-icon">
+                      <i class="bi bi-envelope"></i>
+                    </span>
+                    <input type="email"
+                           class="god-native-input"
+                           id="preview_email"
+                           value="Vibhanshu@4bell.com"
+                           readonly
+                           style="background: transparent; color: #475569; cursor: not-allowed;">
+                    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; border-radius: 999px; padding: 1px 7px; margin-left: auto; flex-shrink: 0;">
+                      <i class="bi bi-patch-check-fill"></i> Verified
+                    </span>
+                  </div>
+                  <div class="god-field-hint">
+                    <i class="bi bi-shield-check"></i> Primary authentication address linked to corporate domain.
+                  </div>
+                </div>
+
+                <!-- ROW 4: Phone Number -->
+                <div class="god-field-wrap">
+                  <div class="god-field-header">
+                    <label class="god-field-label">Phone Number <span style="color: #ef4444;">*</span></label>
+                  </div>
+                  <div class="mock-phone-box">
+                    <div class="mock-phone-flag">
+                      <span>🇮🇳 +91</span>
+                      <i class="bi bi-caret-down-fill" style="font-size: 9px; color: #94a3b8;"></i>
+                    </div>
+                    <input type="text" class="mock-phone-input" value="7217860087" placeholder="Enter Phone">
+                    <span style="font-size: 10px; font-weight: 600; color: #10b981; margin-right: 12px;">10/10</span>
+                  </div>
+                </div>
+
+                <!-- ROW 5: Work Location (City) [Add Internal Client Box & Dropdown] -->
+                <div class="god-field-wrap">
+                  <div class="god-field-header">
+                    <label class="god-field-label" for="preview_city_search">Work Location (City) <span style="color: #ef4444;">*</span></label>
+                  </div>
+                  <div class="position-relative client-addr-input-wrap" id="preview_city_wrap">
+                    <span class="position-absolute client-addr-field-icon-left">
+                      <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text"
+                           class="client-addr-input"
+                           id="preview_city_search"
+                           value="Noida, Uttar Pradesh, India"
+                           placeholder="Search for a city..."
+                           autocomplete="off">
+                    <span class="position-absolute client-addr-field-icon-right">
+                      <i class="bi bi-chevron-down"></i>
+                    </span>
+                    <button type="button" class="client-addr-clear-btn" id="preview_city_clear" style="display: inline-flex;">
+                      <i class="bi bi-x-lg" style="font-size: 10px;"></i>
+                    </button>
+                    <!-- Dropdown -->
+                    <div class="client-addr-city-dropdown" id="preview_city_dd">
+                      <div class="client-addr-dd-item" onclick="selectPreviewCity('Noida, Uttar Pradesh, India')">
+                        <div class="client-addr-dd-left">
+                          <i class="bi bi-geo-alt-fill" style="color: #2563eb; font-size: 14px;"></i>
+                          <div>
+                            <div class="client-addr-dd-city">Noida</div>
+                            <div class="client-addr-dd-sub">Uttar Pradesh, India</div>
+                          </div>
+                        </div>
+                        <span class="client-addr-dd-badge">NCR Hub</span>
+                      </div>
+                      <div class="client-addr-dd-item" onclick="selectPreviewCity('Gurugram, Haryana, India')">
+                        <div class="client-addr-dd-left">
+                          <i class="bi bi-geo-alt-fill" style="color: #2563eb; font-size: 14px;"></i>
+                          <div>
+                            <div class="client-addr-dd-city">Gurugram</div>
+                            <div class="client-addr-dd-sub">Haryana, India</div>
+                          </div>
+                        </div>
+                        <span class="client-addr-dd-badge">NCR Hub</span>
+                      </div>
+                      <div class="client-addr-dd-item" onclick="selectPreviewCity('Bengaluru, Karnataka, India')">
+                        <div class="client-addr-dd-left">
+                          <i class="bi bi-geo-alt-fill" style="color: #2563eb; font-size: 14px;"></i>
+                          <div>
+                            <div class="client-addr-dd-city">Bengaluru</div>
+                            <div class="client-addr-dd-sub">Karnataka, India</div>
+                          </div>
+                        </div>
+                        <span class="client-addr-dd-badge">Metro Hub</span>
+                      </div>
+                      <div class="client-addr-dd-item" onclick="selectPreviewCity('Mumbai, Maharashtra, India')">
+                        <div class="client-addr-dd-left">
+                          <i class="bi bi-geo-alt-fill" style="color: #2563eb; font-size: 14px;"></i>
+                          <div>
+                            <div class="client-addr-dd-city">Mumbai</div>
+                            <div class="client-addr-dd-sub">Maharashtra, India</div>
+                          </div>
+                        </div>
+                        <span class="client-addr-dd-badge">Financial Capital</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="god-field-hint">
+                    <i class="bi bi-info-circle"></i> Instant global city database search with automated state & country mapping.
+                  </div>
+                </div>
+
+                <!-- ROW 6: LinkedIn Profile URL -->
+                <div class="god-field-wrap">
+                  <div class="god-field-header">
+                    <label class="god-field-label" for="preview_linkedin">LinkedIn Profile URL <span style="font-size: 10.5px; color: #94a3b8; font-weight: 400;">(Optional)</span></label>
+                  </div>
+                  <div class="god-input-box">
+                    <span class="god-input-left-icon" style="color: #0a66c2;">
+                      <i class="bi bi-linkedin"></i>
+                    </span>
+                    <input type="url"
+                           class="god-native-input"
+                           id="preview_linkedin"
+                           value="https://linkedin.com/in/vibhanshu-jaiswal"
+                           placeholder="https://linkedin.com/in/yourprofile">
+                    <button type="button" class="god-input-clear-btn" id="preview_li_clear" title="Clear LinkedIn" style="display: inline-flex;">
+                      <i class="bi bi-x-lg" style="font-size: 10px;"></i>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+          </div>
+
+          <!-- ========================== RIGHT COLUMN: PROFILE PHOTO ========================== -->
+          <div class="client-side-column">
+            <section class="card god-card god-company-logo-card">
+              
+              <!-- Card Header -->
+              <div class="god-card-header">
+                <div class="god-card-header-icon">
+                  <i class="bi bi-image"></i>
+                </div>
+                <div class="god-card-header-titles">
+                  <h3 class="god-card-title">Profile Photo</h3>
+                  <p class="god-card-subtitle">Set or update your profile photo.</p>
+                </div>
+              </div>
+
+              <!-- Large Photo Preview Container -->
+              <div class="god-logo-preview-box" id="preview_photo_box" onclick="document.getElementById('mock_file_input').click();">
+                <div class="god-logo-surface" id="preview_avatar_surface">
+                  <div class="god-logo-placeholder" id="preview_avatar_ph">
+                    <i class="bi bi-person" style="font-size: 42px; color: #94a3b8;"></i>
+                    <span class="placeholder-title">Profile Photo</span>
+                    <span class="placeholder-sub">Click Change Photo or drop file</span>
+                  </div>
+                </div>
+              </div>
+              <input type="file" id="mock_file_input" style="display:none;" accept="image/*">
+
+              <!-- Status Banner -->
+              <div class="god-logo-status-banner is-empty" id="preview_photo_banner">
+                <i class="bi bi-info-circle"></i>
+                <span id="preview_banner_text">No photo uploaded yet</span>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="god-logo-actions">
+                <button type="button" class="god-logo-btn god-change-logo-btn" onclick="document.getElementById('mock_file_input').click();">
+                  <i class="bi bi-camera"></i>
+                  <span>Change Photo</span>
+                </button>
+                <button type="button" class="god-logo-btn god-remove-logo-btn" id="preview_remove_btn" style="display:none;" onclick="removePreviewPhoto();">
+                  <i class="bi bi-trash3"></i>
+                  <span>Remove Photo</span>
+                </button>
+              </div>
+
+              <!-- Helper note -->
+              <div class="god-logo-formats-note">
+                <i class="bi bi-info-circle" style="color: #2563eb; margin-top: 2px;"></i>
+                <span>Supported formats: PNG, JPG, WEBP (Max 2MB).<br>Recommended: 400×400px. Used in ATS pipeline & candidate communication.</span>
+              </div>
+
+            </section>
+          </div>
+
         </div>
-      </footer>
+        <!--end::2-Column Layout-->
+
+      </div>
+      <!--end::App Content Viewport-->
 
     </main>
-
   </div>
 
-  <!-- Interactive JavaScript for Live Demonstration -->
   <script>
-    let isOrgAdmin = false;
-    let hasCustomPhoto = false;
+    // Location Autocomplete Interactions
+    var cityInput = document.getElementById('preview_city_search');
+    var cityDd = document.getElementById('preview_city_dd');
+    var cityWrap = document.getElementById('preview_city_wrap');
+    var cityClear = document.getElementById('preview_city_clear');
 
-    function setRoleMode(mode) {
-      isOrgAdmin = (mode === 'admin');
-      const inputName = document.getElementById('inputName');
-      const badgeLocked = document.getElementById('badgeNameLocked');
-      const badgeEditable = document.getElementById('badgeNameEditable');
-      const nameHelp = document.getElementById('nameHelpNote');
-      const btnRecruiter = document.getElementById('btnRecruiterMode');
-      const btnAdmin = document.getElementById('btnAdminMode');
+    cityInput.addEventListener('focus', function() {
+      cityDd.classList.add('active');
+      cityWrap.classList.add('is-open');
+    });
 
-      if (isOrgAdmin) {
-        inputName.removeAttribute('readonly');
-        inputName.classList.remove('is-readonly');
-        badgeLocked.style.display = 'none';
-        badgeEditable.style.display = 'inline-flex';
-        nameHelp.innerHTML = '<i class="bi bi-shield-check" style="color: #0284c7;"></i> You have Org Admin authority. Editing full name will update across corporate ATS records.';
-        btnAdmin.classList.add('is-active');
-        btnRecruiter.classList.remove('is-active');
+    cityInput.addEventListener('input', function() {
+      if (this.value.trim().length > 0) {
+        cityClear.style.display = 'inline-flex';
       } else {
-        inputName.setAttribute('readonly', 'true');
-        inputName.classList.add('is-readonly');
-        badgeLocked.style.display = 'inline-flex';
-        badgeEditable.style.display = 'none';
-        nameHelp.innerHTML = '<i class="bi bi-info-circle"></i> Assigned by your organization admin. Contact admin to modify.';
-        btnRecruiter.classList.add('is-active');
-        btnAdmin.classList.remove('is-active');
+        cityClear.style.display = 'none';
       }
-    }
+      cityDd.classList.add('active');
+      cityWrap.classList.add('is-open');
+    });
 
-    function syncLivePreview() {
-      const name = document.getElementById('inputName').value.trim() || 'Your Name';
-      const designation = document.getElementById('inputDesignation').value.trim() || 'Recruiter';
-      const countryCode = document.getElementById('phoneCountryCode').value;
-      const mobile = document.getElementById('inputMobile').value.trim();
-      const linkedin = document.getElementById('inputLinkedin').value.trim();
-      const whatsapp = document.getElementById('inputWhatsapp').value.trim();
+    cityClear.addEventListener('click', function(e) {
+      e.stopPropagation();
+      cityInput.value = '';
+      cityClear.style.display = 'none';
+      cityInput.focus();
+      cityDd.classList.add('active');
+    });
 
-      // Update name & role
-      document.getElementById('previewName').innerHTML = `${name} <i class="bi bi-patch-check-fill" title="Verified Recruiter Identity"></i>`;
-      document.getElementById('previewRole').textContent = `${designation} • 4Bell Technology`;
-
-      // Update phone
-      if (mobile) {
-        document.getElementById('previewPhone').textContent = `+${countryCode} ${mobile}`;
-      } else {
-        document.getElementById('previewPhone').textContent = 'Phone not set';
+    document.addEventListener('click', function(e) {
+      if (!cityWrap.contains(e.target)) {
+        cityDd.classList.remove('active');
+        cityWrap.classList.remove('is-open');
       }
+    });
 
-      // Update LinkedIn
-      const linkedinRow = document.getElementById('previewLinkedinRow');
-      const iconMissingLinkedin = document.getElementById('iconMissingLinkedin');
-      if (linkedin) {
-        linkedinRow.style.display = 'flex';
-        document.getElementById('previewLinkedin').textContent = linkedin.replace(/^https?:\/\/(www\.)?/, '');
-        iconMissingLinkedin.className = 'bi bi-check-circle-fill missing-check-icon';
-      } else {
-        linkedinRow.style.display = 'none';
-        iconMissingLinkedin.className = 'bi bi-circle text-muted';
+    window.selectPreviewCity = function(val) {
+      cityInput.value = val;
+      cityClear.style.display = 'inline-flex';
+      cityDd.classList.remove('active');
+      cityWrap.classList.remove('is-open');
+    };
+
+    // Designation capitalize
+    var desInput = document.getElementById('preview_designation');
+    var desClear = document.getElementById('preview_des_clear');
+    desInput.addEventListener('blur', function() {
+      var val = this.value;
+      if (val) {
+        this.value = val.replace(/\b\w/g, function(l) { return l.toUpperCase(); });
       }
+    });
+    desClear.addEventListener('click', function() {
+      desInput.value = '';
+      desClear.style.display = 'none';
+      desInput.focus();
+    });
+    desInput.addEventListener('input', function() {
+      desClear.style.display = this.value.length ? 'inline-flex' : 'none';
+    });
 
-      // Update WhatsApp
-      const whatsappRow = document.getElementById('previewWhatsappRow');
-      const iconMissingWhatsapp = document.getElementById('iconMissingWhatsapp');
-      if (whatsapp) {
-        whatsappRow.style.display = 'flex';
-        document.getElementById('previewWhatsapp').textContent = `+${countryCode} ${whatsapp}`;
-        iconMissingWhatsapp.className = 'bi bi-check-circle-fill missing-check-icon';
-      } else {
-        whatsappRow.style.display = 'none';
-        iconMissingWhatsapp.className = 'bi bi-circle text-muted';
-      }
+    // LinkedIn Clear
+    var liInput = document.getElementById('preview_linkedin');
+    var liClear = document.getElementById('preview_li_clear');
+    liClear.addEventListener('click', function() {
+      liInput.value = '';
+      liClear.style.display = 'none';
+      liInput.focus();
+    });
+    liInput.addEventListener('input', function() {
+      liClear.style.display = this.value.length ? 'inline-flex' : 'none';
+    });
 
-      recalcCompletion();
-    }
+    // Mock Photo Upload
+    var fileInput = document.getElementById('mock_file_input');
+    var surface = document.getElementById('preview_avatar_surface');
+    var ph = document.getElementById('preview_avatar_ph');
+    var banner = document.getElementById('preview_photo_banner');
+    var bannerText = document.getElementById('preview_banner_text');
+    var removeBtn = document.getElementById('preview_remove_btn');
 
-    function recalcCompletion() {
-      let score = 50; // base (name, email)
-      if (document.getElementById('inputDesignation').value.trim()) score += 10;
-      if (document.getElementById('inputMobile').value.trim()) score += 10;
-      if (document.getElementById('locationPill').style.display !== 'none') score += 10;
-      if (hasCustomPhoto) score += 10;
-      if (document.getElementById('inputLinkedin').value.trim()) score += 5;
-      if (document.getElementById('inputWhatsapp').value.trim()) score += 5;
-
-      const pct = Math.min(score, 100);
-      document.getElementById('profileCompletionValue').textContent = `${pct}%`;
-      document.getElementById('profileProgressBar').style.width = `${pct}%`;
-    }
-
-    function focusField(id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.focus();
-        const subcard = el.closest('.god-subcard');
-        if (subcard) {
-          subcard.style.borderColor = 'var(--brand-blue)';
-          subcard.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
-          setTimeout(() => {
-            subcard.style.borderColor = '';
-            subcard.style.boxShadow = '';
-          }, 1500);
-        }
-      }
-    }
-
-    function handleFileSelect(input) {
-      if (input.files && input.files[0]) {
-        const file = input.files[0];
+    fileInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        var file = this.files[0];
         if (file.size > 2097152) {
-          alert('File size exceeds 2 MB limit! Please select a smaller image.');
-          input.value = '';
+          alert('Photo size exceeds 2 MB limit!');
+          this.value = '';
           return;
         }
-        const reader = new FileReader();
+        var reader = new FileReader();
         reader.onload = function(e) {
-          const imgUrl = e.target.result;
-          document.getElementById('mainAvatarDisplay').innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-          document.getElementById('previewAvatarCircle').innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-          hasCustomPhoto = true;
-          document.getElementById('iconMissingPhoto').className = 'bi bi-check-circle-fill missing-check-icon';
-          recalcCompletion();
+          surface.style.backgroundImage = "url('" + e.target.result + "')";
+          ph.style.display = 'none';
+          banner.className = 'god-logo-status-banner is-detected';
+          banner.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Profile photo uploaded</span>';
+          removeBtn.style.display = 'inline-flex';
         };
         reader.readAsDataURL(file);
       }
-    }
+    });
 
-    function removePhoto() {
-      document.getElementById('avatarUploadInput').value = '';
-      document.getElementById('mainAvatarDisplay').innerHTML = 'V';
-      document.getElementById('previewAvatarCircle').innerHTML = 'V';
-      hasCustomPhoto = false;
-      document.getElementById('iconMissingPhoto').className = 'bi bi-circle text-muted';
-      recalcCompletion();
-    }
-
-    function clearLocationTag() {
-      document.getElementById('locationPill').style.display = 'none';
-      document.getElementById('previewLocation').innerHTML = '<i class="bi bi-geo-alt"></i> Location not set';
-      document.getElementById('inputLocationSearch').focus();
-      recalcCompletion();
-    }
-
-    function showLocationSuggestions() {
-      // In production, Tagify whitelist auto-populates
-    }
-
-    function handleLocationInput(input) {
-      if (input.value.trim().length > 2) {
-        // user typing
-      }
-    }
-
-    function testValidation() {
-      const designation = document.getElementById('inputDesignation');
-      const mobile = document.getElementById('inputMobile');
-      
-      let hasErr = false;
-      if (!designation.value.trim()) {
-        document.getElementById('subcardDesignation').classList.add('has-error');
-        hasErr = true;
-      } else {
-        document.getElementById('subcardDesignation').classList.remove('has-error');
-      }
-
-      if (!mobile.value.trim() || mobile.value.trim().length < 6) {
-        document.getElementById('subcardPhone').classList.add('has-error');
-        hasErr = true;
-      } else {
-        document.getElementById('subcardPhone').classList.remove('has-error');
-      }
-
-      if (hasErr) {
-        alert('Validation errors detected on mandatory fields! See red highlighting.');
-      } else {
-        alert('All mandatory fields are valid!');
-      }
-    }
-
-    function saveDraftNotification() {
-      alert('Draft state saved locally in browser memory (0% server load).');
-    }
-
-    function handleSaveAction() {
-      const btn = document.getElementById('btnSaveChanges');
-      btn.classList.add('is-loading');
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" style="width: 14px; height: 14px; border: 2px solid #fff; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spin 0.75s linear infinite;"></span> Saving...';
-
-      setTimeout(() => {
-        btn.classList.remove('is-loading');
-        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Saved Successfully!';
-        btn.style.background = 'var(--success)';
-        document.getElementById('footerStatusTitle').textContent = 'All changes saved to JERO ATS';
-        document.getElementById('footerStatusSub').textContent = 'Redis cache invalidated • Elasticsearch index synchronized';
-        setTimeout(() => {
-          btn.innerHTML = '<i class="bi bi-check2"></i> Save Changes';
-          btn.style.background = '';
-        }, 3000);
-      }, 1200);
-    }
+    window.removePreviewPhoto = function() {
+      fileInput.value = '';
+      surface.style.backgroundImage = 'none';
+      ph.style.display = 'flex';
+      banner.className = 'god-logo-status-banner is-empty';
+      banner.innerHTML = '<i class="bi bi-info-circle"></i> <span>Photo marked for removal</span>';
+      removeBtn.style.display = 'none';
+    };
   </script>
-
-  <style>
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  </style>
-
 </body>
 </html>
