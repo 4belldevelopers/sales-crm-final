@@ -145,18 +145,103 @@ class AccountRepository
                     $kpiTotalJobs = DB::table('jobs')->where('company_id', $companyId)->count();
                 }
 
-                if ($clientId > 0) {
-                    $kpiPerf = GeneralMethod::InternalClientCandidatesCountList($clientId, $companyId);
-                    $kpiCandidatesSubmitted = (int) ($kpiPerf->all_candidates ?? 0);
-                    $kpiInterviews = (int) ($kpiPerf->all_interview ?? 0);
-                    $kpiOffers = (int) ($kpiPerf->offers ?? 0);
-                    $kpiJoined = (int) ($kpiPerf->Joined ?? 0);
-                } else {
-                    $kpiCandidatesSubmitted = DB::table('job_applications')->where('company_id', $companyId)->count();
+                // Authoritative Candidates, Offers & Joinings from ELASTIC_CANDIDATES
+                if ($elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                    $candParams = [
+                        'index' => ELASTIC_CANDIDATES,
+                        'request_cache' => true,
+                        'body' => [
+                            'size' => 0,
+                            'query' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['company_id' => (int) $companyId]],
+                                        ['term' => ['ClientComID' => (int) $companyId]],
+                                        ['term' => ['client_comapny_id' => (int) $companyId]],
+                                        ['term' => ['agency_company_id' => (int) $companyId]],
+                                        ['term' => ['from_company_id' => (int) $companyId]],
+                                        ['term' => ['to_company_id' => (int) $companyId]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                            'aggs' => [
+                                'offers' => [
+                                    'filter' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_master_status_id' => 5]],
+                                                ['term' => ['master_status_id' => 5]],
+                                                ['term' => ['of_offer_release' => 1]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                                'joined' => [
+                                    'filter' => [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_master_status_id' => 6]],
+                                                ['term' => ['master_status_id' => 6]],
+                                                ['term' => ['of_joined' => 1]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ];
+                    $candRes = $elasticService->getClient()->search($candParams);
+                    $kpiCandidatesSubmitted = (int) ($candRes['hits']['total']['value'] ?? 0);
+                    $kpiOffers = (int) ($candRes['aggregations']['offers']['doc_count'] ?? 0);
+                    $kpiJoined = (int) ($candRes['aggregations']['joined']['doc_count'] ?? 0);
+                }
+
+                // Authoritative Interviews from ELASTIC_INERTVIEW_TRACKER
+                if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
+                    $intParams = [
+                        'index' => ELASTIC_INERTVIEW_TRACKER,
+                        'request_cache' => true,
+                        'body' => [
+                            'size' => 0,
+                            'query' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['company_id' => (int) $companyId]],
+                                        ['term' => ['job_company_id' => (int) $companyId]],
+                                        ['term' => ['ClientComID' => (int) $companyId]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                        ],
+                    ];
+                    $intRes = $elasticService->getClient()->search($intParams);
+                    $kpiInterviews = (int) ($intRes['hits']['total']['value'] ?? 0);
                 }
             } catch (\Throwable $e) {
-                $kpiTotalJobs = DB::table('jobs')->where('company_id', $companyId)->count();
-                $kpiCandidatesSubmitted = DB::table('job_applications')->where('company_id', $companyId)->count();
+                // Non-blocking fallback to MySQL
+            }
+
+            // Database Reconciliation Safety Net: Ensure real DB counts are never obscured
+            $dbCandCount = DB::table('job_applications')->where('company_id', $companyId)->count();
+            $dbIntCount = DB::table('interview_schedules')->where('company_id', $companyId)->count();
+            $dbOfferCount = DB::table('offer_job_applications')->where('company_id', $companyId)->count();
+            $dbJoinCount = DB::table('offer_job_applications')->where('company_id', $companyId)->where('joined', 1)->count();
+
+            if ($kpiCandidatesSubmitted < $dbCandCount) {
+                $kpiCandidatesSubmitted = $dbCandCount;
+            }
+            if ($kpiInterviews < $dbIntCount) {
+                $kpiInterviews = $dbIntCount;
+            }
+            if ($kpiOffers < $dbOfferCount) {
+                $kpiOffers = $dbOfferCount;
+            }
+            if ($kpiJoined < $dbJoinCount) {
+                $kpiJoined = $dbJoinCount;
             }
 
             // 5c. Recent Company Activities (latest 5 active/updated jobs for company)

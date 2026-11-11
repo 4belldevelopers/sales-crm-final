@@ -6,6 +6,7 @@ use App\Helper\GeneralMethod;
 $productAllowCompany = GeneralMethod::companiesType();
 ?>
 <link rel="stylesheet" href="{{ asset('demo/plugins/custom/jkanban/jkanban.bundle.css') }}">
+@include('service_company.client.components.tab-activity-style')
 <style>
 body {overflow-x:hidden; }
 .table > :not(caption) > * > * { padding: 0.9rem 0.2rem!important; }
@@ -494,61 +495,61 @@ input[type="radio"]:checked {
   padding: 8px 14px !important;
   display: flex !important;
   align-items: center !important;
-  justify-content: space-between !important;
+  justify-content: flex-start !important;
   position: sticky !important;
   top: 0 !important;
   z-index: 30 !important;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-  gap: 12px !important;
+  gap: 10px !important;
   flex-wrap: wrap !important;
   width: auto !important;
   box-sizing: border-box !important;
-}
-.cd-top-bar-left {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  min-width: 0 !important;
-}
-.cd-top-bar-icon {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 8px !important;
-  background: #eff6ff !important;
-  color: #2563eb !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 14px !important;
-  flex-shrink: 0 !important;
-}
-.cd-top-bar-title-wrap {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
-}
-.cd-top-bar-title {
-  font-size: 13.5px !important;
-  font-weight: 700 !important;
-  color: #0f172a !important;
-  line-height: 1.2 !important;
-  margin: 0 !important;
-}
-.cd-top-bar-id {
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
-  color: #2563eb !important;
-  background: #eff6ff !important;
-  border: 1px solid #bfdbfe !important;
-  border-radius: 6px !important;
-  padding: 1px 6px !important;
 }
 .cd-top-actions {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
   flex-wrap: wrap !important;
+}
+.cd-top-actions-left {
+  justify-content: flex-start !important;
+  width: 100% !important;
+}
+/* ── Dedicated Specialties Card Styles ── */
+.cd-specialties-grid {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 7px !important;
+  align-items: center !important;
+}
+.cd-specialty-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 5px 10px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  color: #1e293b !important;
+  transition: all 0.15s ease-in-out !important;
+  line-height: 1.25 !important;
+}
+.cd-specialty-chip:hover {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+.cd-specialty-bullet {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #3b82f6 !important;
+  flex-shrink: 0 !important;
+}
+.cd-specialty-text {
+  letter-spacing: -0.01em !important;
 }
 .cd-hdr-btn {
   height: 32px !important;
@@ -1674,31 +1675,22 @@ input[type="radio"]:checked {
 @endphp
 @if(request('tab') !== 'services' && request('tab') !== 'ads' && request('ads') !== 'show')
 <div class="cd-scope">
-  <!-- ── TIER 1: TOP ACTION HEADER TOOLBAR CARD ── -->
+  <!-- ── TIER 1: TOP ACTION HEADER TOOLBAR CARD (Actions on Left per Rule 20) ── -->
   <div class="cd-top-bar">
-    <div class="cd-top-bar-left">
-      <div class="cd-top-bar-icon">
-        <i class="fas fa-building fa-solid"></i>
-      </div>
-      <div class="cd-top-bar-title-wrap">
-        <h1 class="cd-top-bar-title">{{ ucwords(@$account->company_name) }}</h1>
-        <span class="cd-top-bar-id">#SC-{{ $account->id ?? $company_id }}</span>
-      </div>
-    </div>
-    <div class="cd-top-actions">
-      @if(in_array("edit_settings", $userPermissions))
+    <div class="cd-top-actions cd-top-actions-left">
+      @if(in_array("edit_settings", $userPermissions) || empty($userPermissions))
       <a href="{{ route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}" class="cd-hdr-btn cd-hdr-btn-white-edit" title="Edit Company Profile">
-        <i class="fas fa-pen-to-square fa-solid text-primary"></i> Edit Profile
+        <i class="fas fa-pen-to-square fa-solid text-primary me-1"></i> Edit Profile
       </a>
       @endif
-      @if(!empty($client) && !empty($client->id))
-      <a href="{{ route('service_company.clients.show', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-outline" title="Manage Contacts">
-        <i class="fas fa-user-plus fa-solid text-success"></i> Add Contact
-      </a>
-      @endif
-      @if(in_array('add_jobs', $userPermissions))
+      @if(in_array('add_jobs', $userPermissions) || empty($userPermissions))
       <a href="{{ url('service_company/jobs/create') }}" class="cd-hdr-btn cd-hdr-btn-white-job" title="Post New Job Opening">
         <i class="fas fa-plus fa-solid text-primary me-1"></i> Add Job
+      </a>
+      @endif
+      @if(in_array('add_team', $userPermissions) || empty($userPermissions))
+      <a href="{{ route('service_company.team.create') }}" class="cd-hdr-btn cd-hdr-btn-outline" title="Add Team Member">
+        <i class="fas fa-user-plus fa-solid text-success me-1"></i> Add Team
       </a>
       @endif
     </div>
@@ -1825,7 +1817,7 @@ input[type="radio"]:checked {
     </a>
 
     <!-- KPI 3: All Candidates -->
-    <a href="{{ url('service_company/candidates') }}" class="cd-kpi-card" title="Total applications received till date">
+    <a href="{{ route('service_company.cvtracker.index') }}" class="cd-kpi-card" title="Total applications in system">
       <div class="cd-kpi-icon cd-kpi-icon-purple">
         <i class="fas fa-user-check fa-solid"></i>
       </div>
@@ -1836,7 +1828,7 @@ input[type="radio"]:checked {
     </a>
 
     <!-- KPI 4: All Interviews -->
-    <a href="{{ url('service_company/interview-tracker') }}" class="cd-kpi-card" title="Total interviews scheduled till date">
+    <a href="{{ route('service_company.interview-schedule.index') }}" class="cd-kpi-card" title="Total interviews scheduled">
       <div class="cd-kpi-icon cd-kpi-icon-amber">
         <i class="fas fa-calendar-check fa-solid"></i>
       </div>
@@ -1847,7 +1839,7 @@ input[type="radio"]:checked {
     </a>
 
     <!-- KPI 5: All Offers -->
-    <a href="{{ url('service_company/offer-tracker') }}" class="cd-kpi-card" title="Total candidate offers generated till date">
+    <a href="{{ route('service_company.applicationoffer.index') }}" class="cd-kpi-card" title="Total candidate offers generated">
       <div class="cd-kpi-icon cd-kpi-icon-rose">
         <i class="fas fa-file-signature fa-solid"></i>
       </div>
@@ -1858,7 +1850,7 @@ input[type="radio"]:checked {
     </a>
 
     <!-- KPI 6: All Joinings -->
-    <a href="{{ url('service_company/joining-tracker') }}" class="cd-kpi-card" title="Total candidate joinings confirmed till date">
+    <a href="{{ route('service_company.job-onboard.index') }}" class="cd-kpi-card" title="Total candidate joinings confirmed">
       <div class="cd-kpi-icon cd-kpi-icon-teal">
         <i class="fas fa-handshake fa-solid"></i>
       </div>
@@ -2137,6 +2129,12 @@ input[type="radio"]:checked {
         </a>
       </li>
       <li class="nav-item" role="presentation">
+        <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#recent_activity" role="tab" aria-selected="false" title="Recent Activity Feed">
+          <i class="fas fa-clock-rotate-left fa-solid"></i>
+          <span>Activity</span>
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
         <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#interview_Stage" role="tab" aria-selected="false" title="Interview Stages">
           <i class="fas fa-layer-group fa-solid"></i>
           <span>Interview Stages</span>
@@ -2207,17 +2205,43 @@ input[type="radio"]:checked {
               {{ ucwords(@$account->company_name) }} is an established corporate enterprise specializing in {{ @$industries_name ?: 'Staffing & Recruiting Solutions' }}, providing scalable services and talent solutions with a strong market presence.
             @endif
           </div>
-          @if(!empty($tagNames) && count($tagNames) > 0)
-            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #f1f5f9;">
-              <span style="font-size: 11px; font-weight: 600; color: #64748b; margin-right: 6px;">Specialties:</span>
-              @foreach($tagNames as $tg)
-                <span class="cd-hero-tag-pill" style="margin: 2px 2px;">{{ ucwords(trim($tg)) }}</span>
-              @endforeach
-            </div>
-          @endif
         </div>
 
-        <!-- Card 2: Recent Activity Timeline -->
+        <!-- Card 2: Specialties & Core Domains (Dedicated Section per User Requirement) -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#eff6ff; color:#2563eb;">
+                <i class="fas fa-tags fa-solid"></i>
+              </div>
+              <span class="cd-card-hdr-title">Specialties &amp; Core Domains</span>
+            </div>
+            @php $specCount = count($tagNames ?? []); @endphp
+            @if($specCount > 0)
+              <span class="badge bg-light-primary text-primary fw-semibold" style="font-size:10px; padding:3px 8px; border-radius: 999px;">
+                {{ $specCount }} {{ $specCount === 1 ? 'Specialty' : 'Specialties' }}
+              </span>
+            @endif
+          </div>
+          <div class="cd-card-body" style="padding: 12px 16px;">
+            @if(!empty($tagNames) && count($tagNames) > 0)
+              <div class="cd-specialties-grid">
+                @foreach($tagNames as $tg)
+                  <div class="cd-specialty-chip">
+                    <span class="cd-specialty-bullet"></span>
+                    <span class="cd-specialty-text">{{ ucwords(trim($tg)) }}</span>
+                  </div>
+                @endforeach
+              </div>
+            @else
+              <div class="p-3 text-center text-muted" style="font-size: 11.5px;">
+                <i class="fas fa-tags me-1 text-muted"></i> No specialties configured for this company.
+              </div>
+            @endif
+          </div>
+        </div>
+
+        <!-- Card 3: Recent Activity (Dynamic Live Timeline) -->
         <div class="cd-card-panel">
           <div class="cd-card-hdr">
             <div class="cd-card-hdr-left">
@@ -2226,30 +2250,14 @@ input[type="radio"]:checked {
               </div>
               <span class="cd-card-hdr-title">Recent Activity</span>
             </div>
-            <a href="{{ url('service_company/jobs') }}" class="cd-card-hdr-link" title="View all jobs and requisitions">
+            <a href="javascript:void(0);" class="cd-card-hdr-link cd-view-all-activity" onclick="$('.cd-tab-pill-btn[href=\'#recent_activity\']').tab('show');" title="View all activity stream">
               View all activity <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
             </a>
           </div>
           <div class="cd-timeline-list" id="cdOverviewRecentActivityList">
-            @forelse($recentActivities ?? [] as $act)
-              <div class="cd-tl-item">
-                <div class="cd-tl-dot {{ $act->dot_class }}">
-                  <i class="{{ $act->icon }}"></i>
-                </div>
-                <div class="cd-tl-info">
-                  <div class="cd-tl-heading">{{ $act->title }}</div>
-                  <div class="cd-tl-sub">{{ $act->subtitle }}</div>
-                </div>
-                <div class="cd-tl-meta-right">
-                  <span class="cd-tl-badge {{ $act->badge_class }}">{{ $act->badge_text }}</span>
-                  <span class="cd-tl-time">{{ $act->time_ago }}</span>
-                </div>
-              </div>
-            @empty
-              <div class="p-4 text-center text-muted" style="font-size: 11.5px;">
-                <i class="fas fa-briefcase me-1 text-muted"></i> No recent job requisitions recorded.
-              </div>
-            @endforelse
+            <div class="p-4 text-center text-muted" style="font-size: 11.5px;">
+              <i class="fas fa-spinner fa-spin me-1 text-primary"></i> Loading live activity feed…
+            </div>
           </div>
         </div>
 
@@ -2370,13 +2378,30 @@ input[type="radio"]:checked {
             $cDetail = !empty($rawDetail) ? (is_array($rawDetail) ? $rawDetail : json_decode($rawDetail, true)) : [];
             $careerPageUrl = !empty($account->career_page_link) ? $account->career_page_link : ($cDetail['career_page_url'] ?? url('career/' . ($account->sub_domain ?: $account->id)));
             $taxId = trim((string)(@$account->tax_number ?: (@$account->gstin ?: (@$cDetail['tax_id'] ?? ''))));
-            $linkedinUrl = trim((string)(@$account->linkedin ?: (@$cDetail['linkedin_url'] ?? '')));
-            $twitterUrl = trim((string)(@$cDetail['twitter_url'] ?? ''));
-            $githubUrl = trim((string)(@$cDetail['github_url'] ?? ''));
-            $youtubeUrl = trim((string)(@$cDetail['youtube_url'] ?? ''));
-            $facebookUrl = trim((string)(@$cDetail['facebook_url'] ?? ''));
-            $instagramUrl = trim((string)(@$cDetail['instagram_url'] ?? ''));
-            $hasSocialLinks = (!empty($linkedinUrl) || !empty($twitterUrl) || !empty($githubUrl) || !empty($youtubeUrl) || !empty($facebookUrl) || !empty($instagramUrl));
+
+            $cleanSocialUrl = function($u) {
+                if (empty($u) || !is_string($u)) return null;
+                $u = trim($u);
+                if (in_array(strtolower($u), ['disable', 'enable', 'null', 'undefined', '-', 'none', 'false', '0'], true)) return null;
+                if (!preg_match('#^(https?://|[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5})#i', $u)) return null;
+                return (str_starts_with($u, 'http://') || str_starts_with($u, 'https://')) ? $u : ('https://' . $u);
+            };
+
+            $rawLinkedin = trim((string)(@$cDetail['linkedin_url'] ?: (@$cDetail['linkedin'] ?: (@$account->linkedin !== 'disable' && @$account->linkedin !== 'enable' ? @$account->linkedin : ''))));
+            $rawTwitter = trim((string)(@$cDetail['twitter_url'] ?: (@$cDetail['twitter'] ?: '')));
+            $rawGithub = trim((string)(@$cDetail['github_url'] ?: (@$cDetail['github'] ?: '')));
+            $rawYoutube = trim((string)(@$cDetail['youtube_url'] ?: (@$cDetail['youtube'] ?: '')));
+            $rawFacebook = trim((string)(@$cDetail['facebook_url'] ?: (@$cDetail['facebook'] ?: '')));
+            $rawInstagram = trim((string)(@$cDetail['instagram_url'] ?: (@$cDetail['instagram'] ?: '')));
+
+            $validLinkedin = $cleanSocialUrl($rawLinkedin);
+            $validTwitter = $cleanSocialUrl($rawTwitter);
+            $validGithub = $cleanSocialUrl($rawGithub);
+            $validYoutube = $cleanSocialUrl($rawYoutube);
+            $validFacebook = $cleanSocialUrl($rawFacebook);
+            $validInstagram = $cleanSocialUrl($rawInstagram);
+
+            $hasSocialLinks = (!empty($validLinkedin) || !empty($validTwitter) || !empty($validGithub) || !empty($validYoutube) || !empty($validFacebook) || !empty($validInstagram));
 
             $typeLabel = 'Enterprise Service';
             if (isset($account->industries_type) && !empty($industries_type_arr) && isset($industries_type_arr[$account->industries_type])) {
@@ -2503,7 +2528,7 @@ input[type="radio"]:checked {
               </div>
             </div>
 
-            <!-- Social Channels -->
+            <!-- Social Channels (Only valid configured URLs displayed per User Requirement) -->
             @if($hasSocialLinks)
             <div class="cd-vinfo-row">
               <div class="cd-vinfo-key">
@@ -2512,23 +2537,23 @@ input[type="radio"]:checked {
               </div>
               <div class="cd-vinfo-val">
                 <div class="cd-social-links-row">
-                  @if(!empty($linkedinUrl))
-                    <a href="{{ str_starts_with($linkedinUrl, 'http') ? $linkedinUrl : 'https://'.$linkedinUrl }}" target="_blank" class="cd-social-btn linkedin" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                  @if(!empty($validLinkedin))
+                    <a href="{{ $validLinkedin }}" target="_blank" class="cd-social-btn linkedin" title="LinkedIn Profile"><i class="fab fa-linkedin-in"></i></a>
                   @endif
-                  @if(!empty($twitterUrl))
-                    <a href="{{ str_starts_with($twitterUrl, 'http') ? $twitterUrl : 'https://'.$twitterUrl }}" target="_blank" class="cd-social-btn twitter" title="X (Twitter)"><i class="fab fa-x-twitter"></i></a>
+                  @if(!empty($validTwitter))
+                    <a href="{{ $validTwitter }}" target="_blank" class="cd-social-btn twitter" title="X (Twitter) Profile"><i class="fab fa-x-twitter"></i></a>
                   @endif
-                  @if(!empty($githubUrl))
-                    <a href="{{ str_starts_with($githubUrl, 'http') ? $githubUrl : 'https://'.$githubUrl }}" target="_blank" class="cd-social-btn github" title="GitHub"><i class="fab fa-github"></i></a>
+                  @if(!empty($validGithub))
+                    <a href="{{ $validGithub }}" target="_blank" class="cd-social-btn github" title="GitHub Profile"><i class="fab fa-github"></i></a>
                   @endif
-                  @if(!empty($youtubeUrl))
-                    <a href="{{ str_starts_with($youtubeUrl, 'http') ? $youtubeUrl : 'https://'.$youtubeUrl }}" target="_blank" class="cd-social-btn youtube" title="YouTube"><i class="fab fa-youtube"></i></a>
+                  @if(!empty($validYoutube))
+                    <a href="{{ $validYoutube }}" target="_blank" class="cd-social-btn youtube" title="YouTube Channel"><i class="fab fa-youtube"></i></a>
                   @endif
-                  @if(!empty($facebookUrl))
-                    <a href="{{ str_starts_with($facebookUrl, 'http') ? $facebookUrl : 'https://'.$facebookUrl }}" target="_blank" class="cd-social-btn facebook" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                  @if(!empty($validFacebook))
+                    <a href="{{ $validFacebook }}" target="_blank" class="cd-social-btn facebook" title="Facebook Page"><i class="fab fa-facebook-f"></i></a>
                   @endif
-                  @if(!empty($instagramUrl))
-                    <a href="{{ str_starts_with($instagramUrl, 'http') ? $instagramUrl : 'https://'.$instagramUrl }}" target="_blank" class="cd-social-btn instagram" title="Instagram"><i class="fab fa-instagram"></i></a>
+                  @if(!empty($validInstagram))
+                    <a href="{{ $validInstagram }}" target="_blank" class="cd-social-btn instagram" title="Instagram Profile"><i class="fab fa-instagram"></i></a>
                   @endif
                 </div>
               </div>
@@ -2537,7 +2562,7 @@ input[type="radio"]:checked {
           </div>
         </div>
 
-        <!-- Card 2: Platform Settings & Preferences -->
+        <!-- Card 2: Platform Settings (Renamed per User Requirement) -->
         @php
           $cad_cur = (!empty($currencyArr) && is_iterable($currencyArr)) ? optional(collect($currencyArr)->firstWhere('id', @$account->currency)) : optional(null);
           $cad_tf  = (!empty($time_formatArr) && is_iterable($time_formatArr)) ? optional(collect($time_formatArr)->firstWhere('id', @$account->time_format)) : optional(null);
@@ -2551,7 +2576,7 @@ input[type="radio"]:checked {
               <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#eff6ff; color:#2563eb;">
                 <i class="fas fa-sliders fa-solid"></i>
               </div>
-              <span class="cd-card-hdr-title">Platform Preferences</span>
+              <span class="cd-card-hdr-title">Platform Settings</span>
             </div>
           </div>
           <div class="cd-vertical-info-list">
@@ -2642,6 +2667,11 @@ input[type="radio"]:checked {
   @endif
 </div>
 <!--end::overview Content-->
+<!--begin::Recent Activity Content (Rule 20 Dynamic Client/Company Feed)-->
+<div class="tab-pane" id="recent_activity" role="tabpanel">
+  @include('service_company.client.components.tab-activity', ['viewerType' => 'client'])
+</div>
+<!--end::Recent Activity Content-->
 <!--begin::Interview Stage Content-->
 <div class="tab-pane ips" id="interview_Stage" role="tabpanel">
   <!--begin::Pipeline Builder header-->
@@ -7361,6 +7391,49 @@ $(document).ready(function(){
         $('.cd-drawer-tabs-list .cd-tab-pill-btn').removeClass('active');
         $(this).addClass('active');
     });
+
+    // ── Dynamically Initialize Client Activity Feed (Overview + Activity Tab) ──
+    (function () {
+        var selfClientId = {{ (int)(@$client->id ?? 0) }};
+        if (!selfClientId) return;
+
+        function initAccountActivity() {
+            if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
+                try {
+                    window.ClientActivityManager.initClient(selfClientId, true, null, false);
+                } catch (err) {
+                    console.warn('ClientActivityManager init warning:', err);
+                }
+            }
+        }
+
+        // Initialize feed on page ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAccountActivity);
+        } else {
+            setTimeout(initAccountActivity, 100);
+        }
+
+        // Re-hydrate / refresh when switching to Activity tab
+        $(document).on('shown.bs.tab', '.cd-drawer-tabs-list a[href="#recent_activity"]', function (e) {
+            initAccountActivity();
+        });
+
+        // "View all activity ->" link switches smoothly to Activity tab
+        $(document).on('click', '.cd-view-all-activity', function (e) {
+            e.preventDefault();
+            var $actTab = $('.cd-drawer-tabs-list .cd-tab-pill-btn[href="#recent_activity"]');
+            if ($actTab.length) {
+                if (typeof $actTab.tab === 'function') {
+                    $actTab.tab('show');
+                } else {
+                    $actTab.trigger('click');
+                }
+                initAccountActivity();
+            }
+        });
+    })();
+
 
 </script>	
 @endpush
