@@ -63,7 +63,7 @@ jobs:
             # clear OPcache and actually load the freshly deployed code.
             if systemctl is-active --quiet octane 2>/dev/null; then
               echo ">> Restarting supervised Octane systemd service"
-              sudo systemctl restart octane || systemctl restart octane
+              systemctl restart --no-block octane 2>/dev/null || true
             else
               echo ">> Restarting detached Octane background process"
               php artisan octane:stop || true
