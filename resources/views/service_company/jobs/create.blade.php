@@ -4422,7 +4422,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 $isSel = true;
             }
         } else {
-            if (@$job->min_salary_currency == $key) {
+            if (@$job->min_salary_currency == $key || strtoupper((string)@$job->min_salary_currency) === strtoupper((string)$val)) {
                 $isSel = true;
             }
         }
@@ -4572,7 +4572,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                     $sel = 'selected="selected"';
                 }
             } else {
-                if (@$job->min_salary_currency == $key) {
+                if (@$job->min_salary_currency == $key || strtoupper((string)@$job->min_salary_currency) === strtoupper((string)$val)) {
                     $sel = 'selected="selected"';
                 }
             }
@@ -4592,7 +4592,7 @@ $currency_code = GeneralMethod::defaultCurrency();
                 $sel = 'selected="selected"';
             }
         } else {
-            if (@$job->max_salary_currency == $key) {
+            if (@$job->max_salary_currency == $key || strtoupper((string)@$job->max_salary_currency) === strtoupper((string)$val)) {
                 $sel = 'selected="selected"';
             }
         }
@@ -4695,7 +4695,12 @@ $currency_code = GeneralMethod::defaultCurrency();
                                 </div>
                                 <div class="ij-curr-pop-list" id="ijCurrPopList">
                                     <?php
+                                    $renderedCodes = [];
                                     foreach ($currency as $key => $val) {
+                                        if (isset($renderedCodes[$val])) {
+                                            continue;
+                                        }
+                                        $renderedCodes[$val] = true;
                                         $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
                                         $symbol = $cMeta['symbol'] ?? '';
                                         $name = $cMeta['name'] ?? $val;

@@ -4694,29 +4694,38 @@ END:VCALENDAR";
                 $code = strtoupper(trim($curr['currency_code']));
                 $sym = $curr['currency_symbol'] ?? '';
                 $html = $iconMap[$code] ?? ('<span class="fw-bold">'.e($sym ?: $code).' </span>');
-                $array[$curr['getKey']] = $html;
+                $key = (int) $curr['getKey'];
+                $array[$key] = $html;
+                $array[(string) $key] = $html;
                 $array[$code] = $html;
             }
 
-            // Universal mapping of all numeric currency keys from CurrencyService (e.g. 132 => INR, 1002 => USD)
+            // Universal mapping of all numeric currency keys from CurrencyService (e.g. 1 => EUR, 4 => USD, 1001 => ALL)
             if (! empty($data['key_to_code'])) {
                 foreach ($data['key_to_code'] as $key => $code) {
                     $codeUpper = strtoupper(trim($code));
-                    $html = $array[$codeUpper] ?? ($iconMap[$codeUpper] ?? ('<span class="fw-bold">'.e($codeUpper).' </span>'));
-                    $array[(int) $key] = $html;
-                    if ((int) $key < 1000) {
-                        $array[(int) $key + 1000] = $html;
-                    }
+                    $meta = self::currencyEnterpriseMeta($codeUpper);
+                    $sym = $meta['symbol'] ?? ($data['symbols'][$codeUpper] ?? $codeUpper);
+                    $html = $iconMap[$codeUpper] ?? ($array[$codeUpper] ?? ('<span class="fw-bold">'.e($sym ?: $codeUpper).' </span>'));
+                    $intKey = (int) $key;
+                    $array[$intKey] = $html;
+                    $array[(string) $key] = $html;
+                    $array[$codeUpper] = $html;
                 }
             }
 
-            // Master currencies mapping (items have 'id', 'code', 'symbol')
+            // Safe fallback for legacy master_currencies ONLY for IDs that do not collide with ATS currency keys
             if (! empty($data['master_currencies'])) {
                 foreach ($data['master_currencies'] as $curr) {
                     if (is_array($curr) && ! empty($curr['code']) && isset($curr['id'])) {
-                        $codeUpper = strtoupper(trim((string) $curr['code']));
-                        $html = $array[$codeUpper] ?? ($iconMap[$codeUpper] ?? ('<span class="fw-bold">'.e((string) ($curr['symbol'] ?? $codeUpper)).' </span>'));
-                        $array[(int) $curr['id']] = $html;
+                        $mId = (int) $curr['id'];
+                        // CRITICAL GUARD: NEVER overwrite authoritative ATS currency keys (e.g. 1=EUR, 2=JPY, 3=GBP, 4=USD, 5=AED, etc.)
+                        if (! isset($array[$mId])) {
+                            $codeUpper = strtoupper(trim((string) $curr['code']));
+                            $html = $array[$codeUpper] ?? ($iconMap[$codeUpper] ?? ('<span class="fw-bold">'.e((string) ($curr['symbol'] ?? $codeUpper)).' </span>'));
+                            $array[$mId] = $html;
+                            $array[(string) $mId] = $html;
+                        }
                     }
                 }
             }
@@ -4724,6 +4733,7 @@ END:VCALENDAR";
             // Default safe key 0 fallback
             if (! isset($array[0])) {
                 $array[0] = $iconMap['INR'];
+                $array['0'] = $iconMap['INR'];
             }
 
             return $array;
@@ -4732,7 +4742,7 @@ END:VCALENDAR";
 
     public static function currencySymboleforexcell()
     {
-        return array_values(\App\Services\CurrencyService::getCurrencies());
+        return \App\Services\CurrencyService::getCurrencies();
     }
 
     /**
