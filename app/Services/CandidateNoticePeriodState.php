@@ -70,14 +70,14 @@ final class CandidateNoticePeriodState
     }
 
     /** @return array<string, array<int, string>> */
-    public static function validationRules(mixed $mode): array
+    public static function validationRules(mixed $mode, bool $required = false): array
     {
         $modeValue = is_scalar($mode) ? trim((string) $mode) : '';
         $hasSelectedMode = in_array($modeValue, ['0', '1', '2'], true);
         $normalizedMode = $hasSelectedMode ? (int) $modeValue : null;
 
         return [
-            'serving_notice_period' => ['nullable', 'integer', 'in:0,1,2'],
+            'serving_notice_period' => $required ? ['required', 'integer', 'in:0,1,2'] : ['nullable', 'integer', 'in:0,1,2'],
             'np_id' => $normalizedMode === self::SERVING_NOTICE
                 ? ['required', 'date', 'after_or_equal:today']
                 : ($normalizedMode === self::IMMEDIATE_JOINER
@@ -94,11 +94,15 @@ final class CandidateNoticePeriodState
     {
         return [
             'serving_notice_period.required' => 'Please select a notice period status.',
+            'serving_notice_period.integer' => 'Please select a valid notice period status.',
             'serving_notice_period.in' => 'Please select a valid notice period status.',
             'np_id.required' => 'Please select the relevant last working date.',
+            'np_id.date' => 'Please enter a valid date.',
             'np_id.after_or_equal' => 'Expected last working date cannot be in the past.',
             'np_id.before_or_equal' => 'Last working date cannot be in the future for an immediate joiner.',
             'ddl_np_id.required' => 'Please select the candidate notice period.',
+            'ddl_np_id.integer' => 'Please select a valid notice period.',
+            'ddl_np_id.between' => 'Notice period must be between 1 and 200 days.',
         ];
     }
 

@@ -3643,6 +3643,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         if (! empty($appId) && (int) $appId !== 0) {
             $this->application = JobApplication::withoutGlobalScopes()->find($appId);
+            if ($this->application) {
+                $wiseCandidate = DB::table('add_job_wise_condidates')
+                    ->where('job_application_id', $this->application->id)
+                    ->when(! empty($jobId), function ($q) use ($jobId) {
+                        return $q->where('job_id', $jobId);
+                    })
+                    ->orderByDesc('id')
+                    ->first();
+                if ($wiseCandidate && ! empty($wiseCandidate->master_status_id)) {
+                    $this->application->master_status_id = (int) $wiseCandidate->master_status_id;
+                    $this->application->status_id = (int) ($wiseCandidate->status_id ?: $wiseCandidate->master_status_id);
+                }
+            }
         }
 
         $this->jobDetail = ! empty($jobId) ? Cache::remember("job_detail_create_{$jobId}", 300, function () use ($jobId) {
@@ -6807,7 +6820,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->application->current_ectc_cur = $data->current_ectc_cur;
             $this->application->bill_rate_currency = $data->bill_rate_currency;
             $this->application->bill_rate_currency = $data->bill_rate_currency;
-            $this->application->master_status_id = $data->master_status_id;
+            $candidateCurrentStage = (int) ($AddJobWiseCondidate->master_status_id ?: ($data->job_master_status_id ?? ($data->master_status_id ?? ($this->application->master_status_id ?? 8))));
+            $this->application->master_status_id = $candidateCurrentStage;
+            $this->application->status_id = $candidateCurrentStage;
             $this->application->rjobid = $data->rjobid;
             $this->application->from_company_id = $data->from_company_id;
             $this->application->wiseId = $data->id;
@@ -6843,7 +6858,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->application->secondary_mobile = $data->secondary_mobile;
             $this->application->email = $data->email;
             $this->application->secondrary_email = $data->secondrary_email;
-            $this->application->master_status_name = $data->name;
+            $stageName = DB::table('master_status')->where('id', $candidateCurrentStage)->value('name');
+            $this->application->master_status_name = $stageName ?: ($data->name ?? 'In Review');
             $this->application->offer_currency = $data->of_offer_currency;
             $this->application->offer_mode = $data->of_offer_mode;
             $this->application->offer_amount = $data->of_offer_amount;
@@ -8147,7 +8163,23 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ]);
         }
 
-        $targetStage = (int) ($request->input('master_status_id') ?: ($request->input('current_master_status_id') ?: 8));
+        $existingWiseCandidate = DB::table('add_job_wise_condidates')
+            ->where('job_application_id', $id)
+            ->when($request->filled('jobId') || $request->filled('job_id'), function ($q) use ($request) {
+                $jId = (int) ($request->input('jobId') ?: $request->input('job_id'));
+                if ($jId > 0) {
+                    $q->where('job_id', $jId);
+                }
+            })
+            ->orderByDesc('id')
+            ->first();
+
+        // Preserve candidate's existing recruitment stage
+        $existingStage = $existingWiseCandidate && ! empty($existingWiseCandidate->master_status_id)
+            ? (int) $existingWiseCandidate->master_status_id
+            : (int) ($request->input('current_master_status_id') ?: ($request->input('master_status_id') ?: 8));
+
+        $targetStage = $existingStage;
         $isSourcingOrAbove = ($targetStage !== 8);
 
         $rules = [
@@ -8232,7 +8264,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $messages['email.disposable_email'] = 'Temporary emails are not allowed';
         }
 
-        $validator = Validator::make($request->all(), array_merge($rules, CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'))), array_merge($messages, CandidateNoticePeriodState::validationMessages()));
+        $validator = Validator::make($request->all(), array_merge($rules, CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'), false)), array_merge($messages, CandidateNoticePeriodState::validationMessages()));
 
         if ($validator->fails()) {
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);
@@ -8514,18 +8546,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         DB::beginTransaction();
         try {
 
-            if ($request->has('master_status_id') && ! empty($request->input('master_status_id'))) {
-                $targetStage = (int) $request->input('master_status_id');
-                $jobApplication->status_id = $targetStage;
-                $jobApplication->master_status_id = $targetStage;
-                DB::table('add_job_wise_condidates')
-                    ->where('job_application_id', $jobApplication->id)
-                    ->update([
-                        'status_id' => $targetStage,
-                        'master_status_id' => $targetStage,
-                        'updated_at' => now(),
-                    ]);
-            }
+            // Preserve the candidate's existing pipeline stage without reverting or mutating on profile update
+            $jobApplication->status_id = $existingStage;
+            $jobApplication->master_status_id = $existingStage;
+            // Existing pipeline stage is 100% preserved; add_job_wise_condidates stage is not overwritten!
 
             $jobApplication->save();
 
@@ -12834,6 +12858,23 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->qualification = ReferenceDataCache::qualifications();
         $this->jobId = $jobId;
         $this->appId = $appId;
+
+        if (! empty($appId) && (int) $appId !== 0) {
+            $this->application = JobApplication::withoutGlobalScopes()->find($appId);
+            if ($this->application) {
+                $wiseCandidate = DB::table('add_job_wise_condidates')
+                    ->where('job_application_id', $this->application->id)
+                    ->when(! empty($jobId), function ($q) use ($jobId) {
+                        return $q->where('job_id', $jobId);
+                    })
+                    ->orderByDesc('id')
+                    ->first();
+                if ($wiseCandidate && ! empty($wiseCandidate->master_status_id)) {
+                    $this->application->master_status_id = (int) $wiseCandidate->master_status_id;
+                    $this->application->status_id = (int) ($wiseCandidate->status_id ?: $wiseCandidate->master_status_id);
+                }
+            }
+        }
 
         $this->jobDetail = ! empty($jobId) ? Cache::remember("client_job_detail_{$jobId}", 300, function () use ($jobId) {
             return DB::table('jobs')
