@@ -1853,9 +1853,10 @@ $(document).on('click', '.client-hm-listing', function ()
 
         function renderJobsClientSide(jobs) {
             if (!jobs || jobs.length === 0) {
-                return '<div style="text-align:center;padding:40px 20px;font-family:Poppins,sans-serif;color:#7e8299;">' +
-                       '<i class="fa fa-briefcase" style="font-size:32px;margin-bottom:12px;display:block;"></i>' +
-                       '<p style="font-size:13px;margin:0;">No jobs found matching your criteria.</p></div>';
+                return '<div class="cd-jobs-empty text-center py-16 px-6 my-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px;">' +
+                       '<i class="fa fa-briefcase fa-2x mb-3 text-muted d-block"></i>' +
+                       '<div class="fw-bold fs-6 text-gray-700 mb-1">No Job Requisitions Found</div>' +
+                       '<div class="text-muted fs-7">No job requisitions match the current criteria.</div></div>';
             }
 
             var html = '';
@@ -1871,88 +1872,40 @@ $(document).on('click', '.client-hm-listing', function ()
                 var salaryModeText = displaySalaryMode ? ' /' + displaySalaryMode : '';
                 var employmentMeta = getEmploymentTypeMeta(job.employment_type, job.employment_type_raw);
                 var statusIcon = job.status === 'Hiring' ? 'fa-user-group' : (job.status === 'Hold' ? 'fa-pause' : 'fa-box-archive');
-                var statusClass = job.status_raw === 'active' ? 'active-bg' : (job.status_raw === 'hold' ? 'hold-bg' : 'closed-bg');
-                if (job.status === 'Removed') statusClass = 'closed-bg';
 
-                var ulink = job.status === 'Removed'
-                    ? '<span class="badge-hiring ' + statusClass + '">' + job.status + '</span>'
-                    : '<span data-row-id="' + job.id + '" data-direct-client="' + directClientAttr + '" class="badge-hiring ' + statusClass + ' status_stage"><i class="fas ' + statusIcon + '"></i> ' + job.status + '</span>';
-
-                var logoHtml = job.logo_path
-                    ? '<img src="' + job.logo_path + '" alt="Company Logo" class="border-radius-5 w-100">'
-                    : job.initial_letter;
-
-                var skillsHtml = '';
-                if (job.skills && job.skills.length > 0) {
-                    skillsHtml = job.skills.map(function(s) {
-                        return '<span class="skill-tag">' + s + '</span>';
-                    }).join(' ');
+                var statusCls = 'status-hiring';
+                var displayStatus = job.status || 'Hiring';
+                var statusBorderColor = '#10b981';
+                if (job.status_raw === 'hold' || displayStatus === 'Hold' || displayStatus === 'On Hold') {
+                    statusCls = 'status-hold';
+                    displayStatus = 'On Hold';
+                    statusBorderColor = '#f59e0b';
+                } else if (job.status_raw === 'inactive' || displayStatus === 'Closed') {
+                    statusCls = 'status-closed';
+                    displayStatus = 'Closed';
+                    statusBorderColor = '#ef4444';
+                } else if (displayStatus === 'Removed' || job.status_raw === 'removed') {
+                    statusCls = 'status-inactive';
+                    displayStatus = 'Removed';
+                    statusBorderColor = '#94a3b8';
                 }
-                var addedDateHtml = job.added_date
-                    ? '<span class="job-date-tag"><svg fill="none" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/></svg>' + job.added_date + '</span>'
-                    : '';
 
-                var teamHtml = '';
-                if (job.is_direct_client) {
-                    if (job.partners_first_name) {
-                        teamHtml += '<div class="hm-name team-listing" data-row-id="' + job.id + '">' + job.partners_first_name.substring(0, 10) + '</div>';
-                    }
-                    var pCount = job.partners_count > 1 ? '+' + (job.partners_count - 1) : job.partners_count;
-                    teamHtml += '<div class="action-count">' + pCount + ' Members</div>';
-                    teamHtml += '<div class="action-more team-listing" data-row-id="' + job.id + '">+ Add More</div>';
+                var statusBadgeHtml = '';
+                if (displayStatus === 'Removed') {
+                    statusBadgeHtml = '<span class="cd-status-badge ' + statusCls + '">' + displayStatus + '</span>';
                 } else {
-                    if (job.partners_first_name) {
-                        teamHtml += '<div class="hm-name hm-listing" data-row-id="' + job.id + '">' + job.partners_first_name.substring(0, 10) + '</div>';
-                    }
-                    var pCount = job.partners_count > 1 ? '+' + (job.partners_count - 1) : job.partners_count;
-                    teamHtml += '<div class="action-count">' + pCount + ' Members</div>';
-                    teamHtml += '<div class="action-more hm-listing" data-row-id="' + job.id + '">+ Add More</div>';
+                    statusBadgeHtml = '<span data-row-id="' + job.id + '" data-direct-client="' + directClientAttr + '" class="cd-status-badge ' + statusCls + ' status_stage" title="Click to update status"><i class="fas ' + statusIcon + ' me-1"></i>' + displayStatus + '</span>';
                 }
 
-                var agencyHtml = '';
-                if (job.is_direct_client) {
-                    agencyHtml += '<div class="hm-name">' + (displayAgencyName ? displayAgencyName.substring(0, 30) : '') + '</div>';
+                var clientTypeLabel = job.is_direct_client ? 'Direct Client' : ((job.recommendation_text) ? job.recommendation_text : 'Internal Client');
+                var clientTypeCls = job.is_direct_client ? 'type-direct' : 'type-internal';
+
+                var logoHtml = '';
+                if (job.logo_path) {
+                    logoHtml = '<img src="' + job.logo_path + '" alt="Company Logo" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';"><span style="display:none; color: #009ef7; font-weight: 700;">' + (job.initial_letter || 'J') + '</span>';
                 } else {
-                    if (job.agency_count > 0) {
-                        agencyHtml += '<div class="hm-name">' + job.agency_count + ' Agency</div>';
-                        agencyHtml += '<div class="action-count">15 Matching</div>';
-                        agencyHtml += '<div data-row-id="' + job.id + '" class="action-more spartner-listing">+ Add More</div>';
-                    } else {
-                        agencyHtml += '<button class="btn-action spartner-listing" data-row-id="' + job.id + '"><svg fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Add Agency</button>';
-                        agencyHtml += '<div class="action-count">15 Matching</div>';
-                    }
+                    logoHtml = '<span style="color: #009ef7; font-weight: 700;">' + (job.initial_letter || 'J') + '</span>';
                 }
-
-                var apptrackerBase = job.is_direct_client
-                    ? "{{ url('/service_company/apptracker/clientapp') }}/" + job.encrypted_id + "/"
-                    : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/";
-
-                var allAppUrl = job.is_direct_client
-                    ? "{{ url('/service_company/apptracker/clientapp') }}/" + job.encrypted_id + "/all"
-                    : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/all";
-
-                var stageLabels = [
-                    { id: 1, key: 's-sou', label: 'SOU', title: 'Sourcing', compact: 'Source' },
-                    { id: 2, key: 's-scr', label: 'SCR', title: 'Screening', compact: 'Screen' },
-                    { id: 3, key: 's-eva', label: 'EVA', title: 'Evaluation', compact: 'Eval' },
-                    { id: 4, key: 's-neg', label: 'NEG', title: 'Negotiation', compact: 'Neg' },
-                    { id: 5, key: 's-off', label: 'OFF', title: 'Offer', compact: 'Offer' },
-                    { id: 6, key: 's-joi', label: 'JOI', title: 'Joining', compact: 'Join' },
-                    { id: 7, key: 's-rej', label: 'REJ', title: 'Rejected', compact: 'Reject' }
-                ];
-
-                var pipelineHtml = '<div class="pipeline-stages">';
-                pipelineHtml += '<div class="stage" title="INW - In Review"><div class="stage-label">INW</div><div class="stage-badge s-inw"><a href="' + allAppUrl + '" class="s-inw fw-bolder fs-6">' + (job.inreview_counter || 0) + '</a></div></div>';
-
-                stageLabels.forEach(function(stg) {
-                    var count = (job.stage_counts && job.stage_counts[stg.id]) ? job.stage_counts[stg.id] : 0;
-                    var stgUrl = apptrackerBase + stg.id;
-                    var countClass = count > 0 ? (stg.id === 1 ? 'text-dark fw-bolder fs-6' : stg.key + ' fs-6') : stg.key + ' fs-6';
-                    pipelineHtml += '<div class="stage" title="' + stg.label + ' - ' + stg.title + '"><div class="stage-label">' + stg.label + '</div><div class="stage-badge ' + stg.key + '"><a href="' + stgUrl + '" class="' + countClass + '">' + count + '</a></div></div>';
-                });
-                pipelineHtml += '</div>';
-
-                var directClientLabelText = job.recommendation_text || (job.is_direct_client ? 'Direct Client' : ((job.self_company == 1) ? 'Internal' : 'Internal Client'));
 
                 var isSalaryConfidential = Boolean(
                     job.is_salary_confidential ||
@@ -1963,16 +1916,28 @@ $(document).on('click', '.client-hm-listing', function ()
                      (parseFloat(job.max_salary) === 0 || !job.max_salary || job.max_salary === '0'))
                 );
 
-                var salaryHtml = isSalaryConfidential
-                    ? '<div class="sal-row"><span class="sal-amount sal-amount-confidential" style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span></div>'
-                    : '<div class="sal-row"><span class="sal-amount">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + salaryModeText + '</span></div>';
+                var salaryText = isSalaryConfidential
+                    ? '<span class="text-danger" style="font-weight: 600;"><i class="fas fa-lock me-1"></i>Confidential</span>'
+                    : (job.min_salary_currency || '$') + ' ' + (job.min_salary || '0') + ' - ' + (job.max_salary || '0') + salaryModeText;
+
+                var expText = (job.min_exp || 0) + ' - ' + (job.max_exp || 0) + ' Yrs';
+                if (job.min_exp == job.max_exp && job.min_exp > 0) {
+                    expText = job.min_exp + ' Yrs';
+                }
+
+                var workModeClean = 'Work From Office';
+                var rawWork = (job.work_type || '').toLowerCase();
+                if (rawWork === 'remote' || rawWork === 'yes' || rawWork === 'wfh') {
+                    workModeClean = 'Remote';
+                } else if (rawWork === 'hybrid' || rawWork === 'other') {
+                    workModeClean = 'Hybrid';
+                }
 
                 var locations = Array.isArray(job.work_locations) ? job.work_locations : [];
                 var allCitiesList = (Array.isArray(job.cities) && job.cities.length > 0)
                     ? job.cities.filter(Boolean)
                     : (locations.length > 0 ? locations.map(function(l) { return l.city_name; }).filter(Boolean) : (job.primary_city || job.city ? [job.primary_city || job.city] : []));
 
-                // Deduplicate cities case-insensitively while preserving canonical casing
                 var seenCityKeys = new Set();
                 var deduplicatedCities = [];
                 allCitiesList.forEach(function(c) {
@@ -1988,7 +1953,6 @@ $(document).on('click', '.client-hm-listing', function ()
                 var primaryCityName = job.primary_city ? formatJobPositionName(job.primary_city) : (allCitiesList.length > 0 ? allCitiesList[0] : (job.city ? formatJobPositionName(job.city) : ''));
                 var primaryKey = primaryCityName.toLowerCase().trim();
 
-                // Compute remaining cities (the +N additional cities beyond the primary city)
                 var remainingCities = allCitiesList.filter(function(c) {
                     return c.toLowerCase().trim() !== primaryKey;
                 });
@@ -2004,7 +1968,7 @@ $(document).on('click', '.client-hm-listing', function ()
                         ? 'Primary Location: ' + primaryCityName + ' | Other Locations (+' + extraCitiesCount + '): ' + remainingCitiesText
                         : 'Location: ' + primaryCityName;
 
-                    locContentHtml = '<span class="city-name-text" title="' + cityTitle + '">' + primaryCityName.substring(0, 10) + '</span>';
+                    locContentHtml = '<span class="city-name-text" title="' + cityTitle + '">' + primaryCityName.substring(0, 16) + '</span>';
                     if (extraCitiesCount > 0) {
                         var remainingTooltip = 'Other Locations (+' + extraCitiesCount + '): ' + remainingCitiesText;
                         var popoverItems = allCitiesList.map(function(c) {
@@ -2021,56 +1985,180 @@ $(document).on('click', '.client-hm-listing', function ()
                         '</div>';
                     }
                 } else {
-                    locContentHtml = '<span class="city-name-text text-muted" style="color: #a1a5b7;" title="Location not specified">Not specified</span>';
+                    locContentHtml = '<span class="city-name-text text-muted" style="color: #a1a5b7;">Not specified</span>';
                 }
 
-                var locRowTitle = extraCitiesCount > 0
-                    ? 'Primary Location: ' + primaryCityName + ' | Other Locations (+' + extraCitiesCount + '): ' + remainingCitiesText
-                    : (primaryCityName ? 'Location: ' + primaryCityName : 'Location not specified');
+                // Team Sub-card
+                var leadName = job.partners_first_name ? formatJobPositionName(job.partners_first_name) : 'Team';
+                var memberCountText = 'No other members';
+                if (job.partners_count > 1) {
+                    memberCountText = '+ ' + (job.partners_count - 1) + ' other member' + (job.partners_count - 1 > 1 ? 's' : '');
+                } else if (job.partners_count === 1) {
+                    memberCountText = '1 Member';
+                }
+                var teamDrawerClass = job.is_direct_client ? 'team-listing' : 'hm-listing';
 
-                var locRowHtml = '<div class="loc-row" title="' + locRowTitle + '">' +
-                    '<svg fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/></svg>' +
-                    locContentHtml +
-                '</div>';
+                // Agency Sub-card (No artificial matching badge)
+                var agencyDisplayText = '—';
+                if (job.is_direct_client) {
+                    agencyDisplayText = displayAgencyName || 'Direct Client';
+                } else {
+                    if (job.agency_count > 0) {
+                        agencyDisplayText = job.agency_count + (job.agency_count > 1 ? ' Agencies' : ' Agency');
+                    }
+                }
 
-                html += '<div class="job-row" data-job-id="' + job.id + '" style="position: relative; min-height: 96px; cursor: pointer;">' +
-                    '<div class="col-job ' + profileDetailClass + '" data-row-id="' + job.id + '">' +
-                        '<div class="job-logo ' + job.bg_text_decore + '" style="min-height: 48px; align-self: flex-start;">' + logoHtml + '</div>' +
-                        '<div class="job-info">' +
-                          '<div class="job-title">' + (displayTitle ? displayTitle.substring(0, 30) : '') + '</div>' +
-                          '<div class="job-dept">' + (job.department || '') + '</div>' +
-                          '<div class="job-client">' + (displayClientName ? displayClientName.substring(0, 30) : '') + '</div>' +
-                        '</div>' +
-                    '</div>' +
+                // Pipeline Sub-card
+                var apptrackerBase = job.is_direct_client
+                    ? "{{ url('/service_company/apptracker/clientapp') }}/" + job.encrypted_id + "/"
+                    : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/";
 
-                    '<div class="col-exp">' +
-                      '<div class="exp-row"><svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8"/></svg>' + job.min_exp + ' - ' + job.max_exp + ' Years</div>' +
-                      salaryHtml +
-                      '<span class="badge-type employment-badge employment-badge-' + employmentMeta.tone + '"><i class="fas ' + employmentMeta.icon + '"></i><span class="it-job-type">' + job.employment_type + '</span></span>' +
-                    '</div>' +
+                var allAppUrl = job.is_direct_client
+                    ? "{{ url('/service_company/apptracker/clientapp') }}/" + job.encrypted_id + "/all"
+                    : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/all";
 
-                    '<div class="col-hl">' + ulink +
-                      locRowHtml +
-                      '<div class="mode-row"><svg fill="none" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8"/><polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="1.8"/></svg>' + job.work_type + '</div>' +
-                    '</div>' +
+                var stageLabels = [
+                    { id: 1, key: 's-sou', label: 'SOU', title: 'Sourcing' },
+                    { id: 2, key: 's-scr', label: 'SCR', title: 'Screening' },
+                    { id: 3, key: 's-eva', label: 'EVA', title: 'Evaluation' },
+                    { id: 4, key: 's-neg', label: 'NEG', title: 'Negotiation' },
+                    { id: 5, key: 's-off', label: 'OFF', title: 'Offer' },
+                    { id: 6, key: 's-joi', label: 'JOI', title: 'Joining' },
+                    { id: 7, key: 's-rej', label: 'REJ', title: 'Rejected' }
+                ];
 
-                    '<div class="col-hm">' +
-                      '<div class="hm-name" title="' + (displayHiringManager !== '--------' ? displayHiringManager : '') + '">' + (displayHiringManager ? displayHiringManager.substring(0, 40) : '') + '</div>' +
-                      ((job.hiring_manager_designation && job.hiring_manager_designation !== '--------') ? '<div class="hm-title" title="' + job.hiring_manager_designation + '">' + formatJobPositionName(job.hiring_manager_designation) + '</div>' : '') +
-                      '<div class="hm-company hm-client-type"><span class="it-job-type ' + job.badge + '">' + directClientLabelText + '</span><span class="it-dot-separator"></span><a href="javascript:void(0);" class="it-job-id">' + job.id + '</a></div>' +
-                    '</div>' +
+                var pipelineTrackHtml = '<div class="cd-track-stage" title="INW - In Review"><span class="cd-track-label">INW</span><a href="' + allAppUrl + '" class="cd-track-badge s-inw text-decoration-none">' + (job.inreview_counter || 0) + '</a></div>';
+                stageLabels.forEach(function(stg) {
+                    var count = (job.stage_counts && job.stage_counts[stg.id]) ? job.stage_counts[stg.id] : 0;
+                    var stgUrl = apptrackerBase + stg.id;
+                    pipelineTrackHtml += '<div class="cd-track-stage" title="' + stg.label + ' - ' + stg.title + '"><span class="cd-track-label">' + stg.label + '</span><a href="' + stgUrl + '" class="cd-track-badge ' + stg.key + ' text-decoration-none">' + count + '</a></div>';
+                });
 
-                    '<div class="col-action">' + teamHtml + '</div>' +
-                    '<div class="col-action">' + agencyHtml + '</div>' +
+                // Bottom strip
+                var formattedDate = job.added_date ? job.added_date : '';
+                var hiringManagerDisplay = (displayHiringManager && displayHiringManager !== '--------') ? displayHiringManager : '';
+                var hmRole = (job.hiring_manager_designation && job.hiring_manager_designation !== '--------') ? ' (' + formatJobPositionName(job.hiring_manager_designation) + ')' : '';
 
-                    '<div class="col-pipeline">' + pipelineHtml +
-                      '<div class="pipeline-total">Total: <strong>' + (job.application_counter || 0) + ' Applications</strong> &nbsp;|&nbsp; Interview: <strong>' + (job.interview_counter || 0) + '</strong></div>' +
-                    '</div>' +
+                var skillsHtml = '';
+                if (job.skills && job.skills.length > 0) {
+                    skillsHtml = job.skills.map(function(s) {
+                        return '<span class="cd-skill-pill">' + s + '</span>';
+                    }).join('');
+                } else {
+                    skillsHtml = '<span class="text-muted" style="font-size: 10.5px;">No skills specified</span>';
+                }
 
-                    '<div class="job-meta-strip">' +
-                      '<div class="job-meta-line">' + addedDateHtml + skillsHtml + '</div>' +
-                    '</div>' +
-                  '</div>';
+                // MASTER PRIMARY CARD (Rule 20 Modern Enterprise Card + Sub-Card)
+                html += '<div class="cd-job-card js-job-card-clickable" data-entity="job" data-job-id="' + job.id + '" style="border-left: 3.5px solid ' + statusBorderColor + ' !important; cursor: pointer;">';
+                
+                // UPPER SUB-CARDS GRID (5 Discrete Sub-Cards)
+                html += '  <div class="cd-job-card-grid">';
+
+                // SUB-CARD 1: JOB DETAILS
+                html += '    <div class="cd-job-subcard cd-subcard-details">';
+                html += '      <div class="cd-subcard-header">';
+                html += '        <span class="cd-subcard-label">Job Details</span>';
+                html += '        <div class="cd-header-badges">';
+                html += '          <span class="cd-badge-client-type ' + clientTypeCls + '"><i class="fas fa-building me-1"></i>' + clientTypeLabel + '</span>';
+                html += '          ' + statusBadgeHtml;
+                html += '        </div>';
+                html += '      </div>';
+                html += '      <div class="cd-details-body">';
+                html += '        <div class="cd-logo-box ' + (job.bg_text_decore || '') + '">' + logoHtml + '</div>';
+                html += '        <div class="cd-details-text">';
+                html += '          <a href="javascript:void(0);" class="cd-job-title ' + profileDetailClass + '" data-row-id="' + job.id + '" title="' + displayTitle + '">' + (displayTitle ? displayTitle.substring(0, 32) : 'Untitled Job') + '</a>';
+                html += '          <div class="cd-job-meta">';
+                html += '            <span class="cd-job-id">#' + job.id + '</span>';
+                html += '            <span class="cd-bullet">&bull;</span>';
+                html += '            <span class="cd-job-dept" title="' + (job.department || '') + '">' + (job.department || 'Information Technology') + '</span>';
+                html += '          </div>';
+                html += '          <div class="cd-job-client-row">';
+                html += '            <span class="cd-job-client-name" title="' + displayClientName + '">' + (displayClientName ? displayClientName.substring(0, 20) : 'CLIENT') + '</span>';
+                html += '            <span class="cd-bullet">&bull;</span>';
+                html += '            <span class="cd-job-emp-type"><i class="fas fa-briefcase text-primary me-1"></i>' + (job.employment_type || 'Full-Time') + '</span>';
+                html += '          </div>';
+                html += '        </div>';
+                html += '      </div>';
+                html += '    </div>';
+
+                // SUB-CARD 2: COMPENSATION & EXP
+                html += '    <div class="cd-job-subcard cd-subcard-comp-loc">';
+                html += '      <div class="cd-subcard-header">';
+                html += '        <span class="cd-subcard-label">Compensation &amp; Exp</span>';
+                html += '      </div>';
+                html += '      <div class="cd-subcard-body">';
+                html += '        <div class="cd-val-salary"><strong>' + salaryText + '</strong></div>';
+                html += '        <div class="cd-val-exp"><i class="far fa-clock text-muted me-1"></i><span>🕒 ' + expText + '</span></div>';
+                html += '        <div class="cd-val-loc">';
+                html += '          <i class="fas fa-map-marker-alt text-muted me-1"></i>' + locContentHtml;
+                html += '          <span class="cd-bullet">&bull;</span>';
+                html += '          <span>' + workModeClean + '</span>';
+                html += '        </div>';
+                html += '      </div>';
+                html += '    </div>';
+
+                // SUB-CARD 3: TEAM
+                html += '    <div class="cd-job-subcard cd-subcard-team">';
+                html += '      <div class="cd-subcard-header">';
+                html += '        <span class="cd-subcard-label"><i class="fa fa-users me-1 text-muted"></i>Team</span>';
+                html += '      </div>';
+                html += '      <div class="cd-subcard-body">';
+                html += '        <div class="cd-val-name ' + teamDrawerClass + '" data-row-id="' + job.id + '" title="' + leadName + '"><strong>' + leadName + '</strong></div>';
+                html += '        <div class="cd-val-sub">' + memberCountText + '</div>';
+                html += '        <a href="javascript:void(0);" class="cd-action-link ' + teamDrawerClass + '" data-row-id="' + job.id + '">+ Add / View</a>';
+                html += '      </div>';
+                html += '    </div>';
+
+                // SUB-CARD 4: AGENCY
+                html += '    <div class="cd-job-subcard cd-subcard-agency">';
+                html += '      <div class="cd-subcard-header">';
+                html += '        <span class="cd-subcard-label"><i class="fa fa-handshake me-1 text-muted"></i>Agency</span>';
+                html += '      </div>';
+                html += '      <div class="cd-subcard-body">';
+                if (agencyDisplayText !== '—') {
+                    html += '        <div class="cd-agency-val" title="' + agencyDisplayText + '"><strong>' + agencyDisplayText + '</strong></div>';
+                    if (!job.is_direct_client) {
+                        html += '        <a href="javascript:void(0);" data-row-id="' + job.id + '" class="cd-action-link spartner-listing">+ Manage Agency</a>';
+                    }
+                } else {
+                    html += '        <div class="cd-agency-empty">—</div>';
+                    html += '        <button type="button" class="btn btn-xs btn-light-primary spartner-listing py-1 px-2 mt-1" data-row-id="' + job.id + '" style="font-size: 11px;"><i class="fas fa-plus me-1"></i>Add Agency</button>';
+                }
+                html += '      </div>';
+                html += '    </div>';
+
+                // SUB-CARD 5: HIRING PIPELINE
+                html += '    <div class="cd-job-subcard cd-subcard-pipeline">';
+                html += '      <div class="cd-subcard-header">';
+                html += '        <span class="cd-subcard-label">Hiring Pipeline</span>';
+                html += '      </div>';
+                html += '      <div class="cd-subcard-body">';
+                html += '        <div class="cd-pipeline-track">' + pipelineTrackHtml + '</div>';
+                html += '        <div class="cd-track-summary">';
+                html += '          <span>Apps: <strong>' + (job.application_counter || 0) + '</strong></span>';
+                html += '          <span class="cd-bullet">&bull;</span>';
+                html += '          <span>Interviews: <strong>' + (job.interview_counter || 0) + '</strong></span>';
+                html += '        </div>';
+                html += '      </div>';
+                html += '    </div>';
+
+                html += '  </div>'; // End upper grid
+
+                // SUB-CARD 6: BOTTOM ACTIVITY STRIP
+                html += '  <div class="cd-job-card-bottom">';
+                html += '    <div class="cd-bottom-left">';
+                if (formattedDate) {
+                    html += '      <span><i class="far fa-calendar-alt text-muted me-1"></i>Posted: <strong>' + formattedDate + '</strong></span>';
+                }
+                if (hiringManagerDisplay) {
+                    html += '      <span class="cd-bullet">&bull;</span>';
+                    html += '      <span><i class="far fa-user text-muted me-1"></i>HM: <strong>' + hiringManagerDisplay + hmRole + '</strong></span>';
+                }
+                html += '    </div>';
+                html += '    <div class="cd-bottom-skills">' + skillsHtml + '</div>';
+                html += '  </div>'; // End bottom strip
+
+                html += '</div>'; // End master card
             });
 
             return html;
@@ -2199,11 +2287,11 @@ $(document).on('click', '.client-hm-listing', function ()
             $('#pagination').html(response.pagination || '');
 
             if (response.status_counts) {
-                $('.jh-tab[data-status="all"] .jh-badge').text(response.status_counts.all !== undefined ? response.status_counts.all : 0);
-                $('.jh-tab[data-status="active"] .jh-badge').text(response.status_counts.active !== undefined ? response.status_counts.active : 0);
-                $('.jh-tab[data-status="hold"] .jh-badge').text(response.status_counts.hold !== undefined ? response.status_counts.hold : 0);
-                $('.jh-tab[data-status="inactive"] .jh-badge').text(response.status_counts.inactive !== undefined ? response.status_counts.inactive : 0);
-                $('.jh-tab[data-status="removed"] .jh-badge').text(response.status_counts.removed !== undefined ? response.status_counts.removed : 0);
+                $('#filterCountAll, .jh-tab[data-status="all"] .jh-badge, .cd-jobs-tab-btn[data-status="all"] .cd-jobs-tab-badge').text(response.status_counts.all !== undefined ? response.status_counts.all : 0);
+                $('#filterCountHiring, .jh-tab[data-status="active"] .jh-badge, .cd-jobs-tab-btn[data-status="active"] .cd-jobs-tab-badge').text(response.status_counts.active !== undefined ? response.status_counts.active : 0);
+                $('#filterCountHold, .jh-tab[data-status="hold"] .jh-badge, .cd-jobs-tab-btn[data-status="hold"] .cd-jobs-tab-badge').text(response.status_counts.hold !== undefined ? response.status_counts.hold : 0);
+                $('#filterCountClosed, .jh-tab[data-status="inactive"] .jh-badge, .cd-jobs-tab-btn[data-status="inactive"] .cd-jobs-tab-badge').text(response.status_counts.inactive !== undefined ? response.status_counts.inactive : 0);
+                $('#filterCountRemoved, .jh-tab[data-status="removed"] .jh-badge, .cd-jobs-tab-btn[data-status="removed"] .cd-jobs-tab-badge').text(response.status_counts.removed !== undefined ? response.status_counts.removed : 0);
             }
         }
 
@@ -2394,11 +2482,11 @@ $(document).on('click', '.client-hm-listing', function ()
 
                     // 3. Update status counters if supplied
                     if (event.status_counts) {
-                        $('.jh-tab[data-status="all"] .jh-badge').text(event.status_counts.all || 0);
-                        $('.jh-tab[data-status="active"] .jh-badge').text(event.status_counts.active || 0);
-                        $('.jh-tab[data-status="hold"] .jh-badge').text(event.status_counts.hold || 0);
-                        $('.jh-tab[data-status="inactive"] .jh-badge').text(event.status_counts.inactive || 0);
-                        $('.jh-tab[data-status="removed"] .jh-badge').text(event.status_counts.removed || 0);
+                        $('#filterCountAll, .jh-tab[data-status="all"] .jh-badge, .cd-jobs-tab-btn[data-status="all"] .cd-jobs-tab-badge').text(event.status_counts.all || 0);
+                        $('#filterCountHiring, .jh-tab[data-status="active"] .jh-badge, .cd-jobs-tab-btn[data-status="active"] .cd-jobs-tab-badge').text(event.status_counts.active || 0);
+                        $('#filterCountHold, .jh-tab[data-status="hold"] .jh-badge, .cd-jobs-tab-btn[data-status="hold"] .cd-jobs-tab-badge').text(event.status_counts.hold || 0);
+                        $('#filterCountClosed, .jh-tab[data-status="inactive"] .jh-badge, .cd-jobs-tab-btn[data-status="inactive"] .cd-jobs-tab-badge').text(event.status_counts.inactive || 0);
+                        $('#filterCountRemoved, .jh-tab[data-status="removed"] .jh-badge, .cd-jobs-tab-btn[data-status="removed"] .cd-jobs-tab-badge').text(event.status_counts.removed || 0);
                     }
 
                     // 4. Show non-intrusive notification if toastr is loaded
@@ -2415,11 +2503,11 @@ $(document).on('click', '.client-hm-listing', function ()
                     }
 
                     // Direct DOM patch of pipeline badge on the job card (0ms latency)
-                    const $jobRow = $('.job-row[data-job-id="' + jobId + '"]');
-                    if ($jobRow.length > 0) {
+                    const $jobCard = $('.cd-job-card[data-job-id="' + jobId + '"], .job-row[data-job-id="' + jobId + '"]');
+                    if ($jobCard.length > 0) {
                         const stageId = parseInt(event.masterStatusId, 10);
                         if (stageId) {
-                            const $badge = $jobRow.find('.stage-badge a[href*="/' + stageId + '"]');
+                            const $badge = $jobCard.find('.cd-track-badge[href*="/' + stageId + '"], .stage-badge a[href*="/' + stageId + '"]');
                             if ($badge.length > 0) {
                                 const currentCount = parseInt($badge.text().trim(), 10) || 0;
                                 $badge.text(currentCount + 1);

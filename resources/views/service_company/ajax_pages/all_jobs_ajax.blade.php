@@ -133,8 +133,8 @@
             // Full suffix (/Annum, /Month, /Hour) instead of a single letter — clearer at a glance.
             $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode] ?? '';
             $max_sal_mode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
-            $min_salary_currency = $currencySymbole[@$row->min_salary_currency];
-            $max_salary_currency = $currencySymbole[@$row->max_salary_currency];
+            $min_salary_currency = $currencySymbole[@$row->min_salary_currency] ?? $currencySymbole[\App\Services\CurrencyService::resolveCurrencyCode(@$row->min_salary_currency)] ?? '$';
+            $max_salary_currency = $currencySymbole[@$row->max_salary_currency] ?? $currencySymbole[\App\Services\CurrencyService::resolveCurrencyCode(@$row->max_salary_currency)] ?? '$';
             $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
             $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
             $max_salary = GeneralMethod::formatAmount($max_salary);

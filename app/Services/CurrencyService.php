@@ -709,8 +709,11 @@ class CurrencyService
             if (isset($data['key_to_code'][$key])) {
                 return $data['key_to_code'][$key];
             }
-            if ($key >= 1000 && isset($data['key_to_code'][$key - 1000])) {
-                return $data['key_to_code'][$key - 1000];
+            if (isset($data['key_to_code'][(string) $key])) {
+                return $data['key_to_code'][(string) $key];
+            }
+            if (isset($data['master_id_to_code'][$key])) {
+                return $data['master_id_to_code'][$key];
             }
 
             return self::DEFAULT_CURRENCY;

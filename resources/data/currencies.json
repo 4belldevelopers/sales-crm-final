@@ -3439,39 +3439,88 @@
             ]
         },
         {
+            "key": 1006,
+            "code": "KWD",
             "name": "Kuwaiti Dinar",
             "symbol": "KD",
-            "code": "KWD"
+            "flag": "🇰🇼",
+            "label": "KWD — Kuwaiti Dinar (KD)",
+            "keywords": "kwd kuwaiti dinar kd kuwait kwd dinar",
+            "countries": [
+                "Kuwait"
+            ]
         },
         {
+            "key": 1007,
+            "code": "BHD",
             "name": "Bahraini Dinar",
             "symbol": "BD",
-            "code": "BHD"
+            "flag": "🇧🇭",
+            "label": "BHD — Bahraini Dinar (BD)",
+            "keywords": "bhd bahraini dinar bd bahrain bhd dinar",
+            "countries": [
+                "Bahrain"
+            ]
         },
         {
+            "key": 1008,
+            "code": "JOD",
             "name": "Jordanian Dinar",
             "symbol": "JD",
-            "code": "JOD"
+            "flag": "🇯🇴",
+            "label": "JOD — Jordanian Dinar (JD)",
+            "keywords": "jod jordanian dinar jd jordan jod dinar",
+            "countries": [
+                "Jordan"
+            ]
         },
         {
+            "key": 1009,
+            "code": "BDT",
             "name": "Bangladeshi Taka",
             "symbol": "৳",
-            "code": "BDT"
+            "flag": "🇧🇩",
+            "label": "BDT — Bangladeshi Taka (৳)",
+            "keywords": "bdt bangladeshi taka ৳ bangladesh bdt taka",
+            "countries": [
+                "Bangladesh"
+            ]
         },
         {
+            "key": 1010,
+            "code": "KES",
             "name": "Kenyan Shilling",
             "symbol": "KSh",
-            "code": "KES"
+            "flag": "🇰🇪",
+            "label": "KES — Kenyan Shilling (KSh)",
+            "keywords": "kes kenyan shilling ksh kenya kes shilling",
+            "countries": [
+                "Kenya"
+            ]
         },
         {
+            "key": 1011,
+            "code": "GHS",
             "name": "Ghanaian Cedi",
             "symbol": "GH₵",
-            "code": "GHS"
+            "flag": "🇬🇭",
+            "label": "GHS — Ghanaian Cedi (GH₵)",
+            "keywords": "ghs ghanaian cedi gh₵ ghana ghs cedi",
+            "countries": [
+                "Ghana"
+            ]
         },
         {
+            "key": 1012,
+            "code": "MAD",
             "name": "Moroccan Dirham",
             "symbol": "MAD",
-            "code": "MAD"
+            "flag": "🇲🇦",
+            "label": "MAD — Moroccan Dirham (MAD)",
+            "keywords": "mad moroccan dirham mad morocco mad dirham",
+            "countries": [
+                "Morocco"
+            ]
         }
     ],
     "key_to_code": {

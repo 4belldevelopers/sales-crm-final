@@ -3224,7 +3224,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     || ($isSalaryZero && ($rawSalaryVis === 'confidential' || empty($rawSalaryVis) || ! isset($row->salary_visibility)));
 
                 $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode ?? 0] ?? '';
-                $min_salary_currency = $currencySymbole[@$row->min_salary_currency] ?? '$';
+                $min_salary_currency = $currencySymbole[@$row->min_salary_currency] ?? $currencySymbole[\App\Services\CurrencyService::resolveCurrencyCode(@$row->min_salary_currency)] ?? '$';
                 $max_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->max_salary ?? 0));
                 $min_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0));
                 $salary_display = $isSalaryConfidential ? 'Confidential' : ($min_salary_currency.' '.$min_salary.' - '.$max_salary.' '.$min_sal_mode);
