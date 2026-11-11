@@ -117,10 +117,80 @@ Line 4735 previously called `array_values(\App\Services\CurrencyService::getCurr
 | `resources/views/service_company/jobs/show.blade.php` | Job Details Drawer | Updated currency display to resolve authoritative code and symbols via `CurrencyService::resolveCurrencyCode()` with fallback safety. |
 | `app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php` | `all_data_ajax()` | Added fallback to `CurrencyService::resolveCurrencyCode()` for rock-solid symbol resolution. |
 | `resources/views/service_company/ajax_pages/all_jobs_ajax.blade.php` | Job Tracker Blade | Added fallback resolution for `min_salary_currency` and `max_salary_currency`. |
+| `resources/data/currencies.json` | Enterprise JSON Store | Enriched 7 trailing enterprise setting currencies (KWD, BHD, JOD, BDT, KES, GHS, MAD) with full schema keys, flags, labels, keywords, and country arrays. |
+| `public/country-state-city/currencies.json` | Public JSON Store | Enriched identical 7 currencies to guarantee complete parity between backend and frontend datasets. |
 
 ---
 
-## 5. Verification Evidence
+## 5. Exhaustive Multi-Currency Integrity & Collision Audit
+
+To ensure **no other currency** suffers from cross-contamination, key collisions, or symbol corruption, an automated end-to-end audit was executed across:
+1. **All 120 Enterprise Currencies** in `setting_currencies`.
+2. **All 145 System Keys** in `key_to_code` and `code_to_key`.
+3. **All Top Global ATS Trading Currencies**.
+
+### Audit Execution Output:
+```text
+========================================================
+   EXHAUSTIVE ATS CURRENCY INTEGRITY & COLLISION AUDIT   
+========================================================
+
+--- 1. Testing All 120 Enterprise Currencies in Settings ---
+Tested 120 enterprise setting currencies.
+
+--- 2. Testing All Keys in key_to_code Mapping ---
+Tested 145 keys from key_to_code.
+
+--- 3. Verifying Top ATS Trading Currencies ---
+[USD - US Dollar           ] ExpectedKey: 4    | ResolvedKey: 4    | CodeFromKey: USD  | Sym: <i class="fa fa-usd" aria-hidden="true"></i>
+[EUR - Euro                ] ExpectedKey: 1    | ResolvedKey: 1    | CodeFromKey: EUR  | Sym: <i class="fa fa-eur" aria-hidden="true"></i>
+[INR - Indian Rupee        ] ExpectedKey: 0    | ResolvedKey: 0    | CodeFromKey: INR  | Sym: <i class="fa fa-inr" aria-hidden="true"></i>
+[GBP - British Pound       ] ExpectedKey: 3    | ResolvedKey: 3    | CodeFromKey: GBP  | Sym: <i class="fa fa-gbp" aria-hidden="true"></i>
+[JPY - Japanese Yen        ] ExpectedKey: 2    | ResolvedKey: 2    | CodeFromKey: JPY  | Sym: <i class="fa fa-jpy" aria-hidden="true"></i>
+[AED - UAE Dirham          ] ExpectedKey: 5    | ResolvedKey: 5    | CodeFromKey: AED  | Sym: AED
+[CAD - Canadian Dollar     ] ExpectedKey: 22   | ResolvedKey: 22   | CodeFromKey: CAD  | Sym: C$
+[AUD - Australian Dollar   ] ExpectedKey: 6    | ResolvedKey: 6    | CodeFromKey: AUD  | Sym: A$
+[SGD - Singapore Dollar    ] ExpectedKey: 104  | ResolvedKey: 104  | CodeFromKey: SGD  | Sym: S$
+[CHF - Swiss Franc         ] ExpectedKey: 71   | ResolvedKey: 71   | CodeFromKey: CHF  | Sym: CHF
+[NZD - New Zealand Dollar  ] ExpectedKey: 85   | ResolvedKey: 85   | CodeFromKey: NZD  | Sym: $
+[ZAR - South African Rand  ] ExpectedKey: 108  | ResolvedKey: 108  | CodeFromKey: ZAR  | Sym: R
+[ALL - Albanian Lek        ] ExpectedKey: 1001 | ResolvedKey: 1001 | CodeFromKey: ALL  | Sym: Lek
+[AFN - Afghan Afghani      ] ExpectedKey: 1003 | ResolvedKey: 1003 | CodeFromKey: AFN  | Sym: AFN
+[KWD - Kuwaiti Dinar       ] ExpectedKey: 1006 | ResolvedKey: 1006 | CodeFromKey: KWD  | Sym: KD
+[BHD - Bahraini Dinar      ] ExpectedKey: 1007 | ResolvedKey: 1007 | CodeFromKey: BHD  | Sym: BD
+[SAR - Saudi Riyal         ] ExpectedKey: 101  | ResolvedKey: 101  | CodeFromKey: SAR  | Sym: SAR
+[QAR - Qatari Riyal        ] ExpectedKey: 97   | ResolvedKey: 97   | CodeFromKey: QAR  | Sym: QAR
+[SEK - Swedish Krona       ] ExpectedKey: 112  | ResolvedKey: 112  | CodeFromKey: SEK  | Sym: kr
+[NOK - Norwegian Krone     ] ExpectedKey: 89   | ResolvedKey: 89   | CodeFromKey: NOK  | Sym: kr
+[DKK - Danish Krone        ] ExpectedKey: 32   | ResolvedKey: 32   | CodeFromKey: DKK  | Sym: kr
+[PLN - Polish Zloty        ] ExpectedKey: 96   | ResolvedKey: 96   | CodeFromKey: PLN  | Sym: zł
+[BRL - Brazilian Real      ] ExpectedKey: 18   | ResolvedKey: 18   | CodeFromKey: BRL  | Sym: R$
+[MXN - Mexican Peso        ] ExpectedKey: 78   | ResolvedKey: 78   | CodeFromKey: MXN  | Sym: $
+[MYR - Malaysian Ringgit   ] ExpectedKey: 75   | ResolvedKey: 75   | CodeFromKey: MYR  | Sym: RM
+[THB - Thai Baht           ] ExpectedKey: 117  | ResolvedKey: 117  | CodeFromKey: THB  | Sym: ฿
+[IDR - Indonesian Rupiah   ] ExpectedKey: 54   | ResolvedKey: 54   | CodeFromKey: IDR  | Sym: Rp
+[PHP - Philippine Peso     ] ExpectedKey: 95   | ResolvedKey: 95   | CodeFromKey: PHP  | Sym: Php
+[VND - Vietnamese Dong     ] ExpectedKey: 129  | ResolvedKey: 129  | CodeFromKey: VND  | Sym: VND
+[KRW - South Korean Won    ] ExpectedKey: 65   | ResolvedKey: 65   | CodeFromKey: KRW  | Sym: KRW
+[TRY - Turkish Lira        ] ExpectedKey: 119  | ResolvedKey: 119  | CodeFromKey: TRY  | Sym: TL
+[ILS - Israeli Shekel      ] ExpectedKey: 58   | ResolvedKey: 58   | CodeFromKey: ILS  | Sym: ILS
+[BDT - Bangladeshi Taka    ] ExpectedKey: 1009 | ResolvedKey: 1009 | CodeFromKey: BDT  | Sym: ৳
+[PKR - Pakistani Rupee     ] ExpectedKey: 91   | ResolvedKey: 91   | CodeFromKey: PKR  | Sym: PKR
+[LKR - Sri Lankan Rupee    ] ExpectedKey: 111  | ResolvedKey: 111  | CodeFromKey: LKR  | Sym: LKR
+[NPR - Nepalese Rupee      ] ExpectedKey: 82   | ResolvedKey: 82   | CodeFromKey: NPR  | Sym: NPR
+
+========================================================
+                   AUDIT RESULTS SUMMARY                 
+========================================================
+Total Errors Found: 0
+Total Warnings:     0
+
+ ✅ 100% SUCCESS: Zero currency cross-contamination or mapping errors detected!
+```
+
+---
+
+## 6. Verification Evidence
 
 ### CLI Verification Script Output
 A dedicated verification script was executed against the application container:
