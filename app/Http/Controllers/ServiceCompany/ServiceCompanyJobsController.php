@@ -1447,6 +1447,40 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->header('Cache-Control', 'private, must-revalidate');
     }
 
+    /**
+     * Resolve the organization's own self-client ID strictly from Elasticsearch.
+     * Tenancy: strictly scoped to $companyId and self_company = 1 with 0% MySQL reads.
+     */
+    protected function resolveSelfClientIdFromElastic(int $companyId): ?int
+    {
+        if ($companyId <= 0 || ! $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+            return null;
+        }
+
+        try {
+            $scRes = $this->elasticService->getClient()->search([
+                'index' => ELASTIC_CLIENT_LIST,
+                'body' => [
+                    'size' => 1,
+                    '_source' => ['id'],
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['company_id' => $companyId]],
+                                ['term' => ['self_company' => 1]],
+                            ],
+                        ],
+                    ],
+                ],
+            ]);
+            $id = $scRes['hits']['hits'][0]['_id'] ?? ($scRes['hits']['hits'][0]['_source']['id'] ?? null);
+
+            return $id ? (int) $id : null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
     public function dataCnt()
     {
         $company_id = auth()->user()->company_id ?? 0;
@@ -1482,6 +1516,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'allRequisition' => 0,
             'clientRequisition' => 0,
             'customRequisition' => 0,
+            'myOrganization' => 0,
             'findJobs' => 0,
             'jobRequest' => 0,
             'hiringCount' => 0,
@@ -1573,13 +1608,53 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
-        // 3. Internal Requisition Count
+        // 3. Internal Requisition & My Organization Counts (100% Elasticsearch, 0% MySQL reads)
+        $selfClientId = $this->resolveSelfClientIdFromElastic((int) $company_id);
+
         if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
             try {
+                // My Organization Requisitions (Hiring for own organization positions)
+                $must_my_org = [['term' => ['comId' => $company_id]]];
+                if (! empty($assignedMustClause)) {
+                    $must_my_org[] = $assignedMustClause;
+                }
+                $shouldSelf = [['term' => ['self_company' => 1]]];
+                if ($selfClientId) {
+                    $shouldSelf[] = ['term' => ['client_id' => (int) $selfClientId]];
+                }
+                $must_my_org[] = [
+                    'bool' => [
+                        'should' => $shouldSelf,
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+                $res_my_org = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOBS,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => $must_my_org,
+                                'filter' => [['terms' => ['status' => ['active', 'hold', 'inactive', '2']]]],
+                            ],
+                        ],
+                    ],
+                ]);
+                $dataCnt['myOrganization'] = $res_my_org['count'] ?? 0;
+
+                // Internal (Client) Requisition Count (Excluding own organization)
                 $must_internal = [['term' => ['comId' => $company_id]]];
                 if (! empty($assignedMustClause)) {
                     $must_internal[] = $assignedMustClause;
                 }
+                $mustNotSelf = [['term' => ['self_company' => 1]]];
+                if ($selfClientId) {
+                    $mustNotSelf[] = ['term' => ['client_id' => (int) $selfClientId]];
+                }
+                $must_internal[] = [
+                    'bool' => [
+                        'must_not' => $mustNotSelf,
+                    ],
+                ];
                 $res_internal = $this->elasticService->getClient()->count([
                     'index' => ELASTIC_JOBS,
                     'body' => [
@@ -1597,7 +1672,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         // Total Jobs KPI
-        $dataCnt['allRequisition'] = $dataCnt['clientRequisition'] + $dataCnt['customRequisition'];
+        $dataCnt['allRequisition'] = $dataCnt['clientRequisition'] + $dataCnt['customRequisition'] + $dataCnt['myOrganization'];
 
         // 4. Job Requests KPI: 100% CQRS Elasticsearch Read First with MySQL Fallback (Strict Expiry Guard)
         $dataCnt['jobRequest'] = 0;
@@ -2842,9 +2917,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ];
         }
 
-        // 4. COMPANY ACCESS CONDITIONS BASED ON KPI REQUISITION TYPE
+        // 4. COMPANY ACCESS CONDITIONS BASED ON KPI REQUISITION TYPE (100% Elasticsearch, 0% MySQL reads)
+        $selfClientId = $this->resolveSelfClientIdFromElastic((int) $company_id);
+
         if ($custom_status === 'removed') {
-            if ($requisition_type === 'internal' || $requisition_type === 'custom') {
+            if ($requisition_type === 'internal' || $requisition_type === 'custom' || $requisition_type === 'my_organization') {
                 $must[] = [
                     'terms' => [
                         'id' => [0],
@@ -2863,10 +2940,35 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'id' => ! empty($jobIds) ? $jobIds : [0],
                 ],
             ];
+        } elseif ($requisition_type === 'my_organization') {
+            $must[] = [
+                'term' => [
+                    'comId' => $company_id,
+                ],
+            ];
+            $shouldSelf = [['term' => ['self_company' => 1]]];
+            if (! empty($selfClientId)) {
+                $shouldSelf[] = ['term' => ['client_id' => (int) $selfClientId]];
+            }
+            $must[] = [
+                'bool' => [
+                    'should' => $shouldSelf,
+                    'minimum_should_match' => 1,
+                ],
+            ];
         } elseif ($requisition_type === 'internal' || $requisition_type === 'custom') {
             $must[] = [
                 'term' => [
                     'comId' => $company_id,
+                ],
+            ];
+            $mustNotSelf = [['term' => ['self_company' => 1]]];
+            if (! empty($selfClientId)) {
+                $mustNotSelf[] = ['term' => ['client_id' => (int) $selfClientId]];
+            }
+            $must[] = [
+                'bool' => [
+                    'must_not' => $mustNotSelf,
                 ],
             ];
         } else {
@@ -3203,6 +3305,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 // INTENT: Bulk-resolve company/client logo in memory without N+1 ES calls.
                 $logo_path = '';
+                $clientDetails = null;
                 $jobComId = (int) ($row->comId ?? 0);
                 $jobClientId = (int) ($row->client_id ?? 0);
                 if ($jobComId === (int) $company_id) {
@@ -3229,15 +3332,22 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $min_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0));
                 $salary_display = $isSalaryConfidential ? 'Confidential' : ($min_salary_currency.' '.$min_salary.' - '.$max_salary.' '.$min_sal_mode);
 
-                $isSelfCompany = ((int) ($row->self_company ?? 0)) === 1;
+                // Tenancy: a job belongs to "My Organization" only when owned by the current company (never a Direct Client job).
+                $isSelfCompany = ! $isDirectClientJob
+                    && $jobComId === (int) $company_id
+                    && (
+                        ((int) ($row->self_company ?? 0)) === 1
+                        || ((int) ($clientDetails->self_company ?? 0)) === 1
+                        || (! empty($selfClientId) && $jobClientId === (int) $selfClientId)
+                    );
                 if ($isDirectClientJob) {
                     $recommendation_text = 'Direct Client';
                 } elseif ($isSelfCompany) {
-                    $recommendation_text = __('messages.internal_tag');
+                    $recommendation_text = 'My Organization';
                 } else {
                     $recommendation_text = 'Internal Client';
                 }
-                $badge = $isDirectClientJob ? 'badge-client' : 'badge-internal';
+                $badge = $isDirectClientJob ? 'badge-client' : ($isSelfCompany ? 'badge-my-org' : 'badge-internal');
 
                 $status = ucwords($row->status ?? 'active');
                 if ($status == 'Active') {
@@ -3457,6 +3567,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'clients_name' => $row->clients_name,
                     'company_name' => $row->company_name ?? '',
                     'is_direct_client' => $isDirectClientJob,
+                    'is_self_company' => $isSelfCompany,
                     'parent_company_name' => $parentCompanyName,
                     'logo_path' => $logo_path ? str_replace('index.php', '', $logo_path) : '',
                     'initial_letter' => strtoupper($strVal),
@@ -3568,11 +3679,66 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             }
                         }
                     }
+                } elseif ($requisition_type === 'my_organization') {
+                    $mustClause = [['term' => ['comId' => $company_id]]];
+                    if (! empty($assignedMustClause)) {
+                        $mustClause[] = $assignedMustClause;
+                    }
+                    $shouldSelf = [['term' => ['self_company' => 1]]];
+                    if (! empty($selfClientId)) {
+                        $shouldSelf[] = ['term' => ['client_id' => (int) $selfClientId]];
+                    }
+                    $mustClause[] = [
+                        'bool' => [
+                            'should' => $shouldSelf,
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+
+                    $aggsRes = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_JOBS,
+                        'size' => 0,
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => $mustClause,
+                                ],
+                            ],
+                            'aggs' => [
+                                'by_status' => [
+                                    'terms' => [
+                                        'field' => 'status',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $buckets = $aggsRes['aggregations']['by_status']['buckets'] ?? [];
+                    foreach ($buckets as $b) {
+                        $st = $b['key'] ?? '';
+                        $cnt = $b['doc_count'] ?? 0;
+                        if ($st === 'active') {
+                            $statusCounts['active'] = $cnt;
+                        } elseif ($st === 'hold') {
+                            $statusCounts['hold'] = $cnt;
+                        } elseif ($st === 'inactive') {
+                            $statusCounts['inactive'] = $cnt;
+                        }
+                    }
                 } elseif ($requisition_type === 'internal' || $requisition_type === 'custom') {
                     $mustClause = [['term' => ['comId' => $company_id]]];
                     if (! empty($assignedMustClause)) {
                         $mustClause[] = $assignedMustClause;
                     }
+                    $mustNotSelf = [['term' => ['self_company' => 1]]];
+                    if (! empty($selfClientId)) {
+                        $mustNotSelf[] = ['term' => ['client_id' => (int) $selfClientId]];
+                    }
+                    $mustClause[] = [
+                        'bool' => [
+                            'must_not' => $mustNotSelf,
+                        ],
+                    ];
 
                     $aggsRes = $this->elasticService->getClient()->search([
                         'index' => ELASTIC_JOBS,
@@ -3668,6 +3834,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'next_cursor' => $nextCursor,
             'status_counts' => $statusCounts,
+            'dataCnt' => $this->dataCnt(),
         ];
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_JOBS_LIST_TIME));
 

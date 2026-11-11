@@ -254,17 +254,23 @@
 }
 
 /* ==========================================================================
-   Executive Requisition Source Metric Strip (4 Responsive Metric Cards)
+   Executive Requisition Source Metric Strip (5 Responsive Metric Cards)
    ========================================================================== */
 .cd-jobs-kpi-grid {
     display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 12px !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 10px !important;
     margin-bottom: 12px !important;
     width: 100% !important;
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 1200px) {
+    .cd-jobs-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 768px) {
     .cd-jobs-kpi-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
@@ -274,14 +280,15 @@
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
-    padding: 12px 16px !important;
+    padding: 12px 14px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 10px !important;
     text-decoration: none !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
     transition: all 0.15s ease-in-out !important;
     cursor: pointer !important;
+    min-width: 0 !important;
 }
 
 .cd-kpi-card:hover {
@@ -298,13 +305,13 @@
 }
 
 .cd-kpi-icon {
-    width: 38px !important;
-    height: 38px !important;
+    width: 36px !important;
+    height: 36px !important;
     border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 15px !important;
+    font-size: 14.5px !important;
     flex-shrink: 0 !important;
 }
 
@@ -323,6 +330,11 @@
     color: #d97706 !important;
 }
 
+.cd-kpi-icon.icon-cyan {
+    background: #ecfeff !important;
+    color: #0891b2 !important;
+}
+
 .cd-kpi-icon.icon-purple {
     background: #f5f3ff !important;
     color: #7c3aed !important;
@@ -336,7 +348,7 @@
 }
 
 .cd-kpi-label {
-    font-size: 11px !important;
+    font-size: 10.5px !important;
     font-weight: 600 !important;
     color: #64748b !important;
     text-transform: uppercase !important;
@@ -347,7 +359,7 @@
 }
 
 .cd-kpi-num {
-    font-size: 19px !important;
+    font-size: 18px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     line-height: 1.2 !important;
@@ -358,6 +370,55 @@
 .cd-kpi-card.cd-kpi-active .cd-kpi-num,
 .cd-kpi-card.jh-card-active .cd-kpi-num {
     color: #009ef7 !important;
+}
+
+/* ==========================================================================
+   Separate Search Bar & Filters Card (Point 2)
+   ========================================================================== */
+.cd-jobs-search-filter-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 8px 14px !important;
+    margin-bottom: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+}
+
+.cd-jobs-search-filter-card .cd-jobs-search-subcard {
+    flex: 1 1 300px !important;
+    max-width: 460px !important;
+    height: 34px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+.cd-jobs-search-filter-card .cd-jobs-search-subcard:focus-within {
+    background: #ffffff !important;
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+
+.cd-jobs-search-filter-card .cd-jobs-search-subcard input {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 12px !important;
+    color: #0f172a !important;
+    width: 100% !important;
+    font-family: inherit !important;
 }
 
 /* ==========================================================================
@@ -441,6 +502,55 @@
 <link href="{{ asset('demo/css/joblist.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+
+<style>
+/* Page-isolated overrides loaded after shared component stylesheets (Rule 17) */
+#allJobList .cd-track-badge.s-sou,
+.cd-subcard-pipeline .cd-track-badge.s-sou {
+    background: #ecfeff !important;
+    color: #0891b2 !important;
+    border: 1px solid #a5f3fc !important;
+}
+
+#allJobList .cd-track-badge.s-sou:hover,
+.cd-subcard-pipeline .cd-track-badge.s-sou:hover {
+    background: #cffafe !important;
+    color: #0e7490 !important;
+    border-color: #67e8f9 !important;
+}
+
+.pipeline-legend-card .legend-item:nth-child(3) .legend-dot {
+    background: #0891b2 !important;
+}
+
+.cd-badge-client-type.type-my-org {
+    background: #ecfeff !important;
+    color: #0891b2 !important;
+    border: 1px solid #a5f3fc !important;
+}
+
+.cd-jobs-search-filter-card .cd-jobs-search-subcard input {
+    line-height: 34px !important;
+}
+
+.js-open-job-drawer {
+    cursor: pointer !important;
+    transition: background 0.15s ease-in-out, transform 0.1s ease !important;
+}
+
+.js-open-job-drawer:hover {
+    background: #f8fafc !important;
+}
+
+.js-goto-candidates {
+    cursor: pointer !important;
+    transition: background 0.15s ease-in-out, transform 0.1s ease !important;
+}
+
+.js-goto-candidates:hover {
+    background: #f8fafc !important;
+}
+</style>
 @endpush
 
 @section('content')
@@ -461,6 +571,9 @@
          'customRequisition_active'=> ($currentKpi === 'internal') ? 'tabactive' : '',
          'customRequisition_url'=> 'javascript:void(0);',
          'customRequisition_id'=>'top_card_custom_requisition_count',
+         'myOrganization_active'=> ($currentKpi === 'my_organization') ? 'tabactive' : '',
+         'myOrganization_url'=> 'javascript:void(0);',
+         'myOrganization_id'=>'top_card_my_org_count',
          'clientRequisition_active'=> ($currentKpi === 'direct') ? 'tabactive' : '',
          'clientRequisition_url'=> 'javascript:void(0);',
          'clientRequisition_id'=>'top_card_client_requisition_count',
@@ -469,6 +582,7 @@
          'jobRequest_id'=>'top_card_job_request_count',
          'allRequisition' =>@$dataCnt['allRequisition'],
          'customRequisition' =>@$dataCnt['customRequisition'],
+         'myOrganization' =>@$dataCnt['myOrganization'] ?? 0,
          'clientRequisition' =>@$dataCnt['clientRequisition'],
          'jobRequest' =>@$dataCnt['jobRequest'],
          'productAllowCompany' =>@$productAllowCompany,
@@ -476,6 +590,7 @@
          'hiringCount'    =>@$dataCnt['hiringCount'],
          'holdCount'      =>@$dataCnt['holdCount'],
          'closedCount'    =>@$dataCnt['closedCount'],
+         'removedCount'   =>@$dataCnt['removedCount'],
          'allTabCount'    =>@$dataCnt['allTabCount'],
         ];
         $searchbar = [
@@ -495,7 +610,33 @@
         <div class="content">        
 
           <!-- ══════════════════════════════════════════════════════════════
-               REQUISITION SOURCE EXECUTIVE METRIC STRIP
+               TIER 1: TOP HEADER TOOLBAR CARD (Jobs Tracker - Point 1 & Point 3)
+               ══════════════════════════════════════════════════════════════ -->
+          <div class="cd-jobs-header-card">
+            <div class="cd-jobs-header-left">
+              <div class="cd-jobs-header-icon">
+                <i class="fas fa-briefcase"></i>
+              </div>
+              <div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="cd-jobs-header-title">Jobs Tracker</span>
+                  <span class="badge badge-light-primary fw-bold" id="all_jobs_count" style="font-size: 11px; padding: 3px 8px; border-radius: 10px;">{{ $tabactive['allTabCount'] ?? $tabactive['allRequisition'] }}</span>
+                </div>
+                <div class="cd-jobs-header-sub">Manage, track and hire candidates faster.</div>
+              </div>
+            </div>
+            <div class="cd-jobs-header-right">
+              @if(in_array("add_jobs", $tabactive['userPermissions'] ?? []))
+                <button type="button" class="btn btn-sm btn-primary fw-bold cd-jobs-add-btn" data-toggle="modal" data-target="#add_staffing_partners" id="AddjobSection">
+                  <i class="fas fa-plus me-1"></i> Add Internal Job
+                </button>
+              @endif
+              <button type="button" id="jobSearchBtn" style="display: none;" aria-hidden="true"></button>
+            </div>
+          </div>
+
+          <!-- ══════════════════════════════════════════════════════════════
+               TIER 2: REQUISITION SOURCE EXECUTIVE METRIC STRIP (5 Tabs - Point 1 & Point 4)
                ══════════════════════════════════════════════════════════════ -->
           <div class="cd-jobs-kpi-grid">
             <a href="javascript:void(0);" data-kpi="all" onclick="filterJobsByKpi('all'); return false;" class="cd-kpi-card jh-card jh-card-source-all {{ ($currentKpi === 'all' || empty($currentKpi)) ? 'cd-kpi-active jh-card-active' : '' }}">
@@ -529,6 +670,16 @@
               </div>
             </a>
 
+            <a href="javascript:void(0);" data-kpi="my_organization" onclick="filterJobsByKpi('my_organization'); return false;" class="cd-kpi-card jh-card jh-card-source-my-org {{ ($currentKpi === 'my_organization') ? 'cd-kpi-active jh-card-active' : '' }}">
+              <div class="cd-kpi-icon icon-cyan">
+                <i class="fas fa-id-badge"></i>
+              </div>
+              <div class="cd-kpi-info">
+                <span class="cd-kpi-label">My Organization Jobs</span>
+                <span class="cd-kpi-num" id="top_card_my_org_count">{{ $tabactive['myOrganization'] ?? 0 }}</span>
+              </div>
+            </a>
+
             <a href="javascript:void(0);" data-kpi="job_request" onclick="filterJobsByKpi('job_request'); return false;" class="cd-kpi-card jh-card jh-card-source-request {{ ($currentKpi === 'job_request' || $currentKpi === 'request') ? 'cd-kpi-active jh-card-active' : '' }}">
               <div class="cd-kpi-icon icon-purple">
                 <i class="fas fa-handshake"></i>
@@ -542,42 +693,11 @@
           </div>
 
           <!-- ══════════════════════════════════════════════════════════════
-               TIER 1: TOP HEADER TOOLBAR CARD (Pure White #ffffff, Radius 10px)
-               ══════════════════════════════════════════════════════════════ -->
-          <div class="cd-jobs-header-card">
-            <div class="cd-jobs-header-left">
-              <div class="cd-jobs-header-icon">
-                <i class="fas fa-briefcase"></i>
-              </div>
-              <div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="cd-jobs-header-title">Jobs Tracker</span>
-                  <span class="badge badge-light-primary fw-bold" id="all_jobs_count" style="font-size: 11px; padding: 3px 8px; border-radius: 10px;">{{ $tabactive['allTabCount'] ?? $tabactive['allRequisition'] }}</span>
-                </div>
-                <div class="cd-jobs-header-sub">Manage, track and hire candidates faster.</div>
-              </div>
-            </div>
-            <div class="cd-jobs-header-right">
-              <div class="cd-jobs-search-subcard">
-                <i class="fas fa-search"></i>
-                <input type="text" class="inputJobSearch" id="inputJobSearch" name="inputJobSearch" placeholder="Search jobs by title, skills, client, ID..." autocomplete="off">
-                <button type="button" class="cd-jobs-search-clear" id="btnJobSearchClear" style="display: none;" title="Clear search">✕</button>
-              </div>
-              @if(in_array("add_jobs", $tabactive['userPermissions'] ?? []))
-                <button type="button" class="btn btn-sm btn-primary fw-bold cd-jobs-add-btn" data-toggle="modal" data-target="#add_staffing_partners" id="AddjobSection">
-                  <i class="fas fa-plus me-1"></i> Add Job
-                </button>
-              @endif
-              <button type="button" id="jobSearchBtn" style="display: none;" aria-hidden="true"></button>
-            </div>
-          </div>
-
-          <!-- ══════════════════════════════════════════════════════════════
-               TIER 2: DEDICATED SUB-TABS & FILTERS CARD (Pure White #ffffff)
+               TIER 3: DEDICATED STATUS SUB-TABS CARD (Pure White #ffffff)
                ══════════════════════════════════════════════════════════════ -->
           <div class="cd-jobs-tabs-card">
             <div class="cd-jobs-tabs-group">
-              <button type="button" class="cd-jobs-tab-btn jh-tab jh-tab-active" data-status="all" onclick="filterJobsByStatus('all'); return false;">
+              <button type="button" class="cd-jobs-tab-btn jh-tab jh-tab-active active" data-status="all" onclick="filterJobsByStatus('all'); return false;">
                 <span>All Statuses</span>
                 <span class="cd-jobs-tab-badge" id="filterCountAll">{{ $tabactive['allTabCount'] ?? $tabactive['allRequisition'] }}</span>
               </button>
@@ -598,10 +718,20 @@
                 <span class="cd-jobs-tab-badge badge-inactive" id="filterCountRemoved">{{ $tabactive['removedCount'] ?? 0 }}</span>
               </button>
             </div>
+            <input type="hidden" id="status" value="all">
+          </div>
+
+          <!-- ══════════════════════════════════════════════════════════════
+               TIER 4: DEDICATED SEARCH BAR & FILTERS CARD (Point 2)
+               ══════════════════════════════════════════════════════════════ -->
+          <div class="cd-jobs-search-filter-card">
+            <div class="cd-jobs-search-subcard">
+              <i class="fas fa-search"></i>
+              <input type="text" class="inputJobSearch" id="inputJobSearch" name="inputJobSearch" placeholder="Search jobs by title, skills, client, ID..." autocomplete="off">
+              <button type="button" class="cd-jobs-search-clear" id="btnJobSearchClear" style="display: none;" title="Clear search">✕</button>
+            </div>
 
             <div class="cd-jobs-filters-group">
-              <input type="hidden" id="status" value="all">
-              
               <!-- Job Type Filter Pill -->
               <div class="cd-filter-pill-wrap">
                 <span class="cd-filter-label"><i class="fas fa-briefcase me-1 text-muted"></i>Type:</span>
@@ -1103,10 +1233,10 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
     function updateKpiViewToggle(kpiType) {
         if (kpiType === 'job_request' || kpiType === 'request') {
-            $('.cd-jobs-tabs-card, .jh-filter-bar, .jh-tabs-card').hide();
+            $('.cd-jobs-tabs-card, .cd-jobs-search-filter-card, .jh-filter-bar, .jh-tabs-card').hide();
             $('.pipeline-legend-card').hide();
         } else {
-            $('.cd-jobs-tabs-card, .jh-filter-bar, .jh-tabs-card').show();
+            $('.cd-jobs-tabs-card, .cd-jobs-search-filter-card, .jh-filter-bar, .jh-tabs-card').show();
             $('.pipeline-legend-card').show();
         }
     }
@@ -1391,10 +1521,44 @@ $(document).on('click', '.client-show-detail', function ()
                 // 				}
                 // 		});
 }); 
-	
-	
 
-	
+// Point 6: Click anywhere on Job Details or Compensation & Exp sub-cards -> open Job Drawer
+$(document).on('click', '.js-open-job-drawer', function(e) {
+    if ($(e.target).closest('.status_stage, .loc-more-badge-wrap, .loc-popover-card, .loc-row, a, button').length) {
+        return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+
+    var jobId = $(this).data('row-id');
+    var isDirect = $(this).data('direct') == 1;
+
+    if (isDirect) {
+        var trigger = $('<span class="client-show-detail" data-row-id="' + jobId + '"></span>');
+        $('body').append(trigger);
+        trigger.trigger('click');
+        trigger.remove();
+    } else {
+        var trigger = $('<span class="show-detail" data-row-id="' + jobId + '"></span>');
+        $('body').append(trigger);
+        trigger.trigger('click');
+        trigger.remove();
+    }
+});
+
+// Point 6: Click anywhere on Hiring Pipeline sub-card -> move to Candidate Listing
+$(document).on('click', '.js-goto-candidates', function(e) {
+    if ($(e.target).closest('.cd-track-badge, a, button').length) {
+        return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+
+    var url = $(this).data('apptracker-url');
+    if (url) {
+        window.location.href = url;
+    }
+});
    
       var _isUpdatingStatusLock = false;
    function updateJobStatus(id, statusName)
@@ -1634,6 +1798,7 @@ $(document).on('click', '.client-hm-listing', function ()
                         $('#top_card_all_jobs_count').text(response.dataCnt.allRequisition ?? response.dataCnt.allTabCount ?? 0);
                         $('#top_card_client_requisition_count').text(response.dataCnt.clientRequisition ?? 0);
                         $('#top_card_custom_requisition_count').text(response.dataCnt.customRequisition ?? 0);
+                        $('#top_card_my_org_count').text(response.dataCnt.myOrganization ?? 0);
                         $('#top_card_job_request_count').text(response.dataCnt.jobRequest ?? 0);
                     }
                     Swal.fire({
@@ -1733,6 +1898,7 @@ $(document).on('click', '.client-hm-listing', function ()
                             $('#top_card_all_jobs_count').text(response.dataCnt.allRequisition ?? response.dataCnt.allTabCount ?? 0);
                             $('#top_card_client_requisition_count').text(response.dataCnt.clientRequisition ?? 0);
                             $('#top_card_custom_requisition_count').text(response.dataCnt.customRequisition ?? 0);
+                            $('#top_card_my_org_count').text(response.dataCnt.myOrganization ?? 0);
                             $('#top_card_job_request_count').text(response.dataCnt.jobRequest ?? 0);
                         }
                         swalWithBootstrapButtons.fire('Rejected!', 'Selected request has been rejected.', 'success');
@@ -1897,8 +2063,10 @@ $(document).on('click', '.client-hm-listing', function ()
                     statusBadgeHtml = '<span data-row-id="' + job.id + '" data-direct-client="' + directClientAttr + '" class="cd-status-badge ' + statusCls + ' status_stage" title="Click to update status"><i class="fas ' + statusIcon + ' me-1"></i>' + displayStatus + '</span>';
                 }
 
-                var clientTypeLabel = job.is_direct_client ? 'Direct Client' : ((job.recommendation_text) ? job.recommendation_text : 'Internal Client');
-                var clientTypeCls = job.is_direct_client ? 'type-direct' : 'type-internal';
+                var isOwnOrg = Boolean(job.is_self_company || job.recommendation_text === 'My Organization');
+                var clientTypeLabel = job.is_direct_client ? 'Direct Client' : (isOwnOrg ? 'My Organization' : ((job.recommendation_text) ? job.recommendation_text : 'Internal Client'));
+                var clientTypeCls = job.is_direct_client ? 'type-direct' : (isOwnOrg ? 'type-my-org' : 'type-internal');
+                var clientTypeIcon = isOwnOrg ? 'fa-id-badge' : (job.is_direct_client ? 'fa-shield-alt' : 'fa-building');
 
                 var logoHtml = '';
                 if (job.logo_path) {
@@ -2049,17 +2217,17 @@ $(document).on('click', '.client-hm-listing', function ()
                 }
 
                 // MASTER PRIMARY CARD (Rule 20 Modern Enterprise Card + Sub-Card)
-                html += '<div class="cd-job-card js-job-card-clickable" data-entity="job" data-job-id="' + job.id + '" style="border-left: 3.5px solid ' + statusBorderColor + ' !important; cursor: pointer;">';
+                html += '<div class="cd-job-card" data-entity="job" data-job-id="' + job.id + '" style="border-left: 3.5px solid ' + statusBorderColor + ' !important;">';
                 
                 // UPPER SUB-CARDS GRID (5 Discrete Sub-Cards)
                 html += '  <div class="cd-job-card-grid">';
 
-                // SUB-CARD 1: JOB DETAILS
-                html += '    <div class="cd-job-subcard cd-subcard-details">';
+                // SUB-CARD 1: JOB DETAILS (Point 6 & Point 7)
+                html += '    <div class="cd-job-subcard cd-subcard-details js-open-job-drawer" data-row-id="' + job.id + '" data-direct="' + directClientAttr + '" title="Click to view job details">';
                 html += '      <div class="cd-subcard-header">';
                 html += '        <span class="cd-subcard-label">Job Details</span>';
                 html += '        <div class="cd-header-badges">';
-                html += '          <span class="cd-badge-client-type ' + clientTypeCls + '"><i class="fas fa-building me-1"></i>' + clientTypeLabel + '</span>';
+                html += '          <span class="cd-badge-client-type ' + clientTypeCls + '"><i class="fas ' + clientTypeIcon + ' me-1"></i>' + clientTypeLabel + '</span>';
                 html += '          ' + statusBadgeHtml;
                 html += '        </div>';
                 html += '      </div>';
@@ -2081,8 +2249,8 @@ $(document).on('click', '.client-hm-listing', function ()
                 html += '      </div>';
                 html += '    </div>';
 
-                // SUB-CARD 2: COMPENSATION & EXP
-                html += '    <div class="cd-job-subcard cd-subcard-comp-loc">';
+                // SUB-CARD 2: COMPENSATION & EXP (Point 6)
+                html += '    <div class="cd-job-subcard cd-subcard-comp-loc js-open-job-drawer" data-row-id="' + job.id + '" data-direct="' + directClientAttr + '" title="Click to view job details">';
                 html += '      <div class="cd-subcard-header">';
                 html += '        <span class="cd-subcard-label">Compensation &amp; Exp</span>';
                 html += '      </div>';
@@ -2127,8 +2295,8 @@ $(document).on('click', '.client-hm-listing', function ()
                 html += '      </div>';
                 html += '    </div>';
 
-                // SUB-CARD 5: HIRING PIPELINE
-                html += '    <div class="cd-job-subcard cd-subcard-pipeline">';
+                // SUB-CARD 5: HIRING PIPELINE (Point 6)
+                html += '    <div class="cd-job-subcard cd-subcard-pipeline js-goto-candidates" data-apptracker-url="' + allAppUrl + '" title="Click to view all candidates">';
                 html += '      <div class="cd-subcard-header">';
                 html += '        <span class="cd-subcard-label">Hiring Pipeline</span>';
                 html += '      </div>';
@@ -2176,6 +2344,14 @@ $(document).on('click', '.client-hm-listing', function ()
             var sortVal = $('#hiringtype').val() || '1';
 
             var filtered = window.jobsState.all.filter(function(job) {
+                if (window.currentKpiFilter === 'my_organization') {
+                    if (job.is_direct_client || !job.is_self_company) return false;
+                } else if (window.currentKpiFilter === 'internal') {
+                    if (job.is_direct_client || job.is_self_company) return false;
+                } else if (window.currentKpiFilter === 'direct') {
+                    if (!job.is_direct_client) return false;
+                }
+
                 if (searchTerm !== '') {
                     var matchTitle = (job.title || '').toLowerCase().includes(searchTerm);
                     var matchDept = (job.department || '').toLowerCase().includes(searchTerm);
@@ -2292,6 +2468,14 @@ $(document).on('click', '.client-hm-listing', function ()
                 $('#filterCountHold, .jh-tab[data-status="hold"] .jh-badge, .cd-jobs-tab-btn[data-status="hold"] .cd-jobs-tab-badge').text(response.status_counts.hold !== undefined ? response.status_counts.hold : 0);
                 $('#filterCountClosed, .jh-tab[data-status="inactive"] .jh-badge, .cd-jobs-tab-btn[data-status="inactive"] .cd-jobs-tab-badge').text(response.status_counts.inactive !== undefined ? response.status_counts.inactive : 0);
                 $('#filterCountRemoved, .jh-tab[data-status="removed"] .jh-badge, .cd-jobs-tab-btn[data-status="removed"] .cd-jobs-tab-badge').text(response.status_counts.removed !== undefined ? response.status_counts.removed : 0);
+            }
+
+            if (response.dataCnt) {
+                $('#top_card_all_jobs_count').text(response.dataCnt.allRequisition ?? response.dataCnt.allTabCount ?? 0);
+                $('#top_card_client_requisition_count').text(response.dataCnt.clientRequisition ?? 0);
+                $('#top_card_custom_requisition_count').text(response.dataCnt.customRequisition ?? 0);
+                $('#top_card_my_org_count').text(response.dataCnt.myOrganization ?? 0);
+                $('#top_card_job_request_count').text(response.dataCnt.jobRequest ?? 0);
             }
         }
 
