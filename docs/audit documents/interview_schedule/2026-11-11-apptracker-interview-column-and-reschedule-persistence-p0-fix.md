@@ -133,6 +133,12 @@ Timezone: IST
 Result: PASS
 ```
 
+### 5.3 Undefined Variable Incident Resolution (Commit `5bcce8a0`)
+- **Error Trigger:** `ErrorException: Undefined variable $job_id in storeSchedule:10406`.
+- **Root Cause:** Line 10406 referenced `$job_id` directly rather than resolving it from `$AddJobWiseCondidate->job_id`.
+- **Remediation:** Resolved `$targetJobId = (int) ($AddJobWiseCondidate->job_id ?? $request->jobId ?? $request->job_id ?? 0);` before invoking `cache()->increment("ats:version:job:{$companyId}:{$targetJobId}")`.
+- **Verification:** Syntax linter passed with 0 errors. Pushed to `origin/staging`.
+
 ---
 
 ## 6. Live Server Deployment Instructions
