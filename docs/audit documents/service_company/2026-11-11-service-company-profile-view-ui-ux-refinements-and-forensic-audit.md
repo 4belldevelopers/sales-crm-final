@@ -84,14 +84,30 @@ Following live review on `testing.jero.works`, a second-phase forensic audit and
 | File Path | Changes Applied |
 | :--- | :--- |
 | [`app/Services/ServiceCompanyProfileService.php`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Services/ServiceCompanyProfileService.php) | Added `'users.linkedin'` to `getUserDetails()`; added `'all_jobs'` counter calculation to `getKpiMetrics()`. |
-| [`resources/views/service_company/profile/index.blade.php`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/profile/index.blade.php) | Refined CSS for 7-metric KPI grid, nav-tabs compatibility, LinkedIn pill/btn, and tile-right layout without `word-break: break-all`. Rebuilt Hero card without noise badges. Built 7-card KPI strip. Streamlined 3-card grid without subtitles. Injected robust tab click delegation. |
+| [`resources/views/service_company/profile/index.blade.php`](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/profile/index.blade.php) | Refined CSS for 7-metric KPI grid, nav-tabs compatibility, LinkedIn pill/btn, and tile-right layout without `word-break: break-all`. Rebuilt Hero card without noise badges. Built 7-card KPI strip. Streamlined 3-card grid without subtitles. Injected robust tab click delegation. Fixed 50% container collapse by removing rogue premature `</div>` tag and enforcing `width: 100% !important; flex-wrap: nowrap !important;` on `#kt_content`, `#kt_post`, `#kt_content_container`, `.scp-hero-card`, and `.scp-tabs-card`. |
 
 ---
 
-## 4. Verification Checklist
+## 4. Layout Width & DOM Collapse Forensic Resolution
+
+### Root Cause Analysis
+1. **Premature Tag Termination:** An extra rogue `</div>` before the legacy overview block caused the `#overview` tab-pane to close early. Consequently, the downstream closing tags closed `tab-content`, `card-custom`, `kt_content_container`, and the outer `#kt_wrapper` prematurely, breaking Metronic's flex layout and confining the card contents to a squished ~485px column.
+2. **Bootstrap 5 `.nav` Wrapping Collision:** Adding Bootstrap `.nav` to `.scp-tabs-card` introduced `flex-wrap: wrap;`, which broke Rule 20's mandatory single-row horizontal tab requirement and wrapped the tabs onto 3 rows.
+3. **Hero & KPI Grid Flex Squeeze:** The lack of explicit `width: 100%` and `flex-wrap: nowrap` on `.scp-hero-card` allowed the hero header items to stack vertically when the container width was constricted.
+
+### Implemented Fixes
+1. **DOM Tree Rebalanced:** Removed the redundant `</div>` at line 1909. All 4,690 lines now have 0 unmatched closes and 0 mismatches.
+2. **Strict Full-Width Enforcement:** Added `width: 100% !important; max-width: 100% !important; box-sizing: border-box !important;` across `#kt_content`, `#kt_post`, `#kt_content_container`, `.scp`, `.scp-hero-card`, `.scp-kpi-grid`, and `.scp-tabs-card`.
+3. **Single-Row Horizontal Sub-Tabs (Rule 20):** Enforced `display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; overflow-x: auto !important; overflow-y: hidden !important;` on `.scp-tabs-card`, with `flex-shrink: 0 !important;` on all tab items.
+4. **Hero Header Desktop Alignment:** Enforced `flex-wrap: nowrap !important;` on `.scp-hero-card` for screens $\ge 992px$, ensuring the identity block, profile health tracker, and "Edit Profile" button remain on a single horizontal row across all 15.6" screens (`1366×768` and `1920×1080`).
+
+---
+
+## 5. Verification Checklist
 
 - [x] `php -l app/Services/ServiceCompanyProfileService.php`: 0 syntax errors
 - [x] `php -l resources/views/service_company/profile/index.blade.php`: 0 syntax errors
+- [x] DOM balance audit: 0 unmatched closes, 0 tag mismatches across entire blade
 - [x] Laravel Pint code style pass: 0 violations
 - [x] Rule 18 Persona Code Freeze: 0 frozen files touched
 - [x] AI Guard scan: 0 forbidden debug statements (`dd`, `dump`, `var_dump`, `ray`)
