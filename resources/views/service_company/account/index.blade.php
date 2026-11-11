@@ -6,7 +6,6 @@ use App\Helper\GeneralMethod;
 $productAllowCompany = GeneralMethod::companiesType();
 ?>
 <link rel="stylesheet" href="{{ asset('demo/plugins/custom/jkanban/jkanban.bundle.css') }}">
-@include('service_company.client.components.tab-activity-style')
 <style>
 body {overflow-x:hidden; }
 .table > :not(caption) > * > * { padding: 0.9rem 0.2rem!important; }
@@ -2667,9 +2666,9 @@ input[type="radio"]:checked {
   @endif
 </div>
 <!--end::overview Content-->
-<!--begin::Recent Activity Content (Rule 20 Dynamic Client/Company Feed)-->
+<!--begin::Recent Activity Content (Company Users Activity Timeline)-->
 <div class="tab-pane" id="recent_activity" role="tabpanel">
-  @include('service_company.client.components.tab-activity', ['viewerType' => 'client'])
+  @include('service_company.account.components.tab-company-activity')
 </div>
 <!--end::Recent Activity Content-->
 <!--begin::Interview Stage Content-->
@@ -7392,31 +7391,17 @@ $(document).ready(function(){
         $(this).addClass('active');
     });
 
-    // ── Dynamically Initialize Client Activity Feed (Overview + Activity Tab) ──
+    // ── Dynamically Initialize Company Activity Feed (Overview + Activity Tab) ──
     (function () {
-        var selfClientId = {{ (int)(@$client->id ?? 0) }};
-        if (!selfClientId) return;
-
-        function initAccountActivity() {
-            if (window.ClientActivityManager && typeof window.ClientActivityManager.initClient === 'function') {
-                try {
-                    window.ClientActivityManager.initClient(selfClientId, true, null, false);
-                } catch (err) {
-                    console.warn('ClientActivityManager init warning:', err);
-                }
+        function refreshCompanyActivity() {
+            if (window.CompanyActivityManager && typeof window.CompanyActivityManager.loadActivity === 'function') {
+                window.CompanyActivityManager.loadActivity(false);
             }
-        }
-
-        // Initialize feed on page ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initAccountActivity);
-        } else {
-            setTimeout(initAccountActivity, 100);
         }
 
         // Re-hydrate / refresh when switching to Activity tab
         $(document).on('shown.bs.tab', '.cd-drawer-tabs-list a[href="#recent_activity"]', function (e) {
-            initAccountActivity();
+            refreshCompanyActivity();
         });
 
         // "View all activity ->" link switches smoothly to Activity tab
@@ -7429,7 +7414,7 @@ $(document).ready(function(){
                 } else {
                     $actTab.trigger('click');
                 }
-                initAccountActivity();
+                refreshCompanyActivity();
             }
         });
     })();
