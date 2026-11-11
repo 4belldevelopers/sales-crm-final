@@ -8943,11 +8943,97 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->scheduleDate = $request->date;
         // $this->currentApplicant = JobApplication::findOrFail($id);
         $this->interview_node = GeneralMethod::interview_mode();
-        $this->application_id = $this->interview_id = $this->feedback_id = $this->interview_detail = '';
-        $this->application_id = $id;
-        // dd($this->application_id);
+        $companyId = (int) (auth()->user()->company_id ?? 0);
+
+        // Disambiguate identifiers:
+        // $id could be add_job_wise_condidates.id OR job_applications.id.
+        // Request can also pass explicit wiseId, jobId, application_id.
+        $reqWiseId = (int) ($request->wiseId ?? $request->wise_id ?? $request->jobWiseCanId ?? 0);
+        $reqJobId = (int) ($request->jobId ?? $request->job_id ?? 0);
+        $reqAppId = (int) ($request->application_id ?? $request->app_id ?? $request->candidate_id ?? 0);
+        $routeId = (int) $id;
+
+        $targetWiseId = 0;
+        $targetAppId = 0;
+        $targetJobId = $reqJobId;
+
+        // 1. If explicit wiseId was passed, verify and resolve from add_job_wise_condidates
+        if ($reqWiseId > 0) {
+            $wiseRecord = DB::table('add_job_wise_condidates')->where('id', $reqWiseId)->first();
+            if ($wiseRecord) {
+                $targetWiseId = (int) $wiseRecord->id;
+                $targetAppId = (int) $wiseRecord->job_application_id;
+                if (! $targetJobId) {
+                    $targetJobId = (int) $wiseRecord->job_id;
+                }
+            }
+        }
+
+        // 2. If not yet resolved, check if routeId is a valid add_job_wise_condidates.id
+        if (! $targetWiseId && $routeId > 0) {
+            $wiseQuery = DB::table('add_job_wise_condidates')->where('id', $routeId);
+            if ($targetJobId > 0) {
+                $wiseQuery->where('job_id', $targetJobId);
+            }
+            if ($companyId > 0) {
+                $wiseQuery->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)
+                      ->orWhere('thirdparty_company_id', $companyId);
+                });
+            }
+            $wiseRecord = $wiseQuery->first();
+            if ($wiseRecord) {
+                $targetWiseId = (int) $wiseRecord->id;
+                $targetAppId = (int) $wiseRecord->job_application_id;
+                if (! $targetJobId) {
+                    $targetJobId = (int) $wiseRecord->job_id;
+                }
+            }
+        }
+
+        // 3. If still not resolved as a wiseId, routeId or reqAppId is the job_applications.id
+        if (! $targetAppId) {
+            $targetAppId = $reqAppId > 0 ? $reqAppId : $routeId;
+        }
+
+        // 4. Resolve the matching add_job_wise_condidates row for targetAppId
+        if (! $targetWiseId && $targetAppId > 0) {
+            $wiseQuery = DB::table('add_job_wise_condidates')->where('job_application_id', $targetAppId);
+            if ($targetJobId > 0) {
+                $wiseQuery->where('job_id', $targetJobId);
+            }
+            if ($companyId > 0) {
+                $wiseQuery->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)
+                      ->orWhere('thirdparty_company_id', $companyId);
+                });
+            }
+            $wiseRecord = $wiseQuery->orderByDesc('id')->first();
+            if ($wiseRecord) {
+                $targetWiseId = (int) $wiseRecord->id;
+                if (! $targetJobId) {
+                    $targetJobId = (int) $wiseRecord->job_id;
+                }
+            } else {
+                $wiseRecord = DB::table('add_job_wise_condidates')
+                    ->where('job_application_id', $targetAppId)
+                    ->orderByDesc('id')
+                    ->first();
+                if ($wiseRecord) {
+                    $targetWiseId = (int) $wiseRecord->id;
+                    if (! $targetJobId) {
+                        $targetJobId = (int) $wiseRecord->job_id;
+                    }
+                }
+            }
+        }
+
+        $this->application_id = $targetAppId;
+        $this->interview_id = $this->feedback_id = '';
         $this->interview_detail = [];
-        $this->application = JobApplication::withoutGlobalScopes()->select(
+
+        // Build deterministic candidate application query strictly scoped to targetAppId
+        $appQuery = JobApplication::withoutGlobalScopes()->select(
             'job_applications.*',
             'clients.name as client_name',
             'clients.self_company',
@@ -8969,28 +9055,39 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'add_job_wise_condidates.job_id as jobId',
             'add_job_wise_condidates.thirdparty_company_id as ClientComID',
             'jobs.client_id'
-        )
-            ->leftjoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->leftjoin('master_status', function ($join) {
-                $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-            })
-            ->leftjoin('jobs', function ($join) {
-                $join->on('jobs.id', 'add_job_wise_condidates.job_id');
-            })
-            ->leftjoin('clients', 'clients.id', '=', 'jobs.client_id')
-            ->leftjoin('users', 'users.id', '=', 'add_job_wise_condidates.submitted_by')
-            ->leftjoin('client_location_jobs', 'client_location_jobs.job_id', 'jobs.id')
-            ->leftjoin('client_location', 'client_location.id', 'client_location_jobs.client_location_id')
-            ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-            ->leftjoin('state_list', 'state_list.id', 'job_applications.state')
-            ->where(function ($query) use ($id) {
-                $query->where('add_job_wise_condidates.id', $id)
-                    ->orWhere('job_applications.id', $id);
-            })
-            ->groupBy('job_applications.id')->first();
+        )->where('job_applications.id', $targetAppId);
 
-        if (! $this->application) {
-            $this->application = JobApplication::find($this->application_id);
+        if ($targetWiseId > 0) {
+            $appQuery->leftJoin('add_job_wise_condidates', function ($join) use ($targetWiseId) {
+                $join->on('add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
+                     ->where('add_job_wise_condidates.id', '=', $targetWiseId);
+            });
+        } else {
+            $appQuery->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id');
+        }
+
+        $this->application = $appQuery
+            ->leftJoin('master_status', 'master_status.id', '=', 'add_job_wise_condidates.master_status_id')
+            ->leftJoin('jobs', 'jobs.id', '=', 'add_job_wise_condidates.job_id')
+            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+            ->leftJoin('users', 'users.id', '=', 'add_job_wise_condidates.submitted_by')
+            ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
+            ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+            ->leftJoin('qualification_master', 'qualification_master.id', '=', 'job_applications.qualification')
+            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
+            ->first();
+
+        if (! $this->application && $targetAppId > 0) {
+            $this->application = JobApplication::withoutGlobalScopes()->find($targetAppId);
+        }
+
+        if ($this->application) {
+            if ($targetWiseId > 0) {
+                $this->application->wiseId = $targetWiseId;
+            }
+            if ($targetJobId > 0) {
+                $this->application->jobId = $targetJobId;
+            }
         }
 
         if (! $this->application) {
@@ -10072,6 +10169,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $application_id = (int) ($request->application_id ?: ($AddJobWiseCondidate->job_application_id ?? 0));
+        // Ensure application_id is consistent with the authoritative wise candidate relationship
+        if (! empty($AddJobWiseCondidate->job_application_id) && $application_id !== (int) $AddJobWiseCondidate->job_application_id) {
+            \Log::warning('storeSchedule: application_id mismatch corrected from authoritative wise relationship', [
+                'submitted_app_id' => $application_id,
+                'authoritative_app_id' => $AddJobWiseCondidate->job_application_id,
+                'wise_id' => $request->wiseId,
+            ]);
+            $application_id = (int) $AddJobWiseCondidate->job_application_id;
+        }
         $interview_type = (int) ($request->interview_type ?? 1);
         $interviewDate = (string) ($request->interviewDate ?? '');
         $interviewTime = (string) ($request->interviewTime ?? '');
