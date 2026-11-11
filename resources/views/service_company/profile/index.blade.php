@@ -1,7 +1,7 @@
 @extends('layouts.service_company_layout')
-<?php 
+<?php
    use App\Helper\GeneralMethod;
-   use Carbon\Carbon;
+
 ?>
  @php
       
@@ -203,28 +203,36 @@ body
 }
 
 /* ===== Rule 20 Modern Card + Sub-Card Design System for Service Company Profile ===== */
+#kt_content, #kt_post, #kt_content_container, .scp {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
 .scp, .scp * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; box-sizing:border-box; }
-.scp { font-size:13px; color:#0f172a; }
+.scp { font-size:13px; color:#0f172a; width:100% !important; }
 
 /* Tier 1: Top Hero Profile Header Card */
 .scp-hero-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 10px !important;
-  padding: 18px 22px !important;
+  padding: 16px 20px !important;
   margin-bottom: 14px !important;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
   gap: 18px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 .scp-hero-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-  min-width: 280px;
+  gap: 14px;
+  min-width: 260px;
+  flex: 1 1 auto;
 }
 .scp-avatar-wrap {
   position: relative;
@@ -439,10 +447,12 @@ body
 
 /* Tier 1.5: High-Density 7-Metric KPI Stats Sub-Cards */
 .scp-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin-bottom: 14px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 .scp-kpi-subcard {
   background: #ffffff;
@@ -451,11 +461,13 @@ body
   padding: 10px 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   transition: all 0.15s ease;
   cursor: pointer;
   text-decoration: none;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .scp-kpi-subcard:hover {
   transform: translateY(-1px);
@@ -463,8 +475,8 @@ body
   border-color: #bfdbfe;
 }
 .scp-kpi-ic-box {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -473,7 +485,7 @@ body
   flex-shrink: 0;
 }
 .scp-kpi-ic-box svg, .scp-kpi-ic-box i {
-  font-size: 16px;
+  font-size: 15px;
 }
 .scp-kpi-ic-blue { background: #eff6ff; color: #009ef7; }
 .scp-kpi-ic-teal { background: #f0fdfa; color: #0d9488; }
@@ -487,34 +499,38 @@ body
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 .scp-kpi-lbl {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 500;
   color: #64748b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: block;
 }
 .scp-kpi-val {
   font-size: 15px;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.2;
+  display: block;
 }
 
 @media (max-width: 1400px) {
-  .scp-kpi-grid { gap: 8px; }
-  .scp-kpi-subcard { padding: 8px 10px; gap: 8px; }
-  .scp-kpi-ic-box { width: 32px; height: 32px; font-size: 14px; }
-  .scp-kpi-val { font-size: 14px; }
-  .scp-kpi-lbl { font-size: 10px; }
+  .scp-kpi-grid { gap: 6px !important; }
+  .scp-kpi-subcard { padding: 8px 10px !important; gap: 6px !important; }
+  .scp-kpi-ic-box { width: 30px !important; height: 30px !important; font-size: 13px !important; }
+  .scp-kpi-val { font-size: 14px !important; }
+  .scp-kpi-lbl { font-size: 10px !important; }
 }
 @media (max-width: 1100px) {
-  .scp-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .scp-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
 }
 @media (max-width: 768px) {
-  .scp-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scp-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }
 
 /* Tier 2: Dedicated Sub-Tabs Card (Rule 20 Mandatory) */
@@ -527,18 +543,26 @@ body
   margin-bottom: 14px !important;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
   display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
   gap: 8px !important;
   overflow-x: auto !important;
+  overflow-y: hidden !important;
   scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
   list-style: none !important;
   margin-left: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 .scp-tabs-card::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  height: 0 !important;
 }
 .scp-tab-item, .nav-tabs.scp-tabs-card .nav-item {
-  display: inline-block;
+  display: inline-flex !important;
+  flex-shrink: 0 !important;
   margin: 0 !important;
 }
 .scp-tab-link, .nav-tabs.scp-tabs-card .nav-link.scp-tab-link {
@@ -556,6 +580,7 @@ body
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
   transition: all 0.15s ease !important;
   white-space: nowrap !important;
+  flex-shrink: 0 !important;
   cursor: pointer !important;
 }
 .scp-tab-link:hover, .nav-tabs.scp-tabs-card .nav-link.scp-tab-link:hover {
@@ -845,14 +870,16 @@ body
 
 /* Responsiveness for 15.6" screens and down */
 @media (max-width: 1200px) {
-  .scp-details-grid { grid-template-columns: 1fr 1fr; }
-  .scp-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .scp-details-grid { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 991px) {
+  .scp-hero-card { flex-wrap: wrap !important; }
+  .scp-health-box { flex: 1 1 100% !important; max-width: 100% !important; }
 }
 @media (max-width: 768px) {
-  .scp-details-grid { grid-template-columns: 1fr; }
-  .scp-kpi-grid { grid-template-columns: 1fr 1fr; }
-  .scp-hero-card { flex-direction: column; align-items: stretch; }
-  .scp-hero-actions-col { flex-direction: row; }
+  .scp-details-grid { grid-template-columns: 1fr !important; }
+  .scp-hero-card { flex-direction: column !important; align-items: stretch !important; }
+  .scp-hero-actions-col { flex-direction: row !important; }
 }
 
 /* ===================== Shared icon tints (Settings + Rank) ===================== */
@@ -1264,13 +1291,13 @@ body
 @section('content')
 <!--begin::Toolbar (removed)-->
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content" style="margin-top:-60px;">
+<div class="content d-flex flex-column flex-column-fluid pt-4 w-100" id="kt_content" style="margin-top:-60px;">
   <!--begin::Post-->
-  <div class="post d-flex flex-column-fluid" id="kt_post">
+  <div class="post d-flex flex-column-fluid w-100" id="kt_post">
     <!--begin::Container-->
-    <div id="kt_content_container" class="container-fluid px-3">
+    <div id="kt_content_container" class="container-fluid px-3 w-100">
       <!--begin::Redesigned hero + stats-->
-      <div class="scp px-2">
+      <div class="scp px-0 w-100">
         @php
           $scp_logo = (!empty(@$users->image) && strlen(@$users->image)>10) ? @$users->image : '';
           $scp_initial = '';
@@ -1460,61 +1487,56 @@ body
       <div class="card mb-5 mb-xl-5 mx-2 d-none">
         <div class="card-body pt-5 pb-0 px-5">
           <!--begin::Details-->
-          <?php 
-                  $background_image					=	'';//url('public/user-uploads/team_profile_img/avatar.png'); //'https://preview.keenthemes.com/metronic8/demo1/assets/media/avatars/blank.png';
-                  if(!empty(@$users->image) && strlen(@$users->image)>10){
-                   		//	$background_image			=  url('public/user-uploads/team_profile_img/'.@$users->image);  
-                   				$background_image			=  @$users->image;  
-                   	}
-                  ?>
-          <?php 
-                  $country_id		=	$state	= '';	
-                  $country_id			=	$users->country;	  	//@$application->country;
-                  $state				=	$users->state;    		//@$application->state; users    
-                  if(@$country_id > 0)
-                  {
-                  	   $country_name_Arr	= GeneralMethod::getCountryName($country_id);	
-                   foreach($country_name_Arr as $cval){
-                  // $country_name		= ucwords($cval['name']);	
-                   } 
-                   if($country_id == 101)
-                   {
-                   		// $state_name	= @$users->state_name;
-                      // $city_name	= @$users->city_name; 	
-                   }
-                  	   else
-                   {  			
-                  	if( $state > 0){
-                  		$state_name_Arr		= GeneralMethod::getStateName($country_id, $state);	
-                  		foreach($state_name_Arr as $sval){
-                  			$state_name	= ucwords($sval['name']);	
-                  		}	
-                  	}
-                  	// $city_name	= @$users->city; 
-                   }	
-                  
-                  } 
+          <?php
+                  $background_image = ''; // url('public/user-uploads/team_profile_img/avatar.png'); //'https://preview.keenthemes.com/metronic8/demo1/assets/media/avatars/blank.png';
+if (! empty(@$users->image) && strlen(@$users->image) > 10) {
+    //	$background_image			=  url('public/user-uploads/team_profile_img/'.@$users->image);
+    $background_image = @$users->image;
+}
+?>
+          <?php
+$country_id = $state = '';
+$country_id = $users->country;	  	// @$application->country;
+$state = $users->state;    		// @$application->state; users
+if (@$country_id > 0) {
+    $country_name_Arr = GeneralMethod::getCountryName($country_id);
+    foreach ($country_name_Arr as $cval) {
+        // $country_name		= ucwords($cval['name']);
+    }
+    if ($country_id == 101) {
+        // $state_name	= @$users->state_name;
+        // $city_name	= @$users->city_name;
+    } else {
+        if ($state > 0) {
+            $state_name_Arr = GeneralMethod::getStateName($country_id, $state);
+            foreach ($state_name_Arr as $sval) {
+                $state_name = ucwords($sval['name']);
+            }
+        }
+        // $city_name	= @$users->city;
+    }
 
-                  $str = trim(@$users->name);
-                    if (!empty($str)) {
-                        $str = $strVal = strtolower($str[0]);
-                        $str = ord($str);
-                        if ($str >= 97 && $str <= 101) {
-                            $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                        } elseif ($str >= 102 && $str <= 106) {
-                            $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                        } elseif ($str >= 107 && $str <= 111) {
-                            $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                        } elseif ($str >= 112 && $str <= 116) {
-                            $bgTextDecore = 'fs-3 bg-light-success text-success';
-                        } elseif ($str >= 117 && $str <= 121) {
-                            $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                        } else {
-                            $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                        }
-                    }
+}
 
-                  
+$str = trim(@$users->name);
+if (! empty($str)) {
+    $str = $strVal = strtolower($str[0]);
+    $str = ord($str);
+    if ($str >= 97 && $str <= 101) {
+        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
+    } elseif ($str >= 102 && $str <= 106) {
+        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
+    } elseif ($str >= 107 && $str <= 111) {
+        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
+    } elseif ($str >= 112 && $str <= 116) {
+        $bgTextDecore = 'fs-3 bg-light-success text-success';
+    } elseif ($str >= 117 && $str <= 121) {
+        $bgTextDecore = 'fs-3 bg-dark text-secondary';
+    } else {
+        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+    }
+}
+
                   ?>
           <div class="d-flex flex-wrap flex-sm-nowrap mb-3">
             <!--begin: Pic-->
@@ -1589,10 +1611,9 @@ body
                 <div class="d-flex mt-4">
                   <!--begin::Whatsapp-->
                   <!--begin::Svg Icon-->
-                  <?php 
-                              if($users->status == 'active')
-                              {
-                              ?>
+                  <?php
+            if ($users->status == 'active') {
+                ?>
                   <a href="javascript:void(0);" class="btn btn-sm btn-flex btn-light-success fw-bolder me-3 fs-6"> <span class="svg-icon svg-icon-4 me-1">
                   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                     <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -1602,11 +1623,9 @@ body
                     </g>
                   </svg>
                   </span> Active </a>
-                  <?php 
-                              }
-                              else
-                              {
-                              ?>
+                  <?php
+            } else {
+                ?>
                   <a href="javascript:void(0);" class="btn btn-sm btn-light-danger btn-active-danger fw-bolder me-3 fs-6"> <span class="svg-icon svg-icon-4 me-1">
                   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                     <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -1616,9 +1635,9 @@ body
                     </g>
                   </svg>
                   </span> Inactive </a>
-                  <?php 
-                              } 
-                              ?>
+                  <?php
+            }
+?>
                   <!--end::Svg Icon-->
                   <!--end::Whatsapp-->
                   <!--begin::Email-->
@@ -1656,10 +1675,10 @@ body
       </div>
       <!--end::User Details-->
       <!--begin::Tabs-->
-      <div class="card card-custom mx-2">
+      <div class="card card-custom mx-0 w-100 border-0 bg-transparent shadow-none">
         <!--Begin::Tabs Header-->
         <!--Begin::Tier 2 Dedicated Sub-Tabs Card (Rule 20 Mandatory Standard)-->
-        <div class="px-0 pt-2 pb-0">
+        <div class="px-0 pt-0 pb-0">
           <ul class="nav nav-tabs scp-tabs-card" role="tablist">
             <li class="nav-item scp-tab-item">
               <a class="nav-link scp-tab-link active show" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#overview">
@@ -1906,8 +1925,7 @@ body
 
                 </div>
               </div>
-            </div>
-            <div class="d-none">
+              <div class="d-none">
               <!--begin::Overview header-->
               <div class="card-header cursor-pointer px-0">
                 <!--begin::Card title-->
@@ -2895,8 +2913,8 @@ body
 </div>
 <!--end::Reset password Modal-->
 <input type="hidden" name="userId" id="userId" value="<?php echo @$users->id; ?>" />
-<?php 
-   //echo '<pre>'; print_r($users->name);  
+<?php
+   // echo '<pre>'; print_r($users->name);
 ?>
 <div id="kt_activitiesJob_toggle"></div>
 <div id="kt_activitiesJob" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activitiesJob_close">
@@ -3358,7 +3376,7 @@ $(document).ready(function() {
           // ajax			: {'url' : '{!! route('service_company.cvtracker.alldata') !!}', "data": function ( d ){d.search = $('#inputSearch').val(), d.profile = true, d.status_cus = 6 }}, 
           language:
           {
-              "url": "<?php echo __("app.datatable") ?>"
+              "url": "<?php echo __('app.datatable') ?>"
           },
           "fnDrawCallback": function (oSettings)
           {
@@ -3707,7 +3725,7 @@ $(document).on('click', '.interview_client_stage_sub_stage', function(){
          ajax: '{!! route('service_company.team.appdata') !!}?userId='+userId,  
         // ajax			:	{'url' : '{!! route('service_company.cvtracker.alldata') !!}', "data" : function ( d ) { d.search = $('#inputSearch').val(),d.profile = true} },           
                   language: {
-                      "url": "<?php echo __("app.datatable") ?>"
+                      "url": "<?php echo __('app.datatable') ?>"
                   },
           
                   "fnDrawCallback": function (oSettings) {
@@ -3878,7 +3896,7 @@ table.on('click', '.client_stage_sub_stage', function ()
 	// 															  }
 	// 															},   
   //                             // ajax			: {'url' : '{!! route('service_company.jobs.all_data') !!}', "data": function ( d ){d.search = $('#inputSearch').val(),d.profile = true}},
-	// 													language:{"url": "<?php echo __("app.datatable") ?>"},	  
+	// 													language:{"url": "<?php echo __('app.datatable') ?>"},	  
 	// 													"drawCallback": function( settings ) {   				
 	// 																$('[data-toggle="tooltip1"]').tooltip();
 	// 																$('[data-toggle="tooltip2"]').tooltip();
