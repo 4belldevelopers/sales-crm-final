@@ -209,18 +209,32 @@ jobs:
             php artisan reverb:restart || true
 
             echo ""
-            echo ">> Full Octane restart"
+            echo ">> Ensuring Octane systemd service is installed and active"
 
-            # FrankenPHP + OPcache: `octane:reload` only gracefully reloads
-            # worker threads, which re-read the SAME cached bytecode — so
-            # new code silently never takes effect. A full process
-            # stop/start is required to clear OPcache and actually load the
-            # freshly deployed code. Same fix as deploy-staging.yml.
-            php artisan octane:stop || true
-            sleep 3
-            setsid nohup bash start-octane.sh 8010 > storage/logs/octane-start.log 2>&1 < /dev/null &
+            # Auto-install or update the systemd unit file
+            if [ -f scripts/systemd/octane.service ]; then
+              echo ">> Installing / updating /etc/systemd/system/octane.service"
+              cp scripts/systemd/octane.service /etc/systemd/system/octane.service 2>/dev/null || true
+              systemctl daemon-reload 2>/dev/null || true
+              systemctl enable octane 2>/dev/null || true
+            fi
+
+            # Full Octane restart
+            if systemctl is-active --quiet octane 2>/dev/null; then
+              echo ">> Restarting supervised Octane systemd service"
+              systemctl restart octane || true
+            elif [ -f /etc/systemd/system/octane.service ]; then
+              echo ">> Starting Octane systemd service"
+              systemctl start octane || true
+            else
+              echo ">> Restarting detached Octane background process"
+              php artisan octane:stop || true
+              sleep 3
+              setsid nohup bash start-octane.sh 8010 > storage/logs/octane-start.log 2>&1 < /dev/null &
+            fi
             sleep 8
             php artisan octane:status || true
+            systemctl status octane --no-pager 2>/dev/null || true
 
             ###########################################################
             # DISABLE MAINTENANCE MODE
