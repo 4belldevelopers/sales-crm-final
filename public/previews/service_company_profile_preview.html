@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Company — Company Profile UI/UX Redesign (Internal Client Drawer Standard) | JERO ATS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    /* ==========================================================================
+       JERO ATS Enterprise Design System — Internal Client Drawer Parity
+       Page: Service Company — Company Profile (/service_company/account)
+       Inspiration Reference: Internal Client Drawer (resources/views/service_company/client/show.blade.php)
+       Target Screen: 15.6" Laptops (1366x768 & 1920x1080) with Zero Horizontal Scroll
+       ========================================================================== */
+    :root {
+      --primary-blue: #009ef7;
+      --primary-hover: #0086d4;
+      --primary-light: #eff6ff;
+      --text-main: #0f172a;
+      --text-body: #334155;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --border-color: #e2e8f0;
+      --border-hover: #cbd5e1;
+      --bg-page: #f8fafc;
+      --card-bg: #ffffff;
+      --radius-lg: 10px;
+      --radius-md: 8px;
+      --radius-sm: 6px;
+      --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-page);
+      color: var(--text-body);
+      font-size: 12px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Device Preview Frame / Bar */
+    .preview-control-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1e293b;
+      font-size: 12px;
+    }
+    .preview-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e293b;
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    .preview-badge span {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+    .preview-screens {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .screen-btn {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .screen-btn.active, .screen-btn:hover {
+      background: #009ef7;
+      color: #ffffff;
+      border-color: #009ef7;
+    }
+    .preview-mode-switch {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mode-pill-group {
+      display: inline-flex;
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 3px;
+      border: 1px solid #334155;
+    }
+    .mode-pill {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #94a3b8;
+      border: none;
+      background: transparent;
+      transition: all 0.2s;
+    }
+    .mode-pill.active {
+      background: #009ef7;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* Container for Preview Viewport */
+    .cd-scope {
+      max-width: 1366px;
+      margin: 0 auto;
+      padding: 14px 16px 40px 16px;
+      transition: max-width 0.3s ease;
+    }
+
+    /* ==========================================================================
+       1. Top Action Header Bar (.cd-top-bar) — Internal Client Drawer Parity
+       ========================================================================== */
+    .cd-top-bar {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 8px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+      flex-wrap: wrap;
+    }
+    .cd-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .cd-hdr-btn {
+      height: 32px;
+      padding: 0 12px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease-in-out;
+      line-height: 1;
+      border: 1px solid transparent;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+    .cd-hdr-btn-white-edit {
+      background: #ffffff;
+      border-color: var(--border-color);
+      color: #334155;
+    }
+    .cd-hdr-btn-white-edit:hover, .cd-hdr-btn-white-edit.active {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #009ef7;
+    }
+    .cd-hdr-btn-outline-green {
+      background: #ffffff;
+      border-color: var(--border-color);
+      color: #059669;
+    }
+    .cd-hdr-btn-outline-green:hover {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      color: #059669;
+    }
+    .cd-hdr-btn-white-job {
+      background: #ffffff;
+      border-color: var(--border-color);
+      color: #009ef7;
+    }
+    .cd-hdr-btn-white-job:hover {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #0086d4;
+    }
+    .cd-hdr-btn-close {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: var(--radius-md);
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      color: #64748b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s ease-in-out;
+    }
+    .cd-hdr-btn-close:hover {
+      background: #fee2e2;
+      border-color: #fecdd3;
+      color: #ef4444;
+      transform: rotate(90deg);
+    }
+
+    /* ==========================================================================
+       2. Streamlined Hero Identity Card (.cd-hero-card.cd-hero-streamlined)
+       ========================================================================== */
+    .cd-hero-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+      overflow: hidden;
+    }
+    .cd-hero-main-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .cd-hero-left-flank {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .cd-hero-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .cd-hero-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: #4f46e5;
+      color: #ffffff;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      overflow: hidden;
+    }
+    .cd-hero-avatar svg {
+      width: 26px;
+      height: 26px;
+      fill: #ffffff;
+    }
+    .cd-hero-verified-check {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #10b981;
+      border: 2px solid #ffffff;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7.5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .cd-hero-left-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .cd-hero-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cd-hero-name {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.25;
+      letter-spacing: -0.2px;
+      margin: 0;
+      white-space: nowrap;
+    }
+    .cd-hero-id-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #2563eb;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      flex-shrink: 0;
+    }
+    .cd-hero-web-wrap {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+    }
+    .cd-hero-web-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #2563eb;
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    .cd-hero-web-link:hover {
+      text-decoration: underline;
+      color: #1d4ed8;
+    }
+
+    /* Hero Right Flank */
+    .cd-hero-right-flank {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .cd-hero-scope-row {
+      display: flex;
+      align-items: center;
+    }
+    .cd-pill-scope-internal {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2.5px 8px;
+      border-radius: 5px;
+      line-height: 1.2;
+    }
+    .cd-hero-status-pos-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .cd-status-badge-active {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 10.5px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .cd-pulse-emerald {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .cd-pulse-emerald::after {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      border: 1.5px solid #10b981;
+      animation: cdpulse 2s infinite;
+    }
+    @keyframes cdpulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.4); opacity: 0; }
+      100% { transform: scale(0.95); opacity: 0; }
+    }
+    .cd-status-sep {
+      color: #cbd5e1;
+      font-weight: 300;
+      margin: 0 1px;
+    }
+    .cd-hero-positions-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #334155;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+      transition: all 0.15s ease;
+      line-height: 1.2;
+    }
+    .cd-hero-positions-link:hover {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+    .cd-hero-positions-link .cd-hero-pos-icon {
+      font-size: 11px;
+      color: #f59e0b;
+    }
+    .cd-hero-positions-link .cd-hero-pos-num {
+      font-weight: 700;
+      font-size: 12px;
+      color: #0f172a;
+      margin-right: 2px;
+    }
+    .cd-hero-positions-link .cd-hero-pos-label {
+      font-weight: 500;
+      color: #475569;
+    }
+
+    /* Bottom Tags Row */
+    .cd-hero-bottom-tags-row {
+      background: #f8fafc;
+      border-top: 1px solid #f1f5f9;
+      padding: 6px 18px;
+      display: flex;
+      align-items: center;
+      font-size: 11.5px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .cd-hero-tags-label {
+      font-weight: 600;
+      color: #64748b;
+      font-size: 11.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-right: 2px;
+    }
+    .cd-hero-tag-pill {
+      display: inline-flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      color: #475569;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 4px;
+      line-height: 1.3;
+    }
+
+    /* ==========================================================================
+       3. 6 Metric KPI Summary Grid (.cd-kpi-grid) — Internal Client Drawer Parity
+       ========================================================================== */
+    .cd-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 1200px) {
+      .cd-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 640px) {
+      .cd-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    .cd-kpi-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .cd-kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+      border-color: var(--border-hover);
+    }
+    .cd-kpi-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13.5px;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .cd-kpi-card:hover .cd-kpi-icon {
+      transform: scale(1.08);
+    }
+    .cd-kpi-icon-blue    { background: #eff6ff; color: #2563eb; }
+    .cd-kpi-icon-emerald { background: #ecfdf5; color: #059669; }
+    .cd-kpi-icon-purple  { background: #f5f3ff; color: #7c3aed; }
+    .cd-kpi-icon-amber   { background: #fffbeb; color: #d97706; }
+    .cd-kpi-icon-rose    { background: #fdf2f8; color: #db2777; }
+    .cd-kpi-icon-teal    { background: #f0fdfa; color: #0d9488; }
+
+    .cd-kpi-body {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1;
+    }
+    .cd-kpi-num {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    .cd-kpi-lbl {
+      font-size: 11px;
+      font-weight: 500;
+      color: #64748b;
+      line-height: 1.25;
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       4. Tier 2 Drawer Navigation Tabs Card (.cd-drawer-tabs-card)
+       ========================================================================== */
+    .cd-drawer-tabs-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 5px 8px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .cd-drawer-tabs-list {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      list-style: none;
+      overflow-x: auto;
+      padding: 2px 0;
+      margin: 0;
+    }
+    .cd-tab-pill-btn {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0 11px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 34px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease-in-out;
+      border: 1px solid var(--border-color);
+    }
+    .cd-tab-pill-btn i {
+      font-size: 11px;
+      color: #64748b;
+    }
+    .cd-tab-pill-btn:hover {
+      background: #f1f5f9;
+      border-color: var(--border-hover);
+      color: #0f172a;
+    }
+    .cd-tab-pill-btn:hover i {
+      color: #009ef7;
+    }
+    .cd-tab-pill-btn.active {
+      background: #009ef7 !important;
+      border-color: #009ef7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 5px rgba(0, 158, 247, 0.22) !important;
+    }
+    .cd-tab-pill-btn.active i {
+      color: #ffffff !important;
+    }
+    .cd-tab-pill-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 17px;
+      height: 16px;
+      padding: 0 4.5px;
+      border-radius: 999px;
+      font-size: 9.5px;
+      font-weight: 700;
+      background: #eff6ff;
+      color: #2563eb;
+    }
+    .cd-tab-pill-btn.active .cd-tab-pill-badge {
+      background: rgba(255, 255, 255, 0.28) !important;
+      color: #ffffff !important;
+    }
+
+    /* ==========================================================================
+       5. Main 2-Column Content Grid (.cd-grid-2col) — Internal Client Drawer Parity
+       ========================================================================== */
+    .cd-grid-2col {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr);
+      gap: 14px;
+      align-items: start;
+    }
+    @media (max-width: 1024px) {
+      .cd-grid-2col {
+        grid-template-columns: 1fr;
+      }
+    }
+    .cd-card-panel {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+    .cd-card-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .cd-card-hdr-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cd-hdr-icon-box {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11.5px;
+    }
+    .cd-hdr-icon-box.blue   { background: #eff6ff; color: #2563eb; }
+    .cd-hdr-icon-box.green  { background: #ecfdf5; color: #059669; }
+    .cd-hdr-icon-box.amber  { background: #fffbeb; color: #d97706; }
+    .cd-hdr-icon-box.purple { background: #f5f3ff; color: #7c3aed; }
+    .cd-hdr-icon-box.red    { background: #fef2f2; color: #ef4444; }
+
+    .cd-card-hdr-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .cd-card-hdr-link {
+      font-size: 12px;
+      color: #2563eb;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .cd-card-hdr-link:hover {
+      text-decoration: underline;
+    }
+    .cd-verified-entity-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .cd-about-body {
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.65;
+      color: #475569;
+    }
+
+    /* Executive Vertical Listing (.cd-vertical-info-list) */
+    .cd-vertical-info-list {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    .cd-vinfo-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 2px;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background-color 0.15s ease;
+    }
+    .cd-vinfo-row:first-child {
+      padding-top: 2px;
+    }
+    .cd-vinfo-row:last-child {
+      border-bottom: none;
+      padding-bottom: 2px;
+    }
+    .cd-vinfo-row:hover {
+      background-color: #fcfdfe;
+    }
+    .cd-vinfo-key {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 140px;
+      min-width: 120px;
+    }
+    .cd-vinfo-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .cd-vinfo-icon.blue    { background: #eff6ff; color: #2563eb; }
+    .cd-vinfo-icon.green   { background: #ecfdf5; color: #059669; }
+    .cd-vinfo-icon.amber   { background: #fefce8; color: #ca8a04; }
+    .cd-vinfo-icon.purple  { background: #f5f3ff; color: #7c3aed; }
+    .cd-vinfo-icon.sky     { background: #f0f9ff; color: #0284c7; }
+    .cd-vinfo-icon.emerald { background: #f0fdf4; color: #16a34a; }
+    .cd-vinfo-icon.orange  { background: #fff7ed; color: #ea580c; }
+    .cd-vinfo-icon.red     { background: #fef2f2; color: #ef4444; }
+
+    .cd-vinfo-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #64748b;
+      line-height: 1.3;
+    }
+    .cd-vinfo-val {
+      flex: 1;
+      min-width: 0;
+      text-align: right;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #0f172a;
+    }
+    .cd-vinfo-link {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .cd-vinfo-link:hover {
+      text-decoration: underline;
+    }
+    .cd-careers-pill {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .cd-type-badge-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #f0f9ff;
+      color: #0284c7;
+      border: 1px solid #bae6fd;
+    }
+    .cd-tax-badge-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #f8fafc;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+    }
+
+    /* Recent Activity Timeline (.cd-timeline-list) */
+    .cd-timeline-list {
+      position: relative;
+      padding-left: 28px;
+    }
+    .cd-timeline-list::before {
+      content: "";
+      position: absolute;
+      top: 14px;
+      bottom: 14px;
+      left: 12px;
+      width: 1.5px;
+      background: #e2e8f0;
+    }
+    .cd-tl-item {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px dashed #f1f5f9;
+    }
+    .cd-tl-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .cd-tl-dot {
+      position: absolute;
+      left: -28px;
+      top: 8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      z-index: 1;
+    }
+    .cd-tl-dot-green  { background: #ecfdf5; color: #059669; }
+    .cd-tl-dot-blue   { background: #eff6ff; color: #2563eb; }
+    .cd-tl-heading {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #0f172a;
+      line-height: 1.25;
+    }
+    .cd-tl-sub {
+      font-size: 11px;
+      font-weight: 400;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .cd-tl-meta-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .cd-tl-badge-green {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+    .cd-tl-time {
+      font-size: 10.5px;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+
+    /* Location Cards */
+    .cd-loc-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      border-left: 3.5px solid #2563eb;
+    }
+    .cd-loc-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .cd-loc-hq-tag {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      background: #2563eb;
+      color: #ffffff;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .cd-loc-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .cd-loc-street {
+      font-size: 11.5px;
+      color: #64748b;
+    }
+
+    /* Social Buttons Row */
+    .cd-social-links-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .cd-social-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #ffffff;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .cd-social-btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.9;
+    }
+    .cd-social-btn.linkedin { background: #0a66c2; }
+    .cd-social-btn.twitter  { background: #0f172a; }
+    .cd-social-btn.github   { background: #24292f; }
+    .cd-social-btn.youtube  { background: #ff0000; }
+    .cd-social-btn.facebook { background: #1877f2; }
+    .cd-social-btn.instagram{ background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+
+    /* Contacts Listing in Card */
+    .cd-contact-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .cd-contact-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .cd-contact-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cd-contact-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #eff6ff;
+      color: #2563eb;
+      font-weight: 700;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cd-contact-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .cd-contact-desig {
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    /* ==========================================================================
+       6. In-Place Edit Mode Controls (Active when .edit-mode is toggled)
+       ========================================================================== */
+    .view-mode .edit-control { display: none !important; }
+    .edit-mode .view-display { display: none !important; }
+
+    .edit-input-field {
+      height: 30px;
+      padding: 0 8px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      font-size: 11.5px;
+      font-family: inherit;
+      color: #0f172a;
+      outline: none;
+      width: 100%;
+    }
+    .edit-input-field:focus {
+      border-color: #009ef7;
+      box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15);
+    }
+    .edit-textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: 8px 10px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      color: #0f172a;
+      outline: none;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .edit-textarea:focus {
+      border-color: #009ef7;
+      box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15);
+    }
+
+    /* Floating Save Bar in Edit Mode */
+    .edit-mode-footer-bar {
+      position: sticky;
+      bottom: 20px;
+      z-index: 900;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .btn-save-primary {
+      background: #10b981;
+      color: #ffffff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-save-primary:hover { background: #059669; }
+    .btn-cancel-edit {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-cancel-edit:hover { background: #e2e8f0; }
+
+    /* Toast Notification */
+    .toast-popup {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      font-size: 12px;
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      z-index: 2000;
+    }
+    .toast-popup.show { display: flex; }
+  </style>
+</head>
+<body class="view-mode">
+
+  <!-- ==========================================================================
+       TOP PREVIEW CONTROLLER (DEVICE & INTERACTION SIMULATOR)
+       ========================================================================== -->
+  <div class="preview-control-bar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="preview-badge">
+        <span></span> INTERNAL CLIENT DRAWER INSPIRATION
+      </div>
+      <div style="font-weight:600; font-size:12.5px; color:#e2e8f0;">
+        Service Company — Company Profile (/service_company/account)
+      </div>
+    </div>
+
+    <!-- Viewport Screen Widths -->
+    <div class="preview-screens">
+      <span style="font-size:11px; color:#94a3b8; margin-right:4px;">Viewport:</span>
+      <button type="button" class="screen-btn active" onclick="setScreen('1366px', this)">
+        <i class="fa-solid fa-laptop"></i> 15.6" Laptop (1366)
+      </button>
+      <button type="button" class="screen-btn" onclick="setScreen('1920px', this)">
+        <i class="fa-solid fa-desktop"></i> Desktop (1920)
+      </button>
+      <button type="button" class="screen-btn" onclick="setScreen('1024px', this)">
+        <i class="fa-solid fa-tablet-screen-button"></i> Tablet (1024)
+      </button>
+    </div>
+
+    <!-- Mode Switcher -->
+    <div class="preview-mode-switch">
+      <span style="font-size:11px; color:#94a3b8;">State:</span>
+      <div class="mode-pill-group">
+        <button type="button" class="mode-pill active" id="btn_mode_view" onclick="toggleMode('view')">View Mode</button>
+        <button type="button" class="mode-pill" id="btn_mode_edit" onclick="toggleMode('edit')">Edit Mode</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MAIN SCOPED VIEWPORT (PIXEL-MATCHED TO INTERNAL CLIENT DRAWER)
+       ========================================================================== -->
+  <div class="cd-scope" id="scope_container">
+
+    <!-- 1. Top Action Header Bar (.cd-top-bar) -->
+    <div class="cd-top-bar">
+      <div class="cd-top-actions">
+        <!-- Edit Client / Edit Company button -->
+        <button type="button" class="cd-hdr-btn cd-hdr-btn-white-edit" id="hdr_btn_edit" onclick="toggleMode('edit')">
+          <i class="fa-regular fa-pen-to-square"></i>
+          <span>Edit Company</span>
+        </button>
+
+        <!-- + Add Contact button -->
+        <button type="button" class="cd-hdr-btn cd-hdr-btn-outline-green" onclick="simulateAction('Open Add Contact Drawer')">
+          <i class="fa-solid fa-user-plus"></i>
+          <span>+ Add Contact</span>
+        </button>
+
+        <!-- + Add Job button -->
+        <button type="button" class="cd-hdr-btn cd-hdr-btn-white-job" onclick="simulateAction('Navigate to Job Requisition Creator')">
+          <i class="fa-solid fa-plus"></i>
+          <span>+ Add Job</span>
+        </button>
+      </div>
+
+      <div class="cd-top-close-wrap">
+        <button type="button" class="cd-hdr-btn-close" title="Close" onclick="simulateAction('Close Drawer / Refresh View')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Streamlined Hero Identity Card (.cd-hero-card.cd-hero-streamlined) -->
+    <div class="cd-hero-card cd-hero-streamlined">
+      <div class="cd-hero-main-row">
+        <!-- Left Flank: Logo, Name, ID badge, Website -->
+        <div class="cd-hero-left-flank">
+          <div class="cd-hero-avatar-wrap">
+            <div class="cd-hero-avatar">
+              <!-- Crisp SVG Logo (Matching the purple Stripe logo in screenshot) -->
+              <svg viewBox="0 0 24 24"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697.5 12.541.5 6.775.5 2.873 3.655 2.873 8.63c0 4.887 3.966 6.643 7.575 8.04 2.502.96 3.356 1.63 3.356 2.627 0 .96-.867 1.488-2.392 1.488-2.67 0-5.467-1.196-7.382-2.342L3 23.978c2.148 1.134 5.378 1.848 9.381 1.848 6.035 0 10.14-3.047 10.14-8.23 0-5.183-4.14-6.837-8.545-8.446z"/></svg>
+            </div>
+            <div class="cd-hero-verified-check" title="Verified Organization">
+              <i class="fa-solid fa-check"></i>
+            </div>
+          </div>
+
+          <div class="cd-hero-left-meta">
+            <div class="cd-hero-title-wrap">
+              <h2 class="cd-hero-name" id="disp_hero_name">STRIPE 128</h2>
+              <span class="cd-hero-id-badge">#CL-121</span>
+            </div>
+            <div class="cd-hero-web-wrap">
+              <a href="https://stripe.com" target="_blank" class="cd-hero-web-link" id="disp_hero_link">
+                <i class="fa-solid fa-globe"></i>
+                <span id="disp_hero_url">stripe.com</span>
+                <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Flank: Scope pill, Active status & Positions -->
+        <div class="cd-hero-right-flank">
+          <div class="cd-hero-scope-row">
+            <span class="cd-pill-scope-internal">
+              <i class="fa-solid fa-building"></i>
+              Internal Client
+            </span>
+          </div>
+          <div class="cd-hero-status-pos-row">
+            <span class="cd-status-badge-active">
+              <span class="cd-pulse-emerald"></span>
+              Active
+            </span>
+            <span class="cd-status-sep">|</span>
+            <a href="javascript:void(0)" class="cd-hero-positions-link" onclick="simulateAction('Filter to Active Jobs')">
+              <span class="cd-hero-pos-icon"><i class="fa-solid fa-bolt"></i></span>
+              <span class="cd-hero-pos-num">5</span>
+              <span class="cd-hero-pos-label">Active Positions</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Tags Row (Matching Screenshot) -->
+      <div class="cd-hero-bottom-tags-row">
+        <span class="cd-hero-tags-label">
+          <i class="fa-solid fa-tag"></i> Tags:
+        </span>
+        <span class="cd-hero-tag-pill">Software Development</span>
+        <span class="cd-hero-tag-pill">Technology Services</span>
+        <span class="cd-hero-tag-pill">Enterprise Platform</span>
+        <span class="cd-hero-tag-pill edit-control" style="border-style:dashed; color:#009ef7; cursor:pointer;" onclick="simulateAction('Add Specialty Tag')">+ Add Tag</span>
+      </div>
+    </div>
+
+    <!-- 3. 6 Metric KPI Summary Grid (.cd-kpi-grid) — 100% Screenshot Match -->
+    <div class="cd-kpi-grid">
+      <!-- 1. All Jobs -->
+      <div class="cd-kpi-card" onclick="simulateAction('Filter by All Jobs')">
+        <div class="cd-kpi-icon cd-kpi-icon-blue">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="cd-kpi-body">
+          <span class="cd-kpi-num">5</span>
+          <span class="cd-kpi-lbl">All Jobs</span>
+        </div>
+      </div>
+
+      <!-- 2. Active Jobs -->
+      <div class="cd-kpi-card" onclick="simulateAction('Filter by Active Jobs')">
+        <div class="cd-kpi-icon cd-kpi-icon-emerald">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div class="cd-kpi-body">
+          <span class="cd-kpi-num">5</span>
+          <span class="cd-kpi-lbl">Active Jobs</span>
+        </div>
+      </div>
+
+      <!-- 3. All Candidates -->
+      <div class="cd-kpi-card" onclick="simulateAction('Filter by All Candidates')">
+        <div class="cd-kpi-icon cd-kpi-icon-purple">
+          <i class="fa-solid fa-user-check"></i>
+        </div>
+        <div class="cd-kpi-body">
+          <span class="cd-kpi-num">1</span>
+          <span class="cd-kpi-lbl">All Candidates</span>
+        </div>
+      </div>
+
+      <!-- 4. All Interviews -->
+      <div class="cd-kpi-card" onclick="simulateAction('Filter by All Interviews')">
+        <div class="cd-kpi-icon cd-kpi-icon-amber">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <div class="cd-kpi-body">
+          <span class="cd-kpi-num">0</span>
+          <span class="cd-kpi-lbl">All Interviews</span>
+        </div>
+      </div>
+
+      <!-- 5. All Offers -->
+      <div class="cd-kpi-card" onclick="simulateAction('Filter by All Offers')">
+        <div class="cd-kpi-icon cd-kpi-icon-rose">
+          <i class="fa-solid fa-file-signature"></i>
+        </div>
+        <div class="cd-kpi-body">
+          <span class="cd-kpi-num">0</span>
+          <span class="cd-kpi-lbl">All Offers</span>
+        </div>
+      </div>
+
+      <!-- 6. All Joinings -->
+      <div class="cd-kpi-card" onclick="simulateAction('Filter by All Joinings')">
+        <div class="cd-kpi-icon cd-kpi-icon-teal">
+          <i class="fa-solid fa-handshake"></i>
+        </div>
+        <div class="cd-kpi-body">
+          <span class="cd-kpi-num">0</span>
+          <span class="cd-kpi-lbl">All Joinings</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Navigation Sub-Tabs Bar (.cd-drawer-tabs-card) — 100% Screenshot Match -->
+    <div class="cd-drawer-tabs-card">
+      <ul class="cd-drawer-tabs-list">
+        <li class="nav-item">
+          <button type="button" class="cd-tab-pill-btn active" onclick="switchTab(this)">
+            <i class="fa-solid fa-house"></i>
+            <span>Overview</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="cd-tab-pill-btn" onclick="switchTab(this)">
+            <i class="fa-solid fa-clock"></i>
+            <span>Activity</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="cd-tab-pill-btn" onclick="switchTab(this)">
+            <i class="fa-solid fa-address-card"></i>
+            <span>Contacts</span>
+            <span class="cd-tab-pill-badge">1</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="cd-tab-pill-btn" onclick="switchTab(this)">
+            <i class="fa-solid fa-briefcase"></i>
+            <span>Jobs</span>
+            <span class="cd-tab-pill-badge">5</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="cd-tab-pill-btn" onclick="switchTab(this)">
+            <i class="fa-solid fa-users"></i>
+            <span>Candidates</span>
+            <span class="cd-tab-pill-badge">1</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="cd-tab-pill-btn" onclick="switchTab(this)">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>Interviews</span>
+            <span class="cd-tab-pill-badge">0</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="cd-tab-pill-btn" onclick="switchTab(this)">
+            <i class="fa-solid fa-file-contract"></i>
+            <span>Offers</span>
+            <span class="cd-tab-pill-badge">0</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="cd-tab-pill-btn" onclick="switchTab(this)">
+            <i class="fa-solid fa-handshake"></i>
+            <span>Joined</span>
+            <span class="cd-tab-pill-badge">0</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="cd-tab-pill-btn" onclick="switchTab(this)">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Performance</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 5. Main 2-Column Content Grid (.cd-grid-2col) — 100% Screenshot Match -->
+    <div class="cd-grid-2col">
+
+      <!-- ======================================================================
+           LEFT COLUMN: About the Client / Company + Recent Activity + Addresses
+           ====================================================================== -->
+      <div class="cd-col-left">
+
+        <!-- Card: About the Client / Company -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <span class="cd-hdr-icon-box blue">
+                <i class="fa-solid fa-bookmark"></i>
+              </span>
+              <span class="cd-card-hdr-title">About the Client</span>
+            </div>
+            <a href="https://stripe.com" target="_blank" class="cd-card-hdr-link" id="disp_about_link">
+              <span>stripe.com</span>
+              <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;"></i>
+            </a>
+          </div>
+
+          <!-- Body Description (View Mode vs. In-Place Edit Mode) -->
+          <div class="view-display cd-about-body" id="disp_about_text">
+            Stripe, LLC is an Irish-American multinational financial services and software as a service (SaaS) company dual-headquartered in South San Francisco, California, United States, and Dublin, Ireland. The company primarily offers payment-processing software and application programming interfaces for e-commerce websites and mobile applications.
+          </div>
+          <div class="edit-control" style="margin-top:6px;">
+            <textarea class="edit-textarea" id="input_about_text" rows="4">Stripe, LLC is an Irish-American multinational financial services and software as a service (SaaS) company dual-headquartered in South San Francisco, California, United States, and Dublin, Ireland. The company primarily offers payment-processing software and application programming interfaces for e-commerce websites and mobile applications.</textarea>
+            <div style="font-size:10.5px; color:#94a3b8; text-align:right; margin-top:3px;">Rich Quill formatting supported on live save · Max 2,000 chars</div>
+          </div>
+        </div>
+
+        <!-- Card: Recent Activity (100% Matched to Screenshot) -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <span class="cd-hdr-icon-box blue">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+              </span>
+              <span class="cd-card-hdr-title">Recent Activity</span>
+            </div>
+            <a href="javascript:void(0)" class="cd-card-hdr-link" onclick="simulateAction('View All Activity Log')">
+              <span>View all activity</span>
+              <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i>
+            </a>
+          </div>
+
+          <!-- Timeline item (Matched to screenshot) -->
+          <div class="cd-timeline-list">
+            <div class="cd-tl-item">
+              <span class="cd-tl-dot cd-tl-dot-green">
+                <i class="fa-solid fa-briefcase"></i>
+              </span>
+              <div class="cd-tl-info">
+                <div class="cd-tl-heading">ServiceNow Architect - ITSM...</div>
+                <div class="cd-tl-sub">1 Opening</div>
+              </div>
+              <div class="cd-tl-meta-right">
+                <span class="cd-tl-badge-green">Active Requisition</span>
+                <span class="cd-tl-time">Nov 06, 2026<br>12:13 PM GMT+5:30</span>
+              </div>
+            </div>
+
+            <div class="cd-tl-item">
+              <span class="cd-tl-dot cd-tl-dot-blue">
+                <i class="fa-solid fa-user-plus"></i>
+              </span>
+              <div class="cd-tl-info">
+                <div class="cd-tl-heading">New Candidate Submitted</div>
+                <div class="cd-tl-sub">Senior Cloud Architect · Direct Pipeline</div>
+              </div>
+              <div class="cd-tl-meta-right">
+                <span style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:5px;">Screening</span>
+                <span class="cd-tl-time">Nov 05, 2026<br>03:45 PM GMT+5:30</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: Registered Addresses & Locations -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <span class="cd-hdr-icon-box red">
+                <i class="fa-solid fa-location-dot"></i>
+              </span>
+              <span class="cd-card-hdr-title">Office Locations & Registered Address</span>
+            </div>
+            <a href="javascript:void(0)" class="cd-card-hdr-link edit-control" onclick="simulateAction('Add Branch Location')">
+              <i class="fa-solid fa-plus"></i>
+              <span>Add Location</span>
+            </a>
+          </div>
+
+          <!-- Primary Headquarters Location -->
+          <div class="cd-loc-card">
+            <div class="cd-loc-top">
+              <span class="cd-loc-title">South San Francisco, California, United States</span>
+              <span class="cd-loc-hq-tag">HEADQUARTERS</span>
+            </div>
+            <div class="cd-loc-street">
+              <i class="fa-solid fa-building" style="margin-right:4px;"></i>
+              354 Oyster Point Boulevard, South San Francisco, CA 94080
+            </div>
+          </div>
+
+          <!-- Dublin Dual Headquarters / Branch -->
+          <div class="cd-loc-card" style="border-left-color:#64748b;">
+            <div class="cd-loc-top">
+              <span class="cd-loc-title">Dublin, Ireland</span>
+              <span style="font-size:9.5px; font-weight:700; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px;">BRANCH</span>
+            </div>
+            <div class="cd-loc-street">
+              <i class="fa-solid fa-building" style="margin-right:4px;"></i>
+              The Grand Canal Dock, 1 Grand Canal Street Lower, Dublin 2
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ======================================================================
+           RIGHT COLUMN: Client / Company Information (Executive Vertical List)
+           ====================================================================== -->
+      <div class="cd-col-right">
+
+        <!-- Card: Client Information (100% Matched to Screenshot) -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <span class="cd-hdr-icon-box blue">
+                <i class="fa-solid fa-circle-info"></i>
+              </span>
+              <span class="cd-card-hdr-title">Client Information</span>
+            </div>
+            <span class="cd-verified-entity-badge">
+              <i class="fa-solid fa-shield-halved"></i>
+              Verified Entity
+            </span>
+          </div>
+
+          <!-- Executive Vertical Listing (cd-vertical-info-list) -->
+          <div class="cd-vertical-info-list">
+
+            <!-- 1. Website -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <span class="cd-vinfo-icon blue"><i class="fa-solid fa-globe"></i></span>
+                <span class="cd-vinfo-label">Website</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div class="view-display">
+                  <a href="https://stripe.com" target="_blank" class="cd-vinfo-link" id="disp_vinfo_web">
+                    <span>stripe.com</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;"></i>
+                  </a>
+                </div>
+                <div class="edit-control" style="width:100%; display:flex; gap:6px;">
+                  <input type="url" class="edit-input-field" id="input_vinfo_web" value="https://stripe.com">
+                  <button type="button" class="btn-intelligence-fetch" style="height:30px; padding:0 8px; font-size:11px; background:#ffd428; border:1px solid #d4a017; border-radius:4px; font-weight:700; cursor:pointer;" onclick="simulateAction('AI Auto-Fetch Intelligence')">Fetch</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Careers Portal -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <span class="cd-vinfo-icon green"><i class="fa-solid fa-briefcase"></i></span>
+                <span class="cd-vinfo-label">Careers Portal</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div class="view-display">
+                  <a href="https://stripe.com/careers" target="_blank" class="cd-careers-pill" id="disp_vinfo_career">
+                    <span>stripe.com/careers</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:9.5px;"></i>
+                  </a>
+                </div>
+                <div class="edit-control" style="width:100%;">
+                  <input type="url" class="edit-input-field" id="input_vinfo_career" value="https://stripe.com/careers">
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Tax ID / GSTIN -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <span class="cd-vinfo-icon amber"><i class="fa-solid fa-file-invoice"></i></span>
+                <span class="cd-vinfo-label">Tax ID / GSTIN</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div class="view-display" style="display:inline-flex; align-items:center; gap:6px;">
+                  <span class="cd-tax-badge-pill" id="disp_vinfo_tax">C541437</span>
+                  <i class="fa-regular fa-copy" style="font-size:11px; color:#94a3b8; cursor:pointer;" title="Copy Tax ID" onclick="simulateAction('Tax ID Copied to Clipboard')"></i>
+                </div>
+                <div class="edit-control" style="width:100%;">
+                  <input type="text" class="edit-input-field" id="input_vinfo_tax" value="C541437">
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Industry -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <span class="cd-vinfo-icon purple"><i class="fa-solid fa-chart-pie"></i></span>
+                <span class="cd-vinfo-label">Industry</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div class="view-display" id="disp_vinfo_industry">Staffing & Recruiting</div>
+                <div class="edit-control" style="width:100%;">
+                  <select class="edit-input-field" id="input_vinfo_industry">
+                    <option selected>Staffing & Recruiting</option>
+                    <option>Information Technology & Software Services</option>
+                    <option>Financial Technology & SaaS</option>
+                    <option>Banking & Financial Services</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Company Type -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <span class="cd-vinfo-icon sky"><i class="fa-solid fa-landmark"></i></span>
+                <span class="cd-vinfo-label">Company Type</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div class="view-display">
+                  <span class="cd-type-badge-pill" id="disp_vinfo_type">Publicly Listed Corporation</span>
+                </div>
+                <div class="edit-control" style="width:100%;">
+                  <select class="edit-input-field" id="input_vinfo_type">
+                    <option selected>Publicly Listed Corporation</option>
+                    <option>IT Service Company</option>
+                    <option>Staffing & Recruitment Agency</option>
+                    <option>Product & SaaS Enterprise</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 6. Company Size -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <span class="cd-vinfo-icon emerald"><i class="fa-solid fa-users"></i></span>
+                <span class="cd-vinfo-label">Company Size</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div class="view-display" id="disp_vinfo_size">5,000 - 10,000 Employees</div>
+                <div class="edit-control" style="width:100%;">
+                  <select class="edit-input-field" id="input_vinfo_size">
+                    <option>51 - 200 Employees</option>
+                    <option>201 - 500 Employees</option>
+                    <option selected>5,000 - 10,000 Employees</option>
+                    <option>10,000+ Employees</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7. Founded Year -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <span class="cd-vinfo-icon orange"><i class="fa-solid fa-calendar"></i></span>
+                <span class="cd-vinfo-label">Founded</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div class="view-display" id="disp_vinfo_founded">2010</div>
+                <div class="edit-control" style="width:100%;">
+                  <input type="number" class="edit-input-field" id="input_vinfo_founded" value="2010">
+                </div>
+              </div>
+            </div>
+
+            <!-- 8. Headquarters -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <span class="cd-vinfo-icon red"><i class="fa-solid fa-map-pin"></i></span>
+                <span class="cd-vinfo-label">Headquarters</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div class="view-display" id="disp_vinfo_hq">South San Francisco, CA, USA</div>
+                <div class="edit-control" style="width:100%;">
+                  <input type="text" class="edit-input-field" id="input_vinfo_hq" value="South San Francisco, CA, USA">
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Card: Social & Professional Channels -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <span class="cd-hdr-icon-box purple">
+                <i class="fa-solid fa-share-nodes"></i>
+              </span>
+              <span class="cd-card-hdr-title">Social & Digital Profiles</span>
+            </div>
+            <span style="font-size:11px; color:#10b981; font-weight:600;"><i class="fa-solid fa-check"></i> Verified</span>
+          </div>
+
+          <div class="cd-social-links-row" style="padding:6px 0;">
+            <a href="https://linkedin.com/company/stripe" target="_blank" class="cd-social-btn linkedin" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://x.com/stripe" target="_blank" class="cd-social-btn twitter" title="X / Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://github.com/stripe" target="_blank" class="cd-social-btn github" title="GitHub"><i class="fa-brands fa-github"></i></a>
+            <a href="https://facebook.com/stripe" target="_blank" class="cd-social-btn facebook" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="https://instagram.com/stripe" target="_blank" class="cd-social-btn instagram" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://youtube.com/stripe" target="_blank" class="cd-social-btn youtube" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+          </div>
+        </div>
+
+        <!-- Card: Key Stakeholders & Contacts -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <span class="cd-hdr-icon-box amber">
+                <i class="fa-solid fa-id-badge"></i>
+              </span>
+              <span class="cd-card-hdr-title">Key Organization Stakeholders</span>
+            </div>
+            <a href="javascript:void(0)" class="cd-card-hdr-link" onclick="simulateAction('Open Add Stakeholder Modal')">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>+ Add</span>
+            </a>
+          </div>
+
+          <div class="cd-contact-item">
+            <div class="cd-contact-left">
+              <span class="cd-contact-avatar">PK</span>
+              <div>
+                <div class="cd-contact-name">Patrick Collison</div>
+                <div class="cd-contact-desig">Chief Executive Officer</div>
+              </div>
+            </div>
+            <span style="background:#fef3c7; color:#92400e; font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:4px; border:1px solid #fde68a;">PRIMARY POC</span>
+          </div>
+
+          <div class="cd-contact-item">
+            <div class="cd-contact-left">
+              <span class="cd-contact-avatar" style="background:#ecfdf5; color:#059669;">JC</span>
+              <div>
+                <div class="cd-contact-name">John Collison</div>
+                <div class="cd-contact-desig">President & Co-Founder</div>
+              </div>
+            </div>
+            <span style="color:#64748b; font-size:10.5px;">Stakeholder</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Floating Sticky Save Bar (Visible when .edit-mode is active) -->
+    <div class="edit-mode-footer-bar edit-control" id="save_footer_bar">
+      <div style="display:flex; align-items:center; gap:10px; font-size:12px; color:#334155;">
+        <i class="fa-solid fa-circle-exclamation" style="color:#009ef7; font-size:16px;"></i>
+        <span><strong>In-Place Edit Active.</strong> Modify any company attribute directly. Submissions are synchronized with Elasticsearch in real time.</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button type="button" class="btn-cancel-edit" onclick="toggleMode('view')">Cancel</button>
+        <button type="button" class="btn-save-primary" onclick="saveInPlaceChanges()">
+          <i class="fa-solid fa-check"></i>
+          <span>Save Changes</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification Popup -->
+  <div class="toast-popup" id="toast_popup">
+    <i class="fa-solid fa-circle-check" style="color:#10b981; font-size:15px;"></i>
+    <span id="toast_msg">Action completed successfully.</span>
+  </div>
+
+  <!-- Interactive Logic Script -->
+  <script>
+    // Viewport Resizing
+    function setScreen(width, btn) {
+      document.querySelectorAll('.screen-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('scope_container').style.maxWidth = width;
+    }
+
+    // Toggle View vs Edit Mode
+    function toggleMode(mode) {
+      const body = document.body;
+      const btnView = document.getElementById('btn_mode_view');
+      const btnEdit = document.getElementById('btn_mode_edit');
+      const btnTopEdit = document.getElementById('hdr_btn_edit');
+
+      if (mode === 'edit') {
+        body.classList.remove('view-mode');
+        body.classList.add('edit-mode');
+        btnView.classList.remove('active');
+        btnEdit.classList.add('active');
+        btnTopEdit.classList.add('active');
+        showToast('Switched to In-Place Edit Mode. Update fields and click Save.');
+      } else {
+        body.classList.remove('edit-mode');
+        body.classList.add('view-mode');
+        btnEdit.classList.remove('active');
+        btnView.classList.add('active');
+        btnTopEdit.classList.remove('active');
+      }
+    }
+
+    // Sub-Tab Switcher Simulation
+    function switchTab(btn) {
+      document.querySelectorAll('.cd-tab-pill-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const label = btn.querySelector('span').innerText;
+      showToast('Switched tab to: ' + label);
+    }
+
+    // Save in-place changes simulation
+    function saveInPlaceChanges() {
+      const web = document.getElementById('input_vinfo_web').value;
+      const career = document.getElementById('input_vinfo_career').value;
+      const tax = document.getElementById('input_vinfo_tax').value;
+      const ind = document.getElementById('input_vinfo_industry').value;
+      const type = document.getElementById('input_vinfo_type').value;
+      const size = document.getElementById('input_vinfo_size').value;
+      const founded = document.getElementById('input_vinfo_founded').value;
+      const hq = document.getElementById('input_vinfo_hq').value;
+      const about = document.getElementById('input_about_text').value;
+
+      // Update view-displays
+      document.getElementById('disp_vinfo_web').querySelector('span').innerText = web.replace(/^https?:\/\//i, '');
+      document.getElementById('disp_vinfo_career').querySelector('span').innerText = career.replace(/^https?:\/\//i, '');
+      document.getElementById('disp_vinfo_tax').innerText = tax;
+      document.getElementById('disp_vinfo_industry').innerText = ind;
+      document.getElementById('disp_vinfo_type').innerText = type;
+      document.getElementById('disp_vinfo_size').innerText = size;
+      document.getElementById('disp_vinfo_founded').innerText = founded;
+      document.getElementById('disp_vinfo_hq').innerText = hq;
+      document.getElementById('disp_about_text').innerText = about;
+
+      toggleMode('view');
+      showToast('Company Profile updated successfully (MySQL + Elasticsearch + Redis synchronized).');
+    }
+
+    // Generic Action Simulation
+    function simulateAction(msg) {
+      showToast(msg);
+    }
+
+    // Toast helper
+    function showToast(msg) {
+      const toast = document.getElementById('toast_popup');
+      document.getElementById('toast_msg').innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

@@ -462,7 +462,1131 @@ input[type="radio"]:checked {
 .aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head,.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row{grid-template-columns:minmax(145px,1.05fr) minmax(100px,.7fr) minmax(120px,.82fr) minmax(135px,.9fr) minmax(115px,.78fr) 34px}
 @media(max-width:1199px){.aat-drawer.agency-commercial-mode .aat-default-pricing-card,.aat-drawer.agency-commercial-mode .aat-policy-card,.aat-drawer.agency-commercial-mode .aat-payment-card{grid-template-columns:repeat(2,minmax(0,1fr))}.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card{grid-template-columns:repeat(2,minmax(0,1fr))}.aat-drawer.agency-commercial-mode .aat-range-head,.aat-drawer.agency-commercial-mode .aat-range-row{grid-template-columns:minmax(135px,1fr) minmax(95px,.6fr) minmax(120px,.7fr) 30px;gap:8px}}
 @media(max-width:767px){.aat-drawer.agency-commercial-mode .aat-range-table,.aat-drawer.agency-commercial-mode .aat-contract-range-table{overflow-x:auto}.aat-drawer.agency-commercial-mode .aat-range-head,.aat-drawer.agency-commercial-mode .aat-range-row{grid-template-columns:140px 95px 120px 30px;min-width:430px}.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head,.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row{grid-template-columns:145px 95px 130px 140px 115px 32px;min-width:660px}.aat-drawer.agency-commercial-mode .aat-edit-section .aat-edit-grid>.aat-model-grid{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode .aat-default-pricing-card,.aat-drawer.agency-commercial-mode .aat-policy-card,.aat-drawer.agency-commercial-mode .aat-payment-card{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card{grid-template-columns:1fr}}@media(min-width:768px) and (max-width:1199px){.aat-drawer.agency-commercial-mode .aat-edit-section .aat-edit-grid>.aat-model-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ── Modern Card + Sub-Card Enterprise Design System (Internal Client Drawer Standard - Rule 20) ── */
+.cd-scope {
+  box-sizing: border-box;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 12px !important;
+  color: #334155;
+  background: #f8fafc;
+}
+.cd-scope *, .cd-scope *::before, .cd-scope *::after {
+  box-sizing: border-box;
+}
+.cd-scope i, .cd-scope [class*="fa-"], .cd-scope [class^="fa-"], .cd-scope .fa, .cd-scope .fas, .cd-scope .far, .cd-scope .fab, .cd-scope .fa-solid, .cd-scope .fa-regular {
+  font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+  font-style: normal !important;
+  font-variant: normal !important;
+  text-rendering: auto !important;
+  line-height: 1 !important;
+  display: inline-block;
+}
+.cd-scope .fa-solid, .cd-scope .fas { font-weight: 900 !important; }
+.cd-scope .fa-regular, .cd-scope .far { font-weight: 400 !important; }
+
+/* ── Top Action Header Toolbar ── */
+.cd-top-bar {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  margin: 10px 14px 10px 14px !important;
+  padding: 8px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  width: auto !important;
+  box-sizing: border-box !important;
+}
+.cd-top-bar-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+.cd-top-bar-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  flex-shrink: 0 !important;
+}
+.cd-top-bar-title-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+.cd-top-bar-title {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+}
+.cd-top-bar-id {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #2563eb !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 6px !important;
+  padding: 1px 6px !important;
+}
+.cd-top-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+.cd-hdr-btn {
+  height: 32px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  transition: all 0.15s ease-in-out !important;
+  line-height: 1 !important;
+  border: 1px solid transparent !important;
+}
+.cd-hdr-btn-white-edit {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+}
+.cd-hdr-btn-white-edit:hover {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #009ef7 !important;
+}
+.cd-hdr-btn-outline {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+}
+.cd-hdr-btn-outline:hover {
+  background: #ecfdf5 !important;
+  border-color: #059669 !important;
+  color: #059669 !important;
+}
+.cd-hdr-btn-white-job {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+}
+.cd-hdr-btn-white-job:hover {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #009ef7 !important;
+}
+
+/* ── Streamlined Minimalist Hero Identity ── */
+.cd-hero-card.cd-hero-streamlined,
+.cd-hero-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  margin: 0 14px 12px 14px !important;
+  padding: 0 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+  width: auto !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+.cd-hero-main-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 12px 18px !important;
+  gap: 16px !important;
+}
+@media (max-width: 768px) {
+  .cd-hero-main-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+}
+.cd-hero-left-flank {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+.cd-hero-avatar-wrap {
+  position: relative !important;
+  flex-shrink: 0 !important;
+}
+.cd-hero-avatar {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  overflow: hidden !important;
+  padding: 6px !important;
+  box-sizing: border-box !important;
+}
+.cd-hero-avatar img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+.cd-hero-avatar.is-initials {
+  background: #f8fafc !important;
+  color: #2563eb !important;
+  padding: 0 !important;
+}
+.cd-hero-verified-check {
+  position: absolute !important;
+  top: -2px !important;
+  right: -2px !important;
+  width: 15px !important;
+  height: 15px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 7.5px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+}
+.cd-hero-left-meta {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+}
+.cd-hero-title-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.cd-hero-name {
+  font-size: 15.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  letter-spacing: -0.2px !important;
+  margin: 0 !important;
+}
+.cd-hero-id-badge {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  color: #2563eb !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  font-family: monospace !important;
+  flex-shrink: 0 !important;
+}
+.cd-hero-web-wrap {
+  display: flex !important;
+  align-items: center !important;
+  font-size: 12px !important;
+}
+.cd-hero-web-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #2563eb !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+}
+.cd-hero-web-link:hover {
+  text-decoration: underline !important;
+  color: #1d4ed8 !important;
+}
+.cd-hero-web-empty {
+  font-size: 11.5px !important;
+  color: #94a3b8 !important;
+}
+.cd-hero-right-flank {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+@media (max-width: 768px) {
+  .cd-hero-right-flank {
+    align-items: flex-start !important;
+    width: 100% !important;
+  }
+}
+.cd-hero-scope-row {
+  display: flex !important;
+  align-items: center !important;
+}
+.cd-pill-scope-internal {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  padding: 2.5px 8px !important;
+  border-radius: 5px !important;
+  line-height: 1.2 !important;
+}
+.cd-hero-status-pos-row {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+}
+.cd-status-badge-active {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+  padding: 2px 7px !important;
+  border-radius: 5px !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+}
+.cd-pulse-emerald {
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  position: relative !important;
+  flex-shrink: 0 !important;
+}
+.cd-status-sep {
+  color: #cbd5e1 !important;
+  font-weight: 300 !important;
+  margin: 0 1px !important;
+}
+.cd-hero-positions-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  color: #334155 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  padding: 3px 10px !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.15s ease !important;
+  line-height: 1.2 !important;
+}
+.cd-hero-positions-link:hover {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+.cd-hero-positions-link .cd-hero-pos-num {
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  color: #0f172a !important;
+  margin-right: 2px !important;
+}
+.cd-hero-positions-link .cd-hero-pos-label {
+  font-weight: 500 !important;
+  color: #475569 !important;
+}
+.cd-hero-bottom-tags-row {
+  background: #f8fafc !important;
+  border-top: 1px solid #f1f5f9 !important;
+  padding: 6px 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-size: 11.5px !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+.cd-hero-tags-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+}
+.cd-hero-tags-label {
+  font-weight: 600 !important;
+  color: #64748b !important;
+  font-size: 11.5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  margin-right: 2px !important;
+}
+.cd-hero-tag-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 1px 7px !important;
+  border-radius: 4px !important;
+  line-height: 1.3 !important;
+}
+.cd-hero-tag-more {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #2563eb !important;
+  margin-left: 2px !important;
+}
+
+/* ── 6 Metric KPI Summary Row ── */
+.cd-kpi-grid {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin: 0 14px 10px 14px !important;
+  width: calc(100% - 28px) !important;
+  box-sizing: border-box !important;
+}
+@media (max-width: 1280px) {
+  .cd-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 640px) {
+  .cd-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+.cd-kpi-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 9px 11px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+}
+.cd-kpi-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+  border-color: #cbd5e1 !important;
+}
+.cd-kpi-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13.5px !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.2s ease !important;
+}
+.cd-kpi-card:hover .cd-kpi-icon { transform: scale(1.08) !important; }
+.cd-kpi-icon-blue    { background: #eff6ff !important; color: #2563eb !important; }
+.cd-kpi-icon-emerald { background: #ecfdf5 !important; color: #059669 !important; }
+.cd-kpi-icon-purple  { background: #f5f3ff !important; color: #7c3aed !important; }
+.cd-kpi-icon-amber   { background: #fffbeb !important; color: #d97706 !important; }
+.cd-kpi-icon-rose    { background: #fdf2f8 !important; color: #db2777 !important; }
+.cd-kpi-icon-teal    { background: #f0fdfa !important; color: #0d9488 !important; }
+.cd-kpi-body {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+.cd-kpi-num {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em !important;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cd-kpi-lbl {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  line-height: 1.25 !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* ── Sub-Tabs Card ── */
+.cd-drawer-tabs-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 5px 8px !important;
+  margin: 0 14px 10px 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  width: auto !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  min-height: 48px !important;
+  height: auto !important;
+}
+.cd-drawer-tabs-list {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  list-style: none !important;
+  padding: 2px 0 !important;
+  margin: 0 !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+  min-height: 38px !important;
+  height: auto !important;
+}
+.cd-drawer-tabs-list .nav-item {
+  margin: 0 !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 34px !important;
+}
+.cd-tab-pill-btn {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 0 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  height: 34px !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+  transition: all 0.15s ease-in-out !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+.cd-tab-pill-btn i {
+  font-size: 11px !important;
+  color: #64748b !important;
+  transition: color 0.15s !important;
+}
+.cd-tab-pill-btn:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+.cd-tab-pill-btn:hover i { color: #009ef7 !important; }
+.cd-tab-pill-btn.active {
+  background: #009ef7 !important;
+  border-color: #009ef7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 5px rgba(0, 158, 247, 0.22) !important;
+}
+.cd-tab-pill-btn.active i { color: #ffffff !important; }
+.cd-tab-pill-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 17px !important;
+  height: 16px !important;
+  padding: 0 4.5px !important;
+  border-radius: 999px !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  line-height: 16px !important;
+}
+.cd-tab-pill-btn.active .cd-tab-pill-badge {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+}
+
+/* ── Overview 2-Column Grid ── */
+.cd-grid-2col {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr) !important;
+  gap: 14px !important;
+  padding: 0 14px 20px 14px !important;
+  align-items: start !important;
+  background: #f8fafc !important;
+}
+@media (max-width: 1024px) {
+  .cd-grid-2col { grid-template-columns: 1fr !important; }
+}
+.cd-card-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 14px 16px !important;
+  margin-bottom: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+}
+.cd-card-panel:last-child { margin-bottom: 0 !important; }
+.cd-card-hdr {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+.cd-card-hdr-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.cd-card-hdr-title {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+.cd-card-hdr-link {
+  font-size: 12px !important;
+  color: #2563eb !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+}
+.cd-card-hdr-link:hover { text-decoration: underline !important; }
+.cd-about-body {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1.65 !important;
+  color: #475569 !important;
+}
+
+/* ── Recent Activity Timeline ── */
+.cd-timeline-list {
+  position: relative !important;
+  padding-left: 28px !important;
+}
+.cd-timeline-list::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 14px !important;
+  bottom: 14px !important;
+  left: 13px !important;
+  width: 1.5px !important;
+  background: #e2e8f0 !important;
+}
+.cd-tl-item {
+  position: relative !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 8px 0 !important;
+  border-bottom: 1px dashed #f1f5f9 !important;
+}
+.cd-tl-item:last-child { border-bottom: none !important; padding-bottom: 0 !important; }
+.cd-tl-item:first-child { padding-top: 0 !important; }
+.cd-tl-dot {
+  position: absolute !important;
+  left: -28px !important;
+  top: 9px !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11.5px !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+  z-index: 1 !important;
+}
+.cd-tl-dot-green  { background: #ecfdf5 !important; color: #059669 !important; }
+.cd-tl-dot-purple { background: #f5f3ff !important; color: #7c3aed !important; }
+.cd-tl-dot-orange { background: #fff7ed !important; color: #ea580c !important; }
+.cd-tl-dot-blue   { background: #eff6ff !important; color: #2563eb !important; }
+.cd-tl-info { flex: 1 !important; min-width: 0 !important; }
+.cd-tl-heading {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
+}
+.cd-tl-sub {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #64748b !important;
+  line-height: 1.25 !important;
+  margin-top: 2px !important;
+}
+.cd-tl-meta-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+.cd-tl-time {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #94a3b8 !important;
+  white-space: nowrap !important;
+}
+.cd-tl-badge {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  padding: 2.5px 8px !important;
+  border-radius: 6px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+.cd-tl-badge-blue   { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+.cd-tl-badge-amber  { background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important; }
+.cd-tl-badge-orange { background: #fff7ed !important; color: #ea580c !important; border: 1px solid #fed7aa !important; }
+.cd-tl-badge-green  { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+
+/* ── Vertical Info List ── */
+.cd-vertical-info-list {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+.cd-vinfo-row {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 9px 2px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  min-width: 0 !important;
+  transition: background-color 0.15s ease !important;
+}
+.cd-vinfo-row:first-child { padding-top: 2px !important; }
+.cd-vinfo-row:last-child { border-bottom: none !important; padding-bottom: 2px !important; }
+.cd-vinfo-row:hover { background-color: #fcfdfe !important; }
+.cd-vinfo-key {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 0 0 132px !important;
+  min-width: 110px !important;
+}
+.cd-vinfo-icon {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11px !important;
+  flex-shrink: 0 !important;
+}
+.cd-vinfo-icon.red     { background: #fef2f2 !important; color: #ef4444 !important; }
+.cd-vinfo-icon.blue    { background: #eff6ff !important; color: #2563eb !important; }
+.cd-vinfo-icon.green   { background: #ecfdf5 !important; color: #059669 !important; }
+.cd-vinfo-icon.amber   { background: #fefce8 !important; color: #ca8a04 !important; }
+.cd-vinfo-icon.purple  { background: #f5f3ff !important; color: #7c3aed !important; }
+.cd-vinfo-icon.sky     { background: #f0f9ff !important; color: #0284c7 !important; }
+.cd-vinfo-icon.emerald { background: #f0fdf4 !important; color: #16a34a !important; }
+.cd-vinfo-icon.orange  { background: #fff7ed !important; color: #ea580c !important; }
+.cd-vinfo-icon.slate   { background: #f8fafc !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+.cd-vinfo-icon.cyan    { background: #ecfeff !important; color: #0891b2 !important; }
+.cd-vinfo-icon.indigo  { background: #eef2ff !important; color: #4f46e5 !important; }
+.cd-vinfo-label {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  letter-spacing: -0.1px !important;
+  line-height: 1.3 !important;
+}
+.cd-vinfo-val {
+  flex: 1 !important;
+  min-width: 0 !important;
+  text-align: right !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #0f172a !important;
+  word-break: break-word !important;
+}
+.cd-vinfo-link {
+  color: #2563eb !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  transition: color 0.15s ease !important;
+}
+.cd-vinfo-link:hover {
+  color: #1d4ed8 !important;
+  text-decoration: underline !important;
+}
+.cd-career-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  transition: all 0.15s ease !important;
+}
+.cd-career-pill:hover {
+  background: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+}
+.cd-tax-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+.cd-tax-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  border: 1px solid #e2e8f0 !important;
+  letter-spacing: 0.3px !important;
+}
+.cd-copy-btn {
+  background: transparent !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+  color: #64748b !important;
+  width: 22px !important;
+  height: 22px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 10px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+.cd-copy-btn:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+.cd-type-badge-pill {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  background: #f0f9ff !important;
+  color: #0284c7 !important;
+  border: 1px solid #bae6fd !important;
+}
+.cd-vintage-chip {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+  margin-left: 4px !important;
+}
+.cd-social-links-row {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+}
+.cd-social-btn {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11px !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  transition: opacity 0.15s ease, transform 0.15s ease !important;
+}
+.cd-social-btn:hover {
+  opacity: 0.9 !important;
+  transform: translateY(-1px) !important;
+  color: #ffffff !important;
+}
+.cd-social-btn.linkedin { background: #0a66c2 !important; }
+.cd-social-btn.twitter  { background: #0f172a !important; }
+.cd-social-btn.github   { background: #24292f !important; }
+.cd-social-btn.youtube  { background: #ff0000 !important; }
+.cd-social-btn.facebook { background: #1877f2 !important; }
+.cd-social-btn.instagram{ background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important; }
+
+/* ── Enterprise Location Sub-Cards ── */
+.cd-loc-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+.cd-loc-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 3.5px solid #94a3b8 !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  text-align: left !important;
+  width: 100% !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+.cd-loc-card:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 3px 6px rgba(15, 23, 42, 0.05) !important;
+}
+.cd-loc-card.is-primary,
+.cd-loc-card.hq {
+  background: #ffffff !important;
+  border-color: #dbeafe !important;
+  border-left: 3.5px solid #2563eb !important;
+}
+.cd-loc-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  margin-bottom: 6px !important;
+}
+.cd-loc-header-left {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+.cd-loc-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  padding: 3px 7px !important;
+  border-radius: 4px !important;
+  letter-spacing: 0.2px !important;
+  text-transform: uppercase !important;
+}
+.cd-loc-badge.loc-primary {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+}
+.cd-loc-badge.loc-secondary {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+.cd-loc-hq-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  padding: 2.5px 6px !important;
+  border-radius: 4px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.cd-loc-country-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  color: #475569 !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 3px 9px !important;
+  border-radius: 12px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.cd-loc-city-line {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 12.5px !important;
+  line-height: 1.35 !important;
+  margin-bottom: 4px !important;
+  word-break: break-word !important;
+}
+.cd-loc-city-name {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+.cd-loc-street-line {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 5px !important;
+  font-size: 11.5px !important;
+  color: #64748b !important;
+  line-height: 1.4 !important;
+  word-break: break-word !important;
+  margin-bottom: 3px !important;
+  padding-left: 17px !important;
+}
+.cd-loc-meta-line {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-top: 4px !important;
+  padding-left: 17px !important;
+}
+.cd-loc-meta-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+  padding: 2px 7px !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  line-height: 1.2 !important;
+}
+.cd-loc-meta-chip strong {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  margin-left: 3px !important;
+}
+
+/* ── Administrators List ── */
+.cd-adm-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 8px 0 !important;
+  border-bottom: 1px dashed #f1f5f9 !important;
+}
+.cd-adm-item:last-child { border-bottom: none !important; padding-bottom: 0 !important; }
+.cd-adm-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+}
+.cd-adm-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+.cd-adm-info { flex: 1 !important; min-width: 0 !important; }
+.cd-adm-name-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+.cd-adm-name {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.cd-adm-pri-badge {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+  padding: 1px 5px !important;
+  border-radius: 3px !important;
+}
+.cd-adm-role {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  margin-top: 1px !important;
+}
+.cd-adm-contacts {
+  font-size: 10.5px !important;
+  color: #94a3b8 !important;
+  margin-top: 2px !important;
+}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 @section('content')
  
@@ -543,103 +1667,208 @@ input[type="radio"]:checked {
   $cad_r = 52; $cad_circ = 2*M_PI*$cad_r; $cad_off = $cad_circ*(1-$cad_pct/100);
   $cad_initial = strtoupper(substr(trim((string)@$account->company_name),0,1));
   $cad_size = '';
+  $userPermissions = (array)($userPermissions ?? []);
   if(!empty(@$account->company_size_from)){
     $cad_size = (@$account->company_size_from >= 10000) ? $account->company_size_from.'+ employees' : trim($account->company_size_from.' - '.@$account->company_size).' employees';
   }
 @endphp
 @if(request('tab') !== 'services' && request('tab') !== 'ads' && request('ads') !== 'show')
-<!--begin::Company Dashboard hero (redesigned)-->
-<div class="cad">
-  <div class="cad-hero">
-    <!-- Identity -->
-    <div class="cad-card cad-id">
-      <div class="cad-logo">@if(!empty($logo_path))<img src="{{ $logo_path }}" alt="">@else{{ $cad_initial }}@endif</div>
-      <div class="cad-id-main">
-        <div class="cad-name">
-          <h2>{{ ucwords(@$account->company_name) }}</h2>
-          <svg class="cad-verif" viewBox="0 0 24 24" fill="currentColor"><path d="M10.08 3.72c.8-1.56 3.03-1.56 3.84 0a2.07 2.07 0 0 0 2.58.95c1.67-.53 3.25 1.04 2.71 2.71a2.07 2.07 0 0 0 .95 2.58c1.56.8 1.56 3.03 0 3.84a2.07 2.07 0 0 0-.95 2.58c.54 1.67-1.04 3.25-2.71 2.71a2.07 2.07 0 0 0-2.58.95c-.8 1.56-3.03 1.56-3.84 0a2.07 2.07 0 0 0-2.58-.95c-1.67.54-3.25-1.04-2.71-2.71a2.07 2.07 0 0 0-.95-2.58c-1.56-.8-1.56-3.03 0-3.84a2.07 2.07 0 0 0 .95-2.58c-.53-1.67 1.04-3.25 2.71-2.71a2.07 2.07 0 0 0 2.58-.95z"/><path d="M14.86 9.19c.2-.24.52-.25.76-.05.24.21.2.52 0 .76l-3.75 4.75c-.21.25-.58.27-.82.06l-2.57-2.29a.54.54 0 0 1-.05-.81c.21-.24.57-.26.8-.05l2.14 1.9 3.49-4.27z" fill="#fff"/></svg>
-          <span class="cad-emp-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> Verified Employer</span>
+<div class="cd-scope">
+  <!-- ── TIER 1: TOP ACTION HEADER TOOLBAR CARD ── -->
+  <div class="cd-top-bar">
+    <div class="cd-top-bar-left">
+      <div class="cd-top-bar-icon">
+        <i class="fas fa-building fa-solid"></i>
+      </div>
+      <div class="cd-top-bar-title-wrap">
+        <h1 class="cd-top-bar-title">{{ ucwords(@$account->company_name) }}</h1>
+        <span class="cd-top-bar-id">#SC-{{ $account->id ?? $company_id }}</span>
+      </div>
+    </div>
+    <div class="cd-top-actions">
+      @if(in_array("edit_settings", $userPermissions))
+      <a href="{{ route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}" class="cd-hdr-btn cd-hdr-btn-white-edit" title="Edit Company Profile">
+        <i class="fas fa-pen-to-square fa-solid text-primary"></i> Edit Profile
+      </a>
+      @endif
+      @if(!empty($client) && !empty($client->id))
+      <a href="{{ route('service_company.clients.show', GeneralMethod::value_encrypt($client->id)) }}" class="cd-hdr-btn cd-hdr-btn-outline" title="Manage Contacts">
+        <i class="fas fa-user-plus fa-solid text-success"></i> Add Contact
+      </a>
+      @endif
+      @if(in_array('add_jobs', $userPermissions))
+      <a href="{{ url('service_company/jobs/create') }}" class="cd-hdr-btn cd-hdr-btn-white-job" title="Post New Job Opening">
+        <i class="fas fa-plus fa-solid text-primary me-1"></i> Add Job
+      </a>
+      @endif
+    </div>
+  </div>
+
+  <!-- ── HERO MASTER CARD: STREAMLINED MINIMALIST HEADER ── -->
+  <div class="cd-hero-card cd-hero-streamlined">
+    <div class="cd-hero-main-row">
+      <!-- Left Flank: Company Identity & Website -->
+      <div class="cd-hero-left-flank">
+        <div class="cd-hero-avatar-wrap">
+          @php
+            $cad_initial = strtoupper(substr(trim((string)@$account->company_name), 0, 1));
+            $resolvedLogo = !empty($logo_path) ? $logo_path : (!empty($account->logo) ? (str_starts_with($account->logo, 'http') ? $account->logo : asset_url('company-logo/'.$account->logo)) : '');
+          @endphp
+          <div class="cd-hero-avatar {{ empty($resolvedLogo) ? 'is-initials' : '' }}">
+            @if (!empty($resolvedLogo))
+              <img src="{{ $resolvedLogo }}" alt="{{ $account->company_name }}">
+            @else
+              {{ $cad_initial }}
+            @endif
+          </div>
+          <div class="cd-hero-verified-check" title="Verified Service Company">
+            <i class="fas fa-check"></i>
+          </div>
         </div>
-        <div class="cad-tag">{{ @$industries_name ?: 'Staffing & Recruiting Solutions' }}</div>
-        <div class="cad-meta">
-          @if($company_city_name || $company_country_name)<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>{{ trim(ucwords($company_city_name).(($company_city_name&&$company_country_name)?', ':'').ucwords($company_country_name),', ') }}</span>@endif
-          @if($cad_size)<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>{{ $cad_size }}</span>@endif
-          @if(@$account->founded)<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Founded {{ $account->founded }}</span>@endif
-          @if(@$account->website)<a href="{{ (strpos($account->website,'http')===0?'':'//').$account->website }}" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>{{ $account->website }}</a>@endif
+        <div class="cd-hero-left-meta">
+          <div class="cd-hero-title-wrap">
+            <h2 class="cd-hero-name" title="{{ $account->company_name }}">{{ ucwords(@$account->company_name) }}</h2>
+            <span class="cd-hero-id-badge">#SC-{{ $account->id ?? $company_id }}</span>
+          </div>
+          <div class="cd-hero-web-wrap">
+            @php $webClean = @$account->website ?: (@$client->website ?: ''); @endphp
+            @if (!empty($webClean) && $webClean !== '-')
+              <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-hero-web-link" title="Visit Official Website">
+                <i class="fas fa-globe text-primary"></i>
+                <span>{{ preg_replace('#^https?://(www\.)?#i', '', rtrim($webClean, '/')) }}</span>
+                <i class="fas fa-arrow-up-right-from-square" style="font-size: 9px;"></i>
+              </a>
+            @else
+              <span class="cd-hero-web-empty text-muted">
+                <i class="fas fa-globe text-muted me-1"></i>No Website Provided
+              </span>
+            @endif
+          </div>
         </div>
-        <div class="cad-actions">
-          @if(in_array("edit_settings", $userPermissions))
-          <a href="{{ route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}" class="cad-btn cad-btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg> Edit Profile</a>
-          @endif
-          @if(@$account->website)<a href="{{ (strpos($account->website,'http')===0?'':'//').$account->website }}" target="_blank" class="cad-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14 21 3"/></svg> Visit Website</a>@endif
+      </div>
+
+      <!-- Right Flank: Scope & Status / Positions -->
+      <div class="cd-hero-right-flank">
+        <div class="cd-hero-scope-row">
+          <span class="cd-pill-scope-internal">
+            <i class="far fa-building me-1"></i> Service Company
+          </span>
+        </div>
+        <div class="cd-hero-status-pos-row">
+          <span class="cd-status-badge-active" title="Company workspace is active">
+            <span class="cd-pulse-emerald"></span> Active
+          </span>
+          <span class="cd-status-sep">|</span>
+          <a href="{{ url('service_company/jobs') }}" class="cd-hero-positions-link" title="View Active Job Positions">
+            <span class="cd-hero-pos-icon"><i class="fas fa-bolt text-warning"></i></span>
+            <span class="cd-hero-pos-num">{{ $kpiActiveJobs ?? $activeJobs ?? 0 }}</span>
+            <span class="cd-hero-pos-label">Active {{ ($kpiActiveJobs ?? $activeJobs ?? 0) == 1 ? 'Position' : 'Positions' }}</span>
+          </a>
         </div>
       </div>
     </div>
-    <!-- Profile completion -->
-    <div class="cad-card cad-pc">
-      <div class="cad-pc-h">Profile Completion</div>
-      <div class="cad-pc-body">
-        <div class="cad-donut">
-          <svg width="104" height="104" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="{{ $cad_r }}" fill="none" stroke="#eef0f5" stroke-width="11"/>
-            <circle cx="60" cy="60" r="{{ $cad_r }}" fill="none" stroke="#6741d9" stroke-width="11" stroke-linecap="round" stroke-dasharray="{{ $cad_circ }}" stroke-dashoffset="{{ $cad_off }}"/>
-          </svg>
-          <div class="cad-donut-c"><div class="cad-donut-pct">{{ $cad_pct }}%</div><div class="cad-donut-lbl">Complete</div></div>
-        </div>
-        <div class="cad-pc-list">
-          @foreach($cad_pc as $label => $done)
-            <div class="cad-pc-item"><span>{{ $label }}</span>
-              @if($done)<span class="cad-pc-state done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> Completed</span>
-              @else<span class="cad-pc-state pend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg> Pending</span>@endif
-            </div>
+
+    <!-- Bottom Row: Dynamic Tags Strip -->
+    <div class="cd-hero-bottom-tags-row">
+      <div class="cd-hero-tags-left">
+        <span class="cd-hero-tags-label"><i class="fas fa-tags me-1"></i>Tags:</span>
+        @php
+          $tagNames = [];
+          if (!empty($tags) && count($tags) > 0) {
+            foreach($tags as $t) {
+              if (!empty($t->tag_name)) { $tagNames[] = $t->tag_name; }
+            }
+          }
+          if (empty($tagNames) && !empty($client->tags)) {
+            foreach(explode(',', $client->tags) as $tg) {
+              if (trim($tg) !== '') { $tagNames[] = trim($tg); }
+            }
+          }
+        @endphp
+        @if (!empty($tagNames) && count($tagNames) > 0)
+          @foreach (array_slice($tagNames, 0, 5) as $tn)
+            <span class="cd-hero-tag-pill">{{ ucwords($tn) }}</span>
           @endforeach
-        </div>
-      </div>
-      <div class="cad-pc-foot">Complete your profile to build trust and attract more talent.</div>
-    </div>
-    <!-- Coins -->
-    @php
-      $opEnd = @$operationCoins->end_date; $saEnd = @$salesCoins->end_date;
-      $opDays = ($opEnd && strtotime($opEnd) > time()) ? (int) floor((strtotime($opEnd)-time())/86400) : 0;
-      $saDays = ($saEnd && strtotime($saEnd) > time()) ? (int) floor((strtotime($saEnd)-time())/86400) : 0;
-      $coinUrl = \Route::has('subscribe.newindex') ? route('subscribe.newindex') : 'javascript:void(0);';
-    @endphp
-    <div class="cad-coins">
-      <div class="cad-card cad-coin">
-        <div class="cad-coin-top">
-          <span class="cad-coin-ic op"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></span>
-          <div class="cad-coin-mid">
-            <div class="cad-coin-lbl">Operation Coins</div>
-            <div class="cad-coin-num">{{ number_format((int) (@$operationCoins->coins ?? 0)) }}</div>
-            <div class="cad-coin-sub">Available</div>
-          </div>
-          <a href="{{ $coinUrl }}" class="cad-coin-btn">View Details</a>
-        </div>
-        @if($opEnd)<div class="cad-coin-foot">Expires on <b>{{ date('d M Y', strtotime($opEnd)) }}</b> · {{ $opDays }} days left</div>@endif
-      </div>
-      <div class="cad-card cad-coin">
-        <div class="cad-coin-top">
-          <span class="cad-coin-ic sa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></span>
-          <div class="cad-coin-mid">
-            <div class="cad-coin-lbl">Sales Coins</div>
-            <div class="cad-coin-num">{{ number_format((int) (@$salesCoins->coins ?? 0)) }}</div>
-            <div class="cad-coin-sub">Available</div>
-          </div>
-          <a href="{{ $coinUrl }}" class="cad-coin-btn">View Details</a>
-        </div>
-        @if($saEnd)<div class="cad-coin-foot">Expires on <b>{{ date('d M Y', strtotime($saEnd)) }}</b> · {{ $saDays }} days left</div>@endif
+          @if (count($tagNames) > 5)
+            <span class="cd-hero-tag-more">+{{ count($tagNames) - 5 }}</span>
+          @endif
+        @else
+          <span class="cd-hero-tag-pill" style="background:#ffffff; color:#64748b; border:1px solid #e2e8f0;">{{ $industries_name ?: 'Staffing & Recruiting' }}</span>
+          <span class="cd-hero-tag-pill" style="background:#ffffff; color:#64748b; border:1px solid #e2e8f0;">Talent Marketplace</span>
+        @endif
       </div>
     </div>
   </div>
-  <!-- Stat strip (real, already-loaded data — no extra queries) -->
-  <div class="cad-stats">
-    <div class="cad-stat"><div class="cad-stat-ic cad-bl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div><div class="cad-stat-lbl">Active Jobs</div><div class="cad-stat-num">{{ (int) @$activeJobs }}</div></div></div>
-    <div class="cad-stat"><div class="cad-stat-ic cad-gr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div><div class="cad-stat-lbl">Team Members</div><div class="cad-stat-num">{{ (int) @$team_count }}</div></div></div>
-    <div class="cad-stat"><div class="cad-stat-ic cad-am"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="cad-stat-lbl">Founded</div><div class="cad-stat-num">{{ @$account->founded ?: '—' }}</div></div></div>
-    <div class="cad-stat"><div class="cad-stat-ic cad-pu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><div><div class="cad-stat-lbl">Profile Completion</div><div class="cad-stat-num">{{ $cad_pct }}%</div></div></div>
+
+  <!-- ── 6 METRIC KPI SUMMARY ROW: AUTHORITATIVE BUSINESS TOTALS (Rule 20 Compliant) ── -->
+  <div class="cd-kpi-grid">
+    <!-- KPI 1: All Jobs -->
+    <a href="{{ url('service_company/jobs') }}" class="cd-kpi-card" title="Total jobs created till date">
+      <div class="cd-kpi-icon cd-kpi-icon-blue">
+        <i class="fas fa-layer-group fa-solid"></i>
+      </div>
+      <div class="cd-kpi-body">
+        <div class="cd-kpi-num" id="cdKpiTotalJobs">{{ number_format($kpiTotalJobs ?? 0) }}</div>
+        <div class="cd-kpi-lbl">All Jobs</div>
+      </div>
+    </a>
+
+    <!-- KPI 2: Active Jobs -->
+    <a href="{{ url('service_company/jobs') }}" class="cd-kpi-card" title="Total jobs currently active">
+      <div class="cd-kpi-icon cd-kpi-icon-emerald">
+        <i class="fas fa-bolt fa-solid"></i>
+      </div>
+      <div class="cd-kpi-body">
+        <div class="cd-kpi-num" id="cdKpiActiveJobs">{{ number_format($kpiActiveJobs ?? $activeJobs ?? 0) }}</div>
+        <div class="cd-kpi-lbl">Active Jobs</div>
+      </div>
+    </a>
+
+    <!-- KPI 3: All Candidates -->
+    <a href="{{ url('service_company/candidates') }}" class="cd-kpi-card" title="Total applications received till date">
+      <div class="cd-kpi-icon cd-kpi-icon-purple">
+        <i class="fas fa-user-check fa-solid"></i>
+      </div>
+      <div class="cd-kpi-body">
+        <div class="cd-kpi-num" id="cdKpiAllCandidates">{{ number_format($kpiCandidatesSubmitted ?? 0) }}</div>
+        <div class="cd-kpi-lbl">All Candidates</div>
+      </div>
+    </a>
+
+    <!-- KPI 4: All Interviews -->
+    <a href="{{ url('service_company/interview-tracker') }}" class="cd-kpi-card" title="Total interviews scheduled till date">
+      <div class="cd-kpi-icon cd-kpi-icon-amber">
+        <i class="fas fa-calendar-check fa-solid"></i>
+      </div>
+      <div class="cd-kpi-body">
+        <div class="cd-kpi-num" id="cdKpiAllInterviews">{{ number_format($kpiInterviews ?? 0) }}</div>
+        <div class="cd-kpi-lbl">All Interviews</div>
+      </div>
+    </a>
+
+    <!-- KPI 5: All Offers -->
+    <a href="{{ url('service_company/offer-tracker') }}" class="cd-kpi-card" title="Total candidate offers generated till date">
+      <div class="cd-kpi-icon cd-kpi-icon-rose">
+        <i class="fas fa-file-signature fa-solid"></i>
+      </div>
+      <div class="cd-kpi-body">
+        <div class="cd-kpi-num" id="cdKpiAllOffers">{{ number_format($kpiOffers ?? 0) }}</div>
+        <div class="cd-kpi-lbl">All Offers</div>
+      </div>
+    </a>
+
+    <!-- KPI 6: All Joinings -->
+    <a href="{{ url('service_company/joining-tracker') }}" class="cd-kpi-card" title="Total candidate joinings confirmed till date">
+      <div class="cd-kpi-icon cd-kpi-icon-teal">
+        <i class="fas fa-handshake fa-solid"></i>
+      </div>
+      <div class="cd-kpi-body">
+        <div class="cd-kpi-num" id="cdKpiAllJoinings">{{ number_format($kpiJoined ?? 0) }}</div>
+        <div class="cd-kpi-lbl">All Joinings</div>
+      </div>
+    </a>
   </div>
 </div>
-<!--end::Company Dashboard hero-->
 @endif
 <!--beign::Company Details (legacy, hidden)-->
 <div class="card mb-5 mb-xl-5 mx-2 d-none">
@@ -893,229 +2122,524 @@ input[type="radio"]:checked {
 </div>
 <!--end::Company Details-->
 <!--begin::Tabs-->
-<div class="card card-custom mx-2">
-<!--Begin::Tabs Header-->
+@php
+  $cad_stageCount = count((array)@$interviewStage_sourcing)+count((array)@$interviewStage_screening)+count((array)@$interviewStage_evaluation)+count((array)@$interviewStage_negotiation)+count((array)@$interviewStage_offered)+count((array)@$interviewStage_joined)+count((array)@$interviewStage_reject);
+@endphp
+<div class="cd-scope">
 @if(!@$hide_account_tabs_header)
-<div class="card-header card-header-tabs-line csv2-account-tabs-header">
-  <div class="card-toolbar csv2-account-tabs-wrap">
-    <ul class="nav nav-tabs csv2-account-tabs" role="tablist">
-      <li class="nav-item"><a class="nav-link csv2-account-tab {{$overview_tab}}" data-toggle="tab" href="#overview"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Overview</span></span></a></li>
-      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#interview_stage"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="12" r="2"/><path d="M18 14v5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Interview Stage</span></span></a></li>
-      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#settings"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.1h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1v4a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">General</span></span></a></li>
-      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#notifications"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Notifications</span></span></a></li>
-      <li class="nav-item"><a class="nav-link csv2-account-tab candidate-config-main-tab" data-toggle="tab" href="#offerterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Candidate Configurations</span></span></a></li>
-      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#terms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Agency Agreement</span></span></a></li>
+  <!-- ── TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND (Rule 20 Compliant) ── -->
+  <div class="cd-drawer-tabs-card">
+    <ul class="cd-drawer-tabs-list nav nav-tabs border-0 flex-nowrap" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="cd-tab-pill-btn nav-link {{ !empty($overview_tab) ? 'active' : '' }}" data-bs-toggle="tab" data-toggle="tab" href="#overview" role="tab" aria-selected="{{ !empty($overview_tab) ? 'true' : 'false' }}" title="Overview">
+          <i class="fas fa-house fa-solid"></i>
+          <span>Overview</span>
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#interview_Stage" role="tab" aria-selected="false" title="Interview Stages">
+          <i class="fas fa-layer-group fa-solid"></i>
+          <span>Interview Stages</span>
+          <span class="cd-tab-pill-badge" style="{{ $cad_stageCount > 0 ? '' : 'display:none;' }}">{{ $cad_stageCount }}</span>
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#settings" role="tab" aria-selected="false" title="General Settings">
+          <i class="fas fa-gear fa-solid"></i>
+          <span>General</span>
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#notifications" role="tab" aria-selected="false" title="Notification Preferences">
+          <i class="fas fa-bell fa-solid"></i>
+          <span>Notifications</span>
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="cd-tab-pill-btn nav-link candidate-config-main-tab" data-bs-toggle="tab" data-toggle="tab" href="#offerterms" role="tab" aria-selected="false" title="Candidate Configurations">
+          <i class="fas fa-file-contract fa-solid"></i>
+          <span>Candidate Configurations</span>
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#terms" role="tab" aria-selected="false" title="Agency Agreement Terms">
+          <i class="fas fa-handshake-angle fa-solid"></i>
+          <span>Agency Agreement</span>
+        </a>
+      </li>
     </ul>
   </div>
-</div>
 @endif
-<!--end::Tabs Header-->
+</div>
+
+<div class="card card-custom mx-2 border-0 bg-transparent shadow-none">
 <!--Begin::Body-->
-<div class="card-body py-0">
-<div class="tab-content {{ @$hide_account_tabs_header ? 'pt-0' : 'pt-5' }}">
+<div class="card-body py-0 px-0">
+<div class="tab-content {{ @$hide_account_tabs_header ? 'pt-0' : 'pt-2' }}">
 <!--begin::Overview Content-->
 <div class="tab-pane {{$overview_tab}}" id="overview" role="tabpanel">
-  <!--begin::Overview header-->
-  <div class="card-header cursor-pointer px-0">
-    <!--begin::Card title-->
-    <div class="card-title m-0">
-      <h3 class="fw-bolder m-0">Overview</h3>
-    </div>
-    <!--end::Card title-->
-    @if(in_array("edit_settings", $userPermissions))
-    <!--begin::Action-->
-    <a href="{{ route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}" class="btn btn-primary align-self-center">Edit Profile</a>
-    <!--ensd::Action-->
-    @endif </div>
-  <!--end::Overview header-->
-  <div class="card-body px-0 py-7"> @if(in_array("view_settings", $userPermissions))
-    <!--begin::overview Content (redesigned)-->
-    <div class="cad">
-      <div class="cad-grid3">
-        <!-- About -->
-        <div class="cad-card cad-sec">
-          <div class="cad-sec-h"><span class="ci cad-bl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>About {{ ucwords(@$account->company_name) }}</div>
-          @if(!empty(trim(strip_tags((string)@$account->description))))
-            <div class="cad-desc">{!! @$account->description !!}</div>
-          @else
-            <div class="cad-desc" style="color:#94a3b8;">No company description added yet.</div>
-          @endif
-          @if(!empty(@$client->tags))
-            <div style="margin-top:14px;">
-              <div class="cad-row" style="border:none;padding-bottom:6px;"><span class="k">Specialties</span></div>
-              <div class="cad-tags">@foreach(explode(',', $client->tags) as $tg)@if(trim($tg)!=='')<span class="cad-tagi">{{ ucwords(trim($tg)) }}</span>@endif @endforeach</div>
+  @if(in_array("view_settings", $userPermissions))
+  <div class="cd-scope">
+    <div class="cd-grid-2col">
+      <!-- ── Left Column ── -->
+      <div>
+        <!-- Card 1: About the Company -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px;">
+                <i class="fas fa-building fa-solid"></i>
+              </div>
+              <span class="cd-card-hdr-title">About the Company</span>
             </div>
-          @endif
-        </div>
-        <!-- Company details -->
-        <div class="cad-card cad-sec">
-          <div class="cad-sec-h"><span class="ci cad-pu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01"/></svg></span>Company Information</div>
-          <div class="cad-row"><span class="k">Industry</span><span class="v">{{ @$industries_name ?: '—' }}</span></div>
-          <div class="cad-row"><span class="k">Company Size</span><span class="v">{{ $cad_size ?: '—' }}</span></div>
-          <div class="cad-row"><span class="k">Headquarters</span><span class="v">{{ trim(ucwords($company_city_name).(($company_city_name&&$company_country_name)?', ':'').ucwords($company_country_name),', ') ?: '—' }}</span></div>
-          <div class="cad-row"><span class="k">Type</span><span class="v">@if(isset($account->industries_type) && $account->industries_type >= 0){{ @$industries_type_arr[$account->industries_type] }}@else—@endif</span></div>
-          <div class="cad-row"><span class="k">Founded</span><span class="v">{{ @$account->founded ?: '—' }}</span></div>
-          <div class="cad-row"><span class="k">Website</span><span class="v">@if(!empty(@$account->website))<a href="{{ (strpos($account->website,'http')===0?'':'//').$account->website }}" target="_blank">{{ $account->website }}</a>@else—@endif</span></div>
-        </div>
-        <!-- Configuration Checklist -->
-        @php
-          $cad_stageCount = count((array)@$interviewStage_sourcing)+count((array)@$interviewStage_screening)+count((array)@$interviewStage_evaluation)+count((array)@$interviewStage_negotiation)+count((array)@$interviewStage_offered)+count((array)@$interviewStage_joined)+count((array)@$interviewStage_reject);
-          $cad_cfg = [
-            'Company profile completed'   => ($cad_pct >= 100),
-            'Interview stages configured' => ($cad_stageCount > 0),
-            'Offer letter template set'   => !empty(trim(strip_tags((string)@$account->offer_terms))),
-            'Agency terms & conditions'   => !empty(trim(strip_tags((string)@$account->terms))),
-            'Salary structure configured' => (!empty(@$offer_points) && count($offer_points) > 0),
-            'Services configured'         => ((@$contractStatus->status ?? 0) || (@$fullTimeStatus->status ?? 0)),
-          ];
-        @endphp
-        <div class="cad-card cad-sec">
-          <div class="cad-sec-h"><span class="ci cad-gr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>Configuration Checklist</div>
-          @foreach($cad_cfg as $label => $ok)
-            <div class="cad-row"><span class="k">{{ $label }}</span><span class="v">
-              @if($ok)<span class="cad-chip ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> Completed</span>
-              @else<span class="cad-chip warn">Pending</span>@endif
-            </span></div>
-          @endforeach
-        </div>
-        <!-- Services & Rates -->
-        <div class="cad-card cad-sec">
-          <div class="cad-sec-h"><span class="ci cad-am"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>Services &amp; Rates</div>
-          <div class="cad-mini">
-            <div class="cad-mini-h">Contract Hiring
-              <span class="cad-chip {{ (@$contractStatus->status) ? 'ok' : 'off' }}">{{ (@$contractStatus->status) ? 'Active' : 'Inactive' }}</span>
-            </div>
-            <div class="cad-mini-s">{{ (int) @$contractCount }} {{ (int)@$contractCount === 1 ? 'country' : 'countries' }} served</div>
+            @if(!empty($webClean) && $webClean !== '-')
+            <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-card-hdr-link" title="Visit Official Website">
+              {{ preg_replace('#^https?://(www\.)?#i', '', rtrim($webClean, '/')) }} <i class="fas fa-external-link-alt fa-solid" style="font-size:9px;"></i>
+            </a>
+            @endif
           </div>
-          <div class="cad-mini">
-            <div class="cad-mini-h">Full-time Hiring
-              <span class="cad-chip {{ (@$fullTimeStatus->status) ? 'ok' : 'off' }}">{{ (@$fullTimeStatus->status) ? 'Active' : 'Inactive' }}</span>
+          <div class="cd-about-body">
+            @if (!empty(trim(strip_tags((string)@$account->description))))
+              {!! @$account->description !!}
+            @elseif (!empty(trim(strip_tags((string)@$client->description))))
+              {!! @$client->description !!}
+            @else
+              {{ ucwords(@$account->company_name) }} is an established corporate enterprise specializing in {{ @$industries_name ?: 'Staffing & Recruiting Solutions' }}, providing scalable services and talent solutions with a strong market presence.
+            @endif
+          </div>
+          @if(!empty($tagNames) && count($tagNames) > 0)
+            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #f1f5f9;">
+              <span style="font-size: 11px; font-weight: 600; color: #64748b; margin-right: 6px;">Specialties:</span>
+              @foreach($tagNames as $tg)
+                <span class="cd-hero-tag-pill" style="margin: 2px 2px;">{{ ucwords(trim($tg)) }}</span>
+              @endforeach
             </div>
-            <div class="cad-mini-s">{{ (int) @$fullTimeCount }} {{ (int)@$fullTimeCount === 1 ? 'country' : 'countries' }} served</div>
+          @endif
+        </div>
+
+        <!-- Card 2: Recent Activity Timeline -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#fffbeb; color:#d97706;">
+                <i class="fas fa-clock-rotate-left fa-solid"></i>
+              </div>
+              <span class="cd-card-hdr-title">Recent Activity</span>
+            </div>
+            <a href="{{ url('service_company/jobs') }}" class="cd-card-hdr-link" title="View all jobs and requisitions">
+              View all activity <i class="fas fa-arrow-right fa-solid ms-1" style="font-size:9px;"></i>
+            </a>
+          </div>
+          <div class="cd-timeline-list" id="cdOverviewRecentActivityList">
+            @forelse($recentActivities ?? [] as $act)
+              <div class="cd-tl-item">
+                <div class="cd-tl-dot {{ $act->dot_class }}">
+                  <i class="{{ $act->icon }}"></i>
+                </div>
+                <div class="cd-tl-info">
+                  <div class="cd-tl-heading">{{ $act->title }}</div>
+                  <div class="cd-tl-sub">{{ $act->subtitle }}</div>
+                </div>
+                <div class="cd-tl-meta-right">
+                  <span class="cd-tl-badge {{ $act->badge_class }}">{{ $act->badge_text }}</span>
+                  <span class="cd-tl-time">{{ $act->time_ago }}</span>
+                </div>
+              </div>
+            @empty
+              <div class="p-4 text-center text-muted" style="font-size: 11.5px;">
+                <i class="fas fa-briefcase me-1 text-muted"></i> No recent job requisitions recorded.
+              </div>
+            @endforelse
           </div>
         </div>
-        <!-- Settings -->
+
+        <!-- Card 3: Office Locations & Registered Address -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#fef2f2; color:#ef4444;">
+                <i class="fas fa-location-dot fa-solid"></i>
+              </div>
+              <span class="cd-card-hdr-title">Office Locations &amp; Registered Address</span>
+            </div>
+            @php $locCount = count($allLocations ?? []); @endphp
+            <span class="badge bg-light-primary text-primary fw-semibold" style="font-size:10px; padding:3px 7px;">
+              <i class="fas fa-building me-1"></i>{{ $locCount > 1 ? $locCount . ' Locations' : ($locCount === 1 ? '1 Location' : 'Headquarters') }}
+            </span>
+          </div>
+
+          <div class="cd-loc-group">
+            @if ($locCount > 0)
+              @foreach ($allLocations as $idx => $loc)
+                @php
+                  $lCity = !empty($loc->city_name_resolved) ? $loc->city_name_resolved : (!empty($loc->city_name) ? $loc->city_name : ($loc->city ?? ''));
+                  $lState = !empty($loc->state_name) ? $loc->state_name : (!empty($loc->state) ? $loc->state : '');
+                  $lCountry = !empty($loc->country_name) ? $loc->country_name : (!empty($loc->country) ? $loc->country : '');
+                  $lAddr = trim(!empty($loc->address) ? $loc->address : '');
+                  $lPostcode = !empty($loc->postcode) && $loc->postcode !== '0' && $loc->postcode !== 0 ? trim((string)$loc->postcode) : '';
+                  $isHq = ($idx === 0);
+                  $cityStateParts = array_filter([$lCity ? ucwords(trim($lCity)) : '', $lState ? ucwords(trim($lState)) : '']);
+                  $cityStateText = implode(', ', $cityStateParts);
+                @endphp
+                <div class="cd-loc-card {{ $isHq ? 'is-primary hq' : '' }}">
+                  <div class="cd-loc-header">
+                    <div class="cd-loc-header-left">
+                      <span class="cd-loc-badge {{ $isHq ? 'loc-primary' : 'loc-secondary' }}">
+                        <i class="fas fa-map-marker-alt me-1"></i>Location {{ $idx + 1 }}
+                      </span>
+                      @if($isHq)
+                        <span class="cd-loc-hq-tag">HQ</span>
+                      @endif
+                    </div>
+                    @if($lCountry)
+                      <span class="cd-loc-country-pill">
+                        <i class="fas fa-globe-americas me-1 text-primary" style="font-size:9.5px;"></i>{{ ucwords(trim($lCountry)) }}
+                      </span>
+                    @endif
+                  </div>
+                  @if($cityStateText)
+                    <div class="cd-loc-city-line">
+                      <i class="fas fa-location-dot text-danger" style="font-size:11px; flex-shrink:0;"></i>
+                      <span class="cd-loc-city-name">{{ $cityStateText }}</span>
+                    </div>
+                  @endif
+                  @if($lAddr)
+                    <div class="cd-loc-street-line">
+                      <span>{{ $lAddr }}</span>
+                    </div>
+                  @endif
+                  @if($lPostcode)
+                    <div class="cd-loc-meta-line">
+                      <span class="cd-loc-meta-chip">
+                        <i class="fas fa-hashtag text-muted me-1" style="font-size: 9.5px;"></i>Postal Code: <strong>{{ $lPostcode }}</strong>
+                      </span>
+                    </div>
+                  @endif
+                </div>
+              @endforeach
+            @else
+              @php
+                $fallbackCityState = trim(ucwords($company_city_name).(($company_city_name && $company_country_name)?', ':'').ucwords($company_country_name), ', ');
+                $fallbackAddr = trim((string)@$account->address);
+              @endphp
+              <div class="cd-loc-card is-primary hq">
+                <div class="cd-loc-header">
+                  <div class="cd-loc-header-left">
+                    <span class="cd-loc-badge loc-primary"><i class="fas fa-map-marker-alt me-1"></i>Location 1</span>
+                    <span class="cd-loc-hq-tag">HQ</span>
+                  </div>
+                  @if($company_country_name)
+                    <span class="cd-loc-country-pill"><i class="fas fa-globe-americas me-1 text-primary" style="font-size:9.5px;"></i>{{ ucwords(trim($company_country_name)) }}</span>
+                  @endif
+                </div>
+                @if($fallbackCityState)
+                  <div class="cd-loc-city-line">
+                    <i class="fas fa-location-dot text-danger" style="font-size:11px; flex-shrink:0;"></i>
+                    <span class="cd-loc-city-name">{{ $fallbackCityState }}</span>
+                  </div>
+                @endif
+                @if($fallbackAddr)
+                  <div class="cd-loc-street-line">
+                    <span>{{ $fallbackAddr }}</span>
+                  </div>
+                @endif
+              </div>
+            @endif
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Right Column ── -->
+      <div>
+        <!-- Card 1: Company Information (God-Level Executive Vertical Listing) -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#f5f3ff; color:#7c3aed;">
+                <i class="fas fa-circle-info fa-solid"></i>
+              </div>
+              <span class="cd-card-hdr-title">Company Information</span>
+            </div>
+            <span class="badge bg-light-primary text-primary fw-semibold" style="font-size:10px; padding:3px 7px;">
+              <i class="fas fa-shield-halved me-1"></i>Verified Entity
+            </span>
+          </div>
+
+          @php
+            $rawDetail = @$client->detail;
+            $cDetail = !empty($rawDetail) ? (is_array($rawDetail) ? $rawDetail : json_decode($rawDetail, true)) : [];
+            $careerPageUrl = !empty($account->career_page_link) ? $account->career_page_link : ($cDetail['career_page_url'] ?? url('career/' . ($account->sub_domain ?: $account->id)));
+            $taxId = trim((string)(@$account->tax_number ?: (@$account->gstin ?: (@$cDetail['tax_id'] ?? ''))));
+            $linkedinUrl = trim((string)(@$account->linkedin ?: (@$cDetail['linkedin_url'] ?? '')));
+            $twitterUrl = trim((string)(@$cDetail['twitter_url'] ?? ''));
+            $githubUrl = trim((string)(@$cDetail['github_url'] ?? ''));
+            $youtubeUrl = trim((string)(@$cDetail['youtube_url'] ?? ''));
+            $facebookUrl = trim((string)(@$cDetail['facebook_url'] ?? ''));
+            $instagramUrl = trim((string)(@$cDetail['instagram_url'] ?? ''));
+            $hasSocialLinks = (!empty($linkedinUrl) || !empty($twitterUrl) || !empty($githubUrl) || !empty($youtubeUrl) || !empty($facebookUrl) || !empty($instagramUrl));
+
+            $typeLabel = 'Enterprise Service';
+            if (isset($account->industries_type) && !empty($industries_type_arr) && isset($industries_type_arr[$account->industries_type])) {
+              $typeLabel = $industries_type_arr[$account->industries_type];
+            } elseif (!empty($account->company_type) && !empty($companyType) && isset($companyType[$account->company_type])) {
+              $typeLabel = $companyType[$account->company_type];
+            }
+
+            $fYear = @$account->founded ?: 2010;
+            $currYr = (int)date('Y');
+            $vintage = ($currYr - (int)$fYear);
+          @endphp
+
+          <div class="cd-vertical-info-list">
+            <!-- Website -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon blue"><i class="fas fa-globe"></i></div>
+                <span class="cd-vinfo-label">Website</span>
+              </div>
+              <div class="cd-vinfo-val">
+                @if (!empty($webClean) && $webClean !== '-')
+                  <a href="{{ str_starts_with($webClean, 'http') ? $webClean : 'https://'.$webClean }}" target="_blank" class="cd-vinfo-link">
+                    {{ preg_replace('#^https?://(www\.)?#i', '', rtrim($webClean, '/')) }} <i class="fas fa-arrow-up-right-from-square" style="font-size:9px;"></i>
+                  </a>
+                @else
+                  <span class="text-muted">—</span>
+                @endif
+              </div>
+            </div>
+
+            <!-- Careers Portal -->
+            @if (!empty($careerPageUrl))
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon green"><i class="fas fa-briefcase"></i></div>
+                <span class="cd-vinfo-label">Careers Portal</span>
+              </div>
+              <div class="cd-vinfo-val">
+                @php $careerClean = preg_replace('#^https?://(www\.)?#i', '', rtrim($careerPageUrl, '/')); @endphp
+                <a href="{{ str_starts_with($careerPageUrl, 'http') ? $careerPageUrl : 'https://'.$careerPageUrl }}" target="_blank" class="cd-career-pill" title="{{ $careerPageUrl }}">
+                  <span>{{ strlen($careerClean) > 28 ? substr($careerClean, 0, 26).'…' : $careerClean }}</span>
+                  <i class="fas fa-arrow-up-right-from-square" style="font-size:8px;"></i>
+                </a>
+              </div>
+            </div>
+            @endif
+
+            <!-- Tax ID / GSTIN -->
+            @if (!empty($taxId))
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon amber"><i class="fas fa-receipt"></i></div>
+                <span class="cd-vinfo-label">Tax ID / GSTIN</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div class="cd-tax-wrap">
+                  <span class="cd-tax-code">{{ $taxId }}</span>
+                  <button type="button" class="cd-copy-btn" title="Copy Tax ID" onclick="navigator.clipboard.writeText('{{ $taxId }}'); $(this).find('i').removeClass('fa-copy far').addClass('fas fa-check text-success'); setTimeout(() => $(this).find('i').removeClass('fas fa-check text-success').addClass('far fa-copy'), 1500);">
+                    <i class="far fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            @endif
+
+            <!-- Industry -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon purple"><i class="fas fa-industry"></i></div>
+                <span class="cd-vinfo-label">Industry</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <span class="fw-semibold text-gray-800">{{ $industries_name ?: 'Staffing & Recruiting Solutions' }}</span>
+              </div>
+            </div>
+
+            <!-- Company Type -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon sky"><i class="fas fa-landmark"></i></div>
+                <span class="cd-vinfo-label">Company Type</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <span class="cd-type-badge-pill">{{ $typeLabel }}</span>
+              </div>
+            </div>
+
+            <!-- Workforce Scale -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon emerald"><i class="fas fa-users"></i></div>
+                <span class="cd-vinfo-label">Workforce Scale</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <span class="fw-semibold text-gray-800">{{ $cad_size ?: '51 – 200 Employees' }}</span>
+              </div>
+            </div>
+
+            <!-- Founded Year -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon orange"><i class="fas fa-calendar-alt"></i></div>
+                <span class="cd-vinfo-label">Founded</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div>
+                  <span class="fw-semibold text-gray-800">{{ $fYear }}</span>
+                  @if($vintage > 0)
+                    <span class="cd-vintage-chip">({{ $vintage }} yrs active)</span>
+                  @endif
+                </div>
+              </div>
+            </div>
+
+            <!-- Headquarters -->
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon red"><i class="fas fa-map-pin"></i></div>
+                <span class="cd-vinfo-label">Headquarters</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <span class="fw-semibold text-gray-800">{{ trim(ucwords($company_city_name).(($company_city_name&&$company_country_name)?', ':'').ucwords($company_country_name),', ') ?: '—' }}</span>
+              </div>
+            </div>
+
+            <!-- Social Channels -->
+            @if($hasSocialLinks)
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon indigo"><i class="fas fa-share-nodes"></i></div>
+                <span class="cd-vinfo-label">Social Channels</span>
+              </div>
+              <div class="cd-vinfo-val">
+                <div class="cd-social-links-row">
+                  @if(!empty($linkedinUrl))
+                    <a href="{{ str_starts_with($linkedinUrl, 'http') ? $linkedinUrl : 'https://'.$linkedinUrl }}" target="_blank" class="cd-social-btn linkedin" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                  @endif
+                  @if(!empty($twitterUrl))
+                    <a href="{{ str_starts_with($twitterUrl, 'http') ? $twitterUrl : 'https://'.$twitterUrl }}" target="_blank" class="cd-social-btn twitter" title="X (Twitter)"><i class="fab fa-x-twitter"></i></a>
+                  @endif
+                  @if(!empty($githubUrl))
+                    <a href="{{ str_starts_with($githubUrl, 'http') ? $githubUrl : 'https://'.$githubUrl }}" target="_blank" class="cd-social-btn github" title="GitHub"><i class="fab fa-github"></i></a>
+                  @endif
+                  @if(!empty($youtubeUrl))
+                    <a href="{{ str_starts_with($youtubeUrl, 'http') ? $youtubeUrl : 'https://'.$youtubeUrl }}" target="_blank" class="cd-social-btn youtube" title="YouTube"><i class="fab fa-youtube"></i></a>
+                  @endif
+                  @if(!empty($facebookUrl))
+                    <a href="{{ str_starts_with($facebookUrl, 'http') ? $facebookUrl : 'https://'.$facebookUrl }}" target="_blank" class="cd-social-btn facebook" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                  @endif
+                  @if(!empty($instagramUrl))
+                    <a href="{{ str_starts_with($instagramUrl, 'http') ? $instagramUrl : 'https://'.$instagramUrl }}" target="_blank" class="cd-social-btn instagram" title="Instagram"><i class="fab fa-instagram"></i></a>
+                  @endif
+                </div>
+              </div>
+            </div>
+            @endif
+          </div>
+        </div>
+
+        <!-- Card 2: Platform Settings & Preferences -->
         @php
-          $cad_cur = optional($currencyArr->firstWhere('id', @$account->currency));
-          $cad_tf  = optional($time_formatArr->firstWhere('id', @$account->time_format));
-          $cad_lang= optional($languagesArr->firstWhere('id', @$account->language));
+          $cad_cur = (!empty($currencyArr) && is_iterable($currencyArr)) ? optional(collect($currencyArr)->firstWhere('id', @$account->currency)) : optional(null);
+          $cad_tf  = (!empty($time_formatArr) && is_iterable($time_formatArr)) ? optional(collect($time_formatArr)->firstWhere('id', @$account->time_format)) : optional(null);
+          $cad_lang= (!empty($languagesArr) && is_iterable($languagesArr)) ? optional(collect($languagesArr)->firstWhere('id', @$account->language)) : optional(null);
           $cad_dup = (@$account->app_duplicate == 2) ? 'Overall system'.((@$account->app_duplicate_days)?' · '.$account->app_duplicate_days.' days':'')
                     : ((@$account->app_duplicate == 1) ? 'Job-wise'.((@$account->app_duplicate_days)?' · '.$account->app_duplicate_days.' days':'') : 'Disabled');
         @endphp
-        <div class="cad-card cad-sec">
-          <div class="cad-sec-h"><span class="ci cad-pu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings</div>
-          <div class="cad-row"><span class="k">Duplicate Status</span><span class="v">{{ $cad_dup }}</span></div>
-          <div class="cad-row"><span class="k">Time Zone</span><span class="v">{{ @$account->timezone ?: '—' }}</span></div>
-          <div class="cad-row"><span class="k">Currency</span><span class="v">{{ $cad_cur->code ? $cad_cur->code.' · '.$cad_cur->country : '—' }}</span></div>
-          <div class="cad-row"><span class="k">Time Format</span><span class="v">{{ $cad_tf->name ?: '—' }}</span></div>
-          <div class="cad-row"><span class="k">Language</span><span class="v">{{ $cad_lang->name ?: '—' }}</span></div>
-        </div>
-        <!-- Team Overview -->
-        <div class="cad-card cad-sec">
-          <div class="cad-sec-h"><span class="ci cad-bl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span>Team Overview</div>
-          <div class="cad-row"><span class="k">Active Recruiters</span><span class="v">{{ (int) @$team_count }}</span></div>
-          <div class="cad-row"><span class="k">Interview Stages</span><span class="v">{{ $cad_stageCount }}</span></div>
-          @if(!empty(@$team) && count($team))
-            <div class="cad-team">
-              @foreach($team as $tm)
-                @if(!empty($tm->image))<span class="cad-team-av" title="{{ ucwords($tm->name) }}"><img src="{{ $tm->image }}" alt=""></span>
-                @else<span class="cad-team-av" title="{{ ucwords($tm->name) }}">{{ strtoupper(substr($tm->name,0,1)) }}</span>@endif
-              @endforeach
-              @if(@$team_count > count($team))<span class="cad-team-av">+{{ $team_count - count($team) }}</span>@endif
-            </div>
-          @endif
-        </div>
-        <!-- Marketplace Performance -->
-        <div class="cad-card cad-sec">
-          <div class="cad-sec-h"><span class="ci cad-am"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9zM9 13h6"/></svg></span>Marketplace Performance</div>
-          <div class="cad-row"><span class="k">Agencies Empaneled</span><span class="v">{{ (int) @$agenciesEmpaneled }}</span></div>
-          <div class="cad-row"><span class="k">Active Agencies</span><span class="v">{{ (int) @$agenciesActive }}</span></div>
-        </div>
-        <!-- Administrators -->
-        <div class="cad-card cad-sec">
-          <div class="cad-sec-h"><span class="ci cad-bl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Administrators</div>
-          @forelse(@$administrators ?? [] as $adm)
-            <div class="cad-adm">
-              @if(!empty($adm->image))<span class="cad-adm-av"><img src="{{ $adm->image }}" alt=""></span>
-              @else<span class="cad-adm-av">{{ strtoupper(substr($adm->name,0,1)) }}</span>@endif
-              <div class="cad-adm-mid">
-                <div class="cad-adm-name">{{ ucwords($adm->name) }}@if(@$adm->root_user)<em class="cad-adm-pri">Primary</em>@endif</div>
-                <div class="cad-adm-role">{{ @$adm->designation ?: 'Administrator' }}</div>
-                <div class="cad-adm-c">{{ $adm->email }}@if(@$adm->mobile) · {{ $adm->mobile }}@endif</div>
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#eff6ff; color:#2563eb;">
+                <i class="fas fa-sliders fa-solid"></i>
               </div>
+              <span class="cd-card-hdr-title">Platform Preferences</span>
             </div>
-          @empty
-            <div class="cad-desc" style="color:#94a3b8;">No administrators found.</div>
-          @endforelse
+          </div>
+          <div class="cd-vertical-info-list">
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon slate"><i class="fas fa-copy"></i></div>
+                <span class="cd-vinfo-label">Duplicate Status</span>
+              </div>
+              <div class="cd-vinfo-val"><span class="fw-semibold text-gray-800">{{ $cad_dup }}</span></div>
+            </div>
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon sky"><i class="fas fa-clock"></i></div>
+                <span class="cd-vinfo-label">Time Zone</span>
+              </div>
+              <div class="cd-vinfo-val"><span class="fw-semibold text-gray-800">{{ @$account->timezone ?: 'UTC' }}</span></div>
+            </div>
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon green"><i class="fas fa-money-bill-wave"></i></div>
+                <span class="cd-vinfo-label">Currency</span>
+              </div>
+              <div class="cd-vinfo-val"><span class="fw-semibold text-gray-800">{{ $cad_cur->code ? $cad_cur->code.' · '.$cad_cur->country : '—' }}</span></div>
+            </div>
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon amber"><i class="fas fa-hourglass-half"></i></div>
+                <span class="cd-vinfo-label">Time Format</span>
+              </div>
+              <div class="cd-vinfo-val"><span class="fw-semibold text-gray-800">{{ $cad_tf->name ?: '—' }}</span></div>
+            </div>
+            <div class="cd-vinfo-row">
+              <div class="cd-vinfo-key">
+                <div class="cd-vinfo-icon purple"><i class="fas fa-language"></i></div>
+                <span class="cd-vinfo-label">Language</span>
+              </div>
+              <div class="cd-vinfo-val"><span class="fw-semibold text-gray-800">{{ $cad_lang->name ?: '—' }}</span></div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    <!--end::overview Content (redesigned)-->
-    <div class="row d-none">
-      <!--begin::Col-Desc-->
-      <div class="col-lg-12 mb-7"> {!! @$account->description !!} </div>
-      <div class="col-lg-12">
-        <div class="row mb-7">
-          <label class="col-lg-3 fw-bolder text-gray-800 fs-6">Website</label>
-          <div class="col-lg-9"> <a href="javascript:void(0);" class="fw-bold fs-6 text-primary">{{ @$account->website }}</a> </div>
-        </div>
-        <div class="row mb-7">
-          <label class="col-lg-3 fw-bolder text-gray-800 fs-6">Industry</label>
-          <div class="col-lg-9"> <span class="fw-bold fs-6 text-muted">
-            {{ @$industries_name }}
-            </span> </div>
-        </div>
-        <div class="row mb-7">
-          <label class="col-lg-3 fw-bolder text-gray-800 fs-6">Company Size</label>
-          <div class="col-lg-9"> <span class="fw-bold fs-6 text-muted">
-            @if(@$account->company_size_from >= 10000)
-              {{ @$account->company_size_from }}+ employees 
-            @else
-             {{ @$account->company_size_from }} - {{ @$account->company_size }} employees 
-            @endif
 
-            <a class="d-none" href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-original-title="4Bell is Information Technology Compnay">
-            <!--begin::Svg Icon-->
-            <span class="svg-icon svg-icon-1">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                <rect x="0" y="0" width="24" height="24"></rect>
-                <circle fill="#000000" opacity="0.3" cx="12" cy="12" r="10"></circle>
-                <rect fill="#000000" x="11" y="10" width="2" height="7" rx="1"></rect>
-                <rect fill="#000000" x="11" y="7" width="2" height="2" rx="1"></rect>
-              </g>
-            </svg>
+        <!-- Card 3: Key Administrators & Stakeholders -->
+        <div class="cd-card-panel">
+          <div class="cd-card-hdr">
+            <div class="cd-card-hdr-left">
+              <div class="cd-top-bar-icon" style="width:28px; height:28px; font-size:12px; background:#ecfdf5; color:#059669;">
+                <i class="fas fa-user-shield fa-solid"></i>
+              </div>
+              <span class="cd-card-hdr-title">Key Administrators</span>
+            </div>
+            <span class="badge bg-light-success text-success fw-semibold" style="font-size:10px; padding:3px 7px;">
+              {{ count(@$administrators ?? []) }} Active
             </span>
-            </a> </span>
-           </div>
+          </div>
+
+          <div>
+            @forelse(@$administrators ?? [] as $adm)
+              <div class="cd-adm-item">
+                <div class="cd-adm-avatar">
+                  @if(!empty($adm->image))
+                    <img src="{{ $adm->image }}" alt="{{ $adm->name }}">
+                  @else
+                    {{ strtoupper(substr($adm->name, 0, 1)) }}
+                  @endif
+                </div>
+                <div class="cd-adm-info">
+                  <div class="cd-adm-name-row">
+                    <span class="cd-adm-name">{{ ucwords($adm->name) }}</span>
+                    @if(@$adm->root_user)
+                      <span class="cd-adm-pri-badge">Primary</span>
+                    @endif
+                  </div>
+                  <div class="cd-adm-role">{{ @$adm->designation ?: 'Administrator' }}</div>
+                  <div class="cd-adm-contacts">
+                    <span>{{ $adm->email }}</span>
+                    @if(@$adm->mobile) · <span>{{ $adm->mobile }}</span>@endif
+                  </div>
+                </div>
+              </div>
+            @empty
+              <div class="p-3 text-center text-muted" style="font-size:11.5px;">No administrators found.</div>
+            @endforelse
+          </div>
         </div>
-        <div class="row mb-7">
-          <label class="col-lg-3 fw-bolder text-gray-800 fs-6">Headquarters</label>
-          <div class="col-lg-9"> <span class="fw-bold fs-6 text-muted">
-		  	{{ ucwords($company_city_name) }} {{ ' , ' }} {{ ucwords($company_country_name) }}
-            </span> </div>
-        </div>
-        <div class="row mb-7">
-          <label class="col-lg-3 fw-bolder text-gray-800 fs-6">Type</label>
-          <div class="col-lg-9"> <span class="fw-bold fs-6 text-muted">                           
-					  @if($account->industries_type >= 0)					  	
-						 {{ $industries_type_arr[$account->industries_type] }}   
-					  @endif				             	
-            </span> </div>
-        </div>      
-        <div class="row mb-7">         
-          <label class="col-lg-3 fw-bolder text-gray-800 fs-6">Founded</label>          
-          <div class="col-lg-9"> <span class="fw-bold fs-6 text-muted">{{ @$account->founded }}</span> </div>         
-        </div>        
-        <div class="row mb-7">          
-          <label class="col-lg-3 fw-bolder text-gray-800 fs-6">Specialties</label>          
-          <div class="col-lg-9"> <span class="fw-bold fs-6 text-muted">{{ @$client->tags}}</span> </div>          
-        </div>
-       
       </div>
     </div>
-    
-    @endif </div>
+  </div>
+  @endif
 </div>
 <!--end::overview Content-->
 <!--begin::Interview Stage Content-->
@@ -5827,11 +7351,16 @@ $(document).ready(function(){
             });
         });
 
+    // Synchronize sub-tabs pill button active state (Rule 20 Modern Card + Sub-Card)
+    $(document).on('shown.bs.tab', '.cd-drawer-tabs-list a[data-toggle="tab"], .cd-drawer-tabs-list a[data-bs-toggle="tab"]', function (e) {
+        $('.cd-drawer-tabs-list .cd-tab-pill-btn').removeClass('active');
+        $(e.target).addClass('active');
+    });
 
-
-
-	
-});
+    $(document).on('click', '.cd-drawer-tabs-list .cd-tab-pill-btn', function (e) {
+        $('.cd-drawer-tabs-list .cd-tab-pill-btn').removeClass('active');
+        $(this).addClass('active');
+    });
 
 </script>	
 @endpush
