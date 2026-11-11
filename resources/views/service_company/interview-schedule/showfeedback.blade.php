@@ -1330,7 +1330,7 @@
                         </button>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                            <a href="javascript:void(0);" id="app_interview_schedule_reschedule" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#interview_schedule" rel="{{@$interviewSchedule->wise_con_id}}" data-bs-dismiss="modal">Rescheduled</a>
+                            <a href="javascript:void(0);" id="app_interview_schedule_reschedule" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#interview_schedule" rel="{{@$interviewSchedule->wise_con_id}}" data-interview-id="{{ @$interviewSchedule->interview_schedules_id ?? @$interviewSchedule->id }}" data-bs-dismiss="modal">Rescheduled</a>
                             <button type="button " id="submit-frm-btn" class="btn-submit">
                                 <span class="sfb-label"><i class="fas fa-paper-plane"></i> Submit Feedback</span>
                                 <span class="sfb-progress" style="display:none;"><span class="sfb-spinner"></span> Saving feedback...</span>
@@ -1547,9 +1547,6 @@
         fbBuildToast({ message: message, accent: '#d97706', border: '#fde9c8', iconBg: '#fef3c7', duration: 6000,
             icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>' });
     }
-    $('#app_interview_schedule_reschedule').click(async function(e){
-            $('#submit-frm-btn').click();
-    });
 
     $('#submit-frm-btn').click(async function(e){
         // Show the loader immediately so the click is acknowledged
@@ -1636,11 +1633,12 @@
         e.preventDefault();
         e.stopImmediatePropagation();
         var conId    = $(this).attr('rel');
+        var intId    = $(this).data('interview-id') || $(this).attr('data-interview-id') || '';
         var $current = $(this).closest('.modal');
 
         function openScheduleModal() {
             if (!conId) return;
-            var url      = "{{ route('service_company.job-applications.create-schedule', ':id') }}".replace(':id', conId);
+            var url      = "{{ route('service_company.job-applications.create-schedule', ':id') }}".replace(':id', conId) + '?reschedule=1' + (intId ? '&interview_id=' + intId : '');
             var loader   = "{{ asset('assets/images/Loading2.gif') }}";
             $('#app_interview_schedule_content').html('<img src="' + loader + '" height="35px" width="100%">');
             // $('#interview_schedule').modal('show');

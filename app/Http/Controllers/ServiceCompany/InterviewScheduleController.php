@@ -322,6 +322,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'bool' => [
                 'should' => [
                     ['term' => ['job_company_id' => $company_id]],
+                    ['term' => ['real_company_id' => $company_id]],
                     [
                         'bool' => [
                             'must' => [
@@ -406,6 +407,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $maps = $this->prepareViewMaps($data, $company_id, $this->user->id);
 
         $responseData = [
+            'data' => $data,
             'html' => view('service_company.ajax_pages.interview-tracker-ajax', array_merge([
                 'data' => $data,
                 'userPermissions' => $userPermissions,

@@ -9870,7 +9870,7 @@ END:VCALENDAR";
             ->join('jobs', function ($join) {
                 $join->on('jobs.id', 'add_job_wise_condidates.job_id');
             })
-            ->join('companies', function ($join) {
+            ->leftJoin('companies', function ($join) {
                 $join->on('companies.id', 'jobs.company_id');
             })
             ->leftjoin('clients', 'clients.id', 'jobs.client_id')
@@ -10026,6 +10026,7 @@ END:VCALENDAR";
                 'index' => ELASTIC_INERTVIEW_TRACKER,
                 'id' => $row->id,
                 'retry_on_conflict' => 5,
+                'refresh' => true,
                 'body' => [
                     'doc' => [
                         'id' => $row->id,
@@ -10039,16 +10040,16 @@ END:VCALENDAR";
                         'city_name' => strtolower($row->city_name),
                         'country_name' => strtolower($row->country_name),
                         'candidate_type' => $row->condidate_type,
-                        'schedule_date' => ($row->schedule_date) ? Carbon::parse($row->schedule_date)->toIso8601String() : null,
+                        'schedule_date' => (! empty($row->schedule_date) && $row->schedule_date !== '0000-00-00 00:00:00' && strtotime($row->schedule_date) > 0) ? Carbon::parse($row->schedule_date)->toIso8601String() : null,
                         'master_status_id' => $row->master_status_id,
                         'child_status_id' => $row->child_status_id,
                         'client_name' => $row->client_name,
                         'available_status' => $row->available_status,
-                        'reschedule' => ($row->reschedule) ? Carbon::parse($row->reschedule)->toIso8601String() : null,
+                        'reschedule' => (! empty($row->reschedule) && $row->reschedule !== '0000-00-00 00:00:00' && strtotime($row->reschedule) > 0) ? Carbon::parse($row->reschedule)->toIso8601String() : null,
                         'feedback' => $row->feedback,
                         'interview_mode' => $row->interview_mode,
                         'interviewers' => $row->interviewers,
-                        'interview_type' => $row->interview_type,
+                        'interview_type' => (int) ($row->interview_type ?? 1),
                         'schedule_from_time' => $row->schedule_from_time,
                         'real_company_id' => $row->real_company_id,
                         'mailstatus' => $row->mailstatus,
@@ -10082,8 +10083,8 @@ END:VCALENDAR";
                         'interview_mention_link' => $row->interview_mention_link,
                         'company_id' => $row->company_id, //
                         'user_accept_status' => $row->user_accept_status,
-                        'created_at' => ($row->created_at) ? Carbon::parse($row->created_at)->toIso8601String() : null,
-                        'updated_at' => ($row->updated_at) ? Carbon::parse($row->updated_at)->toIso8601String() : null,
+                        'created_at' => (! empty($row->created_at) && $row->created_at !== '0000-00-00 00:00:00') ? Carbon::parse($row->created_at)->toIso8601String() : null,
+                        'updated_at' => (! empty($row->updated_at) && $row->updated_at !== '0000-00-00 00:00:00') ? Carbon::parse($row->updated_at)->toIso8601String() : null,
                         'url_link' => $row->url_link,
                         'other_email' => $row->other_email,
                         'message' => $row->message,
@@ -10104,6 +10105,9 @@ END:VCALENDAR";
             // Atomically invalidate candidate & interview counters for this client
             if (! empty($row->company_id)) {
                 self::invalidateClientCandidateCounters($row->company_id, $row->client_id ?? null, $row->from_company_id ?? null);
+            }
+            if (! empty($row->real_company_id)) {
+                self::cacheClean('allinterviewschedule_version_company_'.$row->real_company_id, $row->real_company_id);
             }
         }
 

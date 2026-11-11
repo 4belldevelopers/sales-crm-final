@@ -549,6 +549,8 @@ if (empty($isdCompanyAddress)) {
     <input type="hidden" name="jobId" id="jobId" value="{{ @$application->jobId }}" />
     <input type="hidden" name="master_status_id" id="master_status_id" value="{{ @$application->master_status_id }}" />
     <input type="hidden" name="child_status_id" id="child_status_id" value="{{ @$application->child_status_id }}" />
+    <input type="hidden" name="interview_id" id="interview_id" value="{{ @$interview_id ?? @$interviewSchedule->id }}" />
+    <input type="hidden" name="is_reschedule" id="is_reschedule" value="{{ (!empty(@$reschedule) || !empty(@$interview_id) || !empty(@$interviewSchedule->id)) ? 1 : 0 }}" />
 
     @php
         $isdFullName = trim(@$application->full_name);
@@ -698,7 +700,7 @@ if (empty($isdCompanyAddress)) {
                             </button>
                         </div>
                     </div>
-                    <input type="hidden" class="btn-check" name="interview_type" value="1" id="fresh" {{ (@$reschedule == 1) ? '' : 'checked="checked"' }}>
+                    <input type="hidden" class="btn-check" name="interview_type" value="{{ (!empty(@$reschedule) || !empty(@$interview_id) || !empty(@$interviewSchedule->id)) ? 2 : 1 }}" id="interview_type_input">
                 </div>
 
                 <!-- Section 2: Interview Mode -->
@@ -1598,49 +1600,86 @@ if (empty($isdCompanyAddress)) {
             return false;
         }
 
-        $("#interview_schedule_drawer_primary").prop("disabled", true);
-        $('#interview_schedule_drawer_primary .indicator-label').hide();
-        $('#interview_schedule_drawer_primary .indicator-progress').show();
+    window.purgeInterviewTrackerCache = function() {
+        if (window.JeroInterviewScheduleLocalStore && typeof window.JeroInterviewScheduleLocalStore.purge === 'function') {
+            try { window.JeroInterviewScheduleLocalStore.purge(); } catch(e){}
+        }
+        if (window.itRamCache && typeof window.itRamCache.clear === 'function') {
+            try { window.itRamCache.clear(); } catch(e){}
+        }
+        if (window.indexedDB) {
+            try {
+                var req = window.indexedDB.open('jero_interview_schedule_db', 1);
+                req.onsuccess = function(e) {
+                    var db = e.target.result;
+                    if (db && db.objectStoreNames.contains('schedule_cache')) {
+                        var tx = db.transaction(['schedule_cache'], 'readwrite');
+                        tx.objectStore('schedule_cache').clear();
+                    }
+                };
+            } catch(e){}
+        }
+        try {
+            localStorage.setItem('jero_it_last_mutation', Date.now().toString());
+        } catch(e){}
+    };
 
-        $.ajax({
-            url: '{{ route('service_company.job-applications.store-schedule') }}',
-            container: '#app_interview_create_frm',
-            type: "POST",
-            data: $('#app_interview_create_frm').serialize(),
-            success: function(response) {
-                if (response.status == 'success') {
-                    // Purge client-side caches (IndexedDB and RAM) immediately to prevent stale data
-                    if (window.JeroInterviewScheduleLocalStore && window.JeroInterviewScheduleLocalStore.purge) {
-                        try { window.JeroInterviewScheduleLocalStore.purge(); } catch(e){}
-                    }
-                    if (window.itRamCache) {
-                        try { window.itRamCache.clear(); } catch(e){}
-                    }
-                    Swal.fire("Success", "Interview schedule successfully!", "success").then(function() {
-                        $('#interview_schedule_drawer_close').trigger('click');
-                        if (typeof window.fetchCandidates === 'function') {
-                            window.fetchCandidates(1, '', true);
-                        } else {
-                            location.reload();
-                        }
-                    });
-                }
-                if (response.status == 'coinCheck') {
-                    Swal.fire("Success", ` ${response.message}`, "warning").then(function() {
-                        $('#interview_schedule_drawer_close').trigger('click');
-                    });
-                }
-                if (response.status == 'error') {
-                    Swal.fire("Error", response.message || "Failed to schedule interview", "error");
-                }
-            },
-            complete: function() {
-                $("#interview_schedule_drawer_primary").prop("disabled", false);
-                $('#interview_schedule_drawer_primary .indicator-label').show();
-                $('#interview_schedule_drawer_primary .indicator-progress').hide();
-            }
-        })
+    if (window._isdSubmitting) {
+        return false;
     }
+    window._isdSubmitting = true;
+
+    $("#interview_schedule_drawer_primary").prop("disabled", true);
+    $('#interview_schedule_drawer_primary .indicator-label').hide();
+    $('#interview_schedule_drawer_primary .indicator-progress').show();
+
+    $.ajax({
+        url: '{{ route('service_company.job-applications.store-schedule') }}',
+        container: '#app_interview_create_frm',
+        type: "POST",
+        data: $('#app_interview_create_frm').serialize(),
+        success: function(response) {
+            if (response.status == 'success') {
+                window.purgeInterviewTrackerCache();
+                var isResched = (response.is_reschedule == 1) || ($('#is_reschedule').val() == '1');
+                var succMsg = response.message || (isResched ? "Interview rescheduled successfully!" : "Interview scheduled successfully!");
+                Swal.fire("Success", succMsg, "success").then(function() {
+                    $('#interview_schedule_drawer_close').trigger('click');
+                    if (typeof window.fetchCandidates === 'function') {
+                        window.fetchCandidates(1, '', true);
+                    } else if (window.location.pathname.indexOf('interview-schedule') !== -1) {
+                        location.reload();
+                    }
+                });
+            }
+            if (response.status == 'coinCheck') {
+                Swal.fire({
+                    title: "Insufficient Balance",
+                    text: response.message || "You do not have enough coins to schedule this interview.",
+                    icon: "warning",
+                    confirmButtonText: "Ok"
+                });
+            }
+            if (response.status == 'error') {
+                Swal.fire("Error", response.message || "Failed to schedule interview", "error");
+            }
+        },
+        error: function(xhr) {
+            var errText = "Failed to schedule interview. Please try again.";
+            try {
+                var json = JSON.parse(xhr.responseText);
+                if (json.message) errText = json.message;
+            } catch(e){}
+            Swal.fire("Error", errText, "error");
+        },
+        complete: function() {
+            window._isdSubmitting = false;
+            $("#interview_schedule_drawer_primary").prop("disabled", false);
+            $('#interview_schedule_drawer_primary .indicator-label').show();
+            $('#interview_schedule_drawer_primary .indicator-progress').hide();
+        }
+    });
+}
 
     $(document).ready(function() {
         $(document).on('click', '#sendEmailBtn', function(e) {
@@ -1690,17 +1729,14 @@ if (empty($isdCompanyAddress)) {
                         if (savesend) {
                             submitForm();
                         } else {
-                            if (window.JeroInterviewScheduleLocalStore && window.JeroInterviewScheduleLocalStore.purge) {
-                                try { window.JeroInterviewScheduleLocalStore.purge(); } catch(e){}
-                            }
-                            if (window.itRamCache) {
-                                try { window.itRamCache.clear(); } catch(e){}
-                            }
-                            Swal.fire("Success", "Interview schedule successfully!", "success").then(function() {
+                            window.purgeInterviewTrackerCache();
+                            var isResched = ($('#is_reschedule').val() == '1');
+                            var succMsg = isResched ? "Interview rescheduled successfully!" : "Interview scheduled successfully!";
+                            Swal.fire("Success", succMsg, "success").then(function() {
                                 $('#interview_schedule_drawer_close').trigger('click');
                                 if (typeof window.fetchCandidates === 'function') {
                                     window.fetchCandidates(1, '', true);
-                                } else {
+                                } else if (window.location.pathname.indexOf('interview-schedule') !== -1) {
                                     location.reload();
                                 }
                             });

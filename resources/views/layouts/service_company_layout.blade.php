@@ -840,8 +840,8 @@
       </div>
       <div class="isd-shell-topbar-right">
         <button type="button" class="isd-shell-btn-back" id="interview_schedule_drawer_back" style="display:none;"><i class="ti ti-arrow-left me-1"></i> Back</button>
-        <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()">Cancel</button>
-        <button type="button" class="isd-shell-btn-primary" id="interview_schedule_drawer_primary" onclick="if(jQuery('#div_interview_schedule_second').is(':visible')){jQuery('#sendEmailBtn').trigger('click');}else if(typeof window.submitForm==='function'){window.submitForm();}">
+        <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel">Cancel</button>
+        <button type="button" class="isd-shell-btn-primary" id="interview_schedule_drawer_primary">
           <span class="indicator-label d-inline-flex align-items-center gap-2" style="color:#ffffff !important;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);stroke:#ffffff !important;color:#ffffff !important;">
               <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -852,7 +852,7 @@
           </span>
           <span class="indicator-progress" style="display:none;color:#ffffff !important;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2" style="border-color:#ffffff;border-right-color:transparent;"></span></span>
         </button>
-        <span class="isd-shell-close" id="interview_schedule_drawer_close" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()"><i class="ti ti-x"></i></span>
+        <span class="isd-shell-close" id="interview_schedule_drawer_close"><i class="ti ti-x"></i></span>
       </div>
     </div>
     <div class="flex-grow-1" style="overflow-y:auto;min-height:0;" id="app_interview_schedule_content"></div>
@@ -881,11 +881,15 @@
   });
   // Clean up the inline transform we force-set when opening, so KTDrawer's
   // CSS (.drawer.drawer-end { transform: translateX(100%) }) takes over once closed.
-  $(document).on('click', '#interview_schedule_drawer_close', function(){
+  $(document).on('click', '#interview_schedule_drawer_close, #interview_schedule_drawer_cancel', function(){
     var el = document.getElementById('interview_schedule_drawer');
     if (el) { el.classList.remove('drawer-on'); el.style.removeProperty('transform'); }
+    setTimeout(function() {
+      $('#app_interview_schedule_content').empty();
+    }, 350);
   });
-  $(document).on('click', '#interview_schedule_drawer_primary', function(){
+  $(document).on('click', '#interview_schedule_drawer_primary', function(e){
+    e.preventDefault();
     if ($('#div_interview_schedule_second').is(':visible')) {
       $('#sendEmailBtn').trigger('click');
     } else if (typeof submitForm === 'function') {
