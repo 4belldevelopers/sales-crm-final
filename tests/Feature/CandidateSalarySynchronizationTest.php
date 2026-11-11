@@ -10,17 +10,15 @@ use Tests\TestCase;
  */
 class CandidateSalarySynchronizationTest extends TestCase
 {
-    public function test_current_salary_frequency_is_the_only_interactive_frequency_control(): void
+    public function test_current_and_expected_salary_frequencies_are_synchronized(): void
     {
         $form = $this->source('resources/views/service_company/job-applications/create.blade.php');
 
         $this->assertSame(3, substr_count($form, 'data-salary-group="current" data-salary-period='));
         $this->assertSame(3, substr_count($form, 'data-salary-group="expected" data-salary-period='));
-        $this->assertSame(3, substr_count($form, 'data-salary-group="expected" data-salary-period="annual" disabled')
-            + substr_count($form, 'data-salary-group="expected" data-salary-period="monthly" disabled')
-            + substr_count($form, 'data-salary-group="expected" data-salary-period="hourly" disabled'));
+        $this->assertStringContainsString('candidate-salary-tabs--synced', $form);
         $this->assertStringContainsString(
-            'button[data-salary-group="current"]',
+            'data-salary-group="current"',
             $form
         );
         $this->assertStringContainsString('function syncSalaryPeriod(period)', $form);
@@ -40,16 +38,19 @@ class CandidateSalarySynchronizationTest extends TestCase
         $this->assertStringContainsString('(difference / currentAmount) * 100', $form);
     }
 
-    public function test_hike_percentage_is_not_user_editable_or_rendered(): void
+    public function test_expected_increase_percentage_is_directly_editable_and_bidirectionally_synced(): void
     {
         $form = $this->source('resources/views/service_company/job-applications/create.blade.php');
-        $drawer = $this->source('resources/views/service_company/job-applications/showdetail.blade.php');
+        $clientForm = $this->source('resources/views/service_company/job-applications/clientcreate.blade.php');
+        $careerForm = $this->source('resources/views/career-apply.blade.php');
 
-        $this->assertStringNotContainsString('name="percentage_hike"', $form);
-        $this->assertStringNotContainsString('id="percentage_hike"', $form);
-        $this->assertStringNotContainsString('Hike Percentage', $form);
-        $this->assertStringNotContainsString('Hike Percentage', $drawer);
-        $this->assertStringNotContainsString('function percentage_hike()', $form);
+        foreach ([$form, $clientForm, $careerForm] as $viewSource) {
+            $this->assertStringContainsString('id="candidateSalaryHikeInput"', $viewSource);
+            $this->assertStringContainsString('class="candidate-salary-hike-input"', $viewSource);
+            $this->assertStringContainsString('function applyHikePercentageToExpected()', $viewSource);
+            $this->assertStringContainsString('candidateSalaryHikeInput', $viewSource);
+            $this->assertStringContainsString('name="percentage_hike"', $viewSource);
+        }
     }
 
     public function test_create_and_edit_persist_one_normalized_mode_and_calculated_increase(): void
