@@ -138,9 +138,9 @@
                     if ($flag == 1) {
                         echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
 					<a href="javascript:void(0);"  data-row-id="' .
-                            @$row->add_job_wise_condidates_id .
-                            '" data-wise-id="' .
                             @$row->id .
+                            '" data-wise-id="' .
+                            @$row->add_job_wise_condidates_id .
                             '" class="show-application-detail btn btn-icon btn-light-danger pulse pulse-danger mr-5" data-toggle="tooltip" title="Duplicate">
 					' .
                             $nameImg .
@@ -150,9 +150,9 @@
 					</div>                  
 					<div class="d-flex flex-column">
 					<a href="javascript:void(0);"  data-row-id="' .
-                            @$row->add_job_wise_condidates_id .
-                            '" data-wise-id="' .
                             @$row->id .
+                            '" data-wise-id="' .
+                            @$row->add_job_wise_condidates_id .
                             '"  class="text-danger fw-bolder text-hover-primary fs-6 show-application-detail" data-toggle="tooltip" title="' .
                             ucwords(@$row->full_name) .
                             '">' .
@@ -163,7 +163,7 @@
                             $tredmark .
                             '</sup></a>
 					<a href="javascript:void(0);"  data-row-id="' .
-                            @$row->add_job_wise_condidates_id .
+                            @$row->id .
                             '"  class="text-danger fw-bold d-block fs-7 text-hover-primary show-application-detail" data-toggle="tooltip" title="' .
                             ucwords(@$row->current_designation) .
                             '">' .
@@ -185,7 +185,7 @@
                     } else {
                         echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
 					<a href="javascript:void(0);"   data-row-id="' .
-                            @$row->add_job_wise_condidates_id .
+                            @$row->id .
                             '" data-wise-id="' .
                             @$row->id .
                             '" class="show-application-detail">
@@ -196,7 +196,7 @@
 					</div>                  
 					<div class="d-flex flex-column">
 					<a href="javascript:void(0);"  data-row-id="' .
-                            @$row->add_job_wise_condidates_id .
+                            @$row->id .
                             '" data-wise-id="' .
                             @$row->id .
                             '"  class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail" data-toggle="tooltip" title="' .
@@ -209,7 +209,7 @@
                             $tredmark .
                             '</sup></a>
 					<a href="javascript:void(0);"  data-row-id="' .
-                            @$row->add_job_wise_condidates_id .
+                            @$row->id .
                             '" data-wise-id="' .
                             @$row->id .
                             '"  class="text-muted fw-bold d-block fs-7 text-hover-primary show-application-detail" data-toggle="tooltip" title="' .
@@ -632,7 +632,7 @@
                     }
                     echo '<div class="d-flex flex-column">
 						<a href="javascript.void(0);" data-row-id="' .
-                        @$row->add_job_wise_condidates_id .
+                        @$row->id .
                         '" class="d-flex flex-column stage_sub_stage" data-toggle="modal" data-target="#stage_sub_stage">
                         	<span class="badge fw-bolder fs-6 ' .
                         @$row->css_style .
