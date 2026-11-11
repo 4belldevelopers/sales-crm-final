@@ -223,10 +223,10 @@ jobs:
             # Full Octane restart
             if systemctl is-active --quiet octane 2>/dev/null; then
               echo ">> Restarting supervised Octane systemd service"
-              systemctl restart octane || true
+              systemctl restart --no-block octane 2>/dev/null || true
             elif [ -f /etc/systemd/system/octane.service ]; then
               echo ">> Starting Octane systemd service"
-              systemctl start octane || true
+              systemctl start --no-block octane 2>/dev/null || true
             else
               echo ">> Restarting detached Octane background process"
               php artisan octane:stop || true
