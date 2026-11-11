@@ -251,33 +251,33 @@ class JobApplyService
                     'message' => 'Expected salary details are required for experienced candidates.',
                 ]);
             }
+        }
 
-            /* Intent: Server-side validation for Notice Period & Joining Details (mandatory for experienced candidates only) */
-            $snpMode = $request->input('serving_notice_period');
-            if ($snpMode === null || $snpMode === '') {
+        /* Intent: Server-side validation for Notice Period & Joining Details (mandatory for direct candidate career applications) */
+        $snpMode = $request->input('serving_notice_period');
+        if ($snpMode === null || $snpMode === '') {
+            return Reply::dataOnly([
+                'status' => 'mailcheck',
+                'msgType' => 'warning',
+                'message' => 'Please select a notice period option.',
+            ]);
+        } elseif ((string) $snpMode === '0') {
+            if (empty($request->input('ddl_np_id')) || (string) $request->input('ddl_np_id') === '0') {
                 return Reply::dataOnly([
                     'status' => 'mailcheck',
                     'msgType' => 'warning',
-                    'message' => 'Please select a notice period option.',
+                    'message' => 'Please select notice period days.',
                 ]);
-            } elseif ((string) $snpMode === '0') {
-                if (empty($request->input('ddl_np_id')) || (string) $request->input('ddl_np_id') === '0') {
-                    return Reply::dataOnly([
-                        'status' => 'mailcheck',
-                        'msgType' => 'warning',
-                        'message' => 'Please select notice period days.',
-                    ]);
-                }
-            } elseif ((string) $snpMode === '1' || (string) $snpMode === '2') {
-                if (empty(trim((string) $request->input('np_id')))) {
-                    $lwdLabel = ((string) $snpMode === '1') ? 'Expected Last Working Date (LWD)' : 'Joining Date';
+            }
+        } elseif ((string) $snpMode === '1' || (string) $snpMode === '2') {
+            if (empty(trim((string) $request->input('np_id')))) {
+                $lwdLabel = ((string) $snpMode === '1') ? 'Expected Last Working Date (LWD)' : 'Joining Date';
 
-                    return Reply::dataOnly([
-                        'status' => 'mailcheck',
-                        'msgType' => 'warning',
-                        'message' => "{$lwdLabel} is required.",
-                    ]);
-                }
+                return Reply::dataOnly([
+                    'status' => 'mailcheck',
+                    'msgType' => 'warning',
+                    'message' => "{$lwdLabel} is required.",
+                ]);
             }
         }
 
