@@ -5045,6 +5045,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cc = array_values(array_unique($cc));
         }
 
+        // Mandatory Send a Copy to Recruiter (Server-authoritative authenticated user email)
+        $userEmail = strtolower(trim((string) auth()->user()->email));
+        $copyToSelf = true;
+
+        if (! empty($userEmail) && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+            // Requirement 5: Ensure no duplicate emails are sent if primary recipient and logged-in user have same email address
+            if (! in_array($userEmail, $to, true)) {
+                if (! in_array($userEmail, $cc, true)) {
+                    $cc[] = $userEmail;
+                }
+            }
+        }
+
+        // Defensive deduplication & mutual exclusion: no CC address can exist in To
+        $cc = array_values(array_unique(array_diff($cc, $to)));
+
         // Strict deliverability cap: Maximum 5 total recipients (To + CC combined)
         $totalRecipients = count($to) + count($cc);
         if ($totalRecipients > 5) {
@@ -5200,6 +5216,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $fromAddress,
             $senderName,
             $cc,
+            $copyToSelf,
             $replyToEmail
         ) {
             $fwdReq = ForwardRequest::where('uuid', $fwdRequestUuid)->first();
@@ -5243,6 +5260,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     'from_address' => $fromAddress,
                     'sender_name' => $senderName,
                     'cc' => $cc,
+                    'copy_to_self' => $copyToSelf,
                     'reply_to' => $replyToEmail,
                     'reservation_id' => $reservationId,
                     'required_coins' => $coinsRequ,

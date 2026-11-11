@@ -11,9 +11,11 @@ $isSignup = (isset($initialMode) && $initialMode === 'signup')
 
 if (session('status')) {
     $activeState = 'recover';
+} elseif (isset($initialMode) && $initialMode === 'agency_connect') {
+    $activeState = 'agency_connect';
 } elseif ($isTeamInvite) {
     $activeState = 'team_invite';
-} elseif ($isSignup) {
+} elseif ($isSignup || $isAgencyInvite) {
     $activeState = 'signup';
 } else {
     $activeState = 'login';
@@ -23,11 +25,16 @@ $loginStyle   = ($activeState === 'login') ? '' : 'display:none;';
 $signupStyle  = ($activeState === 'signup') ? '' : 'display:none;';
 $teamStyle    = ($activeState === 'team_invite') ? '' : 'display:none;';
 $recoverStyle = ($activeState === 'recover') ? '' : 'display:none;';
+$agencyConnectStyle = ($activeState === 'agency_connect') ? '' : 'display:none;';
 ?>
 
 <title id="jw-page-title">
-    @if($activeState === 'team_invite')
+    @if($activeState === 'agency_connect')
+        Connect with {{ $registrationContext['inviting_company']['name'] ?? 'Partner' }} - Jero.works
+    @elseif($activeState === 'team_invite')
         Join {{ $registrationContext['tenant']['name'] ?? 'Organization' }} - Jero.works
+    @elseif($activeState === 'signup' && $isAgencyInvite)
+        Partner with {{ $registrationContext['inviting_company']['name'] ?? 'Partner' }} - Agency Registration - Jero.works
     @elseif($activeState === 'signup')
         Create your Jero.works account
     @else
@@ -1160,7 +1167,7 @@ select.jw-inp option {
                             <span class="il" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 20 20" fill="none"><rect x="2.2" y="4.5" width="15.6" height="11" rx="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M3 7.2l7 5 7-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                             <input class="jw-inp" type="text" name="email" id="jw-email" placeholder="Enter your email" autocomplete="username" value="{{ old('email') }}" aria-describedby="jw-email-help"/>
                             <span class="ok-mark" id="jw-email-ok" style="display:none;" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8.4" fill="#16B364"/><path d="M5 9l3 3 5-5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                            <input type="hidden" name="url" value="{{ @$url }}"/>
+                            <input type="hidden" name="url" value="{{ @$url ?: request()->fullUrl() }}"/>
                         </div>
                         @if($errors->has('email'))<span class="jw-err" id="jw-email-help">{{ $errors->first('email') }}</span>@endif
                     </div>
@@ -1208,6 +1215,31 @@ select.jw-inp option {
                     @csrf
                     <!-- Honeypot anti-bot security: humans never touch hidden fields -->
                     <input type="text" name="website_url" style="display:none;" tabindex="-1" autocomplete="off">
+                    @if($isAgencyInvite)
+                        <input type="hidden" name="agency_code" value="{{ $registrationContext['agency_code'] ?? request('agency_code') }}">
+                        <input type="hidden" name="direct_user" value="{{ $registrationContext['direct_user'] ?? '' }}">
+                    @endif
+
+                    @if($isAgencyInvite && !empty($registrationContext['inviting_company']['name']))
+                        <div class="jw-agency-banner" style="display:flex; align-items:center; gap:12px; background:linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); border:1.5px solid #bfdbfe; border-radius:12px; padding:12px 14px; margin-bottom:16px; box-shadow:0 1px 3px rgba(37,99,235,0.06);">
+                            <div style="width:38px; height:38px; border-radius:8px; background:#ffffff; border:1px solid #dbeafe; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:700; color:#2563eb; font-size:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); overflow:hidden;">
+                                @if(!empty($registrationContext['inviting_company']['logo']))
+                                    <img src="{{ $registrationContext['inviting_company']['logo'] }}" style="width:100%; height:100%; object-fit:contain;" alt="{{ $registrationContext['inviting_company']['name'] }}">
+                                @else
+                                    {{ strtoupper(substr($registrationContext['inviting_company']['name'], 0, 2)) }}
+                                @endif
+                            </div>
+                            <div style="flex-grow:1; min-width:0;">
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span style="font-size:10px; font-weight:700; color:#1d4ed8; text-transform:uppercase; letter-spacing:0.5px; background:#dbeafe; padding:1px 6px; border-radius:4px;">Agency Partnership</span>
+                                    <span style="font-size:10px; font-weight:600; color:#15803d; background:#dcfce7; padding:1px 6px; border-radius:4px;">Direct Invitation</span>
+                                </div>
+                                <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    Partner with {{ $registrationContext['inviting_company']['name'] }}
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     <h2>Create your Jero.works account</h2>
                     <p class="sub">Get started in 30 seconds. No credit card required.</p>
@@ -1298,18 +1330,26 @@ select.jw-inp option {
                                     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </span>
-                            <select class="jw-inp jw-select" name="company_type" id="jw-signup-company-type" required>
-                                <option value="" disabled selected>Select company business model...</option>
-                                <option value="2">Consulting or Services Company</option>
-                                <option value="1">Recruitment or Staffing Agency</option>
-                                <option value="3">Product or Manufacturing Company (Direct Employer)</option>
-                                <option value="4">Freelancer / Individual Recruiter</option>
-                            </select>
-                            <span class="ir" style="pointer-events:none;" aria-hidden="true">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path d="M6 9l6 6 6-6" stroke="#8b95af" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
+                            @if($isAgencyInvite)
+                                <input type="hidden" name="company_type" id="jw-signup-company-type" value="1">
+                                <input class="jw-inp" type="text" value="Recruitment or Staffing Agency" readonly style="background-color:#f8fafc; color:#1e293b; font-weight:600; cursor:not-allowed; border-color:#cbd5e1; padding-right:110px;">
+                                <span class="ok-mark" style="display:flex;" aria-hidden="true">
+                                    <span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:10.5px; font-weight:600; border-radius:6px; padding:3px 8px; border:1px solid #bae6fd;">Auto-Selected</span>
+                                </span>
+                            @else
+                                <select class="jw-inp jw-select" name="company_type" id="jw-signup-company-type" required>
+                                    <option value="" disabled selected>Select company business model...</option>
+                                    <option value="2">Consulting or Services Company</option>
+                                    <option value="1">Recruitment or Staffing Agency</option>
+                                    <option value="3">Product or Manufacturing Company (Direct Employer)</option>
+                                    <option value="4">Freelancer / Individual Recruiter</option>
+                                </select>
+                                <span class="ir" style="pointer-events:none;" aria-hidden="true">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                        <path d="M6 9l6 6 6-6" stroke="#8b95af" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                            @endif
                         </div>
                         <span class="jw-err" id="jw-signup-company-type-err" style="display:none;"></span>
                     </div>
@@ -1362,6 +1402,69 @@ select.jw-inp option {
                         <a href="javascript:void(0);" onclick="jwSwitchAuth('login')" class="jw-link-switch">Sign In →</a>
                     </div>
                 </form>
+
+                <!-- STATE 2-AGENCY: CAS 1-CLICK AGENCY CONNECTION CARD (Authenticated Scenario A) -->
+                <div class="jw-card-form jw-fade-enter" id="kt_agency_connect_card" style="{{ $agencyConnectStyle ?? 'display:none;' }}">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                        <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 10px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            Agency Partnership Invitation
+                        </span>
+                        <span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:10px; font-weight:600; padding:2px 8px; border-radius:12px;">0 Coins • Direct Link</span>
+                    </div>
+
+                    <h2 style="font-size:20px; font-weight:800; color:#0f172a; margin:0 0 4px;">Connect with {{ $registrationContext['inviting_company']['name'] ?? 'Partner Company' }}</h2>
+                    <p class="sub" style="font-size:13px; color:#64748b; margin-bottom:18px;">You have received a direct invitation to connect your agency and collaborate on recruitment requisitions.</p>
+
+                    <!-- Authenticated Identity Banner -->
+                    <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:14px 16px; margin-bottom:18px;">
+                        <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Signed In As</div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:36px; height:36px; border-radius:50%; background:#2563eb; color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">
+                                {{ strtoupper(substr($currentUser->name ?? 'U', 0, 1)) }}
+                            </div>
+                            <div>
+                                <div style="font-size:13px; font-weight:700; color:#0f172a;">{{ $currentUser->name ?? '' }}</div>
+                                <div style="font-size:11.5px; color:#64748b;">{{ $authCompany->company_name ?? 'Your Organization' }} &bull; {{ $currentUser->email ?? '' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Feedback Alert -->
+                    <div class="jw-alert jw-alert-danger" id="jw_agency_connect_alert" style="display:none;" role="alert"></div>
+                    <div class="jw-alert jw-alert-success" id="jw_agency_connect_success" style="display:none;" role="alert"></div>
+
+                    @if(!empty($alreadyConnected))
+                        <div style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px; padding:12px 16px; margin-bottom:18px; display:flex; align-items:center; gap:10px;">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#16a34a"/><path d="M6 10l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <div>
+                                <strong style="font-size:12.5px; color:#15803d; display:block;">Already Connected</strong>
+                                <span style="font-size:11.5px; color:#166534;">Your agency is already an active partner with {{ $registrationContext['inviting_company']['name'] ?? 'this company' }}.</span>
+                            </div>
+                        </div>
+                        <a href="{{ url('/service_company/clients/direct_client/0') }}" class="jw-btn" style="text-decoration:none; text-align:center; justify-content:center;">
+                            <span>Go to Client Tracker &rarr;</span>
+                        </a>
+                    @else
+                        <button type="button" id="kt_agency_connect_submit" class="jw-btn" onclick="jwConnectAgencyPartnership()">
+                            <span class="indicator-label">Accept &amp; Connect Agency</span>
+                            <span class="arrow" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="indicator-progress" style="display:none" aria-live="polite">
+                                Connecting Agency...&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span>
+                            </span>
+                        </button>
+                    @endif
+
+                    <div class="jw-switch-row" style="margin-top:16px;">
+                        <span>Want to use a different account?</span>
+                        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('agency-logout-form').submit();" class="jw-link-switch">Sign Out &bull; Switch Account</a>
+                        <form id="agency-logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
+                    </div>
+                </div>
 
                 <!-- STATE 2-TEAM: TEAM MEMBER ACTIVATION CARD -->
                 <form class="jw-card-form jw-fade-enter jw-card-team-invite" novalidate id="kt_team_activate_form" action="{{ route('register.activate') }}" method="post" style="{{ $teamStyle }}">
@@ -2045,6 +2148,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (collisionMsg && data.message) collisionMsg.textContent = data.message;
                     }
                     resetSignupBtn();
+                } else if (data.status === 'existing_account') {
+                    if (collisionCard) {
+                        collisionCard.style.display = 'flex';
+                        if (collisionTitle) collisionTitle.textContent = data.title || 'Account Already Exists';
+                        if (collisionMsg) collisionMsg.textContent = data.message || 'This email is already registered on Jero. Please sign in to connect your agency.';
+                    } else if (signupAlert) {
+                        signupAlert.innerHTML = (data.message || 'This email is already registered.') + ' <a href="javascript:void(0);" onclick="jwSwitchToLoginWithEmail()" style="font-weight:700; color:#2563eb; text-decoration:underline;">Sign In Instead →</a>';
+                        signupAlert.style.display = 'block';
+                    }
+                    resetSignupBtn();
                 } else if (res.status === 422 && data.validation) {
                     var keys = Object.keys(data.validation);
                     var firstMsg = data.validation[keys[0]][0];
@@ -2220,6 +2333,68 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+    // Option 2 CAS 1-Click Agency Connection Handler (Scenario A)
+    window.jwConnectAgencyPartnership = function() {
+        var btn = document.getElementById('kt_agency_connect_submit');
+        var alertEl = document.getElementById('jw_agency_connect_alert');
+        var successEl = document.getElementById('jw_agency_connect_success');
+        if (!btn) return;
+
+        var label = btn.querySelector('.indicator-label');
+        var prog = btn.querySelector('.indicator-progress');
+        var arrow = btn.querySelector('.arrow');
+        if (label) label.style.display = 'none';
+        if (arrow) arrow.style.display = 'none';
+        if (prog) prog.style.display = 'inline-flex';
+        btn.setAttribute('disabled', 'disabled');
+        if (alertEl) alertEl.style.display = 'none';
+        if (successEl) successEl.style.display = 'none';
+
+        fetch("{{ route('register.agency-connect') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                agency_code: "{{ $registrationContext['agency_code'] ?? request('agency_code') }}",
+                direct_user: "{{ $registrationContext['direct_user'] ?? '' }}"
+            })
+        })
+        .then(async function(res) {
+            var data = await res.json().catch(function() { return {}; });
+            if (res.ok && data.status === 'success') {
+                if (successEl) {
+                    successEl.textContent = data.message || 'Partnership established successfully! Redirecting...';
+                    successEl.style.display = 'block';
+                }
+                setTimeout(function() {
+                    window.location.href = data.redirect || "{{ url('/service_company/clients/direct_client/0') }}";
+                }, 1000);
+            } else {
+                if (alertEl) {
+                    alertEl.textContent = data.message || 'Failed to connect agency. Please try again.';
+                    alertEl.style.display = 'block';
+                }
+                if (label) label.style.display = 'inline';
+                if (arrow) arrow.style.display = 'inline-flex';
+                if (prog) prog.style.display = 'none';
+                btn.removeAttribute('disabled');
+            }
+        })
+        .catch(function() {
+            if (alertEl) {
+                alertEl.textContent = 'A network error occurred. Please try again.';
+                alertEl.style.display = 'block';
+            }
+            if (label) label.style.display = 'inline';
+            if (arrow) arrow.style.display = 'inline-flex';
+            if (prog) prog.style.display = 'none';
+            btn.removeAttribute('disabled');
+        });
+    };
 });
 </script>
 @endpush

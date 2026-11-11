@@ -3342,10 +3342,12 @@
 
     if (statusCallback) statusCallback('Optimizing document for delivery...');
 
+    var doc = null;
     try {
       await Promise.all([ensurePdfJs(), ensureJsPdf()]);
       var sourceBytes = await pdfBlob.arrayBuffer();
       var bytes = new Uint8Array(sourceBytes);
+      doc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
       var jspdf = await ensureJsPdf();
       var JsPDF = (jspdf && jspdf.jsPDF) || rsGetJsPdfConstructor() || (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
       if (!JsPDF) throw new Error('jsPDF library could not be initialized for size optimization');
@@ -3413,6 +3415,8 @@
     } catch (compressErr) {
       console.warn('[ForwardResumeEngine] Optimization safeguard bypassed:', compressErr);
       return pdfBlob;
+    } finally {
+      try { if (doc && typeof doc.destroy === 'function') doc.destroy(); } catch (e) {}
     }
   }
 
@@ -3538,6 +3542,7 @@
     buildTurboVectorHighlightedResume: buildTurboVectorHighlightedResume,
     renderAnonymizedPdfBlob: renderAnonymizedPdfBlob,
     rdcAnonymizeRules: rdcAnonymizeRules,
+    rdcDiscoverAllContactsFromText: rdcDiscoverAllContactsFromText,
     fetchResumeBytesFromSources: fetchResumeBytesFromSources,
     fetchResumeBytes: fetchResumeBytes,
     ensureJsZip: ensureJsZip,

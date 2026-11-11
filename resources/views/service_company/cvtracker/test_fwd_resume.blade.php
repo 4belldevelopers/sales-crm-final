@@ -1246,7 +1246,16 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         </div>
         <div id="test_cc_email_typo_hint" class="mm-typo-hint" style="display:none;margin-top:4px;"></div>
         <input type="hidden" name="cc_email_panel" id="test_cc_email_panel" value="{{ $cc_email }}">
-        <div class="mm-hint">Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</div>
+        <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          <span>Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</span>
+          @php
+            $currentLoggedInEmail = auth()->user()->email ?? ($userdata->email ?? '');
+          @endphp
+          <div class="mm-copy-self-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:3px 8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#009EF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Auto-copy sent to you <span id="test_copy_self_email_display" style="color:#009EF7;font-weight:600;">({{ $currentLoggedInEmail }})</span></span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2378,6 +2387,35 @@ function updateTestSendButtonState() {
     }
 }
 
+async function ensureTestFwdEngine() {
+    if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.generateAttachmentForCandidate === 'function') {
+        return window.AgyForwardResumeEngine;
+    }
+    if (window.AgyForwardResumeHelper && typeof window.AgyForwardResumeHelper.generateAttachmentForCandidate === 'function') {
+        return window.AgyForwardResumeHelper;
+    }
+    if (typeof window.AgyForwardResumeEngine === 'undefined') {
+        try {
+            await new Promise(function (resolve, reject) {
+                var s = document.createElement('script');
+                s.src = '/assets/modules/fwd-resume/engine.v4.js?v=' + Date.now();
+                s.onload = resolve;
+                s.onerror = function () {
+                    var s2 = document.createElement('script');
+                    s2.src = '/js/opendoc/AgyForwardResumeEngine.js?v=' + Date.now();
+                    s2.onload = resolve;
+                    s2.onerror = reject;
+                    document.head.appendChild(s2);
+                };
+                document.head.appendChild(s);
+            });
+        } catch (e) {
+            console.warn('[test_fwd_resume] Dynamic engine load warning:', e);
+        }
+    }
+    return window.AgyForwardResumeEngine || window.AgyForwardResumeHelper || null;
+}
+
 async function startTestCompilationForOption(optId) {
     if (!optId || optId === 1) return;
     _testFwdIsCompiling = true;
@@ -2399,6 +2437,9 @@ async function startTestCompilationForOption(optId) {
 
     try {
         var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
+        if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
+            engine = await ensureTestFwdEngine();
+        }
         if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
             throw new Error('Forward Resume engine core is not loaded.');
         }
@@ -3689,12 +3730,18 @@ window.onTestFwdSubmitClick = async function (e) {
                     };
                     var jobSkills = @json($jobSkills ?? []);
                     var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
+                    if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
+                        engine = await ensureTestFwdEngine();
+                    }
+                    if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
+                        throw new Error('Forward Resume engine core is not loaded.');
+                    }
                     blob = await engine.generateAttachmentForCandidate(cand, optId, companyData, jobSkills);
                     cached[cand.id] = blob;
                 }
                 if (blob) {
                     var safeCandName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
-                    var defaultName = (optId === 5) ? ('Prescreen_Report_' + safeCandName + '.pdf') : ('Jeroworks_' + safeCandName + '.pdf');
+                    var defaultName = (optId === 5 || (optId >= 51 && optId <= 54)) ? ('Prescreen_Report_' + safeCandName + '.pdf') : (optId === 49 ? 'Jeroworks_Resume.pdf' : ('Jeroworks_' + safeCandName + '.pdf'));
                     var outName = (blob && blob.filename) ? blob.filename : defaultName;
                     candidateBlobs[cand.id] = { blob: blob, filename: outName };
                     filesToInitiate.push({
@@ -3774,6 +3821,7 @@ window.onTestFwdSubmitClick = async function (e) {
             'reply_to_email': reply_to_email,
             'to_email': to_email,
             'cc_email': cc_email,
+            'copy_to_self': 1,
             'subject': subject,
             'attached_cv': attached_cv,
             'attached_cv_format': optId,
@@ -4084,6 +4132,16 @@ window.renderTestTags = function(target) {
     syncTestRecipientDrawerState();
     if (target === 'to') {
         window.syncFirstRecipientSalutation();
+    }
+
+    var currentUserEmail = '{{ strtolower(trim($currentLoggedInEmail)) }}';
+    if (currentUserEmail) {
+        var inTo = (window._testEmailTags.to || []).some(function(e) { return e.toLowerCase() === currentUserEmail; });
+        var inCc = (window._testEmailTags.cc || []).some(function(e) { return e.toLowerCase() === currentUserEmail; });
+        if (inTo && inCc) {
+            window.removeTestEmailByAddress('cc', currentUserEmail);
+            inCc = false;
+        }
     }
 };
 

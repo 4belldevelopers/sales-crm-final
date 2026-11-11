@@ -167,172 +167,31 @@ class SaasFrontController extends SaasFrontBaseController
         return view('saas-front.help_page', $this->data);
     }
 
+    /**
+     * Option 2 Direct Registration Link Entrypoint.
+     * Redirects directly to the Unified Common Registration Page (/register?agency_code={code})
+     * to eliminate duplicate registration pages and preserve seamless single-page UX.
+     */
     public function invitationCompanyRegisterDirectAccess($code = '')
     {
-
         if (empty($code)) {
-            return redirect('register');
-        } else {
-            $decode = base64_decode($code);
-
-            $userRowData = DB::table('users')->select('*')->where('root_user', '=', 1)->where('company_id', $decode)->first();
-
-            $userRowCount = DB::table('users')->select('*')->where('root_user', '=', 1)->where('company_id', $decode)->count();
-            if ($userRowCount > 0) {
-                $this->direct_open_link = false;
-                $this->direct_user = base64_encode($userRowData->id);
-
-                return view('saas-front.invitationCompanyRegister', $this->data);
-            } else {
-                $this->direct_open_link = false;
-                $this->company_id = '';
-
-                return view('saas-front.invitationCompanyRegister', $this->data);
-            }
+            return redirect()->route('register');
         }
 
+        return redirect()->route('register', ['agency_code' => $code]);
     }
 
-    public function invitationCompanyRegister($code)
+    /**
+     * Legacy Invitation Registration Link Entrypoint.
+     * Redirects directly to the Unified Common Registration Page (/register?agency_code={code}).
+     */
+    public function invitationCompanyRegister($code = '')
     {
-
         if (empty($code)) {
-            abort(404);
-        } else {
-            $decode = base64_decode($code);
-
-            $this->userRowData = DB::table('staffing_company_invitation')
-                ->select('*')
-                ->where('id', $decode)
-                ->where('to_status', 0)
-                ->first();
-
-            if ($this->userRowData) {
-
-                $user = DB::table('users')
-                    ->join('companies', 'companies.id', 'users.company_id')
-                    ->select('users.id', 'users.name', 'users.email', 'users.email_verification_code', 'companies.company_name')
-                    ->where('users.email', '=', $this->userRowData->to_email)
-                    ->where('users.status', '=', 'active')
-                    ->first();
-
-                // dd($user);
-
-                if ($user) {
-                    $userRowCount = DB::table('staffing_company_invitation')
-                        ->select('*')
-                        ->where('id', $decode)
-                    // ->where('to_invitation_status', 0)
-                    // ->where('to_status', 0)
-                        ->count();
-                    // dd($userRowCount);
-                    if ($userRowCount) {
-
-                        $company_id = $this->userRowData->to_company_id;
-                        $event_id = 1;
-                        $from_company = $this->userRowData->from_company_id;
-                        $invitation_id = $this->userRowData->id;
-
-                        $user_id = $user->id;
-                        $updateArr = ['to_invitation_status' => $event_id];
-                        DB::table('staffing_company_invitation')->where('id', $invitation_id)->limit(1)->update($updateArr);
-                        $invitationRow = DB::table('staffing_company_invitation')->select('*')->where('id', $invitation_id)->first();
-                        $clientRow = DB::table('clients')->select('*')->where('company_id', $company_id)->where('self_company', 1)->first();
-                        $from_company_id = $invitationRow->from_company_id;
-                        $from_client_id = $invitationRow->from_client_id;
-                        $from_user_id = $invitationRow->from_user_id;
-                        $from_status = $invitationRow->from_status;
-                        $from_created_at = $invitationRow->from_created_at;
-                        $to_company_id = $invitationRow->to_company_id;
-                        $to_email = $invitationRow->to_email;
-                        $to_status = $invitationRow->to_status;
-                        $job_id = $invitationRow->job_id;
-                        $to_invitation_status = $invitationRow->to_invitation_status;
-
-                        $values = [
-                            'from_company_id' => $from_company_id,
-                            'from_client_id' => $from_client_id,
-                            'from_user_id' => $from_user_id,
-                            'from_status' => 1,
-                            'from_created_at' => date('Y-m-d'),
-
-                            'to_company_id' => $company_id,
-                            'to_client_id' => @$clientRow->id,
-                            'to_user_id' => @$user_id,
-                            'to_status' => 1,
-                            'to_created_at' => date('Y-m-d'),
-
-                            'final_status' => 1,
-                            'created_at' => date('Y-m-d'),
-                            'updated_at' => date('Y-m-d'),
-                        ];
-                        DB::table('staffing_company_relation')->insert($values);
-                        $relationId = DB::getPdo()->lastInsertId();
-                        GeneralMethod::appendClientNestedData($relationId);
-
-                        $updateTime = now()->toIso8601String();
-
-                        // 3. Execute update with debugging
-                        $updateParams = [
-                            'index' => ELASTIC_CLIENT_REQUEST,
-                            'id' => $invitation_id,
-                            'body' => [
-                                'doc' => [
-                                    'to_invitation_status' => 1,
-                                    'to_user_id' => @$user_id,
-                                    'to_company_id' => $company_id,
-                                    'to_client_id' => @$clientRow->id,
-                                    'from_status' => 1,
-                                    'to_status' => 1,
-                                    'final_status' => 1,
-                                    'updated_at' => $updateTime,
-                                ],
-                                'doc_as_upsert' => false, // Changed to false since we verified existence
-                            ],
-                            'refresh' => false, // Eventual consistency for 10K concurrent scale
-                        ];
-                        $this->elasticService->getClient()->update($updateParams);
-
-                        $cachekeys = [
-                            'allclients_version_user_'.$user_id,
-                            'alldirectclient_version_user_'.$user_id,
-                            'allconsultancy_version_user_'.$from_user_id,
-                        ];
-                        foreach ($cachekeys as $key) {
-                            GeneralMethod::cacheClean($key);
-                        }
-                    }
-
-                    return redirect('service_company/clients/direct_client/0');
-                    exit;
-
-                }
-            }
-
-            $userRowCount = DB::table('staffing_company_invitation')
-                ->select('*')
-                ->where('id', $decode)
-                ->where('to_status', 0)
-                ->count();
-            if ($userRowCount > 0) {
-                $this->userRowData = DB::table('staffing_company_invitation')
-                    ->select('*')
-                    ->where('id', $decode)
-                    ->where('to_status', 0)
-                    ->first();
-                $this->direct_open_link = true;
-                $this->direct_user = '';
-
-                return view('saas-front.invitationCompanyRegister', $this->data);
-            } else {
-
-                $this->direct_open_link = true;
-                $this->direct_user = '';
-
-                return view('saas-front.invitationCompanyRegister', $this->data);
-            }
+            return redirect()->route('register');
         }
 
+        return redirect()->route('register', ['agency_code' => $code]);
     }
 
     public function submitContact(ContactForm $request)
@@ -364,6 +223,20 @@ class SaasFrontController extends SaasFrontBaseController
         // Default to Service Company (Type 2) if omitted in lightweight 4-field signup
         if (! $request->has('company_type') || empty($request->company_type)) {
             $request->merge(['company_type' => 2]);
+        }
+
+        // Option 2 Existing Agency Account Check (Scenario A / Scenario C)
+        if ($request->has('agency_code') || $request->has('direct_user')) {
+            $existingUser = DB::table('users')->where('email', trim($request->email))->first();
+            if ($existingUser) {
+                return response()->json([
+                    'status' => 'existing_account',
+                    'title' => 'Account Already Exists',
+                    'message' => 'This email is already registered on Jero. Please sign in to connect your agency account.',
+                    'login_url' => route('login', ['return_to' => route('register', ['agency_code' => $request->agency_code ?: $request->direct_user])]),
+                    'email' => $request->email,
+                ], 409);
+            }
         }
 
         $validator = Validator::make($request->all(), [
@@ -1595,6 +1468,91 @@ class SaasFrontController extends SaasFrontBaseController
 
             if ($client_id > 0) {
                 GeneralMethod::clientStaffingPartner($client_id);
+            }
+
+            // Option 2 & Agency Registration Linkage (Scenario B)
+            if ($request->has('agency_code') || $request->has('direct_user')) {
+                $code = (string) ($request->agency_code ?: $request->direct_user);
+                $decoded = base64_decode(trim($code), true);
+                $from_company_id = null;
+                $from_user_id = null;
+
+                if ($decoded !== false && is_numeric($decoded)) {
+                    $candId = (int) $decoded;
+                    $fromComp = DB::table('companies')->where('id', $candId)->first();
+                    if ($fromComp) {
+                        $from_company_id = $fromComp->id;
+                        $rootU = DB::table('users')->where('company_id', $from_company_id)->where('root_user', 1)->first();
+                        $from_user_id = $rootU ? $rootU->id : null;
+                    } else {
+                        $uRow = DB::table('users')->where('id', $candId)->first();
+                        if ($uRow) {
+                            $from_company_id = $uRow->company_id;
+                            $from_user_id = $uRow->id;
+                        }
+                    }
+                } elseif (is_numeric($code)) {
+                    $fromComp = DB::table('companies')->where('id', (int) $code)->first();
+                    if ($fromComp) {
+                        $from_company_id = $fromComp->id;
+                        $rootU = DB::table('users')->where('company_id', $from_company_id)->where('root_user', 1)->first();
+                        $from_user_id = $rootU ? $rootU->id : null;
+                    }
+                }
+
+                if ($from_company_id && $from_company_id != $company->id) {
+                    $clientSelfFrom = DB::table('clients')->where('company_id', $from_company_id)->where('self_company', 1)->first();
+                    $from_client_id = $clientSelfFrom ? $clientSelfFrom->id : 0;
+                    if (! $from_user_id) {
+                        $rootU = DB::table('users')->where('company_id', $from_company_id)->where('root_user', 1)->first();
+                        $from_user_id = $rootU ? $rootU->id : 0;
+                    }
+
+                    // Insert staffing_company_invitation record (Option 2 invitation record)
+                    DB::table('staffing_company_invitation')->insert([
+                        'from_client_id' => $from_client_id,
+                        'from_company_id' => $from_company_id,
+                        'from_user_id' => $from_user_id ?: 0,
+                        'from_status' => 1,
+                        'from_created_at' => now()->toDateString(),
+                        'to_company_id' => $company->id,
+                        'to_email' => $user->email,
+                        'to_status' => 1,
+                        'to_invitation_status' => 1,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    // Insert relation if not exists (Scenario C Idempotency)
+                    if (! DB::table('staffing_company_relation')->where('from_company_id', $from_company_id)->where('to_company_id', $company->id)->exists()) {
+                        DB::table('staffing_company_relation')->insert([
+                            'from_company_id' => $from_company_id,
+                            'from_client_id' => $from_client_id,
+                            'from_user_id' => $from_user_id ?: 0,
+                            'from_status' => 1,
+                            'from_created_at' => date('Y-m-d H:i:s'),
+                            'to_company_id' => $company->id,
+                            'to_client_id' => $client_id,
+                            'to_user_id' => $user->id,
+                            'to_status' => 1,
+                            'to_created_at' => date('Y-m-d H:i:s'),
+                            'final_status' => 1,
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ]);
+
+                        $relationId = DB::getPdo()->lastInsertId();
+                        GeneralMethod::appendClientNestedData($relationId);
+
+                        // Multi-Tenant Atomic Cache Invalidation (Rule 6)
+                        GeneralMethod::cacheClean('allclients_version_user_'.$user->id);
+                        GeneralMethod::cacheClean('alldirectclient_version_user_'.$user->id);
+                        if ($from_user_id) {
+                            GeneralMethod::cacheClean('allconsultancy_version_user_'.$from_user_id);
+                            GeneralMethod::cacheClean('allclients_version_user_'.$from_user_id);
+                        }
+                    }
+                }
             }
 
             $this->user = $user;
