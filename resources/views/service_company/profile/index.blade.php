@@ -1693,7 +1693,7 @@ body
                           <p>Organization affiliation & corporate presence</p>
                         </div>
                       </div>
-                      <a href="{{ route('service_company.company-profile') }}" class="scp-card-action-link" title="Manage Company Profile">
+                      <a href="{{ Route::has('service_company.account.index') ? route('service_company.account.index') : url('service_company/account') }}" class="scp-card-action-link" title="Manage Company Profile">
                         <i class="bi bi-box-arrow-up-right"></i> Manage
                       </a>
                     </div>
@@ -1745,7 +1745,7 @@ body
                           <p>Credentials, account state, and subscription</p>
                         </div>
                       </div>
-                      <a href="{{ route('service_company.subscribe.index') }}" class="scp-card-action-link" title="View Subscription Details">
+                      <a href="{{ Route::has('service_company.subscribe.index') ? route('service_company.subscribe.index') : url('service_company/subscribe') }}" class="scp-card-action-link" title="View Subscription Details">
                         <i class="bi bi-arrow-right"></i> Plans
                       </a>
                     </div>
@@ -1781,7 +1781,7 @@ body
                       </div>
 
                       <div class="scp-plan-footer">
-                        <a href="{{ route('service_company.subscribe.index') }}" class="scp-btn-upgrade-plan">
+                        <a href="{{ Route::has('service_company.subscribe.index') ? route('service_company.subscribe.index') : url('service_company/subscribe') }}" class="scp-btn-upgrade-plan">
                           <i class="bi bi-lightning-charge-fill" style="color: #f59e0b;"></i> Upgrade Subscription Plan
                         </a>
                       </div>
