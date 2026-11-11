@@ -247,7 +247,7 @@
                     <a href="{{ url('/login?return_to=' . urlencode(request()->fullUrl())) }}" class="btn-primary-blue text-center">
                         <i class="ki-outline ki-entrance-left me-1"></i> Sign In to Accept
                     </a>
-                    <a href="{{ url('/register?return_to=' . urlencode(request()->fullUrl())) }}" class="btn-secondary-light text-center">
+                    <a href="{{ route('register', ['agency_token' => $rawToken, 'return_to' => request()->fullUrl()]) }}" class="btn-secondary-light text-center">
                         Register New Agency Account
                     </a>
                 </div>
