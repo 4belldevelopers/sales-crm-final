@@ -79,6 +79,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $from = ($page - 1) * $size;
         $kpiFilter = (string) ($request->input('kpi_filter') ?: $request->input('tab', 'all'));
         $tab = $kpiFilter;
+        $company_type = trim((string) ($request->input('company_type', 'All')));
 
         $stage_filter = $request->input('stage_filter', 'All');
         $status_filter = $request->input('status_filter', 'All');
@@ -91,7 +92,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $sort = [];
 
         $cachePayload = [
-            'ui_v' => 'card_v4',
+            'ui_v' => 'card_v5',
             'page' => $page,
             'size' => $size,
             'company' => $company_id,
@@ -100,6 +101,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'sort' => $valCheck_date,
             'tab' => $tab,
             'kpi_filter' => $kpiFilter,
+            'company_type' => $company_type,
             'stage_filter' => $stage_filter,
             'status_filter' => $status_filter,
             'owner_filter' => $owner_filter,
@@ -262,7 +264,17 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $myOrgClientIds = $this->resolveMyOrgClientIds((int) $company_id);
         $orgFilters = $this->buildOrgClassificationFilters((int) $company_id, $myOrgClientIds);
 
-        // KPI Metric Card Filters
+        // Dedicated Company Type Filter Dropdown
+        $companyTypeLower = strtolower($company_type);
+        if ($companyTypeLower === 'direct_client') {
+            $filter[] = $orgFilters['direct_client'];
+        } elseif ($companyTypeLower === 'internal_client') {
+            $filter[] = $orgFilters['internal_client'];
+        } elseif ($companyTypeLower === 'my_organization') {
+            $filter[] = $orgFilters['my_organization'];
+        }
+
+        // KPI Metric Card Filters (all = master view, no sub-filter)
         if ($tab == 'this_month') {
             $filter[] = [
                 'range' => [
@@ -448,8 +460,23 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $userPermissions = $this->userPermissions;
         $statsCacheKey = 'ats:interview_stats:'.$this->user->id.':v'.$version.':cv'.$companyVersion;
         $stats = cache()->remember($statsCacheKey, now()->addMinutes(10), function () use ($company_id, $chkAdminRole, $page) {
-            return $this->dashboardStats($company_id, $chkAdminRole, $page);
+            return $this->dashboardStats($company_id, $chkAdminRole, $page, 'All');
         });
+
+        // Resolve active stats scoped to the requested company_type
+        $activeKey = strtolower($company_type);
+        if (! empty($stats['stats_by_type'][$activeKey])) {
+            $scopedStats = $stats['stats_by_type'][$activeKey];
+            $responseStats = array_merge($stats, [
+                'total' => $scopedStats['total'],
+                'interview_month' => $scopedStats['interview_month'],
+                'today' => $scopedStats['today'],
+                'upcoming' => $scopedStats['upcoming'],
+                'feedback_pending' => $scopedStats['feedback_pending'],
+            ]);
+        } else {
+            $responseStats = $stats;
+        }
 
         // Batch pre-fetch all relational lookup maps to eliminate Blade N+1 queries
         $maps = $this->prepareViewMaps($data, $company_id, $this->user->id);
@@ -468,16 +495,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'from' => $fromEntry,
             'to' => $toEntry,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-            'stats' => [
-                'total' => $stats['total'] ?? $total,
-                'interview_month' => $stats['interview_month'] ?? 0,
-                'today' => $stats['today'] ?? 0,
-                'upcoming' => $stats['upcoming'] ?? 0,
-                'feedback_pending' => $stats['feedback_pending'] ?? 0,
-                'direct_client' => $stats['direct_client'] ?? 0,
-                'internal_client' => $stats['internal_client'] ?? 0,
-                'my_organization' => $stats['my_organization'] ?? 0,
-            ],
+            'stats' => $responseStats,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_INTERVIEW_SCHEDULE_TIME));
@@ -2552,7 +2570,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         ];
     }
 
-    private function dashboardStats($company_id, $chkAdminRole, $page)
+    private function dashboardStats($company_id, $chkAdminRole, $page, string $selectedCompanyType = 'All')
     {
         $stats = [
             'total' => 0,
@@ -2563,6 +2581,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'direct_client' => 0,
             'internal_client' => 0,
             'my_organization' => 0,
+            'stats_by_type' => [],
         ];
         // Stats are company-wide (not page-specific) so they must be returned on EVERY page,
         // otherwise the hero cards blank out when the user navigates past page 1.
@@ -2596,6 +2615,18 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             $myOrgClientIds = $this->resolveMyOrgClientIds((int) $company_id);
             $orgFilters = $this->buildOrgClassificationFilters((int) $company_id, $myOrgClientIds);
 
+            $monthFilter = ['range' => ['schedule_date' => ['gte' => $nowC->copy()->startOfMonth()->toIso8601String(), 'lte' => $nowC->copy()->endOfMonth()->toIso8601String(), 'format' => 'strict_date_optional_time']]];
+            $todayFilter = ['range' => ['schedule_date' => ['gte' => $nowC->copy()->startOfDay()->toIso8601String(), 'lte' => $nowC->copy()->endOfDay()->toIso8601String(), 'format' => 'strict_date_optional_time']]];
+            $upcomingFilter = ['range' => ['schedule_date' => ['gte' => $nowC->copy()->addDay()->startOfDay()->toIso8601String(), 'format' => 'strict_date_optional_time']]];
+            $pendingFeedbackFilter = ['bool' => ['must' => [['range' => ['schedule_date' => ['lte' => $nowC->copy()->subHour()->toIso8601String(), 'format' => 'strict_date_optional_time']]], ['bool' => ['should' => [['bool' => ['must_not' => ['exists' => ['field' => 'available_status']]]], ['term' => ['available_status' => 0]], ['term' => ['feedback' => 5]]], 'minimum_should_match' => 1]]]]];
+
+            $subAggs = [
+                'this_month' => ['filter' => $monthFilter],
+                'today' => ['filter' => $todayFilter],
+                'upcoming' => ['filter' => $upcomingFilter],
+                'feedback_pending' => ['filter' => $pendingFeedbackFilter],
+            ];
+
             $statsParams = [
                 'index' => ELASTIC_INERTVIEW_TRACKER,
                 'body' => [
@@ -2603,40 +2634,76 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     'track_total_hits' => true,
                     'query' => ['bool' => ['must' => $statsMust]],
                     'aggs' => [
-                        'this_month' => ['filter' => ['range' => ['schedule_date' => ['gte' => $nowC->copy()->startOfMonth()->toIso8601String(), 'lte' => $nowC->copy()->endOfMonth()->toIso8601String(), 'format' => 'strict_date_optional_time']]]],
-                        'today' => ['filter' => ['range' => ['schedule_date' => ['gte' => $nowC->copy()->startOfDay()->toIso8601String(), 'lte' => $nowC->copy()->endOfDay()->toIso8601String(), 'format' => 'strict_date_optional_time']]]],
-                        'upcoming' => ['filter' => ['range' => ['schedule_date' => ['gte' => $nowC->copy()->addDay()->startOfDay()->toIso8601String(), 'format' => 'strict_date_optional_time']]]],
-                        // Feedback pending = the interview has happened but feedback is still missing:
-                        //   - no attendance selected (available_status not set / 0), OR
-                        //   - Interview Result was set to "Feedback Pending" (legacy feedback id 5).
-                        // A real attendance (No Show / Rescheduled / Cancelled etc.) is NOT pending.
-                        'feedback_pending' => ['filter' => ['bool' => ['must' => [['range' => ['schedule_date' => ['lte' => $nowC->copy()->subHour()->toIso8601String(), 'format' => 'strict_date_optional_time']]], ['bool' => ['should' => [['bool' => ['must_not' => ['exists' => ['field' => 'available_status']]]], ['term' => ['available_status' => 0]], ['term' => ['feedback' => 5]]], 'minimum_should_match' => 1]]]]]],
-                        'direct_client' => ['filter' => $orgFilters['direct_client']],
-                        'my_organization' => ['filter' => $orgFilters['my_organization']],
-                        'internal_client' => ['filter' => $orgFilters['internal_client']],
+                        'this_month' => ['filter' => $monthFilter],
+                        'today' => ['filter' => $todayFilter],
+                        'upcoming' => ['filter' => $upcomingFilter],
+                        'feedback_pending' => ['filter' => $pendingFeedbackFilter],
+                        'direct_client' => [
+                            'filter' => $orgFilters['direct_client'],
+                            'aggs' => $subAggs,
+                        ],
+                        'my_organization' => [
+                            'filter' => $orgFilters['my_organization'],
+                            'aggs' => $subAggs,
+                        ],
+                        'internal_client' => [
+                            'filter' => $orgFilters['internal_client'],
+                            'aggs' => $subAggs,
+                        ],
                     ],
                 ],
             ];
             $statsResp = $this->elasticService->getClient()->search($statsParams);
             $agg = $statsResp['aggregations'] ?? [];
             $allCount = (int) ($statsResp['hits']['total']['value'] ?? 0);
-            $monthCount = (int) ($agg['this_month']['doc_count'] ?? 0);
-            $todayCount = (int) ($agg['today']['doc_count'] ?? 0);
-            $upcomingCount = (int) ($agg['upcoming']['doc_count'] ?? 0);
-            $pendingCount = (int) ($agg['feedback_pending']['doc_count'] ?? 0);
-            $directCount = (int) ($agg['direct_client']['doc_count'] ?? 0);
-            $myOrgCount = (int) ($agg['my_organization']['doc_count'] ?? 0);
-            $internalCount = (int) ($agg['internal_client']['doc_count'] ?? 0);
+
+            $statsByType = [
+                'all' => [
+                    'total' => $allCount,
+                    'interview_month' => (int) ($agg['this_month']['doc_count'] ?? 0),
+                    'today' => (int) ($agg['today']['doc_count'] ?? 0),
+                    'upcoming' => (int) ($agg['upcoming']['doc_count'] ?? 0),
+                    'feedback_pending' => (int) ($agg['feedback_pending']['doc_count'] ?? 0),
+                ],
+                'direct_client' => [
+                    'total' => (int) ($agg['direct_client']['doc_count'] ?? 0),
+                    'interview_month' => (int) ($agg['direct_client']['this_month']['doc_count'] ?? 0),
+                    'today' => (int) ($agg['direct_client']['today']['doc_count'] ?? 0),
+                    'upcoming' => (int) ($agg['direct_client']['upcoming']['doc_count'] ?? 0),
+                    'feedback_pending' => (int) ($agg['direct_client']['feedback_pending']['doc_count'] ?? 0),
+                ],
+                'internal_client' => [
+                    'total' => (int) ($agg['internal_client']['doc_count'] ?? 0),
+                    'interview_month' => (int) ($agg['internal_client']['this_month']['doc_count'] ?? 0),
+                    'today' => (int) ($agg['internal_client']['today']['doc_count'] ?? 0),
+                    'upcoming' => (int) ($agg['internal_client']['upcoming']['doc_count'] ?? 0),
+                    'feedback_pending' => (int) ($agg['internal_client']['feedback_pending']['doc_count'] ?? 0),
+                ],
+                'my_organization' => [
+                    'total' => (int) ($agg['my_organization']['doc_count'] ?? 0),
+                    'interview_month' => (int) ($agg['my_organization']['this_month']['doc_count'] ?? 0),
+                    'today' => (int) ($agg['my_organization']['today']['doc_count'] ?? 0),
+                    'upcoming' => (int) ($agg['my_organization']['upcoming']['doc_count'] ?? 0),
+                    'feedback_pending' => (int) ($agg['my_organization']['feedback_pending']['doc_count'] ?? 0),
+                ],
+            ];
+
+            $activeKey = strtolower($selectedCompanyType);
+            if (! isset($statsByType[$activeKey])) {
+                $activeKey = 'all';
+            }
+            $activeGroup = $statsByType[$activeKey];
 
             $stats = [
-                'total' => $allCount,
-                'interview_month' => $monthCount,
-                'today' => $todayCount,
-                'upcoming' => $upcomingCount,
-                'feedback_pending' => $pendingCount,
-                'direct_client' => $directCount,
-                'internal_client' => $internalCount,
-                'my_organization' => $myOrgCount,
+                'total' => $activeGroup['total'],
+                'interview_month' => $activeGroup['interview_month'],
+                'today' => $activeGroup['today'],
+                'upcoming' => $activeGroup['upcoming'],
+                'feedback_pending' => $activeGroup['feedback_pending'],
+                'direct_client' => $statsByType['direct_client']['total'],
+                'internal_client' => $statsByType['internal_client']['total'],
+                'my_organization' => $statsByType['my_organization']['total'],
+                'stats_by_type' => $statsByType,
             ];
         } catch (\Throwable $e) {
         }

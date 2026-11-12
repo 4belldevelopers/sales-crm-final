@@ -224,7 +224,7 @@
    ========================================================================== */
 .it-stat-grid {
     display: grid !important;
-    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
     gap: 8px !important;
     margin-bottom: 14px !important;
     width: 100% !important;
@@ -368,6 +368,23 @@
 }
 
 /* KPI Selected States (Color-matched exactly like Client Tracker .cl-card.active) */
+.it-stat-card.it-kpi-active[data-kpi-filter="all"],
+.it-stat-card.it-kpi-active[data-kpi-tab="all"] {
+    background: #eff6ff !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-filter="all"] .it-stat-icon,
+.it-stat-card.it-kpi-active[data-kpi-tab="all"] .it-stat-icon {
+    background: #ffffff !important;
+    color: #2563eb !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-filter="all"] .it-stat-num,
+.it-stat-card.it-kpi-active[data-kpi-tab="all"] .it-stat-num { color: #1d4ed8 !important; }
+.it-stat-card.it-kpi-active[data-kpi-filter="all"] .it-stat-lbl,
+.it-stat-card.it-kpi-active[data-kpi-tab="all"] .it-stat-lbl { color: #1e40af !important; font-weight: 700 !important; }
+
 .it-stat-card.it-kpi-active[data-kpi-filter="this_month"],
 .it-stat-card.it-kpi-active[data-kpi-tab="this_month"] {
     background: #eff6ff !important;
@@ -576,6 +593,7 @@
 }
 
 /* Shared Combobox Pill Trigger (Copied from Client Tracker .cl-act / .cl-sort-combobox-btn) */
+.it-company-type-wrapper,
 .it-mode-dropdown-wrapper,
 .it-sort-dropdown-wrapper {
     position: relative !important;
@@ -833,10 +851,29 @@
     display: inline-block !important;
     flex-shrink: 0 !important;
 }
-.it-dot-all    { background: #64748b !important; }
-.it-dot-blue   { background: #3b82f6 !important; }
-.it-dot-purple { background: #8b5cf6 !important; }
-.it-dot-green  { background: #10b981 !important; }
+.it-dot-all      { background: #64748b !important; }
+.it-dot-blue     { background: #3b82f6 !important; }
+.it-dot-purple   { background: #8b5cf6 !important; }
+.it-dot-green    { background: #10b981 !important; }
+.it-dot-direct   { background: #059669 !important; box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2) !important; }
+.it-dot-internal { background: #2563eb !important; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important; }
+.it-dot-myorg    { background: #0891b2 !important; box-shadow: 0 0 0 2px rgba(8, 145, 178, 0.2) !important; }
+
+.it-pop-badge.direct-badge {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+.it-pop-badge.internal-badge {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border: 1px solid #bfdbfe !important;
+}
+.it-pop-badge.myorg-badge {
+    background: #ecfeff !important;
+    color: #0891b2 !important;
+    border: 1px solid #a5f3fc !important;
+}
 
 /* Reset Button (Unified with 42px Toolbar Pills) */
 .it-reset-btn {
@@ -1979,7 +2016,7 @@
    ========================================================================== */
 @media (max-width: 1520px) {
     .it-stat-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
         gap: 8px !important;
     }
 }
@@ -2035,7 +2072,7 @@
 
 @media (max-width: 1200px) {
     .it-stat-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
     .it-card-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -2107,10 +2144,37 @@
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════
-             TIER 2: CLIENT TRACKER KPI STAT CARDS (7 Interactive Metric Cards)
+             TIER 2: EXECUTIVE 5-KPI METRIC STRIP (Compact & Responsive Single-Row Layout)
              ══════════════════════════════════════════════════════════════ -->
         <div class="it-stat-grid" id="statsGrid">
-          {{-- KPI 1: Interviews This Month --}}
+          {{-- KPI 1: All Interviews --}}
+          <button type="button" class="it-stat-card it-stat-filter it-kpi-active" data-kpi-filter="all" onclick="filterByKpi('all')">
+            <div class="it-stat-top">
+              <div class="it-stat-icon blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+              </div>
+              <div class="it-stat-meta">
+                <div class="it-stat-num-row">
+                  <div class="it-stat-num" id="stat-all-interviews">0</div>
+                </div>
+                <div class="it-stat-lbl">All Interviews</div>
+              </div>
+            </div>
+            <div class="it-stat-sub blue">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>All scheduled</span>
+            </div>
+          </button>
+
+          {{-- KPI 2: Interviews This Month --}}
           <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="this_month" onclick="filterByKpi('this_month')">
             <div class="it-stat-top">
               <div class="it-stat-icon blue">
@@ -2136,7 +2200,7 @@
             </div>
           </button>
 
-          {{-- KPI 2: Today's Interviews --}}
+          {{-- KPI 3: Today's Interviews --}}
           <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="today" onclick="filterByKpi('today')">
             <div class="it-stat-top">
               <div class="it-stat-icon green">
@@ -2164,7 +2228,7 @@
             </div>
           </button>
 
-          {{-- KPI 3: Upcoming Interviews --}}
+          {{-- KPI 4: Upcoming Interviews --}}
           <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="upcoming" onclick="filterByKpi('upcoming')">
             <div class="it-stat-top">
               <div class="it-stat-icon purple">
@@ -2189,7 +2253,7 @@
             </div>
           </button>
 
-          {{-- KPI 4: Feedback Pending --}}
+          {{-- KPI 5: Feedback Pending --}}
           <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="pending_feedback" onclick="filterByKpi('pending_feedback')">
             <div class="it-stat-top">
               <div class="it-stat-icon red">
@@ -2217,88 +2281,6 @@
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               <span id="span_itPendingSub">Evaluation awaiting review</span>
-            </div>
-          </button>
-
-          {{-- KPI 5: Direct Client Interviews --}}
-          <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="direct_client" onclick="filterByKpi('direct_client')">
-            <div class="it-stat-top">
-              <div class="it-stat-icon green" style="background:#d1fae5!important;color:#166534!important;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              </div>
-              <div class="it-stat-meta">
-                <div class="it-stat-num-row">
-                  <div class="it-stat-num" id="stat-direct-client">0</div>
-                </div>
-                <div class="it-stat-lbl">Direct Client Interviews</div>
-              </div>
-            </div>
-            <div class="it-stat-sub green" style="color:#16a34a!important;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              <span>Marketplace client</span>
-            </div>
-          </button>
-
-          {{-- KPI 6: Internal Client Interviews --}}
-          <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="internal_client" onclick="filterByKpi('internal_client')">
-            <div class="it-stat-top">
-              <div class="it-stat-icon blue" style="background:#dbeafe!important;color:#1e40af!important;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-                  <line x1="9" y1="22" x2="9" y2="22.01"/>
-                  <line x1="15" y1="22" x2="15" y2="22.01"/>
-                  <line x1="9" y1="6" x2="9" y2="6.01"/>
-                  <line x1="15" y1="6" x2="15" y2="6.01"/>
-                  <line x1="9" y1="10" x2="9" y2="10.01"/>
-                  <line x1="15" y1="10" x2="15" y2="10.01"/>
-                  <line x1="9" y1="14" x2="9" y2="14.01"/>
-                  <line x1="15" y1="14" x2="15" y2="14.01"/>
-                  <line x1="9" y1="18" x2="9" y2="18.01"/>
-                  <line x1="15" y1="18" x2="15" y2="18.01"/>
-                </svg>
-              </div>
-              <div class="it-stat-meta">
-                <div class="it-stat-num-row">
-                  <div class="it-stat-num" id="stat-internal-client">0</div>
-                </div>
-                <div class="it-stat-lbl">Internal Client Interviews</div>
-              </div>
-            </div>
-            <div class="it-stat-sub blue" style="color:#2563eb!important;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-              </svg>
-              <span>Managed non-marketplace</span>
-            </div>
-          </button>
-
-          {{-- KPI 7: My Organization Interviews --}}
-          <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="my_organization" onclick="filterByKpi('my_organization')">
-            <div class="it-stat-top">
-              <div class="it-stat-icon amber" style="background:#fef3c7!important;color:#92400e!important;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-              </div>
-              <div class="it-stat-meta">
-                <div class="it-stat-num-row">
-                  <div class="it-stat-num" id="stat-my-organization">0</div>
-                </div>
-                <div class="it-stat-lbl">My Organization Interviews</div>
-              </div>
-            </div>
-            <div class="it-stat-sub amber" style="color:#d97706!important;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 14 14"/>
-              </svg>
-              <span>Own company hiring</span>
             </div>
           </button>
         </div>
@@ -2333,7 +2315,76 @@
               </div>
             </div>
 
-            {{-- Filter 1: Interview Mode Combobox Popover (Client Tracker UX) --}}
+            {{-- Filter 1: Company Type Combobox Popover (Direct Client, Internal Client, My Organization) --}}
+            <div class="it-company-type-wrapper" id="itCompanyTypeDropdownWrapper">
+              <button type="button" class="it-combobox-btn it-company-type-combobox-btn" id="itCompanyTypeBtn" onclick="toggleItCompanyTypeDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="itCompanyTypeDropdownPanel" title="Filter by Company Type">
+                <div class="it-pill-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 21h18"/>
+                    <path d="M5 21V7l8-4v18"/>
+                    <path d="M19 21V11l-6-4"/>
+                    <line x1="9" y1="9" x2="9" y2="9.01"/>
+                    <line x1="9" y1="13" x2="9" y2="13.01"/>
+                    <line x1="9" y1="17" x2="9" y2="17.01"/>
+                  </svg>
+                </div>
+                <div class="it-pill-texts">
+                  <span class="it-pill-lbl">Type</span>
+                  <span class="it-pill-val" id="itCompanyTypeDisplay">All Types</span>
+                </div>
+                <div class="it-pill-clear" id="itCompanyTypeClearBtn" onclick="clearItCompanyTypeFilter(event)" title="Reset Company Type" style="display:none;">&#10005;</div>
+                <div class="it-pill-chevron">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </button>
+
+              <div class="it-dropdown-panel it-company-type-dropdown-panel" id="itCompanyTypeDropdownPanel" role="listbox" aria-labelledby="itCompanyTypeBtn" tabindex="-1">
+                <div class="it-pop-section-hdr">Company Type</div>
+                <div class="it-pop-item selected" id="type-opt-All" data-type-val="All" onclick="selectItCompanyTypeOption('All', 'All Types', event)" role="option" aria-selected="true" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-all"></span>
+                    <span class="it-pop-item-title">All Types</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-check">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="type-opt-direct_client" data-type-val="direct_client" onclick="selectItCompanyTypeOption('direct_client', 'Direct Client', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-direct"></span>
+                    <span class="it-pop-item-title">Direct Client</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge direct-badge">Marketplace</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="type-opt-internal_client" data-type-val="internal_client" onclick="selectItCompanyTypeOption('internal_client', 'Internal Client', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-internal"></span>
+                    <span class="it-pop-item-title">Internal Client</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge internal-badge">Managed</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="type-opt-my_organization" data-type-val="my_organization" onclick="selectItCompanyTypeOption('my_organization', 'My Organization', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-myorg"></span>
+                    <span class="it-pop-item-title">My Organization</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge myorg-badge">Own Company</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+              </div>
+
+              <input type="hidden" id="itCompanyTypeFilter" name="company_type" value="All" />
+            </div>
+
+            {{-- Filter 2: Interview Mode Combobox Popover (Client Tracker UX) --}}
             <div class="it-mode-dropdown-wrapper" id="itModeDropdownWrapper">
               <button type="button" class="it-combobox-btn it-mode-combobox-btn" id="itModeBtn" onclick="toggleItModeDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="itModeDropdownPanel" title="Filter by Interview Mode">
                 <div class="it-pill-icon">
@@ -2656,13 +2707,16 @@
 // ── Enterprise Search, Mode & Sort Combobox Engine (Client Tracker UX Parity) ──
 var itSearchDebounceTimer = null;
 var itLastTotalCount = 0;
+var itStatsByType = {};
 
 function updateItToolbarIndicators() {
     var count = 0;
     var q = ($('#kt_tagify_2').val() || '').trim();
+    var c = $('#itCompanyTypeFilter').val() || 'All';
     var m = $('#itModeFilter').val() || 'All';
     var s = $('#sortingfilter').val() || '';
     if (q.length > 0) count++;
+    if (c !== 'All') count++;
     if (m !== 'All') count++;
     if (s !== '') count++;
     if (typeof activeKpiFilter !== 'undefined' && activeKpiFilter !== 'all') count++;
@@ -2677,6 +2731,104 @@ function updateItToolbarIndicators() {
         $badge.hide();
     }
 }
+
+function closeItCompanyTypeDropdown() {
+    $('#itCompanyTypeDropdownPanel').removeClass('show');
+    $('#itCompanyTypeBtn').removeClass('active').attr('aria-expanded', 'false');
+}
+
+function toggleItCompanyTypeDropdown(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    var $panel = $('#itCompanyTypeDropdownPanel');
+    var $btn = $('#itCompanyTypeBtn');
+    var isVisible = $panel.hasClass('show');
+
+    if (isVisible) {
+        closeItCompanyTypeDropdown();
+    } else {
+        closeItModeDropdown();
+        closeItSortDropdown();
+        $panel.addClass('show');
+        $btn.addClass('active').attr('aria-expanded', 'true');
+        var $selected = $panel.find('.it-pop-item.selected');
+        if ($selected.length) {
+            $selected.focus();
+        } else {
+            $panel.find('.it-pop-item').first().focus();
+        }
+    }
+}
+window.toggleItCompanyTypeDropdown = toggleItCompanyTypeDropdown;
+
+function applyCompanyTypeStatsLocally(typeKey) {
+    var k = (typeKey || 'all').toLowerCase();
+    if (itStatsByType && itStatsByType[k]) {
+        var group = itStatsByType[k];
+        $('#stat-all-interviews').text(group.total ?? 0);
+        $('#stat-interview-month').text(group.interview_month ?? 0);
+        $('#stat-today').text(group.today ?? 0);
+        $('#stat-upcoming').text(group.upcoming ?? 0);
+        var pendingCnt = parseInt(group.feedback_pending ?? 0, 10) || 0;
+        $('#stat-feedback-pending').text(pendingCnt);
+        if (pendingCnt > 0) {
+            $('#badge_itPendingAction').show();
+            $('#span_itPendingSub').text(pendingCnt + (pendingCnt === 1 ? ' interview awaits feedback' : ' interviews await feedback'));
+        } else {
+            $('#badge_itPendingAction').hide();
+            $('#span_itPendingSub').text("You're all caught up");
+        }
+    }
+}
+
+function selectItCompanyTypeOption(val, text, e, skipFetch) {
+    if (e && e.stopPropagation) { e.stopPropagation(); }
+    closeItCompanyTypeDropdown();
+
+    var canonical = String(val || 'All');
+    var typeLabels = {
+        'All': 'All Types',
+        'direct_client': 'Direct Client',
+        'internal_client': 'Internal Client',
+        'my_organization': 'My Organization'
+    };
+    var displayText = text || typeLabels[canonical] || 'All Types';
+
+    $('#itCompanyTypeDisplay').text(displayText);
+    $('#itCompanyTypeFilter').val(canonical);
+    if (typeof filterValues !== 'undefined') {
+        filterValues.company_type = canonical;
+    }
+
+    $('#itCompanyTypeDropdownPanel .it-pop-item').removeClass('selected').attr('aria-selected', 'false')
+        .find('.it-pop-check').hide();
+    $('#itCompanyTypeDropdownPanel .it-pop-item[data-type-val="' + canonical + '"]')
+        .addClass('selected').attr('aria-selected', 'true').find('.it-pop-check').show();
+
+    if (canonical !== 'All') {
+        $('#itCompanyTypeBtn').addClass('is-active-filter');
+        $('#itCompanyTypeClearBtn').show();
+    } else {
+        $('#itCompanyTypeBtn').removeClass('is-active-filter');
+        $('#itCompanyTypeClearBtn').hide();
+    }
+
+    applyCompanyTypeStatsLocally(canonical);
+    updateItToolbarIndicators();
+    if (skipFetch) return;
+
+    itCurrentPage = 1;
+    fetchCandidates(1, $('#kt_tagify_2').val());
+}
+window.selectItCompanyTypeOption = selectItCompanyTypeOption;
+
+function clearItCompanyTypeFilter(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    selectItCompanyTypeOption('All', 'All Types', null, false);
+}
+window.clearItCompanyTypeFilter = clearItCompanyTypeFilter;
 
 function closeItModeDropdown() {
     $('#itModeDropdownPanel').removeClass('show');
@@ -2697,6 +2849,7 @@ function toggleItModeDropdown(e) {
     if (isVisible) {
         closeItModeDropdown();
     } else {
+        closeItCompanyTypeDropdown();
         closeItSortDropdown();
         $panel.addClass('show');
         $btn.addClass('active').attr('aria-expanded', 'true');
@@ -2761,6 +2914,7 @@ function toggleItSortDropdown(e) {
     if (isVisible) {
         closeItSortDropdown();
     } else {
+        closeItCompanyTypeDropdown();
         closeItModeDropdown();
         $panel.addClass('show');
         $btn.addClass('active').attr('aria-expanded', 'true');
@@ -2903,6 +3057,10 @@ $(document).ready(function() {
                 $searchInp.focus().select();
             }
         } else if (e.key === 'Escape') {
+            if ($('#itCompanyTypeDropdownPanel').hasClass('show')) {
+                closeItCompanyTypeDropdown();
+                $('#itCompanyTypeBtn').focus();
+            }
             if ($('#itModeDropdownPanel').hasClass('show')) {
                 closeItModeDropdown();
                 $('#itModeBtn').focus();
@@ -2915,7 +3073,7 @@ $(document).ready(function() {
     });
 
     // Keyboard navigation inside WAI-ARIA combobox panels
-    $('#itModeDropdownPanel, #itSortDropdownPanel').on('keydown', '.it-pop-item', function(e) {
+    $('#itCompanyTypeDropdownPanel, #itModeDropdownPanel, #itSortDropdownPanel').on('keydown', '.it-pop-item', function(e) {
         var $items = $(this).closest('.it-dropdown-panel').find('.it-pop-item');
         var idx = $items.index(this);
         if (e.key === 'ArrowDown') {
@@ -2932,6 +3090,9 @@ $(document).ready(function() {
 
     // Close popovers on outside click
     $(document).on('click', function(e) {
+        if (!$(e.target).closest('#itCompanyTypeDropdownWrapper').length) {
+            closeItCompanyTypeDropdown();
+        }
         if (!$(e.target).closest('#itModeDropdownWrapper').length) {
             closeItModeDropdown();
         }
@@ -3130,7 +3291,7 @@ async function isInternetAvailablecheck() {
 
 // ── KPI & Filter Controllers (Client Tracker Parity — Zero Subtabs) ─────────
 let activeKpiFilter = 'all';
-let filterValues = { mode: 'All', sort: '', search: '', kpi_filter: 'all' };
+let filterValues = { company_type: 'All', mode: 'All', sort: '', search: '', kpi_filter: 'all' };
 
 function syncActiveKpiCards(filterName) {
     document.querySelectorAll('.it-stat-card').forEach(function(card) {
@@ -3156,9 +3317,11 @@ function resetFilters() {
     }
     itLastAppliedSort = '';
     selectItSortOption('', 'Newest Interviews', null, true);
+    selectItCompanyTypeOption('All', 'All Types', null, true);
     selectItModeOption('All', 'All Modes', null, true);
     activeKpiFilter = 'all';
     filterValues.kpi_filter = 'all';
+    filterValues.company_type = 'All';
     filterValues.mode = 'All';
     filterValues.sort = '';
     filterValues.search = '';
@@ -3196,7 +3359,7 @@ var itCurrentXhr = null;
 // ── JeroInterviewScheduleLocalStore — Native Browser IndexedDB Engine ────────
 const JeroInterviewScheduleLocalStore = (function() {
     const DB_NAME = 'jero_interview_schedule_db';
-    const DB_VERSION = 5; // Bumped for 7 KPIs, zero subtabs, and unified toolbar reset
+    const DB_VERSION = 6; // Bumped for 5 KPIs, Company Type filter, and unified toolbar reset
     const CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
     const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
     const CACHE_TTL_MS = 15 * 60 * 1000;
@@ -3456,6 +3619,10 @@ function renderInterviewData(response) {
     }
 
     if (response.stats) {
+        if (response.stats.stats_by_type) {
+            itStatsByType = response.stats.stats_by_type;
+        }
+        $('#stat-all-interviews').text(response.stats.total ?? 0);
         $('#stat-interview-month').text(response.stats.interview_month ?? 0);
         $('#stat-today').text(response.stats.today ?? 0);
         $('#stat-upcoming').text(response.stats.upcoming ?? 0);
@@ -3468,9 +3635,6 @@ function renderInterviewData(response) {
             $('#badge_itPendingAction').hide();
             $('#span_itPendingSub').text("You're all caught up");
         }
-        $('#stat-direct-client').text(response.stats.direct_client ?? 0);
-        $('#stat-internal-client').text(response.stats.internal_client ?? 0);
-        $('#stat-my-organization').text(response.stats.my_organization ?? 0);
     }
 
     var totalAll = response.stats && response.stats.total !== undefined ? response.stats.total : (response.total ?? 0);
@@ -3575,6 +3739,7 @@ async function fetchCandidates(page, search, forceRefresh) {
         custom_search:      currentSearch,
         tab:                activeKpiFilter,
         kpi_filter:         activeKpiFilter,
+        company_type:       (filterValues.company_type || $('#itCompanyTypeFilter').val() || 'All'),
         mode_filter:        filterValues.mode || 'All'
     };
 
