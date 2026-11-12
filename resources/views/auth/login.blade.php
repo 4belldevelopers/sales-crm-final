@@ -26,6 +26,7 @@ $signupStyle  = ($activeState === 'signup') ? '' : 'display:none;';
 $teamStyle    = ($activeState === 'team_invite') ? '' : 'display:none;';
 $recoverStyle = ($activeState === 'recover') ? '' : 'display:none;';
 $agencyConnectStyle = ($activeState === 'agency_connect') ? '' : 'display:none;';
+$signupProfiles = \App\Services\IndustryTaxonomyService::getSignupProfileCatalog();
 ?>
 
 <title id="jw-page-title">
@@ -562,7 +563,7 @@ select.jw-inp option {
 }
 
 /* ==========================================================================
-   ENTERPRISE COMPANY TYPE SELECTOR (Pattern A: Card Combobox - Rule 20)
+   ENTERPRISE COMPANY TYPE SELECTOR (Pattern A: Compact Enterprise Combobox)
    ========================================================================== */
 .jw-combobox-wrapper {
     position: relative;
@@ -570,8 +571,8 @@ select.jw-inp option {
 }
 .jw-combobox-trigger {
     width: 100%;
-    min-height: 54px;
-    padding: 8px 14px;
+    min-height: 52px;
+    padding: 6px 13px;
     background: #ffffff;
     border: 1.5px solid #d7ddea;
     border-radius: 10px;
@@ -592,7 +593,7 @@ select.jw-inp option {
 .jw-combobox-trigger:focus-visible,
 .jw-combobox-trigger.is-open {
     border-color: #009ef7;
-    box-shadow: 0 0 0 4px rgba(0, 158, 247, .12);
+    box-shadow: 0 0 0 3.5px rgba(0, 158, 247, .12);
     background: #ffffff;
 }
 .jw-combobox-trigger.is-invalid {
@@ -607,9 +608,9 @@ select.jw-inp option {
     flex: 1;
 }
 .jw-combobox-icon-box {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -637,6 +638,29 @@ select.jw-inp option {
     color: #9333ea;
     border-color: #f3e8ff;
 }
+.jw-icon-training {
+    background: #f0fdfa;
+    color: #0d9488;
+    border-color: #99f6e4;
+}
+.jw-icon-education {
+    background: #eef2ff;
+    color: #4f46e5;
+    border-color: #c7d2fe;
+}
+.jw-type-hint {
+    font-size: 11px;
+    font-weight: 600;
+    color: #2563eb;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 65%;
+    text-align: right;
+}
+.jw-type-hint.is-auto-ind {
+    color: #059669;
+}
 .jw-combobox-text-stack {
     display: flex;
     flex-direction: column;
@@ -646,7 +670,7 @@ select.jw-inp option {
     text-align: left;
 }
 .jw-combobox-title {
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 700;
     color: #0f172a;
     line-height: 1.25;
@@ -655,15 +679,15 @@ select.jw-inp option {
     text-overflow: ellipsis;
 }
 .jw-combobox-title.is-placeholder {
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 500;
     color: #8993ad;
 }
 .jw-combobox-sub {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 500;
     color: #64748b;
-    line-height: 1.3;
+    line-height: 1.25;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -672,7 +696,7 @@ select.jw-inp option {
 .jw-combobox-trigger-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-shrink: 0;
 }
 .jw-combobox-badges {
@@ -691,60 +715,69 @@ select.jw-inp option {
 }
 .jw-combobox-menu {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 5px);
     left: 0;
     right: 0;
     width: 100%;
     z-index: 1050;
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
-    padding: 6px;
-    max-height: 380px;
-    overflow-y: auto;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    box-shadow: 0 14px 32px -4px rgba(15, 23, 42, 0.15), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+    padding: 5px;
+    overflow: visible;
+    max-height: none;
     box-sizing: border-box;
-    animation: jwMenuFadeIn .15s ease-out;
+    animation: jwMenuFadeIn .14s ease-out;
+}
+.jw-combobox-menu.jw-dropup {
+    top: auto;
+    bottom: calc(100% + 5px);
+    box-shadow: 0 -14px 32px -4px rgba(15, 23, 42, 0.15), 0 -4px 10px -2px rgba(15, 23, 42, 0.06);
+    animation: jwMenuDropupIn .14s ease-out;
 }
 @keyframes jwMenuFadeIn {
     from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes jwMenuDropupIn {
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
 }
 .jw-combobox-menu-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 8px 6px;
-    font-size: 10px;
+    padding: 3px 8px 5px;
+    font-size: 9.5px;
     font-weight: 700;
     color: #94a3b8;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom: 1px solid #f1f5f9;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 .jw-combobox-profile-badge {
-    font-size: 9.5px;
+    font-size: 9px;
     font-weight: 700;
     background: #eff6ff;
-    color: #009ef7;
-    border: 1px solid #bfdbfe;
-    padding: 2px 6px;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+    padding: 1.5px 6px;
     border-radius: 4px;
     text-transform: uppercase;
 }
 .jw-combobox-opt {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    align-items: center;
     gap: 10px;
-    padding: 9px 10px;
-    border-radius: 10px;
+    padding: 7px 9px;
+    border-radius: 9px;
     border: 1.5px solid transparent;
     cursor: pointer;
-    transition: all .16s ease;
+    transition: all .15s ease;
     outline: none;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     background: #ffffff;
 }
 .jw-combobox-opt:last-child {
@@ -761,36 +794,41 @@ select.jw-inp option {
 .jw-combobox-opt.is-selected {
     background: #f0f9ff !important;
     border-color: #009ef7 !important;
-    box-shadow: 0 2px 8px rgba(0, 158, 247, 0.1) !important;
-}
-.jw-combobox-opt-left {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    min-width: 0;
-    flex: 1;
+    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.1) !important;
 }
 .jw-combobox-opt-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    margin-top: 1px;
     border: 1px solid transparent;
 }
-.jw-combobox-opt-content {
-    min-width: 0;
+.jw-combobox-opt-body {
     flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     text-align: left;
 }
+.jw-combobox-opt-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+}
 .jw-combobox-opt-title {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 700;
     color: #0f172a;
-    line-height: 1.3;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .jw-combobox-opt.is-selected .jw-combobox-opt-title {
     color: #009ef7;
@@ -800,51 +838,37 @@ select.jw-inp option {
     font-weight: 500;
     color: #64748b;
 }
-.jw-combobox-opt-desc {
-    font-size: 11px;
-    color: #64748b;
-    line-height: 1.35;
-    margin: 2px 0 3px;
-}
-.jw-combobox-opt-incl {
-    font-size: 10.5px;
-    font-weight: 500;
-    line-height: 1.3;
-}
-.jw-combobox-opt-incl.text-emerald {
-    color: #059669;
-}
-.jw-combobox-opt-incl.text-blue {
-    color: #2563eb;
-}
-.jw-combobox-opt-incl.text-purple {
-    color: #9333ea;
-}
-.jw-combobox-opt-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-    flex-shrink: 0;
-    margin-top: 1px;
-}
-.jw-tag-group {
+.jw-combobox-opt-meta {
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-shrink: 0;
 }
+.jw-combobox-opt-desc {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #64748b;
+    line-height: 1.3;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.jw-opt-incl.text-emerald { color: #059669; font-weight: 600; }
+.jw-opt-incl.text-blue    { color: #2563eb; font-weight: 600; }
+.jw-opt-incl.text-purple  { color: #9333ea; font-weight: 600; }
 .jw-combobox-check {
     display: none;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background: #009ef7;
     color: #ffffff;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 1px 3px rgba(0, 158, 247, 0.3);
+    box-shadow: 0 1px 2px rgba(0, 158, 247, 0.3);
 }
 .jw-combobox-opt.is-selected .jw-combobox-check {
     display: flex;
@@ -852,12 +876,13 @@ select.jw-inp option {
 .jw-cap-tag {
     display: inline-flex;
     align-items: center;
-    padding: 1.5px 6px;
+    padding: 1px 5.5px;
     border-radius: 4px;
-    font-size: 9.5px;
+    font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.3px;
     text-transform: uppercase;
+    line-height: 1.3;
 }
 .jw-tag-ats {
     background: #eff6ff;
@@ -1383,6 +1408,32 @@ select.jw-inp option {
     .jw-privacy-note { font-size: 11px; align-items: flex-start; }
     .jw-footer-links { flex-wrap: wrap; gap: 16px; }
 }
+/* 15.6" & Smaller Viewport Fit for Signup Form + Open Company Type Combobox */
+@media (max-width: 1366px), (max-height: 880px) {
+    .jw-combobox-trigger { min-height: 46px; padding: 5px 12px; }
+    .jw-combobox-icon-box { width: 30px; height: 30px; border-radius: 7px; }
+    .jw-combobox-opt { padding: 5.5px 8px; margin-bottom: 2px; gap: 9px; }
+    .jw-combobox-opt-icon { width: 28px; height: 28px; }
+    .jw-combobox-menu-header { padding: 3px 8px 4px; margin-bottom: 2px; }
+    #kt_sign_up_form.jw-card-form { padding: 20px 30px; }
+    #kt_sign_up_form.jw-card-form h2 { font-size: 24px !important; }
+    #kt_sign_up_form.jw-card-form .sub { margin: 4px 0 14px; font-size: 12.5px; }
+    #kt_sign_up_form .jw-field { margin-bottom: 11px; }
+    #kt_sign_up_form .jw-field label { margin-bottom: 5px; }
+    #kt_sign_up_form .jw-field-row { margin-bottom: 5px !important; }
+    #kt_sign_up_form.jw-card-form .jero-phone-label { margin-bottom: 5px !important; }
+    #kt_sign_up_form .jw-inp { height: 46px; font-size: 13px; }
+    #kt_sign_up_form.jw-card-form .jero-phone-input-wrap { height: 46px !important; min-height: 46px !important; max-height: 46px !important; }
+    #kt_sign_up_form.jw-card-form .jero-phone-native-input { font-size: 13px !important; }
+}
+@media (max-width: 560px) {
+    #kt_sign_up_form.jw-card-form { padding: 20px 18px; }
+    #kt_sign_up_form.jw-card-form h2 { font-size: 21px !important; }
+    .jw-combobox-opt { align-items: flex-start; padding: 7px 8px; }
+    .jw-combobox-opt-top { flex-wrap: wrap; gap: 4px; }
+    .jw-combobox-opt-title,
+    .jw-combobox-opt-desc { white-space: normal; }
+}
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: .01ms !important;
@@ -1636,9 +1687,9 @@ select.jw-inp option {
 
                     <!-- Field 4: Company Type (Enterprise Card Combobox with ATS/CRM Entitlements) -->
                     <div class="jw-field" style="position:relative;">
-                        <div class="jw-field-row" style="margin-bottom:8px;">
+                        <div class="jw-field-row" style="margin-bottom:6px;">
                             <label for="jw-signup-company-type" style="margin:0;">Company Type</label>
-                            <span class="jw-type-hint" style="font-size:11px; font-weight:600; color:#2563eb;">Select your business model</span>
+                            <span class="jw-type-hint" id="jw-type-hint">Select your business model</span>
                         </div>
 
                         @if($isAgencyInvite)
@@ -1650,9 +1701,10 @@ select.jw-inp option {
                                     </svg>
                                 </span>
                                 <input type="hidden" name="company_type" id="jw-signup-company-type" value="1">
+                                <input type="hidden" name="company_profile_key" value="recruitment">
                                 <div class="jw-inp" style="display:flex; align-items:center; justify-content:space-between; background-color:#f8fafc; cursor:not-allowed; border-color:#cbd5e1; padding-left:48px; padding-right:16px;">
                                     <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
-                                        <span style="font-weight:700; color:#0f172a; font-size:13.5px; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Recruitment &amp; Staffing Company</span>
+                                        <span style="font-weight:700; color:#0f172a; font-size:13.5px; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Recruitment &amp; Staffing</span>
                                         <span class="jw-cap-tag jw-tag-ats">ATS</span>
                                         <span class="jw-cap-tag jw-tag-crm">CRM</span>
                                     </div>
@@ -1660,12 +1712,14 @@ select.jw-inp option {
                                 </div>
                             </div>
                         @else
-                            <!-- Hidden input for 100% backward compatible form submission -->
+                            <!-- Hidden inputs for 100% backward compatible account type + dynamic industry resolution -->
                             <input type="hidden" name="company_type" id="jw-signup-company-type" value="{{ old('company_type', '') }}" required>
+                            <input type="hidden" name="company_profile_key" id="jw-signup-company-profile" value="{{ old('company_profile_key', '') }}">
+                            <input type="hidden" name="default_industry_id" id="jw-signup-industry-id" value="{{ old('default_industry_id', '') }}">
 
-                            <!-- Pattern A: Card Combobox (Rule 20 Enterprise Standard) -->
+                            <!-- Pattern A: Compact Enterprise Combobox (Dynamic Profiles & Auto-Industry Engine) -->
                             <div class="jw-combobox-wrapper" id="jw-combobox-wrapper">
-                                <!-- Trigger Element (Matches .jw-inp 54px standard) -->
+                                <!-- Trigger Element -->
                                 <div id="jw-combobox-trigger"
                                      class="jw-combobox-trigger"
                                      onclick="jwToggleTypeCombobox()"
@@ -1697,7 +1751,7 @@ select.jw-inp option {
                                     </div>
                                 </div>
 
-                                <!-- Floating Card Popover Menu -->
+                                <!-- Floating Card Popover Menu (Compact Enterprise Design - Zero Scrollbar) -->
                                 <div id="jw-combobox-menu"
                                      class="jw-combobox-menu"
                                      role="listbox"
@@ -1705,116 +1759,44 @@ select.jw-inp option {
                                      style="display:none;">
                                     
                                     <div class="jw-combobox-menu-header">
-                                        <span>BUSINESS MODEL &amp; CAPABILITIES</span>
-                                        <span class="jw-combobox-profile-badge">3 Enterprise Profiles</span>
+                                        <span>BUSINESS MODEL &amp; WORKSPACE ACCESS</span>
+                                        <span class="jw-combobox-profile-badge">{{ count($signupProfiles) }} Profiles</span>
                                     </div>
 
-                                    <!-- Option 1: Product Company (Direct Employer) (value: 3) -->
-                                    <div class="jw-combobox-opt {{ old('company_type') == '3' ? 'is-selected' : '' }}"
-                                         id="jw-opt-3"
-                                         data-value="3"
-                                         onclick="jwSelectComboboxType(3)"
-                                         role="option"
-                                         aria-selected="{{ old('company_type') == '3' ? 'true' : 'false' }}"
-                                         tabindex="0"
-                                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jwSelectComboboxType(3);}">
-                                        <div class="jw-combobox-opt-left">
-                                            <div class="jw-combobox-opt-icon jw-icon-product">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                                                    <polyline points="2 17 12 22 22 17"></polyline>
-                                                    <polyline points="2 12 12 17 22 12"></polyline>
-                                                </svg>
+                                    @foreach($signupProfiles as $idx => $profile)
+                                        @php
+                                            $isOptSelected = (old('company_profile_key') === $profile['key'])
+                                                || (! old('company_profile_key') && old('company_type') == (string) $profile['company_type'] && in_array($profile['key'], ['product', 'it_services', 'recruitment'], true));
+                                        @endphp
+                                        <div class="jw-combobox-opt {{ $isOptSelected ? 'is-selected' : '' }}"
+                                             id="jw-opt-{{ $profile['key'] }}"
+                                             data-profile="{{ $profile['key'] }}"
+                                             data-value="{{ $profile['company_type'] }}"
+                                             data-industry-id="{{ $profile['industry_id'] ?? '' }}"
+                                             onclick="jwSelectComboboxProfile('{{ $profile['key'] }}')"
+                                             role="option"
+                                             aria-selected="{{ $isOptSelected ? 'true' : 'false' }}"
+                                             tabindex="0"
+                                             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jwSelectComboboxProfile('{{ $profile['key'] }}');}">
+                                            <div class="jw-combobox-opt-icon {{ $profile['icon_class'] }}">
+                                                {!! $profile['svg'] !!}
                                             </div>
-                                            <div class="jw-combobox-opt-content">
-                                                <div class="jw-combobox-opt-title">
-                                                    <span>1. Product Company <span class="jw-opt-subtag">(Direct Employer)</span></span>
+                                            <div class="jw-combobox-opt-body">
+                                                <div class="jw-combobox-opt-top">
+                                                    <div class="jw-combobox-opt-title">
+                                                        {{ $idx + 1 }}. {{ $profile['title'] }}@if(!empty($profile['subtag'])) <span class="jw-opt-subtag">{{ $profile['subtag'] }}</span>@endif
+                                                    </div>
+                                                    <div class="jw-combobox-opt-meta">
+                                                        @foreach($profile['badges'] as $badge)
+                                                            <span class="jw-cap-tag {{ $badge['cls'] }}">{{ $badge['text'] }}</span>
+                                                        @endforeach
+                                                        <span class="jw-combobox-check" id="jw-check-{{ $profile['key'] }}">✓</span>
+                                                    </div>
                                                 </div>
-                                                <p class="jw-combobox-opt-desc">Direct employers, SaaS, startups &amp; corporate enterprises hiring in-house.</p>
-                                                <div class="jw-combobox-opt-incl text-emerald">
-                                                    <span>✓ Pure ATS Pipeline:</span> Requisitions, stages &amp; interviews (No CRM bloat).
-                                                </div>
+                                                <p class="jw-combobox-opt-desc">{{ $profile['desc'] }}</p>
                                             </div>
                                         </div>
-                                        <div class="jw-combobox-opt-right">
-                                            <span class="jw-cap-tag jw-tag-ats-only">ATS Only</span>
-                                            <span class="jw-combobox-check" id="jw-check-3">✓</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Option 2: IT Services & Consulting Company (value: 2) -->
-                                    <div class="jw-combobox-opt {{ old('company_type') == '2' ? 'is-selected' : '' }}"
-                                         id="jw-opt-2"
-                                         data-value="2"
-                                         onclick="jwSelectComboboxType(2)"
-                                         role="option"
-                                         aria-selected="{{ old('company_type') == '2' ? 'true' : 'false' }}"
-                                         tabindex="0"
-                                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jwSelectComboboxType(2);}">
-                                        <div class="jw-combobox-opt-left">
-                                            <div class="jw-combobox-opt-icon jw-icon-services">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
-                                                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                                                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                                                </svg>
-                                            </div>
-                                            <div class="jw-combobox-opt-content">
-                                                <div class="jw-combobox-opt-title">
-                                                    <span>2. IT Services &amp; Consulting Company</span>
-                                                </div>
-                                                <p class="jw-combobox-opt-desc">IT consulting, software services, project delivery &amp; staff augmentation.</p>
-                                                <div class="jw-combobox-opt-incl text-blue">
-                                                    <span>✓ Included:</span> Bench talent deployment, client accounts &amp; contractor billing.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="jw-combobox-opt-right">
-                                            <div class="jw-tag-group">
-                                                <span class="jw-cap-tag jw-tag-ats">ATS</span>
-                                                <span class="jw-cap-tag jw-tag-crm">CRM</span>
-                                            </div>
-                                            <span class="jw-combobox-check" id="jw-check-2">✓</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Option 3: Recruitment & Staffing Company (value: 1) -->
-                                    <div class="jw-combobox-opt {{ old('company_type') == '1' ? 'is-selected' : '' }}"
-                                         id="jw-opt-1"
-                                         data-value="1"
-                                         onclick="jwSelectComboboxType(1)"
-                                         role="option"
-                                         aria-selected="{{ old('company_type') == '1' ? 'true' : 'false' }}"
-                                         tabindex="0"
-                                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jwSelectComboboxType(1);}">
-                                        <div class="jw-combobox-opt-left">
-                                            <div class="jw-combobox-opt-icon jw-icon-recruitment">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                                    <circle cx="9" cy="7" r="4"></circle>
-                                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                                </svg>
-                                            </div>
-                                            <div class="jw-combobox-opt-content">
-                                                <div class="jw-combobox-opt-title">
-                                                    <span>3. Recruitment &amp; Staffing Company</span>
-                                                </div>
-                                                <p class="jw-combobox-opt-desc">Sourcing, vetting &amp; delivering candidates to external client employers.</p>
-                                                <div class="jw-combobox-opt-incl text-purple">
-                                                    <span>✓ Included:</span> Candidate sourcing, resume parsing, pipeline &amp; client accounts.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="jw-combobox-opt-right">
-                                            <div class="jw-tag-group">
-                                                <span class="jw-cap-tag jw-tag-ats">ATS</span>
-                                                <span class="jw-cap-tag jw-tag-crm">CRM</span>
-                                            </div>
-                                            <span class="jw-combobox-check" id="jw-check-1">✓</span>
-                                        </div>
-                                    </div>
-
+                                    @endforeach
                                 </div>
                             </div>
                         @endif
@@ -2513,30 +2495,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (signupPwd) signupPwd.addEventListener('input', evalPasswordStrength);
 
-    /* Enterprise Company Type Combobox Controller (Pattern A: Card Combobox - Rule 20) */
-    var companyTypeMeta = {
-        3: {
-            title: 'Product Company (Direct Employer)',
-            sub: 'Hiring exclusively for in-house teams & departments',
-            iconClass: 'jw-icon-product',
-            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>',
-            tags: [{ text: 'ATS Only', cls: 'jw-tag-ats-only' }]
-        },
-        2: {
-            title: 'IT Services & Consulting Company',
-            sub: 'Manage client accounts, requisitions & deploy consultants',
-            iconClass: 'jw-icon-services',
-            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
-            tags: [{ text: 'ATS', cls: 'jw-tag-ats' }, { text: 'CRM', cls: 'jw-tag-crm' }]
-        },
-        1: {
-            title: 'Recruitment & Staffing Company',
-            sub: 'Agency talent placement, candidate sourcing & client billing',
-            iconClass: 'jw-icon-recruitment',
-            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
-            tags: [{ text: 'ATS', cls: 'jw-tag-ats' }, { text: 'CRM', cls: 'jw-tag-crm' }]
-        }
-    };
+    /* Enterprise Company Type Combobox Controller (Pattern A: Dynamic Multi-Profile + Auto-Industry Engine) */
+    var companyProfileList = @json($signupProfiles);
+    var companyProfileMap = {};
+    var legacyTypeToKey = { 3: 'product', 2: 'it_services', 1: 'recruitment' };
+    companyProfileList.forEach(function(item) {
+        companyProfileMap[item.key] = item;
+    });
 
     window.jwToggleTypeCombobox = function() {
         var menu = document.getElementById('jw-combobox-menu');
@@ -2554,7 +2519,15 @@ document.addEventListener('DOMContentLoaded', function () {
         var menu = document.getElementById('jw-combobox-menu');
         var trigger = document.getElementById('jw-combobox-trigger');
         if (!menu || !trigger) return;
+        menu.classList.remove('jw-dropup');
         menu.style.display = 'block';
+        var rect = trigger.getBoundingClientRect();
+        var menuH = menu.offsetHeight || 245;
+        var spaceBelow = window.innerHeight - rect.bottom - 10;
+        var spaceAbove = rect.top - 10;
+        if (spaceBelow < menuH && spaceAbove > spaceBelow) {
+            menu.classList.add('jw-dropup');
+        }
         trigger.classList.add('is-open');
         trigger.setAttribute('aria-expanded', 'true');
     };
@@ -2564,57 +2537,77 @@ document.addEventListener('DOMContentLoaded', function () {
         var trigger = document.getElementById('jw-combobox-trigger');
         if (!menu || !trigger) return;
         menu.style.display = 'none';
+        menu.classList.remove('jw-dropup');
         trigger.classList.remove('is-open');
         trigger.setAttribute('aria-expanded', 'false');
     };
 
-    window.jwSelectComboboxType = function(val, close) {
+    window.jwSelectComboboxProfile = function(profileKey, close) {
         if (close === undefined) close = true;
-        var meta = companyTypeMeta[val];
-        if (!meta) return;
+        var profile = companyProfileMap[profileKey];
+        if (!profile) return;
 
-        var hiddenInput = document.getElementById('jw-signup-company-type');
+        var hiddenType = document.getElementById('jw-signup-company-type');
+        var hiddenProfile = document.getElementById('jw-signup-company-profile');
+        var hiddenInd = document.getElementById('jw-signup-industry-id');
         var trigger = document.getElementById('jw-combobox-trigger');
         var titleEl = document.getElementById('jw-trigger-title');
         var subEl = document.getElementById('jw-trigger-sub');
         var iconBox = document.getElementById('jw-trigger-icon-box');
         var badgesBox = document.getElementById('jw-trigger-badges');
+        var hintEl = document.getElementById('jw-type-hint');
         var errEl = document.getElementById('jw-signup-company-type-err');
         var alertEl = document.getElementById('jw_signup_alert');
 
-        if (hiddenInput) {
-            hiddenInput.value = val;
-            hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+        if (hiddenProfile) {
+            hiddenProfile.value = profile.key;
+        }
+        if (hiddenInd) {
+            hiddenInd.value = profile.industry_id ? String(profile.industry_id) : '';
+        }
+        if (hiddenType) {
+            hiddenType.value = profile.company_type;
+            hiddenType.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
         // Update trigger presentation
         if (titleEl) {
-            titleEl.textContent = meta.title;
+            titleEl.textContent = profile.full_title || profile.title;
             titleEl.classList.remove('is-placeholder');
         }
         if (subEl) {
-            subEl.textContent = meta.sub;
+            subEl.textContent = profile.desc;
             subEl.style.display = 'block';
         }
         if (iconBox) {
-            iconBox.className = 'jw-combobox-icon-box ' + meta.iconClass;
-            iconBox.innerHTML = meta.svg;
+            iconBox.className = 'jw-combobox-icon-box ' + profile.icon_class;
+            iconBox.innerHTML = profile.svg;
         }
         if (badgesBox) {
             badgesBox.innerHTML = '';
-            meta.tags.forEach(function(tag) {
+            (profile.badges || []).forEach(function(tag) {
                 var span = document.createElement('span');
                 span.className = 'jw-cap-tag ' + tag.cls;
                 span.textContent = tag.text;
                 badgesBox.appendChild(span);
             });
         }
+        if (hintEl) {
+            hintEl.textContent = profile.hint || 'Select your business model';
+            if (profile.industry_id) {
+                hintEl.classList.add('is-auto-ind');
+                hintEl.title = 'Auto-selected industry: ' + (profile.industry_name || '');
+            } else {
+                hintEl.classList.remove('is-auto-ind');
+                hintEl.removeAttribute('title');
+            }
+        }
 
-        // Highlight selected option in menu and update checkmarks
-        [1, 2, 3].forEach(function(i) {
-            var opt = document.getElementById('jw-opt-' + i);
+        // Highlight active option card across all profiles
+        companyProfileList.forEach(function(item) {
+            var opt = document.getElementById('jw-opt-' + item.key);
             if (opt) {
-                if (i === val) {
+                if (item.key === profile.key) {
                     opt.classList.add('is-selected');
                     opt.setAttribute('aria-selected', 'true');
                 } else {
@@ -2633,7 +2626,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // Backward compatibility alias
+    // Backward compatibility helper supporting numeric company_type or profileKey
+    window.jwSelectComboboxType = function(valOrKey, close) {
+        var key = typeof valOrKey === 'string' && companyProfileMap[valOrKey]
+            ? valOrKey
+            : legacyTypeToKey[parseInt(valOrKey, 10)];
+        if (key) {
+            window.jwSelectComboboxProfile(key, close);
+        }
+    };
     window.jwSelectGridType = window.jwSelectComboboxType;
 
     // Click outside to dismiss combobox menu
@@ -2651,14 +2652,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Auto-select if old value exists
+    // Auto-select on load if old profile key or company_type exists
     (function initComboboxCompanyType() {
+        var hiddenProfile = document.getElementById('jw-signup-company-profile');
         var hiddenVal = document.getElementById('jw-signup-company-type');
-        if (hiddenVal && hiddenVal.value) {
-            var valInt = parseInt(hiddenVal.value, 10);
-            if ([1, 2, 3].indexOf(valInt) !== -1) {
-                jwSelectComboboxType(valInt, false);
-            }
+        if (hiddenProfile && hiddenProfile.value && companyProfileMap[hiddenProfile.value]) {
+            jwSelectComboboxProfile(hiddenProfile.value, false);
+        } else if (hiddenVal && hiddenVal.value) {
+            jwSelectComboboxType(hiddenVal.value, false);
         }
     })();
 

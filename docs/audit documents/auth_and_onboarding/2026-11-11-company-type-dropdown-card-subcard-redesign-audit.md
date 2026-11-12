@@ -1,106 +1,71 @@
-# UI/UX Audit & Enterprise Implementation Specification: Registration Company Type (Pattern A: Card Combobox)
+# UI/UX Audit & Enterprise Implementation Specification: Registration Company Type (v5.0.0 — 5 Enterprise Profiles + Dynamic Auto-Industry)
 
-> **Document Version:** 4.0.0 (Pattern A: Enterprise Card Combobox Authoritative Standard)  
-> **Date:** November 11, 2026  
-> **Module / Scope:** `auth_and_onboarding` / Registration Page (`resources/views/auth/login.blade.php`)  
-> **Selected Pattern:** **Pattern A: Enterprise Card Combobox** (Compact 54px Trigger + Floating Card Popover)  
-> **Ordering:** **1. Product Company** &rarr; **2. IT Services Company** &rarr; **3. Recruitment Company** (Independent Recruiter removed)  
-> **Compliance Standard:** Rule 20 (Mandatory Card + Sub-Card Enterprise Design System), Rule 21 (Audit Documents Storage Standard), 15.6" Screen Fit (`1366×768` & `1920×1080`), Strict CQRS (0% MySQL Reads, Zero Business Logic Regression).  
-> **Target Audience:** Engineering Leads, UI/UX Architects, Frontend Engineers, Product Managers.
+> **Document Version:** 5.0.0 (5 Enterprise Profiles, Service Company Accounts for Training & Education, Dynamic Taxonomy Resolution)  
+> **Date:** November 12, 2026  
+> **Module / Scope:** `auth_and_onboarding` / Registration (`resources/views/auth/login.blade.php`, `SaasFrontController.php`, `IndustryTaxonomyService.php`)  
+> **Selected Pattern:** **Pattern A: Compact Enterprise Card Combobox** (Zero Scrollbar, Viewport Drop-Up Flip, 15.6" & Smaller Screen Fit)  
+> **Compliance Standard:** Rule 20 (Modern Card + Sub-Card Design), Rule 21 (Audit Documents Storage Standard), 15.6" Screen Fit (`1366×768` & `1920×1080`), Strict CQRS (0% MySQL Reads, L1/L2 Cache Lookup).  
 
 ---
 
-## 1. Executive Summary & Design Decision
+## 1. Executive Summary & v5.0.0 Upgrade
 
-Following browser testing of Pattern B (2x2 Grid Cards), it was determined that rendering multi-column cards inside the compact registration form container (`max-width: 520px`) caused horizontal overflow on the right margin and pushed the password input below the fold on standard 15.6" displays.
+Based on stakeholder requirements, the Company Type combobox on the registration page (`resources/views/auth/login.blade.php`) has been expanded from 3 to **5 enterprise profiles** powered dynamically by `IndustryTaxonomyService::getSignupProfileCatalog()`:
 
-Per user instruction, **Pattern A: Card Combobox** has been deployed as the authoritative enterprise design standard for the **Company Type** selection on the registration page (`resources/views/auth/login.blade.php`):
+1. **Product Company *(Direct Employer)*** (`company_type = 3`) — `[ATS Only]`
+2. **IT Services & Consulting** (`company_type = 2` — Service Company) — `[ATS]` `[CRM]`
+3. **Recruitment & Staffing** (`company_type = 1` — Staffing Company) — `[ATS]` `[CRM]`
+4. **Training & Upskilling Academy** (`company_type = 2` — **Service Company Account**) — `[ATS]` `[CRM]`
+   - Offers trained bench candidates directly to hiring companies.
+   - Dynamically auto-selects **`Professional Training & Coaching`** (`ind_id: 111`) from cached `td_industries` manifest.
+5. **Educational Institutions & Campuses** (`company_type = 2` — **Service Company Account**) — `[ATS]` `[CRM]`
+   - Offers graduating students directly to corporate employers via bench listings.
+   - Dynamically auto-selects **`Higher Education`** (`ind_id: 56`, with dynamic fallbacks) from cached `td_industries` manifest.
+
+All redundant capability phrases (e.g., *"Pure ATS, no CRM"*, *"(Full ATS + CRM)"*) were stripped from option descriptions so every card communicates pure business value without repeating the pill badges.
+
+---
+
+## 2. Architecture & Dynamic Industry Flow
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ CLOSED STATE (54px Standard Input Height - 100% Width Containment)                     │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [🚀] Product Company (Direct Employer)                       [ATS ONLY]   [ ▾ Chevron ]│
-│      Hiring exclusively for in-house teams & departments                               │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ OPEN STATE (Floating Card Popover - z-index 1050)                                      │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ BUSINESS MODEL & CAPABILITIES                                    [ 3 ENTERPRISE PROFILES]│
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [🚀] 1. Product Company (Direct Employer)                    [ATS ONLY]       ( ✓ )    │
-│      Direct employers, SaaS, startups & corporate enterprises hiring in-house.         │
-│      ✓ Pure ATS Pipeline: Requisitions, stages & interviews (No CRM bloat).            │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [💻] 2. IT Services & Consulting Company                     [ATS] [CRM]      (   )    │
-│      IT consulting, software services, project delivery & staff augmentation.          │
-│      ✓ Included: Bench talent deployment, client accounts & contractor billing.        │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [👥] 3. Recruitment & Staffing Company                      [ATS] [CRM]      (   )    │
-│      Sourcing, vetting & delivering candidates to external client employers.           │
-│      ✓ Included: Candidate sourcing, resume parsing, pipeline & client accounts.       │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+  User selects profile on Registration (/register or /login)
+         │
+         ▼
+  IndustryTaxonomyService::getSignupProfileCatalog()
+  (Reads L1 Redis/Dragonfly -> L2 JSON manifest; 0% MySQL reads)
+         │
+         ├─► 'training'    ──► company_type = 2 (Service Account) + dynamic industry match ('Professional Training & Coaching')
+         ├─► 'education'   ──► company_type = 2 (Service Account) + dynamic industry match ('Higher Education')
+         ├─► 'recruitment' ──► company_type = 1 (Staffing Account) + dynamic industry match ('Staffing & Recruiting')
+         ├─► 'it_services' ──► company_type = 2 (Service Account) + manual industry selection in onboarding
+         └─► 'product'     ──► company_type = 3 (Product Account) + manual industry selection in onboarding
+         │
+         ▼
+  POST /company-register (SaasFrontController::companyRegister)
+         ├─► Persists companies.company_type & resolved companies.industries
+         ├─► Persists matching self_company=1 clients.industry
+         ├─► Grants full ATS + CRM + Bench permissions for company_type = 2
+         └─► Onboarding Step 2 (JeroIndustryIntelligenceEngine) auto-hydrates the selected industry immediately
 ```
 
 ---
 
-## 2. Why Pattern A Resolves Real-World Production Issues
+## 3. UI/UX & Copy Specification (Zero Repetitive Text)
 
-| Evaluation Metric | Pattern B: 2x2 Grid Cards (Deprecated) | **Pattern A: Card Combobox (Authoritative)** |
-|---|---|---|
-| **Container Fit** | Spilled past right card margin in ~440px form | **100% width containment inside `.jw-field`** |
-| **Vertical Space** | Consumed ~160px permanently | **Consumes only 54px when closed (standard input height)** |
-| **Viewport Ergonomics** | Pushed Password & Submit below the fold | **Entire signup card fits comfortably on 1366×768 / 1080p** |
-| **Visual Hierarchy** | Cluttered dense text alongside radio buttons | **Clean, uncluttered, focused popover card selection** |
-| **Responsiveness** | Required brittle multi-breakpoint column switches | **Naturally responsive from 320px mobile to 4K monitors** |
-
----
-
-## 3. Implemented Taxonomy & Hierarchy (Exact Requested Order)
-
-### 1st: Product Company (Direct Employer)
-- **Database Value:** `3`
-- **Icon:** Emerald Layer Polygon (`#ecfdf5`, border `#a7f3d0`, text `#059669`)
-- **Capability Badge:** `<span class="jw-cap-tag jw-tag-ats-only">ATS Only</span>`
-- **Subtitle:** *"Hiring exclusively for in-house teams & departments"*
-- **Included Capabilities:** *"✓ Pure ATS Pipeline: Requisitions, stages & interviews (No CRM bloat)."*
-- **Entitlement Scope:** In-house ATS enabled. External Client CRM omitted from sidebar.
-
-### 2nd: IT Services & Consulting Company
-- **Database Value:** `2`
-- **Icon:** Blue Monitor (`#eff6ff`, border `#bfdbfe`, text `#2563eb`)
-- **Capability Badges:** `<span class="jw-cap-tag jw-tag-ats">ATS</span> <span class="jw-cap-tag jw-tag-crm">CRM</span>`
-- **Subtitle:** *"Manage client accounts, requisitions & deploy consultants"*
-- **Included Capabilities:** *"✓ Included: Bench talent deployment, client accounts & contractor billing."*
-- **Entitlement Scope:** Full ATS + external Client CRM enabled.
-
-### 3rd: Recruitment & Staffing Company
-- **Database Value:** `1`
-- **Icon:** Purple Users (`#faf5ff`, border `#f3e8ff`, text `#9333ea`)
-- **Capability Badges:** `<span class="jw-cap-tag jw-tag-ats">ATS</span> <span class="jw-cap-tag jw-tag-crm">CRM</span>`
-- **Subtitle:** *"Agency talent placement, candidate sourcing & client billing"*
-- **Included Capabilities:** *"✓ Included: Candidate sourcing, resume parsing, pipeline & client accounts."*
-- **Entitlement Scope:** Full ATS + external Client CRM enabled.
-
-*Note: Option 4 ("Freelancer / Individual Recruiter") has been completely removed.*
+| Order | Profile Title | Account Type (`company_type`) | Badges | Concise Description | Auto-Selected Industry |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **1** | **Product Company** *(Direct Employer)* | `3` | `ATS Only` | In-house hiring · Requisitions, interviews & offers | Manual (Onboarding) |
+| **2** | **IT Services & Consulting** | `2` (Service) | `ATS` `CRM` | Bench talent deployment, client projects & billing | Manual (Onboarding) |
+| **3** | **Recruitment & Staffing** | `1` (Staffing) | `ATS` `CRM` | Agency recruiting · Candidate sourcing, job orders & placements | *Staffing & Recruiting* |
+| **4** | **Training & Upskilling Academy** | `2` (Service) | `ATS` `CRM` | Offer trained bench candidates directly to hiring companies | *Professional Training & Coaching* |
+| **5** | **Educational Institutions & Campuses** | `2` (Service) | `ATS` `CRM` | Offer students directly to companies via bench listings | *Higher Education* |
 
 ---
 
-## 4. Technical Architecture & Invariants
+## 4. Verification Checklist
 
-1. **Hidden Payload Input:**
-   - `<input type="hidden" name="company_type" id="jw-signup-company-type" value="{{ old('company_type', '') }}" required>`
-   - Dispatches native `change` event on update, guaranteeing 100% compatibility with Laravel backend validation (`in:1,2,3,4`) and form serialization.
-2. **Accessible Keyboard & Dismissal Handlers:**
-   - `Enter` / `Space` toggles the combobox menu.
-   - `Escape` dismisses the floating popover.
-   - Document-level outside click listener dismisses the popover when clicking anywhere else on the screen.
-3. **Form Validation & Auto-Scroll:**
-   - On empty form submit, `#jw-combobox-trigger` receives `.is-invalid` (crimson border + shadow), alerts the user via `#jw_signup_alert`, and smoothly scrolls the trigger into view.
-   - Selecting any option immediately clears the invalid state and hides the alert.
-4. **Agency Invitation Lock:**
-   - Direct agency invitation links (`$isAgencyInvite = true`) render an auto-selected, locked, read-only trigger card for `Recruitment & Staffing Company` with badges `[ATS] [CRM]` and the `Auto-Selected` tag.
-5. **Code Freeze Compliance:**
-   - Zero changes made to `product_company/` or `staffing_company/` views (Rule 18).
-   - Zero MySQL reads added (Rule 1 & Rule 2).
+1. **Syntax & Blade Lints (`php -l`):** Verified clean across `IndustryTaxonomyService.php`, `SaasFrontController.php`, and `login.blade.php`.
+2. **Dynamic Manifest Resolution (`tinker`):** Verified `getSignupProfileCatalog()` resolves `131`, `111`, and `56` dynamically from cached taxonomy manifest without runtime SQL queries.
+3. **15.6" & Smaller Viewport Fit:** Compact 5-item menu (~235px–250px height) with zero vertical scrollbar and smart `.jw-dropup` flip keeps all profiles 100% visible without clipping.
+4. **Code Freeze & CQRS Integrity:** Zero modifications to `product_company/` or `staffing_company/` modules (Rule 18). Zero runtime DB reads introduced (Rule 1).

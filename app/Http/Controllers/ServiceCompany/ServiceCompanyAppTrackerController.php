@@ -115,9 +115,38 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->public_bench_counter = $return_data->public_bench_counter;
         $this->recomnded_counter = $return_data->recomnded_counter;
         $this->career_counter = $return_data->career_counter;
+        $this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);
         session()->put('job_id', $id);
 
         return view('service_company.apptracker.index', $this->data);
+    }
+
+    /**
+     * Resolve the CSS organization modifier class for the Total Candidates tile.
+     *
+     * Intent: Distinguishes My Organization (Yellow), Internal Client (Blue), and Direct Client
+     * (Emerald Green) on the Hiring Pipeline bar across AppTracker and ClientAppTracker.
+     * Tenancy: Tenant-scoped via Eloquent Client global scope and cached by company_id + client_id.
+     */
+    public static function resolveJobOrgClass(?object $job, int $companyId): string
+    {
+        $jobCompId = (int) ($job->company_id ?? 0);
+        if ($companyId > 0 && $jobCompId > 0 && $companyId !== $jobCompId) {
+            return 'hp-org-direct';
+        }
+
+        if (isset($job->self_company)) {
+            $selfCompanyVal = (int) $job->self_company;
+        } else {
+            $clientId = (int) ($job->client_id ?? 0);
+            $selfCompanyVal = ($clientId > 0 && $companyId > 0)
+                ? (int) Cache::remember("client:self_company:{$companyId}:{$clientId}", 3600, function () use ($clientId) {
+                    return \App\Models\Client::where('id', $clientId)->value('self_company') ?? 0;
+                })
+                : 0;
+        }
+
+        return $selfCompanyVal === 1 ? 'hp-org-my' : 'hp-org-internal';
     }
 
     /**
@@ -380,6 +409,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         'post_company_name', 'company_name',
         'job_master_status_id', 'child_status_id', 'childStatus', 'css_style', 'name',
         'master_status_name', 'immediate_join',
+        'wm', 'job_mode', 'work_mode', 'linkedin', 'ci_linkedin',
+        'visastatu', 'visa_status', 'visa', 'created_at', 'submitted_by_company_name',
     ];
 
     /**
@@ -792,6 +823,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             // V3 Phase 3.1: HTML and JSON responses are cached under separate keys.
             'format' => $request->input('format', 'html'),
+            'ui_v' => 'card_v5',
         ];
 
         $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
@@ -2818,7 +2850,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         // dd($this->applicationCounter);
 
         $this->job = DB::table('jobs')
-            ->select('jobs.id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.total_positions', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
+            ->select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.total_positions', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'clients.self_company', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
             ->leftJoin('recommendation_relation', function ($join) use ($company_id) {
                 $join->on('recommendation_relation.job_id', '=', 'jobs.id');
                 $join->on('recommendation_relation.to_company_id', '=', DB::raw("'".$company_id."'"));
@@ -2843,6 +2875,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         // Guard against null job record before accessing job properties in view
         abort_if(! $this->job, 404);
+
+        $this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);
 
         $this->dinternal_count = $this->dinternal_count($id, $company_id);
         $return_data = GeneralMethod::custome_count_all($id);
@@ -2890,12 +2924,14 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $cachePayload = [
             'page' => $page,
             'size' => $size,
+            'jobid' => $jobid,
             'q' => $searchQuery,
             'company' => $company_id,
             'mstatus_id' => $mstatus_id,
             'valCheck' => $valCheck,
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
+            'ui_v' => 'card_v5',
         ];
 
         $versionKey = 'allclientapp_version_user_'.$this->user->id;
@@ -3393,6 +3429,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         ];
         // dd($pagination);
         $userPermissions = (array) ($this->userPermissions ?? []);
+        $rowMaps = $this->prepareRowMaps($data, (int) $company_id, 0, 0, (int) $jobid);
+        $cityIds = collect($data)
+            ->filter(fn ($r) => (int) ($r['country'] ?? 0) === 101 && ! empty($r['city_id']))
+            ->pluck('city_id')
+            ->unique()
+            ->values()
+            ->all();
+        $citiesMap = ! empty($cityIds)
+            ? DB::table('city_list')->whereIn('city_id', $cityIds)->pluck('city', 'city_id')->toArray()
+            : [];
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
@@ -3400,7 +3446,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $min_salary_currency = request('min_salary_currency');
         $app_int_outsource = request('app_int_outsource');
         $responseData = [
-            'html' => view('service_company.ajax_pages.clientappdata_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'company_id'))->render(),
+            'html' => view('service_company.ajax_pages.clientappdata_ajax', compact('data', 'userPermissions', 'rowMaps', 'citiesMap', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'company_id'))->render(),
             'total' => $total,
             'allCandidateCounter' => $allCandidateCounter,
             'SourcingCounter' => $SourcingCounter,
@@ -8566,7 +8612,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $company_id = auth()->user()->company_id;
 
         $this->job = DB::table('jobs')
-            ->select('jobs.id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.total_positions', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
+            ->select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.total_positions', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'clients.self_company', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
             ->leftJoin('recommendation_relation', function ($join) use ($company_id) {
                 $join->on('recommendation_relation.job_id', '=', 'jobs.id');
                 $join->on('recommendation_relation.to_company_id', '=', DB::raw("'".$company_id."'"));
@@ -9712,7 +9758,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $company_id = auth()->user()->company_id;
 
         $this->job = DB::table('jobs')
-            ->select('jobs.id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.total_positions', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
+            ->select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.total_positions', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'clients.self_company', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
             ->leftJoin('recommendation_relation', function ($join) use ($company_id) {
                 $join->on('recommendation_relation.job_id', '=', 'jobs.id');
                 $join->on('recommendation_relation.to_company_id', '=', DB::raw("'".$company_id."'"));

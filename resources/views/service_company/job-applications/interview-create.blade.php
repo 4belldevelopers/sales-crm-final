@@ -554,6 +554,8 @@ if (empty($isdCompanyAddress)) {
 
     @php
         $isdFullName = trim(@$application->full_name);
+        $isdStageLocked = !empty($stageInterviewLocked) && !empty($existingStageInterview);
+        $isdIsRescheduleMode = !$isdStageLocked && (!empty(@$reschedule) || !empty(@$interview_id) || !empty(@$interviewSchedule->id));
 
         // Candidate-proposed interview slots, captured during the candidate's own
         // application submission (job_applications.interviewDateOne..Six /
@@ -572,7 +574,63 @@ if (empty($isdCompanyAddress)) {
         }
     @endphp
 
-    <div id="div_interview_schedule_first" class="isd-wrap">
+    @if($isdStageLocked)
+        @php
+            $isdExistingDateFmt = !empty($existingStageInterview->schedule_date)
+                ? \Carbon\Carbon::parse($existingStageInterview->schedule_date)->format('D, d M Y')
+                : '–';
+            $isdExistingTimeFmt = !empty($existingStageInterview->schedule_to_time)
+                ? trim($existingStageInterview->schedule_to_time . ' ' . ($existingStageInterview->timezone_abbreviation ?? ''))
+                : (!empty($existingStageInterview->schedule_date) ? \Carbon\Carbon::parse($existingStageInterview->schedule_date)->format('h:i A') : '–');
+            $isdExistingModeLabel = match((int) ($existingStageInterview->interview_mode ?? 0)) {
+                1 => 'Telephonic Interview',
+                2 => 'Video Interview',
+                3 => 'In-Person / F2F',
+                default => 'Scheduled Interview',
+            };
+            $isdStageBadgeLabel = trim((string) ($application->master_status_name ?? 'Current Stage'));
+        @endphp
+        <div id="isdStageScheduledNotice" class="isd-wrap" style="padding:22px;">
+            <div class="isd-card" style="max-width:680px;margin:0 auto;padding:24px;border:1px solid #bfdbfe;background:linear-gradient(135deg,#ffffff 0%,#f8fafc 100%);border-radius:12px;">
+                <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
+                    <span style="width:42px;height:42px;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">
+                        <i class="ti ti-calendar-check"></i>
+                    </span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+                            <span style="font-size:15px;font-weight:700;color:#0f172a;">Interview Already Scheduled for This Stage</span>
+                            <span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:11px;font-weight:600;">{{ $isdStageBadgeLabel }}</span>
+                        </div>
+                        <p style="margin:0;font-size:12.5px;color:#475569;line-height:1.5;">
+                            Only one active interview can be scheduled per pipeline stage. To change the date, time, mode, or panel, reschedule the existing interview below.
+                        </p>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;margin-bottom:18px;">
+                    <div>
+                        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#64748b;">Scheduled Date</div>
+                        <div style="font-size:12.5px;font-weight:600;color:#0f172a;margin-top:2px;">{{ $isdExistingDateFmt }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#64748b;">Time &amp; Zone</div>
+                        <div style="font-size:12.5px;font-weight:600;color:#0f172a;margin-top:2px;">{{ $isdExistingTimeFmt }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#64748b;">Interview Mode</div>
+                        <div style="font-size:12.5px;font-weight:600;color:#0f172a;margin-top:2px;">{{ $isdExistingModeLabel }}</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;">
+                    <button type="button" id="isdSwitchToRescheduleBtn" class="btn btn-sm btn-primary" data-interview-id="{{ (int) $existingStageInterview->id }}" style="display:inline-flex;align-items:center;gap:6px;font-weight:600;padding:8px 16px;border-radius:8px;">
+                        <i class="ti ti-calendar-repeat" style="font-size:15px;"></i>
+                        <span>Reschedule Existing Interview</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <div id="div_interview_schedule_first" class="isd-wrap" style="{{ $isdStageLocked ? 'display:none;' : '' }}">
         <div class="isd-body">
             <div class="isd-main">
 
@@ -1566,6 +1624,21 @@ if (empty($isdCompanyAddress)) {
             $('#div_interview_schedule_second').hide();
             window.isdShellSetStep('main');
         });
+        if (typeof window.isdShellSetMode === 'function') {
+            window.isdShellSetMode('{{ $isdStageLocked ? "locked" : ($isdIsRescheduleMode ? "reschedule" : "schedule") }}');
+        }
+        $('body').off('click.isdSwitchReschedule', '#isdSwitchToRescheduleBtn').on('click.isdSwitchReschedule', '#isdSwitchToRescheduleBtn', function() {
+            var existingId = $(this).attr('data-interview-id') || $('#interview_id').val();
+            if (existingId) {
+                $('#interview_id').val(existingId);
+            }
+            $('#is_reschedule').val('1');
+            $('#isdStageScheduledNotice').hide();
+            $('#div_interview_schedule_first').show();
+            if (typeof window.isdShellSetMode === 'function') {
+                window.isdShellSetMode('reschedule');
+            }
+        });
     });
 
     // Called directly by this file's own Save button and, via a global
@@ -1666,7 +1739,16 @@ if (empty($isdCompanyAddress)) {
                 });
             }
             if (response.status == 'error') {
-                Swal.fire("Error", response.message || "Failed to schedule interview", "error");
+                if (response.code === 'stage_interview_exists' && response.interview_id) {
+                    $('#interview_id').val(response.interview_id);
+                    $('#is_reschedule').val('1');
+                    if (typeof window.isdShellSetMode === 'function') {
+                        window.isdShellSetMode('reschedule');
+                    }
+                    Swal.fire("Already Scheduled", response.message || "An interview is already scheduled for this pipeline stage. Switched to Reschedule mode.", "warning");
+                } else {
+                    Swal.fire("Error", response.message || "Failed to schedule interview", "error");
+                }
             }
         },
         error: function(xhr) {

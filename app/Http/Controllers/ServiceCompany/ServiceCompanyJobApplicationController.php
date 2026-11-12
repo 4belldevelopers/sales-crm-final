@@ -6182,15 +6182,53 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->orderBy('id', 'ASC')
             ->get();
 
-        $this->schedule = DB::table('interview_schedules')->select('interview_schedules.id', 'interview_schedules.company_id', 'interview_schedules.job_application_id', 'interview_schedules.schedule_date', 'interview_schedules.status', 'interview_schedules.user_accept_status', 'interview_schedules.created_at', 'interview_schedules.updated_at', 'interview_schedules.available_status', 'interview_schedules.reschedule', 'interview_schedules.feedback')
+        $this->schedule = DB::table('interview_schedules')->select(
+            'interview_schedules.id',
+            'interview_schedules.company_id',
+            'interview_schedules.job_application_id',
+            'interview_schedules.interview_job_id',
+            'interview_schedules.interview_job_wise_con_id',
+            'interview_schedules.schedule_date',
+            'interview_schedules.schedule_to_time',
+            'interview_schedules.timezone_abbreviation',
+            'interview_schedules.interview_mode',
+            'interview_schedules.stage',
+            'interview_schedules.status',
+            'interview_schedules.user_accept_status',
+            'interview_schedules.created_at',
+            'interview_schedules.updated_at',
+            'interview_schedules.available_status',
+            'interview_schedules.reschedule',
+            'interview_schedules.feedback'
+        )
             ->join('job_applications', 'job_applications.id', 'interview_schedules.job_application_id')
             ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            // ->where('interview_schedules.company_id', user()->company_id)
-            // ->join('users', 'users.id', '=', 'applicant_notes.user_id')
             ->where('add_job_wise_condidates.id', $id)
             ->where('interview_schedules.job_application_id', $this->application->id)
-            ->orderBy('id', 'DESC')
+            ->orderBy('interview_schedules.id', 'DESC')
             ->get();
+
+        $currentStageId = (int) ($this->application->master_status_id ?? 0);
+        $currentWiseId = (int) ($this->application->wiseId ?? $id);
+        $currentJobId = (int) ($jobId ?? ($this->application->jobId ?? 0));
+        $this->stageInterview = $this->schedule->first(function ($row) use ($currentStageId, $currentWiseId, $currentJobId) {
+            if ($currentStageId <= 0 || (int) ($row->stage ?? 0) !== $currentStageId) {
+                return false;
+            }
+            if (strtolower((string) ($row->status ?? '')) === 'canceled') {
+                return false;
+            }
+            $rowWiseId = (int) ($row->interview_job_wise_con_id ?? 0);
+            $rowJobId = (int) ($row->interview_job_id ?? 0);
+            if ($rowWiseId > 0 && $currentWiseId > 0 && $rowWiseId !== $currentWiseId) {
+                return false;
+            }
+            if ($rowJobId > 0 && $currentJobId > 0 && $rowJobId !== $currentJobId) {
+                return false;
+            }
+
+            return true;
+        });
 
         // dd($this->schedule);
 
@@ -9279,18 +9317,46 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $interview_id = (int) ($request->interview_id ?? $request->relint ?? 0);
         $isRescheduleParam = ! empty($request->reschedule) || ! empty($_REQUEST['reschedule']);
+
+        // Detect whether an active (non-canceled) interview is already scheduled at the candidate's current pipeline stage
+        $currentStageId = (int) ($this->application->master_status_id ?? 0);
+        $existingStageInterview = null;
+        if (! empty($this->application->id) && $currentStageId > 0) {
+            $stageIntQuery = DB::table('interview_schedules')
+                ->where('job_application_id', $this->application->id)
+                ->where('stage', (string) $currentStageId)
+                ->where(function ($q) {
+                    $q->whereNull('status')->orWhere('status', '!=', 'canceled');
+                });
+            if ($targetWiseId > 0 || $targetJobId > 0) {
+                $stageIntQuery->where(function ($q) use ($targetWiseId, $targetJobId) {
+                    if ($targetWiseId > 0) {
+                        $q->where('interview_job_wise_con_id', $targetWiseId);
+                    }
+                    if ($targetJobId > 0) {
+                        $q->orWhere('interview_job_id', $targetJobId);
+                    }
+                });
+            }
+            $existingStageInterview = $stageIntQuery->orderBy('id', 'desc')->first();
+        }
+        $this->existingStageInterview = $existingStageInterview;
+        $this->stageInterviewLocked = ($existingStageInterview !== null && $interview_id <= 0 && ! $isRescheduleParam);
+
         if (! $interview_id && $isRescheduleParam && ! empty($this->application->id)) {
-            $interview_id = (int) DB::table('interview_schedules')
+            $interview_id = $existingStageInterview ? (int) $existingStageInterview->id : (int) DB::table('interview_schedules')
                 ->where('job_application_id', $this->application->id)
                 ->where('company_id', auth()->user()->company_id)
                 ->orderBy('id', 'desc')
                 ->value('id');
         }
 
-        if ($interview_id > 0) {
+        // Pre-populate form fields from existing stage interview even when locked so switching to Reschedule works immediately without extra round-trips
+        $lookupInterviewId = $interview_id > 0 ? $interview_id : ($existingStageInterview ? (int) $existingStageInterview->id : 0);
+        if ($lookupInterviewId > 0) {
             $interviewSchedule = InterviewSchedule::leftJoin('updatetimeline', 'updatetimeline.interview_schedules_id', 'interview_schedules.id')
                 ->select('interview_schedules.*', 'updatetimeline.interview_mention_link')
-                ->where('interview_schedules.id', $interview_id)
+                ->where('interview_schedules.id', $lookupInterviewId)
                 ->first();
             if ($interviewSchedule) {
                 $this->scheduledate = $interviewSchedule->schedule_date;
@@ -9305,7 +9371,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $this->savesend = false;
             }
         }
-        $this->interview_id = $this->interview_id ?? $interview_id;
+        $this->interview_id = $this->interview_id ?? $lookupInterviewId;
         $this->reschedule = ($isRescheduleParam || ! empty($this->interview_id)) ? 1 : 0;
 
         $this->timezone = DB::table('master_timezone')->select('*')->orderByDesc('master_timezone.priority')->get();
@@ -10266,6 +10332,36 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
         $isUpdating = ($existingSchedule !== null);
+        $effectiveStageId = (int) ($AddJobWiseCondidate->master_status_id ?: $master_status_id);
+        $targetJobId = (int) ($AddJobWiseCondidate->job_id ?: ($request->jobId ?: ($request->job_id ?? 0)));
+
+        // Stage duplicate guard: prevent scheduling a second active interview for the same pipeline stage
+        if (! $isUpdating && $effectiveStageId > 0) {
+            $existingStageSchedule = InterviewSchedule::where('company_id', $companyId)
+                ->where('stage', (string) $effectiveStageId)
+                ->where(function ($q) {
+                    $q->whereNull('status')->orWhere('status', '!=', 'canceled');
+                })
+                ->where(function ($q) use ($AddJobWiseCondidate, $application_id, $targetJobId) {
+                    $q->where('interview_job_wise_con_id', $AddJobWiseCondidate->id);
+                    if ($application_id > 0 && $targetJobId > 0) {
+                        $q->orWhere(function ($inner) use ($application_id, $targetJobId) {
+                            $inner->where('job_application_id', $application_id)
+                                ->where('interview_job_id', $targetJobId);
+                        });
+                    }
+                })
+                ->orderBy('id', 'desc')
+                ->first();
+            if ($existingStageSchedule) {
+                return Reply::dataOnly([
+                    'status' => 'error',
+                    'code' => 'stage_interview_exists',
+                    'interview_id' => $existingStageSchedule->id,
+                    'message' => 'An interview is already scheduled for this pipeline stage. Please use Reschedule instead.',
+                ]);
+            }
+        }
 
         // Idempotency guard: prevent duplicate fresh records from rapid double submissions within 10 seconds
         if (! $isUpdating) {
@@ -10323,8 +10419,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             if (! empty($interview_mode_lavel)) {
                 $interviewSchedule->interview_mode_lavel = $interview_mode_lavel;
             }
-            if (! empty($master_status_id)) {
-                $interviewSchedule->stage = ($AddJobWiseCondidate->master_status_id) ? $AddJobWiseCondidate->master_status_id : $master_status_id;
+            if ($effectiveStageId > 0) {
+                $interviewSchedule->stage = $effectiveStageId;
             }
             if (! empty($child_status_id)) {
                 $interviewSchedule->substage = $child_status_id;
@@ -10335,7 +10431,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $interviewSchedule->schedule_date = $interviewDate;
             $interviewSchedule->schedule_to_time = mb_substr($interviewTime, 0, 10);
-            $targetJobId = (int) ($AddJobWiseCondidate->job_id ?: ($request->jobId ?: ($request->job_id ?? 0)));
             $interviewSchedule->interview_job_id = $targetJobId;
             $interviewSchedule->interview_job_wise_con_id = $AddJobWiseCondidate->id;
             $interviewSchedule->mailstatus = ! empty($mailstatus) ? (int) $mailstatus : 0;
