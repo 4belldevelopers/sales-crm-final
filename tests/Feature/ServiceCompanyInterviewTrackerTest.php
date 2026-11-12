@@ -171,7 +171,7 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $this->assertStringContainsString('it-scope-internal', $html);
         $this->assertStringContainsString('it-scope-direct', $html);
 
-        // Requisition Subcard: Employment Type (Full-time / Contract) & NO Google Meet inside Requisition
+        // Requisition Subcard: Employment Type (Full-time / Contract) & NO text clipping
         $this->assertStringContainsString('Full-time', $html);
         $this->assertStringContainsString('Contract', $html);
         $firstReqStart = strpos($html, '<!-- Sub-Card 2: REQUISITION -->');
@@ -181,13 +181,16 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $firstReqSection = substr($html, $firstReqStart, $firstSchedStart - $firstReqStart);
         $this->assertStringNotContainsString('Google Meet', $firstReqSection);
 
-        // Schedule Subcard: Google Meet / Interview Mode displayed instead of Completed status
+        // Schedule Subcard: Interview Mode badge preserved, NO "Google Meet" text anywhere on card
         $firstPanelStart = strpos($html, '<!-- Sub-Card 4: INTERVIEW PANEL -->');
         $this->assertNotFalse($firstPanelStart);
         $firstSchedSection = substr($html, $firstSchedStart, $firstPanelStart - $firstSchedStart);
-        $this->assertStringContainsString('Google Meet', $firstSchedSection);
+        $this->assertStringNotContainsString('Google Meet', $firstSchedSection);
+        $this->assertStringContainsString('it-mode-video', $firstSchedSection);
+        $this->assertStringContainsString('Video', $firstSchedSection);
         $this->assertStringNotContainsString('>Completed<', $firstSchedSection);
         $this->assertStringNotContainsString('it-time-tag', $html);
+        $this->assertStringNotContainsString('it-platform-pill', $html);
 
         // No raw table tags
         $this->assertStringNotContainsString('<tr', $html);
@@ -284,7 +287,7 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
 
         $this->assertStringContainsString('My Organization', $myOrgHtml);
         $this->assertStringContainsString('it-scope-myorg', $myOrgHtml);
-        $this->assertStringContainsString('Phone Call', $myOrgHtml);
+        $this->assertStringContainsString('Telecon', $myOrgHtml);
 
         $shellCss = file_get_contents(resource_path('views/service_company/interview-schedule/table.blade.php'));
         $this->assertNotFalse($shellCss);
@@ -309,12 +312,32 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $this->assertStringContainsString('*:not(i):not(.fa):not(.fas)', $content);
         $this->assertStringNotContainsString('href="assets/plugins/global/plugins.bundle.css"', $content);
 
-        // Client Tracker KPI design parity (.it-stat-grid / .it-stat-card / .it-stat-top / .it-stat-sub)
+        // Client Tracker KPI design parity — 7 total interactive metric cards
         $this->assertStringContainsString('class="it-stat-grid"', $content);
         $this->assertStringContainsString('class="it-stat-card it-stat-filter"', $content);
         $this->assertStringContainsString('class="it-stat-icon blue"', $content);
         $this->assertStringContainsString('class="it-stat-num"', $content);
         $this->assertStringContainsString('class="it-stat-sub', $content);
+
+        // All 7 KPI cards present with data-kpi-filter
+        $this->assertStringContainsString('data-kpi-filter="this_month"', $content);
+        $this->assertStringContainsString('data-kpi-filter="today"', $content);
+        $this->assertStringContainsString('data-kpi-filter="upcoming"', $content);
+        $this->assertStringContainsString('data-kpi-filter="pending_feedback"', $content);
+        $this->assertStringContainsString('data-kpi-filter="direct_client"', $content);
+        $this->assertStringContainsString('data-kpi-filter="internal_client"', $content);
+        $this->assertStringContainsString('data-kpi-filter="my_organization"', $content);
+        $this->assertStringContainsString('Direct Client Interviews', $content);
+        $this->assertStringContainsString('Internal Client Interviews', $content);
+        $this->assertStringContainsString('My Organization Interviews', $content);
+
+        // Subtabs completely removed
+        $this->assertStringNotContainsString('class="it-tabs-card"', $content);
+        $this->assertStringNotContainsString('id="tab-count-all"', $content);
+        $this->assertStringNotContainsString('filterByTab', $content);
+
+        // Search clear X button removed
+        $this->assertStringNotContainsString('id="itSearchClear"', $content);
 
         // Single dedicated white toolbar card holding Search, Mode, Sort & Reset together
         $this->assertStringContainsString('class="it-toolbar-card"', $content);
@@ -326,14 +349,14 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $this->assertStringContainsString('id="itSortDropdownWrapper"', $content);
         $this->assertStringContainsString('id="itResetFiltersBtn"', $content);
 
-        // Verify Search, Mode, Sort & Reset all live inside .it-toolbar-card (before .it-tabs-card)
+        // Verify Search, Mode, Sort & Reset all live inside .it-toolbar-card (before .it-stream-wrapper)
         $toolbarPos = strpos($content, '<div class="it-toolbar-card">');
-        $tabsPos = strpos($content, '<div class="it-tabs-card">');
+        $streamPos = strpos($content, '<div class="it-stream-wrapper">');
         $this->assertNotFalse($toolbarPos);
-        $this->assertNotFalse($tabsPos);
-        $this->assertLessThan($tabsPos, $toolbarPos);
+        $this->assertNotFalse($streamPos);
+        $this->assertLessThan($streamPos, $toolbarPos);
 
-        $toolbarSection = substr($content, $toolbarPos, $tabsPos - $toolbarPos);
+        $toolbarSection = substr($content, $toolbarPos, $streamPos - $toolbarPos);
         $this->assertStringContainsString('id="kt_tagify_2"', $toolbarSection);
         $this->assertStringContainsString('id="itModeFilter"', $toolbarSection);
         $this->assertStringContainsString('id="sortingfilter"', $toolbarSection);

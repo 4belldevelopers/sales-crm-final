@@ -153,64 +153,6 @@
                 $ilLabel = 'Interview Link';
             }
 
-            // Interview Platform / Sub-Mode Badge (replaces Completed/Today status on Schedule sub-card)
-            $mLinkLower = strtolower($mLink);
-            if (str_contains($mLinkLower, 'meet.google.com')) {
-                $platformLabel = 'Google Meet';
-                $platformClass = 'it-plat-gmeet';
-                $platformIcon  = 'fas fa-video';
-            } elseif (str_contains($mLinkLower, 'zoom.us') || str_contains($mLinkLower, 'zoom.com')) {
-                $platformLabel = 'Zoom';
-                $platformClass = 'it-plat-zoom';
-                $platformIcon  = 'fas fa-video';
-            } elseif (str_contains($mLinkLower, 'teams.microsoft.com') || str_contains($mLinkLower, 'teams.live.com')) {
-                $platformLabel = 'MS Teams';
-                $platformClass = 'it-plat-teams';
-                $platformIcon  = 'fas fa-video';
-            } elseif (str_contains($mLinkLower, 'webex.com')) {
-                $platformLabel = 'Webex';
-                $platformClass = 'it-plat-video';
-                $platformIcon  = 'fas fa-video';
-            } elseif (str_contains($mLinkLower, 'skype.com')) {
-                $platformLabel = 'Skype';
-                $platformClass = 'it-plat-video';
-                $platformIcon  = 'fas fa-video';
-            } elseif ($roundLevelClean !== '') {
-                $platformLabel = ucwords($roundLevelClean);
-                $rlLower = strtolower($roundLevelClean);
-                if (str_contains($rlLower, 'meet') || str_contains($rlLower, 'google')) {
-                    $platformClass = 'it-plat-gmeet';
-                    $platformIcon  = 'fas fa-video';
-                } elseif (str_contains($rlLower, 'zoom')) {
-                    $platformClass = 'it-plat-zoom';
-                    $platformIcon  = 'fas fa-video';
-                } elseif (str_contains($rlLower, 'team')) {
-                    $platformClass = 'it-plat-teams';
-                    $platformIcon  = 'fas fa-video';
-                } elseif ($modeId === 1) {
-                    $platformClass = 'it-plat-phone';
-                    $platformIcon  = 'fas fa-phone-alt';
-                } elseif ($modeId === 3) {
-                    $platformClass = 'it-plat-f2f';
-                    $platformIcon  = 'fas fa-map-marker-alt';
-                } else {
-                    $platformClass = 'it-plat-video';
-                    $platformIcon  = 'fas fa-video';
-                }
-            } elseif ($modeId === 1) {
-                $platformLabel = 'Phone Call';
-                $platformClass = 'it-plat-phone';
-                $platformIcon  = 'fas fa-phone-alt';
-            } elseif ($modeId === 3) {
-                $platformLabel = 'In-Person';
-                $platformClass = 'it-plat-f2f';
-                $platformIcon  = 'fas fa-map-marker-alt';
-            } else {
-                $platformLabel = $modeId === 2 ? 'Video Call' : $modeLabel;
-                $platformClass = 'it-plat-video';
-                $platformIcon  = 'fas fa-video';
-            }
-
             // ── 5. Interviewers / Panel ────────────────────────────────────
             $panelists = [];
             if (!empty($row->interviewers)) {
@@ -511,10 +453,6 @@
                             <span class="it-sched-date">
                                 <i class="far fa-calendar-alt"></i>
                                 <span>{{ $dateFormatted }}</span>
-                            </span>
-                            <span class="it-platform-pill {{ $platformClass }}" title="Interview Mode / Platform">
-                                <i class="{{ $platformIcon }}"></i>
-                                <span>{{ $platformLabel }}</span>
                             </span>
                         </div>
                         <div class="it-sched-time-row">

@@ -73,11 +73,12 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $valCheck_date = $request->input('custom_hiringtype') ?? request('custom_hiringtype');
         $chkAdminRole = $this->user->hasRole('admin');
 
-        $searchTerm = trim($request->input('custom_search') ?? $request->input('search') ?? $request->input('q') ?? request('custom_search') ?? '');
+        $searchTerm = trim((string) ($request->input('custom_search') ?: ($request->input('search') ?: ($request->input('q') ?: request('custom_search', '')))));
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
-        $tab = $request->input('tab', 'all');
+        $kpiFilter = (string) ($request->input('kpi_filter') ?: $request->input('tab', 'all'));
+        $tab = $kpiFilter;
 
         $stage_filter = $request->input('stage_filter', 'All');
         $status_filter = $request->input('status_filter', 'All');
@@ -90,7 +91,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $sort = [];
 
         $cachePayload = [
-            'ui_v' => 'card_v3',
+            'ui_v' => 'card_v4',
             'page' => $page,
             'size' => $size,
             'company' => $company_id,
@@ -98,6 +99,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
             'sort' => $valCheck_date,
             'tab' => $tab,
+            'kpi_filter' => $kpiFilter,
             'stage_filter' => $stage_filter,
             'status_filter' => $status_filter,
             'owner_filter' => $owner_filter,
@@ -136,95 +138,131 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 'from' => 0,
                 'to' => 0,
                 'pagination' => view('service_company.ajax_pages.pagination', ['pagination' => ['total' => 0, 'current_page' => 1, 'per_page' => $size, 'last_page' => 1, 'listType' => 'allcandidate']])->render(),
-                'stats' => ['interview_month' => 0, 'today' => 0, 'upcoming' => 0, 'feedback_pending' => 0],
-                'tab_counts' => ['all' => 0, 'this_month' => 0, 'today' => 0, 'upcoming' => 0, 'pending_feedback' => 0, 'selected' => 0, 'rejected' => 0, 'rescheduled' => 0],
+                'stats' => [
+                    'total' => 0,
+                    'interview_month' => 0,
+                    'today' => 0,
+                    'upcoming' => 0,
+                    'feedback_pending' => 0,
+                    'direct_client' => 0,
+                    'internal_client' => 0,
+                    'my_organization' => 0,
+                ],
             ];
 
             return response()->json($responseData);
         }
 
-        $valCheck = $request->input('custom_hiringtype') ?? request('custom_hiringtype');
+        $valCheck = (string) ($request->input('custom_hiringtype') ?? request('custom_hiringtype', ''));
         switch ($valCheck) {
-            case 1:
-                $sort[] = ['schedule_date' => ['order' => 'asc']];
+            case '1':
+                $sort = [
+                    ['schedule_date' => ['order' => 'asc']],
+                    ['id' => ['order' => 'desc']],
+                ];
+                $filter[] = [
+                    'range' => [
+                        'schedule_date' => [
+                            'gte' => Carbon::now()->startOfDay()->toIso8601String(),
+                            'lte' => Carbon::now()->endOfDay()->toIso8601String(),
+                            'format' => 'strict_date_optional_time',
+                        ],
+                    ],
+                ];
                 break;
-            case 2:
-                $sort[] = ['created_at' => ['order' => 'asc']];
+            case '2':
+                $sort = [
+                    ['created_at' => ['order' => 'asc']],
+                    ['id' => ['order' => 'asc']],
+                ];
                 break;
-            case 3:
-                $sort[] = ['schedule_date' => ['order' => 'desc']];
+            case '3':
+                $sort = [
+                    ['schedule_date' => ['order' => 'desc']],
+                    ['id' => ['order' => 'desc']],
+                ];
                 break;
-            case 4:
-                $sort[] = ['schedule_date' => ['order' => 'asc']];
+            case '4':
+                $sort = [
+                    ['schedule_date' => ['order' => 'asc']],
+                    ['id' => ['order' => 'asc']],
+                ];
+                break;
+            case 'Feedback Pending':
+                $sort = [
+                    ['schedule_date' => ['order' => 'desc']],
+                    [
+                        '_script' => [
+                            'type' => 'number',
+                            'script' => ['source' => "doc['feedback'].size() == 0 ? 0 : 1", 'lang' => 'painless'],
+                            'order' => 'asc',
+                        ],
+                    ],
+                    ['id' => ['order' => 'desc']],
+                ];
+                $filter[] = [
+                    'range' => [
+                        'schedule_date' => [
+                            'lte' => now()->subHour()->toIso8601String(),
+                            'format' => 'strict_date_optional_time',
+                        ],
+                    ],
+                ];
+                $filter[] = [
+                    'bool' => [
+                        'should' => [
+                            ['bool' => ['must_not' => ['exists' => ['field' => 'available_status']]]],
+                            ['term' => ['available_status' => 0]],
+                            ['term' => ['feedback' => 5]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+                break;
+            case 'Interview Pending':
+                $sort = [
+                    ['schedule_date' => ['order' => 'asc']],
+                    [
+                        '_script' => [
+                            'type' => 'number',
+                            'script' => ['source' => "doc['feedback'].size() == 0 ? 0 : 1", 'lang' => 'painless'],
+                            'order' => 'asc',
+                        ],
+                    ],
+                    ['id' => ['order' => 'asc']],
+                ];
+                $filter[] = [
+                    'range' => [
+                        'schedule_date' => [
+                            'gte' => now()->subHour()->toIso8601String(),
+                            'format' => 'strict_date_optional_time',
+                        ],
+                    ],
+                ];
+                $filter[] = [
+                    'bool' => [
+                        'should' => [
+                            ['bool' => ['must_not' => ['exists' => ['field' => 'feedback']]]],
+                            ['term' => ['feedback' => 0]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+                $filter[] = ['bool' => ['must_not' => ['term' => ['available_status' => 2]]]];
                 break;
             default:
-                $sort[] = ['schedule_date' => ['order' => 'desc']];
-                $sort[] = ['id' => ['order' => 'desc']];
+                $sort = [
+                    ['schedule_date' => ['order' => 'desc']],
+                    ['id' => ['order' => 'desc']],
+                ];
+                break;
         }
 
-        if ($valCheck == 'Feedback Pending') {
-            $sort = [
-                ['schedule_date' => ['order' => 'desc']],
-                [
-                    '_script' => [
-                        'type' => 'number',
-                        'script' => ['source' => "doc['feedback'].size() == 0 ? 0 : 1", 'lang' => 'painless'],
-                        'order' => 'asc',
-                    ],
-                ],
-            ];
-            $filter[] = [
-                'range' => [
-                    'schedule_date' => [
-                        'lte' => now()->subHour()->toIso8601String(),
-                        'format' => 'strict_date_optional_time',
-                    ],
-                ],
-            ];
-            $filter[] = [
-                'bool' => [
-                    'should' => [
-                        ['bool' => ['must_not' => ['exists' => ['field' => 'available_status']]]],
-                        ['term' => ['available_status' => 0]],
-                        ['term' => ['feedback' => 5]],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-        }
+        // Standardized Tenant Org Classification Filters
+        $myOrgClientIds = $this->resolveMyOrgClientIds((int) $company_id);
+        $orgFilters = $this->buildOrgClassificationFilters((int) $company_id, $myOrgClientIds);
 
-        if ($valCheck == 'Interview Pending') {
-            $sort = [
-                ['schedule_date' => ['order' => 'asc']],
-                [
-                    '_script' => [
-                        'type' => 'number',
-                        'script' => ['source' => "doc['feedback'].size() == 0 ? 0 : 1", 'lang' => 'painless'],
-                        'order' => 'asc',
-                    ],
-                ],
-            ];
-            $filter[] = [
-                'range' => [
-                    'schedule_date' => [
-                        'gte' => now()->subHour()->toIso8601String(),
-                        'format' => 'strict_date_optional_time',
-                    ],
-                ],
-            ];
-            $filter[] = [
-                'bool' => [
-                    'should' => [
-                        ['bool' => ['must_not' => ['exists' => ['field' => 'feedback']]]],
-                        ['term' => ['feedback' => 0]],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-            $filter[] = ['bool' => ['must_not' => ['term' => ['available_status' => 2]]]];
-        }
-
-        // Tab Filters
+        // KPI Metric Card Filters
         if ($tab == 'this_month') {
             $filter[] = [
                 'range' => [
@@ -273,60 +311,56 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     'minimum_should_match' => 1,
                 ],
             ];
-        } elseif ($tab == 'selected') {
+        } elseif ($tab == 'direct_client') {
+            $filter[] = $orgFilters['direct_client'];
+        } elseif ($tab == 'my_organization') {
+            $filter[] = $orgFilters['my_organization'];
+        } elseif ($tab == 'internal_client') {
+            $filter[] = $orgFilters['internal_client'];
+        }
+
+        // Interview Mode Dropdown Filter (supports both int and string mapping)
+        if ($mode_filter !== 'All' && $mode_filter !== '' && ! empty($mode_filter)) {
             $filter[] = [
                 'bool' => [
                     'should' => [
-                        ['term' => ['feedback' => 1]],
-                        ['term' => ['interview_result' => 'selected']],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-        } elseif ($tab == 'rejected') {
-            $filter[] = [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['feedback' => 3]],
-                        ['term' => ['interview_result' => 'rejected']],
-                        ['term' => ['status' => 'rejected']],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-        } elseif ($tab == 'rescheduled') {
-            $filter[] = [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['available_status' => 3]],
-                        ['term' => ['interview_result' => 'rescheduled']],
+                        ['term' => ['interview_mode' => (int) $mode_filter]],
+                        ['term' => ['interview_mode' => (string) $mode_filter]],
                     ],
                     'minimum_should_match' => 1,
                 ],
             ];
         }
 
-        // Dropdown Filters
-        if ($mode_filter !== 'All' && ! empty($mode_filter)) {
-            $filter[] = ['term' => ['interview_mode' => (int) $mode_filter]];
-        }
-
-        // Search
+        // Dynamic Multi-field Search
         if (! empty($searchTerm)) {
+            $numTerm = ltrim($searchTerm, '#');
+            $searchShould = [
+                ['term' => ['phone' => $searchTerm]],
+                ['term' => ['email' => $searchTerm]],
+                ['match_phrase_prefix' => ['job_title' => $searchTerm]],
+                ['match_phrase_prefix' => ['client_name' => $searchTerm]],
+                ['match_phrase_prefix' => ['full_name' => $searchTerm]],
+                ['match_phrase_prefix' => ['company_name' => $searchTerm]],
+                ['match_phrase_prefix' => ['uc_company_name' => $searchTerm]],
+                ['match_phrase_prefix' => ['interviewers' => $searchTerm]],
+                ['match_phrase_prefix' => ['current_designation' => $searchTerm]],
+                ['match_phrase_prefix' => ['current_company' => $searchTerm]],
+                ['match_phrase_prefix' => ['posted_by' => $searchTerm]],
+                ['match_phrase_prefix' => ['master_status_name' => $searchTerm]],
+                ['wildcard' => ['city_name' => '*'.strtolower($searchTerm).'*']],
+                ['wildcard' => ['country_name' => '*'.strtolower($searchTerm).'*']],
+                ['wildcard' => ['state_name' => '*'.strtolower($searchTerm).'*']],
+                ['wildcard' => ['posted_by' => '*'.strtolower($searchTerm).'*']],
+            ];
+            if (is_numeric($numTerm)) {
+                $searchShould[] = ['term' => ['job_id' => (int) $numTerm]];
+                $searchShould[] = ['term' => ['jobId' => (int) $numTerm]];
+                $searchShould[] = ['term' => ['id' => (int) $numTerm]];
+            }
             $must[] = [
                 'bool' => [
-                    'should' => [
-                        ['term' => ['phone' => $searchTerm]],
-                        ['term' => ['email' => $searchTerm]],
-                        ['match_phrase_prefix' => ['job_title' => $searchTerm]],
-                        ['match_phrase_prefix' => ['client_name' => $searchTerm]],
-                        ['match_phrase_prefix' => ['full_name' => $searchTerm]],
-                        ['wildcard' => ['city_name' => strtolower($searchTerm).'*']],
-                        ['wildcard' => ['country_name' => strtolower($searchTerm).'*']],
-                        ['wildcard' => ['state_name' => strtolower($searchTerm).'*']],
-                        ['wildcard' => ['posted_by' => strtolower($searchTerm).'*']],
-                        ['match_phrase_prefix' => ['company_name' => $searchTerm]],
-                    ],
+                    'should' => $searchShould,
                     'minimum_should_match' => 1,
                 ],
             ];
@@ -434,16 +468,15 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'from' => $fromEntry,
             'to' => $toEntry,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-            'stats' => $stats,
-            'tab_counts' => $stats['tab_counts'] ?? [
-                'all' => $total,
-                'this_month' => $stats['interview_month'] ?? 0,
+            'stats' => [
+                'total' => $stats['total'] ?? $total,
+                'interview_month' => $stats['interview_month'] ?? 0,
                 'today' => $stats['today'] ?? 0,
                 'upcoming' => $stats['upcoming'] ?? 0,
-                'pending_feedback' => $stats['feedback_pending'] ?? 0,
-                'selected' => 0,
-                'rejected' => 0,
-                'rescheduled' => 0,
+                'feedback_pending' => $stats['feedback_pending'] ?? 0,
+                'direct_client' => $stats['direct_client'] ?? 0,
+                'internal_client' => $stats['internal_client'] ?? 0,
+                'my_organization' => $stats['my_organization'] ?? 0,
             ],
         ];
 
@@ -931,16 +964,15 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'html' => view('service_company.ajax_pages.bench-candidate-interview-schedule-ajax', compact('data', 'userPermissions', 'company_id', 'available_status', 'spokpersonMap'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-            'stats' => $stats,
-            'tab_counts' => $stats['tab_counts'] ?? [
-                'all' => $total,
-                'this_month' => $stats['interview_month'] ?? 0,
+            'stats' => [
+                'total' => $stats['total'] ?? $total,
+                'interview_month' => $stats['interview_month'] ?? 0,
                 'today' => $stats['today'] ?? 0,
                 'upcoming' => $stats['upcoming'] ?? 0,
-                'pending_feedback' => $stats['feedback_pending'] ?? 0,
-                'selected' => 0,
-                'rejected' => 0,
-                'rescheduled' => 0,
+                'feedback_pending' => $stats['feedback_pending'] ?? 0,
+                'direct_client' => $stats['direct_client'] ?? 0,
+                'internal_client' => $stats['internal_client'] ?? 0,
+                'my_organization' => $stats['my_organization'] ?? 0,
             ],
         ];
 
@@ -2385,23 +2417,152 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         }
     }
 
+    /**
+     * Intent: Resolve client IDs belonging to the tenant's own organization (self_company = 1).
+     * Tenancy: Scoped strictly to the authenticated tenant's company_id.
+     * Optimization: Cached in memory / Redis to prevent redundant lookups.
+     *
+     * @return array<int>
+     */
+    private function resolveMyOrgClientIds(int $companyId): array
+    {
+        if ($companyId <= 0) {
+            return [];
+        }
+
+        $cacheKey = "tenant_{$companyId}_my_org_client_ids";
+
+        return cache()->remember($cacheKey, now()->addMinutes(10), function () use ($companyId) {
+            try {
+                if ($this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+                    $res = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_CLIENT_LIST,
+                        'size' => 1000,
+                        '_source' => ['id'],
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['company_id' => $companyId]],
+                                        ['term' => ['self_company' => 1]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $ids = [];
+                    foreach ($res['hits']['hits'] ?? [] as $hit) {
+                        $id = (int) ($hit['_id'] ?? ($hit['_source']['id'] ?? 0));
+                        if ($id > 0) {
+                            $ids[] = $id;
+                        }
+                    }
+                    if (! empty($ids)) {
+                        return array_values(array_unique($ids));
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Graceful fallback to MySQL
+            }
+
+            try {
+                return DB::table('clients')
+                    ->where('company_id', $companyId)
+                    ->where('self_company', 1)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+            } catch (\Throwable $e) {
+                return [];
+            }
+        });
+    }
+
+    /**
+     * Intent: Build mutually exclusive ES filters for Direct Client, My Organization, and Internal Client.
+     * Tenancy: Scoped to company_id.
+     *
+     * @param  array<int>  $myOrgClientIds
+     * @return array<string, array>
+     */
+    private function buildOrgClassificationFilters(int $companyId, array $myOrgClientIds): array
+    {
+        $directFilter = [
+            'bool' => [
+                'should' => [
+                    [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['to_company_id' => $companyId]],
+                                ['range' => ['recommendation_id' => ['gt' => 0]]],
+                            ],
+                        ],
+                    ],
+                    [
+                        'bool' => [
+                            'must' => [
+                                ['range' => ['job_company_id' => ['gt' => 0]]],
+                            ],
+                            'must_not' => [
+                                ['term' => ['job_company_id' => $companyId]],
+                            ],
+                        ],
+                    ],
+                    ['term' => ['is_direct_client' => true]],
+                    ['term' => ['is_direct_client' => 1]],
+                ],
+                'minimum_should_match' => 1,
+            ],
+        ];
+
+        $myOrgShould = [
+            ['term' => ['self_company' => 1]],
+        ];
+        if (! empty($myOrgClientIds)) {
+            $myOrgShould[] = ['terms' => ['client_id' => array_values(array_map('intval', $myOrgClientIds))]];
+        }
+
+        $myOrgFilter = [
+            'bool' => [
+                'must_not' => [$directFilter],
+                'must' => [
+                    [
+                        'bool' => [
+                            'should' => $myOrgShould,
+                            'minimum_should_match' => 1,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $internalFilter = [
+            'bool' => [
+                'must_not' => [
+                    $directFilter,
+                    ['bool' => ['should' => $myOrgShould, 'minimum_should_match' => 1]],
+                ],
+            ],
+        ];
+
+        return [
+            'direct_client' => $directFilter,
+            'my_organization' => $myOrgFilter,
+            'internal_client' => $internalFilter,
+        ];
+    }
+
     private function dashboardStats($company_id, $chkAdminRole, $page)
     {
         $stats = [
+            'total' => 0,
             'interview_month' => 0,
             'today' => 0,
             'upcoming' => 0,
             'feedback_pending' => 0,
-            'tab_counts' => [
-                'all' => 0,
-                'this_month' => 0,
-                'today' => 0,
-                'upcoming' => 0,
-                'pending_feedback' => 0,
-                'selected' => 0,
-                'rejected' => 0,
-                'rescheduled' => 0,
-            ],
+            'direct_client' => 0,
+            'internal_client' => 0,
+            'my_organization' => 0,
         ];
         // Stats are company-wide (not page-specific) so they must be returned on EVERY page,
         // otherwise the hero cards blank out when the user navigates past page 1.
@@ -2431,6 +2592,10 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 }
                 $statsMust[] = ['bool' => ['should' => $statsShould, 'minimum_should_match' => 1]];
             }
+
+            $myOrgClientIds = $this->resolveMyOrgClientIds((int) $company_id);
+            $orgFilters = $this->buildOrgClassificationFilters((int) $company_id, $myOrgClientIds);
+
             $statsParams = [
                 'index' => ELASTIC_INERTVIEW_TRACKER,
                 'body' => [
@@ -2446,9 +2611,9 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                         //   - Interview Result was set to "Feedback Pending" (legacy feedback id 5).
                         // A real attendance (No Show / Rescheduled / Cancelled etc.) is NOT pending.
                         'feedback_pending' => ['filter' => ['bool' => ['must' => [['range' => ['schedule_date' => ['lte' => $nowC->copy()->subHour()->toIso8601String(), 'format' => 'strict_date_optional_time']]], ['bool' => ['should' => [['bool' => ['must_not' => ['exists' => ['field' => 'available_status']]]], ['term' => ['available_status' => 0]], ['term' => ['feedback' => 5]]], 'minimum_should_match' => 1]]]]]],
-                        'selected' => ['filter' => ['bool' => ['should' => [['term' => ['feedback' => 1]], ['term' => ['interview_result' => 'selected']]], 'minimum_should_match' => 1]]],
-                        'rejected' => ['filter' => ['bool' => ['should' => [['term' => ['feedback' => 3]], ['term' => ['interview_result' => 'rejected']], ['term' => ['status' => 'rejected']]], 'minimum_should_match' => 1]]],
-                        'rescheduled' => ['filter' => ['bool' => ['should' => [['term' => ['available_status' => 3]], ['term' => ['interview_result' => 'rescheduled']]], 'minimum_should_match' => 1]]],
+                        'direct_client' => ['filter' => $orgFilters['direct_client']],
+                        'my_organization' => ['filter' => $orgFilters['my_organization']],
+                        'internal_client' => ['filter' => $orgFilters['internal_client']],
                     ],
                 ],
             ];
@@ -2459,25 +2624,19 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             $todayCount = (int) ($agg['today']['doc_count'] ?? 0);
             $upcomingCount = (int) ($agg['upcoming']['doc_count'] ?? 0);
             $pendingCount = (int) ($agg['feedback_pending']['doc_count'] ?? 0);
-            $selectedCount = (int) ($agg['selected']['doc_count'] ?? 0);
-            $rejectedCount = (int) ($agg['rejected']['doc_count'] ?? 0);
-            $rescheduledCount = (int) ($agg['rescheduled']['doc_count'] ?? 0);
+            $directCount = (int) ($agg['direct_client']['doc_count'] ?? 0);
+            $myOrgCount = (int) ($agg['my_organization']['doc_count'] ?? 0);
+            $internalCount = (int) ($agg['internal_client']['doc_count'] ?? 0);
 
             $stats = [
+                'total' => $allCount,
                 'interview_month' => $monthCount,
                 'today' => $todayCount,
                 'upcoming' => $upcomingCount,
                 'feedback_pending' => $pendingCount,
-                'tab_counts' => [
-                    'all' => $allCount,
-                    'this_month' => $monthCount,
-                    'today' => $todayCount,
-                    'upcoming' => $upcomingCount,
-                    'pending_feedback' => $pendingCount,
-                    'selected' => $selectedCount,
-                    'rejected' => $rejectedCount,
-                    'rescheduled' => $rescheduledCount,
-                ],
+                'direct_client' => $directCount,
+                'internal_client' => $internalCount,
+                'my_organization' => $myOrgCount,
             ];
         } catch (\Throwable $e) {
         }

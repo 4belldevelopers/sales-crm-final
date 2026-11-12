@@ -85,24 +85,43 @@ Each card features a `3.5px` semantic left-border accent (`#10b981` Selected, `#
 - Excluded `i`, `.fa`, `.fas`, `.far`, `.fab`, `.fa-solid`, `.fa-regular`, `.fa-brands`, `.ti`, `.bi` from `.it-dashboard *` Poppins `font-family !important`, explicitly loaded Font Awesome 6.5.1 CSS with enforced `"Font Awesome 6 Free"` font rules, and removed the broken relative `assets/plugins/global/plugins.bundle.css` link.
 - IndexedDB cache version bumped to `DB_VERSION = 3` cleanly.
 
+### 7-KPI Metric Strip & Complete Subtab Elimination
+- **Subtabs Completely Removed:** Completely removed `.it-tabs-card`, `.it-tabs-group`, `.it-tab-btn`, and `#tab-count-*` elements, state, and redundant server payload (`tab_counts`). Replaced subtabs with clean KPI metric filtering via `filterByKpi()`, `syncActiveKpiCards()`, and `activeKpiFilter`.
+- **7 Clickable KPI Metric Cards:** Expanded executive metric strip to 7 interactive KPI cards styled with AppTracker emerald, cobalt blue, and amber tokens:
+  1. `Interviews This Month` (`data-kpi-filter="this_month"`)
+  2. `Today's Interviews` (`data-kpi-filter="today"`)
+  3. `Upcoming Interviews` (`data-kpi-filter="upcoming"`)
+  4. `Feedback Pending` (`data-kpi-filter="pending_feedback"`)
+  5. `Direct Client Interviews` (`data-kpi-filter="direct_client"`, Emerald palette)
+  6. `Internal Client Interviews` (`data-kpi-filter="internal_client"`, Cobalt Blue palette)
+  7. `My Organization Interviews` (`data-kpi-filter="my_organization"`, Amber palette)
+  Mutually exclusive ES queries ensure `direct_client + my_organization + internal_client === total`. Responsive layout: `repeat(7, minmax(0, 1fr))` on 1920px, `repeat(4, minmax(0, 1fr))` on <=1520px / 15.6" screens (`1366×768`).
+- **Deep Search, Mode & Sort Audit:**
+  - Multi-match search: normalized search terms (`custom_search` / `search` / `q`), supported `#86` / `86` numeric job IDs via exact term matching on `job_id`, `jobId`, `id`, and expanded `match_phrase_prefix` + wildcards across `job_title`, `client_name`, `company_name`, `uc_company_name`, `full_name`, `interviewers`, `current_designation`, `current_company`, `posted_by`, `master_status_name`, `city_name`, `state_name`, `country_name`, `email`, and `phone`.
+  - Mode filter: supports both integer and string-mapped ES docs (`[(int) $mode_filter, (string) $mode_filter]`).
+  - Sort bug fix: fixed state tracking (`itLastAppliedSort`) so switching away from filter-based sorts (`1`, `Feedback Pending`, `Interview Pending`) back to chronological sorts always queries the server.
+- **Search Bar Clear (X) Removal:** Removed redundant `#itSearchClear` (`✕`) button from HTML/CSS/JS since the dedicated `Reset` button resets all query inputs, mode dropdown, sort dropdown, and active KPI filters.
+- **Requisition Header Anti-Clipping Layout:** Adjusted `.it-card-grid` fractional weights (`1.7fr 1.9fr 1.32fr 1.2fr 1.5fr 1.36fr`) and applied `flex-shrink: 0`, `font-size: 8px`, `padding: 1.5px 5.5px` to `.it-scope-badge`, completely eliminating text clipping of `REQUISITION` and `[INTERNAL CLIENT]` on 1366×768 and 1920×1080 screens.
+- **Google Meet Text Removal:** Completely removed `"Google Meet"` text and the `.it-platform-pill` from cards, while preserving interview mode badges (`Video`, `Telecon`, `F2F`), mode dropdown filtering, and `Interview Link` / `View Address` action pills.
+- **Cache Invalidation:** Bumped cache keys to `ui_v => 'card_v4'` and IndexedDB to `DB_VERSION = 5`.
+
 ---
 
 ## 4. File Changes Matrix
 
 | File | Purpose | Isolation & Safety |
 |---|---|---|
-| `resources/views/service_company/interview-schedule/table.blade.php` | Complete Rule 20 4-tier Card + 6-Subcard layout, Client Tracker KPI & single toolbar card, Font Awesome 6 Free fix, AppTracker `My Organization` / `Internal Client` / `Direct Client` palettes, `Ownership & Recruiter` styles, `patchInterviewRowDelta()` DOM patcher, IndexedDB `v4` upgrade. | Scoped strictly to Service Company Interview Tracker (Rule 17 & Rule 18). |
-| `resources/views/service_company/ajax_pages/interview-tracker-ajax.blade.php` | Replaced legacy `<tr>`/`<td>` rows with `.it-card` primary cards, 6 discrete upper sub-cards (`Candidate` with `current_company`, `Requisition` with `Employment Type` + standardized org badge, `Schedule` with platform/mode badge, `Panelists`, `Ownership & Recruiter`, `Evaluation`), `.it-card-bottom` activity strip, and `.it-empty-card`. | All user strings Blade-escaped (`{{ }}`). Zero business logic alterations. |
-| `app/Http/Controllers/ServiceCompany/InterviewScheduleController.php` | Added `real_company_id` parity & tab aggregations in `dashboardStats()`, `this_month` tab filter & `tab_counts` payload in `data_ajax()`, `ui_v => 'card_v3'` cache key, and batch `jobMetaMap` (`self_company`, `employment_type`) + ES-first `candidateMetaMap` (`current_company`, `submitted_at`) in `prepareViewMaps()`. | Backwards-compatible `$stats` keys preserved. |
-| `app/Helper/GeneralMethod.php` | Updated `interviewTrackerAddEditUpload()` to index `current_company`, `employment_type`, `self_company`, and `submitted_at` directly on `ELASTIC_INERTVIEW_TRACKER`. | Additive fields only. |
-| `docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` | Codified permanent application-wide `My Organization`, `Internal Client`, and `Direct Client` naming + AppTracker color standards and 6-subcard field rules (§6). | Design-system standard. |
-| `tests/Feature/ServiceCompanyInterviewTrackerTest.php` | Automated Blade render, 6-subcard Rule 20 structure, AppTracker org badge colors, `Ownership & Recruiter`, candidate `current_company`, Requisition `Full-time`/`Contract`, Schedule platform pill, XSS escaping, and shell UI/UX invariant tests. | Isolated test suite. |
+| `resources/views/service_company/interview-schedule/table.blade.php` | Complete Rule 20 Card + 6-Subcard layout, 7 interactive KPI cards (`Direct Client`, `Internal Client`, `My Organization` added), complete removal of `.it-tabs-card` and clear X button, Requisition non-clipping width fix, `itLastAppliedSort` fix, `syncActiveKpiCards()`, IndexedDB `v5` upgrade. | Scoped strictly to Service Company Interview Tracker (Rule 17 & Rule 18). |
+| `resources/views/service_company/ajax_pages/interview-tracker-ajax.blade.php` | Replaced legacy table with `.it-card` stream; removed `"Google Meet"` text pill from cards; retained interview mode pill, link/address buttons, and 6-subcard layout (`Candidate` with current company, `Requisition` with employment type and non-clipping org badge, `Schedule`, `Panelists`, `Ownership & Recruiter`, `Evaluation`). | All user strings Blade-escaped (`{{ }}`). Zero business logic alterations. |
+| `app/Http/Controllers/ServiceCompany/InterviewScheduleController.php` | Added `resolveMyOrgClientIds()` and `buildOrgClassificationFilters()`, updated `dashboardStats()` to calculate all 7 KPIs (`direct_client`, `internal_client`, `my_organization`, `this_month`, `today`, `upcoming`, `feedback_pending`), updated `data_ajax()` to support multi-field search + numeric job ID `#id`, mode filter, deterministic sort tie-breakers, and dropped `tab_counts`. | 100% CQRS and ES read compliance. |
+| `docs/audit documents/interview_schedule/2026-11-12-interview-tracker-modern-card-subcard-redesign.md` | Comprehensive architectural documentation and audit log. | Documentation standard (Rule 21). |
+| `tests/Feature/ServiceCompanyInterviewTrackerTest.php` | Automated tests verifying 7 KPIs, zero subtabs, zero clear X icon, zero Google Meet text on cards, Requisition layout, and UI/UX invariant assertions (96 assertions). | Isolated test suite. |
 
 ---
 
 ## 5. 15.6" Screen Fit & Verification Evidence
 
-- **Screen Responsiveness:** `#kt_content_container` enforces `overflow-x: hidden !important`, `.it-card-grid` uses fractional `minmax(0, ...fr)` units across `1920×1080`, `1440px`, `1366×768`, and reflows gracefully to 3/2/1 columns at `<=1200px`, `<=768px`, and `<=520px`.
+- **Screen Responsiveness:** `#kt_content_container` enforces `overflow-x: hidden !important`, `.it-stat-grid` renders 7 columns on 1920px and 4 columns on <=1520px (1366×768), and `.it-card-grid` uses fractional `minmax(0, ...fr)` units preventing horizontal overflow and text clipping.
 - **Syntax & Compilation:** `php -l` passed on `InterviewScheduleController.php` and Blade-compiled PHP output of both `table.blade.php` and `interview-tracker-ajax.blade.php`.
-- **Laravel Pint:** `./vendor/bin/pint --test` passed on modified PHP files.
-- **Automated Tests:** `php artisan test tests/Feature/ServiceCompanyInterviewTrackerTest.php` verified Rule 20 markup, XSS escaping, interactive hooks, and zero raw `<tr>`/`<td>` tags.
+- **Laravel Pint:** `./vendor/bin/pint --test` passed cleanly across modified PHP files.
+- **Automated Tests:** `php artisan test tests/Feature/ServiceCompanyInterviewTrackerTest.php` passed 100% (5 tests, 96 assertions).
