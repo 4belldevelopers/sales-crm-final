@@ -145,56 +145,814 @@
         }
 
         /* ============================================================
-           CV Tracker — Hero KPI stats
-           Data source: Elasticsearch only, riding the existing
-           allcandidates() fetch (no extra request, no MySQL load).
-           Poppins per UI standard, 14px hard cap.
+           CV Tracker — Enterprise Header Card (.cl-header-card)
+           Client Tracker Design System
         ============================================================ */
-        .cvh-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin: 14px 0; font-family: 'Poppins', sans-serif; }
-        .cvh-card { background: #fff; border-radius: 14px; padding: 13px 16px; border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
-        .cvh-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-        .cvh-icon svg { width: 18px; height: 18px; }
-        .cvh-body { flex: 1; min-width: 0; }
-        .cvh-label { font-size: 11px; color: #64748b; font-weight: 500; margin: 0 0 4px; }
-        .cvh-value { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.15; }
-        .cvh-delta { font-size: 11px; margin-top: 4px; font-weight: 500; }
-        .cvh-delta.up   { color: #16a34a; }
-        .cvh-delta.info { color: #64748b; }
-        .cvh-delta.warn { color: #dc2626; }
+        .cl-header, .cl-header-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            font-family: 'Poppins', sans-serif;
+        }
+        .cl-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .cl-header-icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2563eb;
+            flex-shrink: 0;
+            box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06);
+        }
+        .cl-header-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cl-header-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.015em;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .cl-verified-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #16a34a;
+        }
+        .cl-header-subtitle {
+            font-size: 12.5px;
+            font-weight: 400;
+            color: #64748b;
+            margin-top: 2px;
+            line-height: 1.35;
+        }
+        .cl-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
 
-        @media (max-width: 1440px) { .cvh-value { font-size: 16px; } }
-        @media (max-width: 1200px) { .cvh-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 768px)  { .cvh-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
-        @media (max-width: 480px)  { .cvh-grid { grid-template-columns: 1fr; } }
+        /* ============================================================
+           CV Tracker — 9 Interactive Status KPI Cards
+           Client Tracker KPI Design System: All, In Review, Sourcing,
+           Screening, Evaluation, Negotiation, Offer, Joined, Rejected
+        ============================================================ */
+        .cv-kpi-grid {
+            display: grid !important;
+            grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin-bottom: 14px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            font-family: 'Poppins', sans-serif;
+        }
+        .cl-card.cv-kpi-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 11px;
+            padding: 9px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+            min-width: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            user-select: none;
+        }
+        .cl-card.cv-kpi-card:hover {
+            transform: translateY(-1px);
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            text-decoration: none;
+        }
+        .cl-card-top {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 4px;
+            min-width: 0;
+        }
+        .cl-card-icon {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .cl-card-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+        .cl-card-icon.blue   { background: #eff6ff; color: #2563eb; }
+        .cl-card-icon.yellow { background: #fefce8; color: #ca8a04; }
+        .cl-card-icon.gray   { background: #f1f5f9; color: #64748b; }
+        .cl-card-icon.purple { background: #faf5ff; color: #9333ea; }
+        .cl-card-icon.sky    { background: #f0f9ff; color: #0284c7; }
+        .cl-card-icon.pink   { background: #fff1f2; color: #e11d48; }
+        .cl-card-icon.orange { background: #fff7ed; color: #ea580c; }
+        .cl-card-icon.green  { background: #f0fdf4; color: #16a34a; }
+        .cl-card-icon.red    { background: #fef2f2; color: #dc2626; }
 
-        /* Stage tabs — own card, full-width stretch row (each tab takes an equal share
-           of the row, edge to edge) with icon + label on one line and the count below.
-           Colors match the app's own "Pipeline Stages" legend
-           (resources/views/sections/service_company/pipeline.blade.php) exactly, so a
-           given stage reads as the same color everywhere. Inactive tabs stay neutral
-           gray; a tab only takes on its stage color once it's the active/selected tab. */
-        .cvh-tabs-card { margin-bottom: 14px; border-width: 1px; transition: border-color .15s; }
-        .cvh-tabs-card .card-body { padding: 4px 0; }
-        .cvh-tabs { display: flex; align-items: stretch; font-family: 'Poppins', sans-serif; }
-        .cvh-tab { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 11px 6px; border: none; border-right: 1px solid #f1f5f9; background: transparent; color: #64748b; white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
-        .cvh-tab:last-child { border-right: none; }
-        .cvh-tab:hover { background: #f8fafc; }
-        .cvh-tab-top { display: flex; align-items: center; gap: 5px; }
-        .cvh-tab-icon { display: flex; }
-        .cvh-tab-icon svg { width: 14px; height: 14px; }
-        .cvh-tab-label { line-height: 1.1; font-size: 11px; font-weight: 500; }
-        .cvh-tab-count { font-size: 13px; font-weight: 700; line-height: 1.1; color: inherit; }
-        .cvh-tab.active .cvh-tab-label { font-weight: 700; }
-        .cvh-tab.stage-total.active       { color: #2563eb; background: rgba(37,99,235,.10); }
-        .cvh-tab.stage-inreview.active    { color: #bdbd26; background: rgba(189,189,38,.14); }
-        .cvh-tab.stage-sourcing.active    { color: #7e8299; background: rgba(126,130,153,.14); }
-        .cvh-tab.stage-screening.active   { color: #c000ff; background: rgba(192,0,255,.10); }
-        .cvh-tab.stage-evaluation.active  { color: #2896ff; background: rgba(40,150,255,.12); }
-        .cvh-tab.stage-negotiation.active { color: #ff4098; background: rgba(255,64,152,.12); }
-        .cvh-tab.stage-offered.active     { color: #ffab00; background: rgba(255,171,0,.14); }
-        .cvh-tab.stage-joined.active      { color: #06c732; background: rgba(6,199,50,.12); }
-        .cvh-tab.stage-rejected.active    { color: #ff0202; background: rgba(255,2,2,.10); }
-        @media (max-width: 768px) { .cvh-tabs { flex-wrap: wrap; } .cvh-tab { flex: 1 1 33%; border-right: none; border-bottom: 1px solid #f1f5f9; padding: 8px 4px; } .cvh-tab-label { font-size: 10.5px; } }
+        .cl-card-meta {
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+        .cl-card-num {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.15;
+            white-space: nowrap;
+        }
+        .cl-card-lbl {
+            font-size: 10.5px;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+        .cl-card-sub {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 9.5px;
+            font-weight: 500;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        .cl-card-sub svg { flex-shrink: 0; width: 11px; height: 11px; }
+        .cl-card-sub.blue   { color: #2563eb; }
+        .cl-card-sub.yellow { color: #a16207; }
+        .cl-card-sub.gray   { color: #64748b; }
+        .cl-card-sub.purple { color: #9333ea; }
+        .cl-card-sub.sky    { color: #0284c7; }
+        .cl-card-sub.pink   { color: #e11d48; }
+        .cl-card-sub.orange { color: #ea580c; }
+        .cl-card-sub.green  { color: #16a34a; }
+        .cl-card-sub.red    { color: #dc2626; }
+
+        /* KPI Active Selected States */
+        .cv-kpi-card.active[data-tab="all"] {
+            background: #eff6ff !important;
+            border-color: #60a5fa !important;
+            box-shadow: 0 0 0 1.5px #2563eb, 0 4px 12px rgba(37, 99, 235, 0.12) !important;
+        }
+        .cv-kpi-card.active[data-tab="all"] .cl-card-icon { background: #ffffff !important; }
+
+        .cv-kpi-card.active[data-tab="8"] {
+            background: #fefce8 !important;
+            border-color: #facc15 !important;
+            box-shadow: 0 0 0 1.5px #ca8a04, 0 4px 12px rgba(202, 138, 4, 0.12) !important;
+        }
+        .cv-kpi-card.active[data-tab="8"] .cl-card-icon { background: #ffffff !important; }
+
+        .cv-kpi-card.active[data-tab="1"] {
+            background: #f8fafc !important;
+            border-color: #94a3b8 !important;
+            box-shadow: 0 0 0 1.5px #64748b, 0 4px 12px rgba(100, 116, 139, 0.12) !important;
+        }
+        .cv-kpi-card.active[data-tab="1"] .cl-card-icon { background: #ffffff !important; }
+
+        .cv-kpi-card.active[data-tab="2"] {
+            background: #faf5ff !important;
+            border-color: #c084fc !important;
+            box-shadow: 0 0 0 1.5px #9333ea, 0 4px 12px rgba(147, 51, 234, 0.12) !important;
+        }
+        .cv-kpi-card.active[data-tab="2"] .cl-card-icon { background: #ffffff !important; }
+
+        .cv-kpi-card.active[data-tab="3"] {
+            background: #f0f9ff !important;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 0 1.5px #0284c7, 0 4px 12px rgba(2, 132, 199, 0.12) !important;
+        }
+        .cv-kpi-card.active[data-tab="3"] .cl-card-icon { background: #ffffff !important; }
+
+        .cv-kpi-card.active[data-tab="4"] {
+            background: #fff1f2 !important;
+            border-color: #fb7185 !important;
+            box-shadow: 0 0 0 1.5px #e11d48, 0 4px 12px rgba(225, 29, 72, 0.12) !important;
+        }
+        .cv-kpi-card.active[data-tab="4"] .cl-card-icon { background: #ffffff !important; }
+
+        .cv-kpi-card.active[data-tab="5"] {
+            background: #fff7ed !important;
+            border-color: #fb923c !important;
+            box-shadow: 0 0 0 1.5px #ea580c, 0 4px 12px rgba(234, 88, 12, 0.12) !important;
+        }
+        .cv-kpi-card.active[data-tab="5"] .cl-card-icon { background: #ffffff !important; }
+
+        .cv-kpi-card.active[data-tab="6"] {
+            background: #f0fdf4 !important;
+            border-color: #4ade80 !important;
+            box-shadow: 0 0 0 1.5px #16a34a, 0 4px 12px rgba(22, 163, 74, 0.12) !important;
+        }
+        .cv-kpi-card.active[data-tab="6"] .cl-card-icon { background: #ffffff !important; }
+
+        .cv-kpi-card.active[data-tab="7,9"] {
+            background: #fef2f2 !important;
+            border-color: #f87171 !important;
+            box-shadow: 0 0 0 1.5px #dc2626, 0 4px 12px rgba(220, 38, 38, 0.12) !important;
+        }
+        .cv-kpi-card.active[data-tab="7,9"] .cl-card-icon { background: #ffffff !important; }
+
+        @media (max-width: 1400px) {
+            .cv-kpi-grid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; gap: 8px !important; }
+        }
+        @media (max-width: 992px) {
+            .cv-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+        }
+        @media (max-width: 576px) {
+            .cv-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        }
+
+        /* Rule 25 Canonical Organization Filter Pills */
+        .cv-org-pills {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 3px;
+            border-radius: 24px;
+        }
+        .cv-org-pill {
+            border-radius: 20px !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            padding: 5px 12px !important;
+            color: #64748b !important;
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            transition: all 0.15s ease !important;
+            white-space: nowrap !important;
+            line-height: 1.3 !important;
+        }
+        .cv-org-pill:hover {
+            color: #0f172a !important;
+            background: rgba(0, 0, 0, 0.04) !important;
+        }
+        .cv-org-pill.active {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        }
+        .cv-org-pill.type-my-org.active {
+            background: #ecfeff !important;
+            color: #0891b2 !important;
+            border-color: #a5f3fc !important;
+        }
+        .cv-org-pill.type-internal.active {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border-color: #bfdbfe !important;
+        }
+        .cv-org-pill.type-direct.active {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border-color: #a7f3d0 !important;
+        }
+
+        /* Organization badge tokens (matching Rule 25) */
+        .type-my-org { background: #ecfeff !important; color: #0891b2 !important; border-color: #a5f3fc !important; }
+        .type-internal { background: #eff6ff !important; color: #2563eb !important; border-color: #bfdbfe !important; }
+        .type-direct { background: #ecfdf5 !important; color: #059669 !important; border-color: #a7f3d0 !important; }
+        .type-request { background: #f5f3ff !important; color: #7c3aed !important; border-color: #ddd6fe !important; }
+
+        /* ============================================================
+           Candidate Stream & Master Card + Sub-Card Architecture
+           App Tracker Design Pattern (Rule 20 Modern Card + Sub-Card)
+        ============================================================ */
+        .cv-cards-stream {
+            font-family: 'Poppins', sans-serif;
+            width: 100%;
+        }
+        .aptk-cand-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        .aptk-cand-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+        }
+        .aptk-cand-card.is-selected {
+            background-color: #f8fbff !important;
+            border-color: #009ef7 !important;
+            box-shadow: 0 2px 10px rgba(0, 158, 247, 0.12) !important;
+        }
+
+        /* 6 Upper Discrete Sub-Cards Grid */
+        .aptk-cand-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.3fr);
+            gap: 8px;
+            padding: 10px 12px;
+            width: 100%;
+            max-width: 100%;
+            align-items: stretch;
+        }
+        .aptk-cand-subcard {
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 8px;
+            padding: 7px 9px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+            overflow: hidden;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
+        }
+        .aptk-cand-card:hover .aptk-cand-subcard {
+            border-color: #e2e8f0;
+        }
+        .aptk-subcard-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            margin-bottom: 6px;
+            line-height: 1;
+        }
+        .aptk-subcard-label {
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .aptk-chk-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            cursor: pointer;
+            min-width: 0;
+        }
+        .aptk-chk-wrap .form-check-input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .aptk-hdr-badges {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .aptk-pill-bench {
+            font-size: 8.5px;
+            font-weight: 700;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+            text-transform: uppercase;
+        }
+        .aptk-pill-dup {
+            font-size: 8.5px;
+            font-weight: 700;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            text-transform: uppercase;
+        }
+        .aptk-subcard-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        /* Sub-Card 1: Identity */
+        .aptk-identity-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+        }
+        .aptk-avatar-box {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+        }
+        .aptk-avatar-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .aptk-identity-meta {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .aptk-cand-name {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #0f172a;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-decoration: none;
+        }
+        .aptk-cand-name:hover {
+            color: #009ef7;
+        }
+        .aptk-cand-desig {
+            font-size: 11px;
+            font-weight: 500;
+            color: #475569;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 1px;
+        }
+        .aptk-cand-company {
+            font-size: 10.5px;
+            color: #64748b;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        .aptk-cand-company i { font-size: 9.5px; color: #94a3b8; }
+
+        /* Sub-Card 2: Compensation & Exp */
+        .aptk-val-salary {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .aptk-sal-main {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+        }
+        .aptk-sal-mode {
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748b;
+        }
+        .aptk-sal-sub {
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .aptk-val-exp,
+        .aptk-val-notice {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-variant-numeric: tabular-nums;
+            line-height: 1.3;
+        }
+        .aptk-val-exp i,
+        .aptk-val-notice i { font-size: 10px; color: #94a3b8; flex-shrink: 0; }
+        .aptk-dot { color: #cbd5e1; font-size: 8px; }
+        .aptk-notice-txt { font-weight: 600; }
+        .aptk-notice-immediate { color: #16a34a; }
+        .aptk-notice-days { color: #d97706; }
+        .aptk-notice-snp { color: #7c3aed; }
+        .aptk-notice-default { color: #64748b; }
+
+        /* Sub-Card 3: Location & Degree */
+        .aptk-loc-city {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        .aptk-loc-city i { font-size: 10px; color: #94a3b8; }
+        .aptk-loc-mode {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .aptk-loc-mode i { font-size: 9.5px; color: #94a3b8; }
+        .aptk-loc-edu {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .aptk-loc-edu i { font-size: 10px; color: #94a3b8; }
+        .aptk-edu-uppercase { text-transform: uppercase; }
+
+        /* Sub-Card 4: Job & Mandate */
+        .aptk-job-title {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            text-decoration: none;
+            display: block;
+        }
+        .aptk-job-title:hover { color: #009ef7; }
+        .aptk-job-client {
+            font-size: 10.5px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .aptk-job-client i { font-size: 9.5px; color: #94a3b8; }
+
+        /* Sub-Card 5: Stage */
+        .aptk-subcard-stage { cursor: pointer; }
+        .aptk-subcard-stage:hover, .aptk-subcard-stage:focus-visible {
+            border-color: #93c5fd !important;
+            background: #f0f9ff;
+            outline: none;
+        }
+        .aptk-subcard-stage:hover .aptk-stage-cue { text-decoration: underline; }
+        .aptk-stage-trigger {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            text-decoration: none;
+            min-width: 0;
+        }
+        .aptk-stage-pill {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            max-width: 100%;
+            padding: 2.5px 8px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .aptk-substage-txt {
+            font-size: 10.5px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .aptk-substage-txt strong { color: #334155; font-weight: 600; }
+        .aptk-stage-cue {
+            font-size: 10.5px;
+            font-weight: 600;
+            color: #009ef7;
+            line-height: 1.2;
+        }
+
+        /* Sub-Card 6: Quick Actions */
+        .aptk-quick-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .aptk-action-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .aptk-action-btn:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #2563eb;
+        }
+
+        /* Bottom Intelligence & Skills Strip */
+        .aptk-cand-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 12px;
+            background: #ffffff;
+            border-top: 1px solid #f1f5f9;
+            width: 100%;
+            overflow: hidden;
+        }
+        .aptk-bottom-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .aptk-match-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 10.5px;
+            font-weight: 700;
+            line-height: 1.3;
+            white-space: nowrap;
+            flex-shrink: 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .aptk-skills-scroll {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            white-space: nowrap;
+            min-width: 0;
+        }
+        .aptk-skills-scroll::-webkit-scrollbar { display: none; }
+        .aptk-skill-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 1.5px 7px;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            font-size: 10px;
+            font-weight: 500;
+            line-height: 1.4;
+            flex-shrink: 0;
+        }
+        .aptk-skill-pill.is-matched {
+            background: #dcfce7;
+            color: #15803d;
+            border-color: #bbf7d0;
+            font-weight: 600;
+        }
+        .aptk-bottom-right {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .aptk-linkedin-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #ecfdf5;
+            color: #15803d;
+            border: 1px solid #86efac;
+            font-size: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .aptk-linkedin-pill:hover { background: #dcfce7; color: #166534; border-color: #4ade80; }
+        .aptk-visa-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .aptk-empty-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 42px 20px;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* 15.6" screen responsive grid adjustments */
+        @media (max-width: 1440px) {
+            .aptk-cand-grid {
+                grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.25fr);
+                gap: 6px;
+                padding: 8px 10px;
+            }
+            .aptk-cand-subcard { padding: 6px 8px; }
+        }
+        @media (max-width: 1180px) {
+            .aptk-cand-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        }
+        @media (max-width: 640px) {
+            .aptk-cand-grid { grid-template-columns: 1fr; gap: 8px; }
+            .aptk-cand-bottom { flex-direction: column; align-items: flex-start; gap: 6px; }
+        }
 
         /* Selected-rows action bar */
         .cvh-selection-bar { display: none; align-items: center; gap: 14px; background: #fff; border: 1px solid #e5e9f2; border-radius: 12px; padding: 10px 16px; margin-bottom: 14px; font-family: 'Poppins', sans-serif; flex-wrap: wrap; }
@@ -206,15 +964,8 @@
         .cvh-selection-close { width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .cvh-selection-close:hover { background: #f1f5f9; color: #334155; }
 
-        /* The original Mass Email/Fwd Resume/Copy/Export buttons stay in the DOM (so all
-           existing modal/ajax click handlers keep firing unmodified) but are permanently
-           hidden here — their restyled equivalents now live in #cvh_selection_bar. */
+        /* Legacy hidden hooks */
         .cvh-legacy-hide { display: none !important; }
-
-        /* Page header — title + subtext sized/worded to match the Offer Tracker page
-           (resources/views/service_company/applicationoffer/index.blade.php .ot-page-head) */
-        .cvh-page-title, .cvh-page-title a { font-size: 14px !important; font-weight: 700 !important; color: #0f172a !important; font-family: 'Poppins', sans-serif; }
-        .cvh-page-sub { font-size: 11px; color: #64748b; margin: 2px 0 0; font-family: 'Poppins', sans-serif; }
 
         /* ==================================================================
            Enterprise toolbar redesign: search / sort / filter (cvh-tb-*).
@@ -495,234 +1246,292 @@
 @endpush
 
 @section('content')
-    <div class="toolbar" id="kt_toolbar">
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-                <div class="d-flex flex-column">
-                    <h5 class="cvh-page-title d-flex align-items-center my-1"> <a href="javascript:void(0);"
-                            class="text-primary-800">All Candidates Tracker</a> </h5>
-                    <p class="cvh-page-sub">Track and Manage all your candidates of every job in one place</p>
-                    {{-- Kept in the DOM (hidden) — fetchCandidates() still writes the live
-                         total into it via $('#total_record').html(...); the number itself
-                         is already shown prominently in the "Total Candidates" hero card. --}}
-                    <span class="text-gray-600 d-none" id="total_record"></span>
-                    {{-- {{ @$applicationCounter }} --}}
-                </div>
-            </div>
-            <div class="d-flex align-items-center py-1">
-                <!--  <a href="javascript:void(0);" class="me-3 daterange"><span class="svg-icon svg-icon-primary svg-icon-1x">-->
-                <input type="hidden" class="form-control form-control-solid" placeholder="Pick date rage"
-                    id="kt_daterangepicker" />
-                <!--</span> </a>-->
-
-                {{-- Mass Email / Fwd Resume / Copy / Export now live in #cvh_selection_bar
-                     (a dedicated selection card shown on row selection, styled per the
-                     approved design) — see just above the candidates table. Classes and
-                     data-target attributes are unchanged so every existing modal/ajax
-                     handler still fires from their new location. --}}
-                <a href="javascript:void(0);" type="button"
-                    class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-3 d-none cvh-legacy-hide" data-toggle="modal"
-                    data-target="#mass_mail"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                            height="24px" viewBox="0 0 24 24" version="1.1">
-                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                <rect x="0" y="0" width="24" height="24" />
-                                <path
-                                    d="M18,2 L20,2 C21.6568542,2 23,3.34314575 23,5 L23,19 C23,20.6568542 21.6568542,22 20,22 L18,22 L18,2 Z"
-                                    fill="#000000" opacity="0.3" />
-                                <path
-                                    d="M5,2 L17,2 C18.6568542,2 20,3.34314575 20,5 L20,19 C20,20.6568542 18.6568542,22 17,22 L5,22 C4.44771525,22 4,21.5522847 4,21 L4,3 C4,2.44771525 4.44771525,2 5,2 Z M12,11 C13.1045695,11 14,10.1045695 14,9 C14,7.8954305 13.1045695,7 12,7 C10.8954305,7 10,7.8954305 10,9 C10,10.1045695 10.8954305,11 12,11 Z M7.00036205,16.4995035 C6.98863236,16.6619875 7.26484009,17 7.4041679,17 C11.463736,17 14.5228466,17 16.5815,17 C16.9988413,17 17.0053266,16.6221713 16.9988413,16.5 C16.8360465,13.4332455 14.6506758,12 11.9907452,12 C9.36772908,12 7.21569918,13.5165724 7.00036205,16.4995035 Z"
-                                    fill="#000000" />
-                            </g>
-                        </svg>
-                    </span> Mass Email </a>
-
-                {{-- <a href="javascript:void(0);"  type="button" class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 send_email d-none" data-toggle="modal" data-target="#send_email"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-          <rect x="0" y="0" width="24" height="24"/>
-          <path d="M4,16 L5,16 C5.55228475,16 6,16.4477153 6,17 C6,17.5522847 5.55228475,18 5,18 L4,18 C3.44771525,18 3,17.5522847 3,17 C3,16.4477153 3.44771525,16 4,16 Z M1,11 L5,11 C5.55228475,11 6,11.4477153 6,12 C6,12.5522847 5.55228475,13 5,13 L1,13 C0.44771525,13 6.76353751e-17,12.5522847 0,12 C-6.76353751e-17,11.4477153 0.44771525,11 1,11 Z M3,6 L5,6 C5.55228475,6 6,6.44771525 6,7 C6,7.55228475 5.55228475,8 5,8 L3,8 C2.44771525,8 2,7.55228475 2,7 C2,6.44771525 2.44771525,6 3,6 Z" fill="#000000" opacity="0.3"/>
-          <path d="M10,6 L22,6 C23.1045695,6 24,6.8954305 24,8 L24,16 C24,17.1045695 23.1045695,18 22,18 L10,18 C8.8954305,18 8,17.1045695 8,16 L8,8 C8,6.8954305 8.8954305,6 10,6 Z M21.0849395,8.0718316 L16,10.7185839 L10.9150605,8.0718316 C10.6132433,7.91473331 10.2368262,8.02389331 10.0743092,8.31564728 C9.91179228,8.60740125 10.0247174,8.9712679 10.3265346,9.12836619 L15.705737,11.9282847 C15.8894428,12.0239051 16.1105572,12.0239051 16.294263,11.9282847 L21.6734654,9.12836619 C21.9752826,8.9712679 22.0882077,8.60740125 21.9256908,8.31564728 C21.7631738,8.02389331 21.3867567,7.91473331 21.0849395,8.0718316 Z" fill="#000000"/>
-        </g>
-      </svg>
-      </span> Send Email </a> --}}
-                <a href="javascript:void(0);" type="button"
-                    class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 application_copy d-none cvh-legacy-hide" data-toggle="modal"
-                    data-target="#application_copy">
-                    <span class="svg-icon svg-icon-primary svg-icon-1x">
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                            height="24px" viewBox="0 0 24 24" version="1.1">
-                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                <rect x="0" y="0" width="24" height="24" />
-                                <path
-                                    d="M6,9 L6,15 C6,16.6568542 7.34314575,18 9,18 L15,18 L15,18.8181818 C15,20.2324881 14.2324881,21 12.8181818,21 L5.18181818,21 C3.76751186,21 3,20.2324881 3,18.8181818 L3,11.1818182 C3,9.76751186 3.76751186,9 5.18181818,9 L6,9 Z"
-                                    fill="#000000" fill-rule="nonzero" />
-                                <path
-                                    d="M10.1818182,4 L17.8181818,4 C19.2324881,4 20,4.76751186 20,6.18181818 L20,13.8181818 C20,15.2324881 19.2324881,16 17.8181818,16 L10.1818182,16 C8.76751186,16 8,15.2324881 8,13.8181818 L8,6.18181818 C8,4.76751186 8.76751186,4 10.1818182,4 Z"
-                                    fill="#000000" opacity="0.3" />
-                            </g>
-                        </svg>
-                    </span>
-                    Copy </a>
-
-                <div class="before-event downloadexcell d-flex align-items-center position-relative my-1 me-3 d-none cvh-legacy-hide">
-                   
-                    <button type="button"
-                        class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3 exportRecord"
-                        data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end" style="width: 100px;">
-                        <span class="svg-icon svg-icon-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none">
-                                <path
-                                    d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                    fill="black" />
-                            </svg>
-                        </span>
-                        Export </button>
-                </div>
-
-                <div class="before-event d-flex align-items-center position-relative my-1 me-3 custom_hide">
-
-                    <input type="hidden" id="inputSearch" data-kt-user-table-filter="search"
-                        class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                        placeholder="Search..." />
-                </div>
-
-
-
-
-                <div class="card-toolbar">
-                    <div class="before-event d-flex justify-content-end" data-kt-user-table-toolbar="base">
-
-                        <div class="menu menu-sub menu-sub-dropdown w-300px w-md-325px" data-kt-menu="true">
-                            <div class="px-7 py-5">
-                                <div class="fs-5 text-dark fw-bolder">Filter Options</div>
-                            </div>
-                            <div class="separator border-gray-200"></div>
-                            <div class="px-7 py-5" data-kt-user-table-filter="form">
-                                <div class="mb-10">
-                                    <label class="form-label fs-6 fw-bold">Role:</label>
-                                    <select class="form-select form-select-solid fw-bolder" data-kt-select2="true"
-                                        data-placeholder="Select option" data-allow-clear="true"
-                                        data-kt-user-table-filter="role" data-hide-search="true">
-                                        <option></option>
-                                        <option value="Administrator">Administrator</option>
-                                        <option value="Analyst">Analyst</option>
-                                        <option value="Developer">Developer</option>
-                                        <option value="Support">Support</option>
-                                        <option value="Trial">Trial</option>
-                                    </select>
-                                </div>
-                                <div class="mb-10">
-                                    <label class="form-label fs-6 fw-bold">Two Step Verification:</label>
-                                    <select class="form-select form-select-solid fw-bolder" data-kt-select2="true"
-                                        data-placeholder="Select option" data-allow-clear="true"
-                                        data-kt-user-table-filter="two-step" data-hide-search="true">
-                                        <option></option>
-                                        <option value="Enabled">Enabled</option>
-                                    </select>
-                                </div>
-                                <div class="d-flex justify-content-end">
-                                    <button type="reset"
-                                        class="btn btn-light btn-active-light-primary fw-bold me-2 px-6"
-                                        data-kt-menu-dismiss="true" data-kt-user-table-filter="reset">Reset</button>
-                                    <button type="submit" class="btn btn-primary fw-bold px-6"
-                                        data-kt-menu-dismiss="true" data-kt-user-table-filter="filter">Apply</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {{-- Hidden DOM hooks for backward compatibility --}}
+    <input type="hidden" id="kt_daterangepicker" />
+    <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" value="" />
+    <span class="d-none" id="total_record"></span>
 
     <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-3">
 
-                {{-- ── Hero KPI stats (ES-only, seeded server-side, refreshed live) ── --}}
-                @php
-                    $cvHeroCards = [
-                        ['key'=>'total','label'=>'Total Candidates','bg'=>'#dbeafe','ic'=>'#2563eb',
-                         'icon'=>'M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z'],
-                        ['key'=>'today','label'=>'Added Today','bg'=>'#dcfce7','ic'=>'#16a34a','tone'=>'info','text'=>'Since 12:00 AM',
-                         'icon'=>'M12 4.5v15m7.5-7.5h-15'],
-                        ['key'=>'this_week','label'=>'Added This Week','bg'=>'#ede9fe','ic'=>'#7c3aed','tone'=>'info','text'=>'Mon &ndash; Today',
-                         'icon'=>'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5A2.25 2.25 0 0 1 5.25 5.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5'],
-                        ['key'=>'immediate','label'=>'Immediate Joiners','bg'=>'#d1fae5','ic'=>'#059669','tone'=>'up','text'=>'Notice = 0 Days',
-                         'icon'=>'M13 2 3 14h7l-1 8 10-12h-7l1-8Z'],
-                        ['key'=>'without_resume','label'=>'Without Resume','bg'=>'#fee2e2','ic'=>'#dc2626','tone'=>'warn','text'=>'Needs Attention',
-                         'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l4.414 4.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z'],
-                    ];
-                @endphp
-                <div class="cvh-grid">
-                    @foreach($cvHeroCards as $card)
-                    <div class="cvh-card">
-                        <div class="cvh-icon" style="background:{{ $card['bg'] }}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="{{ $card['ic'] }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $card['icon'] }}"/></svg>
+                <!-- ── HEADER CARD (Client Tracker Design Standard) ── -->
+                <div class="cl-header cl-header-card">
+                    <div class="cl-header-left">
+                        <div class="cl-header-icon-box">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
                         </div>
-                        <div class="cvh-body">
-                            <p class="cvh-label">{{ $card['label'] }}</p>
-                            <p class="cvh-value" data-cvh="{{ $card['key'] }}">{{ number_format($candidateStats[$card['key']] ?? 0) }}</p>
-                            @if($card['key'] === 'total')
-                                <div class="cvh-delta up">&uarr; <span data-cvh="this_week_delta">{{ number_format($candidateStats['this_week'] ?? 0) }}</span> this week</div>
-                            @else
-                                <div class="cvh-delta {{ $card['tone'] }}">{!! $card['text'] !!}</div>
-                            @endif
+                        <div>
+                            <div class="cl-header-title-row">
+                                <h1 class="cl-header-title">All Candidates Tracker</h1>
+                                <span class="cl-verified-badge" title="Verified ATS Talent Pipeline">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="cl-header-subtitle">Track and manage all talent pipeline candidates across jobs and organizations</div>
                         </div>
                     </div>
-                    @endforeach
+                    <div class="cl-header-actions">
+                        <button type="button" class="btn btn-sm btn-light-primary fw-bolder exportRecord" title="Export candidates list">
+                            <i class="fa fa-print me-1"></i> Export List
+                        </button>
+                    </div>
                 </div>
 
-                {{-- ── Search + Sort + Filter toolbar (cvh-tb-* — mirrors the Similar Candidates /
-                     Bench Requests enterprise toolbar redesign: bordered search box, a custom
-                     sort dropdown skinned over the real #sortingfilter <select> (single source
-                     of truth for filtersdataget()), and a primary Filter button with an
-                     active-count badge that opens the cvh-flt-* drawer below. ── --}}
+                <!-- ── 9 INTERACTIVE STATUS KPI CARDS (Client Tracker KPI Design System) ── -->
+                <div class="cv-kpi-grid mb-4">
+                    {{-- 1. All Candidates --}}
+                    <div class="cl-card cv-kpi-card active" data-tab="all" onclick="setCvKpiTab('all', this)">
+                        <div class="cl-card-top">
+                            <div class="cl-card-icon blue">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </div>
+                            <div class="cl-card-meta">
+                                <div class="cl-card-num" id="kpi_all">{{ number_format($candidateStats['tabs']['all'] ?? $candidateStats['total'] ?? $applicationCounter ?? 0) }}</div>
+                                <div class="cl-card-lbl">All Candidates</div>
+                            </div>
+                        </div>
+                        <div class="cl-card-sub blue">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                            <span>Total talent pool</span>
+                        </div>
+                    </div>
+
+                    {{-- 2. In Review --}}
+                    <div class="cl-card cv-kpi-card" data-tab="8" onclick="setCvKpiTab('8', this)">
+                        <div class="cl-card-top">
+                            <div class="cl-card-icon yellow">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/>
+                                </svg>
+                            </div>
+                            <div class="cl-card-meta">
+                                <div class="cl-card-num" id="kpi_inreview">{{ number_format($candidateStats['tabs']['inreview'] ?? 0) }}</div>
+                                <div class="cl-card-lbl">In Review</div>
+                            </div>
+                        </div>
+                        <div class="cl-card-sub yellow">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M12 2v20"/></svg>
+                            <span>Under review</span>
+                        </div>
+                    </div>
+
+                    {{-- 3. Sourcing --}}
+                    <div class="cl-card cv-kpi-card" data-tab="1" onclick="setCvKpiTab('1', this)">
+                        <div class="cl-card-top">
+                            <div class="cl-card-icon gray">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                            </div>
+                            <div class="cl-card-meta">
+                                <div class="cl-card-num" id="kpi_sourcing">{{ number_format($candidateStats['tabs']['sourcing'] ?? 0) }}</div>
+                                <div class="cl-card-lbl">Sourcing</div>
+                            </div>
+                        </div>
+                        <div class="cl-card-sub gray">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span>Active sourcing</span>
+                        </div>
+                    </div>
+
+                    {{-- 4. Screening --}}
+                    <div class="cl-card cv-kpi-card" data-tab="2" onclick="setCvKpiTab('2', this)">
+                        <div class="cl-card-top">
+                            <div class="cl-card-icon purple">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+                                </svg>
+                            </div>
+                            <div class="cl-card-meta">
+                                <div class="cl-card-num" id="kpi_screening">{{ number_format($candidateStats['tabs']['screening'] ?? 0) }}</div>
+                                <div class="cl-card-lbl">Screening</div>
+                            </div>
+                        </div>
+                        <div class="cl-card-sub purple">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                            <span>Technical screen</span>
+                        </div>
+                    </div>
+
+                    {{-- 5. Evaluation --}}
+                    <div class="cl-card cv-kpi-card" data-tab="3" onclick="setCvKpiTab('3', this)">
+                        <div class="cl-card-top">
+                            <div class="cl-card-icon sky">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                            </div>
+                            <div class="cl-card-meta">
+                                <div class="cl-card-num" id="kpi_evaluation">{{ number_format($candidateStats['tabs']['evaluation'] ?? 0) }}</div>
+                                <div class="cl-card-lbl">Evaluation</div>
+                            </div>
+                        </div>
+                        <div class="cl-card-sub sky">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                            <span>Evaluations</span>
+                        </div>
+                    </div>
+
+                    {{-- 6. Negotiation --}}
+                    <div class="cl-card cv-kpi-card" data-tab="4" onclick="setCvKpiTab('4', this)">
+                        <div class="cl-card-top">
+                            <div class="cl-card-icon pink">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                            </div>
+                            <div class="cl-card-meta">
+                                <div class="cl-card-num" id="kpi_negotiation">{{ number_format($candidateStats['tabs']['negotiation'] ?? 0) }}</div>
+                                <div class="cl-card-lbl">Negotiation</div>
+                            </div>
+                        </div>
+                        <div class="cl-card-sub pink">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                            <span>Comp & terms</span>
+                        </div>
+                    </div>
+
+                    {{-- 7. Offer --}}
+                    <div class="cl-card cv-kpi-card" data-tab="5" onclick="setCvKpiTab('5', this)">
+                        <div class="cl-card-top">
+                            <div class="cl-card-icon orange">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                </svg>
+                            </div>
+                            <div class="cl-card-meta">
+                                <div class="cl-card-num" id="kpi_offered">{{ number_format($candidateStats['tabs']['offered'] ?? 0) }}</div>
+                                <div class="cl-card-lbl">Offer</div>
+                            </div>
+                        </div>
+                        <div class="cl-card-sub orange">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                            <span>Offer stage</span>
+                        </div>
+                    </div>
+
+                    {{-- 8. Joined --}}
+                    <div class="cl-card cv-kpi-card" data-tab="6" onclick="setCvKpiTab('6', this)">
+                        <div class="cl-card-top">
+                            <div class="cl-card-icon green">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                            </div>
+                            <div class="cl-card-meta">
+                                <div class="cl-card-num" id="kpi_joined">{{ number_format($candidateStats['tabs']['joined'] ?? 0) }}</div>
+                                <div class="cl-card-lbl">Joined</div>
+                            </div>
+                        </div>
+                        <div class="cl-card-sub green">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                            <span>Onboarded</span>
+                        </div>
+                    </div>
+
+                    {{-- 9. Rejected --}}
+                    <div class="cl-card cv-kpi-card" data-tab="7,9" onclick="setCvKpiTab('7,9', this)">
+                        <div class="cl-card-top">
+                            <div class="cl-card-icon red">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                                </svg>
+                            </div>
+                            <div class="cl-card-meta">
+                                <div class="cl-card-num" id="kpi_rejected">{{ number_format($candidateStats['tabs']['rejected'] ?? 0) }}</div>
+                                <div class="cl-card-lbl">Rejected</div>
+                            </div>
+                        </div>
+                        <div class="cl-card-sub red">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                            <span>Archived</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── TOOLBAR CARD: COMPANY TYPE PILLS + SEARCH + SORT + FILTER ── -->
                 <div class="card cvh-tb-card mb-4">
-                    <div class="card-body py-3">
-                        <div class="d-flex align-items-center gap-3 flex-wrap">
-                            <div class="cvh-tb-search-wrap" style="position: relative;">
-                                <span class="cvh-tb-search-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
-                                </span>
-                                <input type="text" class="form-control cvh-tb-search-input" name="inputJobSearch"
-                                    value="" placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" autocomplete="off" />
-                                <div style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%);">
-                                    <div id="loader_search" class="loader_search hidden_search"></div>
-                                </div>
-                            </div>
-                            <div class="cvh-tb-sort-wrap" id="cvh_sort_wrap">
-                                <span class="cvh-tb-sort-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
-                                </span>
-                                <button type="button" class="cvh-tb-sort-btn" id="cvh_sort_btn">
-                                    <span id="cvh_sort_label">Sort</span>
-                                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    <div class="card-body py-3 px-4">
+                        <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                            {{-- Left: Rule 25 Canonical Organization Filter Pills --}}
+                            <div class="cv-org-pills d-flex align-items-center gap-1 flex-wrap">
+                                <button type="button" class="btn btn-sm cv-org-pill active" onclick="setCvCompanyType('all', this)">
+                                    <i class="fa fa-layer-group me-1 fs-8"></i> All Organizations
                                 </button>
-                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                    id="sortingfilter" data-dropdown-css-class="w-150px" style="display:none;"
-                                    onchange="filtersdataget()">
-                                    <option value="Show All" selected="">Sort</option>
-                                    <option value="1">Newest to Oldest (Upload Date)</option>
-                                    <option value="2">Oldest to Newest (Upload Date)</option>
-                                    <option value="21">Notice Period (Immediate)</option>
-                                    <option value="22">Notice Period (Serving)</option>
-                                    <option value="7">High to Low (Experience) </option>
-                                    <option value="8">Low to High (Experience)</option>
-                                    <option value="30">Best Match</option>
-                                </select>
-                                <div class="cvh-tb-sort-panel d-none" id="cvh_sort_panel"></div>
+                                <button type="button" class="btn btn-sm cv-org-pill type-my-org" onclick="setCvCompanyType('my_organization', this)">
+                                    <i class="fa fa-id-badge me-1 fs-8"></i> My Organization
+                                </button>
+                                <button type="button" class="btn btn-sm cv-org-pill type-internal" onclick="setCvCompanyType('internal_client', this)">
+                                    <i class="fa fa-building me-1 fs-8"></i> Internal Client
+                                </button>
+                                <button type="button" class="btn btn-sm cv-org-pill type-direct" onclick="setCvCompanyType('direct_client', this)">
+                                    <i class="fa fa-shield-alt me-1 fs-8"></i> Direct Client
+                                </button>
                             </div>
-                            <button type="button" id="kt_cvtracker_filter_toggle"
-                                class="btn cvh-tb-filter-btn position-relative">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
-                                <span>Filter<span id="cvh_filter_count_text"></span></span>
-                                <span class="badge badge-circle badge-primary cvh-tb-count-badge d-none" id="cvh_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
-                            </button>
+
+                            {{-- Right: Search + Sort + Filter --}}
+                            <div class="d-flex align-items-center gap-3 flex-grow-1 justify-content-end" style="min-width: 300px;">
+                                {{-- Debounced Search Box with Clear Button --}}
+                                <div class="cvh-tb-search-wrap position-relative flex-grow-1" style="max-width: 440px;">
+                                    <span class="cvh-tb-search-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                    </span>
+                                    <input type="text" class="form-control cvh-tb-search-input pe-8" name="inputJobSearch"
+                                        value="" placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" autocomplete="off" />
+                                    <button type="button" id="cv_search_clear" class="btn btn-icon btn-sm text-muted position-absolute" style="right: 8px; top: 50%; transform: translateY(-50%); display: none; width: 22px; height: 22px; background: transparent; border: none;" title="Clear search">
+                                        <i class="fa fa-times fs-8"></i>
+                                    </button>
+                                    <div style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%);">
+                                        <div id="loader_search" class="loader_search hidden_search"></div>
+                                    </div>
+                                </div>
+
+                                {{-- Sort Dropdown --}}
+                                <div class="cvh-tb-sort-wrap" id="cvh_sort_wrap">
+                                    <span class="cvh-tb-sort-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                                    </span>
+                                    <button type="button" class="cvh-tb-sort-btn" id="cvh_sort_btn">
+                                        <span id="cvh_sort_label">Sort</span>
+                                        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                    </button>
+                                    <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
+                                        id="sortingfilter" data-dropdown-css-class="w-150px" style="display:none;"
+                                        onchange="filtersdataget()">
+                                        <option value="Show All" selected="">Sort</option>
+                                        <option value="1">Newest to Oldest (Upload Date)</option>
+                                        <option value="2">Oldest to Newest (Upload Date)</option>
+                                        <option value="21">Notice Period (Immediate)</option>
+                                        <option value="22">Notice Period (Serving)</option>
+                                        <option value="7">High to Low (Experience)</option>
+                                        <option value="8">Low to High (Experience)</option>
+                                        <option value="30">Best Match</option>
+                                    </select>
+                                    <div class="cvh-tb-sort-panel d-none" id="cvh_sort_panel"></div>
+                                </div>
+
+                                {{-- Filter Button --}}
+                                <button type="button" id="kt_cvtracker_filter_toggle"
+                                    class="btn cvh-tb-filter-btn position-relative">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                    <span>Filter<span id="cvh_filter_count_text"></span></span>
+                                    <span class="badge badge-circle badge-primary cvh-tb-count-badge d-none" id="cvh_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1333,58 +2142,6 @@
                 {{-- ── Stage Tabs (separate card, ES-backed counts) — sits directly above
                      the candidate list, below the search/filter bar. ── --}}
                 @php
-                    // Tab key => the ID(s) sent to the backend as `stage_tab` (comma-separated
-                    // for "Rejected", which spans two master_status rows both named "Rejected"),
-                    // the matching key in $candidateStats['tabs'] for the live badge count, an
-                    // SVG icon path (inline, not an icon-font class — Keenicons is no longer
-                    // mandatory per docs/ENTERPRISE_PLAYBOOK.md §4.2), and the stage's solid
-                    // color — taken from the app's own "Pipeline Stages" legend
-                    // (resources/views/sections/service_company/pipeline.blade.php) so this
-                    // tab bar matches that legend exactly rather than inventing new colors.
-                    $cvStageTabs = [
-                        ['stage'=>'all', 'label'=>'All Candidates', 'countKey'=>'total', 'color'=>'#2563eb',
-                         'icon'=>'M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z'],
-                        ['stage'=>'8',   'label'=>'InReview',       'countKey'=>'inreview', 'color'=>'#bdbd26',
-                         'icon'=>'M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'],
-                        ['stage'=>'1',   'label'=>'Sourcing',       'countKey'=>'sourcing', 'color'=>'#7e8299',
-                         'icon'=>'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
-                        ['stage'=>'2',   'label'=>'Screening',      'countKey'=>'screening', 'color'=>'#c000ff',
-                         'icon'=>'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
-                        ['stage'=>'3',   'label'=>'Evaluation',     'countKey'=>'evaluation', 'color'=>'#2896ff',
-                         'icon'=>'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
-                        ['stage'=>'4',   'label'=>'Negotiation',    'countKey'=>'negotiation', 'color'=>'#ff4098',
-                         'icon'=>'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
-                        ['stage'=>'5',   'label'=>'Offered',        'countKey'=>'offered', 'color'=>'#ffab00',
-                         'icon'=>'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
-                        ['stage'=>'6',   'label'=>'Joined',         'countKey'=>'joined', 'color'=>'#06c732',
-                         'icon'=>'M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4 4 0 0 0-7.533-2.348M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25-3 3-1.5-1.5'],
-                        ['stage'=>'7,9', 'label'=>'Rejected',       'countKey'=>'rejected', 'color'=>'#ff0202',
-                         'icon'=>'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
-                    ];
-                @endphp
-                <div class="card cvh-tabs-card" id="cvh_tabs_card">
-                    <div class="card-body">
-                        <div class="cvh-tabs">
-                            @foreach($cvStageTabs as $i => $tab)
-                                @php
-                                    $tabCount = $tab['countKey'] === 'total'
-                                        ? ($candidateStats['total'] ?? 0)
-                                        : ($candidateStats['tabs'][$tab['countKey']] ?? 0);
-                                @endphp
-                                <button type="button" class="cvh-tab stage-{{ $tab['countKey'] }} {{ $i === 0 ? 'active' : '' }}" data-stage="{{ $tab['stage'] }}" data-color="{{ $tab['color'] }}">
-                                    <span class="cvh-tab-top">
-                                        <span class="cvh-tab-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $tab['icon'] }}"/></svg>
-                                        </span>
-                                        <span class="cvh-tab-label">{{ $tab['label'] }}</span>
-                                    </span>
-                                    <span class="cvh-tab-count" data-cvh-tab="{{ $tab['countKey'] }}">{{ number_format($tabCount) }}</span>
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
                 {{-- ── Row selection action bar — hidden until candidates are checked.
                      Reuses the exact same trigger classes/data-target attributes as the
                      legacy toolbar buttons (mass_mail / fwd_resume / application_copy /
@@ -1392,7 +2149,7 @@
                      only the presentation is new. ── --}}
                 <div class="cvh-selection-bar" id="cvh_selection_bar">
                     <div class="form-check form-check-sm form-check-custom form-check-solid">
-                        <input class="form-check-input" type="checkbox" id="cvh_selection_master_chk" checked
+                        <input class="form-check-input datatable_chk" type="checkbox" id="cvh_selection_master_chk" checked
                             title="Clear selection" />
                     </div>
                     <span class="cvh-selection-count"><span id="cvh_selected_count">0</span> candidates selected</span>
@@ -1423,49 +2180,17 @@
                     </button>
                 </div>
 
-                <div class="card" id="cvh_table_card" style="display:none;">
-                    <div class="card-body pt-3 px-5" style="position: relative">
+                <div class="card border-0 shadow-none bg-transparent" id="cvh_table_card" style="display:none;">
+                    <div class="card-body p-0" style="position: relative">
                         @if (in_array('view_job_applications', $userPermissions))
-                           {{-- Circle loader only (Bootstrap/Metronic's own spinner-border) — no text
-                                label. position:fixed + viewport-centered (not absolute/inset:0 relative
-                                to .card-body): the card body's height grows with the candidate list, so
-                                centering "within the card" could place the spinner well below the
-                                visible viewport on a long list or when scrolled. --}}
                            <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
                                <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
                            </div>
-                            <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class"
-                                id="myTable">
-                                <thead>
-                                    <tr class="fw-bolder text-muted">
-                                        <th class="w-10px pe-0">
-                                            <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                <input class="form-check-input datatable_chk chk_list" type="checkbox"
-                                                    data-kt-check="true" data-kt-check-target="#myTable .form-check-input"
-                                                    value="1" />
-                                            </div>
-                                        </th>
-                                        <th class="">Candidate Name</th>
-                                        {{-- <th class="">Contacts</th> --}}
-                                        <th class="" data-toggle="tooltip" title="Experience">Exp.</th>
-                                        <th class="">Salary</th>
-                                        <th class="" data-toggle="tooltip" title="Notice Period">Notice</th>
-                                        <th class="">Location</th>
-                                        <th class="">Ownership</th>
-                                        {{-- <th class="" data-toggle="tooltip" title="Upload Date">Date</th> --}}
-                                        <th class="">Jobs</th>
-                                        <th class="">Status</th>
-                                        <th class="">Stage</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-gray-600 fw-bold" id="candidatetList">
-                                </tbody>
-                            </table>
-                            <div id="paginationcandidate"></div>
-                            {{-- Print target — populated client-side from the checked rows already
-                                 on this page (see the .exportRecord click handler); nothing here
-                                 until the user clicks Print, no server round-trip involved. --}}
-                            <div id="cvh_print_area"></div>
+                            <div class="cv-cards-stream d-flex flex-column gap-3" id="candidatetList">
+                            </div>
+                            <div id="paginationcandidate" class="mt-4"></div>
+                            {{-- Print target — populated client-side from checked cards --}}
+                            <div id="cvh_print_area" class="d-none"></div>
                         @endif
                     </div>
                 </div>
@@ -1686,7 +2411,6 @@
           // the browser's own print dialog (Save as PDF works the same way
           // from there, at the user's discretion, with zero server cost).
           $(document).on('click', '.exportRecord', function() {
-
                 var $checked = $('.chk_list_item:checked');
                 if ($checked.length === 0) {
                     cvhToast.fire({ icon: 'warning', title: 'Select at least one candidate first' });
@@ -1694,15 +2418,35 @@
                 }
 
                 var $table = $('<table></table>');
-                var $thead = $('#myTable thead tr').clone();
-                $thead.find('th').first().remove(); // drop the checkbox header column
-                $table.append($('<thead></thead>').append($thead));
+                var $thead = $('<thead><tr>' +
+                    '<th>Candidate</th>' +
+                    '<th>Job & Client</th>' +
+                    '<th>Exp & Notice</th>' +
+                    '<th>Compensation</th>' +
+                    '<th>Location</th>' +
+                    '<th>Stage</th>' +
+                    '<th>Match</th>' +
+                    '</tr></thead>');
+                $table.append($thead);
 
                 var $tbody = $('<tbody></tbody>');
                 $checked.each(function() {
-                    var $row = $(this).closest('tr').clone();
-                    $row.find('td').first().remove(); // drop the checkbox cell
-                    $tbody.append($row);
+                    var $card = $(this).closest('.aptk-cand-card');
+                    if ($card.length) {
+                        var $tr = $('<tr></tr>');
+                        $tr.append($('<td></td>').html('<strong>' + $('<div>').text($card.attr('data-print-name') || '').html() + '</strong><br><small>' + $('<div>').text($card.attr('data-print-desig') || '').html() + ' (' + $('<div>').text($card.attr('data-print-company') || '').html() + ')</small>'));
+                        $tr.append($('<td></td>').html('<strong>' + $('<div>').text($card.attr('data-print-job') || '').html() + '</strong><br><small>' + $('<div>').text($card.attr('data-print-client') || '').html() + '</small>'));
+                        $tr.append($('<td></td>').html($('<div>').text($card.attr('data-print-exp') || '—').html() + '<br><small>' + $('<div>').text($card.attr('data-print-notice') || '').html() + '</small>'));
+                        $tr.append($('<td></td>').text($card.attr('data-print-salary') || '—'));
+                        $tr.append($('<td></td>').html($('<div>').text($card.attr('data-print-location') || '').html() + '<br><small>' + $('<div>').text($card.attr('data-print-edu') || '').html() + '</small>'));
+                        $tr.append($('<td></td>').text($card.attr('data-print-stage') || '—'));
+                        $tr.append($('<td></td>').text($card.attr('data-print-match') || '0%'));
+                        $tbody.append($tr);
+                    } else {
+                        var $row = $(this).closest('tr').clone();
+                        $row.find('td').first().remove();
+                        $tbody.append($row);
+                    }
                 });
                 $table.append($tbody);
 
@@ -1902,18 +2646,33 @@
 
         var table;
         
-        // Free-text search box: Enter re-runs the same fetchCandidates() call the
-        // sort dropdown and pagination already use — no separate endpoint, and no
-        // auto-apply on every keystroke/blur (previously fired fetchCandidates() on
-        // every keyup, and again onchange/blur — both removed in favor of this
-        // single Enter-triggered handler, matching the rest of the redesigned pages).
-        $(document).on('keydown', '#kt_tagify_2', function(e) {
+        // Free-text search box: 300ms debounce + Enter key immediate trigger + Clear button
+        var cvSearchDebounce = null;
+        $(document).on('input keyup', '#kt_tagify_2', function(e) {
+            var val = $(this).val();
+            $('#cv_search_clear').toggle(val.length > 0);
             if (e.key === 'Enter' || e.keyCode === 13) {
                 e.preventDefault();
+                clearTimeout(cvSearchDebounce);
                 page_no = 1;
                 localStorage.setItem('currentPage', 1);
                 fetchCandidates(1);
+                return;
             }
+            clearTimeout(cvSearchDebounce);
+            cvSearchDebounce = setTimeout(function() {
+                page_no = 1;
+                localStorage.setItem('currentPage', 1);
+                fetchCandidates(1);
+            }, 300);
+        });
+
+        $(document).on('click', '#cv_search_clear', function() {
+            $('#kt_tagify_2').val('');
+            $(this).hide();
+            page_no = 1;
+            localStorage.setItem('currentPage', 1);
+            fetchCandidates(1);
         });
 
         function filtersdataget() {
@@ -2462,14 +3221,19 @@
                 $('#cvh_selected_count').text(n);
                 $('#cvh_selection_bar').toggleClass('show', n > 0);
                 $('#cvh_selection_master_chk').prop('checked', n > 0);
+                $('.chk_list_item').each(function() {
+                    $(this).closest('.aptk-cand-card').toggleClass('is-selected', $(this).is(':checked'));
+                });
                 if (n === 0) {
-                    $('.chk_list, #cvh_selection_master_chk').prop('checked', false);
+                    $('.chk_list, .datatable_chk, #cvh_selection_master_chk').prop('checked', false);
+                    $('.aptk-cand-card').removeClass('is-selected');
                     $('.test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
                     $('.custom_hide').removeClass('d-none');
                 }
             }
             function clearCvSelection() {
-                $('.chk_list, .chk_list_item, #cvh_selection_master_chk, #chk_all_list').prop('checked', false);
+                $('.chk_list, .chk_list_item, .datatable_chk, #cvh_selection_master_chk, #chk_all_list').prop('checked', false);
+                $('.aptk-cand-card').removeClass('is-selected');
                 $('#myTable tbody tr').removeClass('table-active selected');
                 $('.test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
                 $('.custom_hide').removeClass('d-none');
@@ -2481,6 +3245,20 @@
             $(document).on('click', '#cvh_selection_close', clearCvSelection);
             $(document).on('change', '#cvh_selection_master_chk', function() {
                 if (!$(this).is(':checked')) clearCvSelection();
+            });
+
+            /* Candidate Card click handler: open detail drawer unless clicking interactive elements */
+            $(document).on('click', '.aptk-cand-card', function(e) {
+                if ($(e.target).closest('.chk_list_item, .aptk-chk-wrap, .aptk-subcard-stage, .stage_sub_stage, .client_stage_sub_stage, .aptk-linkedin-pill, .show-application-detail, a[href^="http"], a[data-toggle="modal"], button, input, select, textarea').length) {
+                    return;
+                }
+                if (window.getSelection && window.getSelection().toString().trim() !== '') {
+                    return;
+                }
+                var $detailTrigger = $(this).find('.show-application-detail').first();
+                if ($detailTrigger.length) {
+                    $detailTrigger.trigger('click');
+                }
             });
 
             //  $.noConflict();
@@ -2517,19 +3295,27 @@
         });
         var page_no = localStorage.getItem('currentPage') || 1;
         var activeStageTab = 'all';
-        function setCvTabsCardBorder(color) {
-            $('#cvh_tabs_card').css('border-color', color || '#e4e6ef');
-        }
-        $(document).on('click', '.cvh-tab', function() {
-            $('.cvh-tab').removeClass('active');
-            $(this).addClass('active');
-            activeStageTab = $(this).attr('data-stage');
-            setCvTabsCardBorder($(this).attr('data-color'));
+        var activeCompanyType = 'all';
+
+        function setCvKpiTab(stage, el) {
+            $('.cv-kpi-card').removeClass('active');
+            $(el).closest('.cv-kpi-card').addClass('active');
+            activeStageTab = stage;
             page_no = 1;
             localStorage.setItem('currentPage', 1);
             fetchCandidates(1);
-        });
-        setCvTabsCardBorder($('.cvh-tab.active').attr('data-color'));
+        }
+        window.setCvKpiTab = setCvKpiTab;
+
+        function setCvCompanyType(orgType, el) {
+            $('.cv-org-pill').removeClass('active');
+            $(el).closest('.cv-org-pill').addClass('active');
+            activeCompanyType = orgType;
+            page_no = 1;
+            localStorage.setItem('currentPage', 1);
+            fetchCandidates(1);
+        }
+        window.setCvCompanyType = setCvCompanyType;
 
         /* ── Phase 7: GOD-Level Client Caching (L1 RAM + L2 IndexedDB + SWR + Request Abort + Multi-Tab Sync) ──
          * Reference: service_company/job-onboard
@@ -2570,7 +3356,8 @@
                     s.app_int_status || '',
                     s.app_int_activity || '',
                     s.app_int_notice || '',
-                    s.stage_tab || ''
+                    s.stage_tab || '',
+                    s.company_type || ''
                 ].join('|');
             },
 
@@ -2821,6 +3608,7 @@
                 app_int_activity: filterState.app_int_activity,
                 app_int_notice: filterState.app_int_notice,
                 stage_tab: filterState.stage_tab,
+                company_type: filterState.company_type,
                 size: filterState.per_page,
                 per_page: filterState.per_page
             };
@@ -2887,7 +3675,8 @@
                 app_int_status: $('[name="app_int_status"]:checked').val() || '',
                 app_int_activity: $('[name="app_int_activity"]:checked').val() || '',
                 app_int_notice: $('[name="app_int_notice"]:checked').val() || '',
-                stage_tab: activeStageTab === 'all' ? '' : activeStageTab
+                stage_tab: activeStageTab === 'all' ? '' : activeStageTab,
+                company_type: activeCompanyType === 'all' ? '' : activeCompanyType
             };
 
             // 1. Check L1 RAM Snapshot Cache first (instant 0ms render, 0 network hit)
@@ -2938,6 +3727,23 @@
         /* Sync hero KPI cards + stage tab badges from the same ES aggregation the table fetch already returns */
         function updateCvHeroStats(stats) {
             if (!stats) return;
+
+            // 1. Synchronize 9 interactive status KPI cards
+            if (stats.tabs) {
+                if (stats.tabs.all != null) $('#kpi_all').text(Number(stats.tabs.all).toLocaleString());
+                if (stats.tabs.inreview != null) $('#kpi_inreview').text(Number(stats.tabs.inreview).toLocaleString());
+                if (stats.tabs.sourcing != null) $('#kpi_sourcing').text(Number(stats.tabs.sourcing).toLocaleString());
+                if (stats.tabs.screening != null) $('#kpi_screening').text(Number(stats.tabs.screening).toLocaleString());
+                if (stats.tabs.evaluation != null) $('#kpi_evaluation').text(Number(stats.tabs.evaluation).toLocaleString());
+                if (stats.tabs.negotiation != null) $('#kpi_negotiation').text(Number(stats.tabs.negotiation).toLocaleString());
+                if (stats.tabs.offered != null) $('#kpi_offered').text(Number(stats.tabs.offered).toLocaleString());
+                if (stats.tabs.joined != null) $('#kpi_joined').text(Number(stats.tabs.joined).toLocaleString());
+                if (stats.tabs.rejected != null) $('#kpi_rejected').text(Number(stats.tabs.rejected).toLocaleString());
+            } else if (stats.total != null) {
+                $('#kpi_all').text(Number(stats.total).toLocaleString());
+            }
+
+            // 2. Legacy data hooks
             document.querySelectorAll('[data-cvh]').forEach(function (el) {
                 var k = el.getAttribute('data-cvh');
                 if (k === 'this_week_delta') {
@@ -2979,8 +3785,8 @@
             }
 
             var $row = $();
-            if (wid) $row = $row.add($('tr[data-wise-id="' + wid + '"]'));
-            if (cid && !$row.length) $row = $row.add($('tr[data-candidate-id="' + cid + '"]'));
+            if (wid) $row = $row.add($('tr[data-wise-id="' + wid + '"], .aptk-cand-card[data-wise-id="' + wid + '"]'));
+            if (cid && !$row.length) $row = $row.add($('tr[data-candidate-id="' + cid + '"], .aptk-cand-card[data-candidate-id="' + cid + '"]'));
 
             var STAGE_ID_TO_TAB = {
                 8: 'inreview',
@@ -2998,21 +3804,21 @@
             if (currentStageTab && currentStageTab !== 'all' && oldMasterStatusId && masterStatusId && String(oldMasterStatusId) !== String(masterStatusId)) {
                 $row.fadeOut(300, function() {
                     $(this).remove();
-                    if ($('#candidatetList tr').length === 0) {
+                    if ($('#candidatetList tr').length === 0 && $('#candidatetList .aptk-cand-card').length === 0) {
                         var page = $('#paginationcandidate .active_disabled').data('page') || page_no || 1;
                         fetchCandidates(page);
                     }
                 });
             } else if ($row.length) {
-                var $stageLink = $row.find('.stage_sub_stage, .client_stage_sub_stage');
+                var $stageLink = $row.find('.stage_sub_stage, .client_stage_sub_stage, .aptk-stage-trigger');
                 if ($stageLink.length) {
                     if (cssStyle && masterStatusName) {
-                        var $badge = $stageLink.find('.badge');
-                        $badge.attr('class', 'badge fw-bolder fs-6 ' + cssStyle + ' px-2 py-1');
-                        $badge.text(masterStatusName.substring(0, 10));
+                        var $badge = $row.find('.aptk-stage-pill, .stage_sub_stage .badge, .client_stage_sub_stage .badge');
+                        $badge.attr('class', 'aptk-stage-pill fw-bolder fs-7 ' + cssStyle + ' px-2 py-1');
+                        $badge.text(masterStatusName.substring(0, 12));
                     }
                     if (subStageName !== undefined && subStageName !== null) {
-                        $stageLink.find('.text-muted').text(subStageName || '');
+                        $row.find('.aptk-substage-txt strong, .stage_sub_stage .text-muted').text(subStageName || '');
                     }
                     $row.css('transition', 'background-color 0.4s ease');
                     var origBg = $row.css('background-color');
@@ -3024,15 +3830,21 @@
             }
 
             if (oldMasterStatusId && STAGE_ID_TO_TAB[oldMasterStatusId]) {
-                var $oldTab = $('[data-cvh-tab="' + STAGE_ID_TO_TAB[oldMasterStatusId] + '"]');
-                if ($oldTab.length) {
-                    var cnt = Math.max(0, parseInt($oldTab.text().replace(/,/g, ''), 10) - 1);
-                    $oldTab.text(cnt.toLocaleString());
+                var oldKey = STAGE_ID_TO_TAB[oldMasterStatusId];
+                var $oldEl = $('#kpi_' + oldKey + ', [data-cvh-tab="' + oldKey + '"]');
+                if ($oldEl.length) {
+                    var cnt = Math.max(0, parseInt($oldEl.first().text().replace(/,/g, ''), 10) - 1);
+                    $oldEl.text(cnt.toLocaleString());
                 }
             }
             if (masterStatusId && STAGE_ID_TO_TAB[masterStatusId]) {
-                var $newTab = $('[data-cvh-tab="' + STAGE_ID_TO_TAB[masterStatusId] + '"]');
-                if ($newTab.length) {
+                var newKey = STAGE_ID_TO_TAB[masterStatusId];
+                var $newEl = $('#kpi_' + newKey + ', [data-cvh-tab="' + newKey + '"]');
+                if ($newEl.length) {
+                    var cnt = (parseInt($newEl.first().text().replace(/,/g, ''), 10) || 0) + 1;
+                    $newEl.text(cnt.toLocaleString());
+                }
+            }
                     var cnt = (parseInt($newTab.text().replace(/,/g, ''), 10) || 0) + 1;
                     $newTab.text(cnt.toLocaleString());
                 }
