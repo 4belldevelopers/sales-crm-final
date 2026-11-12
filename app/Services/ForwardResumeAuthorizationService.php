@@ -135,7 +135,7 @@ class ForwardResumeAuthorizationService
         ?int $jobId,
         array $candidateSkills,
         array $jobSkills,
-        ?int $candidateRating = 4
+        ?int $candidateRating = 0
     ): int {
         $matchScore = 0;
 
@@ -157,11 +157,9 @@ class ForwardResumeAuthorizationService
             }
         }
 
-        if ($matchScore <= 0) {
-            $matchScore = ! empty($candidateRating) ? min(100, max(40, (int) ($candidateRating * 20))) : 85;
-        }
-
-        return min(100, max(10, $matchScore));
+        // Strict Non-Fabrication Guarantee:
+        // Never invent an arbitrary 85% or rating*20% match when job/candidate skills do not match.
+        return min(100, max(0, $matchScore));
     }
 
     /**

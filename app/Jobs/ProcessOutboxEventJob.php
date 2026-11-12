@@ -341,6 +341,7 @@ class ProcessOutboxEventJob implements ShouldQueue
             }
 
             $jobId = (int) ($payload['job_id'] ?? 0);
+            \App\Services\PrescreenDossierService::invalidateDossierCaches($candidateId, $jobId > 0 ? $jobId : null, $companyId);
             if ($jobId > 0 && $companyId > 0) {
                 try {
                     cache()->increment("ats:version:job:{$companyId}:{$jobId}");
