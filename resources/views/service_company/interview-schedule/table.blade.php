@@ -685,26 +685,7 @@
 }
 
 .it-pill-clear {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 16px !important;
-    height: 16px !important;
-    border-radius: 50% !important;
-    background: #bae6fd !important;
-    color: #0284c7 !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    line-height: 1 !important;
-    cursor: pointer !important;
-    margin-left: 2px !important;
-    transition: all 0.12s ease !important;
-    flex-shrink: 0 !important;
-}
-
-.it-pill-clear:hover {
-    background: #0284c7 !important;
-    color: #ffffff !important;
+    display: none !important;
 }
 
 .it-pill-chevron {
@@ -1144,12 +1125,13 @@
 .it-followup-menu {
     position: absolute !important;
     top: calc(100% + 4px) !important;
-    right: 0 !important;
+    left: 0 !important;
+    right: auto !important;
     background: #ffffff !important;
     border: 1px solid var(--it-border) !important;
     border-radius: 8px !important;
     box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15) !important;
-    z-index: 80 !important;
+    z-index: 1050 !important;
     display: none !important;
     min-width: 145px !important;
     padding: 4px !important;
@@ -1157,6 +1139,11 @@
 
 .it-followup-menu.open {
     display: block !important;
+}
+
+.it-followup-menu.it-menu-up {
+    top: auto !important;
+    bottom: calc(100% + 4px) !important;
 }
 
 .it-followup-item {
@@ -1768,8 +1755,22 @@
     border-color: var(--it-primary-deep) !important;
 }
 
+.it-fb-btn-add i,
+.it-fb-btn-add svg,
+.it-fb-btn-add .fa-plus,
+.it-fb-btn-add [class*="fa-"] {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+}
+
 .it-fb-btn-add:hover {
     background: #1d4ed8 !important;
+}
+
+.it-fb-btn-add:hover i,
+.it-fb-btn-add:hover svg,
+.it-fb-btn-add:hover .fa-plus {
+    color: #ffffff !important;
 }
 
 .it-fb-btn-view {
@@ -2315,9 +2316,9 @@
               </div>
             </div>
 
-            {{-- Filter 1: Company Type Combobox Popover (Direct Client, Internal Client, My Organization) --}}
+            {{-- Filter 1: Job Type Combobox Popover (Direct Client, Internal Client, My Organization) --}}
             <div class="it-company-type-wrapper" id="itCompanyTypeDropdownWrapper">
-              <button type="button" class="it-combobox-btn it-company-type-combobox-btn" id="itCompanyTypeBtn" onclick="toggleItCompanyTypeDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="itCompanyTypeDropdownPanel" title="Filter by Company Type">
+              <button type="button" class="it-combobox-btn it-company-type-combobox-btn" id="itCompanyTypeBtn" onclick="toggleItCompanyTypeDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="itCompanyTypeDropdownPanel" title="Filter by Job Type">
                 <div class="it-pill-icon">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M3 21h18"/>
@@ -2329,21 +2330,20 @@
                   </svg>
                 </div>
                 <div class="it-pill-texts">
-                  <span class="it-pill-lbl">Type</span>
-                  <span class="it-pill-val" id="itCompanyTypeDisplay">All Types</span>
+                  <span class="it-pill-lbl">Job Type</span>
+                  <span class="it-pill-val" id="itCompanyTypeDisplay">All Job Types</span>
                 </div>
-                <div class="it-pill-clear" id="itCompanyTypeClearBtn" onclick="clearItCompanyTypeFilter(event)" title="Reset Company Type" style="display:none;">&#10005;</div>
                 <div class="it-pill-chevron">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
               </button>
 
               <div class="it-dropdown-panel it-company-type-dropdown-panel" id="itCompanyTypeDropdownPanel" role="listbox" aria-labelledby="itCompanyTypeBtn" tabindex="-1">
-                <div class="it-pop-section-hdr">Company Type</div>
-                <div class="it-pop-item selected" id="type-opt-All" data-type-val="All" onclick="selectItCompanyTypeOption('All', 'All Types', event)" role="option" aria-selected="true" tabindex="0">
+                <div class="it-pop-section-hdr">Job Type</div>
+                <div class="it-pop-item selected" id="type-opt-All" data-type-val="All" onclick="selectItCompanyTypeOption('All', 'All Job Types', event)" role="option" aria-selected="true" tabindex="0">
                   <div class="it-pop-item-left">
                     <span class="it-dot it-dot-all"></span>
-                    <span class="it-pop-item-title">All Types</span>
+                    <span class="it-pop-item-title">All Job Types</span>
                   </div>
                   <div class="it-pop-item-right">
                     <span class="it-pop-check">&#10003;</span>
@@ -2397,7 +2397,6 @@
                   <span class="it-pill-lbl">Mode</span>
                   <span class="it-pill-val" id="itModeDisplay">All Modes</span>
                 </div>
-                <div class="it-pill-clear" id="itModeClearBtn" onclick="clearItModeFilter(event)" title="Reset Mode" style="display:none;">&#10005;</div>
                 <div class="it-pill-chevron">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
@@ -2786,12 +2785,15 @@ function selectItCompanyTypeOption(val, text, e, skipFetch) {
 
     var canonical = String(val || 'All');
     var typeLabels = {
-        'All': 'All Types',
+        'All': 'All Job Types',
         'direct_client': 'Direct Client',
         'internal_client': 'Internal Client',
         'my_organization': 'My Organization'
     };
-    var displayText = text || typeLabels[canonical] || 'All Types';
+    var displayText = text || typeLabels[canonical] || 'All Job Types';
+    if (canonical === 'All' && displayText === 'All Types') {
+        displayText = 'All Job Types';
+    }
 
     $('#itCompanyTypeDisplay').text(displayText);
     $('#itCompanyTypeFilter').val(canonical);
@@ -2806,10 +2808,8 @@ function selectItCompanyTypeOption(val, text, e, skipFetch) {
 
     if (canonical !== 'All') {
         $('#itCompanyTypeBtn').addClass('is-active-filter');
-        $('#itCompanyTypeClearBtn').show();
     } else {
         $('#itCompanyTypeBtn').removeClass('is-active-filter');
-        $('#itCompanyTypeClearBtn').hide();
     }
 
     applyCompanyTypeStatsLocally(canonical);
@@ -2826,7 +2826,7 @@ function clearItCompanyTypeFilter(e) {
         e.preventDefault();
         e.stopPropagation();
     }
-    selectItCompanyTypeOption('All', 'All Types', null, false);
+    selectItCompanyTypeOption('All', 'All Job Types', null, false);
 }
 window.clearItCompanyTypeFilter = clearItCompanyTypeFilter;
 
@@ -2882,10 +2882,8 @@ function selectItModeOption(val, text, e, skipFetch) {
 
     if (canonical !== 'All') {
         $('#itModeBtn').addClass('is-active-filter');
-        $('#itModeClearBtn').show();
     } else {
         $('#itModeBtn').removeClass('is-active-filter');
-        $('#itModeClearBtn').hide();
     }
 
     updateItToolbarIndicators();
@@ -3317,7 +3315,7 @@ function resetFilters() {
     }
     itLastAppliedSort = '';
     selectItSortOption('', 'Newest Interviews', null, true);
-    selectItCompanyTypeOption('All', 'All Types', null, true);
+    selectItCompanyTypeOption('All', 'All Job Types', null, true);
     selectItModeOption('All', 'All Modes', null, true);
     activeKpiFilter = 'all';
     filterValues.kpi_filter = 'all';
@@ -3348,7 +3346,15 @@ function toggleFollowUp(btn) {
     const menu = btn.nextElementSibling;
     const isOpen = menu.classList.contains('open');
     document.querySelectorAll('.it-followup-menu.open').forEach(m => m.classList.remove('open'));
-    if (!isOpen) menu.classList.add('open');
+    if (!isOpen) {
+        menu.classList.remove('it-menu-up');
+        menu.classList.add('open');
+        var rect = menu.getBoundingClientRect();
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        if (rect.bottom > vh && rect.top > rect.height) {
+            menu.classList.add('it-menu-up');
+        }
+    }
 }
 
 // ── Browser-RAM LRU Cache ──────────────────────────────────────────────────
