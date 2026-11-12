@@ -74,6 +74,7 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
             'childStatus' => 0,
             'css_style' => 'badge-light-warning',
             'name' => 'InReview',
+            'status' => 2,
         ], $overrides);
     }
 
@@ -759,8 +760,84 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);', $controllerFile);
         $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, '$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);'));
 
-        // All AJAX actions pass card_v7 in $cachePayload
-        $this->assertStringContainsString("'ui_v' => 'card_v7'", $controllerFile);
-        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v7'"));
+        // All AJAX actions pass card_v8 in $cachePayload
+        $this->assertStringContainsString("'ui_v' => 'card_v8'", $controllerFile);
+        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v8'"));
+    }
+
+    public function test_matched_job_subcard_and_restored_work_mode_and_add_candidate_button(): void
+    {
+        $baseParams = [
+            'data' => [$this->makeCandidateRow()],
+            'userPermissions' => ['view_jobs', 'add_job_applications'],
+            'app_int_status' => null,
+            'app_int_activity' => null,
+            'app_int_notice' => null,
+            'sal_mode' => 0,
+            'min_salary_currency' => 0,
+            'app_int_outsource' => null,
+            'jobid' => 117,
+            'requiredSkills' => ['php'],
+            'modeFilter' => 0,
+            'currencyFilter' => 0,
+            'symbolsFilter' => 'INR',
+            'hasActiveFilters' => false,
+            'search' => '',
+            'rowMaps' => array_merge($this->baseRowMaps(117), [
+                'wise_job_info' => [
+                    101 => (object) [
+                        'wise_id' => 101,
+                        'company_name' => '4Bell Technology',
+                        'client_name' => 'TechNova Solutions',
+                        'self_company' => 0,
+                        'matched_job_id' => 81,
+                        'title' => 'PHP / Laravel Developer',
+                        'jobStatus' => 'active',
+                        'companyIdCheck' => 1,
+                        'employment_type' => 0,
+                        'category_name' => 'Technology',
+                    ],
+                ],
+                'work_mode_map' => [
+                    101 => 'office',
+                ],
+            ]),
+            'assignedCandidateIds' => [],
+        ];
+
+        // 1. Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode, and clean glyph
+        $simHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $baseParams)->render();
+        $this->assertStringContainsString('TARGET REQ', $simHtml);
+        $this->assertStringContainsString('Internal Client', $simHtml);
+        $this->assertStringContainsString('Hiring', $simHtml);
+        $this->assertStringContainsString('#81', $simHtml);
+        $this->assertStringContainsString('Technology', $simHtml);
+        $this->assertStringContainsString('simf-loc-mode', $simHtml);
+        $this->assertStringNotContainsString('<i class="fa fa-inr"', $simHtml);
+
+        // 2. Client Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode
+        $dsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $baseParams)->render();
+        $this->assertStringContainsString('TARGET REQ', $dsimHtml);
+        $this->assertStringContainsString('Internal Client', $dsimHtml);
+        $this->assertStringContainsString('dsf-loc-mode', $dsimHtml);
+        $this->assertStringNotContainsString('<i class="fa fa-inr"', $dsimHtml);
+
+        // 3. Location & Degree in channel views restores Work Mode
+        $ibHtml = View::make('service_company.ajax_pages.internal_bench_ajax', $baseParams)->render();
+        $this->assertStringContainsString('ibf-loc-mode', $ibHtml);
+
+        $dibHtml = View::make('service_company.ajax_pages.dinternal_bench_ajax', $baseParams)->render();
+        $this->assertStringContainsString('dib-loc-mode', $dibHtml);
+
+        $abHtml = View::make('service_company.ajax_pages.public_bench_ajax', array_merge($baseParams, [
+            'boostbenchApplications' => [],
+        ]))->render();
+        $this->assertStringContainsString('abf-loc-mode', $abHtml);
+
+        $brHtml = View::make('service_company.ajax_pages.candidates_request_ajax', $baseParams)->render();
+        $this->assertStringContainsString('brf-loc-mode', $brHtml);
+
+        $wcHtml = View::make('service_company.ajax_pages.career_apply_ajax', $baseParams)->render();
+        $this->assertStringContainsString('wcf-loc-mode', $wcHtml);
     }
 }

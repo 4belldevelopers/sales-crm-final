@@ -98,3 +98,30 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
      * **Button Hover State:** `linear-gradient(135deg, #6ee7b7 0%, #34d399 100%)`, border `#10b981`, text `#064e3b`.
      * **Shadow Glow:** `0 4px 14px rgba(16, 185, 129, 0.22)`.
    - **Parity & Consistency:** Applied identically across AppTracker (`index.blade.php`), ClientAppTracker (`clientapp.blade.php`), and automated test assertions (`AppTrackerCardSubCardRedesignTest.php`).
+
+
+10. **Target Req Redesign, Restored Work Mode, Clean Compensation Glyphs & Multi-Channel Add Candidate Button:**
+    - **1. Similar Candidates Compensation Subcard:**
+      * Replaced legacy raw HTML string (`<i class="fa fa-inr" aria-hidden="true"></i>`) returned by `GeneralMethod::currencySymbole()` with clean Unicode currency symbols via `CurrencyService::resolvePlainSymbolFromLegacy()`.
+      * Eliminated literal escaped HTML rendering (`<i class="fa fa-inr"...`) on screen.
+      * Standardized salary formatting for expected and current CTC with empty-safe zero fallbacks.
+    - **2. Restored Work Mode in Location Subcard:**
+      * Restored the Work Mode row (`Remote`, `Hybrid`, `Work From Office`, `Work From Home`) between City/Country and Degree across all channel AJAX views (`similar_existing_ajax`, `dsimilar_existing_ajax`, `internal_bench_ajax`, `dinternal_bench_ajax`, `public_bench_ajax`, `candidates_request_ajax`, `career_apply_ajax`).
+      * Integrated `AppTrackerCardPresenter::resolveWorkMode($row)` with icon mapping (`fas fa-laptop` for Remote/WFH, `fas fa-building` for Office/Hybrid).
+      * Added batch `job_applications.wm` pre-fetching in `prepareSimilarCandidatesRowMaps()` for candidate rows missing `wm` in Elasticsearch, avoiding N+1 queries.
+    - **3. Matched Job Subcard (Target Req Redesign per Rule 25):**
+      * Strictly replaced bare/ambiguous `Internal` label with canonical `Internal Client` (Blue `#eff6ff` bg, `#1d4ed8` text, `#bfdbfe` border).
+      * When candidate's matched job belongs to own company (`self_company === 1`), dynamically renders `My Organization` (Cyan `#ecfeff` bg, `#0891b2` text, `#a5f3fc` border).
+      * When candidate's matched job belongs to a marketplace client, renders `Direct Client` (Emerald `#ecfdf5` bg, `#059669` text, `#a7f3d0` border).
+      * Redesigned Subcard 4 matching user reference (`media_1794491413897_67f7cc29.png`):
+        - Header: `TARGET REQ...` with dual right-aligned pills (Classification badge + `HIRING` status badge).
+        - Body: 34×34px gradient icon box (`#4f46e5` to `#6366f1` with white code icon) on left; 3-line details on right:
+          * Line 1: Job title (12.5px bold `#0f172a`).
+          * Line 2: `#ID` (bold cyan `#0284c7`) • `Category` (slate `#64748b`).
+          * Line 3: `Company` (medium text `#334155`) • briefcase icon + `Employment Type` (Full-Time / Contract).
+    - **4. Add Candidate Button Header Uniformity:**
+      * Ensured consistent position, height (`38px`, `36px` at `<=1440px`), padding, border-radius (`8px`), and org-matching colors across all channel headers (`similar_candidates`, `dsimilar_candidates`, `internal_bench`, `dinternal_bench`, `public_bench`, `candidates_request`, `career_apply`).
+      * Wired `#addServiceCandidate` click handlers to package validation endpoint (`service_company.auth-custom-package.validatePackage`) matching `all_apptracker` and `clientapp`.
+    - **5. Tenancy & Cache Invalidation:**
+      * Bumped cache version across all 9 AppTracker controller endpoints to `card_v8` to immediately invalidate legacy HTML.
+      * 13 feature tests in `AppTrackerCardSubCardRedesignTest` passing with 332 assertions.

@@ -785,9 +785,9 @@
         #kt_toolbar.brf-job-toolbar { background: #ffffff !important; border-bottom: none !important; box-shadow: none !important; height: auto !important; min-height: 60px; padding: 0 !important; margin: 0 !important; }
         #kt_toolbar.brf-job-toolbar #kt_toolbar_container { width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; display: block !important; }
         .brf-hdr-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 60px; background: var(--hdr-bg, #ffffff); border: none; border-bottom: 1px solid var(--hdr-border, #dbeafe); border-left: 4px solid var(--hdr-accent, #2563eb); border-radius: 0 !important; padding: 10px 20px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
-        .brf-hdr-card.hp-org-my { --hdr-bg: linear-gradient(90deg, #fffbeb 0%, #fffdf7 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #fde68a; --hdr-accent: #d97706; --hdr-logo-bg: #fffbeb; --hdr-logo-border: #fde68a; --hdr-icon-color: #d97706; --hdr-pill-bg: #fef3c7; --hdr-pill-border: #fcd34d; --hdr-pill-color: #92400e; --hdr-btn-outline-border: #f59e0b; --hdr-btn-outline-color: #b45309; --hdr-btn-outline-hover-bg: #fef3c7; --hdr-btn-outline-hover-color: #78350f; }
-        .brf-hdr-card.hp-org-internal { --hdr-bg: linear-gradient(90deg, #eff6ff 0%, #f7faff 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #bfdbfe; --hdr-accent: #2563eb; --hdr-logo-bg: #eff6ff; --hdr-logo-border: #bfdbfe; --hdr-icon-color: #2563eb; --hdr-pill-bg: #dbeafe; --hdr-pill-border: #93c5fd; --hdr-pill-color: #1e40af; --hdr-btn-outline-border: #60a5fa; --hdr-btn-outline-color: #1d4ed8; --hdr-btn-outline-hover-bg: #dbeafe; --hdr-btn-outline-hover-color: #1e3a8a; }
-        .brf-hdr-card.hp-org-direct { --hdr-bg: linear-gradient(90deg, #ecfdf5 0%, #f5fdf9 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #a7f3d0; --hdr-accent: #16a34a; --hdr-logo-bg: #ecfdf5; --hdr-logo-border: #a7f3d0; --hdr-icon-color: #16a34a; --hdr-pill-bg: #d1fae5; --hdr-pill-border: #6ee7b7; --hdr-pill-color: #166534; --hdr-btn-outline-border: #34d399; --hdr-btn-outline-color: #15803d; --hdr-btn-outline-hover-bg: #d1fae5; --hdr-btn-outline-hover-color: #14532d; }
+        .brf-hdr-card.hp-org-my { --hdr-bg: linear-gradient(90deg, #fffbeb 0%, #fffdf7 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #fde68a; --hdr-accent: #d97706; --hdr-logo-bg: #fffbeb; --hdr-logo-border: #fde68a; --hdr-icon-color: #d97706; --hdr-pill-bg: #fef3c7; --hdr-pill-border: #fcd34d; --hdr-pill-color: #92400e; --hdr-btn-outline-border: #f59e0b; --hdr-btn-outline-color: #b45309; --hdr-btn-outline-hover-bg: #fef3c7; --hdr-btn-outline-hover-color: #78350f; --hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%); --hdr-btn-solid-border: #eab308; --hdr-btn-solid-color: #422006; --hdr-btn-solid-hover: linear-gradient(135deg, #facc15 0%, #ca8a04 100%); --hdr-btn-solid-hover-border: #ca8a04; --hdr-btn-shadow: rgba(234, 179, 8, 0.28); }
+        .brf-hdr-card.hp-org-internal { --hdr-bg: linear-gradient(90deg, #eff6ff 0%, #f7faff 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #bfdbfe; --hdr-accent: #2563eb; --hdr-logo-bg: #eff6ff; --hdr-logo-border: #bfdbfe; --hdr-icon-color: #2563eb; --hdr-pill-bg: #dbeafe; --hdr-pill-border: #93c5fd; --hdr-pill-color: #1e40af; --hdr-btn-outline-border: #60a5fa; --hdr-btn-outline-color: #1d4ed8; --hdr-btn-outline-hover-bg: #dbeafe; --hdr-btn-outline-hover-color: #1e3a8a; --hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%); --hdr-btn-solid-border: #1d4ed8; --hdr-btn-solid-color: #ffffff; --hdr-btn-solid-hover: linear-gradient(135deg, #1e40af 0%, #172554 100%); --hdr-btn-solid-hover-border: #1e3a8a; --hdr-btn-shadow: rgba(29, 78, 216, 0.30); }
+        .brf-hdr-card.hp-org-direct { --hdr-bg: linear-gradient(90deg, #ecfdf5 0%, #f5fdf9 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #a7f3d0; --hdr-accent: #16a34a; --hdr-logo-bg: #ecfdf5; --hdr-logo-border: #a7f3d0; --hdr-icon-color: #16a34a; --hdr-pill-bg: #d1fae5; --hdr-pill-border: #6ee7b7; --hdr-pill-color: #166534; --hdr-btn-outline-border: #34d399; --hdr-btn-outline-color: #15803d; --hdr-btn-outline-hover-bg: #d1fae5; --hdr-btn-outline-hover-color: #14532d; --hdr-btn-solid-bg: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%); --hdr-btn-solid-border: #34d399; --hdr-btn-solid-color: #064e3b; --hdr-btn-solid-hover: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%); --hdr-btn-solid-hover-border: #10b981; --hdr-btn-shadow: rgba(16, 185, 129, 0.22); }
         .brf-hdr-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .brf-hdr-sep { width: 1px; height: 30px; background: #e2e8f0; flex-shrink: 0; }
         .brf-hdr-col { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
@@ -817,12 +817,16 @@
         .brf-hdr-actions { display: flex; align-items: center; gap: 8px; padding-left: 16px; border-left: 1px solid #e2e8f0; min-height: 38px; white-space: nowrap; }
         .brf-hdr-btn-outline { background: #ffffff !important; border: 1.5px solid var(--hdr-btn-outline-border, #60a5fa) !important; color: var(--hdr-btn-outline-color, #1d4ed8) !important; border-radius: 8px !important; height: 38px !important; min-height: 38px !important; padding: 0 14px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; font-size: 12.5px !important; font-weight: 600 !important; line-height: 1 !important; margin: 0 !important; transition: all 0.15s ease !important; }
         .brf-hdr-btn-outline:hover, .brf-hdr-btn-outline:focus { background: var(--hdr-btn-outline-hover-bg, #dbeafe) !important; border-color: var(--hdr-accent, #2563eb) !important; color: var(--hdr-btn-outline-hover-color, #1e3a8a) !important; }
+        .brf-hdr-btn-solid { background: var(--hdr-btn-solid-bg, linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%)) !important; border: 1.5px solid var(--hdr-btn-solid-border, #1d4ed8) !important; color: var(--hdr-btn-solid-color, #ffffff) !important; border-radius: 8px !important; height: 38px !important; min-height: 38px !important; padding: 0 16px !important; font-size: 13px !important; font-weight: 600 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; white-space: nowrap !important; line-height: 1 !important; margin: 0 !important; box-shadow: 0 2px 5px var(--hdr-btn-shadow, rgba(29, 78, 216, 0.25)) !important; transition: all 0.15s ease !important; }
+        .brf-hdr-btn-solid:hover, .brf-hdr-btn-solid:focus { background: var(--hdr-btn-solid-hover, linear-gradient(135deg, #1e40af 0%, #172554 100%)) !important; border-color: var(--hdr-btn-solid-hover-border, #1e3a8a) !important; color: var(--hdr-btn-solid-color, #ffffff) !important; transform: translateY(-0.5px); }
+        .brf-hdr-btn-solid .svg-icon svg path { fill: var(--hdr-btn-solid-color, #ffffff) !important; }
         @media (max-width: 1440px) {
             .brf-hdr-card { gap: 12px; padding: 9px 16px; }
             .brf-hdr-main { gap: 8px; }
             .brf-hdr-col--identity { flex: 0 1 285px; max-width: 295px; }
             .brf-hdr-actions { padding-left: 12px; min-height: 36px; }
             .brf-hdr-btn-outline { height: 36px !important; min-height: 36px !important; padding: 0 12px !important; font-size: 12px !important; }
+            .brf-hdr-btn-solid { height: 36px !important; min-height: 36px !important; padding: 0 14px !important; font-size: 12px !important; }
         }
         @media (max-width: 1180px) {
             .brf-hdr-card { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 14px; }
@@ -907,6 +911,30 @@
                         class="btn btn-sm brf-hdr-btn-outline show-detail-open">
                         <i class="far fa-eye" aria-hidden="true"></i>
                         <span>View Job</span>
+                    </a>
+                @endif
+                @if (in_array('add_job_applications', $userPermissions))
+                    <a href="javascript:void(0);" class="d-inline-flex">
+                        <button type="button"
+                            class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder brf-hdr-btn-solid"
+                            id="addServiceCandidate"
+                            data-job-status="{{ $job->status }}">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x me-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                    width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                        <polygon points="0 0 24 0 24 24" />
+                                        <path
+                                            d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
+                                            fill="#000000" fill-rule="nonzero" opacity="0.3" />
+                                        <path
+                                            d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
+                                            fill="#000000" fill-rule="nonzero" />
+                                    </g>
+                                </svg>
+                            </span>
+                            Add Candidate
+                        </button>
                     </a>
                 @endif
             </div>
@@ -2175,6 +2203,29 @@
         $(document).ready(function() {
             // $.noConflict();
             
+            $(document).on('click', '#addServiceCandidate', function() {
+                var url = "{{ route('service_company.auth-custom-package.validatePackage') }}";
+                var token = "{{ csrf_token() }}";
+                var eventId = 4;
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: {
+                        '_token': token,
+                        'event': 'CVACCESS',
+                        'eventId': eventId
+                    },
+                    success: function(response) {
+                        if (response.status == "success") {
+                            var redirectUrl = "{{ url('service_company/job-applications/create/' . GeneralMethod::value_encrypt(@$job->id) . '/0') }}";
+                            window.location = redirectUrl;
+                        } else if (response.status == "info") {
+                            sweetAlert("Fail!", response.message, "error");
+                        }
+                    }
+                });
+            });
+
             setTimeout(() => {
                 fetchCandidates();
             }, 200);

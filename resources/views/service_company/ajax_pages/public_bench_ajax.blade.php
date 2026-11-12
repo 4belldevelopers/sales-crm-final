@@ -1,5 +1,7 @@
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\AppTrackerCardPresenter;
+    use App\Services\CurrencyService;
     use Illuminate\Support\Facades\DB;
 
     $salaryMode = GeneralMethod::salaryMode();
@@ -107,8 +109,9 @@
             // Compensation & Outsourcing type
             $safeCurrencyKey = (int) (@$min_salary_currency ?? 0);
             $safeSalMode = (int) (@$sal_mode ?? 0);
-            $pay_rate_currency = $currencySymbole[$safeCurrencyKey] ?? '₹';
-            $bill_rate_currency = $currencySymbole[$safeCurrencyKey] ?? '₹';
+            $plainCurrencySymbol = CurrencyService::resolvePlainSymbolFromLegacy($safeCurrencyKey, $currencySymbole);
+            $pay_rate_currency = $plainCurrencySymbol;
+            $bill_rate_currency = $plainCurrencySymbol;
             $pay_rate_amount = '0';
             $bill_rate_amount = '0';
             if ((@$row->ectc_yearly ?? 0) > 0 || (@$row->ctc_yearly ?? 0) > 0) {
@@ -130,6 +133,9 @@
             $row_country_name = @$row->country_name;
             $row_city_name = @$row->city_name;
             $qualFull = mb_strtoupper((string) @$row->qualification_name);
+            $wmMeta = AppTrackerCardPresenter::resolveWorkMode($row);
+            $wmIcon = !empty($wmMeta['icon']) ? $wmMeta['icon'] : 'fa-solid fa-building';
+            $wmLabel = !empty($wmMeta['label']) ? $wmMeta['label'] : '–';
 
             // Last Active & Status label
             $statusLabel = 'Bench';
@@ -246,16 +252,19 @@
                     </div>
                 </div>
 
-                {{-- Sub-Card 5: Location & Degree --}}
+                {{-- Sub-Card 5: Location & Degree (With Restored Work Mode) --}}
                 <div class="abf-cand-subcard">
                     <div class="abf-subcard-head">
                         <span class="abf-subcard-label">Location &amp; Degree</span>
                     </div>
                     <div>
-                        <div class="abf-loc-city" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
-                            <i class="fa-solid fa-location-dot me-1"></i>{{ ucwords((string) $row_city_name) ?: '—' }}, {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}
+                        <div class="abf-loc-city text-truncate" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
+                            <i class="fa-solid fa-location-dot me-1"></i>{{ ucwords((string) $row_city_name) ?: '—' }}@if(!empty($row_country_name) && $row_country_name !== '----'), {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}@endif
                         </div>
-                        <div class="abf-loc-edu abf-edu-uppercase" title="{{ @$row->qualification_name }}">
+                        <div class="abf-loc-mode text-truncate" style="font-size:11px; color:#475569; margin:2px 0;" title="{{ !empty($wmMeta['label']) ? e($wmMeta['label']) : 'Work Mode: –' }}">
+                            <i class="{{ $wmIcon }} me-1 text-primary" style="font-size:10px;"></i><span>{{ $wmLabel }}</span>
+                        </div>
+                        <div class="abf-loc-edu abf-edu-uppercase text-truncate" style="font-size:11px;" title="{{ @$row->qualification_name }}">
                             <i class="fa-solid fa-graduation-cap me-1"></i>{{ $qualFull ?: '—' }}
                         </div>
                     </div>
