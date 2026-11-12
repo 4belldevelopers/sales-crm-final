@@ -1,7 +1,9 @@
 @php
     use App\Helper\GeneralMethod;
-    use Illuminate\Support\Facades\DB;
+    use App\Services\AppTrackerCardPresenter;
+    use App\Services\CurrencyService;
     use Carbon\Carbon;
+    use Illuminate\Support\Facades\DB;
 
     $salaryMode = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
@@ -9,7 +11,7 @@
     $currency = GeneralMethod::currency();
     $job_status_arr = GeneralMethod::job_status();
     $job_status = GeneralMethod::job_status();
-    $company_id = auth()->user()->company_id;
+    $company_id = auth()->check() ? auth()->user()->company_id : 1;
 @endphp
 
 @if (count($data) > 0)
@@ -124,14 +126,19 @@
             }
 
             // Salary
-            $current_ctc_cur = $currencySymbole[@$jobCurrency] ?? '';
-            $current_ectc_cur = $currencySymbole[@$jobCurrency] ?? '';
             $payFormatViewSalary = GeneralMethod::formatViewSalary($row->ctc_yearly, $symbols, $jobMode);
             $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly, $symbols, $jobMode);
+            $plainCurrencySymbol = CurrencyService::resolvePlainSymbolFromLegacy(
+                @$jobCurrency,
+                $currencySymbole,
+                $billFormatViewSalary->symbol ?? null
+            );
+            $current_ctc_cur = $plainCurrencySymbol;
+            $current_ectc_cur = $plainCurrencySymbol;
             $ctc = explode('.', GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount))[0];
             $ectc = explode('.', GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount))[0];
-            $current_ctc_mode = @$salaryMode[$jobMode];
-            $current_ectc_mode = @$salaryMode[$jobMode];
+            $current_ctc_mode = @$salaryMode[$jobMode] ?: 'Monthly';
+            $current_ectc_mode = @$salaryMode[$jobMode] ?: 'Monthly';
 
             // Notice period
             $np = $row->np_id;
@@ -193,35 +200,64 @@
                     $row_city_name = @$row->city;
                 }
             }
+            $qualFull = mb_strtoupper((string) @$row->qualification_name);
 
-            // Jobs + Status
-            $job_title = ucwords((string) @$row->title);
-            $client_name = ucwords((string) @$row->client_name);
-            if (($row->client_comapny_id ?? $company_id) != $company_id) {
-                $client_name = ucwords((string) @$row->company_name);
+            // Work mode resolution
+            $candId = (int) (@$row->candidate_id ?? @$row->id ?? 0);
+            if (empty($row->wm) && isset($rowMaps['work_mode_map'][$candId])) {
+                $row->wm = $rowMaps['work_mode_map'][$candId];
             }
-            $created_at = !empty($row->created_at) ? date('d M , Y', strtotime($row->created_at)) : '—';
+            $wmMeta = AppTrackerCardPresenter::resolveWorkMode($row);
+            $wmIcon = !empty($wmMeta['icon']) ? $wmMeta['icon'] : 'fa-solid fa-building';
+            $wmLabel = !empty($wmMeta['label']) ? $wmMeta['label'] : '–';
 
-            $job_status_get = GeneralMethod::jobDetails($row->jobId);
-            $rawStatus = strtolower((string) @$job_status_get->status);
-            if ($rawStatus === 'hold') {
-                $status = 'Hold';
-                $statusBg = '#fef3c7';
-                $statusColor = '#d97706';
-            } elseif ($rawStatus === 'inactive') {
-                $status = 'Closed';
-                $statusBg = '#fee2e2';
-                $statusColor = '#dc2626';
+            // Matched Job & Status
+            $wiseInfo = $rowMaps['wise_job_info'][$row->id] ?? null;
+            $matchedJobTitle = ucwords((string) ($wiseInfo->title ?? @$row->title ?? ''));
+            $matchedJobId = (int) ($wiseInfo->matched_job_id ?? @$row->jobId ?? @$row->job_id ?? 0);
+            $matchedCategory = ucwords((string) ($wiseInfo->category_name ?? ''));
+            $client_name = ucwords((string) ($wiseInfo->client_name ?? @$row->client_name ?? ''));
+            $companyName = ucwords((string) ($wiseInfo->company_name ?? @$row->company_name ?? ''));
+            if ($wiseInfo && ($wiseInfo->companyIdCheck ?? 0) != $company_id && !empty($wiseInfo->company_name)) {
+                $client_name = $companyName;
+            }
+
+            // Determine Target Req Classification per Rule 25
+            $isSelfCompany = !empty($wiseInfo->self_company) || (($wiseInfo->companyIdCheck ?? $company_id) == $company_id && empty($wiseInfo->client_name));
+            $isDirectClient = ($wiseInfo && ($wiseInfo->companyIdCheck ?? 0) != $company_id);
+            if ($isSelfCompany) {
+                $targetTypeLabel = 'My Organization';
+                $targetTypeClass = 'type-my-org';
+                $targetTypeStyle = 'background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc;';
+            } elseif ($isDirectClient) {
+                $targetTypeLabel = 'Direct Client';
+                $targetTypeClass = 'type-direct';
+                $targetTypeStyle = 'background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;';
             } else {
-                $status = 'Hiring';
-                $statusBg = '#dcfce7';
-                $statusColor = '#16a34a';
+                $targetTypeLabel = 'Internal Client';
+                $targetTypeClass = 'type-internal';
+                $targetTypeStyle = 'background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;';
             }
 
-            $recommendation_text = __('messages.internal_tag');
-            if (($row->client_comapny_id ?? $company_id) != $company_id) {
-                $recommendation_text = __('messages.clinet_tag');
+            // Job Status Pill
+            $jobStatusVal = strtolower((string) ($wiseInfo->jobStatus ?? 'active'));
+            if ($jobStatusVal === 'active') {
+                $targetStatusLabel = 'Hiring';
+                $targetStatusStyle = 'background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;';
+            } elseif ($jobStatusVal === 'hold') {
+                $targetStatusLabel = 'On Hold';
+                $targetStatusStyle = 'background:#fffbeb; color:#d97706; border:1px solid #fde68a;';
+            } else {
+                $targetStatusLabel = 'Closed';
+                $targetStatusStyle = 'background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;';
             }
+
+            // Employment Type
+            $empTypeRaw = $wiseInfo->employment_type ?? 0;
+            $empTypes = GeneralMethod::employmentType();
+            $empTypeLabel = $empTypes[$empTypeRaw] ?? ($empTypeRaw == 1 ? 'Contract' : 'Full-Time');
+
+            $created_at = !empty($row->created_at) ? date('d M , Y', strtotime($row->created_at)) : '—';
 
             // Ownership
             if ($company_id != ($row->ClientComID ?? 0) && ($row->ClientComID ?? 0) > 0) {
@@ -349,42 +385,61 @@
                     </div>
                 </div>
 
-                {{-- Sub-Card 3: Location & Degree --}}
+                {{-- Sub-Card 3: Location & Degree (With Restored Work Mode) --}}
                 <div class="dsf-cand-subcard">
                     <div class="dsf-subcard-head">
                         <span class="dsf-subcard-label">Location &amp; Degree</span>
                     </div>
                     <div>
-                        <div class="dsf-loc-city" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
-                            <i class="fa-solid fa-location-dot me-1"></i>{{ ucwords((string) $row_city_name) ?: '—' }}, {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}
+                        <div class="dsf-loc-city text-truncate" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
+                            <i class="fa-solid fa-location-dot me-1"></i>{{ ucwords((string) $row_city_name) ?: '—' }}@if(!empty($row_country_name) && $row_country_name !== '----'), {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}@endif
                         </div>
-                        @if (!empty($row_state_name) && $row_state_name !== '----')
-                            <div class="dsf-loc-state" title="{{ ucwords((string) $row_state_name) }}">
-                                {{ ucwords((string) $row_state_name) }}
-                            </div>
-                        @endif
+                        <div class="dsf-loc-mode text-truncate" style="font-size:11px; color:#475569; margin:2px 0;" title="{{ !empty($wmMeta['label']) ? e($wmMeta['label']) : 'Work Mode: –' }}">
+                            <i class="{{ $wmIcon }} me-1 text-primary" style="font-size:10px;"></i><span>{{ $wmLabel }}</span>
+                        </div>
                     </div>
-                    <div class="dsf-loc-edu" title="{{ @$row->qualification_name }}">
-                        <i class="fa-solid fa-graduation-cap me-1"></i>{{ ucwords((string) @$row->qualification_name) ?: '—' }}
+                    <div class="dsf-loc-edu dsf-edu-uppercase text-truncate" style="font-size:11px;" title="{{ $qualFull ?: '—' }}">
+                        <i class="fa-solid fa-graduation-cap me-1"></i>{{ $qualFull ?: '—' }}
                     </div>
                 </div>
 
-                {{-- Sub-Card 4: Matched Job & Status --}}
-                <div class="dsf-cand-subcard">
-                    <div class="dsf-subcard-head">
-                        <span class="dsf-subcard-label">Matched Job &amp; Status</span>
-                    </div>
-                    <div>
-                        <a href="javascript:void(0);" class="dsf-job-title d-block" title="{{ @$row->title }}">
-                            {{ $job_title ?: '—' }}
-                        </a>
-                        <div class="dsf-job-company" title="{{ @$row->client_name }}">
-                            {{ $client_name ?: '—' }}
+                {{-- Sub-Card 4: Matched Job & Status (Target Req Redesign) --}}
+                <div class="dsf-cand-subcard dsf-cand-subcard--target">
+                    <div class="dsf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="dsf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;" title="TARGET REQ">TARGET REQ...</span>
+                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                            <span class="dsf-target-type-badge {{ $targetTypeClass }}" style="font-size:9px; font-weight:700; padding:1px 5px; border-radius:4px; text-transform:uppercase; {{ $targetTypeStyle }}">
+                                {{ $targetTypeLabel }}
+                            </span>
+                            <span class="dsf-target-status-badge" style="font-size:9px; font-weight:700; padding:1px 5px; border-radius:4px; text-transform:uppercase; {{ $targetStatusStyle }}">
+                                {{ $targetStatusLabel }}
+                            </span>
                         </div>
                     </div>
-                    <div class="dsf-job-meta-row">
-                        <span class="badge dsf-job-status-pill" style="background:{{ $statusBg }};color:{{ $statusColor }};">{{ $status }}</span>
-                        <span class="dsf-job-type-tag">#{{ @$row->jobId }} &middot; {{ $recommendation_text }}</span>
+                    <div class="d-flex align-items-start gap-2 pt-1">
+                        <div class="dsf-req-icon-box flex-shrink-0 d-flex align-items-center justify-content-center" style="width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color:#ffffff; box-shadow:0 1px 3px rgba(79,70,229,0.25);">
+                            <i class="fa-solid fa-code" style="font-size:13px; color:#ffffff;"></i>
+                        </div>
+                        <div class="flex-grow-1 min-w-0" style="overflow:hidden;">
+                            <div class="dsf-req-title text-truncate fw-bold text-dark" style="font-size:12.5px; line-height:1.25; color:#0f172a;" title="{{ $matchedJobTitle }}">
+                                {{ $matchedJobTitle ?: '—' }}
+                            </div>
+                            <div class="dsf-req-meta-line text-truncate mt-1" style="font-size:11px; line-height:1.2;">
+                                <span class="fw-bold" style="color:#0284c7;">#{{ $matchedJobId }}</span>
+                                @if(!empty($matchedCategory))
+                                    <span class="mx-1" style="color:#94a3b8;">&bull;</span>
+                                    <span style="color:#64748b;">{{ $matchedCategory }}</span>
+                                @endif
+                            </div>
+                            <div class="dsf-req-sub-line text-truncate mt-1" style="font-size:11px; line-height:1.2; color:#475569;">
+                                <span class="fw-medium text-dark">{{ $client_name ?: '—' }}</span>
+                                @if(!empty($empTypeLabel))
+                                    <span class="mx-1" style="color:#94a3b8;">&bull;</span>
+                                    <i class="fa-solid fa-briefcase text-primary me-1" style="font-size:10px;"></i>
+                                    <span style="color:#64748b;">{{ $empTypeLabel }}</span>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
 

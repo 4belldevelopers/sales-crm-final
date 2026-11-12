@@ -1,5 +1,7 @@
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\AppTrackerCardPresenter;
+    use App\Services\CurrencyService;
     use Illuminate\Support\Facades\DB;
 
     $salaryMode = GeneralMethod::salaryMode();
@@ -92,8 +94,9 @@
             }
 
             // Compensation
-            $current_ctc_cur = $currencySymbole[@$jobCurrency] ?? '';
-            $current_ectc_cur = $currencySymbole[@$jobCurrency] ?? '';
+            $plainCurrencySymbol = CurrencyService::resolvePlainSymbolFromLegacy(@$jobCurrency, $currencySymbole);
+            $current_ctc_cur = $plainCurrencySymbol;
+            $current_ectc_cur = $plainCurrencySymbol;
             $ctc = '0';
             $ectc = '0';
             if ((@$row->ctc_yearly ?? 0) > 0 || (@$row->ectc_yearly ?? 0) > 0) {
@@ -184,6 +187,9 @@
                 $row_city_name = @$row->city ?: '';
             }
             $qualFull = mb_strtoupper((string) @$row->qualification_name);
+            $wmMeta = AppTrackerCardPresenter::resolveWorkMode($row);
+            $wmIcon = !empty($wmMeta['icon']) ? $wmMeta['icon'] : 'fa-solid fa-building';
+            $wmLabel = !empty($wmMeta['label']) ? $wmMeta['label'] : '–';
 
             // Last Active & Commission & Request Expiry
             $dateupdate = !empty($row->updated_at) ? GeneralMethod::ymdTodmyNotTime($row->updated_at) : '—';
@@ -277,23 +283,21 @@
                     </div>
                 </div>
 
-                {{-- Sub-Card 5: Location & Degree --}}
+                {{-- Sub-Card 5: Location & Degree (With Restored Work Mode) --}}
                 <div class="brf-cand-subcard">
                     <div class="brf-subcard-head">
                         <span class="brf-subcard-label">Location &amp; Degree</span>
                     </div>
                     <div>
-                        <div class="brf-loc-city" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
-                            <i class="fa-solid fa-location-dot me-1"></i>{{ ucwords((string) $row_city_name) ?: '—' }}, {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}
+                        <div class="brf-loc-city text-truncate" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
+                            <i class="fa-solid fa-location-dot me-1"></i>{{ ucwords((string) $row_city_name) ?: '—' }}@if(!empty($row_country_name) && $row_country_name !== '----'), {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}@endif
                         </div>
-                        @if (!empty($row_state_name) && $row_state_name !== '----')
-                            <div class="brf-avail-sub" title="{{ ucwords((string) $row_state_name) }}">
-                                {{ ucwords((string) $row_state_name) }}
-                            </div>
-                        @endif
-                    </div>
-                    <div class="brf-loc-edu brf-edu-uppercase" title="{{ @$row->qualification_name }}">
-                        <i class="fa-solid fa-graduation-cap me-1"></i>{{ $qualFull ?: '—' }}
+                        <div class="brf-loc-mode text-truncate" style="font-size:11px; color:#475569; margin:2px 0;" title="{{ !empty($wmMeta['label']) ? e($wmMeta['label']) : 'Work Mode: –' }}">
+                            <i class="{{ $wmIcon }} me-1 text-primary" style="font-size:10px;"></i><span>{{ $wmLabel }}</span>
+                        </div>
+                        <div class="brf-loc-edu brf-edu-uppercase text-truncate" style="font-size:11px;" title="{{ @$row->qualification_name }}">
+                            <i class="fa-solid fa-graduation-cap me-1"></i>{{ $qualFull ?: '—' }}
+                        </div>
                     </div>
                 </div>
 

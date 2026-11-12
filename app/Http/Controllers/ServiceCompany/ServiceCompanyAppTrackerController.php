@@ -713,15 +713,20 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $wiseJobInfo = ! empty($wiseIds)
             ? DB::table('add_job_wise_condidates')
                 ->join('jobs', 'add_job_wise_condidates.job_id', '=', 'jobs.id')
-                ->join('clients', 'clients.id', 'jobs.client_id')
-                ->join('companies', 'companies.id', '=', 'jobs.company_id')
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
+                ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
                 ->select(
                     'add_job_wise_condidates.id as wise_id',
                     'companies.company_name',
                     'clients.name as client_name',
+                    'clients.self_company',
+                    'jobs.id as matched_job_id',
                     'jobs.title',
                     'jobs.status as jobStatus',
-                    'jobs.company_id as companyIdCheck'
+                    'jobs.company_id as companyIdCheck',
+                    'jobs.employment_type',
+                    'job_categories.name as category_name'
                 )
                 ->whereIn('add_job_wise_condidates.id', $wiseIds)
                 ->get()
@@ -770,6 +775,23 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             }
         }
 
+        // 11. Work mode map from job_applications for candidates missing wm
+        $missingWmIds = collect($data)
+            ->filter(fn ($r) => empty(is_object($r) ? ($r->wm ?? null) : ($r['wm'] ?? null)))
+            ->map(fn ($r) => (int) (is_object($r) ? ($r->candidate_id ?? $r->id ?? 0) : ($r['candidate_id'] ?? $r['id'] ?? 0)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $workModeMap = ! empty($missingWmIds)
+            ? DB::table('job_applications')
+                ->whereIn('id', $missingWmIds)
+                ->whereNotNull('wm')
+                ->pluck('wm', 'id')
+                ->toArray()
+            : [];
+
         $baseMaps['rec_assigned'] = $recAssignedSet;
         $baseMaps['recAssignedSet'] = $recAssignedSet;
         $baseMaps['source_from_type'] = $sourceTypeMap;
@@ -784,6 +806,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $baseMaps['wise_job_info'] = $wiseJobInfo;
         $baseMaps['child_status_map'] = $childStatusMap;
         $baseMaps['spokperson_map'] = $spokpersonMap;
+        $baseMaps['work_mode_map'] = $workModeMap;
 
         return $baseMaps;
     }
@@ -833,7 +856,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             // V3 Phase 3.1: HTML and JSON responses are cached under separate keys.
             'format' => $request->input('format', 'html'),
-            'ui_v' => 'card_v7',
+            'ui_v' => 'card_v8',
         ];
 
         $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
@@ -1690,7 +1713,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_notice' => $app_int_notice,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v7',
+            'ui_v' => 'card_v8',
         ];
 
         // dd($cachePayload );
@@ -2943,7 +2966,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'valCheck' => $valCheck,
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
-            'ui_v' => 'card_v7',
+            'ui_v' => 'card_v8',
         ];
 
         $versionKey = 'allclientapp_version_user_'.$this->user->id;
@@ -4971,7 +4994,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
             'country' => $country ?? [],
             'cus_search' => $cus_search,
-            'ui_v' => 'card_v7',
+            'ui_v' => 'card_v8',
         ];
 
         $versionKey = 'allcandidatesrequest_version_user_'.$this->user->id;
@@ -5863,7 +5886,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v7',
+            'ui_v' => 'card_v8',
         ];
 
         // dd($cachePayload );
@@ -6893,7 +6916,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v7',
+            'ui_v' => 'card_v8',
         ];
 
         // dd($cachePayload );
@@ -7832,7 +7855,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v7',
+            'ui_v' => 'card_v8',
         ];
 
         $versionKey = 'allpublicbench_version_user_'.$this->user->id;
@@ -8888,7 +8911,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_notice' => $app_int_notice,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v7',
+            'ui_v' => 'card_v8',
         ];
 
         // dd($cachePayload );
@@ -10056,7 +10079,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v7',
+            'ui_v' => 'card_v8',
         ];
 
         // dd($cachePayload );

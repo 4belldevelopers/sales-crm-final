@@ -1,5 +1,7 @@
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\AppTrackerCardPresenter;
+    use App\Services\CurrencyService;
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
 
@@ -87,8 +89,9 @@
             }
 
             // Compensation
-            $pay_rate_currency = $currencySymbole[@$jobCurrency] ?? '';
-            $bill_rate_currency = $currencySymbole[@$jobCurrency] ?? '';
+            $plainCurrencySymbol = CurrencyService::resolvePlainSymbolFromLegacy(@$jobCurrency, $currencySymbole);
+            $pay_rate_currency = $plainCurrencySymbol;
+            $bill_rate_currency = $plainCurrencySymbol;
             $pay_rate_amount = '0';
             $bill_rate_amount = '0';
             if ((@$row->ectc_yearly ?? 0) > 0 || (@$row->ctc_yearly ?? 0) > 0) {
@@ -140,6 +143,9 @@
             $row_country_name = @$row->country_name;
             $row_city_name = @$row->city_name;
             $qualFull = mb_strtoupper((string) @$row->qualification_name);
+            $wmMeta = AppTrackerCardPresenter::resolveWorkMode($row);
+            $wmIcon = !empty($wmMeta['icon']) ? $wmMeta['icon'] : 'fa-solid fa-building';
+            $wmLabel = !empty($wmMeta['label']) ? $wmMeta['label'] : '–';
 
             // Last Active
             $updated_at = !empty($row->updated_at) ? GeneralMethod::ymdTodmyNotTime($row->updated_at) : '—';
@@ -229,16 +235,19 @@
                     </div>
                 </div>
 
-                {{-- Sub-Card 4: Location & Degree --}}
+                {{-- Sub-Card 4: Location & Degree (With Restored Work Mode) --}}
                 <div class="ibf-cand-subcard">
                     <div class="ibf-subcard-head">
                         <span class="ibf-subcard-label">Location &amp; Degree</span>
                     </div>
                     <div>
-                        <div class="ibf-loc-city" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
-                            <i class="fa-solid fa-location-dot me-1"></i>{{ ucwords((string) $row_city_name) ?: '—' }}, {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}
+                        <div class="ibf-loc-city text-truncate" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
+                            <i class="fa-solid fa-location-dot me-1"></i>{{ ucwords((string) $row_city_name) ?: '—' }}@if(!empty($row_country_name) && $row_country_name !== '----'), {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}@endif
                         </div>
-                        <div class="ibf-loc-edu" style="text-transform:uppercase;" title="{{ @$row->qualification_name }}">
+                        <div class="ibf-loc-mode text-truncate" style="font-size:11px; color:#475569; margin:2px 0;" title="{{ !empty($wmMeta['label']) ? e($wmMeta['label']) : 'Work Mode: –' }}">
+                            <i class="{{ $wmIcon }} me-1 text-primary" style="font-size:10px;"></i><span>{{ $wmLabel }}</span>
+                        </div>
+                        <div class="ibf-loc-edu text-truncate" style="text-transform:uppercase; font-size:11px;" title="{{ @$row->qualification_name }}">
                             <i class="fa-solid fa-graduation-cap me-1"></i>{{ $qualFull ?: '—' }}
                         </div>
                     </div>
@@ -265,7 +274,7 @@
                         <span class="ibf-subcard-label">Status &amp; Action</span>
                     </div>
                     <div class="ibf-action-wrap">
-                        @if ($row->status == 2)
+                        @if ((@$row->status ?? 0) == 2)
                             <div class="d-flex flex-column">
                                 @if ($isAdded)
                                     <button type="button" class="btn btn-sm" disabled
@@ -283,15 +292,15 @@
                                     </a>
                                 @endif
                             </div>
-                        @elseif ($row->status == 1)
+                        @elseif ((@$row->status ?? 0) == 1)
                             <a href="javascript:void(0);" data-row-id="985"
                                 class="ibf-status-pill stage_sub_stage interview text-hover-primary"
                                 data-toggle="modal" data-target="#stage_sub_stage">Pool</a>
-                        @elseif ($row->status == 4)
+                        @elseif ((@$row->status ?? 0) == 4)
                             <a href="javascript:void(0);" data-row-id="985"
                                 class="ibf-status-pill stage_sub_stage hold-bg text-hover-warning"
                                 data-toggle="modal" data-target="#stage_sub_stage">Pause</a>
-                        @elseif ($row->status == 3)
+                        @elseif ((@$row->status ?? 0) == 3)
                             <a href="javascript:void(0);" data-row-id="985"
                                 class="ibf-status-pill stage_sub_stage active-bg text-hover-success"
                                 data-toggle="modal" data-target="#stage_sub_stage">Placed</a>
