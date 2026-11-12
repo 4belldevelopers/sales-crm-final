@@ -539,6 +539,287 @@
 
 <style>
 /* Page-isolated overrides loaded after shared component stylesheets (Rule 17) */
+
+/* Header Card — Inspired by Clients Tracker Executive Header */
+.cd-jobs-header-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 14px 20px !important;
+    margin-bottom: 14px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+.cd-jobs-header-left {
+    gap: 12px !important;
+    min-width: 0 !important;
+}
+
+.cd-jobs-header-icon {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 10px !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    color: #2563eb !important;
+    font-size: 18px !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06) !important;
+}
+
+.cd-jobs-header-title-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+}
+
+.cd-jobs-header-title {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.015em !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+}
+
+.cd-jobs-verified-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-jobs-header-count-pill {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 2px 9px !important;
+    border-radius: 9999px !important;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border: 1px solid #dbeafe !important;
+    font-variant-numeric: tabular-nums !important;
+    line-height: 1.35 !important;
+}
+
+.cd-jobs-header-sub {
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    color: #64748b !important;
+    margin-top: 3px !important;
+    line-height: 1.35 !important;
+}
+
+.cd-jobs-add-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    box-shadow: 0 1px 3px rgba(0, 158, 247, 0.25) !important;
+    transition: all 0.15s ease !important;
+}
+
+.cd-jobs-add-btn:hover {
+    transform: translateY(-0.5px);
+    box-shadow: 0 3px 8px rgba(0, 158, 247, 0.32) !important;
+}
+
+/* 5 KPI Cards — Inspired by Clients Tracker Executive Stat Strip */
+.cd-jobs-kpi-grid {
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+}
+
+.cd-kpi-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 11px !important;
+    padding: 10px 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: space-between !important;
+    gap: 0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease !important;
+}
+
+.cd-kpi-top {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 6px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.cd-kpi-icon {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 8px !important;
+    font-size: 15px !important;
+    transition: all 0.15s ease !important;
+}
+
+.cd-kpi-icon.icon-blue { background: #eff6ff !important; color: #2563eb !important; }
+.cd-kpi-icon.icon-emerald { background: #ecfdf5 !important; color: #16a34a !important; }
+.cd-kpi-icon.icon-amber { background: #fff7ed !important; color: #ea580c !important; }
+.cd-kpi-icon.icon-cyan { background: #ecfeff !important; color: #0891b2 !important; }
+.cd-kpi-icon.icon-purple { background: #faf5ff !important; color: #9333ea !important; }
+
+.cd-kpi-info {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+}
+
+.cd-kpi-num-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+}
+
+.cd-kpi-num {
+    font-size: 19px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.01em !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+.cd-kpi-label {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    margin-top: 2px !important;
+    line-height: 1.2 !important;
+}
+
+.cd-kpi-invite-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 2px 7px !important;
+    background: #f5f3ff !important;
+    border: 1px solid #ddd6fe !important;
+    border-radius: 9999px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    color: #7c3aed !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-kpi-invite-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    background: #8b5cf6 !important;
+    display: inline-block !important;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+}
+
+.cd-kpi-sub {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    color: #64748b !important;
+}
+
+.cd-kpi-sub svg, .cd-kpi-sub i {
+    flex-shrink: 0 !important;
+    font-size: 10px !important;
+}
+
+.cd-kpi-sub.sub-blue { color: #2563eb !important; }
+.cd-kpi-sub.sub-green { color: #16a34a !important; }
+.cd-kpi-sub.sub-orange { color: #ea580c !important; }
+.cd-kpi-sub.sub-cyan { color: #0891b2 !important; }
+.cd-kpi-sub.sub-purple { color: #9333ea !important; }
+
+/* Color-Coded Active KPI Card Highlighting (Inspired by Clients Tracker) */
+.cd-kpi-card.cd-kpi-active[data-kpi="all"] {
+    background: #eff6ff !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="all"] .cd-kpi-icon {
+    background: #ffffff !important;
+    color: #2563eb !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="all"] .cd-kpi-num { color: #1d4ed8 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="all"] .cd-kpi-label { color: #1e40af !important; font-weight: 700 !important; }
+
+.cd-kpi-card.cd-kpi-active[data-kpi="direct"] {
+    background: #ecfdf5 !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="direct"] .cd-kpi-icon {
+    background: #ffffff !important;
+    color: #059669 !important;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="direct"] .cd-kpi-num { color: #065f46 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="direct"] .cd-kpi-label { color: #047857 !important; font-weight: 700 !important; }
+
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] {
+    background: #fff7ed !important;
+    border-color: #fb923c !important;
+    box-shadow: 0 0 0 1.5px #ea580c, 0 4px 14px rgba(234, 88, 12, 0.12) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-icon {
+    background: #ffffff !important;
+    color: #ea580c !important;
+    box-shadow: 0 1px 3px rgba(234, 88, 12, 0.15) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-num { color: #9a3412 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-label { color: #c2410c !important; font-weight: 700 !important; }
+
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] {
+    background: #ecfeff !important;
+    border-color: #22d3ee !important;
+    box-shadow: 0 0 0 1.5px #0891b2, 0 4px 14px rgba(8, 145, 178, 0.12) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-icon {
+    background: #ffffff !important;
+    color: #0891b2 !important;
+    box-shadow: 0 1px 3px rgba(8, 145, 178, 0.15) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-num { color: #155e75 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-label { color: #0e7490 !important; font-weight: 700 !important; }
+
+.cd-kpi-card.cd-kpi-active[data-kpi="job_request"] {
+    background: #faf5ff !important;
+    border-color: #c084fc !important;
+    box-shadow: 0 0 0 1.5px #9333ea, 0 4px 14px rgba(147, 51, 234, 0.12) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="job_request"] .cd-kpi-icon {
+    background: #ffffff !important;
+    color: #9333ea !important;
+    box-shadow: 0 1px 3px rgba(147, 51, 234, 0.15) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="job_request"] .cd-kpi-num { color: #6b21a8 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="job_request"] .cd-kpi-label { color: #7e22ce !important; font-weight: 700 !important; }
+
 .cd-jobs-tabs-card {
     margin-bottom: 12px !important;
 }
@@ -843,26 +1124,52 @@
       <!-- CONTENT -->
         <div class="content">        
 
+          @php
+              $allRequisitionTotal = (int) ($tabactive['allRequisition'] ?? 0);
+              $directJobsTotal = (int) ($tabactive['clientRequisition'] ?? 0);
+              $internalClientJobsTotal = (int) ($tabactive['customRequisition'] ?? 0);
+              $myOrgJobsTotal = (int) ($tabactive['myOrganization'] ?? 0);
+              $jobRequestsTotal = (int) ($tabactive['jobRequest'] ?? 0);
+              $hiringJobsTotal = (int) ($tabactive['hiringCount'] ?? 0);
+
+              $directJobsPercent = $allRequisitionTotal > 0 ? round(($directJobsTotal / $allRequisitionTotal) * 100) : 0;
+              $internalJobsPercent = $allRequisitionTotal > 0 ? round(($internalClientJobsTotal / $allRequisitionTotal) * 100) : 0;
+              $myOrgJobsPercent = $allRequisitionTotal > 0 ? round(($myOrgJobsTotal / $allRequisitionTotal) * 100) : 0;
+          @endphp
+
           <!-- ══════════════════════════════════════════════════════════════
-               TIER 1: TOP HEADER TOOLBAR CARD (Jobs Tracker - Point 1 & Point 3)
+               TIER 1: TOP HEADER TOOLBAR CARD (Inspired by Clients Tracker)
                ══════════════════════════════════════════════════════════════ -->
           <div class="cd-jobs-header-card">
             <div class="cd-jobs-header-left">
               <div class="cd-jobs-header-icon">
-                <i class="fas fa-briefcase"></i>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
               </div>
               <div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="cd-jobs-header-title">Jobs Tracker</span>
-                  <span class="badge badge-light-primary fw-bold" id="all_jobs_count" style="font-size: 11px; padding: 3px 8px; border-radius: 10px;">{{ $tabactive['allTabCount'] ?? $tabactive['allRequisition'] }}</span>
+                <div class="cd-jobs-header-title-row">
+                  <h1 class="cd-jobs-header-title">Jobs Tracker</h1>
+                  <span class="cd-jobs-verified-badge" title="Verified ATS Module">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      <path d="m9 12 2 2 4-4" stroke-width="2.5"/>
+                    </svg>
+                  </span>
+                  <span class="cd-jobs-header-count-pill" id="all_jobs_count">{{ $tabactive['allTabCount'] ?? $allRequisitionTotal }}</span>
                 </div>
-                <div class="cd-jobs-header-sub">Manage, track and hire candidates faster.</div>
+                <div class="cd-jobs-header-sub">Manage job requisitions, client mandates, hiring pipelines and recruitment performance.</div>
               </div>
             </div>
             <div class="cd-jobs-header-right">
               @if(in_array("add_jobs", $tabactive['userPermissions'] ?? []))
                 <button type="button" class="btn btn-sm btn-primary fw-bold cd-jobs-add-btn" data-toggle="modal" data-target="#add_staffing_partners" id="AddjobSection">
-                  <i class="fas fa-plus me-1"></i> Add Internal Job
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  <span>Add Internal Job</span>
                 </button>
               @endif
               <button type="button" id="jobSearchBtn" style="display: none;" aria-hidden="true"></button>
@@ -870,57 +1177,131 @@
           </div>
 
           <!-- ══════════════════════════════════════════════════════════════
-               TIER 2: REQUISITION SOURCE EXECUTIVE METRIC STRIP (5 Tabs - Point 1 & Point 4)
+               TIER 2: REQUISITION SOURCE EXECUTIVE KPI STRIP (Inspired by Clients Tracker)
                ══════════════════════════════════════════════════════════════ -->
           <div class="cd-jobs-kpi-grid">
             <a href="javascript:void(0);" data-kpi="all" onclick="filterJobsByKpi('all'); return false;" class="cd-kpi-card jh-card jh-card-source-all {{ ($currentKpi === 'all' || empty($currentKpi)) ? 'cd-kpi-active jh-card-active' : '' }}">
-              <div class="cd-kpi-icon icon-blue">
-                <i class="fas fa-briefcase"></i>
+              <div class="cd-kpi-top">
+                <div class="cd-kpi-icon icon-blue">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                  </svg>
+                </div>
+                <div class="cd-kpi-info">
+                  <div class="cd-kpi-num-row">
+                    <span class="cd-kpi-num" id="top_card_all_jobs_count">{{ $allRequisitionTotal }}</span>
+                    <span class="cd-kpi-invite-badge" id="badge_jobsAllRequests" style="{{ $jobRequestsTotal > 0 ? '' : 'display:none;' }}" title="{{ $jobRequestsTotal }} Pending Job {{ $jobRequestsTotal === 1 ? 'Request' : 'Requests' }}">
+                      <span class="cd-kpi-invite-dot"></span>
+                      <span id="span_jobsAllRequestBadge">{{ $jobRequestsTotal }} {{ $jobRequestsTotal === 1 ? 'req' : 'reqs' }}</span>
+                    </span>
+                  </div>
+                  <span class="cd-kpi-label">Total Jobs</span>
+                </div>
               </div>
-              <div class="cd-kpi-info">
-                <span class="cd-kpi-label">Total Jobs</span>
-                <span class="cd-kpi-num" id="top_card_all_jobs_count">{{ $tabactive['allRequisition'] ?? 0 }}</span>
+              <div class="cd-kpi-sub sub-blue">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                <span id="span_kpi_all_sub">{{ $hiringJobsTotal > 0 ? $hiringJobsTotal . ' actively hiring ' . ($hiringJobsTotal === 1 ? 'role' : 'roles') : '0 actively hiring roles' }}</span>
               </div>
             </a>
 
             @if($tabactive['productAllowCompany'])
             <a href="javascript:void(0);" data-kpi="direct" onclick="filterJobsByKpi('direct'); return false;" class="cd-kpi-card jh-card jh-card-source-direct {{ ($currentKpi === 'direct') ? 'cd-kpi-active jh-card-active' : '' }}">
-              <div class="cd-kpi-icon icon-emerald">
-                <i class="fas fa-shield-alt"></i>
+              <div class="cd-kpi-top">
+                <div class="cd-kpi-icon icon-emerald">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                  </svg>
+                </div>
+                <div class="cd-kpi-info">
+                  <div class="cd-kpi-num-row">
+                    <span class="cd-kpi-num" id="top_card_client_requisition_count">{{ $directJobsTotal }}</span>
+                  </div>
+                  <span class="cd-kpi-label">Direct Client Jobs</span>
+                </div>
               </div>
-              <div class="cd-kpi-info">
-                <span class="cd-kpi-label">Direct Client Jobs</span>
-                <span class="cd-kpi-num" id="top_card_client_requisition_count">{{ $tabactive['clientRequisition'] ?? 0 }}</span>
+              <div class="cd-kpi-sub sub-green">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span id="span_kpi_direct_sub">{{ $directJobsPercent }}% of total jobs</span>
               </div>
             </a>
 
             <a href="javascript:void(0);" data-kpi="internal" onclick="filterJobsByKpi('internal'); return false;" class="cd-kpi-card jh-card jh-card-source-internal {{ ($currentKpi === 'internal') ? 'cd-kpi-active jh-card-active' : '' }}">
-              <div class="cd-kpi-icon icon-amber">
-                <i class="fas fa-building"></i>
+              <div class="cd-kpi-top">
+                <div class="cd-kpi-icon icon-amber">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                    <path d="M9 22v-4h6v4"/>
+                    <path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01"/>
+                  </svg>
+                </div>
+                <div class="cd-kpi-info">
+                  <div class="cd-kpi-num-row">
+                    <span class="cd-kpi-num" id="top_card_custom_requisition_count">{{ $internalClientJobsTotal }}</span>
+                  </div>
+                  <span class="cd-kpi-label">Internal Client Jobs</span>
+                </div>
               </div>
-              <div class="cd-kpi-info">
-                <span class="cd-kpi-label">Internal Client Jobs</span>
-                <span class="cd-kpi-num" id="top_card_custom_requisition_count">{{ $tabactive['customRequisition'] ?? 0 }}</span>
+              <div class="cd-kpi-sub sub-orange">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m18 15-6-6-6 6"/>
+                </svg>
+                <span id="span_kpi_internal_sub">{{ $internalClientJobsTotal > 0 ? $internalJobsPercent . '% of total · client mandates' : 'No internal client jobs' }}</span>
               </div>
             </a>
 
             <a href="javascript:void(0);" data-kpi="my_organization" onclick="filterJobsByKpi('my_organization'); return false;" class="cd-kpi-card jh-card jh-card-source-my-org {{ ($currentKpi === 'my_organization') ? 'cd-kpi-active jh-card-active' : '' }}">
-              <div class="cd-kpi-icon icon-cyan">
-                <i class="fas fa-id-badge"></i>
+              <div class="cd-kpi-top">
+                <div class="cd-kpi-icon icon-cyan">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                </div>
+                <div class="cd-kpi-info">
+                  <div class="cd-kpi-num-row">
+                    <span class="cd-kpi-num" id="top_card_my_org_count">{{ $myOrgJobsTotal }}</span>
+                  </div>
+                  <span class="cd-kpi-label">My Organization Jobs</span>
+                </div>
               </div>
-              <div class="cd-kpi-info">
-                <span class="cd-kpi-label">My Organization Jobs</span>
-                <span class="cd-kpi-num" id="top_card_my_org_count">{{ $tabactive['myOrganization'] ?? 0 }}</span>
+              <div class="cd-kpi-sub sub-cyan">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                </svg>
+                <span id="span_kpi_my_org_sub">{{ $myOrgJobsTotal > 0 ? $myOrgJobsPercent . '% of total · in-house roles' : 'No in-house roles yet' }}</span>
               </div>
             </a>
 
             <a href="javascript:void(0);" data-kpi="job_request" onclick="filterJobsByKpi('job_request'); return false;" class="cd-kpi-card jh-card jh-card-source-request {{ ($currentKpi === 'job_request' || $currentKpi === 'request') ? 'cd-kpi-active jh-card-active' : '' }}">
-              <div class="cd-kpi-icon icon-purple">
-                <i class="fas fa-handshake"></i>
+              <div class="cd-kpi-top">
+                <div class="cd-kpi-icon icon-purple">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                </div>
+                <div class="cd-kpi-info">
+                  <div class="cd-kpi-num-row">
+                    <span class="cd-kpi-num" id="top_card_job_request_count">{{ $jobRequestsTotal }}</span>
+                  </div>
+                  <span class="cd-kpi-label">Job Requests</span>
+                </div>
               </div>
-              <div class="cd-kpi-info">
-                <span class="cd-kpi-label">Job Requests</span>
-                <span class="cd-kpi-num" id="top_card_job_request_count">{{ $tabactive['jobRequest'] ?? 0 }}</span>
+              <div class="cd-kpi-sub sub-purple">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 14 14"/>
+                </svg>
+                <span id="span_kpi_request_sub">{{ $jobRequestsTotal > 0 ? $jobRequestsTotal . ' pending ' . ($jobRequestsTotal === 1 ? 'invitation' : 'invitations') : "You're all caught up" }}</span>
               </div>
             </a>
             @endif
@@ -1468,11 +1849,36 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
     function syncTopKpiCounts(dataCnt) {
         if (!dataCnt) return;
-        $('#top_card_all_jobs_count').text(dataCnt.allRequisition ?? dataCnt.allTabCount ?? 0);
-        $('#top_card_client_requisition_count').text(dataCnt.clientRequisition ?? 0);
-        $('#top_card_custom_requisition_count').text(dataCnt.customRequisition ?? 0);
-        $('#top_card_my_org_count').text(dataCnt.myOrganization ?? 0);
-        $('#top_card_job_request_count').text(dataCnt.jobRequest ?? 0);
+        var total = Number(dataCnt.allRequisition !== undefined ? dataCnt.allRequisition : (dataCnt.allTabCount || 0));
+        var direct = Number(dataCnt.clientRequisition || 0);
+        var internal = Number(dataCnt.customRequisition || 0);
+        var myOrg = Number(dataCnt.myOrganization || 0);
+        var jobReq = Number(dataCnt.jobRequest || 0);
+        var hiring = Number(dataCnt.hiringCount || 0);
+
+        $('#top_card_all_jobs_count').text(total);
+        $('#top_card_client_requisition_count').text(direct);
+        $('#top_card_custom_requisition_count').text(internal);
+        $('#top_card_my_org_count').text(myOrg);
+        $('#top_card_job_request_count').text(jobReq);
+
+        // Sync Client-Tracker-inspired executive micro-telemetry subtitles & request alert badge
+        var directPct = total > 0 ? Math.round((direct / total) * 100) : 0;
+        var internalPct = total > 0 ? Math.round((internal / total) * 100) : 0;
+        var myOrgPct = total > 0 ? Math.round((myOrg / total) * 100) : 0;
+
+        $('#span_kpi_all_sub').text(hiring > 0 ? (hiring + ' actively hiring ' + (hiring === 1 ? 'role' : 'roles')) : '0 actively hiring roles');
+        $('#span_kpi_direct_sub').text(directPct + '% of total jobs');
+        $('#span_kpi_internal_sub').text(internal > 0 ? (internalPct + '% of total · client mandates') : 'No internal client jobs');
+        $('#span_kpi_my_org_sub').text(myOrg > 0 ? (myOrgPct + '% of total · in-house roles') : 'No in-house roles yet');
+        $('#span_kpi_request_sub').text(jobReq > 0 ? (jobReq + ' pending ' + (jobReq === 1 ? 'invitation' : 'invitations')) : "You're all caught up");
+
+        if (jobReq > 0) {
+            $('#span_jobsAllRequestBadge').text(jobReq + ' ' + (jobReq === 1 ? 'req' : 'reqs'));
+            $('#badge_jobsAllRequests').attr('title', jobReq + ' Pending Job ' + (jobReq === 1 ? 'Request' : 'Requests')).show();
+        } else {
+            $('#badge_jobsAllRequests').hide();
+        }
     }
 
     function updateKpiViewToggle(kpiType) {
