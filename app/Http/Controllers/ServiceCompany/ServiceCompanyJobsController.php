@@ -10580,7 +10580,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $searchTerms = request('cus_search');
         $custom_search = json_decode($searchTerms, true);
 
-        $chkAdminRole = $this->user->hasRole('admin');
+        $this->user = $this->user ?? auth()->user();
+        $isSuperAdmin = ($this->user && ((int) $this->user->is_superadmin === 1 || in_array((int) $this->user->id, GeneralMethod::superAdminUserIds())));
         $company_id = auth()->user()->company_id;
 
         $jobId = $request->jobid;
@@ -10628,7 +10629,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $currentRowJob = (object) $jobMeta['job'];
-        if (! $chkAdminRole && (int) $currentRowJob->company_id !== (int) $company_id) {
+        if (! $isSuperAdmin && (int) $currentRowJob->company_id !== (int) $company_id) {
             return response()->json([
                 'html' => '<tr class="odd"><td colspan="6" class="text-center text-muted p-4">Unauthorized: Job requisition does not belong to your company.</td></tr>',
                 'total' => 0,
@@ -10636,23 +10637,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
         $parent_employment_type = request('app_int_outsource', $currentRowJob->employment_type);
 
-        // 1. EXTRACT AND NORMALIZE JOB SKILLS
+        // 1. EXTRACT AND NORMALIZE JOB SKILLS & USER SEARCH TERMS
         $jobSkillsFromDb = $jobMeta['skills'] ?? [];
 
-        $searchSkills = [];
-
-        // If custom search tags provided via Tagify / input
+        $userSearchTerms = [];
         if (is_array($custom_search) && ! empty($custom_search)) {
-            $extracted = array_column($custom_search, 'value');
-            $searchSkills = array_merge($searchSkills, $extracted);
+            $userSearchTerms = array_column($custom_search, 'value');
         } elseif (! empty($searchTerms) && is_string($searchTerms)) {
-            $searchSkills = array_merge($searchSkills, explode(',', $searchTerms));
+            $userSearchTerms = explode(',', $searchTerms);
         }
+        $userSearchTerms = array_values(array_filter(array_map('trim', $userSearchTerms), fn ($t) => ! empty($t) && strtolower($t) !== 'skill'));
 
-        // Include DB job skills
-        $searchSkills = array_merge($searchSkills, $jobSkillsFromDb);
-
-        // Clean & Normalize skills (lowercase, trimmed, deduplicated, exclude 'skill')
+        $searchSkills = array_merge($userSearchTerms, $jobSkillsFromDb);
         $searchSkills = array_values(array_unique(array_filter(array_map(function ($s) {
             return strtolower(trim((string) $s));
         }, $searchSkills), fn ($s) => ! empty($s) && $s !== 'skill')));
@@ -10852,10 +10848,23 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $hasAnySkillMatch = true;
             }
 
+            // Check if user search terms match agency name
+            $isNameMatched = false;
+            if (! empty($userSearchTerms)) {
+                $companyNameLower = strtolower($source['company_name'] ?? '');
+                foreach ($userSearchTerms as $ust) {
+                    if (str_contains($companyNameLower, strtolower($ust))) {
+                        $isNameMatched = true;
+                        break;
+                    }
+                }
+            }
+
             $source['matched_skills'] = $matchedSkills;
             $source['search_skills'] = $searchSkills;
             $source['matched_skill_count'] = $matchedSkillCount;
             $source['skill_match_percentage'] = $matchPercentage;
+            $source['is_name_matched'] = $isNameMatched;
             $source['leadCount'] = (int) ($source['leadCount'] ?? 0);
 
             $processedAgencies[] = $source;
@@ -10864,10 +10873,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // If ES returns 0 results or is unavailable, fallback to MySQL query for eligible agencies
         if (empty($processedAgencies)) {
             $dbAgenciesQuery = DB::table('companies')
-                ->where('status', 'active')
-                ->whereIn('company_type', [1, 2])
-                ->where('id', '!=', $company_id)
-                ->whereNotIn('id', $superAdminIds);
+                ->select('companies.id', 'companies.company_name', 'companies.logo', 'companies.website', 'companies.industries', 'companies.leadCount')
+                ->where('companies.status', 'active')
+                ->whereIn('companies.company_type', [1, 2])
+                ->where('companies.id', '!=', $company_id)
+                ->whereNotIn('companies.id', $superAdminIds)
+                ->whereExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('company_coins')
+                        ->whereColumn('company_coins.company_id', 'companies.id')
+                        ->where('company_coins.event_type', 'sales')
+                        ->where('company_coins.coins', '>', 0);
+                });
 
             if (! empty($countryFilterParam)) {
                 $dbAgenciesQuery->whereExists(function ($q) use ($countryFilterParam) {
@@ -10878,17 +10895,49 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 });
             }
 
+            if (! empty($industry)) {
+                $dbAgenciesQuery->whereIn('companies.industries', (array) $industry);
+            }
+
+            if (! empty($experience)) {
+                if ($experience == '0–2 years') {
+                    $dbAgenciesQuery->where('companies.founded', '>=', $currentYear - 2);
+                } elseif ($experience == '3–5 years') {
+                    $dbAgenciesQuery->whereBetween('companies.founded', [$currentYear - 5, $currentYear - 3]);
+                } elseif ($experience == '5–10 years') {
+                    $dbAgenciesQuery->whereBetween('companies.founded', [$currentYear - 10, $currentYear - 5]);
+                } elseif ($experience == '10+ years') {
+                    $dbAgenciesQuery->where('companies.founded', '<=', $currentYear - 10);
+                }
+            }
+
+            if (! empty($commtype)) {
+                $dbAgenciesQuery->whereExists(function ($q) use ($commtype) {
+                    $q->select(DB::raw(1))
+                        ->from('commericials')
+                        ->whereColumn('commericials.company_id', 'companies.id')
+                        ->where('commericials.commtype', (int) $commtype)
+                        ->where('commericials.status', 1);
+                });
+            }
+
             $dbAgencies = $dbAgenciesQuery->get();
+            $dbCompanyIds = $dbAgencies->pluck('id')->filter()->unique()->values()->toArray();
+
+            // Batch fetch skills for all returned agencies to eliminate N+1 queries
+            $allAgencySkillsMap = [];
+            if (! empty($dbCompanyIds)) {
+                $rawDbSkills = DB::table('job_metronics_skills')
+                    ->select('company_id', 'skill_name')
+                    ->whereIn('company_id', $dbCompanyIds)
+                    ->get();
+                foreach ($rawDbSkills as $rsk) {
+                    $allAgencySkillsMap[$rsk->company_id][] = strtolower(trim((string) $rsk->skill_name));
+                }
+            }
 
             foreach ($dbAgencies as $comp) {
-                // Fetch skills from job_metronics_skills for this agency company_id
-                $agencySkills = DB::table('job_metronics_skills')
-                    ->where('company_id', $comp->id)
-                    ->pluck('skill_name')
-                    ->map(fn ($s) => strtolower(trim($s)))
-                    ->filter()
-                    ->toArray();
-
+                $agencySkills = array_values(array_unique(array_filter($allAgencySkillsMap[$comp->id] ?? [])));
                 $matchedSkills = array_values(array_intersect($searchSkills, $agencySkills));
                 $matchedSkillCount = count($matchedSkills);
 
@@ -10898,6 +10947,17 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 if ($matchedSkillCount > 0) {
                     $hasAnySkillMatch = true;
+                }
+
+                $isNameMatched = false;
+                if (! empty($userSearchTerms)) {
+                    $companyNameLower = strtolower($comp->company_name ?? '');
+                    foreach ($userSearchTerms as $ust) {
+                        if (str_contains($companyNameLower, strtolower($ust))) {
+                            $isNameMatched = true;
+                            break;
+                        }
+                    }
                 }
 
                 $processedAgencies[] = [
@@ -10911,15 +10971,27 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'search_skills' => $searchSkills,
                     'matched_skill_count' => $matchedSkillCount,
                     'skill_match_percentage' => $matchPercentage,
+                    'is_name_matched' => $isNameMatched,
                 ];
             }
         }
 
-        // 4. RANKING: skill_match_percentage DESC, leadCount ASC, id ASC
-        $totalEligible = count($processedAgencies);
+        // 4. SEPARATION OF MATCHING AGENCIES vs FALLBACK POOL
+        // Priority 1: Recommended Matching Agencies
+        // Priority 2: Fallback to 20 Agencies when ZERO matching agencies exist
+        $matchingAgencies = [];
+        $eligiblePool = [];
 
-        if ($totalEligible > 0) {
-            usort($processedAgencies, function ($a, $b) {
+        foreach ($processedAgencies as $agency) {
+            $eligiblePool[] = $agency;
+            if (($agency['matched_skill_count'] ?? 0) > 0 || ! empty($agency['is_name_matched'])) {
+                $matchingAgencies[] = $agency;
+            }
+        }
+
+        if (count($matchingAgencies) > 0) {
+            // Priority 1: Show matching agencies first, sorted by matching percentage in descending order
+            usort($matchingAgencies, function ($a, $b) {
                 // Priority 1: Skill Match — DESC
                 $aPct = (float) ($a['skill_match_percentage'] ?? 0);
                 $bPct = (float) ($b['skill_match_percentage'] ?? 0);
@@ -10937,10 +11009,39 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 // Priority 3: Stable deterministic tie-breaker: agency ID — ASC
                 return ($a['id'] ?? 0) <=> ($b['id'] ?? 0);
             });
+
+            // If matching agencies exist: display all matching agencies. Do not force 20 records.
+            $finalAgencies = $matchingAgencies;
+            $totalEligible = count($finalAgencies);
+        } else {
+            // Priority 2: Fallback to 20 Agencies when zero matching agencies found
+            $poolCount = count($eligiblePool);
+
+            if ($poolCount === 0) {
+                // 0 matching and 0 eligible agencies -> empty state
+                $finalAgencies = [];
+                $totalEligible = 0;
+            } elseif ($poolCount <= 20) {
+                // All available eligible agencies when 20 or fewer exist
+                $finalAgencies = $eligiblePool;
+                $totalEligible = $poolCount;
+            } else {
+                // Efficient random selection of 20 distinct agencies without ORDER BY RAND()
+                // Deterministic pseudo-random seed per jobId guarantees stability and refreshes for new job
+                mt_srand((int) $jobId);
+                $randomKeys = (array) array_rand($eligiblePool, 20);
+                mt_srand();
+
+                $finalAgencies = [];
+                foreach ($randomKeys as $k) {
+                    $finalAgencies[] = $eligiblePool[$k];
+                }
+                $totalEligible = 20;
+            }
         }
 
         // 5. SERVER-SIDE PAGINATION (Slice max 20 records per page)
-        $data = array_slice($processedAgencies, $from, $size);
+        $data = array_slice($finalAgencies, $from, $size);
 
         // 6. BATCH LOOKUPS TO ELIMINATE N+1 IN BLADE
         if (! empty($data)) {
@@ -11023,9 +11124,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $pagination = [
             'total' => $totalEligible,
+            'per_page' => $size,
             'current_page' => $page,
-            'last_page' => ceil($totalEligible / $size),
-            'listType' => 'allcandidate',
+            'last_page' => max(1, (int) ceil($totalEligible / $size)),
+            'listType' => 'companies',
         ];
 
         $page_view = 'find_agency_recom_ajax';

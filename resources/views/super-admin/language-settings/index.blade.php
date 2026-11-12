@@ -921,9 +921,36 @@
         var currentFilter = 'all';
         var currentSearch = '';
         var searchDebounceTimer = null;
+        var isMutationInFlight = false;
+
+        // ─── Multi-Tab Real-Time Sync & Idempotency Engine ───
+        var syncChannel = null;
+        try {
+            if ('BroadcastChannel' in window) {
+                syncChannel = new BroadcastChannel('jero_languages_sync');
+                syncChannel.onmessage = function(ev) {
+                    if (ev && ev.data && ev.data.action) {
+                        if (ev.data.action === 'saved' || ev.data.action === 'deleted' || ev.data.action === 'status_changed' || ev.data.action === 'default_changed') {
+                            window.location.reload();
+                        }
+                    }
+                };
+            }
+        } catch (e) {}
+
+        function generateIdempotencyKey() {
+            if (window.crypto && window.crypto.randomUUID) {
+                return window.crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
 
         // Initialize tooltips
         $('[data-bs-toggle="tooltip"]').tooltip();
+
 
         // ─── Client-First Filtering Engine (10K Concurrency / 0% Server Strain) ───
         function applyFilters() {
@@ -1217,6 +1244,7 @@
         // Drawer Submit Form
         $('#btn-submit-drawer-lang').on('click', function(e) {
             e.preventDefault();
+            if (isMutationInFlight) return;
             var $btn = $(this);
             var form = $('#createLangDrawerForm')[0];
 
@@ -1226,9 +1254,12 @@
             }
 
             var formData = new FormData(form);
+            isMutationInFlight = true;
             $btn.attr('disabled', true);
             $btn.find('.indicator-label').hide();
             $btn.find('.indicator-progress').show();
+
+            var idempKey = generateIdempotencyKey();
 
             $.ajax({
                 url: "{{ route('superadmin.language-settings.store') }}",
@@ -1237,14 +1268,19 @@
                 processData: false,
                 contentType: false,
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Idempotency-Key': idempKey
                 },
                 success: function(response) {
+                    isMutationInFlight = false;
                     $btn.attr('disabled', false);
                     $btn.find('.indicator-label').show();
                     $btn.find('.indicator-progress').hide();
 
                     if (response.status === 'success') {
+                        if (syncChannel) {
+                            try { syncChannel.postMessage({ action: 'saved' }); } catch (e) {}
+                        }
                         closeLanguageDrawer();
                         Swal.fire({
                             title: "Created!",
@@ -1266,6 +1302,7 @@
                     }
                 },
                 error: function(xhr) {
+                    isMutationInFlight = false;
                     $btn.attr('disabled', false);
                     $btn.find('.indicator-label').show();
                     $btn.find('.indicator-progress').hide();
@@ -1297,9 +1334,21 @@
             var status = isChecked ? 'enabled' : 'disabled';
             var url = "{{ route('superadmin.language-settings.changeStatus', ':id') }}".replace(':id', id);
 
+            if (isMutationInFlight) {
+                $switch.prop('checked', !isChecked);
+                return;
+            }
+            isMutationInFlight = true;
+
+            var idempKey = generateIdempotencyKey();
+
             $.ajax({
                 url: url,
                 type: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Idempotency-Key': idempKey
+                },
                 data: {
                     'id': id,
                     'status': status,
@@ -1307,7 +1356,11 @@
                     '_token': '{{ csrf_token() }}'
                 },
                 success: function(response) {
+                    isMutationInFlight = false;
                     if (response.status === 'success') {
+                        if (syncChannel) {
+                            try { syncChannel.postMessage({ action: 'status_changed', id: id, status: status }); } catch (e) {}
+                        }
                         // Update DOM data attributes
                         $('.lang-item-col[data-id="' + id + '"]').attr('data-status', status).data('status', status);
                         $('.lang-table-row[data-id="' + id + '"]').attr('data-status', status).data('status', status);
@@ -1337,6 +1390,7 @@
                     }
                 },
                 error: function(xhr) {
+                    isMutationInFlight = false;
                     $switch.prop('checked', !isChecked);
                     Swal.fire({
                         title: "Error",
@@ -1355,6 +1409,8 @@
             var name = $(this).data('lang-name') || 'this language';
             var url = "{{ route('superadmin.language-settings.setDefault', ':id') }}".replace(':id', id);
 
+            if (isMutationInFlight) return;
+
             Swal.fire({
                 title: "Set Default Language?",
                 text: "Do you want to set " + name + " as the primary system-wide default language for all tenant portals?",
@@ -1368,15 +1424,26 @@
                 }
             }).then(function(result) {
                 if (result.isConfirmed) {
+                    isMutationInFlight = true;
+                    var idempKey = generateIdempotencyKey();
+
                     $.ajax({
                         url: url,
                         type: "POST",
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Idempotency-Key': idempKey
+                        },
                         data: {
                             '_method': 'PUT',
                             '_token': '{{ csrf_token() }}'
                         },
                         success: function(response) {
+                            isMutationInFlight = false;
                             if (response.status === 'success') {
+                                if (syncChannel) {
+                                    try { syncChannel.postMessage({ action: 'default_changed', id: id }); } catch (e) {}
+                                }
                                 Swal.fire({
                                     title: "Default Updated!",
                                     text: response.message,
@@ -1396,6 +1463,7 @@
                             }
                         },
                         error: function() {
+                            isMutationInFlight = false;
                             Swal.fire({
                                 title: "Error",
                                 text: "Failed to set default language.",
@@ -1414,6 +1482,8 @@
             var name = $(this).data('lang-name') || 'this language';
             var url = "{{ route('superadmin.language-settings.destroy', ':id') }}".replace(':id', id);
 
+            if (isMutationInFlight) return;
+
             Swal.fire({
                 title: "Delete Language?",
                 text: "Are you sure you want to permanently delete " + name + "? All custom translations for this locale will be removed.",
@@ -1428,15 +1498,26 @@
                 }
             }).then(function(result) {
                 if (result.isConfirmed) {
+                    isMutationInFlight = true;
+                    var idempKey = generateIdempotencyKey();
+
                     $.ajax({
                         url: url,
                         type: "POST",
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Idempotency-Key': idempKey
+                        },
                         data: {
                             '_token': '{{ csrf_token() }}',
                             '_method': 'DELETE'
                         },
                         success: function(response) {
+                            isMutationInFlight = false;
                             if (response.status === 'success') {
+                                if (syncChannel) {
+                                    try { syncChannel.postMessage({ action: 'deleted', id: id }); } catch (e) {}
+                                }
                                 Swal.fire({
                                     title: "Deleted!",
                                     text: response.message,
@@ -1468,6 +1549,7 @@
                             }
                         },
                         error: function() {
+                            isMutationInFlight = false;
                             Swal.fire({
                                 title: "Error",
                                 text: "Failed to delete language record.",

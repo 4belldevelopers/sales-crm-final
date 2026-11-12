@@ -223,8 +223,10 @@
         });
 
         // Submit form handler
+        var isSubmitting = false;
         $('#btn-update-standalone-lang').on('click', function(e) {
             e.preventDefault();
+            if (isSubmitting) return;
             var $btn = $(this);
             var form = $('#editLangStandaloneForm')[0];
 
@@ -236,11 +238,13 @@
             var formData = new FormData(form);
             formData.append('_method', 'PUT');
 
+            isSubmitting = true;
             $btn.attr('disabled', true);
             $btn.find('.indicator-label').hide();
             $btn.find('.indicator-progress').show();
 
             var updateUrl = "{{ route('superadmin.language-settings.update', $language->id) }}";
+            var idempKey = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ('idemp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));
 
             $.ajax({
                 url: updateUrl,
@@ -249,14 +253,22 @@
                 processData: false,
                 contentType: false,
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Idempotency-Key': idempKey
                 },
                 success: function(response) {
+                    isSubmitting = false;
                     $btn.attr('disabled', false);
                     $btn.find('.indicator-label').show();
                     $btn.find('.indicator-progress').hide();
 
                     if (response.status === 'success') {
+                        try {
+                            if ('BroadcastChannel' in window) {
+                                var ch = new BroadcastChannel('jero_languages_sync');
+                                ch.postMessage({ action: 'saved', id: "{{ $language->id }}" });
+                            }
+                        } catch (e) {}
                         Swal.fire({
                             title: "Updated!",
                             text: response.message,
@@ -277,6 +289,7 @@
                     }
                 },
                 error: function(xhr) {
+                    isSubmitting = false;
                     $btn.attr('disabled', false);
                     $btn.find('.indicator-label').show();
                     $btn.find('.indicator-progress').hide();

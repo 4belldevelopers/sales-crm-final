@@ -1672,6 +1672,7 @@
                             <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
                             <span class="ms-2 fs-7 text-muted">Loading recommended agencies...</span>
                         </div>
+                        <div id="paginationrecommendedagency" class="mt-2"></div>
                     </div>
                 </div>
 
@@ -2097,12 +2098,22 @@
                     if (response.total !== undefined) {
                         $('#recommendedTotal').html('(' + response.total + ')');
                     }
+                    if (response.pagination) {
+                        $('#paginationrecommendedagency').html(response.pagination);
+                    } else {
+                        $('#paginationrecommendedagency').html('');
+                    }
                     syncCheckboxSelectionState();
                 } else if (hasRep && window.agencyTableCache[ramCacheKey]) {
                     var cached = window.agencyTableCache[ramCacheKey];
                     $('#recommendedlistBody').html(cached.html);
                     if (cached.total !== undefined) {
                         $('#recommendedTotal').html('(' + cached.total + ')');
+                    }
+                    if (cached.pagination) {
+                        $('#paginationrecommendedagency').html(cached.pagination);
+                    } else {
+                        $('#paginationrecommendedagency').html('');
                     }
                     syncCheckboxSelectionState();
                 } else {
@@ -2114,6 +2125,11 @@
                             $('#recommendedlistBody').html(fresh.html);
                             if (fresh.total !== undefined) {
                                 $('#recommendedTotal').html('(' + fresh.total + ')');
+                            }
+                            if (fresh.pagination) {
+                                $('#paginationrecommendedagency').html(fresh.pagination);
+                            } else {
+                                $('#paginationrecommendedagency').html('');
                             }
                             syncCheckboxSelectionState();
                         }
@@ -3036,6 +3052,15 @@
                     }
                 });
             });
+        });
+
+        // Pagination handlers for Recommended tab
+        $(document).off('click.pagiRecommended', '#paginationrecommendedagency .pagi-page, #paginationrecommendedagency .pagi-arrow')
+                   .on('click.pagiRecommended', '#paginationrecommendedagency .pagi-page, #paginationrecommendedagency .pagi-arrow', function(e) {
+            e.preventDefault();
+            var page = $(this).attr('data-page') || $(this).data('page');
+            if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
+            tableLoad(page);
         });
 
         // Pagination handlers for Assigned tab
