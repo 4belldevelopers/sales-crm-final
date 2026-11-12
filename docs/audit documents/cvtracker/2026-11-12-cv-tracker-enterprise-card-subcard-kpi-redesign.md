@@ -91,7 +91,8 @@ flowchart TD
 ## 5. 15.6" Screen Fit & UI/UX Standards
 
 - **Standard Resolution Target:** `1366×768` and `1920×1080` displays.
-- **KPI Card Grid:** `grid-template-columns: repeat(9, minmax(0, 1fr))` on desktop, cleanly collapsing to 5 columns on laptop screens (`max-width: 1400px`), 3 columns on tablet, and 2 columns on mobile.
+- **KPI Single-Row Architecture:** Strictly configured as `grid-template-columns: repeat(9, minmax(0, 1fr))` across viewports $\ge 1200$px with compact padding (`7px 8px`), streamlined icon sizing (`28px`), and font scaling so all 9 cards fit neatly in one single line. On screens $< 1200$px, smooth touch horizontal scrolling keeps all 9 cards on a single row without wrapping to multiple rows.
+- **Organization Type Dropdown List:** Replaced horizontal pill buttons with a compact, modern dropdown list (`.cvh-tb-org-wrap`, `width: 215px`) showing selected organization type with canonical Rule 25 icons and active indicator checkmarks.
 - **Sub-Card Proportions:** Sized in fractional widths (`2.15fr`, `1.35fr`, `1.15fr`, `1.35fr`, `1.15fr`, `1.3fr`) with `overflow: hidden` and `text-overflow: ellipsis` on all text nodes to prevent horizontal page scrolling.
 - **Typography & Colors:** Strictly Poppins font, 14px maximum UI cap, standard Metronic design tokens, clean icon-based design (0 3D elements).
 
@@ -110,5 +111,7 @@ flowchart TD
    php -l resources/views/service_company/cvtracker/index.blade.php
    # Output: No syntax errors detected in resources/views/service_company/cvtracker/index.blade.php
    ```
-2. **Git Tracking:**
-   All edits are completely isolated to the CV Tracker module files, ensuring zero regressions across other pages or controllers.
+2. **JavaScript Syntax Verification:**
+   All dangling syntax tokens resolved; client-side caching (L1 RAM snapshot + L2 IndexedDB SWR), debounced free-text search (300ms), and custom organization / sort dropdown panels operate cleanly.
+3. **Tenancy & Git Tracking:**
+   All edits remain strictly isolated to the CV Tracker module files with 0% MySQL reads on the web path and 100% Elasticsearch read compliance.
