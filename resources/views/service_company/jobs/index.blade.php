@@ -3354,7 +3354,7 @@ $(document).on('click', '.client-hm-listing', function ()
                     pipelineTrackHtml += '<div class="cd-track-stage" title="' + stg.label + ' - ' + stg.title + '"><span class="cd-track-label">' + stg.label + '</span><a href="' + stgUrl + '" class="cd-track-badge ' + stg.key + ' text-decoration-none">' + count + '</a></div>';
                 });
 
-                var formattedDate = job.added_date ? job.added_date : '';
+                var formattedDate = job.posted_date || job.added_date || '';
 
                 // MASTER PRIMARY CARD (Rule 20 Modern Enterprise Card + Sub-Card)
                 html += '<div class="cd-job-card" data-entity="job" data-job-id="' + job.id + '" style="border-left: 3.5px solid ' + shared.statusBorderColor + ' !important;">';
@@ -3774,7 +3774,7 @@ $(document).on('click', '.client-hm-listing', function ()
 
             const searchVal = ($('.inputJobSearch').val() || $('#inputSearch').val() || search || '').trim();
             const cacheKey = [
-                'v5',
+                'v6',
                 window.currentKpiFilter || 'all',
                 $('#status').val() || 'all',
                 $('#hiringtype').val() || '',
