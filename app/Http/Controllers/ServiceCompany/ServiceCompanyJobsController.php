@@ -1481,6 +1481,73 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
     }
 
+    /**
+     * Build Elasticsearch bool filter matching active, unexpired job requests (JIT Rule 22).
+     * Accepts records where expires_at > now, or legacy records without expires_at sent within 7 days.
+     */
+    protected function buildJobRequestExpiryFilter(): array
+    {
+        $nowIso = now()->toIso8601String();
+        $sevenDaysAgoIso = now()->subDays(7)->toIso8601String();
+
+        return [
+            'bool' => [
+                'should' => [
+                    ['range' => ['expires_at' => ['gt' => $nowIso]]],
+                    [
+                        'bool' => [
+                            'must_not' => [['exists' => ['field' => 'expires_at']]],
+                            'should' => [
+                                ['range' => ['created_at_rec' => ['gt' => $sevenDaysAgoIso]]],
+                                ['range' => ['from_created_at' => ['gt' => $sevenDaysAgoIso]]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ],
+                ],
+                'minimum_should_match' => 1,
+            ],
+        ];
+    }
+
+    /**
+     * Batch-fetch Elasticsearch documents by ID in a single round-trip (0% MySQL reads).
+     * Caller ensures any tenant filtering applies to retrieved IDs.
+     */
+    protected function batchFetchElasticDocsByIds(string $index, array $ids, array $sourceFields = []): array
+    {
+        $cleanIds = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (empty($cleanIds) || ! $this->elasticService->indexExists($index)) {
+            return [];
+        }
+
+        try {
+            $body = [
+                'size' => count($cleanIds),
+                'query' => ['ids' => ['values' => array_map('strval', $cleanIds)]],
+            ];
+            if (! empty($sourceFields)) {
+                $body['_source'] = $sourceFields;
+            }
+            $res = $this->elasticService->getClient()->search([
+                'index' => $index,
+                'body' => $body,
+            ]);
+            $map = [];
+            foreach ($res['hits']['hits'] ?? [] as $hit) {
+                $src = $hit['_source'] ?? [];
+                $docId = (int) ($src['id'] ?? $hit['_id'] ?? 0);
+                if ($docId > 0) {
+                    $map[$docId] = $src;
+                }
+            }
+
+            return $map;
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
     public function dataCnt()
     {
         $company_id = auth()->user()->company_id ?? 0;
@@ -1682,7 +1749,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $jobReqMust = [
                     ['term' => ['to_company_id' => $company_id]],
                     ['term' => ['final_status' => 0]],
-                    ['range' => ['expires_at' => ['gt' => now()->toIso8601String()]]],
+                    $this->buildJobRequestExpiryFilter(),
                 ];
                 if ($isNonAdmin && ! empty($userAssignedJobIds)) {
                     $jobReqMust[] = ['terms' => ['job_id' => $userAssignedJobIds]];
@@ -5707,69 +5774,114 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     }
 
+    /**
+     * Fetch active, unexpired inbound Job Requests 100% from Elasticsearch (0% MySQL reads)
+     * with batch-hydrated job metadata, sent timestamps, and dual SLA/job expiry telemetry.
+     *
+     * Tenancy Note: Scoped strictly to authenticated company ($company_id = to_company_id).
+     */
     public function recommandedrequest_ajax(Request $request)
     {
-        $company_id = auth()->user()->company_id;
-        $chkAdminRole = $this->user->hasRole('admin');
-        // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-        $job_status = GeneralMethod::job_status();
+        $company_id = (int) ($this->user->company_id ?? auth()->user()->company_id ?? 0);
+        $currentUserId = (int) ($this->user->id ?? auth()->id() ?? 0);
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
 
         $searchQuery = trim((string) $request->input('custom_search', $request->input('search', $request->input('q', ''))));
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 10 results per page
+        $size = max((int) $request->input('size', 10), 1);
         $from = ($page - 1) * $size;
-        $valCheck = $request->input('sortingfilter', $request->input('custom_hiringtype', 1));
+        $valCheck = (int) $request->input('sortingfilter', $request->input('custom_hiringtype', 1));
         $mstatus_id = $request->input('mstatus_id');
         $custom_status = $request->input('custom_status', 'all');
         $employment_type = $request->input('employment_type', 'all');
         $experience_filter = $request->input('experience_filter', 'all');
-        $sort = [];
-        $country = '';
-        $filters = [];
-        $customOrder = [8, 1, 2, 3, 4, 5, 6, 7];
+        $renderLegacyHtml = $request->boolean('render_html');
 
         $cachePayload = [
+            'v' => 2,
             'company' => $company_id,
             'page' => $page,
             'size' => $size,
             'q' => $searchQuery,
             'valCheck' => $valCheck,
-            'user_id' => $this->user->id,
+            'user_id' => $currentUserId,
             'mstatus_id' => $mstatus_id,
             'custom_status' => $custom_status,
             'employment_type' => $employment_type,
             'experience_filter' => $experience_filter,
+            'render_html' => $renderLegacyHtml,
             'requisition_type' => 'job_request',
         ];
 
-        $versionKey = 'alljobrequest_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:alljobrequest:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
+        $userVersionKey = 'alljobrequest_version_user_'.$currentUserId;
+        $companyVersionKey = 'alljobrequest_version_company_'.$company_id;
+        $version = cache()->get($userVersionKey, 1).'_'.cache()->get($companyVersionKey, 1);
+        $cacheKeySet = 'ats:alljobrequest:'.$currentUserId.':'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
+
+        // ⚡ Check Dragonfly/Redis cache first, applying JIT expiry guard against cached items (Rule 22)
         if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
+            $cachedResponse = cache()->get($cacheKeySet);
+            if (! empty($cachedResponse['jobs']) && is_array($cachedResponse['jobs'])) {
+                $nowTs = now()->timestamp;
+                $cachedResponse['jobs'] = array_values(array_filter($cachedResponse['jobs'], function ($item) use ($nowTs) {
+                    $expIso = $item['expires_at_iso'] ?? null;
+
+                    return ! $expIso || strtotime((string) $expIso) > $nowTs;
+                }));
+                $cachedResponse['data'] = $cachedResponse['jobs'];
+                $cachedResponse['total'] = count($cachedResponse['jobs']) < ($cachedResponse['total'] ?? 0) && $page === 1
+                    ? count($cachedResponse['jobs'])
+                    : ($cachedResponse['total'] ?? count($cachedResponse['jobs']));
+            }
+
+            return response()->json($cachedResponse);
         }
 
-        // Apply fallback sort by ID descending
-        $sort[] = ['final_status' => ['order' => 'asc', 'unmapped_type' => 'long']];
-        if ($valCheck == 2) {
-            $sort[] = ['id' => ['order' => 'asc']];
-        } else {
-            $sort[] = ['id' => ['order' => 'desc']];
+        // Dynamic sorting in Elasticsearch using unmapped_type safety
+        $sort = [['final_status' => ['order' => 'asc', 'unmapped_type' => 'long']]];
+        switch ($valCheck) {
+            case 2:
+                $sort[] = ['id' => ['order' => 'asc']];
+                break;
+            case 3:
+                $sort[] = ['max_salary' => ['order' => 'asc', 'unmapped_type' => 'double']];
+                $sort[] = ['id' => ['order' => 'desc']];
+                break;
+            case 4:
+                $sort[] = ['max_salary' => ['order' => 'desc', 'unmapped_type' => 'double']];
+                $sort[] = ['id' => ['order' => 'desc']];
+                break;
+            case 7:
+                $sort[] = ['expires_at' => ['order' => 'asc', 'missing' => '_last', 'unmapped_type' => 'date']];
+                $sort[] = ['id' => ['order' => 'asc']];
+                break;
+            default:
+                $sort[] = ['id' => ['order' => 'desc']];
         }
 
+        $filters = [];
         if ($searchQuery !== '') {
-            $filters[] = [
-                'multi_match' => [
-                    'query' => $searchQuery,
-                    'fields' => ['title^3', 'company_name^2', 'clients_name^2', 'city_name', 'skillArr'],
-                    'type' => 'phrase_prefix',
-                ],
-            ];
+            if (ctype_digit($searchQuery)) {
+                $filters[] = [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['job_id' => (int) $searchQuery]],
+                            ['term' => ['id' => (int) $searchQuery]],
+                            ['term' => ['recommendation_relation_id' => (int) $searchQuery]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+            } else {
+                $filters[] = [
+                    'multi_match' => [
+                        'query' => $searchQuery,
+                        'fields' => ['title^3', 'company_name^2', 'clients_name^2', 'city_name', 'skillArr'],
+                        'type' => 'phrase_prefix',
+                    ],
+                ];
+            }
         }
 
         if (! empty($experience_filter) && $experience_filter !== 'all') {
@@ -5792,30 +5904,22 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $boolQuery = [
             'bool' => [
-                'should' => [
-                    // Active and Unexpired Job Requests Only
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['to_company_id' => $company_id]],
-                                ['term' => ['final_status' => 0]],
-                                ['range' => ['expires_at' => ['gt' => now()->toIso8601String()]]],
-                            ]),
-                        ],
-                    ],
+                'must' => [
+                    ['term' => ['to_company_id' => $company_id]],
+                    ['term' => ['final_status' => 0]],
+                    $this->buildJobRequestExpiryFilter(),
                 ],
-                'minimum_should_match' => 1,
-                'filter' => $filters, // We'll add all filters here
+                'filter' => $filters,
             ],
         ];
 
-        // Build the final query
         $params = [
             'index' => ELASTIC_JOB_REQUEST,
             'request_cache' => true,
             'body' => [
                 'from' => $from,
                 'size' => $size,
+                'track_total_hits' => true,
                 'sort' => $sort,
                 'query' => $boolQuery,
             ],
@@ -5827,39 +5931,295 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         } else {
             $response = $this->elasticService->getClient()->search($params);
             $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
+            $data = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits'] ?? []);
         }
 
-        // ── Canonical Architecture: Batch Pre-hydration to eliminate in-Blade queries ──
-        $jobIds = array_filter(array_map(fn ($item) => (int) ($item['job_id'] ?? ($item['id'] ?? 0)), $data));
-        $categoriesMap = cache()->remember('global_job_categories_id_name_map', 86400, function () {
-            return DB::table('job_categories')->pluck('name', 'id')->toArray();
-        });
-
+        // ── 100% CQRS Batch Hydration via Elasticsearch (0% MySQL reads) ──
+        $formattedRequests = [];
+        $categoriesMap = [];
         $locationsMap = [];
         $captainsMap = [];
-        if (! empty($jobIds)) {
-            $locationsMap = DB::table('client_city_jobs')
-                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('client_city_jobs.job_id', 'city_list.city as city_name', 'countries.country_name')
-                ->whereIn('client_city_jobs.job_id', $jobIds)
-                ->get()
-                ->keyBy('job_id')
-                ->toArray();
 
-            $captainsMap = DB::table('job_assign')
-                ->select('job_assign.job_id', 'users.name', 'users_profile.designation')
-                ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
-                ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-                ->whereIn('job_assign.job_id', $jobIds)
-                ->where('job_assign.spok_user_id', '!=', '')
-                ->get()
-                ->keyBy('job_id')
-                ->toArray();
+        if (! empty($data)) {
+            $jobIds = array_values(array_unique(array_filter(array_map(fn ($item) => (int) ($item['job_id'] ?? ($item['id'] ?? 0)), $data))));
+            $fromCompanyIds = array_values(array_unique(array_filter(array_map(fn ($item) => (int) ($item['from_company_id'] ?? 0), $data))));
+            $fromUserIds = array_values(array_unique(array_filter(array_map(fn ($item) => (int) ($item['from_user_id'] ?? 0), $data))));
+
+            $jobsEsMap = $this->batchFetchElasticDocsByIds(ELASTIC_JOBS, $jobIds, [
+                'id', 'title', 'category_id', 'client_city_jobs', 'salary_visibility',
+                'min_salary', 'max_salary', 'min_sal_mode', 'min_salary_currency',
+                'job_metronics_skills', 'job_assign', 'end_date', 'auto_date_job',
+                'employment_type', 'work_type', 'total_positions', 'status',
+                'created_at', 'company_name', 'logo',
+            ]);
+
+            $categoryIds = array_values(array_unique(array_filter(array_map(
+                fn ($j) => (int) ($j['category_id'] ?? 0),
+                $jobsEsMap
+            ))));
+            $categoriesEsMap = $this->batchFetchElasticDocsByIds(ELASTIC_JOB_CATEGORIES, $categoryIds, ['id', 'name']);
+            foreach ($categoriesEsMap as $cid => $cDoc) {
+                $categoriesMap[$cid] = $cDoc['name'] ?? '';
+            }
+
+            $spokUserIds = [];
+            foreach ($jobsEsMap as $esJobDoc) {
+                foreach ($esJobDoc['job_assign'] ?? [] as $assign) {
+                    if (! empty($assign['spok_user_id'])) {
+                        $spokUserIds[] = (int) $assign['spok_user_id'];
+                    }
+                }
+            }
+            $allUserIds = array_values(array_unique(array_filter(array_merge($spokUserIds, $fromUserIds))));
+            $usersEsMap = $this->batchFetchElasticDocsByIds(ELASTIC_USERS_LIST, $allUserIds, ['id', 'name', 'designation']);
+            $companiesEsMap = $this->batchFetchElasticDocsByIds(ELASTIC_COMPANIES_INDEX, $fromCompanyIds, ['id', 'company_name', 'logo']);
+
+            foreach ($data as $row) {
+                $recId = (int) ($row['recommendation_relation_id'] ?? ($row['id'] ?? 0));
+                $jobId = (int) ($row['job_id'] ?? ($row['id'] ?? 0));
+                $esJob = $jobsEsMap[$jobId] ?? [];
+                $fromCompId = (int) ($row['from_company_id'] ?? 0);
+                $fromComp = $companiesEsMap[$fromCompId] ?? [];
+
+                $title = (string) ($row['title'] ?? ($esJob['title'] ?? 'Untitled Job'));
+                $catId = (int) ($esJob['category_id'] ?? ($row['category_id'] ?? 0));
+                $department = (string) ($row['department'] ?? ($categoriesMap[$catId] ?? 'Information Technology'));
+                if (trim($department) === '') {
+                    $department = 'Information Technology';
+                }
+
+                $companyName = (string) ($fromComp['company_name'] ?? ($row['company_name'] ?? ($esJob['company_name'] ?? 'Direct Client')));
+                $logoPath = (string) ($row['logo'] ?? ($fromComp['logo'] ?? ($esJob['logo'] ?? '')));
+                $logoPath = strlen($logoPath) > 5 ? str_replace('index.php', '', $logoPath) : '';
+
+                // Status resolution
+                $finalStatus = (int) ($row['final_status'] ?? 0);
+                $statusRaw = strtolower((string) ($esJob['status'] ?? ($row['status'] ?? 'active')));
+                $statusLabel = match ($statusRaw) {
+                    'hold' => 'Hold',
+                    'inactive' => 'Closed',
+                    default => 'Hiring',
+                };
+                if ($finalStatus === 2 || $finalStatus === 3) {
+                    $statusLabel = 'Removed';
+                }
+
+                // Confidentiality & Compensation resolution (authoritative ES policy check)
+                $rawSalVis = $esJob['salary_visibility'] ?? ($row['salary_visibility'] ?? null);
+                $normSalVis = \App\Services\SalaryVisibilityPolicy::normalize($rawSalVis);
+                $minSalRaw = $esJob['min_salary'] ?? ($row['min_salary'] ?? 0);
+                $maxSalRaw = $esJob['max_salary'] ?? ($row['max_salary'] ?? 0);
+                $isSalZero = ((float) $minSalRaw === 0.0 && (float) $maxSalRaw === 0.0);
+                $isSalConfidential = ($normSalVis === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
+                    || ($rawSalVis === 'confidential')
+                    || ($isSalZero && ($rawSalVis === 'confidential' || empty($rawSalVis) || ! isset($esJob['salary_visibility'])));
+
+                $salModeIdx = (int) ($esJob['min_sal_mode'] ?? ($row['min_sal_mode'] ?? 0));
+                $minSalMode = ['/Annum', '/Month', '/Hour'][$salModeIdx] ?? '';
+                $salCurrKey = $esJob['min_salary_currency'] ?? ($row['min_salary_currency'] ?? null);
+                $minSalCurrency = $currencySymbole[$salCurrKey]
+                    ?? $currencySymbole[\App\Services\CurrencyService::resolveCurrencyCode($salCurrKey)]
+                    ?? '$';
+                $minSalFmt = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($minSalRaw));
+                $maxSalFmt = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($maxSalRaw));
+                $salDisplay = $isSalConfidential ? 'Confidential' : ($minSalCurrency.' '.$minSalFmt.' - '.$maxSalFmt.' '.$minSalMode);
+
+                // Work Locations (multi-city hydration from ELASTIC_JOBS, fallback to city_name)
+                $allCities = [];
+                $workLocations = [];
+                $seenCityKeys = [];
+                $esCityJobs = $esJob['client_city_jobs'] ?? [];
+                if (! empty($esCityJobs) && is_array($esCityJobs)) {
+                    foreach ($esCityJobs as $wl) {
+                        $cName = trim((string) ($wl['city_name'] ?? ''));
+                        $coName = trim((string) ($wl['country_name'] ?? ''));
+                        if ($cName !== '') {
+                            $key = strtolower($cName);
+                            if (! isset($seenCityKeys[$key])) {
+                                $seenCityKeys[$key] = true;
+                                $cleanCity = ucwords($cName);
+                                $cleanCountry = ucwords($coName);
+                                $allCities[] = $cleanCity;
+                                $workLocations[] = [
+                                    'city_name' => $cleanCity,
+                                    'country_name' => $cleanCountry,
+                                ];
+                            }
+                        }
+                    }
+                }
+                if (empty($workLocations) && ! empty($row['city_name'])) {
+                    $cleanCity = ucwords(trim((string) $row['city_name']));
+                    $cleanCountry = ucwords(trim((string) ($row['country_name'] ?? '')));
+                    $allCities[] = $cleanCity;
+                    $workLocations[] = ['city_name' => $cleanCity, 'country_name' => $cleanCountry];
+                }
+                $primaryCity = $allCities[0] ?? '';
+                $primaryCountry = $workLocations[0]['country_name'] ?? '';
+                $locationsMap[$jobId] = (object) [
+                    'job_id' => $jobId,
+                    'city_name' => $primaryCity,
+                    'country_name' => $primaryCountry,
+                ];
+
+                // Skills resolution (from ELASTIC_JOB_REQUEST skillArr or ELASTIC_JOBS job_metronics_skills)
+                $rawSkills = ! empty($row['skillArr']) && is_array($row['skillArr'])
+                    ? $row['skillArr']
+                    : array_map(fn ($s) => $s['skill_name'] ?? '', $esJob['job_metronics_skills'] ?? []);
+                $skills = array_values(array_unique(array_filter(array_map(
+                    fn ($s) => trim((string) $s) !== '' ? ucfirst(trim((string) $s)) : '',
+                    $rawSkills
+                ))));
+
+                // Hiring Manager / Client SPOC resolution from ELASTIC_USERS_LIST
+                $hiringManager = '--------';
+                $hiringManagerDesignation = '';
+                foreach ($esJob['job_assign'] ?? [] as $assign) {
+                    $spokId = (int) ($assign['spok_user_id'] ?? 0);
+                    if ($spokId > 0) {
+                        $uDoc = $usersEsMap[$spokId] ?? [];
+                        $hiringManager = ucwords((string) ($uDoc['name'] ?? ($assign['user_name'] ?? '--------')));
+                        $hiringManagerDesignation = (string) ($uDoc['designation'] ?? '');
+                        break;
+                    }
+                }
+                $fromUserId = (int) ($row['from_user_id'] ?? 0);
+                $sentByUser = $fromUserId > 0 ? ($usersEsMap[$fromUserId] ?? []) : [];
+                $sentByName = ! empty($sentByUser['name']) ? ucwords((string) $sentByUser['name']) : '';
+                if (($hiringManager === '--------' || $hiringManager === '') && $sentByName !== '') {
+                    $hiringManager = $sentByName;
+                    $hiringManagerDesignation = (string) ($sentByUser['designation'] ?? '');
+                }
+                $captainsMap[$jobId] = (object) [
+                    'job_id' => $jobId,
+                    'name' => $hiringManager,
+                    'designation' => $hiringManagerDesignation ?: 'Client SPOC',
+                ];
+
+                // Avatar palette
+                $firstChar = strtolower(trim($title)[0] ?? 'j');
+                $charOrd = ord($firstChar);
+                $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+                if ($charOrd >= 97 && $charOrd <= 101) {
+                    $bgTextDecore = 'fs-3 bg-light-danger text-danger';
+                } elseif ($charOrd >= 102 && $charOrd <= 106) {
+                    $bgTextDecore = 'fs-3 bg-light-warning text-warning';
+                } elseif ($charOrd >= 107 && $charOrd <= 111) {
+                    $bgTextDecore = 'fs-3 bg-light-primary text-primary';
+                } elseif ($charOrd >= 112 && $charOrd <= 116) {
+                    $bgTextDecore = 'fs-3 bg-light-success text-success';
+                } elseif ($charOrd >= 117 && $charOrd <= 121) {
+                    $bgTextDecore = 'fs-3 bg-dark text-secondary';
+                }
+
+                // Request Sent Date (prefers created_at_rec full timestamp over date-only from_created_at)
+                $sentRaw = ! empty($row['created_at_rec'])
+                    ? $row['created_at_rec']
+                    : (! empty($row['from_created_at']) ? $row['from_created_at'] : ($row['created_at'] ?? null));
+                $sentCarbon = null;
+                if (! empty($sentRaw)) {
+                    try {
+                        $sentCarbon = Carbon::parse($sentRaw);
+                    } catch (\Throwable) {
+                    }
+                }
+                $sentAtIso = $sentCarbon ? $sentCarbon->toIso8601String() : null;
+                $sentAtDisplay = $sentCarbon ? $sentCarbon->format('d M y') : '—';
+                $sentTimeDisplay = ($sentCarbon && $sentCarbon->format('H:i:s') !== '00:00:00')
+                    ? $sentCarbon->format('h:i A')
+                    : '';
+
+                // Request SLA Expiry (explicit expires_at or JIT 7-day SLA from sent timestamp)
+                $expRaw = ! empty($row['expires_at'])
+                    ? $row['expires_at']
+                    : ($sentCarbon ? $sentCarbon->copy()->addDays(7)->toIso8601String() : null);
+                $expCarbon = null;
+                if (! empty($expRaw)) {
+                    try {
+                        $expCarbon = Carbon::parse($expRaw);
+                    } catch (\Throwable) {
+                    }
+                }
+                $expiresAtIso = $expCarbon ? $expCarbon->toIso8601String() : null;
+                $expiresAtDisplay = $expCarbon ? $expCarbon->format('d M y, h:i A') : '—';
+
+                // Job Requisition Closing / Expiry Date (end_date or auto_date_job)
+                $jobEndRaw = $row['end_date'] ?? ($esJob['end_date'] ?? ($esJob['auto_date_job'] ?? null));
+                $jobEndCarbon = null;
+                if (! empty($jobEndRaw)) {
+                    try {
+                        $jobEndCarbon = Carbon::parse($jobEndRaw);
+                    } catch (\Throwable) {
+                    }
+                }
+                $jobEndDateIso = $jobEndCarbon ? $jobEndCarbon->toIso8601String() : null;
+                $jobEndDateDisplay = $jobEndCarbon ? $jobEndCarbon->format('d M y') : null;
+
+                $empTypeRaw = (int) ($esJob['employment_type'] ?? ($row['employment_type'] ?? 0));
+                $empTypeLabel = ['Full-time', 'Contract', 'Freelance', 'Part Time'][$empTypeRaw] ?? 'Full-time';
+                $rawWorkType = strtolower((string) ($esJob['work_type'] ?? ($row['work_type'] ?? '')));
+                $workTypeLabel = ($rawWorkType === 'yes' || $rawWorkType === 'remote')
+                    ? 'Remote'
+                    : (($rawWorkType === 'other' || $rawWorkType === 'hybrid') ? 'Hybrid' : 'Office');
+
+                $formattedRequests[] = [
+                    'id' => $jobId,
+                    'encrypted_id' => GeneralMethod::value_encrypt($jobId),
+                    'recommendation_relation_id' => $recId,
+                    'final_status' => $finalStatus,
+                    'is_job_request' => true,
+                    'is_direct_client' => true,
+                    'title' => $title,
+                    'department' => $department,
+                    'clients_name' => $companyName,
+                    'company_name' => $companyName,
+                    'parent_company_name' => $companyName,
+                    'logo_path' => $logoPath,
+                    'initial_letter' => strtoupper($firstChar),
+                    'bg_text_decore' => $bgTextDecore,
+                    'status' => $statusLabel,
+                    'status_raw' => $statusRaw,
+                    'employment_type' => $empTypeLabel,
+                    'employment_type_raw' => $empTypeRaw,
+                    'total_positions' => max(1, (int) ($esJob['total_positions'] ?? ($row['total_positions'] ?? 1))),
+                    'min_exp' => (int) ($row['min_exp'] ?? ($esJob['min_exp'] ?? 0)),
+                    'max_exp' => (int) ($row['max_exp'] ?? ($esJob['max_exp'] ?? 0)),
+                    'min_salary' => $minSalFmt,
+                    'max_salary' => $maxSalFmt,
+                    'min_salary_raw' => (float) $minSalRaw,
+                    'max_salary_raw' => (float) $maxSalRaw,
+                    'min_salary_currency' => $minSalCurrency,
+                    'min_sal_mode' => $minSalMode,
+                    'salary_display' => $salDisplay,
+                    'salary_visibility' => $isSalConfidential ? 'confidential' : $normSalVis,
+                    'is_salary_confidential' => $isSalConfidential,
+                    'work_type' => $workTypeLabel,
+                    'primary_city' => $primaryCity,
+                    'city' => $primaryCity,
+                    'cities' => $allCities,
+                    'work_locations' => $workLocations,
+                    'country' => $primaryCountry,
+                    'hiring_manager' => $hiringManager,
+                    'hiring_manager_designation' => $hiringManagerDesignation ?: 'Client SPOC',
+                    'sent_by_name' => $sentByName,
+                    'added_date' => $sentAtDisplay,
+                    'sent_at_iso' => $sentAtIso,
+                    'sent_at_display' => $sentAtDisplay,
+                    'sent_time_display' => $sentTimeDisplay,
+                    'expires_at_iso' => $expiresAtIso,
+                    'expires_at_display' => $expiresAtDisplay,
+                    'job_end_date_iso' => $jobEndDateIso,
+                    'job_end_date_display' => $jobEndDateDisplay,
+                    'skills' => $skills,
+                ];
+            }
+
+            // Optional alphabetical company sort requested via dropdown (5 = A-Z, 6 = Z-A)
+            if ($valCheck === 5) {
+                usort($formattedRequests, fn ($a, $b) => strcasecmp($a['company_name'] ?? '', $b['company_name'] ?? ''));
+            } elseif ($valCheck === 6) {
+                usort($formattedRequests, fn ($a, $b) => strcasecmp($b['company_name'] ?? '', $a['company_name'] ?? ''));
+            }
         }
 
         $pagination = [
@@ -5872,7 +6232,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $userPermissions = $this->userPermissions ?? [];
         $responseData = [
-            'html' => view('service_company.ajax_pages.request_jobs_ajax', compact('data', 'userPermissions', 'locationsMap', 'categoriesMap', 'captainsMap'))->render(),
+            'jobs' => $formattedRequests,
+            'data' => $formattedRequests,
+            'html' => $renderLegacyHtml
+                ? view('service_company.ajax_pages.request_jobs_ajax', compact('data', 'userPermissions', 'locationsMap', 'categoriesMap', 'captainsMap'))->render()
+                : '',
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'status_counts' => [
@@ -5882,12 +6246,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'inactive' => 0,
                 'removed' => 0,
             ],
+            'dataCnt' => $this->dataCnt(),
         ];
 
-        cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+        cache()->put($cacheKeySet, $responseData, now()->addMinute());
 
         return response()->json($responseData);
-
     }
 
     /**
