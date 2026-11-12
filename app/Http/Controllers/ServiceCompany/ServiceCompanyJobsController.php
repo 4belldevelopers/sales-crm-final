@@ -2796,24 +2796,35 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
             'requisition_type' => $requisition_type,
-            'v' => 'status_v15',
+            'v' => 'status_v16',
         ];
 
-        // Two-axis version key: user (personal filter changes) + company (job creates/updates by any team member).
-        // JobObserver::saved bumps alljobslist_version_company_{id} so all team members see fresh data immediately.
+        // Multi-axis version key: user + company jobs + company/user job requests so Accept/Reject immediately refreshes Total Jobs.
+        // JobObserver::saved bumps alljobslist_version_company_{id}; requestapproval bumps both jobs and jobrequest versions.
         $userVersionKey = 'alljobslist_version_user_'.$this->user->id;
         $companyVersionKey = 'alljobslist_version_company_'.$company_id;
-        $version = cache()->get($userVersionKey, 1).'_'.cache()->get($companyVersionKey, 1);
+        $reqUserVersionKey = 'alljobrequest_version_user_'.$this->user->id;
+        $reqCompanyVersionKey = 'alljobrequest_version_company_'.$company_id;
+        $version = cache()->get($userVersionKey, 1)
+            .'_'.cache()->get($companyVersionKey, 1)
+            .'_'.cache()->get($reqUserVersionKey, 1)
+            .'_'.cache()->get($reqCompanyVersionKey, 1);
         $cacheKeySet = 'ats:alljobslist:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         if ($requisition_type === 'job_request' || $requisition_type === 'request') {
             return $this->recommandedrequest_ajax($request);
         }
 
         /* ----------------------------
-        ⚡ Check DragonflyDB first
+        ⚡ Check DragonflyDB first (applying JIT expiry filter to embedded requests)
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
+            $cached = cache()->get($cacheKeySet);
+            if (! empty($cached['job_requests']) && is_array($cached['job_requests'])) {
+                $cached['job_requests'] = $this->filterExpiredRequestItems($cached['job_requests']);
+                $cached['job_requests_total'] = count($cached['job_requests']);
+            }
+
+            return response()->json($cached);
         }
 
         // INTENT: Fetch & cache recommendation job IDs for company once to eliminate duplicate size:10000 ES queries. Tenancy: scoped to to_company_id.
@@ -3894,9 +3905,26 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
+        $topJobRequests = [];
+        $topJobRequestsTotal = 0;
+        if (($requisition_type === 'all' || $requisition_type === '') && $page === 1) {
+            $reqBundle = $this->queryActiveJobRequests((int) $company_id, (int) $userId, [
+                'search' => $custom_search,
+                'experience_filter' => (string) ($experience_filter ?? 'all'),
+                'employment_type' => (string) ($employment_type ?? 'all'),
+                'valCheck' => (int) ($valCheck ?? 1),
+                'from' => 0,
+                'size' => 100,
+            ]);
+            $topJobRequests = $reqBundle['requests'];
+            $topJobRequestsTotal = $reqBundle['total'];
+        }
+
         $responseData = [
             'html' => '',
             'jobs' => $formattedJobs,
+            'job_requests' => $topJobRequests,
+            'job_requests_total' => $topJobRequestsTotal,
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'next_cursor' => $nextCursor,
@@ -5775,68 +5803,34 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     }
 
     /**
-     * Fetch active, unexpired inbound Job Requests 100% from Elasticsearch (0% MySQL reads)
-     * with batch-hydrated job metadata, sent timestamps, and dual SLA/job expiry telemetry.
+     * Filter cached DTO items in-memory by SLA expiry timestamp (JIT Rule 22).
+     */
+    protected function filterExpiredRequestItems(array $items): array
+    {
+        $nowTs = now()->timestamp;
+
+        return array_values(array_filter($items, function ($item) use ($nowTs) {
+            $expIso = $item['expires_at_iso'] ?? null;
+
+            return ! $expIso || strtotime((string) $expIso) > $nowTs;
+        }));
+    }
+
+    /**
+     * Query & batch-hydrate active, unexpired inbound Job Requests 100% from Elasticsearch (0% MySQL reads).
+     * Shared by both the Job Requests KPI tab and the unified Total Jobs tab.
      *
      * Tenancy Note: Scoped strictly to authenticated company ($company_id = to_company_id).
      */
-    public function recommandedrequest_ajax(Request $request)
+    protected function queryActiveJobRequests(int $company_id, int $currentUserId, array $criteria = []): array
     {
-        $company_id = (int) ($this->user->company_id ?? auth()->user()->company_id ?? 0);
-        $currentUserId = (int) ($this->user->id ?? auth()->id() ?? 0);
-        $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
-
-        $searchQuery = trim((string) $request->input('custom_search', $request->input('search', $request->input('q', ''))));
-        $page = max((int) $request->input('page', 1), 1);
-        $size = max((int) $request->input('size', 10), 1);
-        $from = ($page - 1) * $size;
-        $valCheck = (int) $request->input('sortingfilter', $request->input('custom_hiringtype', 1));
-        $mstatus_id = $request->input('mstatus_id');
-        $custom_status = $request->input('custom_status', 'all');
-        $employment_type = $request->input('employment_type', 'all');
-        $experience_filter = $request->input('experience_filter', 'all');
-        $renderLegacyHtml = $request->boolean('render_html');
-
-        $cachePayload = [
-            'v' => 2,
-            'company' => $company_id,
-            'page' => $page,
-            'size' => $size,
-            'q' => $searchQuery,
-            'valCheck' => $valCheck,
-            'user_id' => $currentUserId,
-            'mstatus_id' => $mstatus_id,
-            'custom_status' => $custom_status,
-            'employment_type' => $employment_type,
-            'experience_filter' => $experience_filter,
-            'render_html' => $renderLegacyHtml,
-            'requisition_type' => 'job_request',
-        ];
-
-        $userVersionKey = 'alljobrequest_version_user_'.$currentUserId;
-        $companyVersionKey = 'alljobrequest_version_company_'.$company_id;
-        $version = cache()->get($userVersionKey, 1).'_'.cache()->get($companyVersionKey, 1);
-        $cacheKeySet = 'ats:alljobrequest:'.$currentUserId.':'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
-
-        // ⚡ Check Dragonfly/Redis cache first, applying JIT expiry guard against cached items (Rule 22)
-        if (cache()->has($cacheKeySet)) {
-            $cachedResponse = cache()->get($cacheKeySet);
-            if (! empty($cachedResponse['jobs']) && is_array($cachedResponse['jobs'])) {
-                $nowTs = now()->timestamp;
-                $cachedResponse['jobs'] = array_values(array_filter($cachedResponse['jobs'], function ($item) use ($nowTs) {
-                    $expIso = $item['expires_at_iso'] ?? null;
-
-                    return ! $expIso || strtotime((string) $expIso) > $nowTs;
-                }));
-                $cachedResponse['data'] = $cachedResponse['jobs'];
-                $cachedResponse['total'] = count($cachedResponse['jobs']) < ($cachedResponse['total'] ?? 0) && $page === 1
-                    ? count($cachedResponse['jobs'])
-                    : ($cachedResponse['total'] ?? count($cachedResponse['jobs']));
-            }
-
-            return response()->json($cachedResponse);
-        }
+        $searchQuery = trim((string) ($criteria['search'] ?? ''));
+        $from = max((int) ($criteria['from'] ?? 0), 0);
+        $size = max((int) ($criteria['size'] ?? 100), 1);
+        $valCheck = (int) ($criteria['valCheck'] ?? 1);
+        $employment_type = (string) ($criteria['employment_type'] ?? 'all');
+        $experience_filter = (string) ($criteria['experience_filter'] ?? 'all');
 
         // Dynamic sorting in Elasticsearch using unmapped_type safety
         $sort = [['final_status' => ['order' => 'asc', 'unmapped_type' => 'long']]];
@@ -6221,6 +6215,89 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 usort($formattedRequests, fn ($a, $b) => strcasecmp($b['company_name'] ?? '', $a['company_name'] ?? ''));
             }
         }
+
+        return [
+            'requests' => $formattedRequests,
+            'total' => $total,
+            'raw' => $data,
+            'locationsMap' => $locationsMap,
+            'categoriesMap' => $categoriesMap,
+            'captainsMap' => $captainsMap,
+        ];
+    }
+
+    /**
+     * Fetch active, unexpired inbound Job Requests 100% from Elasticsearch (0% MySQL reads)
+     * with batch-hydrated job metadata, sent timestamps, and dual SLA/job expiry telemetry.
+     *
+     * Tenancy Note: Scoped strictly to authenticated company ($company_id = to_company_id).
+     */
+    public function recommandedrequest_ajax(Request $request)
+    {
+        $company_id = (int) ($this->user->company_id ?? auth()->user()->company_id ?? 0);
+        $currentUserId = (int) ($this->user->id ?? auth()->id() ?? 0);
+
+        $searchQuery = trim((string) $request->input('custom_search', $request->input('search', $request->input('q', ''))));
+        $page = max((int) $request->input('page', 1), 1);
+        $size = max((int) $request->input('size', 10), 1);
+        $from = ($page - 1) * $size;
+        $valCheck = (int) $request->input('sortingfilter', $request->input('custom_hiringtype', 1));
+        $mstatus_id = $request->input('mstatus_id');
+        $custom_status = $request->input('custom_status', 'all');
+        $employment_type = $request->input('employment_type', 'all');
+        $experience_filter = $request->input('experience_filter', 'all');
+        $renderLegacyHtml = $request->boolean('render_html');
+
+        $cachePayload = [
+            'v' => 2,
+            'company' => $company_id,
+            'page' => $page,
+            'size' => $size,
+            'q' => $searchQuery,
+            'valCheck' => $valCheck,
+            'user_id' => $currentUserId,
+            'mstatus_id' => $mstatus_id,
+            'custom_status' => $custom_status,
+            'employment_type' => $employment_type,
+            'experience_filter' => $experience_filter,
+            'render_html' => $renderLegacyHtml,
+            'requisition_type' => 'job_request',
+        ];
+
+        $userVersionKey = 'alljobrequest_version_user_'.$currentUserId;
+        $companyVersionKey = 'alljobrequest_version_company_'.$company_id;
+        $version = cache()->get($userVersionKey, 1).'_'.cache()->get($companyVersionKey, 1);
+        $cacheKeySet = 'ats:alljobrequest:'.$currentUserId.':'.$company_id.':'.$version.':'.md5(json_encode($cachePayload));
+
+        // ⚡ Check Dragonfly/Redis cache first, applying JIT expiry guard against cached items (Rule 22)
+        if (cache()->has($cacheKeySet)) {
+            $cachedResponse = cache()->get($cacheKeySet);
+            if (! empty($cachedResponse['jobs']) && is_array($cachedResponse['jobs'])) {
+                $cachedResponse['jobs'] = $this->filterExpiredRequestItems($cachedResponse['jobs']);
+                $cachedResponse['data'] = $cachedResponse['jobs'];
+                $cachedResponse['total'] = count($cachedResponse['jobs']) < ($cachedResponse['total'] ?? 0) && $page === 1
+                    ? count($cachedResponse['jobs'])
+                    : ($cachedResponse['total'] ?? count($cachedResponse['jobs']));
+            }
+
+            return response()->json($cachedResponse);
+        }
+
+        $bundle = $this->queryActiveJobRequests($company_id, $currentUserId, [
+            'search' => $searchQuery,
+            'from' => $from,
+            'size' => $size,
+            'valCheck' => $valCheck,
+            'employment_type' => $employment_type,
+            'experience_filter' => $experience_filter,
+        ]);
+
+        $formattedRequests = $bundle['requests'];
+        $total = $bundle['total'];
+        $data = $bundle['raw'];
+        $locationsMap = $bundle['locationsMap'];
+        $categoriesMap = $bundle['categoriesMap'];
+        $captainsMap = $bundle['captainsMap'];
 
         $pagination = [
             'total' => $total,
