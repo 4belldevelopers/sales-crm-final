@@ -430,5 +430,122 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $clientAppView = file_get_contents(resource_path('views/service_company/apptracker/clientapp.blade.php'));
         $this->assertStringContainsString("$(document).on('click', '.aptk-cand-card'", $indexView);
         $this->assertStringContainsString("$(document).on('click', '.caf-cand-card'", $clientAppView);
+        $this->assertStringContainsString('.aptk-int-schedule-btn', $indexView);
+        $this->assertStringContainsString('.caf-int-schedule-btn', $clientAppView);
+    }
+
+    public function test_interview_card_schedule_button_hides_when_scheduled_and_reactivates_on_next_stage(): void
+    {
+        $this->actingUser();
+
+        $stage8Candidate = $this->makeCandidateRow([
+            'id' => 301,
+            'candidate_id' => 301,
+            'wiseId' => 7001,
+            'jobId' => 117,
+            'job_id' => 117,
+            'job_master_status_id' => 8,
+            'name' => 'InReview',
+        ]);
+
+        // 1. No interview scheduled yet at Stage 8 -> Schedule Interview CTA rendered
+        $noIntMaps = $this->baseRowMaps();
+        $noIntMaps['stage_interviews'] = [];
+
+        $appNoIntHtml = View::make('service_company.ajax_pages.all_apptracker', [
+            'data' => [$stage8Candidate],
+            'userPermissions' => ['view_job_applications', 'add_schedule'],
+            'rowMaps' => $noIntMaps,
+        ])->render();
+
+        $clientNoIntHtml = View::make('service_company.ajax_pages.clientappdata_ajax', [
+            'data' => [$stage8Candidate],
+            'userPermissions' => ['view_job_applications', 'add_schedule'],
+            'rowMaps' => $noIntMaps,
+            'citiesMap' => [],
+            'jobid' => 117,
+            'company_id' => 1,
+        ])->render();
+
+        $this->assertStringContainsString('aptk-int-schedule-btn app_interview_schedule', $appNoIntHtml);
+        $this->assertStringContainsString('Schedule Interview', $appNoIntHtml);
+        $this->assertStringContainsString('data-wise-id="7001"', $appNoIntHtml);
+
+        $this->assertStringContainsString('caf-int-schedule-btn app_interview_schedule', $clientNoIntHtml);
+        $this->assertStringContainsString('Schedule Interview', $clientNoIntHtml);
+        $this->assertStringContainsString('data-wise-id="7001"', $clientNoIntHtml);
+
+        // 2. Active interview scheduled at Stage 8 -> Schedule Interview CTA hidden
+        $stage8Scheduled = (object) [
+            'id' => 9901,
+            'job_application_id' => 301,
+            'interview_job_wise_con_id' => 7001,
+            'interview_job_id' => 117,
+            'stage' => '8',
+            'status' => 'pending',
+            'schedule_date' => '2026-11-15 10:30:00',
+            'schedule_to_time' => '10:30 AM',
+            'timezone_abbreviation' => 'IST',
+            'interview_mode' => 2,
+        ];
+        $stage8Maps = $this->baseRowMaps();
+        $stage8Maps['interviews'] = [
+            '301_117' => $stage8Scheduled,
+            'w_7001_117' => $stage8Scheduled,
+        ];
+        $stage8Maps['stage_interviews'] = [
+            '301_117_8' => $stage8Scheduled,
+            'w_7001_117_8' => $stage8Scheduled,
+        ];
+
+        $appScheduledHtml = View::make('service_company.ajax_pages.all_apptracker', [
+            'data' => [$stage8Candidate],
+            'userPermissions' => ['view_job_applications', 'add_schedule'],
+            'rowMaps' => $stage8Maps,
+        ])->render();
+
+        $clientScheduledHtml = View::make('service_company.ajax_pages.clientappdata_ajax', [
+            'data' => [$stage8Candidate],
+            'userPermissions' => ['view_job_applications', 'add_schedule'],
+            'rowMaps' => $stage8Maps,
+            'citiesMap' => [],
+            'jobid' => 117,
+            'company_id' => 1,
+        ])->render();
+
+        $this->assertStringNotContainsString('aptk-int-schedule-btn', $appScheduledHtml);
+        $this->assertStringNotContainsString('Schedule Interview', $appScheduledHtml);
+        $this->assertStringContainsString('15 Nov, 2026', $appScheduledHtml);
+
+        $this->assertStringNotContainsString('caf-int-schedule-btn', $clientScheduledHtml);
+        $this->assertStringNotContainsString('Schedule Interview', $clientScheduledHtml);
+        $this->assertStringContainsString('15 Nov, 2026', $clientScheduledHtml);
+
+        // 3. Candidate moves to next stage (Stage 2) where no interview is scheduled yet -> CTA re-activates
+        $nextStageCandidate = array_merge($stage8Candidate, [
+            'job_master_status_id' => 2,
+            'name' => 'Screening',
+        ]);
+
+        $appNextStageHtml = View::make('service_company.ajax_pages.all_apptracker', [
+            'data' => [$nextStageCandidate],
+            'userPermissions' => ['view_job_applications', 'add_schedule'],
+            'rowMaps' => $stage8Maps,
+        ])->render();
+
+        $clientNextStageHtml = View::make('service_company.ajax_pages.clientappdata_ajax', [
+            'data' => [$nextStageCandidate],
+            'userPermissions' => ['view_job_applications', 'add_schedule'],
+            'rowMaps' => $stage8Maps,
+            'citiesMap' => [],
+            'jobid' => 117,
+            'company_id' => 1,
+        ])->render();
+
+        $this->assertStringContainsString('aptk-int-schedule-btn app_interview_schedule', $appNextStageHtml);
+        $this->assertStringContainsString('Schedule Interview', $appNextStageHtml);
+
+        $this->assertStringContainsString('caf-int-schedule-btn app_interview_schedule', $clientNextStageHtml);
+        $this->assertStringContainsString('Schedule Interview', $clientNextStageHtml);
     }
 }
