@@ -319,63 +319,113 @@
     gap: 2px;
     transition: background-color .15s;
 }
+#bg_all.hp-total.bg-total-active,
 .hp-total.bg-total-active {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+    background-color: #1d4ed8 !important;
+    background-image: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25) !important;
 }
 /* Organization-specific Total Candidates palettes: My Org = Sunlit Canary Yellow, Internal Client = Deep Royal Cobalt, Direct Client = Emerald */
+#bg_all.hp-total.hp-org-my.bg-total-active,
 .hp-total.hp-org-my.bg-total-active {
-    background: linear-gradient(135deg, #fde047 0%, #eab308 100%);
-    box-shadow: 0 6px 16px rgba(234, 179, 8, 0.28);
+    background-color: #eab308 !important;
+    background-image: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+    background: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+    border-color: #eab308 !important;
+    box-shadow: 0 6px 16px rgba(234, 179, 8, 0.28) !important;
 }
+#bg_all.hp-total.hp-org-my.bg-total-active .hp-total-icon,
+#bg_all.hp-total.hp-org-my.bg-total-active .hp-total-count,
 .hp-total.hp-org-my.bg-total-active .hp-total-icon,
 .hp-total.hp-org-my.bg-total-active .hp-total-count {
-    color: #422006;
+    color: #422006 !important;
 }
+#bg_all.hp-total.hp-org-my.bg-total-active .hp-total-label,
 .hp-total.hp-org-my.bg-total-active .hp-total-label {
-    color: #713f12;
+    color: #713f12 !important;
     font-weight: 600;
 }
+#bg_all.hp-total.hp-org-my.bg-gray,
 .hp-total.hp-org-my.bg-gray {
-    background: #fefce8;
-    border: 1.5px solid #fde047;
+    background-color: #fefce8 !important;
+    background-image: none !important;
+    background: #fefce8 !important;
+    border: 1.5px solid #fde047 !important;
 }
+#bg_all.hp-total.hp-org-my.bg-gray .hp-total-icon,
+#bg_all.hp-total.hp-org-my.bg-gray .hp-total-count,
+#bg_all.hp-total.hp-org-my.bg-gray .hp-total-label,
 .hp-total.hp-org-my.bg-gray .hp-total-icon,
 .hp-total.hp-org-my.bg-gray .hp-total-count,
 .hp-total.hp-org-my.bg-gray .hp-total-label {
-    color: #854d0e;
+    color: #854d0e !important;
 }
+#bg_all.hp-total.hp-org-internal.bg-total-active,
 .hp-total.hp-org-internal.bg-total-active {
-    background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
-    box-shadow: 0 6px 16px rgba(29, 78, 216, 0.30);
+    background-color: #1d4ed8 !important;
+    background-image: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 6px 16px rgba(29, 78, 216, 0.30) !important;
 }
+#bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-icon,
+#bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-count,
+.hp-total.hp-org-internal.bg-total-active .hp-total-icon,
+.hp-total.hp-org-internal.bg-total-active .hp-total-count {
+    color: #ffffff !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-label,
 .hp-total.hp-org-internal.bg-total-active .hp-total-label {
-    color: #dbeafe;
+    color: #dbeafe !important;
 }
+#bg_all.hp-total.hp-org-internal.bg-gray,
 .hp-total.hp-org-internal.bg-gray {
-    background: #eff6ff;
-    border: 1.5px solid #93c5fd;
+    background-color: #eff6ff !important;
+    background-image: none !important;
+    background: #eff6ff !important;
+    border: 1.5px solid #93c5fd !important;
 }
+#bg_all.hp-total.hp-org-internal.bg-gray .hp-total-icon,
+#bg_all.hp-total.hp-org-internal.bg-gray .hp-total-count,
+#bg_all.hp-total.hp-org-internal.bg-gray .hp-total-label,
 .hp-total.hp-org-internal.bg-gray .hp-total-icon,
 .hp-total.hp-org-internal.bg-gray .hp-total-count,
 .hp-total.hp-org-internal.bg-gray .hp-total-label {
-    color: #1e3a8a;
+    color: #1e3a8a !important;
 }
+#bg_all.hp-total.hp-org-direct.bg-total-active,
 .hp-total.hp-org-direct.bg-total-active {
-    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-    box-shadow: 0 6px 16px rgba(4, 120, 87, 0.28);
+    background-color: #047857 !important;
+    background-image: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+    border-color: #047857 !important;
+    box-shadow: 0 6px 16px rgba(4, 120, 87, 0.28) !important;
 }
+#bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-icon,
+#bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-count,
+.hp-total.hp-org-direct.bg-total-active .hp-total-icon,
+.hp-total.hp-org-direct.bg-total-active .hp-total-count {
+    color: #ffffff !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-label,
 .hp-total.hp-org-direct.bg-total-active .hp-total-label {
-    color: #d1fae5;
+    color: #d1fae5 !important;
 }
+#bg_all.hp-total.hp-org-direct.bg-gray,
 .hp-total.hp-org-direct.bg-gray {
-    background: #ecfdf5;
-    border: 1.5px solid #a7f3d0;
+    background-color: #ecfdf5 !important;
+    background-image: none !important;
+    background: #ecfdf5 !important;
+    border: 1.5px solid #a7f3d0 !important;
 }
+#bg_all.hp-total.hp-org-direct.bg-gray .hp-total-icon,
+#bg_all.hp-total.hp-org-direct.bg-gray .hp-total-count,
+#bg_all.hp-total.hp-org-direct.bg-gray .hp-total-label,
 .hp-total.hp-org-direct.bg-gray .hp-total-icon,
 .hp-total.hp-org-direct.bg-gray .hp-total-count,
 .hp-total.hp-org-direct.bg-gray .hp-total-label {
-    color: #047857;
+    color: #047857 !important;
 }
 .hp-total.bg-gray {
     background: #e4e6ef;
@@ -1222,9 +1272,9 @@
     gap: 4px;
     padding: 2px 8px;
     border-radius: 4px;
-    background: #eff6ff;
-    color: #1d4ed8;
-    border: 1px solid #bfdbfe;
+    background: #ecfdf5;
+    color: #15803d;
+    border: 1px solid #86efac;
     font-size: 10px;
     font-weight: 600;
     text-decoration: none;
@@ -1234,9 +1284,9 @@
     transition: all 0.15s ease;
 }
 .caf-linkedin-pill:hover {
-    background: #dbeafe;
-    color: #1e40af;
-    border-color: #93c5fd;
+    background: #dcfce7;
+    color: #166534;
+    border-color: #4ade80;
 }
 .caf-visa-pill {
     display: inline-flex;
