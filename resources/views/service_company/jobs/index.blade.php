@@ -754,38 +754,71 @@
 .cd-kpi-sub.sub-cyan { color: #0891b2 !important; }
 .cd-kpi-sub.sub-purple { color: #9333ea !important; }
 
-/* Active KPI Card Selection Background (#fde047 -> #eab308 Gold Combination) */
-.cd-kpi-card.cd-kpi-active,
-.cd-kpi-card.jh-card-active {
-    background: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
-    border-color: #ca8a04 !important;
-    box-shadow: 0 0 0 1.5px #eab308, 0 4px 14px rgba(234, 179, 8, 0.28) !important;
+/* Color-Coded Active KPI Card Highlighting (Inspired by Clients Tracker) */
+.cd-kpi-card.cd-kpi-active[data-kpi="all"] {
+    background: #eff6ff !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
 }
-.cd-kpi-card.cd-kpi-active .cd-kpi-icon,
-.cd-kpi-card.jh-card-active .cd-kpi-icon {
-    background: rgba(255, 255, 255, 0.94) !important;
-    box-shadow: 0 1px 3px rgba(161, 98, 7, 0.18) !important;
+.cd-kpi-card.cd-kpi-active[data-kpi="all"] .cd-kpi-icon {
+    background: #ffffff !important;
+    color: #2563eb !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
 }
-.cd-kpi-card.cd-kpi-active .cd-kpi-num,
-.cd-kpi-card.jh-card-active .cd-kpi-num {
-    color: #0f172a !important;
+.cd-kpi-card.cd-kpi-active[data-kpi="all"] .cd-kpi-num { color: #1d4ed8 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="all"] .cd-kpi-label { color: #1e40af !important; font-weight: 700 !important; }
+
+.cd-kpi-card.cd-kpi-active[data-kpi="direct"] {
+    background: #ecfdf5 !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
 }
-.cd-kpi-card.cd-kpi-active .cd-kpi-label,
-.cd-kpi-card.jh-card-active .cd-kpi-label {
-    color: #422006 !important;
-    font-weight: 700 !important;
+.cd-kpi-card.cd-kpi-active[data-kpi="direct"] .cd-kpi-icon {
+    background: #ffffff !important;
+    color: #059669 !important;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
 }
-.cd-kpi-card.cd-kpi-active .cd-kpi-sub,
-.cd-kpi-card.jh-card-active .cd-kpi-sub {
-    color: #422006 !important;
-    font-weight: 600 !important;
+.cd-kpi-card.cd-kpi-active[data-kpi="direct"] .cd-kpi-num { color: #065f46 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="direct"] .cd-kpi-label { color: #047857 !important; font-weight: 700 !important; }
+
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] {
+    background: #fff7ed !important;
+    border-color: #fb923c !important;
+    box-shadow: 0 0 0 1.5px #ea580c, 0 4px 14px rgba(234, 88, 12, 0.12) !important;
 }
-.cd-kpi-card.cd-kpi-active .cd-kpi-invite-badge,
-.cd-kpi-card.jh-card-active .cd-kpi-invite-badge {
-    background: rgba(255, 255, 255, 0.92) !important;
-    border-color: rgba(124, 58, 237, 0.25) !important;
-    box-shadow: 0 1px 2px rgba(66, 32, 6, 0.1) !important;
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-icon {
+    background: #ffffff !important;
+    color: #ea580c !important;
+    box-shadow: 0 1px 3px rgba(234, 88, 12, 0.15) !important;
 }
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-num { color: #9a3412 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-label { color: #c2410c !important; font-weight: 700 !important; }
+
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] {
+    background: #ecfeff !important;
+    border-color: #22d3ee !important;
+    box-shadow: 0 0 0 1.5px #0891b2, 0 4px 14px rgba(8, 145, 178, 0.12) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-icon {
+    background: #ffffff !important;
+    color: #0891b2 !important;
+    box-shadow: 0 1px 3px rgba(8, 145, 178, 0.15) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-num { color: #155e75 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-label { color: #0e7490 !important; font-weight: 700 !important; }
+
+.cd-kpi-card.cd-kpi-active[data-kpi="job_request"] {
+    background: #faf5ff !important;
+    border-color: #c084fc !important;
+    box-shadow: 0 0 0 1.5px #9333ea, 0 4px 14px rgba(147, 51, 234, 0.12) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="job_request"] .cd-kpi-icon {
+    background: #ffffff !important;
+    color: #9333ea !important;
+    box-shadow: 0 1px 3px rgba(147, 51, 234, 0.15) !important;
+}
+.cd-kpi-card.cd-kpi-active[data-kpi="job_request"] .cd-kpi-num { color: #6b21a8 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="job_request"] .cd-kpi-label { color: #7e22ce !important; font-weight: 700 !important; }
 
 .cd-jobs-tabs-card {
     margin-bottom: 12px !important;
@@ -822,9 +855,9 @@
 }
 
 .cd-badge-client-type.type-my-org {
-    background: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
-    color: #422006 !important;
-    border: 1px solid #eab308 !important;
+    background: #ecfeff !important;
+    color: #0891b2 !important;
+    border: 1px solid #a5f3fc !important;
 }
 
 .js-open-job-drawer {
@@ -3178,7 +3211,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 html += '      <div class="cd-subcard-body">';
                 html += '        <div class="cd-pipeline-track">' + pipelineTrackHtml + '</div>';
                 html += '        <div class="cd-track-summary">';
-                html += '          <span>Applications: <strong>' + (job.application_counter || 0) + '</strong></span>';
+                html += '          <span>Apps: <strong>' + (job.application_counter || 0) + '</strong></span>';
                 html += '          <span class="cd-bullet">&bull;</span>';
                 html += '          <span>Interviews: <strong>' + (job.interview_counter || 0) + '</strong></span>';
                 html += '        </div>';
