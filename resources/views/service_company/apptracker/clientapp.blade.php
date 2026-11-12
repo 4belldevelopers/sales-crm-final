@@ -287,238 +287,267 @@
 }
 
 /* Hiring Pipeline card */
-/* ClientAppTracker KPI Stat Grid — Client Tracker Card Style (Rule 14/20, Page-Isolated .caf-kpi-*) */
 .hp-toolbar-card .card-body {
     padding: 14px 16px;
 }
-.caf-kpi-grid {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1.15fr) repeat(7, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    margin-bottom: 12px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
+.hp-card .card-body {
+    padding: 16px 20px;
+}
+.hp-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
     font-family: 'Poppins', sans-serif;
 }
-.caf-kpi-link {
-    text-decoration: none !important;
-    display: flex;
-    min-width: 0;
+.hp-total-link {
+    text-decoration: none;
+    flex-shrink: 0;
 }
-.caf-kpi-link:hover,
-.caf-kpi-link:focus {
-    text-decoration: none !important;
-}
-.caf-kpi-card {
-    width: 100%;
-    min-width: 0;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 11px;
-    padding: 10px 11px;
+.hp-total {
+    width: 82px;
+    height: 82px;
+    border-radius: 14px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    cursor: pointer;
-    text-align: left !important;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-}
-.caf-kpi-card:hover {
-    transform: translateY(-1px);
-    border-color: #cbd5e1;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-}
-.caf-kpi-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    min-width: 0;
-}
-.caf-kpi-icon {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    border-radius: 8px;
-    display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    background: var(--kpi-bg, #ecfdf5);
-    color: var(--kpi-color, #16a34a);
-    transition: all 0.15s ease;
+    gap: 2px;
+    transition: background-color .15s;
 }
-.caf-kpi-icon svg {
-    width: 17px;
-    height: 17px;
+#bg_all.hp-total.bg-total-active,
+.hp-total.bg-total-active {
+    background-color: #1d4ed8 !important;
+    background-image: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25) !important;
 }
-.caf-kpi-meta {
-    min-width: 0;
-    flex: 1;
-    overflow: hidden;
+/* Organization-specific Total Candidates palettes: My Org = Sunlit Canary Yellow, Internal Client = Deep Royal Cobalt, Direct Client = Emerald */
+#bg_all.hp-total.hp-org-my.bg-total-active,
+.hp-total.hp-org-my.bg-total-active {
+    background-color: #eab308 !important;
+    background-image: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+    background: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+    border-color: #eab308 !important;
+    box-shadow: 0 6px 16px rgba(234, 179, 8, 0.28) !important;
 }
-.caf-kpi-num {
-    font-size: 19px;
-    font-weight: 700;
-    color: #0f172a;
-    line-height: 1.1;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-    transition: color 0.15s ease;
+#bg_all.hp-total.hp-org-my.bg-total-active .hp-total-icon,
+#bg_all.hp-total.hp-org-my.bg-total-active .hp-total-count,
+.hp-total.hp-org-my.bg-total-active .hp-total-icon,
+.hp-total.hp-org-my.bg-total-active .hp-total-count {
+    color: #422006 !important;
 }
-.caf-kpi-lbl {
-    font-size: 11px;
+#bg_all.hp-total.hp-org-my.bg-total-active .hp-total-label,
+.hp-total.hp-org-my.bg-total-active .hp-total-label {
+    color: #713f12 !important;
     font-weight: 600;
-    color: #64748b;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.2;
-    text-align: left !important;
-    transition: color 0.15s ease, font-weight 0.15s ease;
 }
-.caf-kpi-sub {
+#bg_all.hp-total.hp-org-my.bg-gray,
+.hp-total.hp-org-my.bg-gray {
+    background-color: #fefce8 !important;
+    background-image: none !important;
+    background: #fefce8 !important;
+    border: 1.5px solid #fde047 !important;
+}
+#bg_all.hp-total.hp-org-my.bg-gray .hp-total-icon,
+#bg_all.hp-total.hp-org-my.bg-gray .hp-total-count,
+#bg_all.hp-total.hp-org-my.bg-gray .hp-total-label,
+.hp-total.hp-org-my.bg-gray .hp-total-icon,
+.hp-total.hp-org-my.bg-gray .hp-total-count,
+.hp-total.hp-org-my.bg-gray .hp-total-label {
+    color: #854d0e !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-total-active,
+.hp-total.hp-org-internal.bg-total-active {
+    background-color: #1d4ed8 !important;
+    background-image: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 6px 16px rgba(29, 78, 216, 0.30) !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-icon,
+#bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-count,
+.hp-total.hp-org-internal.bg-total-active .hp-total-icon,
+.hp-total.hp-org-internal.bg-total-active .hp-total-count {
+    color: #ffffff !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-label,
+.hp-total.hp-org-internal.bg-total-active .hp-total-label {
+    color: #dbeafe !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-gray,
+.hp-total.hp-org-internal.bg-gray {
+    background-color: #eff6ff !important;
+    background-image: none !important;
+    background: #eff6ff !important;
+    border: 1.5px solid #93c5fd !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-gray .hp-total-icon,
+#bg_all.hp-total.hp-org-internal.bg-gray .hp-total-count,
+#bg_all.hp-total.hp-org-internal.bg-gray .hp-total-label,
+.hp-total.hp-org-internal.bg-gray .hp-total-icon,
+.hp-total.hp-org-internal.bg-gray .hp-total-count,
+.hp-total.hp-org-internal.bg-gray .hp-total-label {
+    color: #1e3a8a !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-total-active,
+.hp-total.hp-org-direct.bg-total-active {
+    background-color: #047857 !important;
+    background-image: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+    border-color: #047857 !important;
+    box-shadow: 0 6px 16px rgba(4, 120, 87, 0.28) !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-icon,
+#bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-count,
+.hp-total.hp-org-direct.bg-total-active .hp-total-icon,
+.hp-total.hp-org-direct.bg-total-active .hp-total-count {
+    color: #ffffff !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-label,
+.hp-total.hp-org-direct.bg-total-active .hp-total-label {
+    color: #d1fae5 !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-gray,
+.hp-total.hp-org-direct.bg-gray {
+    background-color: #ecfdf5 !important;
+    background-image: none !important;
+    background: #ecfdf5 !important;
+    border: 1.5px solid #a7f3d0 !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-gray .hp-total-icon,
+#bg_all.hp-total.hp-org-direct.bg-gray .hp-total-count,
+#bg_all.hp-total.hp-org-direct.bg-gray .hp-total-label,
+.hp-total.hp-org-direct.bg-gray .hp-total-icon,
+.hp-total.hp-org-direct.bg-gray .hp-total-count,
+.hp-total.hp-org-direct.bg-gray .hp-total-label {
+    color: #047857 !important;
+}
+.hp-total.bg-gray {
+    background: #e4e6ef;
+}
+.hp-total-icon {
+    color: #fff;
     display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    font-weight: 500;
+}
+.hp-total.bg-gray .hp-total-icon {
+    color: #7e8299;
+}
+.hp-total-icon svg {
+    width: 16px;
+    height: 16px;
+}
+.hp-total-count {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
     line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 2px;
-    color: var(--kpi-color, #64748b);
 }
-.caf-kpi-sub svg {
+.hp-total.bg-gray .hp-total-count {
+    color: #3f4254;
+}
+.hp-total-label {
+    font-size: 9px;
+    font-weight: 500;
+    color: #dbeafe;
+    text-align: center;
+    line-height: 1.2;
+    padding: 0 4px;
+}
+.hp-total.bg-gray .hp-total-label {
+    color: #7e8299;
+}
+.hp-eq {
+    font-size: 18px;
+    font-weight: 600;
+    color: #b5b5c3;
     flex-shrink: 0;
-    width: 11px;
-    height: 11px;
 }
-
-/* Stage KPI Card Active State (.hp-circle.active preserved for existing JS hooks) */
-.caf-kpi-card.hp-circle.active {
-    background: var(--kpi-tint, #eff6ff) !important;
-    border-color: var(--kpi-border, #60a5fa) !important;
-    box-shadow: 0 0 0 1.5px var(--kpi-color, #2563eb), 0 4px 14px var(--kpi-glow, rgba(37, 99, 235, 0.12)) !important;
+.hp-chevron {
+    display: flex;
+    color: #c2c5cc;
+    flex-shrink: 0;
 }
-.caf-kpi-card.hp-circle.active .caf-kpi-icon {
-    background: #ffffff !important;
-    color: var(--kpi-color, #2563eb) !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12) !important;
+.hp-chevron svg {
+    width: 16px;
+    height: 16px;
 }
-.caf-kpi-card.hp-circle.active .caf-kpi-num {
-    color: var(--kpi-deep, #1e3a8a) !important;
+.hp-divider {
+    width: 1px;
+    height: 44px;
+    background: #e4e6ef;
+    flex-shrink: 0;
+    margin: 0 4px;
 }
-.caf-kpi-card.hp-circle.active .caf-kpi-lbl,
-.caf-kpi-card .hp-label.active {
-    color: var(--kpi-color, #1d4ed8) !important;
-    font-weight: 700 !important;
+.hp-stage {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
-
-/* Total Candidates KPI Card — Inactive & Organization-Specific Active Palettes */
-#bg_all.caf-kpi-total.bg-gray {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+.hp-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    background: #f2f3f7;
+    border: 2px solid #e4e6ef;
+    transition: border-color .15s, background-color .15s;
 }
-#bg_all.caf-kpi-total.hp-org-internal {
-    --kpi-color: #2563eb;
-    --kpi-bg: #eff6ff;
-    --kpi-tint: #eff6ff;
-    --kpi-border: #60a5fa;
-    --kpi-deep: #1e3a8a;
-    --kpi-label-active: #1d4ed8;
-    --kpi-glow: rgba(37, 99, 235, 0.12);
+.hp-circle .hp-icon {
+    display: flex;
+    color: #99a1b7;
+    transition: color .15s;
 }
-#bg_all.caf-kpi-total.hp-org-my {
-    --kpi-color: #d97706;
-    --kpi-bg: #fffbeb;
-    --kpi-tint: #fffbeb;
-    --kpi-border: #fbbf24;
-    --kpi-deep: #78350f;
-    --kpi-label-active: #b45309;
-    --kpi-glow: rgba(217, 119, 6, 0.14);
+.hp-circle .hp-icon svg {
+    width: 14px;
+    height: 14px;
 }
-#bg_all.caf-kpi-total.hp-org-direct {
-    --kpi-color: #16a34a;
-    --kpi-bg: #ecfdf5;
-    --kpi-tint: #ecfdf5;
-    --kpi-border: #34d399;
-    --kpi-deep: #14532d;
-    --kpi-label-active: #15803d;
-    --kpi-glow: rgba(22, 163, 74, 0.12);
+.hp-circle .hp-count {
+    font-size: 13px;
+    font-weight: 700;
+    color: #5e6278;
+    line-height: 1.2;
+    transition: color .15s;
 }
-#bg_all.caf-kpi-total.bg-total-active {
-    background: var(--kpi-tint, #ecfdf5) !important;
-    border: 1px solid var(--kpi-border, #34d399) !important;
-    box-shadow: 0 0 0 1.5px var(--kpi-color, #16a34a), 0 4px 14px var(--kpi-glow, rgba(22, 163, 74, 0.12)) !important;
+.hp-circle.active {
+    border-color: var(--hp-color);
+    background: var(--hp-bg);
 }
-#bg_all.caf-kpi-total.bg-total-active .caf-kpi-icon {
-    background: #ffffff !important;
-    color: var(--kpi-color, #16a34a) !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12) !important;
+.hp-circle.active .hp-icon {
+    color: var(--hp-color);
 }
-#bg_all.caf-kpi-total.bg-total-active .caf-kpi-num {
-    color: var(--kpi-deep, #14532d) !important;
+.hp-circle.active .hp-count {
+    color: var(--hp-color);
 }
-#bg_all.caf-kpi-total.bg-total-active .caf-kpi-lbl {
-    color: var(--kpi-label-active, #15803d) !important;
-    font-weight: 700 !important;
+.hp-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #7e8299;
+    text-align: center;
+    white-space: nowrap;
+    transition: color .15s, font-weight .15s;
 }
-
-/* 15.6" Laptop (1366x768) & Tablet/Mobile Responsive Scaling — Matches Client Tracker */
+.hp-label.active {
+    font-weight: 700;
+    color: #181c32;
+}
 @media (max-width: 1440px) {
-    .caf-kpi-grid {
-        grid-template-columns: minmax(0, 1.15fr) repeat(7, minmax(0, 1fr)) !important;
-        gap: 6px !important;
-    }
-    .caf-kpi-card {
-        padding: 8px 8px !important;
-    }
-    .caf-kpi-top {
-        gap: 7px !important;
-        margin-bottom: 5px !important;
-    }
-    .caf-kpi-icon {
-        width: 30px !important;
-        height: 30px !important;
-        min-width: 30px !important;
-        border-radius: 7px !important;
-    }
-    .caf-kpi-icon svg {
-        width: 15px !important;
-        height: 15px !important;
-    }
-    .caf-kpi-num {
-        font-size: 17px !important;
-    }
-    .caf-kpi-lbl {
-        font-size: 10px !important;
-    }
-    .caf-kpi-sub {
-        font-size: 9.5px !important;
-        gap: 3.5px !important;
-        margin-top: 2px !important;
-    }
-    .caf-kpi-sub svg {
-        width: 10px !important;
-        height: 10px !important;
-    }
+    .hp-total { width: 72px; height: 72px; }
+    .hp-circle { width: 52px; height: 52px; }
 }
-@media (max-width: 1150px) {
-    .caf-kpi-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-        gap: 6px !important;
-    }
-}
-@media (max-width: 640px) {
-    .caf-kpi-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 6px !important;
-    }
+@media (max-width: 576px) {
+    .hp-flow { justify-content: flex-start; }
 }
 
 /* ==========================================================================
@@ -540,8 +569,9 @@
     width: 100% !important;
 }
 
-/* Toolbar Card — Rule 20 Sharp White Card Surface */
-.caf-toolbar-card {
+/* Toolbar & Pipeline Cards — Rule 20 Sharp White Card Surface */
+.caf-toolbar-card,
+.hp-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
@@ -616,7 +646,11 @@
     border-color: #009ef7;
     color: #009ef7;
 }
-.caf-kpi-num {
+.hp-card .card-body {
+    padding: 12px 16px !important;
+}
+.hp-total-count,
+.hp-circle .hp-count {
     font-variant-numeric: tabular-nums;
 }
 
@@ -1390,12 +1424,404 @@
     }
 }
 
+/* ==========================================================================
+   Rule 20: Job Header Card + Sub-Card Design System (.caf-job-toolbar / .caf-hdr-*)
+   Org-Differentiated Light Palettes & Button Colors (Total Candidates Parity)
+   ========================================================================== */
+@media (min-width: 1181px) {
+    body#kt_body.toolbar-fixed {
+        --kt-toolbar-height: 88px !important;
+    }
+    body#kt_body.toolbar-fixed .wrapper {
+        padding-top: calc(var(--kt-header-height, 65px) + 88px) !important;
+    }
+}
+@media (max-width: 1180px) {
+    #kt_toolbar.caf-job-toolbar {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        height: auto !important;
+    }
+    body#kt_body.toolbar-fixed .wrapper {
+        padding-top: var(--kt-header-height, 65px) !important;
+    }
+}
+#kt_toolbar.caf-job-toolbar {
+    background: #eef2f7 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    height: auto !important;
+    min-height: 76px;
+    padding: 8px 0 6px 0 !important;
+}
+#kt_toolbar.caf-job-toolbar #kt_toolbar_container {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+}
+.caf-hdr-card {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    background: var(--hdr-bg, #ecfdf5);
+    border: 1px solid var(--hdr-border, #34d399);
+    border-left: 4px solid var(--hdr-accent, #16a34a);
+    border-radius: 10px;
+    padding: 7px 10px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow: hidden;
+}
+/* Org Theme Tokens — Aligned with Total Candidates Card Palettes */
+.caf-hdr-card.hp-org-my {
+    --hdr-bg: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    --hdr-border: #fbbf24;
+    --hdr-accent: #d97706;
+    --hdr-sub-border: #fde68a;
+    --hdr-icon-bg: #fffbeb;
+    --hdr-icon-color: #d97706;
+    --hdr-pill-bg: #fef3c7;
+    --hdr-pill-border: #fcd34d;
+    --hdr-pill-color: #92400e;
+    --hdr-btn-outline-border: #f59e0b;
+    --hdr-btn-outline-color: #b45309;
+    --hdr-btn-outline-hover-bg: #fef3c7;
+    --hdr-btn-outline-hover-color: #78350f;
+    --hdr-btn-solid-bg: #d97706;
+    --hdr-btn-solid-hover: #b45309;
+    --hdr-btn-shadow: rgba(217, 119, 6, 0.24);
+}
+.caf-hdr-card.hp-org-internal {
+    --hdr-bg: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    --hdr-border: #60a5fa;
+    --hdr-accent: #2563eb;
+    --hdr-sub-border: #bfdbfe;
+    --hdr-icon-bg: #eff6ff;
+    --hdr-icon-color: #2563eb;
+    --hdr-pill-bg: #dbeafe;
+    --hdr-pill-border: #93c5fd;
+    --hdr-pill-color: #1e40af;
+    --hdr-btn-outline-border: #60a5fa;
+    --hdr-btn-outline-color: #1d4ed8;
+    --hdr-btn-outline-hover-bg: #dbeafe;
+    --hdr-btn-outline-hover-color: #1e3a8a;
+    --hdr-btn-solid-bg: #2563eb;
+    --hdr-btn-solid-hover: #1d4ed8;
+    --hdr-btn-shadow: rgba(37, 99, 235, 0.22);
+}
+.caf-hdr-card.hp-org-direct {
+    --hdr-bg: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    --hdr-border: #34d399;
+    --hdr-accent: #16a34a;
+    --hdr-sub-border: #a7f3d0;
+    --hdr-icon-bg: #ecfdf5;
+    --hdr-icon-color: #16a34a;
+    --hdr-pill-bg: #d1fae5;
+    --hdr-pill-border: #6ee7b7;
+    --hdr-pill-color: #166534;
+    --hdr-btn-outline-border: #34d399;
+    --hdr-btn-outline-color: #15803d;
+    --hdr-btn-outline-hover-bg: #d1fae5;
+    --hdr-btn-outline-hover-color: #14532d;
+    --hdr-btn-solid-bg: #16a34a;
+    --hdr-btn-solid-hover: #15803d;
+    --hdr-btn-shadow: rgba(22, 163, 74, 0.22);
+}
+.caf-hdr-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(195px, 1.85fr) minmax(130px, 1.05fr) minmax(145px, 1.2fr) minmax(115px, 0.95fr) minmax(120px, 1.0fr);
+    gap: 8px;
+    align-items: stretch;
+}
+.caf-hdr-subcard {
+    background: #ffffff;
+    border: 1px solid var(--hdr-sub-border, #e2e8f0);
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.caf-hdr-sub--identity {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 9px;
+    cursor: pointer;
+}
+.caf-hdr-sub--status {
+    cursor: pointer;
+    gap: 4px;
+}
+.caf-hdr-sub--identity:hover,
+.caf-hdr-sub--status:hover {
+    border-color: var(--hdr-accent, #16a34a);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+.caf-hdr-logo-wrap {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.caf-hdr-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.caf-hdr-logo-mono {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+.caf-hdr-identity-txt {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.caf-hdr-job-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    text-decoration: none;
+}
+.caf-hdr-sub--identity:hover .caf-hdr-job-title {
+    color: var(--hdr-accent, #16a34a);
+}
+.caf-hdr-company-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    text-decoration: none;
+}
+.caf-hdr-company-name i {
+    font-size: 10px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+.caf-hdr-sub-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+.caf-hdr-status-badge {
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    padding: 2px 8px !important;
+    border-radius: 5px !important;
+    line-height: 1.25 !important;
+}
+.caf-hdr-job-id {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.caf-hdr-sub-btm {
+    display: flex;
+    align-items: center;
+}
+.caf-hdr-org-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: var(--hdr-pill-bg, #d1fae5);
+    border: 1px solid var(--hdr-pill-border, #6ee7b7);
+    color: var(--hdr-pill-color, #166534);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.25;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.caf-hdr-org-pill i {
+    font-size: 9px;
+    flex-shrink: 0;
+}
+.caf-hdr-sub-kicker {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.55px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin-bottom: 3px;
+    white-space: nowrap;
+}
+.caf-hdr-sub-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+.caf-hdr-sub-icon {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    border-radius: 4px;
+    background: var(--hdr-icon-bg, #ecfdf5);
+    color: var(--hdr-icon-color, #16a34a);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    flex-shrink: 0;
+}
+.caf-hdr-sub-val {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+}
+.caf-hdr-sub-meta {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+}
+.caf-hdr-actions-form {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: stretch;
+    margin: 0 !important;
+}
+.caf-hdr-subcard--actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 9px;
+    white-space: nowrap;
+}
+.caf-hdr-btn-outline {
+    background: #ffffff !important;
+    border: 1.5px solid var(--hdr-btn-outline-border, #34d399) !important;
+    color: var(--hdr-btn-outline-color, #15803d) !important;
+    border-radius: 7px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    transition: all 0.15s ease !important;
+}
+.caf-hdr-btn-outline:hover,
+.caf-hdr-btn-outline:focus {
+    background: var(--hdr-btn-outline-hover-bg, #d1fae5) !important;
+    border-color: var(--hdr-accent, #16a34a) !important;
+    color: var(--hdr-btn-outline-hover-color, #14532d) !important;
+}
+.caf-hdr-btn-solid {
+    background: var(--hdr-btn-solid-bg, #16a34a) !important;
+    border: 1.5px solid var(--hdr-btn-solid-bg, #16a34a) !important;
+    color: #ffffff !important;
+    border-radius: 7px !important;
+    padding: 6px 13px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    box-shadow: 0 2px 6px var(--hdr-btn-shadow, rgba(22, 163, 74, 0.22)) !important;
+    transition: all 0.15s ease !important;
+}
+.caf-hdr-btn-solid:hover,
+.caf-hdr-btn-solid:focus {
+    background: var(--hdr-btn-solid-hover, #15803d) !important;
+    border-color: var(--hdr-btn-solid-hover, #15803d) !important;
+    color: #ffffff !important;
+    transform: translateY(-0.5px);
+}
+.caf-hdr-btn-solid .svg-icon svg path {
+    fill: #ffffff !important;
+}
+@media (max-width: 1440px) {
+    .caf-hdr-card {
+        gap: 6px;
+        padding: 6px 8px;
+    }
+    .caf-hdr-main {
+        grid-template-columns: minmax(175px, 1.8fr) minmax(120px, 1.05fr) minmax(135px, 1.2fr) minmax(105px, 0.9fr) minmax(112px, 0.95fr);
+        gap: 6px;
+    }
+    .caf-hdr-subcard {
+        padding: 5px 8px;
+    }
+    .caf-hdr-btn-outline,
+    .caf-hdr-btn-solid {
+        padding: 6px 10px !important;
+        font-size: 11.5px !important;
+    }
+}
+@media (max-width: 1180px) {
+    .caf-hdr-card {
+        flex-direction: column;
+    }
+    .caf-hdr-main {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .caf-hdr-subcard--actions {
+        justify-content: flex-end;
+    }
+}
+@media (max-width: 640px) {
+    .caf-hdr-main {
+        grid-template-columns: 1fr;
+    }
+    .caf-hdr-subcard--actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+    .caf-hdr-subcard--actions > * {
+        flex: 1;
+    }
+}
+
 </style>
 @endpush
 
 @section('content')
 <!--begin::Toolbar-->
-<div class="toolbar" id="kt_toolbar">
+<div class="toolbar caf-job-toolbar {{ $hpOrgClass ?? 'hp-org-direct' }}" id="kt_toolbar">
   <?php  
      use App\Helper\GeneralMethod;
      $logos = GeneralMethod::companyDetails($job->id);
@@ -1437,24 +1863,31 @@
 
    ?>
   <!--begin::Container-->
-  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+  <div id="kt_toolbar_container" class="container-fluid">
+    <div class="caf-hdr-card {{ $hpOrgClass ?? 'hp-org-direct' }}">
     <!--begin::Page title-->
-    @include('sections.service_company.toolbar',['id' => $job->id])
+    @include('sections.service_company.toolbar', [
+        'id' => $job->id,
+        'apptrackerHeaderCard' => true,
+        'headerPrefix' => 'caf-hdr',
+        'hpOrgClass' => $hpOrgClass ?? null,
+    ])
     <!--end::Page title-->
-    <form action="" id="filter-form" style="">
+    <form action="" id="filter-form" class="caf-hdr-actions-form" style="">
       @csrf
       <input type="hidden" name="jobid" id="jobid" value="{{ @$job->id }}" />
       <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
       <!--begin::Actions-->
-      <div class="d-flex align-items-center py-1">
+      <div class="d-flex align-items-stretch">
+        <div class="caf-hdr-subcard caf-hdr-subcard--actions">
         @if (in_array('view_jobs', $userPermissions))
             {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
                  defined once in the shared layout) that the job title/logo already
                  uses elsewhere — .show-detail-open's click handler in
                  service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
             <a href="javascript:void(0);" data-id="{{ $job->id }}"
-                class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
-                View Job
+                class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder show-detail-open caf-hdr-btn-outline">
+                <i class="fa-regular fa-eye me-1" aria-hidden="true"></i>View Job
             </a>
         @endif
         <?php
@@ -1467,9 +1900,9 @@
         // final_status IN (1,2), so no unauthorized-access case is being bypassed
         // here — those are the only two values this page ever loads.
         ?>
-        <a href="javascript:void(0);">
-            <button type="button" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3" id="addServiceCandidate" data-job-status="{{ $job->status }}">
-                <span class="svg-icon svg-icon-primary svg-icon-1x">
+        <a href="javascript:void(0);" class="d-inline-flex">
+            <button type="button" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder caf-hdr-btn-solid" id="addServiceCandidate" data-job-status="{{ $job->status }}">
+                <span class="svg-icon svg-icon-primary svg-icon-1x me-1">
                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                             <polygon points="0 0 24 0 24 24 0 24"/>
@@ -1480,6 +1913,7 @@
                 </span> Add Candidate
             </button>
         </a>
+        </div>
         <!--begin::Send Email-->
         
 		<!--<a href="javascript:void(0);"  type="button" class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 d-none send_email" data-toggle="modal" data-target="#send_email"> <span class="svg-icon svg-icon-primary svg-icon-1x">
@@ -1509,14 +1943,14 @@
         Copy </a>
         <!--end::Copy-->
         <!--begin::Search-->
-        <div class="d-flex align-items-center position-relative my-1 me-3 custom_hide">
+        <div class="d-none align-items-center position-relative custom_hide">
           <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
           
           <!--end::Svg Icon-->
           <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;" placeholder="Search..." />
         </div>
         <!--end::Search-->
-        <div class="card-toolbar">
+        <div class="card-toolbar d-none">
           <!--begin::Toolbar-->
           <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
           
@@ -1579,6 +2013,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
       </div>
       <!--end::Actions-->
     </form>
+    </div>
   </div>
   <!--end::Container-->
 </div>
@@ -1699,27 +2134,20 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
             $hpTotalActive = !empty($mstatus_id) && $mstatus_id == 'all';
 
             $hpStages = [
-                ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing',
-                    'color' => '#0891b2', 'bg' => '#ecfeff', 'tint' => '#ecfeff', 'border' => '#67e8f9', 'deep' => '#155e75', 'glow' => 'rgba(8, 145, 178, 0.12)',
+                ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing', 'color' => '#0891b2', 'bg' => '#ecfeff',
                     'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
-                ['key' => 'Screening', 'rel' => '2', 'label' => 'Screening',
-                    'color' => '#9333ea', 'bg' => '#faf5ff', 'tint' => '#faf5ff', 'border' => '#c084fc', 'deep' => '#6b21a8', 'glow' => 'rgba(147, 51, 234, 0.12)',
+                ['key' => 'Screening', 'rel' => '2', 'label' => 'Screening', 'color' => '#c000ff', 'bg' => '#f9e6ff',
                     'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
-                ['key' => 'Interview', 'rel' => '3', 'label' => 'Evaluation',
-                    'color' => '#2563eb', 'bg' => '#eff6ff', 'tint' => '#eff6ff', 'border' => '#60a5fa', 'deep' => '#1e3a8a', 'glow' => 'rgba(37, 99, 235, 0.12)',
+                ['key' => 'Interview', 'rel' => '3', 'label' => 'Evaluation', 'color' => '#2896ff', 'bg' => '#e8f4ff',
                     'icon' => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
-                ['key' => 'Negotiation', 'rel' => '4', 'label' => 'Negotiation',
-                    'color' => '#db2777', 'bg' => '#fdf2f8', 'tint' => '#fdf2f8', 'border' => '#f472b6', 'deep' => '#9d174d', 'glow' => 'rgba(219, 39, 119, 0.12)',
+                ['key' => 'Negotiation', 'rel' => '4', 'label' => 'Negotiation', 'color' => '#ff4098', 'bg' => '#ffe6f2',
                     'icon' => 'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
-                ['key' => 'Offered', 'rel' => '5', 'label' => 'Offer',
-                    'color' => '#d97706', 'bg' => '#fffbeb', 'tint' => '#fffbeb', 'border' => '#fbbf24', 'deep' => '#92400e', 'glow' => 'rgba(217, 119, 6, 0.12)',
+                ['key' => 'Offered', 'rel' => '5', 'label' => 'Offer', 'color' => '#ffab00', 'bg' => '#fff4e0',
                     'icon' => 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
-                ['key' => 'Joined', 'rel' => '6', 'label' => 'Joined',
-                    'color' => '#16a34a', 'bg' => '#ecfdf5', 'tint' => '#ecfdf5', 'border' => '#34d399', 'deep' => '#14532d', 'glow' => 'rgba(22, 163, 74, 0.12)',
+                ['key' => 'Joined', 'rel' => '6', 'label' => 'Joined', 'color' => '#06c732', 'bg' => '#e3fbe9',
                     'icon' => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
             ];
-            $hpRejected = ['key' => 'Rejected', 'rel' => '7', 'label' => 'Rejected',
-                'color' => '#dc2626', 'bg' => '#fef2f2', 'tint' => '#fef2f2', 'border' => '#f87171', 'deep' => '#991b1b', 'glow' => 'rgba(220, 38, 38, 0.12)',
+            $hpRejected = ['key' => 'Rejected', 'rel' => '7', 'label' => 'Rejected', 'color' => '#ff0202', 'bg' => '#ffe3e3',
                 'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'];
             $hpCounters = [
                 '1' => @$SourcingCounter,
@@ -1730,82 +2158,65 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                 '6' => @$JoinedCounter,
                 '7' => @$RejectedCounter,
             ];
-            $hpAllKpiCards = array_merge($hpStages, [$hpRejected]);
-            $cafTotalInt = (int) (@$allCandidateCounter ?? 0);
-            $cafActiveInt = max(0, $cafTotalInt - (int) (@$RejectedCounter ?? 0));
         ?>
 
-        <!-- ── 8 PIPELINE KPI STAT CARDS (Client Tracker Style) ── -->
-        <div class="caf-kpi-grid" role="navigation" aria-label="Pipeline stage KPIs">
-            {{-- KPI 1: Total Candidates --}}
-            <a class="application_sttus_nav caf-kpi-link" href="javascript:void(0);" rel="all">
-                <div class="caf-kpi-card caf-kpi-total <?php echo $hpTotalActive ? 'bg-total-active' : 'bg-gray'; ?> <?php echo $hpOrgClass ?? 'hp-org-direct'; ?>" id="bg_all">
-                    <div class="caf-kpi-top">
-                        <div class="caf-kpi-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                                <circle cx="9" cy="7" r="4"/>
-                                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                            </svg>
+        <div class="card hp-card mb-4">
+            <div class="card-body">
+                <div class="hp-flow">
+                    <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
+                        <div class="<?php echo $hpTotalActive ? 'bg-total-active' : 'bg-gray'; ?> <?php echo $hpOrgClass ?? 'hp-org-direct'; ?> text-center hp-total" id="bg_all">
+                            <span class="hp-total-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                                </svg>
+                            </span>
+                            <span class="hp-total-count" id="bg_alldata"><?php echo @$allCandidateCounter; ?></span>
+                            <span class="hp-total-label">Total Candidates</span>
                         </div>
-                        <div class="caf-kpi-meta">
-                            <div class="caf-kpi-num" id="bg_alldata"><?php echo $cafTotalInt; ?></div>
-                            <div class="caf-kpi-lbl">Total Candidates</div>
-                        </div>
-                    </div>
-                    <div class="caf-kpi-sub">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                        </svg>
-                        <span id="caf_kpi_sub_all"><?php echo $cafActiveInt; ?> active</span>
-                    </div>
-                </div>
-            </a>
-
-            {{-- KPI 2-8: Pipeline Stages (Sourcing..Joined + Rejected) --}}
-            <?php foreach ($hpAllKpiCards as $stage): ?>
-                <?php
-                    $stageCountInt = (int) (@$hpCounters[$stage['rel']] ?? 0);
-                    $stagePctInt = $cafTotalInt > 0 ? (int) round(($stageCountInt / $cafTotalInt) * 100) : 0;
-                    $stagePctText = ($stageCountInt > 0 && $stagePctInt === 0) ? '<1% of total' : ($stagePctInt . '% of total');
-                ?>
-                <a class="application_sttus_nav caf-kpi-link" href="javascript:void(0);" rel="<?php echo $stage['rel']; ?>">
-                    <div class="caf-kpi-card hp-circle <?php echo $hpActiveStage === $stage['key'] ? 'active' : ''; ?>"
-                        data-hp="<?php echo $stage['rel']; ?>"
-                        style="--kpi-color: <?php echo $stage['color']; ?>; --kpi-bg: <?php echo $stage['bg']; ?>; --kpi-tint: <?php echo $stage['tint']; ?>; --kpi-border: <?php echo $stage['border']; ?>; --kpi-deep: <?php echo $stage['deep']; ?>; --kpi-glow: <?php echo $stage['glow']; ?>;">
-                        <div class="caf-kpi-top">
-                            <div class="caf-kpi-icon">
+                    </a>
+                    <span class="hp-eq">=</span>
+                    <?php foreach ($hpStages as $i => $stage): ?>
+                        <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="<?php echo $stage['rel']; ?>">
+                            <div class="hp-circle <?php echo $hpActiveStage === $stage['key'] ? 'active' : ''; ?>"
+                                data-hp="<?php echo $stage['rel']; ?>"
+                                style="--hp-color: <?php echo $stage['color']; ?>; --hp-bg: <?php echo $stage['bg']; ?>;">
+                                <span class="hp-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="<?php echo $stage['icon']; ?>" />
+                                    </svg>
+                                </span>
+                                <span class="hp-count" id="bg_<?php echo $stage['rel']; ?>"><?php echo @$hpCounters[$stage['rel']]; ?></span>
+                            </div>
+                            <div class="hp-label <?php echo $hpActiveStage === $stage['key'] ? 'active' : ''; ?>" id="tx_<?php echo $stage['rel']; ?>">
+                                <?php echo $stage['label']; ?>
+                            </div>
+                        </a>
+                        <?php if ($i < count($hpStages) - 1): ?>
+                            <span class="hp-chevron">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="<?php echo $stage['icon']; ?>" />
+                                    <path d="m9 6 6 6-6 6" />
                                 </svg>
-                            </div>
-                            <div class="caf-kpi-meta">
-                                <div class="caf-kpi-num" id="bg_<?php echo $stage['rel']; ?>"><?php echo $stageCountInt; ?></div>
-                                <div class="caf-kpi-lbl hp-label <?php echo $hpActiveStage === $stage['key'] ? 'active' : ''; ?>" id="tx_<?php echo $stage['rel']; ?>">
-                                    <?php echo $stage['label']; ?>
-                                </div>
-                            </div>
+                            </span>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                    <span class="hp-divider"></span>
+                    <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="<?php echo $hpRejected['rel']; ?>">
+                        <div class="hp-circle <?php echo $hpActiveStage === $hpRejected['key'] ? 'active' : ''; ?>"
+                            data-hp="<?php echo $hpRejected['rel']; ?>"
+                            style="--hp-color: <?php echo $hpRejected['color']; ?>; --hp-bg: <?php echo $hpRejected['bg']; ?>;">
+                            <span class="hp-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="<?php echo $hpRejected['icon']; ?>" />
+                                </svg>
+                            </span>
+                            <span class="hp-count" id="bg_<?php echo $hpRejected['rel']; ?>"><?php echo @$hpCounters[$hpRejected['rel']]; ?></span>
                         </div>
-                        <div class="caf-kpi-sub">
-                            <?php if ($stage['rel'] === '7'): ?>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/>
-                                </svg>
-                            <?php elseif ($stage['rel'] === '6'): ?>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="20 6 9 17 4 12"/>
-                                </svg>
-                            <?php else: ?>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="m18 15-6-6-6 6"/>
-                                </svg>
-                            <?php endif; ?>
-                            <span id="caf_kpi_sub_<?php echo $stage['rel']; ?>"><?php echo $stagePctText; ?></span>
+                        <div class="hp-label <?php echo $hpActiveStage === $hpRejected['key'] ? 'active' : ''; ?>" id="tx_<?php echo $hpRejected['rel']; ?>">
+                            <?php echo $hpRejected['label']; ?>
                         </div>
-                    </div>
-                </a>
-            <?php endforeach; ?>
+                    </a>
+                </div>
+            </div>
         </div>
 
         {{-- Row selection action bar — hidden until candidates are checked. Reuses the
@@ -2648,7 +3059,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                         $('#bg_5').html(response.activeAppCounter.Offered);      // Offered
                         $('#bg_6').html(response.activeAppCounter.Joined);     // Joined
                         $('#bg_7').html(response.activeAppCounter.Rejected);      // Rejected
-                        if (typeof syncCafKpiSublines === 'function') syncCafKpiSublines();
                         
                          fetchCandidates();
                       }
@@ -2688,7 +3098,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                         $('#bg_5').html(response.activeAppCounter.Offered);      // Offered
                         $('#bg_6').html(response.activeAppCounter.Joined);     // Joined
                         $('#bg_7').html(response.activeAppCounter.Rejected);      // Rejected
-                        if (typeof syncCafKpiSublines === 'function') syncCafKpiSublines();
                         
                          fetchCandidates();
                       }
@@ -3333,7 +3742,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                     $('#bg_5').html(response.OfferedCounter);
                     $('#bg_6').html(response.JoinedCounter);
                     $('#bg_7').html(response.RejectedCounter);
-                    syncCafKpiSublines();
                     if (typeof clearAptkSelection === 'function') {
                         clearAptkSelection();
                     }
@@ -3344,20 +3752,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                 }
             });
             return _cafListXhr;
-        }
-
-        function syncCafKpiSublines() {
-            var total = parseInt($('#bg_alldata').text(), 10) || 0;
-            var rejected = parseInt($('#bg_7').text(), 10) || 0;
-            var activeCount = Math.max(0, total - rejected);
-            $('#caf_kpi_sub_all').text(activeCount + ' active');
-
-            for (var i = 1; i <= 7; i++) {
-                var val = parseInt($('#bg_' + i).text(), 10) || 0;
-                var pct = total > 0 ? Math.round((val / total) * 100) : 0;
-                var pctText = (val > 0 && pct === 0) ? '<1% of total' : (pct + '% of total');
-                $('#caf_kpi_sub_' + i).text(pctText);
-            }
         }
 
         $(document).on('keydown', '.caf-subcard-stage[role="button"]', function(e) {
