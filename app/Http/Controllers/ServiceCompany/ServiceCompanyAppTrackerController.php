@@ -792,6 +792,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             // V3 Phase 3.1: HTML and JSON responses are cached under separate keys.
             'format' => $request->input('format', 'html'),
+            'ui_v' => 'card_v1',
         ];
 
         $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
@@ -2890,12 +2891,14 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $cachePayload = [
             'page' => $page,
             'size' => $size,
+            'jobid' => $jobid,
             'q' => $searchQuery,
             'company' => $company_id,
             'mstatus_id' => $mstatus_id,
             'valCheck' => $valCheck,
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
+            'ui_v' => 'card_v1',
         ];
 
         $versionKey = 'allclientapp_version_user_'.$this->user->id;
@@ -3393,6 +3396,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         ];
         // dd($pagination);
         $userPermissions = (array) ($this->userPermissions ?? []);
+        $rowMaps = $this->prepareRowMaps($data, (int) $company_id, 0, 0, (int) $jobid);
+        $cityIds = collect($data)
+            ->filter(fn ($r) => (int) ($r['country'] ?? 0) === 101 && ! empty($r['city_id']))
+            ->pluck('city_id')
+            ->unique()
+            ->values()
+            ->all();
+        $citiesMap = ! empty($cityIds)
+            ? DB::table('city_list')->whereIn('city_id', $cityIds)->pluck('city', 'city_id')->toArray()
+            : [];
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
@@ -3400,7 +3413,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $min_salary_currency = request('min_salary_currency');
         $app_int_outsource = request('app_int_outsource');
         $responseData = [
-            'html' => view('service_company.ajax_pages.clientappdata_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'company_id'))->render(),
+            'html' => view('service_company.ajax_pages.clientappdata_ajax', compact('data', 'userPermissions', 'rowMaps', 'citiesMap', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'company_id'))->render(),
             'total' => $total,
             'allCandidateCounter' => $allCandidateCounter,
             'SourcingCounter' => $SourcingCounter,
