@@ -584,7 +584,10 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('#fffbeb', $indexView);
         $this->assertStringContainsString('#eff6ff', $indexView);
         $this->assertStringContainsString('#ecfdf5', $indexView);
-        $this->assertStringContainsString('--kt-toolbar-height: 66px', $indexView);
+        $this->assertStringContainsString('--kt-toolbar-height: 70px', $indexView);
+        $this->assertStringContainsString('padding-left: 12px !important;', $indexView);
+        $this->assertStringContainsString('justify-content: space-between;', $indexView);
+        $this->assertStringContainsString('height: 38px !important;', $indexView);
 
         // ClientAppTracker host view: page-isolated caf-hdr flat header strip & data-job-status preservation
         $this->assertStringContainsString("'apptrackerHeaderCard' => true", $clientAppView);
@@ -598,6 +601,9 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('.caf-hdr-card.hp-org-my', $clientAppView);
         $this->assertStringContainsString('.caf-hdr-card.hp-org-internal', $clientAppView);
         $this->assertStringContainsString('.caf-hdr-card.hp-org-direct', $clientAppView);
-        $this->assertStringContainsString('--kt-toolbar-height: 66px', $clientAppView);
+        $this->assertStringContainsString('--kt-toolbar-height: 70px', $clientAppView);
+        $this->assertStringContainsString('padding-left: 12px !important;', $clientAppView);
+        $this->assertStringContainsString('justify-content: space-between;', $clientAppView);
+        $this->assertStringContainsString('height: 38px !important;', $clientAppView);
     }
 }
