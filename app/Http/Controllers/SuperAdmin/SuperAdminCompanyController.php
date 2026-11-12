@@ -59,6 +59,8 @@ use App\Services\SuperAdmin\SuperAdminJdMutationService;
 use App\Services\SuperAdmin\SuperAdminMeetingMutationService;
 use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
 use App\Services\SuperAdmin\SuperAdminNotificationReadService;
+use App\Services\SuperAdmin\SuperAdminTeamMeetingMutationService;
+use App\Services\SuperAdmin\SuperAdminTeamMeetingReadService;
 use App\Services\SuperAdmin\SuperAdminWhatsAppThemeMutationService;
 use App\Services\SuperAdmin\SuperAdminWhatsAppThemeReadService;
 use App\Services\SuperAdmin\SuperAdminZoomSettingMutationService;
@@ -7975,129 +7977,64 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     /**
      * Display the Microsoft Teams Meeting Link Pool Management Hub.
-     * Supports multi-field search (account email + meeting link), status filtering, and real-time pool metrics.
+     * Supports multi-field search (account email + meeting link), status filtering, real-time pool metrics,
+     * with 0% MySQL reads on web/API request paths via strict CQRS and Elasticsearch.
      */
-    public function teamMeetingSetting(Request $request)
+    public function teamMeetingSetting(Request $request, SuperAdminTeamMeetingReadService $readService)
     {
         $searchTerm = trim((string) $request->input('meeting_link', $request->input('q', '')));
         $statusFilter = $request->input('status', null);
+        $page = max(1, (int) $request->input('page', 1));
+        $perPage = max(1, min(100, (int) ($request->input('per_page') ?: $request->input('size') ?: 15)));
 
-        $query = DB::table('team_meeting_lists')
-            ->select('team_meeting_lists.*')
-            ->when($searchTerm !== '', function ($query) use ($searchTerm) {
-                $query->where(function ($sub) use ($searchTerm) {
-                    $sub->where('meeting_link', 'LIKE', '%'.$searchTerm.'%')
-                        ->orWhere('account_name', 'LIKE', '%'.$searchTerm.'%');
-                });
-            })
-            ->when($statusFilter !== null && $statusFilter !== '' && $statusFilter !== 'all', function ($query) use ($statusFilter) {
-                $query->where('status', (int) $statusFilter);
-            })
-            ->orderByDesc('id');
+        $result = $readService->getPaginatedMeetingLists($searchTerm, $statusFilter, $page, $perPage);
 
-        $this->team_meeting_setting = $query->paginate(15)->withQueryString();
+        $this->team_meeting_setting = $result['paginator'];
         $this->isEmptycheck = ($this->team_meeting_setting->total() === 0);
         $this->meeting_link = $searchTerm;
         $this->statusFilter = $statusFilter;
 
-        // High-level pool metrics for Tier 1 Toolbar
-        $this->totalLinksCount = DB::table('team_meeting_lists')->count();
-        $this->activeLinksCount = DB::table('team_meeting_lists')->where('status', 1)->count();
-        $this->inactiveLinksCount = DB::table('team_meeting_lists')->where('status', 0)->count();
-        $this->scheduledMeetingsCount = DB::table('team_meeting_schedule')->count();
+        // High-level pool metrics for Tier 1 Toolbar served with 0% MySQL reads
+        $this->totalLinksCount = $result['totalLinksCount'];
+        $this->activeLinksCount = $result['activeLinksCount'];
+        $this->inactiveLinksCount = $result['inactiveLinksCount'];
+        $this->scheduledMeetingsCount = $result['scheduledMeetingsCount'];
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'total' => $this->team_meeting_setting->total(),
+                'counts' => [
+                    'total' => $this->totalLinksCount,
+                    'active' => $this->activeLinksCount,
+                    'inactive' => $this->inactiveLinksCount,
+                    'scheduled' => $this->scheduledMeetingsCount,
+                ],
+                'data' => [
+                    'items' => $this->team_meeting_setting->items(),
+                    'total' => $this->team_meeting_setting->total(),
+                ],
+            ]);
+        }
 
         return view('super-admin.meeting.team-meeting-setting', $this->data);
     }
 
     /**
-     * Store Microsoft Teams Meeting links into the pool (resolves phantom route company.settingteamMeetingStore).
+     * Store Microsoft Teams Meeting links into the pool with Two-Tier Idempotency and Transactional Outbox.
      * Supports both multi-row batch insert and single link creation.
      */
-    public function settingteamMeetingStore(Request $request)
+    public function settingteamMeetingStore(Request $request, SuperAdminTeamMeetingMutationService $mutationService)
     {
         try {
-            // Case 1: Multi-row dynamic manual entry
-            if ($request->has('holder_email') && is_array($request->holder_email)) {
-                $emails = $request->input('holder_email', []);
-                $links = $request->input('meeting_link', []);
+            $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+            $adminId = auth()->id();
 
-                $insertData = [];
-                foreach ($emails as $key => $email) {
-                    $emailTrim = trim((string) $email);
-                    $linkTrim = trim((string) ($links[$key] ?? ''));
+            $response = $mutationService->storeLinks($request->all(), $idempotencyKey, $adminId);
 
-                    if ($emailTrim === '' || $linkTrim === '') {
-                        continue;
-                    }
+            $statusCode = ($response['status'] ?? false) ? 200 : 422;
 
-                    if (! preg_match('/^https?:\/\//i', $linkTrim)) {
-                        $linkTrim = 'https://'.$linkTrim;
-                    }
-
-                    $insertData[] = [
-                        'account_name' => $emailTrim,
-                        'meeting_link' => $linkTrim,
-                        'status' => 1,
-                    ];
-                }
-
-                if (empty($insertData)) {
-                    return response()->json([
-                        'status' => false,
-                        'type' => 'warning',
-                        'message' => 'Please provide at least one valid account email and meeting link.',
-                    ], 422);
-                }
-
-                DB::table('team_meeting_lists')->insertOrIgnore($insertData);
-                Cache::forget('jero:team_meeting_links:active_pool');
-
-                return response()->json([
-                    'status' => true,
-                    'type' => 'success',
-                    'message' => count($insertData).' Teams meeting link(s) added successfully to the pool.',
-                    'url' => route('superadmin.company.team_meeting_setting'),
-                ]);
-            }
-
-            // Case 2: Single item creation
-            $validated = $request->validate([
-                'account_name' => 'required|string|max:255',
-                'meeting_link' => 'required|string|max:500',
-                'status' => 'nullable|in:0,1',
-            ]);
-
-            $accountName = trim($validated['account_name']);
-            $meetingLink = trim($validated['meeting_link']);
-            if (! preg_match('/^https?:\/\//i', $meetingLink)) {
-                $meetingLink = 'https://'.$meetingLink;
-            }
-            $status = isset($validated['status']) ? (int) $validated['status'] : 1;
-
-            $exists = DB::table('team_meeting_lists')->where('meeting_link', $meetingLink)->exists();
-            if ($exists) {
-                return response()->json([
-                    'status' => false,
-                    'type' => 'warning',
-                    'message' => 'This Teams meeting link already exists in the pool.',
-                ], 422);
-            }
-
-            $id = DB::table('team_meeting_lists')->insertGetId([
-                'account_name' => $accountName,
-                'meeting_link' => $meetingLink,
-                'status' => $status,
-            ]);
-
-            Cache::forget('jero:team_meeting_links:active_pool');
-
-            return response()->json([
-                'status' => true,
-                'type' => 'success',
-                'message' => 'Teams meeting link created successfully.',
-                'id' => $id,
-                'url' => route('superadmin.company.team_meeting_setting'),
-            ]);
+            return response()->json($response, $statusCode);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -8108,9 +8045,9 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     }
 
     /**
-     * Atomically toggle or update status of a Teams Meeting pool link.
+     * Atomically toggle or update status of a Teams Meeting pool link with Two-Tier Idempotency and Outbox.
      */
-    public function teamMeetStatusUpdate(Request $request)
+    public function teamMeetStatusUpdate(Request $request, SuperAdminTeamMeetingMutationService $mutationService)
     {
         $validator = Validator::make($request->all(), [
             'id' => 'required|integer|exists:team_meeting_lists,id',
@@ -8124,25 +8061,20 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ], 422);
         }
 
-        $newStatus = (int) $request->chkStatus;
-        DB::table('team_meeting_lists')
-            ->where('id', $request->id)
-            ->update(['status' => $newStatus]);
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        $adminId = auth()->id();
 
-        Cache::forget('jero:team_meeting_links:active_pool');
+        $response = $mutationService->updateStatus((int) $request->id, (int) $request->chkStatus, $idempotencyKey, $adminId);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => $newStatus === 1 ? 'Teams meeting link activated successfully.' : 'Teams meeting link paused successfully.',
-            'new_status' => $newStatus,
-            'id' => (int) $request->id,
-        ]);
+        $status = ($response['status'] ?? '') === 'error' ? 422 : 200;
+
+        return response()->json($response, $status);
     }
 
     /**
-     * Update an individual Teams Meeting link record (account_name and meeting_link).
+     * Update an individual Teams Meeting link record (account_name and meeting_link) with Two-Tier Idempotency.
      */
-    public function updateTeamMeetingLink(Request $request, $id)
+    public function updateTeamMeetingLink(Request $request, $id, SuperAdminTeamMeetingMutationService $mutationService)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -8158,52 +8090,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 ], 422);
             }
 
-            $record = DB::table('team_meeting_lists')->where('id', $id)->first();
-            if (! $record) {
-                return response()->json([
-                    'status' => false,
-                    'type' => 'error',
-                    'message' => 'Meeting link record not found.',
-                ], 404);
-            }
+            $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+            $adminId = auth()->id();
 
-            $accountName = trim($request->account_name);
-            $meetingLink = trim($request->meeting_link);
-            if (! preg_match('/^https?:\/\//i', $meetingLink)) {
-                $meetingLink = 'https://'.$meetingLink;
-            }
+            $response = $mutationService->updateLink((int) $id, $request->only(['account_name', 'meeting_link']), $idempotencyKey, $adminId);
 
-            // Check if meeting_link conflicts with another record
-            $conflict = DB::table('team_meeting_lists')
-                ->where('meeting_link', $meetingLink)
-                ->where('id', '!=', $id)
-                ->exists();
+            $statusCode = ($response['status'] ?? false) ? 200 : 422;
 
-            if ($conflict) {
-                return response()->json([
-                    'status' => false,
-                    'type' => 'warning',
-                    'message' => 'Another record with this Teams meeting link already exists.',
-                ], 422);
-            }
-
-            DB::table('team_meeting_lists')->where('id', $id)->update([
-                'account_name' => $accountName,
-                'meeting_link' => $meetingLink,
-            ]);
-
-            Cache::forget('jero:team_meeting_links:active_pool');
-
-            return response()->json([
-                'status' => true,
-                'type' => 'success',
-                'message' => 'Teams meeting link updated successfully.',
-                'data' => [
-                    'id' => (int) $id,
-                    'account_name' => $accountName,
-                    'meeting_link' => $meetingLink,
-                ],
-            ]);
+            return response()->json($response, $statusCode);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -8214,26 +8108,12 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     }
 
     /**
-     * Fetch recent schedule allocations for Teams Meeting links from team_meeting_schedule.
+     * Fetch recent schedule allocations for Teams Meeting links from L2 cache.
      */
-    public function getTeamMeetingScheduleHistory(Request $request)
+    public function getTeamMeetingScheduleHistory(Request $request, SuperAdminTeamMeetingReadService $readService)
     {
         try {
-            $schedules = DB::table('team_meeting_schedule')
-                ->leftJoin('companies', 'companies.id', '=', 'team_meeting_schedule.company_id')
-                ->leftJoin('users', 'users.id', '=', 'team_meeting_schedule.user_id')
-                ->select(
-                    'team_meeting_schedule.id',
-                    'team_meeting_schedule.meeting_link',
-                    'team_meeting_schedule.interview_date',
-                    'team_meeting_schedule.interview_job_wise_con_id',
-                    'companies.company_name',
-                    'users.name as recruiter_name',
-                    'users.email as recruiter_email'
-                )
-                ->orderByDesc('team_meeting_schedule.id')
-                ->limit(50)
-                ->get();
+            $schedules = $readService->getScheduleHistory();
 
             return response()->json([
                 'status' => true,
@@ -8282,14 +8162,19 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 return response()->json($res);
             }
 
+            if ($table === 'team_meeting_lists') {
+                $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+                $adminId = auth()->id();
+                $mutationService = app(SuperAdminTeamMeetingMutationService::class);
+                $res = $mutationService->deleteLinks($ids, $idempotencyKey, $adminId);
+
+                return response()->json($res);
+            }
+
             // ✅ Delete query for other tables
             $deleted = DB::table($table)
                 ->whereIn('id', $ids)
                 ->delete();
-
-            if ($table === 'team_meeting_lists') {
-                Cache::forget('jero:team_meeting_links:active_pool');
-            }
 
             return response()->json([
                 'status' => true,
@@ -8333,6 +8218,15 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                 $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
                 $adminId = auth()->id();
                 $mutationService = app(SuperAdminGoogleMeetingMutationService::class);
+                $res = $mutationService->storeLinks($request->all(), $idempotencyKey, $adminId);
+
+                return response()->json($res);
+            }
+
+            if ($table === 'team_meeting_lists') {
+                $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+                $adminId = auth()->id();
+                $mutationService = app(SuperAdminTeamMeetingMutationService::class);
                 $res = $mutationService->storeLinks($request->all(), $idempotencyKey, $adminId);
 
                 return response()->json($res);

@@ -10416,50 +10416,9 @@ class HomeController extends Controller
             }
 
             $usdToInr = (float) $usdRates['INR'];
-            $currencies = DB::table('currencies')->get();
-
-            DB::transaction(function () use ($currencies, $usdRates, $usdToInr) {
-                foreach ($currencies as $currency) {
-                    $code = strtoupper(trim($currency->currency_code));
-
-                    if ($code === 'USD') {
-                        // 1 USD = 1.0 USD, 1 USD = $usdToInr INR
-                        DB::table('currencies')->where('id', $currency->id)->update([
-                            'usd_based_rates' => 1.0000,
-                            'inr_based_rates' => round($usdToInr, 4),
-                            'updated_at' => now(),
-                        ]);
-
-                        continue;
-                    }
-
-                    if ($code === 'INR') {
-                        // For INR: usd_based_rates stores 1 USD in INR (system baseline anchor), inr_based_rates stores 1.0
-                        DB::table('currencies')->where('id', $currency->id)->update([
-                            'usd_based_rates' => round($usdToInr, 4),
-                            'inr_based_rates' => 1.0000,
-                            'updated_at' => now(),
-                        ]);
-
-                        continue;
-                    }
-
-                    if (isset($usdRates[$code]) && (float) $usdRates[$code] > 0) {
-                        $rateFromUsd = (float) $usdRates[$code]; // e.g. 1 USD = 0.897 EUR
-                        $valInUsd = 1 / $rateFromUsd; // e.g. 1 EUR = 1.1148 USD
-                        $valInInr = $valInUsd * $usdToInr; // e.g. 1 EUR = 106.24 INR
-
-                        DB::table('currencies')->where('id', $currency->id)->update([
-                            'usd_based_rates' => round($valInUsd, 4),
-                            'inr_based_rates' => round($valInInr, 4),
-                            'updated_at' => now(),
-                        ]);
-                    }
-                }
-            });
-
-            // Re-compile static JSON stores and clear Redis reference cache atomically
-            CurrencyService::syncCurrenciesJson();
+            $mutationService = app(\App\Services\SuperAdmin\SuperAdminCurrencyMutationService::class);
+            $idempotencyKey = request()->header('X-Idempotency-Key') ?? request()->input('idempotency_key');
+            $mutationService->syncExchangeRates($usdRates, $usdToInr, $idempotencyKey);
 
             return response()->json([
                 'status' => true,

@@ -1,6 +1,6 @@
 {
     "_meta": {
-        "generated_at": "2026-10-29T13:02:28+05:30",
+        "generated_at": "2026-11-12T13:22:10+05:30",
         "description": "Authoritative Enterprise Currency Dataset for JERO ATS. Serves 100% of currency queries with 0% MySQL reads.",
         "version": "1.1",
         "total_master_currencies": 139,
@@ -13,7 +13,7 @@
             "currency_symbol": "$",
             "currency_code": "USD",
             "usd_based_rates": "1.0000000000",
-            "inr_based_rates": "95.3000000000",
+            "inr_based_rates": "88.5000000000",
             "getKey": 4
         },
         {
@@ -21,8 +21,8 @@
             "currency_name": "Pounds",
             "currency_symbol": "£",
             "currency_code": "GBP",
-            "usd_based_rates": "1.3298000000",
-            "inr_based_rates": "126.7287000000",
+            "usd_based_rates": "1.2821000000",
+            "inr_based_rates": "113.4659000000",
             "getKey": 3
         },
         {
@@ -30,8 +30,8 @@
             "currency_name": "Euros",
             "currency_symbol": "€",
             "currency_code": "EUR",
-            "usd_based_rates": "1.1148000000",
-            "inr_based_rates": "106.2430000000",
+            "usd_based_rates": "1.0870000000",
+            "inr_based_rates": "96.1995000000",
             "getKey": 1
         },
         {
@@ -39,7 +39,7 @@
             "currency_name": "Rupee",
             "currency_symbol": "₹",
             "currency_code": "INR",
-            "usd_based_rates": "95.3000000000",
+            "usd_based_rates": "88.5000000000",
             "inr_based_rates": "1.0000000000",
             "getKey": 0
         },
@@ -3668,7 +3668,8 @@
         "1009": "BDT",
         "1010": "KES",
         "1011": "GHS",
-        "1012": "MAD"
+        "1012": "MAD",
+        "1013": "ICD"
     },
     "code_to_key": {
         "INR": 0,
@@ -3790,7 +3791,12 @@
         "BDT": 1009,
         "KES": 1010,
         "GHS": 1011,
-        "MAD": 1012
+        "MAD": 1012,
+        "TID": 1013,
+        "OR1": 1013,
+        "OSD": 1013,
+        "ICD": 1013,
+        "BNC": 1013
     },
     "master_id_to_code": {
         "3": "AFN",
@@ -4046,14 +4052,19 @@
         "BDT": "৳",
         "KES": "KSh",
         "GHS": "GH₵",
-        "MAD": "MAD"
+        "MAD": "MAD",
+        "TID": "T$",
+        "OR1": "O$",
+        "OSD": "O$",
+        "ICD": "I$",
+        "BNC": "B$"
     },
     "rates_to_inr": {
         "INR": 1,
-        "EUR": 106.243,
+        "EUR": 96.1995,
         "JPY": 0.6035,
-        "GBP": 126.7287,
-        "USD": 95.3,
+        "GBP": 113.4659,
+        "USD": 88.5,
         "AED": 25.9673,
         "CAD": 68.0728,
         "AUD": 67.1103,
@@ -4168,13 +4179,18 @@
         "BDT": 0.7719,
         "KES": 0.7338,
         "GHS": 8.1863,
-        "MAD": 9.673
+        "MAD": 9.673,
+        "TID": 118.5,
+        "OR1": 95,
+        "OSD": 142.5,
+        "ICD": 299,
+        "BNC": 120
     },
     "rates_to_usd": {
-        "INR": 95.3,
-        "EUR": 1.1148,
+        "INR": 88.5,
+        "EUR": 1.087,
         "JPY": 0.0063,
-        "GBP": 1.3298,
+        "GBP": 1.2821,
         "USD": 1,
         "AED": 0.2725,
         "CAD": 0.7143,
@@ -4290,6 +4306,11 @@
         "BDT": 0.0081,
         "KES": 0.0077,
         "GHS": 0.0859,
-        "MAD": 0.1015
+        "MAD": 0.1015,
+        "TID": 1.25,
+        "OR1": 1,
+        "OSD": 1.5,
+        "ICD": 3.14,
+        "BNC": 1.5
     }
 }

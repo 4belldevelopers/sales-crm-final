@@ -68,11 +68,9 @@ class LanguageSetting extends Model
      */
     public static function flushCaches(): void
     {
-        \Illuminate\Support\Facades\Cache::forget('language_settings_enabled');
-        \Illuminate\Support\Facades\Cache::forget('superadmin_language_settings');
-        \Illuminate\Support\Facades\Cache::forget('global_setting:default');
-        \Illuminate\Support\Facades\Cache::forget('global_settings');
+        \App\Services\SuperAdmin\SuperAdminLanguageCacheManager::flushCaches();
     }
+
 
     public function frontCmsHeader()
     {

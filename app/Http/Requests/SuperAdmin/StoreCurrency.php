@@ -38,6 +38,7 @@ class StoreCurrency extends FormRequest
             ],
             'inr_based_rates' => 'required|numeric|min:0.000001',
             'usd_based_rates' => 'required|numeric|min:0.000001',
+            'idempotency_key' => 'nullable|string|max:64',
         ];
     }
 

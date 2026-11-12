@@ -47,49 +47,69 @@ class Files
         if (!empty($crop)) {
             // Crop image
             if (isset($crop[0])) {
-                // To store the multiple images for the copped ones
+                // To store the multiple images for the cropped ones
                 foreach ($crop as $cropped) {
-                    $image = Image::make($tempPath);
-
                     if (isset($cropped['resize']['width']) && isset($cropped['resize']['height'])) {
-
-                        $image->crop(floor($cropped['width']), floor($cropped['height']), floor($cropped['x']), floor($cropped['y']));
-
                         $fileName = str_replace('.', '_' . $cropped['resize']['width'] . 'x' . $cropped['resize']['height'] . '.', $newName);
                         $tempPathCropped = public_path('user-uploads/temp') . '/' . $fileName;
                         $newPathCropped = $folder . '/' . $fileName;
 
-                        // Resize in Proper format
-                        $image->resize($cropped['resize']['width'], $cropped['resize']['height'], function ($constraint) {
-                            //$constraint->aspectRatio();
-                            // $constraint->upsize();
-                        });
-
-                        $image->save($tempPathCropped);
-
-                        \Storage::put($newPathCropped, \File::get($tempPathCropped), ['public']);
-
-                        // Deleting cropped temp file
-                        \File::delete($tempPathCropped);
+                        if (class_exists('Intervention\Image\ImageManagerStatic')) {
+                            $image = Image::make($tempPath);
+                            $image->crop(floor($cropped['width']), floor($cropped['height']), floor($cropped['x']), floor($cropped['y']));
+                            $image->resize($cropped['resize']['width'], $cropped['resize']['height'], function ($constraint) {
+                                //$constraint->aspectRatio();
+                                // $constraint->upsize();
+                            });
+                            $image->save($tempPathCropped);
+                            \Storage::put($newPathCropped, \File::get($tempPathCropped), ['public']);
+                            \File::delete($tempPathCropped);
+                        } elseif (class_exists('\Intervention\Image\ImageManager') && class_exists('\Intervention\Image\Drivers\Gd\Driver')) {
+                            try {
+                                $manager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+                                $image = $manager->read($tempPath);
+                                $image->crop((int)floor($cropped['width']), (int)floor($cropped['height']), (int)floor($cropped['x']), (int)floor($cropped['y']));
+                                $image->scaleDown($cropped['resize']['width'], $cropped['resize']['height']);
+                                $image->save($tempPathCropped);
+                                \Storage::put($newPathCropped, \File::get($tempPathCropped), ['public']);
+                                \File::delete($tempPathCropped);
+                            } catch (\Throwable $e) {}
+                        }
                     }
-
                 }
             } else {
-                $image = Image::make($tempPath);
-                $image->crop(floor($crop['width']), floor($crop['height']), floor($crop['x']), floor($crop['y']));
-                $image->save();
+                if (class_exists('Intervention\Image\ImageManagerStatic')) {
+                    $image = Image::make($tempPath);
+                    $image->crop(floor($crop['width']), floor($crop['height']), floor($crop['x']), floor($crop['y']));
+                    $image->save();
+                } elseif (class_exists('\Intervention\Image\ImageManager') && class_exists('\Intervention\Image\Drivers\Gd\Driver')) {
+                    try {
+                        $manager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+                        $image = $manager->read($tempPath);
+                        $image->crop((int)floor($crop['width']), (int)floor($crop['height']), (int)floor($crop['x']), (int)floor($crop['y']));
+                        $image->save();
+                    } catch (\Throwable $e) {}
+                }
             }
-
         }
 
         if (($width || $height)) {
-            // Crop image
-            $image = Image::make($tempPath);
-            $image->resize($width, $height, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
-            $image->save();
+            // Crop / resize image
+            if (class_exists('Intervention\Image\ImageManagerStatic')) {
+                $image = Image::make($tempPath);
+                $image->resize($width, $height, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+                $image->save();
+            } elseif (class_exists('\Intervention\Image\ImageManager') && class_exists('\Intervention\Image\Drivers\Gd\Driver')) {
+                try {
+                    $manager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+                    $image = $manager->read($tempPath);
+                    $image->scaleDown($width, $height);
+                    $image->save();
+                } catch (\Throwable $e) {}
+            }
         }
 
         \Storage::put($newPath, \File::get($tempPath), ['public']);
