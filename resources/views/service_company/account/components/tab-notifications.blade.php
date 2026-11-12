@@ -1,10 +1,10 @@
-{{--
+{{-- 
   JERO ATS — Service Company Notification Email Routing Tab Component (Rule 20 Modern Card + Sub-Card Design System)
-  Intent: Preserves the intuitive 2-column original workflow where each domain card pairs the Primary Recipient Email
-          input directly above the 8 automated service sub-cards routed to that inbox, upgraded with Rule 20 visual
-          architecture, enterprise copy, isolated CSS tokens, and guaranteed FontAwesome 5/6 glyph rendering.
-  Tenancy & Security: Strictly scoped by company_id. Preserves recuitment_email & sales_email form keys and
-                      JeroEmailBoxEngine client-first validation hooks.
+  Intent: 2-column channel-paired layout for Recruitment and Sales notifications with inline direct email editing,
+          strict Add Candidate RFC 5321 validation, auto-restoration of Admin Email ID on empty submission,
+          zero redundant header/footer controls, and guaranteed FontAwesome 5/6 glyph rendering.
+  Tenancy & Security: Strictly scoped by company_id. Preserves recuitment_email & sales_email form keys,
+                      JeroEmailBoxEngine client-first validation, and backend database/Elasticsearch synchronization.
   Screen Fit: 100% fluid fit for 15.6" screens (1366x768 & 1920x1080) with zero horizontal overflow.
 --}}
 
@@ -12,6 +12,7 @@
   $userPerms = $userPermissions ?? [];
   $hasViewPerm = in_array('view_settings', $userPerms);
   $hasEditPerm = in_array('edit_settings', $userPerms);
+  $adminEmail = $account->company_email ?? '';
 
   // Recruitment Email Services (8 Automated Triggers) — Universal FA5/FA6 solid icons
   $recruitmentNotificationItems = [
@@ -101,8 +102,8 @@
     ],
   ];
 
-  $recruitmentEmailVal = (!empty($notification['Recuitment']->email)) ? $notification['Recuitment']->email : ($account->company_email ?? '');
-  $salesEmailVal = (!empty($notification['Sales']->email)) ? $notification['Sales']->email : ($account->company_email ?? '');
+  $recruitmentEmailVal = (!empty($notification['Recuitment']->email)) ? $notification['Recuitment']->email : $adminEmail;
+  $salesEmailVal = (!empty($notification['Sales']->email)) ? $notification['Sales']->email : $adminEmail;
 @endphp
 
 @if($hasViewPerm)
@@ -113,7 +114,8 @@
   <div class="ns-wrapper notifications-card-system">
 
     {{-- ══════════════════════════════════════════════════════════════
-         TIER 1: PURE WHITE TOOLBAR HEADER CARD
+         TIER 1: PURE WHITE HEADER SUMMARY CARD
+         (Search bar, header save button, count pill & subtabs completely removed per spec)
          ══════════════════════════════════════════════════════════════ --}}
     <div class="ns-toolbar-card tier1-toolbar-card">
       <div class="ns-toolbar-left">
@@ -121,61 +123,21 @@
           <i class="fas fa-bell"></i>
         </div>
         <div class="ns-toolbar-copy">
-          <div class="ns-toolbar-title-row">
-            <h3 class="ns-toolbar-title">Notification Email Routing</h3>
-            <span class="ns-count-pill">2 Dedicated Inboxes &bull; 16 Services</span>
-          </div>
-          <p class="ns-toolbar-sub">Enter a primary email address in each channel card to receive automated alerts for every service listed underneath it.</p>
+          <h3 class="ns-toolbar-title">Notification Email Routing</h3>
+          <p class="ns-toolbar-sub">Configure and directly update primary recipient mailboxes for automated recruitment pipeline activities and commercial client alerts.</p>
         </div>
-      </div>
-
-      <div class="ns-toolbar-right">
-        <div class="ns-search-box">
-          <i class="fas fa-search ns-search-icon"></i>
-          <input type="text" id="notifications_search" class="ns-search-input" placeholder="Search notification services..." autocomplete="off">
-          <button type="button" id="notifications_search_clear_btn" class="ns-search-clear" title="Clear search"><i class="fas fa-times"></i></button>
-        </div>
-
-        @if($hasEditPerm)
-        <button type="button" class="ns-btn-save" id="saveNotificationSettingsHeader">
-          <span class="csn-save-spinner" aria-hidden="true"></span>
-          <i class="fas fa-check"></i>
-          <span class="csn-save-label">Save Changes</span>
-        </button>
-        @endif
       </div>
     </div>
 
     {{-- ══════════════════════════════════════════════════════════════
-         TIER 2: PURE WHITE SUB-TABS FILTER CARD
-         ══════════════════════════════════════════════════════════════ --}}
-    <div class="ns-subtabs-card tier2-subtabs-card" id="notifications_subtabs_bar">
-      <button type="button" class="ns-subtab-pill btn-subtab active" data-target="all">
-        <i class="fas fa-columns"></i>
-        <span>All Notification Channels</span>
-        <span class="ns-subtab-counter">2</span>
-      </button>
-      <button type="button" class="ns-subtab-pill btn-subtab" data-target="card_notif_recruitment">
-        <i class="fas fa-user-tie"></i>
-        <span>Recruitment Services</span>
-        <span class="ns-subtab-counter">8</span>
-      </button>
-      <button type="button" class="ns-subtab-pill btn-subtab" data-target="card_notif_sales">
-        <i class="fas fa-chart-line"></i>
-        <span>Sales &amp; Commercial Services</span>
-        <span class="ns-subtab-counter">8</span>
-      </button>
-    </div>
-
-    {{-- ══════════════════════════════════════════════════════════════
-         TIER 3: UNIFIED 2-COLUMN DOMAIN CARDS (EMAIL ABOVE + 8 SERVICES BELOW)
+         TIER 3: UNIFIED 2-COLUMN DOMAIN CARDS (EMAIL INLINE EDIT + 8 SERVICES)
          ══════════════════════════════════════════════════════════════ --}}
     <div class="ns-channels-grid tier3-cards-stream" id="notifications_channels_grid">
 
       {{-- ────────────────────────────────────────────────────────────
            PRIMARY CARD 1: RECRUITMENT NOTIFICATIONS
            ──────────────────────────────────────────────────────────── --}}
-      <section class="ns-primary-card primary-notifications-card" id="card_notif_recruitment" data-search-scope="recruitment email candidate stages agency offers joining bench team member notes">
+      <section class="ns-primary-card primary-notifications-card" id="card_notif_recruitment">
         <div class="ns-card-header">
           <div class="ns-card-header-left">
             <div class="ns-cat-icon ns-icon-purple">
@@ -192,8 +154,8 @@
         </div>
 
         <div class="ns-card-body">
-          {{-- Sub-Card A: Primary Recipient Email Input --}}
-          <div class="ns-inbox-subcard ns-inbox-purple">
+          {{-- Sub-Card A: Primary Recipient Email Input & Inline Direct Edit --}}
+          <div class="ns-inbox-subcard ns-inbox-purple" id="box_recuitment_email">
             <div class="ns-inbox-head">
               <label class="ns-inbox-label" for="recuitment_email">
                 Primary Recruitment Email ID <span class="ns-req">*</span>
@@ -203,10 +165,48 @@
               </span>
             </div>
             <p class="ns-inbox-help">Every automated recruitment alert listed below will be dispatched exclusively to this email address.</p>
-            <div class="ns-email-wrap">
-              <i class="fas fa-envelope ns-email-icon"></i>
-              <input type="email" name="recuitment_email" id="recuitment_email" value="{{ $recruitmentEmailVal }}" placeholder="Enter recruitment email (e.g., talent@company.com)" class="ns-email-input" required maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
+
+            <div class="ns-email-interactive-group">
+              <div class="ns-email-input-wrap">
+                <i class="fas fa-envelope ns-email-icon"></i>
+                <input type="email"
+                       name="recuitment_email"
+                       id="recuitment_email"
+                       value="{{ $recruitmentEmailVal }}"
+                       data-admin-fallback="{{ $adminEmail }}"
+                       data-current-val="{{ $recruitmentEmailVal }}"
+                       placeholder="Enter recruitment email (e.g., talent@company.com)"
+                       class="ns-email-input is-locked"
+                       readonly
+                       required
+                       maxlength="254"
+                       inputmode="email"
+                       autocomplete="email"
+                       autocapitalize="none"
+                       spellcheck="false">
+              </div>
+
+              <div class="ns-inline-btn-group">
+                @if($hasEditPerm)
+                {{-- Default View State: Edit Action --}}
+                <button type="button" class="ns-btn-inline ns-btn-edit" data-target="recuitment_email" title="Edit Recruitment Email">
+                  <i class="fas fa-pencil-alt"></i> <span>Edit</span>
+                </button>
+
+                {{-- Active Edit State: Save & Cancel Actions (Hidden initially) --}}
+                <div class="ns-edit-actions-cluster" style="display: none;">
+                  <button type="button" class="ns-btn-inline ns-btn-save-inline" data-target="recuitment_email" title="Save Recruitment Email">
+                    <span class="ns-inline-spinner" style="display: none;"></span>
+                    <i class="fas fa-check"></i> <span>Save</span>
+                  </button>
+                  <button type="button" class="ns-btn-inline ns-btn-cancel-inline" data-target="recuitment_email" title="Cancel Editing">
+                    <i class="fas fa-times"></i> <span>Cancel</span>
+                  </button>
+                </div>
+                @endif
+              </div>
             </div>
+
             <div id="recuitment_email_typo_hint" class="email-typo-hint" style="display: none; margin-top: 6px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 5px 9px;"></div>
           </div>
 
@@ -222,7 +222,7 @@
 
             <div class="ns-services-list">
               @foreach($recruitmentNotificationItems as $notificationIndex => $notificationItem)
-                <div class="ns-service-subcard notif-trigger-col" data-trigger-scope="{{ strtolower($notificationItem['title'] . ' ' . $notificationItem['desc']) }}">
+                <div class="ns-service-subcard">
                   <div class="ns-service-icon ns-icon-purple">
                     <i class="{{ $notificationItem['icon'] }}"></i>
                   </div>
@@ -246,7 +246,7 @@
       {{-- ────────────────────────────────────────────────────────────
            PRIMARY CARD 2: SALES & COMMERCIAL NOTIFICATIONS
            ──────────────────────────────────────────────────────────── --}}
-      <section class="ns-primary-card primary-notifications-card" id="card_notif_sales" data-search-scope="sales commercial email direct client job requests bench subscription invoice payment contract wallet coins">
+      <section class="ns-primary-card primary-notifications-card" id="card_notif_sales">
         <div class="ns-card-header">
           <div class="ns-card-header-left">
             <div class="ns-cat-icon ns-icon-emerald">
@@ -263,8 +263,8 @@
         </div>
 
         <div class="ns-card-body">
-          {{-- Sub-Card A: Primary Recipient Email Input --}}
-          <div class="ns-inbox-subcard ns-inbox-emerald">
+          {{-- Sub-Card A: Primary Recipient Email Input & Inline Direct Edit --}}
+          <div class="ns-inbox-subcard ns-inbox-emerald" id="box_sales_email">
             <div class="ns-inbox-head">
               <label class="ns-inbox-label" for="sales_email">
                 Primary Sales Email ID <span class="ns-req">*</span>
@@ -274,10 +274,48 @@
               </span>
             </div>
             <p class="ns-inbox-help">Every automated sales, client, and billing alert listed below will be dispatched exclusively to this email address.</p>
-            <div class="ns-email-wrap">
-              <i class="fas fa-envelope ns-email-icon"></i>
-              <input type="email" name="sales_email" id="sales_email" value="{{ $salesEmailVal }}" placeholder="Enter sales email (e.g., business@company.com)" class="ns-email-input" required maxlength="254" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false">
+
+            <div class="ns-email-interactive-group">
+              <div class="ns-email-input-wrap">
+                <i class="fas fa-envelope ns-email-icon"></i>
+                <input type="email"
+                       name="sales_email"
+                       id="sales_email"
+                       value="{{ $salesEmailVal }}"
+                       data-admin-fallback="{{ $adminEmail }}"
+                       data-current-val="{{ $salesEmailVal }}"
+                       placeholder="Enter sales email (e.g., business@company.com)"
+                       class="ns-email-input is-locked"
+                       readonly
+                       required
+                       maxlength="254"
+                       inputmode="email"
+                       autocomplete="email"
+                       autocapitalize="none"
+                       spellcheck="false">
+              </div>
+
+              <div class="ns-inline-btn-group">
+                @if($hasEditPerm)
+                {{-- Default View State: Edit Action --}}
+                <button type="button" class="ns-btn-inline ns-btn-edit" data-target="sales_email" title="Edit Sales Email">
+                  <i class="fas fa-pencil-alt"></i> <span>Edit</span>
+                </button>
+
+                {{-- Active Edit State: Save & Cancel Actions (Hidden initially) --}}
+                <div class="ns-edit-actions-cluster" style="display: none;">
+                  <button type="button" class="ns-btn-inline ns-btn-save-inline" data-target="sales_email" title="Save Sales Email">
+                    <span class="ns-inline-spinner" style="display: none;"></span>
+                    <i class="fas fa-check"></i> <span>Save</span>
+                  </button>
+                  <button type="button" class="ns-btn-inline ns-btn-cancel-inline" data-target="sales_email" title="Cancel Editing">
+                    <i class="fas fa-times"></i> <span>Cancel</span>
+                  </button>
+                </div>
+                @endif
+              </div>
             </div>
+
             <div id="sales_email_typo_hint" class="email-typo-hint" style="display: none; margin-top: 6px; font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 5px 9px;"></div>
           </div>
 
@@ -293,7 +331,7 @@
 
             <div class="ns-services-list">
               @foreach($salesNotificationItems as $notificationIndex => $notificationItem)
-                <div class="ns-service-subcard notif-trigger-col" data-trigger-scope="{{ strtolower($notificationItem['title'] . ' ' . $notificationItem['desc']) }}">
+                <div class="ns-service-subcard">
                   <div class="ns-service-icon ns-icon-emerald">
                     <i class="{{ $notificationItem['icon'] }}"></i>
                   </div>
@@ -314,33 +352,6 @@
         </div>
       </section>
 
-    </div>
-
-    {{-- ══════════════════════════════════════════════════════════════
-         BOTTOM ACTIVITY & TENANCY STRIP
-         ══════════════════════════════════════════════════════════════ --}}
-    <div class="ns-bottom-strip activity-strip-card">
-      <div class="ns-strip-left">
-        <div class="ns-tenancy-badge">
-          <i class="fas fa-shield-alt"></i>
-          <span>Tenant Context: {{ auth()->user()->company->company_name ?? 'Organization' }} (#{{ auth()->user()->company_id ?? 0 }})</span>
-        </div>
-        <div class="ns-sync-note">
-          <i class="fas fa-bolt"></i>
-          <span>Notification recipient changes update Redis &amp; Elasticsearch immediately with zero dispatch latency.</span>
-        </div>
-      </div>
-
-      @if($hasEditPerm)
-      <div class="ns-strip-actions">
-        <button type="reset" class="ns-btn-discard" id="discardNotificationSettings">Discard Changes</button>
-        <button type="button" class="ns-btn-save" id="saveNotificationSettings">
-          <span class="csn-save-spinner" aria-hidden="true"></span>
-          <i class="fas fa-check"></i>
-          <span class="csn-save-label">Save Changes</span>
-        </button>
-      </div>
-      @endif
     </div>
 
   </div>
@@ -384,171 +395,35 @@
   .ns-badge-emerald { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
   .ns-badge-emerald i { color: #059669 !important; }
 
-  /* ── TIER 1: TOOLBAR HEADER CARD ── */
+  /* ── TIER 1: HEADER SUMMARY CARD ── */
   .ns-toolbar-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
-    padding: 15px 18px;
-    margin-bottom: 14px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-    flex-wrap: wrap;
   }
-  .ns-toolbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 380px; }
+  .ns-toolbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
   .ns-toolbar-copy { min-width: 0; }
   .ns-toolbar-icon-box {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
     background: #eff6ff;
     color: #009ef7;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
+    font-size: 18px;
     border: 1px solid #dbeafe;
     flex-shrink: 0;
   }
   .ns-toolbar-icon-box i { color: #009ef7 !important; }
-  .ns-toolbar-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .ns-toolbar-title { font-size: 15.5px; font-weight: 700; color: #0f172a; margin: 0; }
-  .ns-count-pill {
-    background: #eff6ff;
-    color: #0284c7;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 9px;
-    border-radius: 12px;
-    border: 1px solid #bae6fd;
-  }
-  .ns-toolbar-sub { font-size: 12px; color: #64748b; margin: 2px 0 0 0; line-height: 1.4; }
-  .ns-toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .ns-search-box { position: relative; min-width: 245px; }
-  .ns-search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 12.5px;
-    color: #94a3b8 !important;
-    pointer-events: none;
-  }
-  .ns-search-input {
-    width: 100%;
-    height: 38px;
-    padding: 0 32px 0 35px;
-    font-size: 12.5px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    background: #f8fafc;
-    color: #0f172a;
-    outline: none;
-    transition: all 0.2s ease;
-  }
-  .ns-search-input:focus {
-    background: #ffffff;
-    border-color: #009ef7;
-    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
-  }
-  .ns-search-clear {
-    position: absolute;
-    right: 9px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 12px;
-    color: #94a3b8;
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: none;
-    padding: 2px;
-  }
-  .ns-search-clear:hover i { color: #ef4444 !important; }
-  .ns-btn-save {
-    height: 38px;
-    padding: 0 18px;
-    background: #009ef7;
-    color: #ffffff !important;
-    font-size: 12.5px;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2);
-    white-space: nowrap;
-  }
-  .ns-btn-save:hover { background: #0086d4; box-shadow: 0 4px 8px rgba(0, 158, 247, 0.3); }
-  .ns-btn-save i { color: #ffffff !important; font-size: 12px; }
-  .ns-btn-save .csn-save-spinner {
-    display: none;
-    width: 14px;
-    height: 14px;
-    border: 2px solid #ffffff;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: nsSpin 0.6s linear infinite;
-  }
-  .ns-btn-save.is-loading .csn-save-spinner { display: inline-block; }
-  .ns-btn-save:disabled { cursor: not-allowed; opacity: 0.78; }
-  @keyframes nsSpin { to { transform: rotate(360deg); } }
-
-  /* ── TIER 2: SUB-TABS FILTER CARD ── */
-  .ns-subtabs-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 6px 10px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .ns-subtabs-card::-webkit-scrollbar { display: none; }
-  .ns-subtab-pill {
-    background: transparent;
-    border: none;
-    border-radius: 7px;
-    padding: 8px 15px;
-    font-size: 12.5px;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-  .ns-subtab-pill i { color: #64748b !important; font-size: 12.5px; }
-  .ns-subtab-pill:hover { background: #f1f5f9; color: #1e293b; }
-  .ns-subtab-pill:hover i { color: #1e293b !important; }
-  .ns-subtab-pill.active {
-    background: #eff6ff;
-    color: #009ef7;
-    font-weight: 600;
-    box-shadow: inset 0 0 0 1px rgba(0, 158, 247, 0.3);
-  }
-  .ns-subtab-pill.active i { color: #009ef7 !important; }
-  .ns-subtab-counter {
-    font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 10px;
-    background: #e2e8f0;
-    color: #475569;
-    font-weight: 600;
-  }
-  .ns-subtab-pill.active .ns-subtab-counter { background: #009ef7; color: #ffffff; }
+  .ns-toolbar-title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; }
+  .ns-toolbar-sub { font-size: 12.5px; color: #64748b; margin: 3px 0 0 0; line-height: 1.4; }
 
   /* ── TIER 3: 2-COLUMN UNIFIED PRIMARY CARDS ── */
   .ns-channels-grid {
@@ -556,14 +431,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
     align-items: stretch;
-  }
-  .ns-channels-grid.ns-single-focus {
-    grid-template-columns: 1fr;
-  }
-  .ns-channels-grid.ns-single-focus .ns-services-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
   }
   .ns-primary-card {
     background: #ffffff;
@@ -621,18 +488,13 @@
     flex: 1;
   }
 
-  /* ── SUB-CARD A: EMAIL DESTINATION INBOX ── */
+  /* ── SUB-CARD A: EMAIL DESTINATION INBOX & INLINE ACTIONS ── */
   .ns-inbox-subcard {
     background: #f8fafc;
     border: 1.5px solid #e2e8f0;
     border-radius: 9px;
     padding: 14px 15px;
     transition: border-color 0.2s ease, background 0.2s ease;
-  }
-  .ns-inbox-subcard:focus-within {
-    background: #ffffff;
-    border-color: #009ef7;
-    box-shadow: 0 2px 10px rgba(0, 158, 247, 0.08);
   }
   .ns-inbox-purple { border-left: 3.5px solid #7c3aed; }
   .ns-inbox-emerald { border-left: 3.5px solid #059669; }
@@ -649,7 +511,6 @@
     font-weight: 700;
     color: #0f172a;
     margin: 0;
-    cursor: pointer;
   }
   .ns-req { color: #ef4444; }
   .ns-inbox-scope {
@@ -667,7 +528,19 @@
     margin: 0 0 10px 0;
     line-height: 1.4;
   }
-  .ns-email-wrap { position: relative; }
+
+  /* ── INLINE EMAIL INTERACTIVE GROUP ── */
+  .ns-email-interactive-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+  .ns-email-input-wrap {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+  }
   .ns-email-icon {
     position: absolute;
     left: 12px;
@@ -683,17 +556,101 @@
     padding: 0 12px 0 36px;
     font-size: 12.5px;
     font-weight: 500;
-    color: #0f172a;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
     border-radius: 7px;
     outline: none;
     transition: all 0.2s ease;
+    border: 1px solid #cbd5e1;
   }
-  .ns-email-input:focus {
+  .ns-email-input.is-locked {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #e2e8f0;
+    cursor: default;
+  }
+  .ns-email-input.is-editing {
+    background: #ffffff;
+    color: #0f172a;
     border-color: #009ef7;
     box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
   }
+  .ns-email-input.has-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+  }
+
+  .ns-inline-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .ns-btn-inline {
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    outline: none;
+  }
+  .ns-btn-edit {
+    background: #eff6ff;
+    color: #009ef7;
+    border-color: #bae6fd;
+  }
+  .ns-btn-edit:hover {
+    background: #009ef7;
+    color: #ffffff;
+    border-color: #009ef7;
+  }
+  .ns-btn-edit i { color: inherit !important; font-size: 11.5px; }
+
+  .ns-edit-actions-cluster {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ns-btn-save-inline {
+    background: #009ef7;
+    color: #ffffff;
+    border-color: #009ef7;
+    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2);
+  }
+  .ns-btn-save-inline:hover {
+    background: #0086d4;
+    border-color: #0086d4;
+    box-shadow: 0 4px 8px rgba(0, 158, 247, 0.28);
+  }
+  .ns-btn-save-inline i { color: #ffffff !important; font-size: 11px; }
+
+  .ns-btn-cancel-inline {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+  .ns-btn-cancel-inline:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+    border-color: #94a3b8;
+  }
+  .ns-btn-cancel-inline i { color: #64748b !important; font-size: 11px; }
+
+  .ns-inline-spinner {
+    width: 13px;
+    height: 13px;
+    border: 2px solid #ffffff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: nsInlineSpin 0.6s linear infinite;
+    display: inline-block;
+  }
+  @keyframes nsInlineSpin { to { transform: rotate(360deg); } }
 
   /* ── SUB-CARD B: SERVICES DELIVERED TO THIS EMAIL ── */
   .ns-services-section { display: flex; flex-direction: column; gap: 9px; flex: 1; }
@@ -793,156 +750,256 @@
   }
   .ns-service-active i { color: #10b981 !important; }
 
-  /* ── BOTTOM ACTIVITY & TENANCY STRIP ── */
-  .ns-bottom-strip {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 13px 18px;
-    margin-top: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-    flex-wrap: wrap;
-  }
-  .ns-strip-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .ns-tenancy-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: #475569;
-    background: #f1f5f9;
-    padding: 4px 10px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-  }
-  .ns-tenancy-badge i { color: #009ef7 !important; }
-  .ns-sync-note { font-size: 11.5px; color: #64748b; display: flex; align-items: center; gap: 6px; }
-  .ns-sync-note i { color: #f59e0b !important; }
-  .ns-strip-actions { display: flex; align-items: center; gap: 10px; }
-  .ns-btn-discard {
-    height: 38px;
-    padding: 0 16px;
-    background: #f1f5f9;
-    color: #475569 !important;
-    font-size: 12.5px;
-    font-weight: 600;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  .ns-btn-discard:hover { background: #e2e8f0; color: #0f172a !important; }
-
   /* ── 15.6" SCREEN FIT & MOBILE RESPONSIVE BREAKPOINTS ── */
   @media (max-width: 1080px) {
     .ns-channels-grid { grid-template-columns: 1fr; }
-    .ns-channels-grid.ns-single-focus .ns-services-list { grid-template-columns: 1fr; }
   }
   @media (max-width: 600px) {
-    .ns-toolbar-card { flex-direction: column; align-items: flex-start; }
-    .ns-toolbar-right, .ns-search-box { width: 100%; }
+    .ns-email-interactive-group { flex-direction: column; align-items: stretch; }
+    .ns-inline-btn-group { justify-content: flex-end; }
   }
 </style>
 
 <script>
   $(document).ready(function() {
-    // ── 1. Live 300ms Debounced Search Across Notification Services ──
-    var $notifSearch = $('#notifications_search');
-    var $notifClear = $('#notifications_search_clear_btn');
-    var notifSearchTimer = null;
+    var adminCompanyEmail = "{{ addslashes($adminEmail) }}";
 
-    $notifSearch.on('input', function() {
-      var query = $(this).val().trim().toLowerCase();
-      $notifClear.toggle(query.length > 0);
+    // ── 1. Inline Edit Mode Toggle ──
+    $(document).on('click', '.ns-btn-edit', function(e) {
+      e.preventDefault();
+      var target = $(this).data('target');
+      var $container = $('#box_' + target);
+      var $input = $('#' + target);
 
-      clearTimeout(notifSearchTimer);
-      notifSearchTimer = setTimeout(function() {
-        filterNotificationCards(query);
-      }, 300);
+      // Store pre-edit value for Cancel restoration
+      $input.data('pre-edit-val', $input.val());
+
+      // Unlock input for editing
+      $input.prop('readonly', false).removeClass('is-locked').addClass('is-editing').focus();
+      var len = $input.val().length;
+      if ($input[0].setSelectionRange) {
+        $input[0].setSelectionRange(len, len);
+      }
+
+      // Toggle button cluster
+      $container.find('.ns-btn-edit').hide();
+      $container.find('.ns-edit-actions-cluster').show();
     });
 
-    $notifClear.on('click', function() {
-      $notifSearch.val('');
-      $notifClear.hide();
-      filterNotificationCards('');
-      $notifSearch.focus();
+    // ── 2. Inline Cancel Mode ──
+    $(document).on('click', '.ns-btn-cancel-inline', function(e) {
+      e.preventDefault();
+      var target = $(this).data('target');
+      var $container = $('#box_' + target);
+      var $input = $('#' + target);
+      var original = $input.data('current-val') || $input.data('pre-edit-val') || '';
+
+      // Revert value
+      $input.val(original);
+      $input.prop('readonly', true).removeClass('is-editing has-error').addClass('is-locked');
+
+      // Clear typo/validation messages
+      $('#' + target + '_typo_hint').hide().empty();
+
+      // Toggle buttons back
+      $container.find('.ns-edit-actions-cluster').hide();
+      $container.find('.ns-btn-edit').show();
     });
 
-    function filterNotificationCards(query) {
-      if (!query) {
-        $('.primary-notifications-card').show();
-        $('.notif-trigger-col').show();
+    // ── 3. Real-time Cleaning, Syntax Validation & Typo Detection (Add Candidate standard) ──
+    $(document).on('paste', '#recuitment_email, #sales_email', function() {
+      var self = this;
+      setTimeout(function() {
+        var raw = $(self).val();
+        var clean = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(raw) : raw.trim();
+        if (clean !== raw) {
+          $(self).val(clean).trigger('input');
+        }
+      }, 10);
+    });
+
+    $(document).on('blur', '#recuitment_email, #sales_email', function() {
+      if ($(this).prop('readonly')) return;
+      var targetId = $(this).attr('id');
+      var raw = $(this).val();
+      var clean = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(raw) : raw.trim();
+      if (clean !== raw) {
+        $(this).val(clean);
+      }
+      var $hint = $('#' + targetId + '_typo_hint');
+      if (!clean) {
+        $hint.hide().empty();
+        return;
+      }
+      if (window.JeroEmailBoxEngine) {
+        var syntax = window.JeroEmailBoxEngine.validateSyntax(clean);
+        if (!syntax.isValid) {
+          $hint.html('<i class="fa fa-exclamation-circle text-danger"></i> ' + syntax.error).show();
+          return;
+        }
+        var suggestion = window.JeroEmailBoxEngine.getSuggestion(clean);
+        if (suggestion) {
+          $hint.html('<i class="fa fa-lightbulb text-warning"></i> ' + suggestion.message + ' <a href="javascript:void(0);" class="apply-email-fix fw-bold text-primary ms-1" data-target="#' + targetId + '" data-fixed="' + suggestion.suggested + '">Apply</a>').show();
+        } else {
+          $hint.hide().empty();
+        }
+      }
+    });
+
+    // ── 4. Typo Suggestion 'Apply' Click ──
+    $(document).on('click', '.apply-email-fix', function(e) {
+      e.preventDefault();
+      var target = $(this).data('target');
+      var fixed = $(this).data('fixed');
+      if (target && fixed) {
+        $(target).val(fixed).trigger('input').trigger('change').removeClass('has-error');
+        $(this).closest('.email-typo-hint').hide().empty();
+      }
+    });
+
+    // ── 5. Inline Save Action with Add Candidate Validation & Empty Fallback ──
+    $(document).on('click', '.ns-btn-save-inline', function(e) {
+      e.preventDefault();
+      var $saveBtn = $(this);
+      var targetField = $saveBtn.data('target');
+      var $container = $('#box_' + targetField);
+      var $input = $('#' + targetField);
+      var $hint = $('#' + targetField + '_typo_hint');
+      var fallbackEmail = $input.data('admin-fallback') || adminCompanyEmail;
+      var rawVal = $input.val();
+      var cleanVal = window.JeroEmailBoxEngine ? window.JeroEmailBoxEngine.cleanDeterministic(rawVal) : (rawVal || '').trim();
+
+      // Rule: Email ID must be mandatory and cannot be left empty.
+      // If user attempts to save an empty email field, display clear validation notification & auto-restore Admin Email ID.
+      if (!cleanVal || cleanVal === '') {
+        $input.val(fallbackEmail).addClass('has-error');
+        $hint.html('<i class="fa fa-exclamation-circle text-danger"></i> <strong>Email is mandatory.</strong> Automatically restored to original Admin Email ID (' + fallbackEmail + ').').show();
+
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Email Address Mandatory',
+            text: 'Email ID cannot be left empty. It has been automatically restored to your organization Admin Email ID (' + fallbackEmail + ').',
+            confirmButtonColor: '#009ef7',
+            confirmButtonText: 'Understood'
+          });
+        }
         return;
       }
 
-      $('.primary-notifications-card').each(function() {
-        var $card = $(this);
-        var scope = ($card.attr('data-search-scope') || '').toLowerCase();
-        var matchCount = 0;
+      // Standard Add Candidate RFC 5321 Syntax Validation
+      if (window.JeroEmailBoxEngine) {
+        var syntax = window.JeroEmailBoxEngine.validateSyntax(cleanVal);
+        if (!syntax.isValid) {
+          $input.addClass('has-error').focus();
+          $hint.html('<i class="fa fa-exclamation-circle text-danger"></i> ' + syntax.error).show();
 
-        $card.find('.notif-trigger-col').each(function() {
-          var trigScope = $(this).attr('data-trigger-scope') || '';
-          var matches = trigScope.indexOf(query) !== -1;
-          $(this).toggle(matches);
-          if (matches) matchCount++;
-        });
-
-        // Show card if any child service matched OR card-level scope/email text matched
-        var emailMatch = ($card.find('.ns-email-input').val() || '').toLowerCase().indexOf(query) !== -1;
-        if (matchCount > 0 || scope.indexOf(query) !== -1 || emailMatch) {
-          $card.show();
-          if (matchCount === 0 && (scope.indexOf(query) !== -1 || emailMatch)) {
-            $card.find('.notif-trigger-col').show();
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'error',
+              title: 'Invalid Email Address',
+              text: syntax.error,
+              confirmButtonColor: '#009ef7'
+            });
           }
-        } else {
-          $card.hide();
+          return;
+        }
+      } else {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanVal)) {
+          $input.addClass('has-error').focus();
+          $hint.html('<i class="fa fa-exclamation-circle text-danger"></i> The value is not a valid email address.').show();
+          return;
+        }
+      }
+
+      $input.removeClass('has-error');
+      $hint.hide().empty();
+
+      // Build payload
+      var postData = new FormData();
+      postData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+      postData.append('pagename', 'settings');
+      var recEmailVal = (targetField === 'recuitment_email') ? cleanVal : ($('#recuitment_email').val() || fallbackEmail);
+      var salesEmailVal = (targetField === 'sales_email') ? cleanVal : ($('#sales_email').val() || fallbackEmail);
+      postData.append('recuitment_email', recEmailVal);
+      postData.append('sales_email', salesEmailVal);
+
+      // UI Loading State
+      $saveBtn.prop('disabled', true);
+      $saveBtn.find('.ns-inline-spinner').show();
+      $saveBtn.find('i.fa-check').hide();
+      $saveBtn.find('span:not(.ns-inline-spinner)').text('Saving...');
+
+      $.ajax({
+        url: '{{ !empty($account->id) ? route('service_company.account.update', $account->id) : url('service_company/account/update/0') }}',
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: postData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+          if (response.status === 'warning') {
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Validation Notice',
+                text: response.message || 'Validation warning encountered.',
+                confirmButtonColor: '#009ef7'
+              });
+            }
+            return;
+          }
+
+          if (response.status === 'success') {
+            // Update active cached value
+            $input.val(cleanVal);
+            $input.data('current-val', cleanVal);
+            $input.prop('readonly', true).removeClass('is-editing has-error').addClass('is-locked');
+
+            // Update live destination badge pill
+            if (targetField === 'recuitment_email') {
+              $('.badge-rec-email').text(cleanVal);
+            } else {
+              $('.badge-sales-email').text(cleanVal);
+            }
+
+            // Toggle buttons back to Edit mode
+            $container.find('.ns-edit-actions-cluster').hide();
+            $container.find('.ns-btn-edit').show();
+
+            // Clean feedback
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: (targetField === 'recuitment_email' ? 'Recruitment' : 'Sales') + ' email updated successfully.',
+                showConfirmButton: false,
+                timer: 2500,
+                timerProgressBar: true
+              });
+            }
+            return;
+          }
+
+          if (typeof Swal !== 'undefined') {
+            Swal.fire('Unable to save', response.message || 'Please try again.', 'error');
+          }
+        },
+        error: function(xhr) {
+          var res = xhr.responseJSON || {};
+          var msg = res.message || 'Email could not be saved. Please try again.';
+          if (typeof Swal !== 'undefined') {
+            Swal.fire('Unable to save', msg, 'error');
+          }
+        },
+        complete: function() {
+          $saveBtn.prop('disabled', false);
+          $saveBtn.find('.ns-inline-spinner').hide();
+          $saveBtn.find('i.fa-check').show();
+          $saveBtn.find('span:not(.ns-inline-spinner)').text('Save');
         }
       });
-    }
-
-    // ── 2. Tier 2 Category Jump Sub-Tabs ──
-    $('#notifications_subtabs_bar').on('click', '.btn-subtab', function() {
-      $('#notifications_subtabs_bar .btn-subtab').removeClass('active');
-      $(this).addClass('active');
-
-      var target = $(this).attr('data-target');
-      var $grid = $('#notifications_channels_grid');
-      if (target === 'all') {
-        $grid.removeClass('ns-single-focus');
-        $('.primary-notifications-card').show();
-      } else {
-        $grid.addClass('ns-single-focus');
-        $('.primary-notifications-card').each(function() {
-          $(this).toggle($(this).attr('id') === target);
-        });
-      }
-    });
-
-    // ── 3. Header Save Button Triggers Primary Save Action ──
-    $('#saveNotificationSettingsHeader').on('click', function() {
-      $('#saveNotificationSettings').click();
-    });
-
-    // ── 4. Sync Destination Email Badges Dynamically & On Reset ──
-    function syncNotificationDestinationBadges() {
-      var recVal = $('#recuitment_email').val().trim() || 'Unconfigured';
-      var salesVal = $('#sales_email').val().trim() || 'Unconfigured';
-      $('.badge-rec-email').text(recVal);
-      $('.badge-sales-email').text(salesVal);
-    }
-
-    $('#recuitment_email, #sales_email').on('input change', syncNotificationDestinationBadges);
-
-    $('#notification_content').on('reset', function() {
-      setTimeout(function() {
-        syncNotificationDestinationBadges();
-        $('.email-typo-hint').hide().empty();
-      }, 0);
     });
   });
 </script>
