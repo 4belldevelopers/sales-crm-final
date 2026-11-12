@@ -25,7 +25,7 @@
 
     $stageRailColors = [
         8 => '#f59e0b', // InReview
-        1 => '#64748b', // Sourcing
+        1 => '#0891b2', // Sourcing (Client Tracker cyan)
         2 => '#a855f7', // Screening
         3 => '#009ef7', // Evaluation / Interview
         4 => '#ec4899', // Negotiation
@@ -36,7 +36,7 @@
     ];
     $stageBadgeThemes = [
         8 => 'background:#fef3c7;color:#92400e;border-color:#fde68a;',
-        1 => 'background:#f1f5f9;color:#334155;border-color:#cbd5e1;',
+        1 => 'background:#ecfeff;color:#0e7490;border-color:#a5f3fc;',
         2 => 'background:#faf5ff;color:#7e22ce;border-color:#e9d5ff;',
         3 => 'background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;',
         4 => 'background:#fdf2f8;color:#be185d;border-color:#fbcfe8;',
@@ -103,16 +103,16 @@
             $rawCurrentCompany = trim((string) (@$row->current_company ?: (@$row->apl_company_name ?? '')));
             $displayCurrentCompany = $rawCurrentCompany !== '' ? ucwords($rawCurrentCompany) : '—';
 
-            // Experience formatting (preserving exact decimal formatting like 3.0, 5.6, 9.10)
+            // Experience formatting (preserving exact decimal formatting like 3.0, 5.6, 9.10; trimming dangling dots like "10.")
             $fmtExp = function ($val) {
                 $s = trim((string) $val);
-                if ($s === '' || $s === '0.') {
+                if ($s === '' || $s === '.' || $s === '0.') {
                     return '0';
                 }
                 if (strpos($s, '.') !== false) {
-                    $parts = explode('.', $s);
-                    if (isset($parts[1]) && $parts[1] === '00') {
-                        return $parts[0];
+                    $parts = explode('.', $s, 2);
+                    if ($parts[1] === '00' || $parts[1] === '') {
+                        return $parts[0] !== '' ? $parts[0] : '0';
                     }
                 }
                 return $s;
@@ -129,7 +129,6 @@
 
             // Compensation formatting
             $safeJobCurrency = $jobCurrency ?? 0;
-            $current_ctc_cur = $currencySymbole[$safeJobCurrency] ?? ($currencySymbole[\App\Services\CurrencyService::resolveCurrencyCode($safeJobCurrency)] ?? '');
             $cur = $safeJobCurrency;
             $safeJobMode = $jobMode ?? 0;
             $mod = $safeJobMode;
@@ -142,15 +141,22 @@
             }
             $payFormatViewSalary = GeneralMethod::formatViewSalary($row->ctc_yearly ?? 0, $symbols, $mod);
             $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly ?? 0, $symbols, $mod);
+            $current_ctc_cur = \App\Services\CurrencyService::resolvePlainSymbolFromLegacy(
+                $safeJobCurrency,
+                $currencySymbole,
+                $billFormatViewSalary->symbol ?? null
+            );
             $payAmountFormatted = explode('.', GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount))[0];
             $billAmountFormatted = explode('.', GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount))[0];
             $current_ctc_mode = $salaryMode[$safeJobMode] ?? '';
             $current_ectc_mode = $salaryMode[$safeJobMode] ?? '';
+            $ectcModeSuffix = $current_ectc_mode !== '' ? '/' . $current_ectc_mode : '';
+            $ctcModeSuffix = $current_ctc_mode !== '' ? '/' . $current_ctc_mode : '';
             $outsourcing_type = (@$row->outsourcing_type == 1) ? 'Fulltime' : 'Contract';
             $canViewSalary = in_array('salary_view', (array) ($userPermissions ?? []));
 
             $printSalaryStr = $canViewSalary
-                ? ($current_ctc_cur . $billAmountFormatted . '/' . $current_ectc_mode . ($isBench ? ' (' . $outsourcing_type . ')' : ' | Cur: ' . $current_ctc_cur . $payAmountFormatted . '/' . $current_ctc_mode))
+                ? ($current_ctc_cur . $billAmountFormatted . $ectcModeSuffix . ($isBench ? ' (' . $outsourcing_type . ')' : ' | Cur: ' . $current_ctc_cur . $payAmountFormatted . $ctcModeSuffix))
                 : 'N/A';
 
             // Notice period
@@ -368,9 +374,9 @@
                     <div class="aptk-subcard-body">
                         @if ($canViewSalary)
                             <div class="aptk-val-salary" title="Expected / Current CTC">
-                                <span class="aptk-sal-main">{{ $current_ctc_cur }}{{ $billAmountFormatted }}<span class="aptk-sal-mode">/{{ $current_ectc_mode }}</span></span>
+                                <span class="aptk-sal-main">{{ $current_ctc_cur }}{{ $billAmountFormatted }}@if ($ectcModeSuffix !== '')<span class="aptk-sal-mode">{{ $ectcModeSuffix }}</span>@endif</span>
                                 @if (!$isBench)
-                                    <span class="aptk-sal-sub">Cur: {{ $current_ctc_cur }}{{ $payAmountFormatted }}/{{ $current_ctc_mode }}</span>
+                                    <span class="aptk-sal-sub">Cur: {{ $current_ctc_cur }}{{ $payAmountFormatted }}{{ $ctcModeSuffix }}</span>
                                 @else
                                     <span class="aptk-sal-sub text-primary">{{ $outsourcing_type }}</span>
                                 @endif

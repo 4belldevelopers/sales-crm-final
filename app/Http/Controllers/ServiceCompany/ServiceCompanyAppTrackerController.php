@@ -792,7 +792,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             // V3 Phase 3.1: HTML and JSON responses are cached under separate keys.
             'format' => $request->input('format', 'html'),
-            'ui_v' => 'card_v1',
+            'ui_v' => 'card_v3',
         ];
 
         $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
@@ -2898,7 +2898,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'valCheck' => $valCheck,
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
-            'ui_v' => 'card_v1',
+            'ui_v' => 'card_v3',
         ];
 
         $versionKey = 'allclientapp_version_user_'.$this->user->id;

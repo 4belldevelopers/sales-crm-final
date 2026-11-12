@@ -198,6 +198,8 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('client_stage_locked_notice', $html);
         $this->assertStringContainsString('Client Managed', $html);
         $this->assertStringContainsString('show-application-detail', $html);
+        $this->assertStringContainsString('#0891b2', $html);
+        $this->assertStringContainsString('background:#ecfeff;color:#0e7490;border-color:#a5f3fc;', $html);
         $this->assertStringNotContainsString('<tr', $html);
         $this->assertStringNotContainsString('<td', $html);
 
@@ -213,6 +215,58 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('caf-empty-card', $htmlEmpty);
     }
 
+    public function test_compensation_card_renders_clean_currency_glyph_and_trims_trailing_experience_dot(): void
+    {
+        $this->actingUser();
+
+        $legacyMap = [
+            0 => '<i class="fa fa-inr" aria-hidden="true"></i>',
+            1 => '<i class="fa fa-eur" aria-hidden="true"></i>',
+            4 => '<i class="fa fa-usd" aria-hidden="true"></i>',
+            5 => '<span class="fw-bold">AED </span>',
+        ];
+        $this->assertSame('₹', \App\Services\CurrencyService::resolvePlainSymbolFromLegacy(0, $legacyMap));
+        $this->assertSame('€', \App\Services\CurrencyService::resolvePlainSymbolFromLegacy(1, $legacyMap));
+        $this->assertSame('$', \App\Services\CurrencyService::resolvePlainSymbolFromLegacy(4, $legacyMap));
+        $this->assertSame('AED ', \App\Services\CurrencyService::resolvePlainSymbolFromLegacy(5, $legacyMap));
+
+        $row = $this->makeCandidateRow([
+            'total_exp' => '10.',
+            'rel_exp' => '7.',
+        ]);
+
+        $appHtml = View::make('service_company.ajax_pages.all_apptracker', [
+            'data' => [$row],
+            'userPermissions' => ['view_job_applications', 'salary_view'],
+            'rowMaps' => $this->baseRowMaps(),
+        ])->render();
+
+        $this->assertStringNotContainsString('&lt;i class=&quot;fa fa-', $appHtml);
+        $this->assertStringNotContainsString('<i class="fa fa-inr', $appHtml);
+        $this->assertStringContainsString('₹', $appHtml);
+        $this->assertStringContainsString('<strong>10 Y</strong> Total', $appHtml);
+        $this->assertStringContainsString('<strong>7 Y</strong> Rel', $appHtml);
+        $this->assertStringNotContainsString('10. Y', $appHtml);
+        $this->assertStringNotContainsString('7. Y', $appHtml);
+
+        $clientHtml = View::make('service_company.ajax_pages.clientappdata_ajax', [
+            'data' => [$row],
+            'userPermissions' => ['view_job_applications', 'salary_view'],
+            'rowMaps' => $this->baseRowMaps(),
+            'citiesMap' => [],
+            'jobid' => 117,
+            'company_id' => 1,
+        ])->render();
+
+        $this->assertStringNotContainsString('&lt;i class=&quot;fa fa-', $clientHtml);
+        $this->assertStringNotContainsString('<i class="fa fa-inr', $clientHtml);
+        $this->assertStringContainsString('₹', $clientHtml);
+        $this->assertStringContainsString('<strong>10 Y</strong> Total', $clientHtml);
+        $this->assertStringContainsString('<strong>7 Y</strong> Rel', $clientHtml);
+        $this->assertStringNotContainsString('10. Y', $clientHtml);
+        $this->assertStringNotContainsString('7. Y', $clientHtml);
+    }
+
     public function test_host_views_enforce_card_subcard_stream_and_rule_17_isolation(): void
     {
         $indexView = file_get_contents(resource_path('views/service_company/apptracker/index.blade.php'));
@@ -224,6 +278,7 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('aptk-stream-bar', $indexView);
         $this->assertStringNotContainsString('<table class="table align-middle table-row-dashed', $indexView);
         $this->assertStringNotContainsString('caf-cand-card', $indexView);
+        $this->assertStringContainsString("'color' => '#0891b2', 'bg' => '#ecfeff'", $indexView);
 
         $this->assertStringContainsString('id="candidatetList" class="caf-cand-stream"', $clientAppView);
         $this->assertStringContainsString('id="btnCafSearchClear"', $clientAppView);
@@ -233,5 +288,6 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('_cafListXhr.abort()', $clientAppView);
         $this->assertStringNotContainsString('<table class="table align-middle table-row-dashed', $clientAppView);
         $this->assertStringNotContainsString('aptk-cand-card', $clientAppView);
+        $this->assertStringContainsString("'color' => '#0891b2', 'bg' => '#ecfeff'", $clientAppView);
     }
 }

@@ -1148,4 +1148,48 @@ class CurrencyService
             'mode' => $mode,
         ];
     }
+
+    /**
+     * Resolve a plain Unicode/text currency glyph (no HTML tags) from a currency key/code
+     * and optional legacy GeneralMethod::currencySymbole() HTML map.
+     *
+     * Intent: Prevents escaped `<i class="fa fa-inr">` markup in plain-text Blade cards and
+     * print attributes while preserving key-0 -> INR fallback parity.
+     *
+     * @param  string|int|null  $currency
+     * @param  array<int|string, string>|null  $legacySymbols
+     */
+    public static function resolvePlainSymbolFromLegacy($currency, ?array $legacySymbols = null, ?string $fallbackSymbol = null): string
+    {
+        $safeKey = $currency ?? 0;
+        $code = self::resolveCurrencyCode($safeKey);
+        $rawHtml = '';
+        if (is_array($legacySymbols)) {
+            $rawHtml = (string) ($legacySymbols[$safeKey] ?? ($legacySymbols[$code] ?? ''));
+        }
+
+        if ($rawHtml !== '') {
+            $faToUnicode = [
+                'fa-inr' => '₹',
+                'fa-eur' => '€',
+                'fa-jpy' => '¥',
+                'fa-gbp' => '£',
+                'fa-usd' => '$',
+            ];
+            foreach ($faToUnicode as $faClass => $glyph) {
+                if (str_contains($rawHtml, $faClass)) {
+                    return $glyph;
+                }
+            }
+
+            $stripped = trim(html_entity_decode(strip_tags($rawHtml), ENT_QUOTES, 'UTF-8'));
+            if ($stripped !== '') {
+                return preg_match('/^[A-Za-z]{2,}$/', $stripped) ? $stripped.' ' : $stripped;
+            }
+        }
+
+        $fallback = trim((string) ($fallbackSymbol ?? ''));
+
+        return $fallback !== '' ? $fallback : self::getCurrencySymbol($code);
+    }
 }
