@@ -1008,6 +1008,36 @@
     border: 1px solid #ddd6fe !important;
 }
 
+#allJobList .cd-job-card.cd-job-request-card .cd-header-badges {
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+    gap: 3px !important;
+}
+
+.cd-req-team-disabled-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-top: 3px !important;
+    padding: 2px 8px !important;
+    border-radius: 5px !important;
+    border: 1px dashed #cbd5e1 !important;
+    background: #f8fafc !important;
+    color: #94a3b8 !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+    cursor: not-allowed !important;
+    width: fit-content !important;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+}
+
+.cd-req-team-disabled-btn:hover {
+    background: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #64748b !important;
+}
+
 .cd-subcard-req-expiry {
     background: #fafbfe !important;
 }
@@ -2554,6 +2584,21 @@ $(document).on('click', '.client-hm-listing', function ()
     	  			});
     	});
 
+    // Guard Add Team clicks on pending (unaccepted) job requests
+    $(document).on('click', '.js-req-team-disabled', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        Swal.fire({
+            text: 'Please accept the job request before adding your recruitment team.',
+            icon: 'info',
+            buttonsStyling: false,
+            confirmButtonText: 'Ok, got it!',
+            customClass: {
+                confirmButton: 'btn btn-primary'
+            }
+        });
+    });
+
     // Accept Job Request handler
     $(document).on('click', '.request_approval', function (e) {
         e.preventDefault();
@@ -3046,7 +3091,12 @@ $(document).on('click', '.client-hm-listing', function ()
             detailsHtml += '      <div class="cd-subcard-header">';
             detailsHtml += '        <span class="cd-subcard-label">Job Details</span>';
             detailsHtml += '        <div class="cd-header-badges">';
-            detailsHtml += '          <span class="cd-badge-client-type ' + clientTypeCls + '"><i class="fas ' + clientTypeIcon + ' me-1"></i>' + clientTypeLabel + '</span>';
+            if (opts.isJobRequest) {
+                detailsHtml += '          <span class="cd-badge-client-type type-direct"><i class="fas fa-shield-alt me-1"></i>Direct Client</span>';
+                detailsHtml += '          <span class="cd-badge-client-type ' + clientTypeCls + '"><i class="fas ' + clientTypeIcon + ' me-1"></i>' + clientTypeLabel + '</span>';
+            } else {
+                detailsHtml += '          <span class="cd-badge-client-type ' + clientTypeCls + '"><i class="fas ' + clientTypeIcon + ' me-1"></i>' + clientTypeLabel + '</span>';
+            }
             detailsHtml += '          ' + statusBadgeHtml;
             detailsHtml += '        </div>';
             detailsHtml += '      </div>';
@@ -3076,7 +3126,7 @@ $(document).on('click', '.client-hm-listing', function ()
             compLocHtml += '      </div>';
             compLocHtml += '      <div class="cd-subcard-body">';
             compLocHtml += '        <div class="cd-val-salary"><strong>' + salaryText + '</strong></div>';
-            compLocHtml += '        <div class="cd-val-exp"><i class="far fa-clock text-muted me-1"></i><span>🕒 ' + expText + '</span></div>';
+            compLocHtml += '        <div class="cd-val-exp"><span>' + expText + '</span></div>';
             compLocHtml += '        <div class="cd-val-loc">';
             compLocHtml += '          <i class="fas fa-map-marker-alt text-muted me-1"></i>' + locContentHtml;
             compLocHtml += '          <span class="cd-bullet">&bull;</span>';
@@ -3117,18 +3167,39 @@ $(document).on('click', '.client-hm-listing', function ()
                 });
                 var expMeta = computeExpiryTelemetry(job.expires_at_iso, job.job_end_date_iso);
                 var recId = job.recommendation_relation_id || job.id;
+                var isAcceptedReq = Boolean(job.is_accepted || job.final_status === 1);
 
                 var sentDateDisplay = job.sent_at_display || job.added_date || '—';
                 var sentTimePart = job.sent_time_display ? ' <span class="text-muted">(' + job.sent_time_display + ')</span>' : '';
-                var sentRel = formatRelativeTimeAgo(job.sent_at_iso);
+                var reqExpiryDatePart = job.expires_at_date || '';
+                var reqExpiryTimePart = job.expires_at_time_tz ? ' <span class="text-muted">(' + job.expires_at_time_tz + ')</span>' : '';
+                var reqExpiryFullDisplay = job.expires_at_display || '—';
 
-                var hmNameText = shared.hiringManagerDisplay ? shared.hiringManagerDisplay : 'Client SPOC';
-                var hmDesignation = (job.hiring_manager_designation && job.hiring_manager_designation !== '--------')
-                    ? formatJobPositionName(job.hiring_manager_designation)
-                    : 'Client Representative';
-                var sentByNote = (job.sent_by_name && job.sent_by_name !== hmNameText)
-                    ? 'Sent by ' + formatJobPositionName(job.sent_by_name)
-                    : hmDesignation;
+                var postedDateDisplay = job.posted_date || job.added_date || sentDateDisplay || '—';
+
+                var requestedByName = (job.sent_by_name && job.sent_by_name !== '--------')
+                    ? formatJobPositionName(job.sent_by_name)
+                    : (shared.hiringManagerDisplay ? shared.hiringManagerDisplay : '');
+                var requestedByRole = '';
+                if (job.sent_by_name && job.sent_by_name !== '--------') {
+                    requestedByRole = (job.sent_by_designation && job.sent_by_designation !== '--------')
+                        ? ' (' + formatJobPositionName(job.sent_by_designation) + ')'
+                        : '';
+                } else {
+                    requestedByRole = shared.hmRole || '';
+                }
+
+                // Dynamic Team Sub-card state (follows Job Card Team design; disabled Add Team until accepted)
+                var teamCount = parseInt(job.partners_count, 10) || 0;
+                var teamLeadName = job.partners_first_name
+                    ? formatJobPositionName(job.partners_first_name)
+                    : (teamCount > 0 ? 'Team' : 'Not Assigned');
+                var teamMemberText = '0 Members';
+                if (teamCount > 1) {
+                    teamMemberText = '+ ' + (teamCount - 1) + ' other member' + (teamCount - 1 > 1 ? 's' : '');
+                } else if (teamCount === 1) {
+                    teamMemberText = '1 Member';
+                }
 
                 var openingsNum = parseInt(job.total_positions, 10) || 1;
                 var openingsLabel = openingsNum + ' Opening' + (openingsNum > 1 ? 's' : '');
@@ -3140,19 +3211,25 @@ $(document).on('click', '.client-hm-listing', function ()
                 html += shared.detailsHtml;
                 html += shared.compLocHtml;
 
-                // SUB-CARD 3: CLIENT CONTACT & HM
+                // SUB-CARD 3: TEAM (Dynamic design matching Hiring Job Card; locked until request is accepted)
                 html += '    <div class="cd-job-subcard cd-subcard-team">';
                 html += '      <div class="cd-subcard-header">';
-                html += '        <span class="cd-subcard-label"><i class="fa fa-user-tie me-1 text-muted"></i>Client Contact</span>';
+                html += '        <span class="cd-subcard-label"><i class="fa fa-users me-1 text-muted"></i>Team</span>';
                 html += '      </div>';
                 html += '      <div class="cd-subcard-body">';
-                html += '        <div class="cd-val-name client-hm-listing" data-row-id="' + job.id + '" title="' + escapeHtmlAttr(hmNameText) + '"><strong>' + hmNameText + '</strong></div>';
-                html += '        <div class="cd-val-sub" title="' + escapeHtmlAttr(sentByNote) + '">' + sentByNote + '</div>';
-                html += '        <a href="javascript:void(0);" class="cd-action-link client-hm-listing" data-row-id="' + job.id + '">+ View HM Details</a>';
+                if (isAcceptedReq) {
+                    html += '        <div class="cd-val-name team-listing" data-row-id="' + job.id + '" title="' + escapeHtmlAttr(teamLeadName) + '"><strong>' + teamLeadName + '</strong></div>';
+                    html += '        <div class="cd-val-sub">' + teamMemberText + '</div>';
+                    html += '        <a href="javascript:void(0);" class="cd-action-link team-listing" data-row-id="' + job.id + '">+ Add / View</a>';
+                } else {
+                    html += '        <div class="cd-val-name" style="cursor:default; color:#64748b;" title="' + escapeHtmlAttr(teamLeadName) + '"><strong>' + teamLeadName + '</strong></div>';
+                    html += '        <div class="cd-val-sub">' + teamMemberText + '</div>';
+                    html += '        <button type="button" class="cd-req-team-disabled-btn js-req-team-disabled" aria-disabled="true" data-row-id="' + job.id + '" data-rec-id="' + recId + '" title="Accept job request before adding your recruitment team"><i class="fas fa-plus" style="font-size:9px;"></i> Add Team</button>';
+                }
                 html += '      </div>';
                 html += '    </div>';
 
-                // SUB-CARD 4: SENT DATE & JOB/REQUEST EXPIRY
+                // SUB-CARD 4: SENT DATE & REQUEST EXPIRY (with Date, Time & Timezone)
                 html += '    <div class="cd-job-subcard cd-subcard-req-expiry">';
                 html += '      <div class="cd-subcard-header">';
                 html += '        <span class="cd-subcard-label"><i class="far fa-clock me-1 text-muted"></i>Sent &amp; Expiry</span>';
@@ -3162,18 +3239,15 @@ $(document).on('click', '.client-hm-listing', function ()
                 html += '          <i class="far fa-paper-plane text-primary"></i>';
                 html += '          <span>Sent: <strong>' + sentDateDisplay + '</strong>' + sentTimePart + '</span>';
                 html += '        </div>';
-                if (job.job_end_date_display) {
-                    html += '        <div class="cd-req-date-row" title="Job expiry / closing date: ' + escapeHtmlAttr(job.job_end_date_display) + '">';
-                    html += '          <i class="far fa-calendar-times text-danger"></i>';
-                    html += '          <span>Job Expiry: <strong>' + job.job_end_date_display + '</strong></span>';
-                    html += '        </div>';
+                html += '        <div class="cd-req-date-row" title="Request expiry date &amp; time: ' + escapeHtmlAttr(reqExpiryFullDisplay) + '">';
+                html += '          <i class="far fa-calendar-times text-warning"></i>';
+                if (reqExpiryDatePart && reqExpiryDatePart !== '—') {
+                    html += '          <span>Req Expiry: <strong>' + reqExpiryDatePart + '</strong>' + reqExpiryTimePart + '</span>';
                 } else {
-                    html += '        <div class="cd-req-date-row" title="Request SLA expires on ' + escapeHtmlAttr(job.expires_at_display || '—') + '">';
-                    html += '          <i class="far fa-calendar-check text-warning"></i>';
-                    html += '          <span>Req Expiry: <strong>' + (job.expires_at_display || '—') + '</strong></span>';
-                    html += '        </div>';
+                    html += '          <span>Req Expiry: <strong>' + reqExpiryFullDisplay + '</strong></span>';
                 }
-                html += '        <div class="cd-req-expiry-pill ' + expMeta.toneClass + ' js-req-live-timer" data-expires-iso="' + escapeHtmlAttr(job.expires_at_iso || '') + '" data-job-expires-iso="' + escapeHtmlAttr(job.job_end_date_iso || '') + '" data-rec-id="' + recId + '" data-job-id="' + job.id + '" title="SLA Deadline: ' + escapeHtmlAttr(job.expires_at_display || '') + '">';
+                html += '        </div>';
+                html += '        <div class="cd-req-expiry-pill ' + expMeta.toneClass + ' js-req-live-timer" data-expires-iso="' + escapeHtmlAttr(job.expires_at_iso || '') + '" data-job-expires-iso="' + escapeHtmlAttr(job.job_end_date_iso || '') + '" data-rec-id="' + recId + '" data-job-id="' + job.id + '" title="Request Expiry: ' + escapeHtmlAttr(reqExpiryFullDisplay) + '">';
                 html += '          <i class="far fa-hourglass"></i><span class="js-req-timer-text">' + expMeta.countdownText + '</span>';
                 html += '        </div>';
                 html += '      </div>';
@@ -3205,20 +3279,13 @@ $(document).on('click', '.client-hm-listing', function ()
 
                 html += '  </div>'; // End upper grid
 
-                // SUB-CARD 6: BOTTOM ACTIVITY & SKILLS STRIP
+                // SUB-CARD 6: BOTTOM ACTIVITY & SKILLS STRIP (Posted Date & Requested By; SLA removed)
                 html += '  <div class="cd-job-card-bottom">';
                 html += '    <div class="cd-bottom-left">';
-                html += '      <span><i class="far fa-paper-plane text-primary me-1"></i>Sent: <strong>' + sentDateDisplay + '</strong>' + (sentRel ? ' (' + sentRel + ')' : '') + '</span>';
-                if (job.job_end_date_display && job.expires_at_display && job.expires_at_display !== '—') {
+                html += '      <span><i class="far fa-calendar-alt text-muted me-1"></i>Posted Date: <strong>' + postedDateDisplay + '</strong></span>';
+                if (requestedByName) {
                     html += '      <span class="cd-bullet">&bull;</span>';
-                    html += '      <span><i class="far fa-hourglass text-warning me-1"></i>Request SLA: <strong>' + job.expires_at_display + '</strong></span>';
-                } else if (job.expires_at_display && job.expires_at_display !== '—') {
-                    html += '      <span class="cd-bullet">&bull;</span>';
-                    html += '      <span><i class="far fa-hourglass text-warning me-1"></i>Expires: <strong>' + job.expires_at_display + '</strong></span>';
-                }
-                if (shared.hiringManagerDisplay) {
-                    html += '      <span class="cd-bullet">&bull;</span>';
-                    html += '      <span><i class="far fa-user text-muted me-1"></i>HM: <strong>' + shared.hiringManagerDisplay + shared.hmRole + '</strong></span>';
+                    html += '      <span><i class="far fa-user text-muted me-1"></i>Requested By: <strong>' + requestedByName + requestedByRole + '</strong></span>';
                 }
                 html += '    </div>';
                 html += '    <div class="cd-bottom-skills">' + shared.skillsHtml + '</div>';
@@ -3707,7 +3774,7 @@ $(document).on('click', '.client-hm-listing', function ()
 
             const searchVal = ($('.inputJobSearch').val() || $('#inputSearch').val() || search || '').trim();
             const cacheKey = [
-                'v4',
+                'v5',
                 window.currentKpiFilter || 'all',
                 $('#status').val() || 'all',
                 $('#hiringtype').val() || '',

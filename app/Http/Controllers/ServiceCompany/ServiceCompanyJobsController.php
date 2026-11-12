@@ -2796,7 +2796,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
             'requisition_type' => $requisition_type,
-            'v' => 'status_v16',
+            'v' => 'status_v17',
         ];
 
         // Multi-axis version key: user + company jobs + company/user job requests so Accept/Reject immediately refreshes Total Jobs.
@@ -5957,16 +5957,22 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
 
             $spokUserIds = [];
+            $teamUserIds = [];
             foreach ($jobsEsMap as $esJobDoc) {
                 foreach ($esJobDoc['job_assign'] ?? [] as $assign) {
                     if (! empty($assign['spok_user_id'])) {
                         $spokUserIds[] = (int) $assign['spok_user_id'];
                     }
+                    if ((int) ($assign['company_id'] ?? 0) === $company_id && ! empty($assign['user_id'])) {
+                        $teamUserIds[] = (int) $assign['user_id'];
+                    }
                 }
             }
-            $allUserIds = array_values(array_unique(array_filter(array_merge($spokUserIds, $fromUserIds))));
+            $allUserIds = array_values(array_unique(array_filter(array_merge($spokUserIds, $fromUserIds, $teamUserIds))));
             $usersEsMap = $this->batchFetchElasticDocsByIds(ELASTIC_USERS_LIST, $allUserIds, ['id', 'name', 'designation']);
             $companiesEsMap = $this->batchFetchElasticDocsByIds(ELASTIC_COMPANIES_INDEX, $fromCompanyIds, ['id', 'company_name', 'logo']);
+            $appTimezone = (string) (config('app.timezone') ?: 'Asia/Kolkata');
+            $companyTimezone = (string) (GeneralMethod::defaultTimeZone($company_id) ?: $appTimezone);
 
             foreach ($data as $row) {
                 $recId = (int) ($row['recommendation_relation_id'] ?? ($row['id'] ?? 0));
@@ -6080,15 +6086,41 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $fromUserId = (int) ($row['from_user_id'] ?? 0);
                 $sentByUser = $fromUserId > 0 ? ($usersEsMap[$fromUserId] ?? []) : [];
                 $sentByName = ! empty($sentByUser['name']) ? ucwords((string) $sentByUser['name']) : '';
+                $sentByDesignation = ! empty($sentByUser['designation']) ? (string) $sentByUser['designation'] : '';
                 if (($hiringManager === '--------' || $hiringManager === '') && $sentByName !== '') {
                     $hiringManager = $sentByName;
-                    $hiringManagerDesignation = (string) ($sentByUser['designation'] ?? '');
+                    $hiringManagerDesignation = $sentByDesignation;
                 }
                 $captainsMap[$jobId] = (object) [
                     'job_id' => $jobId,
                     'name' => $hiringManager,
                     'designation' => $hiringManagerDesignation ?: 'Client SPOC',
                 ];
+
+                // Recipient service company team resolution from ELASTIC_JOBS job_assign
+                $companyTeamAssigns = array_values(array_filter(
+                    $esJob['job_assign'] ?? [],
+                    fn ($a) => (int) ($a['company_id'] ?? 0) === $company_id && ! empty($a['user_id'])
+                ));
+                $uniqueTeamUserIds = [];
+                $spokLeadName = '';
+                $fallbackLeadName = '';
+                foreach ($companyTeamAssigns as $assignItem) {
+                    $uId = (int) ($assignItem['user_id'] ?? 0);
+                    if ($uId <= 0 || isset($uniqueTeamUserIds[$uId])) {
+                        continue;
+                    }
+                    $uniqueTeamUserIds[$uId] = true;
+                    $uName = trim((string) ($usersEsMap[$uId]['name'] ?? ($assignItem['user_name'] ?? '')));
+                    if ($fallbackLeadName === '' && $uName !== '') {
+                        $fallbackLeadName = ucwords($uName);
+                    }
+                    if ($uId === (int) ($assignItem['spok_user_id'] ?? 0) && $uName !== '') {
+                        $spokLeadName = ucwords($uName);
+                    }
+                }
+                $partnersCount = count($uniqueTeamUserIds);
+                $partnersFirstName = $spokLeadName ?: $fallbackLeadName;
 
                 // Avatar palette
                 $firstChar = strtolower(trim($title)[0] ?? 'j');
@@ -6113,36 +6145,50 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $sentCarbon = null;
                 if (! empty($sentRaw)) {
                     try {
-                        $sentCarbon = Carbon::parse($sentRaw);
+                        $sentCarbon = Carbon::parse($sentRaw, $appTimezone)->setTimezone($companyTimezone);
                     } catch (\Throwable) {
                     }
                 }
                 $sentAtIso = $sentCarbon ? $sentCarbon->toIso8601String() : null;
                 $sentAtDisplay = $sentCarbon ? $sentCarbon->format('d M y') : '—';
                 $sentTimeDisplay = ($sentCarbon && $sentCarbon->format('H:i:s') !== '00:00:00')
-                    ? $sentCarbon->format('h:i A')
+                    ? $sentCarbon->format('h:i A T')
                     : '';
 
-                // Request SLA Expiry (explicit expires_at or JIT 7-day SLA from sent timestamp)
+                // Request SLA Expiry (explicit expires_at or JIT 7-day SLA from sent timestamp) with tenant timezone
                 $expRaw = ! empty($row['expires_at'])
                     ? $row['expires_at']
                     : ($sentCarbon ? $sentCarbon->copy()->addDays(7)->toIso8601String() : null);
                 $expCarbon = null;
                 if (! empty($expRaw)) {
                     try {
-                        $expCarbon = Carbon::parse($expRaw);
+                        $expCarbon = Carbon::parse($expRaw, $appTimezone)->setTimezone($companyTimezone);
                     } catch (\Throwable) {
                     }
                 }
                 $expiresAtIso = $expCarbon ? $expCarbon->toIso8601String() : null;
-                $expiresAtDisplay = $expCarbon ? $expCarbon->format('d M y, h:i A') : '—';
+                $expiresAtDate = $expCarbon ? $expCarbon->format('d M y') : '—';
+                $expiresAtTimeTz = $expCarbon ? $expCarbon->format('h:i A T') : '';
+                $expiresAtDisplay = $expCarbon ? $expCarbon->format('d M y, h:i A T') : '—';
+                $timezoneAbbr = $expCarbon ? $expCarbon->format('T') : ($sentCarbon ? $sentCarbon->format('T') : '');
+
+                // Job Posted Date (from ELASTIC_JOBS created_at, fallback to request sent date)
+                $jobCreatedRaw = $esJob['created_at'] ?? ($row['job_created_at'] ?? $sentRaw);
+                $postedCarbon = null;
+                if (! empty($jobCreatedRaw)) {
+                    try {
+                        $postedCarbon = Carbon::parse($jobCreatedRaw, $appTimezone)->setTimezone($companyTimezone);
+                    } catch (\Throwable) {
+                    }
+                }
+                $postedDateDisplay = $postedCarbon ? $postedCarbon->format('d M y') : $sentAtDisplay;
 
                 // Job Requisition Closing / Expiry Date (end_date or auto_date_job)
                 $jobEndRaw = $row['end_date'] ?? ($esJob['end_date'] ?? ($esJob['auto_date_job'] ?? null));
                 $jobEndCarbon = null;
                 if (! empty($jobEndRaw)) {
                     try {
-                        $jobEndCarbon = Carbon::parse($jobEndRaw);
+                        $jobEndCarbon = Carbon::parse($jobEndRaw, $appTimezone)->setTimezone($companyTimezone);
                     } catch (\Throwable) {
                     }
                 }
@@ -6161,6 +6207,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'encrypted_id' => GeneralMethod::value_encrypt($jobId),
                     'recommendation_relation_id' => $recId,
                     'final_status' => $finalStatus,
+                    'is_accepted' => ($finalStatus === 1),
                     'is_job_request' => true,
                     'is_direct_client' => true,
                     'title' => $title,
@@ -6196,12 +6243,19 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'hiring_manager' => $hiringManager,
                     'hiring_manager_designation' => $hiringManagerDesignation ?: 'Client SPOC',
                     'sent_by_name' => $sentByName,
-                    'added_date' => $sentAtDisplay,
+                    'sent_by_designation' => $sentByDesignation,
+                    'partners_count' => $partnersCount,
+                    'partners_first_name' => $partnersFirstName,
+                    'posted_date' => $postedDateDisplay,
+                    'added_date' => $postedDateDisplay,
                     'sent_at_iso' => $sentAtIso,
                     'sent_at_display' => $sentAtDisplay,
                     'sent_time_display' => $sentTimeDisplay,
                     'expires_at_iso' => $expiresAtIso,
+                    'expires_at_date' => $expiresAtDate,
+                    'expires_at_time_tz' => $expiresAtTimeTz,
                     'expires_at_display' => $expiresAtDisplay,
+                    'timezone_abbr' => $timezoneAbbr,
                     'job_end_date_iso' => $jobEndDateIso,
                     'job_end_date_display' => $jobEndDateDisplay,
                     'skills' => $skills,
