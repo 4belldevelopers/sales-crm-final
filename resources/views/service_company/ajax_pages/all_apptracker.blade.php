@@ -164,14 +164,22 @@
             $np = $cardMeta['notice_display'];
             $npClass = 'aptk-notice-' . $cardMeta['notice_class'];
 
-            // Interview schedule (uses pre-fetched map; fallback to DB if not passed)
+            // Interview schedule (uses pre-fetched map; stage-aware so Schedule Interview re-activates on next stage)
+            $masterStatusId = (int) ($row->job_master_status_id ?? 8);
+            $canScheduleInterview = in_array('add_schedule', (array) ($userPermissions ?? []));
             $schedule_date = '';
             $schedule_time = '';
             $iKey = $candAppId . '_' . $rowJobId;
             $wKey = 'w_' . $wiseId . '_' . $rowJobId;
+            $stageIntRow = null;
             if (isset($rowMaps['interviews'])) {
                 $intRow = $rowMaps['interviews'][$iKey] ?? ($rowMaps['interviews'][$wKey] ?? null);
                 $intRowCount = $intRow ? 1 : 0;
+                if (isset($rowMaps['stage_interviews'])) {
+                    $stageIntRow = $rowMaps['stage_interviews'][$iKey . '_' . $masterStatusId] ?? ($rowMaps['stage_interviews'][$wKey . '_' . $masterStatusId] ?? null);
+                } elseif ($intRow && (int) ($intRow->stage ?? 0) === $masterStatusId && strtolower((string) ($intRow->status ?? '')) !== 'canceled') {
+                    $stageIntRow = $intRow;
+                }
             } else {
                 $intRow = DB::table('interview_schedules')
                     ->select('*')
@@ -183,23 +191,38 @@
                     ->orderBy('interview_schedules.id', 'DESC')
                     ->first();
                 $intRowCount = $intRow ? 1 : 0;
+                $stageIntRow = DB::table('interview_schedules')
+                    ->select('*')
+                    ->where(function ($q) use ($candAppId, $wiseId) {
+                        if ($candAppId > 0) $q->where('job_application_id', $candAppId);
+                        if ($wiseId > 0) $q->orWhere('interview_job_wise_con_id', $wiseId);
+                    })
+                    ->where('interview_job_id', $rowJobId)
+                    ->where('stage', (string) $masterStatusId)
+                    ->where(function ($q) {
+                        $q->whereNull('status')->orWhere('status', '!=', 'canceled');
+                    })
+                    ->orderBy('interview_schedules.id', 'DESC')
+                    ->first();
             }
-            if ($intRowCount > 0 && !empty($intRow->schedule_date) && $intRow->schedule_date !== '0000-00-00 00:00:00') {
-                $schedule_date = date('d M, Y', strtotime($intRow->schedule_date));
-                $timezone_abbreviation = !empty($intRow->timezone_abbreviation) ? ' (' . $intRow->timezone_abbreviation . ')' : '';
-                $schedule_time = trim((string) (@$intRow->schedule_to_time . ' ' . $timezone_abbreviation));
+            $hasStageInterview = ($stageIntRow !== null);
+            $displayIntRow = $stageIntRow ?? $intRow;
+            if ($displayIntRow && !empty($displayIntRow->schedule_date) && $displayIntRow->schedule_date !== '0000-00-00 00:00:00') {
+                $schedule_date = date('d M, Y', strtotime($displayIntRow->schedule_date));
+                $timezone_abbreviation = !empty($displayIntRow->timezone_abbreviation) ? ' (' . $displayIntRow->timezone_abbreviation . ')' : '';
+                $schedule_time = trim((string) (@$displayIntRow->schedule_to_time . ' ' . $timezone_abbreviation));
             }
             $feedbackGiven = false;
             $row3Text = '';
             $row3Class = '';
-            if ($intRowCount > 0) {
-                if (isset($intRow->feedback) && $intRow->feedback >= 0) {
+            if ($displayIntRow) {
+                if (isset($displayIntRow->feedback) && $displayIntRow->feedback >= 0) {
                     $feedbackGiven = true;
-                    $row3Text = @$feedback_status[@$intRow->feedback]['name'];
-                    $row3Class = @$feedback_status[@$intRow->feedback]['classname'];
+                    $row3Text = @$feedback_status[@$displayIntRow->feedback]['name'];
+                    $row3Class = @$feedback_status[@$displayIntRow->feedback]['classname'];
                 } else {
                     $interviewModeLabels = [1 => 'Telecon', 2 => 'Video Call', 3 => 'Face To Face', 4 => 'Other'];
-                    $row3Text = $interviewModeLabels[(int) @$intRow->interview_mode] ?? '';
+                    $row3Text = $interviewModeLabels[(int) @$displayIntRow->interview_mode] ?? '';
                 }
             }
             $printInterviewStr = !empty($schedule_date)
@@ -410,7 +433,7 @@
                         <span class="aptk-subcard-label">Interview</span>
                     </div>
                     <div class="aptk-subcard-body" id="interview_date">
-                        @if (!empty($schedule_date))
+                        @if ($hasStageInterview && !empty($schedule_date))
                             <div class="aptk-int-date">
                                 <i class="far fa-calendar-alt me-1 text-primary"></i>
                                 <span>{{ $schedule_date }}</span>
@@ -431,10 +454,30 @@
                                 @endif
                             @endif
                         @else
-                            <div class="aptk-int-empty">
-                                <i class="far fa-calendar-times me-1"></i>Not Scheduled
-                            </div>
-                            <div class="aptk-int-empty-sub">Pending interview</div>
+                            @if (!empty($schedule_date))
+                                <div class="aptk-int-date" title="Previous stage interview: {{ e($printInterviewStr) }}">
+                                    <i class="far fa-calendar-alt me-1 text-muted"></i>
+                                    <span>{{ $schedule_date }}</span>
+                                </div>
+                            @else
+                                <div class="aptk-int-empty">
+                                    <i class="far fa-calendar-times me-1"></i>Not Scheduled
+                                </div>
+                            @endif
+                            @if ($canScheduleInterview)
+                                <button type="button"
+                                        class="aptk-int-schedule-btn app_interview_schedule"
+                                        rel="{{ $wiseId ?: $candAppId }}"
+                                        data-app-id="{{ $candAppId }}"
+                                        data-wise-id="{{ $wiseId }}"
+                                        data-job-id="{{ $rowJobId }}"
+                                        title="Schedule interview for current stage">
+                                    <i class="far fa-calendar-plus"></i>
+                                    <span>Schedule Interview</span>
+                                </button>
+                            @elseif (empty($schedule_date))
+                                <div class="aptk-int-empty-sub">Pending interview</div>
+                            @endif
                         @endif
                     </div>
                 </div>

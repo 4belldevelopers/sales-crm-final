@@ -499,6 +499,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ->values()
             ->all();
         $interviewsMap = [];
+        $stageInterviewsMap = [];
         if ((! empty($candIds) || ! empty($candWiseIds)) && ! empty($jobIds)) {
             $intRows = DB::table('interview_schedules')
                 ->where(function ($q) use ($candIds, $candWiseIds) {
@@ -513,16 +514,24 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 ->orderBy('id', 'DESC')
                 ->get();
             foreach ($intRows as $ir) {
+                $irStage = (int) ($ir->stage ?? 0);
+                $isActiveStageInt = $irStage > 0 && strtolower((string) ($ir->status ?? '')) !== 'canceled';
                 if ($ir->job_application_id > 0) {
                     $iKey = $ir->job_application_id.'_'.$ir->interview_job_id;
                     if (! isset($interviewsMap[$iKey])) {
                         $interviewsMap[$iKey] = $ir;
+                    }
+                    if ($isActiveStageInt && ! isset($stageInterviewsMap[$iKey.'_'.$irStage])) {
+                        $stageInterviewsMap[$iKey.'_'.$irStage] = $ir;
                     }
                 }
                 if ($ir->interview_job_wise_con_id > 0) {
                     $wKey = 'w_'.$ir->interview_job_wise_con_id.'_'.$ir->interview_job_id;
                     if (! isset($interviewsMap[$wKey])) {
                         $interviewsMap[$wKey] = $ir;
+                    }
+                    if ($isActiveStageInt && ! isset($stageInterviewsMap[$wKey.'_'.$irStage])) {
+                        $stageInterviewsMap[$wKey.'_'.$irStage] = $ir;
                     }
                 }
             }
@@ -564,6 +573,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'skills' => $skillsByJob,
             'duplicates' => $duplicateMap,
             'interviews' => $interviewsMap,
+            'stage_interviews' => $stageInterviewsMap,
             'spokperson_map' => $spokpersonMap,
             'child_status_map' => $childStatusMap,
         ];
@@ -823,7 +833,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             // V3 Phase 3.1: HTML and JSON responses are cached under separate keys.
             'format' => $request->input('format', 'html'),
-            'ui_v' => 'card_v5',
+            'ui_v' => 'card_v6',
         ];
 
         $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
@@ -2931,7 +2941,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'valCheck' => $valCheck,
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
-            'ui_v' => 'card_v5',
+            'ui_v' => 'card_v6',
         ];
 
         $versionKey = 'allclientapp_version_user_'.$this->user->id;

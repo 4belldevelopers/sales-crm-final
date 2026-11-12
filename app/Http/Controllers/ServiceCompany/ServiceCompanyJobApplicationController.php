@@ -10323,8 +10323,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             if (! empty($interview_mode_lavel)) {
                 $interviewSchedule->interview_mode_lavel = $interview_mode_lavel;
             }
-            if (! empty($master_status_id)) {
-                $interviewSchedule->stage = ($AddJobWiseCondidate->master_status_id) ? $AddJobWiseCondidate->master_status_id : $master_status_id;
+            $effectiveStageId = (int) ($AddJobWiseCondidate->master_status_id ?: $master_status_id);
+            if ($effectiveStageId > 0) {
+                $interviewSchedule->stage = $effectiveStageId;
             }
             if (! empty($child_status_id)) {
                 $interviewSchedule->substage = $child_status_id;
@@ -10537,6 +10538,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // Multi-Tenant Atomic Cache Invalidation (Rule 6)
             $cachekeys = [
                 'allapptracker_version_user_'.$userId,
+                'allclientapp_version_user_'.$userId,
                 'candidateDetails_version_user_'.$userId,
                 'allinterviewschedule_version_user_'.$userId,
                 'allinterviewbenchcandidates_version_user_'.$userId,
