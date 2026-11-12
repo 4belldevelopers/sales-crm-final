@@ -883,13 +883,739 @@
             cursor: pointer;
         }
         .simf-applied-more:hover { background: #e5e7eb; }
+
+        /* Crisp Search Clear & Refresh Controls in Toolbar */
+        .simf-search-wrap { position: relative; }
+        .simf-search-input.form-control { padding-right: 30px !important; }
+        .simf-search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .simf-search-clear:hover { background: #e2e8f0; color: #0f172a; }
+        .simf-refresh-btn {
+            height: 44px;
+            border-radius: 10px !important;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            padding: 0 14px !important;
+            background: #ffffff !important;
+            border: 1px solid #e4e6ef !important;
+            color: #3f4254 !important;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .simf-refresh-btn:hover { background: #f8fafc !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+        .simf-refresh-btn.is-spinning svg { animation: simfSpin 0.8s linear infinite; }
+        @keyframes simfSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ==========================================================================
+           Rule 20 Card + Sub-Card Candidate Stream (.simf-stream-wrapper / .simf-cand-*)
+           ========================================================================== */
+        .simf-stream-wrapper {
+            background: transparent;
+            border: none;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .simf-stream-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 9px 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+            flex-wrap: wrap;
+        }
+        .simf-stream-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .simf-selectall-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+        }
+        .simf-active-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 2.5px 10px;
+            border-radius: 6px;
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .simf-stream-count {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .simf-stream-count strong {
+            color: #0f172a;
+            font-weight: 700;
+        }
+        .simf-stream-bar-right {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .simf-stream-hint i {
+            color: #009ef7;
+            margin-right: 4px;
+        }
+        .simf-cand-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .simf-cand-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-left: 3.5px solid #cbd5e1;
+            border-radius: 10px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        .simf-cand-card:hover {
+            border-color: #bae6fd;
+            border-left-color: #009ef7;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        }
+        .simf-cand-card.is-selected {
+            border-color: #93c5fd;
+            border-left-color: #009ef7;
+            background: #f8fbff;
+        }
+        .simf-cand-card.is-duplicate {
+            border-left-color: #ef4444;
+        }
+        .simf-cand-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2.0fr) minmax(0, 1.3fr) minmax(0, 1.15fr) minmax(0, 1.4fr) minmax(0, 1.15fr) minmax(0, 1.35fr);
+            gap: 8px;
+            padding: 10px 12px;
+            align-items: stretch;
+        }
+        .simf-cand-subcard {
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 8px;
+            padding: 7px 9px;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .simf-cand-card:hover .simf-cand-subcard {
+            border-color: #e2e8f0;
+        }
+        .simf-subcard-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .simf-subcard-label {
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.45px;
+            color: #94a3b8;
+            line-height: 1.1;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .simf-cand-subcard--info {
+            cursor: pointer;
+        }
+        .simf-cand-subcard--info:hover {
+            background: #f0f9ff;
+            border-color: #bae6fd !important;
+        }
+        .simf-cand-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            min-width: 0;
+        }
+        .simf-avatar {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px !important;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .simf-cand-info-meta {
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5px;
+        }
+        .simf-cand-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+            text-decoration: none;
+        }
+        .simf-cand-subcard--info:hover .simf-cand-name {
+            color: #009ef7;
+        }
+        .simf-cand-role {
+            font-size: 11px;
+            font-weight: 500;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+        }
+        .simf-cand-company {
+            font-size: 10.5px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+        }
+        .simf-dup-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            font-size: 9.5px;
+            font-weight: 700;
+        }
+        /* Sub-Card 2: Comp & Exp */
+        .simf-val-salary {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .simf-sal-main {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+        }
+        .simf-sal-mode { font-size: 10px; font-weight: 500; color: #64748b; }
+        .simf-sal-sub { font-size: 10px; font-weight: 500; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .simf-val-exp,
+        .simf-val-notice {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-variant-numeric: tabular-nums;
+            line-height: 1.3;
+        }
+        .simf-val-exp i, .simf-val-notice i { font-size: 10px; color: #94a3b8; flex-shrink: 0; }
+        .simf-dot { color: #cbd5e1; font-size: 8px; }
+        .simf-notice-txt { font-weight: 600; }
+        .simf-notice-immediate { color: #16a34a; }
+        .simf-notice-days { color: #d97706; }
+        .simf-notice-snp { color: #7c3aed; }
+        .simf-notice-default { color: #64748b; }
+
+        /* Sub-Card 3: Location & Degree */
+        .simf-loc-city {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        .simf-loc-city i { font-size: 10px; color: #94a3b8; }
+        .simf-loc-state {
+            font-size: 10px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 1px;
+        }
+        .simf-loc-edu {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .simf-loc-edu i { font-size: 10px; color: #94a3b8; }
+        .simf-edu-uppercase { text-transform: uppercase; }
+
+        /* Sub-Card 4: Matched Job & Status */
+        .simf-job-title {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            text-decoration: none;
+        }
+        .simf-job-title:hover { color: #009ef7; }
+        .simf-job-company {
+            font-size: 10px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 1px;
+        }
+        .simf-job-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 3px;
+        }
+        .simf-job-status-pill {
+            font-size: 9.5px !important;
+            padding: 1.5px 6px !important;
+            border-radius: 4px !important;
+            font-weight: 700 !important;
+            line-height: 1.25 !important;
+        }
+        .simf-job-type-tag {
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+            white-space: nowrap;
+        }
+
+        /* Sub-Card 5: Ownership */
+        .simf-owner-name {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        .simf-owner-company {
+            font-size: 10.5px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .simf-owner-company i { font-size: 9.5px; color: #94a3b8; }
+
+        /* Sub-Card 6: Stage & Action */
+        .simf-stage-action-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+        .simf-stage-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            text-decoration: none;
+            min-width: 0;
+        }
+        .simf-stage-pill {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            max-width: 100%;
+            padding: 2px 7px;
+            border-radius: 5px;
+            border: 1px solid transparent;
+            font-size: 10.5px;
+            font-weight: 600;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .simf-substage-txt {
+            font-size: 10px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Sub-Card 7: Bottom Match & Skills Strip */
+        .simf-cand-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 12px;
+            background: #ffffff;
+            border-top: 1px solid #f1f5f9;
+            width: 100%;
+            overflow: hidden;
+        }
+        .simf-bottom-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .simf-match-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 10.5px;
+            font-weight: 700;
+            line-height: 1.3;
+            white-space: nowrap;
+            flex-shrink: 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .simf-skills-scroll {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            white-space: nowrap;
+            min-width: 0;
+        }
+        .simf-skills-scroll::-webkit-scrollbar { display: none; }
+        .simf-skill-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 1.5px 7px;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            font-size: 10px;
+            font-weight: 500;
+            line-height: 1.4;
+            flex-shrink: 0;
+        }
+        .simf-skill-pill.is-matched {
+            background: #dcfce7;
+            color: #15803d;
+            border-color: #bbf7d0;
+            font-weight: 600;
+        }
+        .simf-skill-pill.is-mandatory {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #93c5fd;
+            font-weight: 600;
+        }
+        .simf-skills-empty { font-size: 10.5px; color: #94a3b8; }
+
+        /* Empty & Skeleton States */
+        .simf-empty-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 42px 20px;
+            text-align: center;
+        }
+        .simf-empty-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .simf-empty-title { font-size: 14px; font-weight: 600; color: #1e293b; }
+        .simf-empty-sub { font-size: 12px; color: #64748b; margin-top: 3px; }
+        .simf-skeleton-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px;
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .simf-skeleton-box {
+            height: 62px;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: simfShimmer 1.3s infinite;
+        }
+        @keyframes simfShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .simf-pagination-card {
+            margin-top: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+        }
+
+        /* Responsive Breakpoints (15.6" 1366x768 & Smaller) */
+        @media (max-width: 1440px) {
+            .simf-cand-grid {
+                grid-template-columns: minmax(0, 1.95fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.35fr) minmax(0, 1.1fr) minmax(0, 1.3fr);
+                gap: 6px;
+                padding: 8px 10px;
+            }
+            .simf-cand-subcard { padding: 6px 8px; }
+        }
+        @media (max-width: 1180px) {
+            .simf-cand-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        }
+        @media (max-width: 640px) {
+            .simf-cand-grid { grid-template-columns: 1fr; gap: 8px; }
+            .simf-cand-bottom { flex-direction: column; align-items: flex-start; gap: 6px; }
+        }
+
+        /* ==========================================================================
+           AppTracker Flat Light-Tinted Enterprise Header (.simf-job-toolbar / .simf-hdr-*)
+           ========================================================================== */
+        @media (min-width: 1181px) {
+            body#kt_body.toolbar-fixed { --kt-toolbar-height: 62px !important; }
+            body#kt_body.toolbar-fixed .wrapper { padding-top: calc(var(--kt-header-height, 65px) + 62px) !important; }
+        }
+        @media (max-width: 1180px) {
+            #kt_toolbar.simf-job-toolbar { position: relative !important; top: auto !important; left: auto !important; right: auto !important; height: auto !important; }
+            body#kt_body.toolbar-fixed .wrapper { padding-top: var(--kt-header-height, 65px) !important; }
+        }
+        #kt_toolbar.simf-job-toolbar {
+            background: #ffffff !important;
+            border-bottom: none !important;
+            box-shadow: none !important;
+            height: auto !important;
+            min-height: 60px;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        #kt_toolbar.simf-job-toolbar #kt_toolbar_container {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: block !important;
+        }
+        .simf-hdr-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            width: 100%;
+            min-height: 60px;
+            background: var(--hdr-bg, #ffffff);
+            border: none;
+            border-bottom: 1px solid var(--hdr-border, #dbeafe);
+            border-left: 4px solid var(--hdr-accent, #2563eb);
+            border-radius: 0 !important;
+            padding: 10px 20px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+        }
+        .simf-hdr-card.hp-org-my {
+            --hdr-bg: linear-gradient(90deg, #fffbeb 0%, #fffdf7 34%, #ffffff 64%, #ffffff 100%);
+            --hdr-border: #fde68a;
+            --hdr-accent: #d97706;
+            --hdr-logo-bg: #fffbeb;
+            --hdr-logo-border: #fde68a;
+            --hdr-icon-color: #d97706;
+            --hdr-pill-bg: #fef3c7;
+            --hdr-pill-border: #fcd34d;
+            --hdr-pill-color: #92400e;
+            --hdr-btn-outline-border: #f59e0b;
+            --hdr-btn-outline-color: #b45309;
+            --hdr-btn-outline-hover-bg: #fef3c7;
+            --hdr-btn-outline-hover-color: #78350f;
+        }
+        .simf-hdr-card.hp-org-internal {
+            --hdr-bg: linear-gradient(90deg, #eff6ff 0%, #f7faff 34%, #ffffff 64%, #ffffff 100%);
+            --hdr-border: #bfdbfe;
+            --hdr-accent: #2563eb;
+            --hdr-logo-bg: #eff6ff;
+            --hdr-logo-border: #bfdbfe;
+            --hdr-icon-color: #2563eb;
+            --hdr-pill-bg: #dbeafe;
+            --hdr-pill-border: #93c5fd;
+            --hdr-pill-color: #1e40af;
+            --hdr-btn-outline-border: #60a5fa;
+            --hdr-btn-outline-color: #1d4ed8;
+            --hdr-btn-outline-hover-bg: #dbeafe;
+            --hdr-btn-outline-hover-color: #1e3a8a;
+        }
+        .simf-hdr-card.hp-org-direct {
+            --hdr-bg: linear-gradient(90deg, #ecfdf5 0%, #f5fdf9 34%, #ffffff 64%, #ffffff 100%);
+            --hdr-border: #a7f3d0;
+            --hdr-accent: #16a34a;
+            --hdr-logo-bg: #ecfdf5;
+            --hdr-logo-border: #a7f3d0;
+            --hdr-icon-color: #16a34a;
+            --hdr-pill-bg: #d1fae5;
+            --hdr-pill-border: #6ee7b7;
+            --hdr-pill-color: #166534;
+            --hdr-btn-outline-border: #34d399;
+            --hdr-btn-outline-color: #15803d;
+            --hdr-btn-outline-hover-bg: #d1fae5;
+            --hdr-btn-outline-hover-color: #14532d;
+        }
+        .simf-hdr-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .simf-hdr-sep { width: 1px; height: 30px; background: #e2e8f0; flex-shrink: 0; }
+        .simf-hdr-col { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        .simf-hdr-col--identity { flex-direction: row; align-items: center; gap: 10px; flex: 0 1 320px; min-width: 185px; max-width: clamp(220px, 26vw, 350px); cursor: pointer; }
+        .simf-hdr-col--status { gap: 3px; flex-shrink: 0; cursor: pointer; }
+        .simf-hdr-col--comp, .simf-hdr-col--loc, .simf-hdr-col--meta { gap: 2px; flex-shrink: 0; }
+        .simf-hdr-logo-wrap { width: 38px; height: 38px; min-width: 38px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+        .simf-hdr-logo-img { width: 100%; height: 100%; object-fit: cover; }
+        .simf-hdr-logo-mono { background: var(--hdr-logo-bg, #eff6ff) !important; border-color: var(--hdr-logo-border, #bfdbfe) !important; color: var(--hdr-icon-color, #2563eb) !important; font-size: 14px !important; font-weight: 700 !important; }
+        .simf-hdr-identity-txt { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+        .simf-hdr-job-title { font-size: 13px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; text-decoration: none; transition: color 0.15s ease; }
+        .simf-hdr-col--identity:hover .simf-hdr-job-title { color: var(--hdr-accent, #2563eb); }
+        .simf-hdr-company-name { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 500; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; text-decoration: none; }
+        .simf-hdr-company-name i { font-size: 10.5px; color: #94a3b8; flex-shrink: 0; }
+        .simf-hdr-sub-top { display: flex; align-items: center; gap: 6px; }
+        .simf-hdr-status-badge { font-size: 11px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 5px !important; line-height: 1.25 !important; }
+        .simf-hdr-job-id { font-size: 11px; font-weight: 600; color: #64748b; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .simf-hdr-sub-btm { display: flex; align-items: center; }
+        .simf-hdr-org-pill { display: inline-flex; align-items: center; gap: 4px; padding: 1.5px 7px; border-radius: 5px; background: var(--hdr-pill-bg, #dbeafe); border: 1px solid var(--hdr-pill-border, #93c5fd); color: var(--hdr-pill-color, #1e40af); font-size: 10.5px; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+        .simf-hdr-org-pill i { font-size: 9.5px; flex-shrink: 0; }
+        .simf-hdr-sub-row { display: flex; align-items: center; gap: 5px; min-width: 0; }
+        .simf-hdr-col-icon { font-size: 11px; color: var(--hdr-icon-color, #2563eb); flex-shrink: 0; }
+        .simf-hdr-sub-val { font-size: 12.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; font-variant-numeric: tabular-nums; }
+        .simf-hdr-loc-plus { font-size: 11px; font-weight: 700; color: var(--hdr-icon-color, #2563eb); margin-left: 2px; }
+        .simf-hdr-sub-meta { font-size: 11.5px; font-weight: 500; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; font-variant-numeric: tabular-nums; }
+        .simf-hdr-actions-form { flex: 0 0 auto; display: flex; align-items: center; margin: 0 !important; }
+        .simf-hdr-actions { display: flex; align-items: center; gap: 8px; padding-left: 16px; border-left: 1px solid #e2e8f0; min-height: 38px; white-space: nowrap; }
+        .simf-hdr-btn-outline {
+            background: #ffffff !important;
+            border: 1.5px solid var(--hdr-btn-outline-border, #60a5fa) !important;
+            color: var(--hdr-btn-outline-color, #1d4ed8) !important;
+            border-radius: 8px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            padding: 0 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+            transition: all 0.15s ease !important;
+        }
+        .simf-hdr-btn-outline:hover, .simf-hdr-btn-outline:focus {
+            background: var(--hdr-btn-outline-hover-bg, #dbeafe) !important;
+            border-color: var(--hdr-accent, #2563eb) !important;
+            color: var(--hdr-btn-outline-hover-color, #1e3a8a) !important;
+        }
+        @media (max-width: 1440px) {
+            .simf-hdr-card { gap: 12px; padding: 9px 16px; }
+            .simf-hdr-main { gap: 8px; }
+            .simf-hdr-col--identity { flex: 0 1 285px; max-width: 295px; }
+            .simf-hdr-actions { padding-left: 12px; min-height: 36px; }
+            .simf-hdr-btn-outline { height: 36px !important; min-height: 36px !important; padding: 0 12px !important; font-size: 12px !important; }
+        }
+        @media (max-width: 1180px) {
+            .simf-hdr-card { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 14px; }
+            .simf-hdr-main { justify-content: flex-start; flex-wrap: wrap; gap: 10px 18px; }
+            .simf-hdr-sep { display: none !important; }
+            .simf-hdr-col--identity { max-width: 100%; flex: 1 1 100%; }
+            .simf-hdr-actions { width: 100%; min-height: auto; justify-content: flex-end; border-left: none; border-top: 1px solid #e2e8f0; padding-left: 0; padding-top: 8px; }
+        }
+        @media (max-width: 640px) {
+            .simf-hdr-actions { flex-wrap: wrap; }
+            .simf-hdr-actions > * { flex: 1; }
+        }
     </style>
 @endpush
 @section('content')
     <!--begin::Toolbar-->
-    <div class="toolbar" id="kt_toolbar">
+    <div class="toolbar simf-job-toolbar {{ $hpOrgClass ?? 'hp-org-internal' }}" id="kt_toolbar">
         <!--begin::Container-->
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+        <div id="kt_toolbar_container" class="container-fluid">
                @php
                     use App\Helper\GeneralMethod;
 
@@ -935,131 +1661,43 @@
                     'public_bench_counter' =>@$public_bench_counter,
                     'recomnded_counter' => @$recomnded_counter,
                     ];
-                   
-
                 @endphp
 
+            <div class="simf-hdr-card {{ $hpOrgClass ?? 'hp-org-internal' }}">
              <!--begin::Page title-->
-             @include('sections.service_company.toolbar',['id' => $job->id])
-            
+             @include('sections.service_company.toolbar', [
+                 'id' => $job->id,
+                 'apptrackerHeaderCard' => true,
+                 'headerPrefix' => 'simf-hdr',
+                 'hpOrgClass' => $hpOrgClass ?? null,
+             ])
             <!--end::Page title-->
-            <form action="" id="filter-form" style="">
+            <form action="" id="filter-form" class="simf-hdr-actions-form" style="">
                 @csrf
                 <input type="hidden" name="jobid" id="jobid" value="{{ @$job->id }}" />
                 <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
+                <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" value="" />
                 <!--begin::Actions-->
-                <div class="d-flex align-items-center py-1">
+                <div class="simf-hdr-actions">
                     @if (in_array('view_jobs', $userPermissions))
-                        {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
-                             defined once in the shared layout) that the job title/logo already
-                             uses elsewhere ΓÇö .show-detail-open's click handler in
-                             service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
                         <a href="javascript:void(0);" data-id="{{ $job->id }}"
-                            class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
-                            View Job
+                            class="btn btn-sm simf-hdr-btn-outline show-detail-open">
+                            <i class="far fa-eye" aria-hidden="true"></i>
+                            <span>View Job</span>
                         </a>
                     @endif
-                    <!--begin::Forward CV-->
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn aptk-legacy-hide d-none" data-toggle="modal"
-                        data-target="#mass_mail"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <path
-                                        d="M18,2 L20,2 C21.6568542,2 23,3.34314575 23,5 L23,19 C23,20.6568542 21.6568542,22 20,22 L18,22 L18,2 Z"
-                                        fill="#000000" opacity="0.3" />
-                                    <path
-                                        d="M5,2 L17,2 C18.6568542,2 20,3.34314575 20,5 L20,19 C20,20.6568542 18.6568542,22 17,22 L5,22 C4.44771525,22 4,21.5522847 4,21 L4,3 C4,2.44771525 4.44771525,2 5,2 Z M12,11 C13.1045695,11 14,10.1045695 14,9 C14,7.8954305 13.1045695,7 12,7 C10.8954305,7 10,7.8954305 10,9 C10,10.1045695 10.8954305,11 12,11 Z M7.00036205,16.4995035 C6.98863236,16.6619875 7.26484009,17 7.4041679,17 C11.463736,17 14.5228466,17 16.5815,17 C16.9988413,17 17.0053266,16.6221713 16.9988413,16.5 C16.8360465,13.4332455 14.6506758,12 11.9907452,12 C9.36772908,12 7.21569918,13.5165724 7.00036205,16.4995035 Z"
-                                        fill="#000000" />
-                                </g>
-                            </svg>
-                        </span> Mass Email 
-                    </a>
-
-                    <!--begin::Search-->
-                    <div class="d-none d-flex align-items-center position-relative my-1 me-3">
-                        <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-                        <span class="svg-icon svg-icon-1 position-absolute ms-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none">
-                                <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546" height="2" rx="1"
-                                    transform="rotate(45 17.0365 15.1223)" fill="black" />
-                                <path
-                                    d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
-                                    fill="black" />
-                            </svg>
-                        </span>
-                        <!--end::Svg Icon-->
-                        <input type="text" id="inputSearch" data-kt-user-table-filter="search"
-                            class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                            placeholder="Search..." />
-                    </div>
-                    <!--end::Search-->
-                    <div class="card-toolbar">
-                        <!--begin::Toolbar-->
-                        <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-                            <!--begin::Search-->
-                            <div class="d-flex align-items-center position-relative my-1 me-3">
-                                <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-
-                                <!--end::Svg Icon-->
-                                <input type="hidden" id="inputSearch" data-kt-user-table-filter="search"
-                                    class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                                    placeholder="Search..." />
-                            </div>
-                            <!--end::Search-->
-
-                            <!--begin::Filter-->
-                            <!--<button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">-->
-                            <!--begin::Svg Icon | path: icons/duotune/general/gen031.svg-->
-                            <!--<span class="svg-icon svg-icon-2">-->
-                            <!--<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">-->
-                            <!--  <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black" />-->
-                            <!--</svg>-->
-                            <!--</span>-->
-                            <!--end::Svg Icon-->
-                            <!--Filter </button>-->
-
-
-
-                            <!--end::Filter-->
-                            <!--begin::Export-->
-                            <button type="button"
-                                class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3 d-none"
-                                data-bs-toggle="modal" data-bs-target="#kt_modal_export_users">
-                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
-                                <span class="svg-icon svg-icon-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                        viewBox="0 0 24 24" fill="none">
-                                        <rect opacity="0.3" x="12.75" y="4.25" width="12" height="2"
-                                            rx="1" transform="rotate(90 12.75 4.25)" fill="black" />
-                                        <path
-                                            d="M12.0573 6.11875L13.5203 7.87435C13.9121 8.34457 14.6232 8.37683 15.056 7.94401C15.4457 7.5543 15.4641 6.92836 15.0979 6.51643L12.4974 3.59084C12.0996 3.14332 11.4004 3.14332 11.0026 3.59084L8.40206 6.51643C8.0359 6.92836 8.0543 7.5543 8.44401 7.94401C8.87683 8.37683 9.58785 8.34458 9.9797 7.87435L11.4427 6.11875C11.6026 5.92684 11.8974 5.92684 12.0573 6.11875Z"
-                                            fill="black" />
-                                        <path
-                                            d="M18.75 8.25H17.75C17.1977 8.25 16.75 8.69772 16.75 9.25C16.75 9.80228 17.1977 10.25 17.75 10.25C18.3023 10.25 18.75 10.6977 18.75 11.25V18.25C18.75 18.8023 18.3023 19.25 17.75 19.25H5.75C5.19772 19.25 4.75 18.8023 4.75 18.25V11.25C4.75 10.6977 5.19771 10.25 5.75 10.25C6.30229 10.25 6.75 9.80228 6.75 9.25C6.75 8.69772 6.30229 8.25 5.75 8.25H4.75C3.64543 8.25 2.75 9.14543 2.75 10.25V19.25C2.75 20.3546 3.64543 21.25 4.75 21.25H18.75C19.8546 21.25 20.75 20.3546 20.75 19.25V10.25C20.75 9.14543 19.8546 8.25 18.75 8.25Z"
-                                            fill="#C4C4C4" />
-                                    </svg>
-                                </span>
-                                <!--end::Svg Icon-->
-                                Export
-                            </button>
-                            <!--end::Export-->
-
-                        </div>
-                        <!--end::Toolbar-->
-                    </div>
+                        class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder custombtn aptk-legacy-hide d-none" data-toggle="modal"
+                        data-target="#mass_mail">Mass Email</a>
                 </div>
                 <!--end::Actions-->
             </form>
+            </div>
         </div>
         <!--end::Container-->
     </div>
     <!--end::Toolbar-->
     @php
-        //echo '<pre>'; print_r($candStatusClass);
         $sourcing_bg = $screening_bg = $interview_bg = $negotation_bg = $offer_bg = $joining_bg = $rejected_bg = $All_candidate_bg =
             'alert bg-gray text-center circle_boxes';
         $sourcing_text = $screening_text = $interview_text = $negotation_text = $offer_text = $joining_text = $rejected_text = $All_candidate_text =
@@ -1101,7 +1739,6 @@
                 $tr_class = 'bg-gray';
             }
         }
-
     @endphp
 
     <!--begin::Content-->
@@ -1125,6 +1762,9 @@
                                 </span>
                                 <input type="text" class="form-control simf-search-input" name="inputJobSearch"
                                     placeholder="Search by candidate name, company or recruiter..." id="kt_tagify_2" autocomplete="off" />
+                                <button type="button" class="simf-search-clear d-none" id="btnSimfSearchClear" title="Clear search">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                </button>
                             </div>
                             <div class="simf-sort-wrap" id="simf_sort_wrap">
                                 <span class="simf-sort-icon">
@@ -1152,6 +1792,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
                                 <span>Filter<span id="simf_filter_count_text"></span></span>
                                 <span class="badge badge-circle badge-primary simf-count-badge d-none" id="simf_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
+                            </button>
+                            <button type="button" id="btnSimfRefreshList" class="btn simf-refresh-btn" title="Refresh candidates">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                                <span>Refresh</span>
                             </button>
                         </div>
                     </div>
@@ -2033,56 +2677,37 @@
                     </button>
                 </div>
 
-                <!--begin::Card-->
-                <div class="card">
-                    <!--begin::Card body-->
-                    <div class="card-body pt-3 px-5" style="position: relative;">
-                      <!-- Circle loader only (Bootstrap/Metronic's own spinner-border,
-                           same pattern used elsewhere in this app) ΓÇö no text label.
-                           position:fixed + viewport-centered (not absolute/inset:0
-                           relative to .card-body): the card body's height grows with
-                           the candidate list, so centering "within the card" could
-                           place the spinner well below the visible viewport on a long
-                           list or when scrolled ΓÇö this keeps it in the center of the
-                           actual screen regardless of scroll position or row count. -->
-                      <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
-                          <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
-                      </div>
-                        <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class" id="myTable">
-                            <!--begin::Table head-->
-                            <thead>
-                                <!--begin::Table row-->
-                                <tr class="fw-bolder text-muted">
-                                    <th class="w-10px pe-0">
-                                        <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                            <input class="form-check-input chk_list" type="checkbox" data-kt-check="true"
-                                                data-kt-check-target="#kt_table_users .form-check-input" value="1" />
-                                        </div>
-                                    </th>
-                                    <th class="">Candidate Name</th>
-                                    {{-- <th class="">Contacts</th> --}}
-                                    <th class="">Exp.</th>
-                                    <th class="">Salary</th>
-                                    <th class="">Notice</th>
-                                    <th class="">Location</th>
-                                    <th class="">Jobs</th>
-                                    <th class="">Status</th>
-                                    <th class="">Ownership</th>
-                                    {{-- <th class="">Date</th> --}}
-                                    <th class="">Stage</th>
-                                    <th class="">Action</th>
-                                </tr>
-                                <!--end::Table row-->
-                            </thead>
-                            <!--end::Table head-->
-                            <tbody class="text-gray-600 fw-bold" id="candidatetList">
-                            </tbody>
-                        </table>
-                        <div id="paginationcandidate"></div>
+                <!--begin::Rule 20 Card + Sub-Card Candidate Stream-->
+                <div id="sc_table_card" class="simf-stream-wrapper">
+                    <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+                        <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
                     </div>
-                    <!--end::Card body-->
+                    <div class="simf-stream-bar">
+                        <div class="simf-stream-bar-left">
+                            <label class="form-check form-check-sm form-check-custom form-check-solid simf-selectall-label" for="simf_select_all">
+                                <input class="form-check-input chk_list" type="checkbox" id="simf_select_all" value="1" />
+                                <span>Select All</span>
+                            </label>
+                            <span class="simf-active-pill">Similar Candidates</span>
+                            <span class="simf-stream-count"><strong id="simf_visible_count">{{ @$existing_counter ?? 0 }}</strong> candidates</span>
+                        </div>
+                        <div class="simf-stream-bar-right">
+                            <span class="simf-stream-hint"><i class="fa-regular fa-hand-pointer"></i> Click candidate for profile drawer &bull; Click Add to Job to assign</span>
+                        </div>
+                    </div>
+                    <div id="candidatetList" class="simf-cand-stream">
+                        <div class="simf-skeleton-card">
+                            <div class="simf-skeleton-box"></div>
+                            <div class="simf-skeleton-box"></div>
+                            <div class="simf-skeleton-box"></div>
+                            <div class="simf-skeleton-box"></div>
+                            <div class="simf-skeleton-box"></div>
+                            <div class="simf-skeleton-box"></div>
+                        </div>
+                    </div>
+                    <div id="paginationcandidate" class="simf-pagination-card"></div>
                 </div>
-                <!--end::Card-->
+                <!--end::Rule 20 Card + Sub-Card Candidate Stream-->
             </div>
             <!--end::Container-->
         </div>
@@ -2183,16 +2808,11 @@
             });
 
         $(document).on('click', '.chk_list', function() {
-            if ($(".chk_list").prop('checked') == true) {
-                var chk_list = $('.chk_list').val();
-                $('.chk_list_item').prop('checked', true);
-            } else {
-                $('.chk_list_item').prop('checked', false);	
-            }
-        });
-        $(document).on('click', '.chk_list', function() {
-            if ($(".chk_list").prop('checked') == true) {
-                var chk_list = $('.chk_list').val();
+            var isChecked = $(this).prop('checked') == true;
+            $('.chk_list').prop('checked', isChecked);
+            $('.chk_list_item').prop('checked', isChecked);
+            $('.simf-cand-card').toggleClass('is-selected', isChecked);
+            if (isChecked) {
                 $('.custom_hide').addClass("d-none");
                 $('.mass_mail').removeClass("d-none");
                 $('.downloadexcell').removeClass("d-none");
@@ -2210,7 +2830,7 @@
             updateAptkSelectionBar();
         });
         $(document).on('click', '.chk_list_item', function() {
-            var i = 0;
+            $(this).closest('.simf-cand-card').toggleClass('is-selected', $(this).is(':checked'));
             var arr = [];
             $('.chk_list_item:checked').each(function() {
                 arr.push($(this).val());
@@ -2237,12 +2857,15 @@
            same behavior as the Pool tab / CV Tracker's #cvh_selection_bar. */
         function updateAptkSelectionBar() {
             var n = $('.chk_list_item:checked').length;
+            var totalVisible = $('.chk_list_item').length;
             $('#aptk_selected_count').text(n);
             $('#aptk_selection_bar').toggleClass('show', n > 0);
             $('#aptk_selection_master_chk').prop('checked', n > 0);
+            $('.chk_list').prop('checked', totalVisible > 0 && n === totalVisible);
         }
         function clearAptkSelection() {
             $('.chk_list, .chk_list_item').prop('checked', false);
+            $('.simf-cand-card').removeClass('is-selected');
             $('.send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
             $('.custom_hide').removeClass('d-none');
             updateAptkSelectionBar();
@@ -2790,7 +3413,9 @@
                     $('#candidatetList').html(response.html);
                     $('#similar_counter').html(response.total);
                     $('#simf_footer_number').text(response.total);
+                    $('#simf_visible_count').text(response.total);
                     $('#paginationcandidate').html(response.pagination);
+                    clearAptkSelection();
                     // The header card's hint (see apptrackerHeader.blade.php)
                     // says "job defaults" by default ΓÇö correct everywhere
                     // EXCEPT here, since this specific number IS the live,
@@ -2816,6 +3441,29 @@
                 fetchCandidates();
             }
         });
+
+        function syncSimfSearchClear() {
+            var hasVal = $.trim($('#kt_tagify_2').val() || '').length > 0;
+            $('#btnSimfSearchClear').toggleClass('d-none', !hasVal);
+        }
+        $(document).on('input keyup change', '#kt_tagify_2', syncSimfSearchClear);
+        $(document).on('click', '#btnSimfSearchClear', function() {
+            $('#kt_tagify_2').val('');
+            syncSimfSearchClear();
+            fetchCandidates(1);
+        });
+        $(document).on('click', '#btnSimfRefreshList', function() {
+            var $btn = $(this);
+            $btn.addClass('is-spinning');
+            fetchCandidates(1);
+            setTimeout(function() { $btn.removeClass('is-spinning'); }, 650);
+        });
+        $(document).on('click', '.simf-cand-subcard--info', function(e) {
+            if ($(e.target).closest('input, button, a, label, .form-check').length) return;
+            var $trigger = $(this).find('.show-application-detail, .client-show-application-detail').first();
+            if ($trigger.length) $trigger.trigger('click');
+        });
+        syncSimfSearchClear();
 
         // Custom Sort dropdown. Reads options straight from the real
         // #sortingfilter <select> (single source of truth ΓÇö nothing is

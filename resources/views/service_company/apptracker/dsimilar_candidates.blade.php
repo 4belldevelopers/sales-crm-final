@@ -764,22 +764,252 @@
         body > .tagify__dropdown {
             z-index: 1400 !important;
         }
+
+        /* Search Clear & Refresh Controls */
+        .dsf-search-wrap { position: relative; }
+        .dsf-search-input.form-control { padding-right: 30px !important; }
+        .dsf-search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .dsf-search-clear:hover { background: #e2e8f0; color: #0f172a; }
+        .dsf-refresh-btn {
+            height: 44px;
+            border-radius: 10px !important;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            padding: 0 14px !important;
+            background: #ffffff !important;
+            border: 1px solid #e4e6ef !important;
+            color: #3f4254 !important;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .dsf-refresh-btn:hover { background: #f8fafc !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+        .dsf-refresh-btn.is-spinning svg { animation: dsfSpin 0.8s linear infinite; }
+        @keyframes dsfSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Rule 20 Card + Sub-Card Candidate Stream (.dsf-stream-wrapper / .dsf-cand-*) */
+        .dsf-stream-wrapper {
+            background: transparent;
+            border: none;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .dsf-stream-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 9px 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+            flex-wrap: wrap;
+        }
+        .dsf-stream-bar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .dsf-selectall-label { display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; font-size: 12px; font-weight: 600; color: #334155; }
+        .dsf-active-pill { display: inline-flex; align-items: center; padding: 2.5px 10px; border-radius: 6px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 11px; font-weight: 700; }
+        .dsf-stream-count { font-size: 12px; color: #64748b; font-weight: 500; }
+        .dsf-stream-count strong { color: #0f172a; font-weight: 700; }
+        .dsf-stream-bar-right { font-size: 11px; color: #64748b; font-weight: 500; }
+        .dsf-stream-hint i { color: #009ef7; margin-right: 4px; }
+        .dsf-cand-stream { display: flex; flex-direction: column; gap: 8px; }
+        .dsf-cand-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-left: 3.5px solid #cbd5e1;
+            border-radius: 10px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        .dsf-cand-card:hover { border-color: #bae6fd; border-left-color: #009ef7; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06); }
+        .dsf-cand-card.is-selected { border-color: #93c5fd; border-left-color: #009ef7; background: #f8fbff; }
+        .dsf-cand-card.is-duplicate { border-left-color: #ef4444; }
+        .dsf-cand-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2.0fr) minmax(0, 1.3fr) minmax(0, 1.15fr) minmax(0, 1.4fr) minmax(0, 1.15fr) minmax(0, 1.35fr);
+            gap: 8px;
+            padding: 10px 12px;
+            align-items: stretch;
+        }
+        .dsf-cand-subcard {
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 8px;
+            padding: 7px 9px;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .dsf-cand-card:hover .dsf-cand-subcard { border-color: #e2e8f0; }
+        .dsf-subcard-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+        .dsf-subcard-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.45px; color: #94a3b8; line-height: 1.1; display: inline-flex; align-items: center; gap: 4px; }
+        .dsf-cand-subcard--info { cursor: pointer; }
+        .dsf-cand-subcard--info:hover { background: #f0f9ff; border-color: #bae6fd !important; }
+        .dsf-cand-info-row { display: flex; align-items: flex-start; gap: 9px; min-width: 0; }
+        .dsf-avatar { width: 34px; height: 34px; min-width: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px !important; font-weight: 700; text-transform: uppercase; }
+        .dsf-cand-info-meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1.5px; }
+        .dsf-cand-name { font-size: 12.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; text-decoration: none; }
+        .dsf-cand-subcard--info:hover .dsf-cand-name { color: #009ef7; }
+        .dsf-cand-role { font-size: 11px; font-weight: 500; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+        .dsf-cand-company { font-size: 10.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+        .dsf-dup-pill { display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 4px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-size: 9.5px; font-weight: 700; }
+        .dsf-val-salary { display: flex; flex-direction: column; gap: 1px; min-width: 0; font-variant-numeric: tabular-nums; }
+        .dsf-sal-main { font-size: 12px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+        .dsf-sal-mode { font-size: 10px; font-weight: 500; color: #64748b; }
+        .dsf-sal-sub { font-size: 10px; font-weight: 500; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dsf-val-exp, .dsf-val-notice { font-size: 10.5px; font-weight: 500; color: #475569; display: flex; align-items: center; gap: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; line-height: 1.3; }
+        .dsf-val-exp i, .dsf-val-notice i { font-size: 10px; color: #94a3b8; flex-shrink: 0; }
+        .dsf-dot { color: #cbd5e1; font-size: 8px; }
+        .dsf-notice-txt { font-weight: 600; }
+        .dsf-notice-immediate { color: #16a34a; }
+        .dsf-notice-days { color: #d97706; }
+        .dsf-notice-snp { color: #7c3aed; }
+        .dsf-notice-default { color: #64748b; }
+        .dsf-loc-city { font-size: 11.5px; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+        .dsf-loc-city i { font-size: 10px; color: #94a3b8; }
+        .dsf-loc-state { font-size: 10px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-top: 1px; }
+        .dsf-loc-edu { font-size: 10.5px; font-weight: 500; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-top: 2px; }
+        .dsf-loc-edu i { font-size: 10px; color: #94a3b8; }
+        .dsf-job-title { font-size: 11.5px; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; text-decoration: none; }
+        .dsf-job-title:hover { color: #009ef7; }
+        .dsf-job-company { font-size: 10px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-top: 1px; }
+        .dsf-job-meta-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 3px; }
+        .dsf-job-status-pill { font-size: 9.5px !important; padding: 1.5px 6px !important; border-radius: 4px !important; font-weight: 700 !important; line-height: 1.25 !important; }
+        .dsf-job-type-tag { font-size: 9.5px; font-weight: 600; padding: 1.5px 6px; border-radius: 4px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; white-space: nowrap; }
+        .dsf-owner-name { font-size: 11.5px; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+        .dsf-owner-company { font-size: 10.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-top: 2px; }
+        .dsf-owner-company i { font-size: 9.5px; color: #94a3b8; }
+        .dsf-owner-submitted { font-size: 10px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-top: 2px; }
+        .dsf-owner-submitted i { font-size: 9.5px; color: #94a3b8; }
+        .dsf-stage-action-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+        .dsf-stage-trigger { display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; text-decoration: none; min-width: 0; }
+        .dsf-stage-pill { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 2px 7px; border-radius: 5px; border: 1px solid transparent; font-size: 10.5px; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dsf-substage-txt { font-size: 10px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dsf-cand-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 12px; background: #ffffff; border-top: 1px solid #f1f5f9; width: 100%; overflow: hidden; }
+        .dsf-bottom-left { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
+        .dsf-match-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 5px; font-size: 10.5px; font-weight: 700; line-height: 1.3; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+        .dsf-skills-scroll { display: flex; align-items: center; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -ms-overflow-style: none; white-space: nowrap; min-width: 0; }
+        .dsf-skills-scroll::-webkit-scrollbar { display: none; }
+        .dsf-skill-pill { display: inline-flex; align-items: center; gap: 3px; padding: 1.5px 7px; border-radius: 4px; background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; font-size: 10px; font-weight: 500; line-height: 1.4; flex-shrink: 0; }
+        .dsf-skill-pill.is-matched { background: #dcfce7; color: #15803d; border-color: #bbf7d0; font-weight: 600; }
+        .dsf-skill-pill.is-mandatory { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; font-weight: 600; }
+        .dsf-skills-empty { font-size: 10.5px; color: #94a3b8; }
+        .dsf-empty-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 42px 20px; text-align: center; }
+        .dsf-empty-icon { width: 48px; height: 48px; border-radius: 12px; background: #f1f5f9; color: #94a3b8; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+        .dsf-empty-title { font-size: 14px; font-weight: 600; color: #1e293b; }
+        .dsf-empty-sub { font-size: 12px; color: #64748b; margin-top: 3px; }
+        .dsf-skeleton-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+        .dsf-skeleton-box { height: 62px; border-radius: 8px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: dsfShimmer 1.3s infinite; }
+        @keyframes dsfShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .dsf-pagination-card { margin-top: 12px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; background: #ffffff; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); }
+        @media (max-width: 1440px) {
+            .dsf-cand-grid { grid-template-columns: minmax(0, 1.95fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.35fr) minmax(0, 1.1fr) minmax(0, 1.3fr); gap: 6px; padding: 8px 10px; }
+            .dsf-cand-subcard { padding: 6px 8px; }
+        }
+        @media (max-width: 1180px) { .dsf-cand-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
+        @media (max-width: 640px) {
+            .dsf-cand-grid { grid-template-columns: 1fr; gap: 8px; }
+            .dsf-cand-bottom { flex-direction: column; align-items: flex-start; gap: 6px; }
+        }
+
+        /* ClientAppTracker Flat Light-Tinted Enterprise Header (.dsf-job-toolbar / .dsf-hdr-*) */
+        @media (min-width: 1181px) {
+            body#kt_body.toolbar-fixed { --kt-toolbar-height: 62px !important; }
+            body#kt_body.toolbar-fixed .wrapper { padding-top: calc(var(--kt-header-height, 65px) + 62px) !important; }
+        }
+        @media (max-width: 1180px) {
+            #kt_toolbar.dsf-job-toolbar { position: relative !important; top: auto !important; left: auto !important; right: auto !important; height: auto !important; }
+            body#kt_body.toolbar-fixed .wrapper { padding-top: var(--kt-header-height, 65px) !important; }
+        }
+        #kt_toolbar.dsf-job-toolbar { background: #ffffff !important; border-bottom: none !important; box-shadow: none !important; height: auto !important; min-height: 60px; padding: 0 !important; margin: 0 !important; }
+        #kt_toolbar.dsf-job-toolbar #kt_toolbar_container { width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; display: block !important; }
+        .dsf-hdr-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 60px; background: var(--hdr-bg, #ffffff); border: none; border-bottom: 1px solid var(--hdr-border, #dbeafe); border-left: 4px solid var(--hdr-accent, #2563eb); border-radius: 0 !important; padding: 10px 20px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
+        .dsf-hdr-card.hp-org-my { --hdr-bg: linear-gradient(90deg, #fffbeb 0%, #fffdf7 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #fde68a; --hdr-accent: #d97706; --hdr-logo-bg: #fffbeb; --hdr-logo-border: #fde68a; --hdr-icon-color: #d97706; --hdr-pill-bg: #fef3c7; --hdr-pill-border: #fcd34d; --hdr-pill-color: #92400e; --hdr-btn-outline-border: #f59e0b; --hdr-btn-outline-color: #b45309; --hdr-btn-outline-hover-bg: #fef3c7; --hdr-btn-outline-hover-color: #78350f; }
+        .dsf-hdr-card.hp-org-internal { --hdr-bg: linear-gradient(90deg, #eff6ff 0%, #f7faff 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #bfdbfe; --hdr-accent: #2563eb; --hdr-logo-bg: #eff6ff; --hdr-logo-border: #bfdbfe; --hdr-icon-color: #2563eb; --hdr-pill-bg: #dbeafe; --hdr-pill-border: #93c5fd; --hdr-pill-color: #1e40af; --hdr-btn-outline-border: #60a5fa; --hdr-btn-outline-color: #1d4ed8; --hdr-btn-outline-hover-bg: #dbeafe; --hdr-btn-outline-hover-color: #1e3a8a; }
+        .dsf-hdr-card.hp-org-direct { --hdr-bg: linear-gradient(90deg, #ecfdf5 0%, #f5fdf9 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #a7f3d0; --hdr-accent: #16a34a; --hdr-logo-bg: #ecfdf5; --hdr-logo-border: #a7f3d0; --hdr-icon-color: #16a34a; --hdr-pill-bg: #d1fae5; --hdr-pill-border: #6ee7b7; --hdr-pill-color: #166534; --hdr-btn-outline-border: #34d399; --hdr-btn-outline-color: #15803d; --hdr-btn-outline-hover-bg: #d1fae5; --hdr-btn-outline-hover-color: #14532d; }
+        .dsf-hdr-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .dsf-hdr-sep { width: 1px; height: 30px; background: #e2e8f0; flex-shrink: 0; }
+        .dsf-hdr-col { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        .dsf-hdr-col--identity { flex-direction: row; align-items: center; gap: 10px; flex: 0 1 320px; min-width: 185px; max-width: clamp(220px, 26vw, 350px); cursor: pointer; }
+        .dsf-hdr-col--status { gap: 3px; flex-shrink: 0; cursor: pointer; }
+        .dsf-hdr-col--comp, .dsf-hdr-col--loc, .dsf-hdr-col--meta { gap: 2px; flex-shrink: 0; }
+        .dsf-hdr-logo-wrap { width: 38px; height: 38px; min-width: 38px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+        .dsf-hdr-logo-img { width: 100%; height: 100%; object-fit: cover; }
+        .dsf-hdr-logo-mono { background: var(--hdr-logo-bg, #eff6ff) !important; border-color: var(--hdr-logo-border, #bfdbfe) !important; color: var(--hdr-icon-color, #2563eb) !important; font-size: 14px !important; font-weight: 700 !important; }
+        .dsf-hdr-identity-txt { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+        .dsf-hdr-job-title { font-size: 13px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; text-decoration: none; transition: color 0.15s ease; }
+        .dsf-hdr-col--identity:hover .dsf-hdr-job-title { color: var(--hdr-accent, #2563eb); }
+        .dsf-hdr-company-name { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 500; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; text-decoration: none; }
+        .dsf-hdr-company-name i { font-size: 10.5px; color: #94a3b8; flex-shrink: 0; }
+        .dsf-hdr-sub-top { display: flex; align-items: center; gap: 6px; }
+        .dsf-hdr-status-badge { font-size: 11px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 5px !important; line-height: 1.25 !important; }
+        .dsf-hdr-job-id { font-size: 11px; font-weight: 600; color: #64748b; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .dsf-hdr-sub-btm { display: flex; align-items: center; }
+        .dsf-hdr-org-pill { display: inline-flex; align-items: center; gap: 4px; padding: 1.5px 7px; border-radius: 5px; background: var(--hdr-pill-bg, #dbeafe); border: 1px solid var(--hdr-pill-border, #93c5fd); color: var(--hdr-pill-color, #1e40af); font-size: 10.5px; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+        .dsf-hdr-org-pill i { font-size: 9.5px; flex-shrink: 0; }
+        .dsf-hdr-sub-row { display: flex; align-items: center; gap: 5px; min-width: 0; }
+        .dsf-hdr-col-icon { font-size: 11px; color: var(--hdr-icon-color, #2563eb); flex-shrink: 0; }
+        .dsf-hdr-sub-val { font-size: 12.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; font-variant-numeric: tabular-nums; }
+        .dsf-hdr-loc-plus { font-size: 11px; font-weight: 700; color: var(--hdr-icon-color, #2563eb); margin-left: 2px; }
+        .dsf-hdr-sub-meta { font-size: 11.5px; font-weight: 500; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; font-variant-numeric: tabular-nums; }
+        .dsf-hdr-actions-form { flex: 0 0 auto; display: flex; align-items: center; margin: 0 !important; }
+        .dsf-hdr-actions { display: flex; align-items: center; gap: 8px; padding-left: 16px; border-left: 1px solid #e2e8f0; min-height: 38px; white-space: nowrap; }
+        .dsf-hdr-btn-outline { background: #ffffff !important; border: 1.5px solid var(--hdr-btn-outline-border, #60a5fa) !important; color: var(--hdr-btn-outline-color, #1d4ed8) !important; border-radius: 8px !important; height: 38px !important; min-height: 38px !important; padding: 0 14px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; font-size: 12.5px !important; font-weight: 600 !important; line-height: 1 !important; margin: 0 !important; transition: all 0.15s ease !important; }
+        .dsf-hdr-btn-outline:hover, .dsf-hdr-btn-outline:focus { background: var(--hdr-btn-outline-hover-bg, #dbeafe) !important; border-color: var(--hdr-accent, #2563eb) !important; color: var(--hdr-btn-outline-hover-color, #1e3a8a) !important; }
+        @media (max-width: 1440px) {
+            .dsf-hdr-card { gap: 12px; padding: 9px 16px; }
+            .dsf-hdr-main { gap: 8px; }
+            .dsf-hdr-col--identity { flex: 0 1 285px; max-width: 295px; }
+            .dsf-hdr-actions { padding-left: 12px; min-height: 36px; }
+            .dsf-hdr-btn-outline { height: 36px !important; min-height: 36px !important; padding: 0 12px !important; font-size: 12px !important; }
+        }
+        @media (max-width: 1180px) {
+            .dsf-hdr-card { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 14px; }
+            .dsf-hdr-main { justify-content: flex-start; flex-wrap: wrap; gap: 10px 18px; }
+            .dsf-hdr-sep { display: none !important; }
+            .dsf-hdr-col--identity { max-width: 100%; flex: 1 1 100%; }
+            .dsf-hdr-actions { width: 100%; min-height: auto; justify-content: flex-end; border-left: none; border-top: 1px solid #e2e8f0; padding-left: 0; padding-top: 8px; }
+        }
+        @media (max-width: 640px) { .dsf-hdr-actions { flex-wrap: wrap; } .dsf-hdr-actions > * { flex: 1; } }
     </style>
 @endpush
 
 @section('content')
     <!--begin::Toolbar-->
-    <div class="toolbar" id="kt_toolbar">
+    <div class="toolbar dsf-job-toolbar {{ $hpOrgClass ?? 'hp-org-internal' }}" id="kt_toolbar">
         @php
              use App\Helper\GeneralMethod;
             $req_path = url(
                 '/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt(@$job->id) . '/all',
             );
-            //$public_bench_path	=	url('/service_company/apptracker/public_bench/'. GeneralMethod::value_encrypt(@$job->id));
             $internal_bench_path = url(
                 '/service_company/apptracker/dinternal_bench/' . GeneralMethod::value_encrypt(@$job->id),
             );
-
             $career_url = url(
                 '/service_company/career-apptracker/career-apply/' . GeneralMethod::value_encrypt(@$job->id),
             );
@@ -806,46 +1036,34 @@
                     ];
         @endphp
         <!--begin::Container-->
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+        <div id="kt_toolbar_container" class="container-fluid">
+            <div class="dsf-hdr-card {{ $hpOrgClass ?? 'hp-org-internal' }}">
             <!--begin::Page title-->
-           @include('sections.service_company.toolbar',['id' => $job->id])
+           @include('sections.service_company.toolbar', [
+               'id' => $job->id,
+               'apptrackerHeaderCard' => true,
+               'headerPrefix' => 'dsf-hdr',
+               'hpOrgClass' => $hpOrgClass ?? null,
+           ])
             <!--end::Page title-->
-            <form action="" id="filter-form" style="">
+            <form action="" id="filter-form" class="dsf-hdr-actions-form" style="">
                 @csrf
                 <input type="hidden" name="jobid" id="jobid" value="{{ @$job->id }}" />
                 <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
+                <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" value="" />
                 <!--begin::Actions-->
-                <div class="d-flex align-items-center py-1">
+                <div class="dsf-hdr-actions">
                     @if (in_array('view_jobs', $userPermissions))
-                        {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
-                             defined once in the shared layout) that the job title/logo already
-                             uses elsewhere — .show-detail-open's click handler in
-                             service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
                         <a href="javascript:void(0);" data-id="{{ $job->id }}"
-                            class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
-                            View Job
+                            class="btn btn-sm dsf-hdr-btn-outline show-detail-open">
+                            <i class="far fa-eye" aria-hidden="true"></i>
+                            <span>View Job</span>
                         </a>
                     @endif
-                    <!--begin::Search-->
-                    <div class="d-flex align-items-center position-relative my-1 me-3">
-                        <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-
-                        <!--end::Svg Icon-->
-                        <input type="hidden" id="inputSearch" data-kt-user-table-filter="search"
-                            class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                            placeholder="Search..." />
-                    </div>
-                    <!--end::Search-->
-                    <div class="card-toolbar">
-                        <!--begin::Toolbar-->
-                        <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-
-                        </div>
-                        <!--end::Toolbar-->
-                    </div>
                 </div>
                 <!--end::Actions-->
             </form>
+            </div>
         </div>
         <!--end::Container-->
     </div>
@@ -871,6 +1089,9 @@
                                 </span>
                                 <input type="text" class="form-control dsf-search-input" name="inputJobSearch"
                                     placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" autocomplete="off" />
+                                <button type="button" class="dsf-search-clear d-none" id="btnDsfSearchClear" title="Clear search">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                </button>
                             </div>
                             <div class="dsf-sort-wrap" id="dsf_sort_wrap">
                                 <span class="dsf-sort-icon">
@@ -898,6 +1119,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
                                 <span>Filter<span id="dsf_filter_count_text"></span></span>
                                 <span class="badge badge-circle badge-primary dsf-count-badge d-none" id="dsf_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
+                            </button>
+                            <button type="button" id="btnDsfRefreshList" class="btn dsf-refresh-btn" title="Refresh candidates">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                                <span>Refresh</span>
                             </button>
                         </div>
                     </div>
@@ -1835,45 +2060,34 @@
                     <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
                 </div>
 
-                <!--begin::Card-->
-                <div class="card" id="sc_table_card" style="display:none;">
-                    <!--begin::Card body-->
-                    <div class="card-body pt-3 px-5" style="position: relative;">
-                        <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class" id="myTable">
-                            <!--begin::Table head-->
-                            <thead>
-                                <!--begin::Table row-->
-                                <tr class="fw-bolder text-muted">
-                                    <th class="w-10px pe-0">
-                                        <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                            <input class="form-check-input chk_list" type="checkbox" data-kt-check="true"
-                                                data-kt-check-target="#kt_table_users .form-check-input" value="1" />
-                                        </div>
-                                    </th>
-                                    <th class="">Candidate Name</th>
-                                    {{-- <th class="">Contacts</th> --}}
-                                    <th class="">Exp.</th>
-                                    <th class="">Salary</th>
-                                    <th class="">Notice</th>
-                                    <th class="">Location</th>
-                                    <th class="">Jobs</th>
-                                    <th class="">Status</th>
-                                    <th class="">Ownership</th>
-                                    {{-- <th class="">Date</th> --}}
-                                    <th class="">Stage</th>
-                                    <th class="">Action</th>
-                                </tr>
-                                <!--end::Table row-->
-                            </thead>
-                            <!--end::Table head-->
-                            <tbody class="text-gray-600 fw-bold" id="candidatetList">
-                            </tbody>
-                        </table>
-                        <div id="paginationcandidate"></div>
+                <!--begin::Rule 20 Card + Sub-Card Candidate Stream-->
+                <div class="dsf-stream-wrapper" id="sc_table_card" style="display:none;">
+                    <div class="dsf-stream-bar">
+                        <div class="dsf-stream-bar-left">
+                            <label class="form-check form-check-sm form-check-custom form-check-solid dsf-selectall-label" for="dsf_select_all">
+                                <input class="form-check-input chk_list" type="checkbox" id="dsf_select_all" value="1" />
+                                <span>Select All</span>
+                            </label>
+                            <span class="dsf-active-pill">Similar Candidates</span>
+                            <span class="dsf-stream-count"><strong id="dsf_visible_count">{{ @$existing_counter ?? 0 }}</strong> candidates</span>
+                        </div>
+                        <div class="dsf-stream-bar-right">
+                            <span class="dsf-stream-hint"><i class="fa-regular fa-hand-pointer"></i> Click candidate for profile drawer &bull; Click Add to Job to assign</span>
+                        </div>
                     </div>
-                    <!--end::Card body-->
+                    <div id="candidatetList" class="dsf-cand-stream">
+                        <div class="dsf-skeleton-card">
+                            <div class="dsf-skeleton-box"></div>
+                            <div class="dsf-skeleton-box"></div>
+                            <div class="dsf-skeleton-box"></div>
+                            <div class="dsf-skeleton-box"></div>
+                            <div class="dsf-skeleton-box"></div>
+                            <div class="dsf-skeleton-box"></div>
+                        </div>
+                    </div>
+                    <div id="paginationcandidate" class="dsf-pagination-card"></div>
                 </div>
-                <!--end::Card-->
+                <!--end::Rule 20 Card + Sub-Card Candidate Stream-->
             </div>
             <!--end::Container-->
         </div>
@@ -2301,7 +2515,9 @@
                     $('#candidatetList').html(response.html);
                     $('#similar_counter').html(response.total);
                     $('#dsf_footer_number').text(response.total);
+                    $('#dsf_visible_count').text(response.total);
                     $('#paginationcandidate').html(response.pagination);
+                    $('.chk_list, .chk_list_item').prop('checked', false);
                     // The header card's hint (see clientappHeader.blade.php)
                     // says "job defaults" by default — correct everywhere
                     // EXCEPT here, since this specific number IS the live,
@@ -2326,6 +2542,41 @@
                 fetchCandidates();
             }
         });
+
+        function syncDsfSearchClear() {
+            var hasVal = $.trim($('#kt_tagify_2').val() || '').length > 0;
+            $('#btnDsfSearchClear').toggleClass('d-none', !hasVal);
+        }
+        $(document).on('input keyup change', '#kt_tagify_2', syncDsfSearchClear);
+        $(document).on('click', '#btnDsfSearchClear', function() {
+            $('#kt_tagify_2').val('');
+            syncDsfSearchClear();
+            fetchCandidates(1);
+        });
+        $(document).on('click', '#btnDsfRefreshList', function() {
+            var $btn = $(this);
+            $btn.addClass('is-spinning');
+            fetchCandidates(1);
+            setTimeout(function() { $btn.removeClass('is-spinning'); }, 650);
+        });
+        $(document).on('click', '.chk_list', function() {
+            var isChecked = $(this).prop('checked') == true;
+            $('.chk_list').prop('checked', isChecked);
+            $('.chk_list_item').prop('checked', isChecked);
+            $('.dsf-cand-card').toggleClass('is-selected', isChecked);
+        });
+        $(document).on('click', '.chk_list_item', function() {
+            $(this).closest('.dsf-cand-card').toggleClass('is-selected', $(this).is(':checked'));
+            var total = $('.chk_list_item').length;
+            var checked = $('.chk_list_item:checked').length;
+            $('.chk_list').prop('checked', total > 0 && checked === total);
+        });
+        $(document).on('click', '.dsf-cand-subcard--info', function(e) {
+            if ($(e.target).closest('input, button, a, label, .form-check').length) return;
+            var $trigger = $(this).find('.show-application-detail, .client-show-application-detail').first();
+            if ($trigger.length) $trigger.trigger('click');
+        });
+        syncDsfSearchClear();
 
         // Custom Sort dropdown — reads options straight from the real
         // #sortingfilter <select> (single source of truth), keeps that

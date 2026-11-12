@@ -833,7 +833,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             // V3 Phase 3.1: HTML and JSON responses are cached under separate keys.
             'format' => $request->input('format', 'html'),
-            'ui_v' => 'card_v6',
+            'ui_v' => 'card_v7',
         ];
 
         $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
@@ -1414,6 +1414,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
         $this->job = Job::withoutGlobalScopes()->findOrFail($id);
+        $this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);
 
         $this->custome_count = $this->custome_count($id);
         $return_data = GeneralMethod::custome_count_all($id);
@@ -1689,6 +1690,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_notice' => $app_int_notice,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
+            'ui_v' => 'card_v7',
         ];
 
         // dd($cachePayload );
@@ -2941,7 +2943,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'valCheck' => $valCheck,
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
-            'ui_v' => 'card_v6',
+            'ui_v' => 'card_v7',
         ];
 
         $versionKey = 'allclientapp_version_user_'.$this->user->id;
@@ -4969,6 +4971,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
             'country' => $country ?? [],
             'cus_search' => $cus_search,
+            'ui_v' => 'card_v7',
         ];
 
         $versionKey = 'allcandidatesrequest_version_user_'.$this->user->id;
@@ -5612,6 +5615,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
         $this->job = Job::withoutGlobalScopes()->findOrFail($id);
+        $this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);
 
         // ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
         // same one similar_candidates() and custome_count_all() (the header
@@ -5859,6 +5863,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
+            'ui_v' => 'card_v7',
         ];
 
         // dd($cachePayload );
@@ -6663,6 +6668,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
         $this->job = Job::withoutGlobalScopes()->findOrFail($id);
+        $this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);
 
         // ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
         // same one similar_candidates() and custome_count_all() (the header
@@ -6887,6 +6893,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
+            'ui_v' => 'card_v7',
         ];
 
         // dd($cachePayload );
@@ -7632,6 +7639,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
         $this->job = Job::withoutGlobalScopes()->findOrFail($id);
+        $this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);
 
         $return_data = GeneralMethod::custome_count_all($id);
         // Phase 1 Optimization: Reuse $return_data->public_bench_counter already computed via ES by GeneralMethod::custome_count_all($id)
@@ -7824,6 +7832,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
+            'ui_v' => 'card_v7',
         ];
 
         $versionKey = 'allpublicbench_version_user_'.$this->user->id;
@@ -8645,6 +8654,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ->first();
 
         $this->dinternal_count = $this->dinternal_count($id, $company_id);
+        $this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);
         $return_data = GeneralMethod::custome_count_all($id);
         $this->pool_counter = $return_data->pool_client_counter;
         $this->existing_counter = $return_data->existing_counter;
@@ -8878,6 +8888,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_notice' => $app_int_notice,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
+            'ui_v' => 'card_v7',
         ];
 
         // dd($cachePayload );
@@ -9791,6 +9802,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ->first();
 
         $this->dinternal_count = $this->dinternal_count($id, $company_id);
+        $this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);
         $return_data = GeneralMethod::custome_count_all($id);
         $this->pool_counter = $return_data->pool_client_counter;
         $this->existing_counter = $return_data->existing_counter;
@@ -10044,6 +10056,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
+            'ui_v' => 'card_v7',
         ];
 
         // dd($cachePayload );
