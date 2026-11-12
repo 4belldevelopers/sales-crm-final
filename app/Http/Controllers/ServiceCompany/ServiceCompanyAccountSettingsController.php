@@ -729,12 +729,35 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         // 	dd($mapping);
         // dd("dkjdkd");
 
+        // Intent: Fallback to organization Admin Email ID if an empty notification email is submitted
+        $targetCompanyId = $id ?: (companySetting()->id ?? auth()->user()->company_id);
+        if ($request->has('recuitment_email') && empty(trim((string) $request->recuitment_email))) {
+            $company = DB::table('companies')->where('id', $targetCompanyId)->first();
+            $adminFallback = $company->company_email ?? '';
+            if (! empty($adminFallback)) {
+                $request->merge(['recuitment_email' => $adminFallback]);
+            } else {
+                return Reply::dataOnly(['status' => 'warning', 'message' => 'Recruitment email cannot be empty.']);
+            }
+        }
+        if ($request->has('sales_email') && empty(trim((string) $request->sales_email))) {
+            $company = DB::table('companies')->where('id', $targetCompanyId)->first();
+            $adminFallback = $company->company_email ?? '';
+            if (! empty($adminFallback)) {
+                $request->merge(['sales_email' => $adminFallback]);
+            } else {
+                return Reply::dataOnly(['status' => 'warning', 'message' => 'Sales email cannot be empty.']);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'recuitment_email' => [
+                'nullable',
                 'email:rfc,dns',
                 'disposable_email',
             ],
             'sales_email' => [
+                'nullable',
                 'email:rfc,dns',
                 'disposable_email',
             ],
