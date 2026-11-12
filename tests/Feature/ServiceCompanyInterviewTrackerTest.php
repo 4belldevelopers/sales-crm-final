@@ -192,6 +192,21 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $this->assertStringNotContainsString('it-time-tag', $html);
         $this->assertStringNotContainsString('it-platform-pill', $html);
 
+        // Follow-up dropdown placed in bottom activity strip (next to Stage), NOT in candidate subcard header
+        $firstCandStart = strpos($html, '<!-- Sub-Card 1: CANDIDATE -->');
+        $candSection = substr($html, $firstCandStart, $firstReqStart - $firstCandStart);
+        $this->assertStringNotContainsString('it-followup-dropdown', $candSection);
+
+        $firstBottomStart = strpos($html, '<!-- Bottom Activity & Pipeline Strip -->');
+        $this->assertNotFalse($firstBottomStart);
+        $bottomSection = substr($html, $firstBottomStart);
+        $this->assertStringContainsString('it-followup-dropdown', $bottomSection);
+        $this->assertStringContainsString('it-stage-cell', $bottomSection);
+
+        // Add Feedback button with white plus icon
+        $this->assertStringContainsString('it-fb-btn-add', $html);
+        $this->assertStringContainsString('fa-plus text-white', $html);
+
         // No raw table tags
         $this->assertStringNotContainsString('<tr', $html);
         $this->assertStringNotContainsString('<td', $html);
@@ -383,5 +398,19 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $this->assertNotFalse($modePos);
         $this->assertLessThan($companyTypePos, $searchPos);
         $this->assertLessThan($modePos, $companyTypePos);
+
+        // Job Type pill text and All Job Types default label
+        $this->assertStringContainsString('<span class="it-pill-lbl">Job Type</span>', $content);
+        $this->assertStringContainsString('All Job Types', $content);
+
+        // Clear cross icons removed from filter pills (dedicated Reset button used)
+        $this->assertStringNotContainsString('id="itCompanyTypeClearBtn"', $content);
+        $this->assertStringNotContainsString('id="itModeClearBtn"', $content);
+        $this->assertStringContainsString('.it-pill-clear {', $content);
+        $this->assertStringContainsString('display: none !important;', $content);
+
+        // White plus icon on Add Feedback button via CSS
+        $this->assertStringContainsString('.it-fb-btn-add i,', $content);
+        $this->assertStringContainsString('color: #ffffff !important;', $content);
     }
 }

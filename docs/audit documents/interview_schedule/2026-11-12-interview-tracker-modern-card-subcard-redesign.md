@@ -117,23 +117,31 @@ Each card features a `3.5px` semantic left-border accent (`#10b981` Selected, `#
   - Reset button resets all query inputs, sets company type back to `All Types`, resets mode, resets sort, and reactivates `All Interviews`.
 - **Cache Invalidation:** Bumped cache keys to `ui_v => 'card_v5'` and IndexedDB to `DB_VERSION = 6`.
 
+### 3.5 Toolbar Filter & Card Layout Polish (Post-Audit Enhancements)
+
+- **Toolbar Filter Combobox Inline Cross (✕) Removal:** Removed redundant clear cross icons from `Job Type` and `Mode` filter pills (`#itCompanyTypeClearBtn`, `#itModeClearBtn`), relying on the dedicated `Reset` button to reset all filters in a single click. `.it-pill-clear` CSS class permanently hidden (`display: none !important;`).
+- **Renamed "Type" to "Job Type":** Renamed toolbar filter label from "Type" to "Job Type" with default text "All Job Types" (`#itCompanyTypeDisplay`, `.it-pill-lbl`, and dropdown item title), improving clarity and enterprise branding.
+- **Moved Follow-Up Dropdown to Footer Card (Next to Stage):** Relocated the `.it-followup-dropdown` from Subcard 1 (Candidate header) to `.it-card-bottom .it-bottom-left` immediately adjacent to `.it-stage-cell` (Stage badge). Subcard 1 now displays a clean, uncluttered header containing solely `<span class="it-subcard-label">Candidate</span>`.
+- **Smart Upward Flip Menu Positioning (`.it-menu-up`):** Implemented viewport-aware bounds calculation in `toggleFollowUp()` and added `.it-followup-menu.it-menu-up { top: auto !important; bottom: calc(100% + 4px) !important; }` so the menu opens upwards when near the bottom of the viewport, eliminating clipping.
+- **Add Feedback Plus Icon Pure White Visibility:** Enforced pure white `#ffffff !important` with `text-white` on the `<i class="fas fa-plus">` icon inside `.it-fb-btn-add`, guaranteeing high contrast and sharp visibility across all screen resolutions and themes.
+
 ---
 
 ## 4. File Changes Matrix
 
 | File | Purpose | Isolation & Safety |
 |---|---|---|
-| `resources/views/service_company/interview-schedule/table.blade.php` | Compact 5-KPI single-row strip (`All Interviews`, `This Month`, `Today`, `Upcoming`, `Feedback Pending`); dedicated Company Type combobox filter adjacent to search; `applyCompanyTypeStatsLocally()` for 0ms User RAM KPI updates; IndexedDB `v6` upgrade. | Scoped strictly to Service Company Interview Tracker (Rule 17 & Rule 18). |
-| `resources/views/service_company/ajax_pages/interview-tracker-ajax.blade.php` | Replaced legacy table with `.it-card` stream; removed `"Google Meet"` text pill from cards; retained interview mode pill, link/address buttons, and 6-subcard layout (`Candidate` with current company, `Requisition` with employment type and non-clipping org badge, `Schedule`, `Panelists`, `Ownership & Recruiter`, `Evaluation`). | All user strings Blade-escaped (`{{ }}`). Zero business logic alterations. |
+| `resources/views/service_company/interview-schedule/table.blade.php` | Compact 5-KPI single-row strip; dedicated Job Type combobox filter adjacent to search; inline cross removal on filter pills; `.it-menu-up` smart dropdown flip; pure white `.it-fb-btn-add` icon CSS; `applyCompanyTypeStatsLocally()` for 0ms User RAM KPI updates; IndexedDB `v6` upgrade. | Scoped strictly to Service Company Interview Tracker (Rule 17 & Rule 18). |
+| `resources/views/service_company/ajax_pages/interview-tracker-ajax.blade.php` | Replaced legacy table with `.it-card` stream; moved Follow-up button from Candidate Subcard to footer card next to Stage; added pure white `text-white` plus icon to `+ Add Feedback` button; removed `"Google Meet"` text pill from cards; 6-subcard layout (`Candidate` with current company, `Requisition` with employment type and non-clipping org badge, `Schedule`, `Panelists`, `Ownership & Recruiter`, `Evaluation`). | All user strings Blade-escaped (`{{ }}`). Zero business logic alterations. |
 | `app/Http/Controllers/ServiceCompany/InterviewScheduleController.php` | Updated `dashboardStats()` to perform sub-aggregations per company type in a single ES call; updated `data_ajax()` to accept `company_type`, filter Elasticsearch queries accordingly, scope KPI counts to the active company type, and return `stats_by_type`. | 100% CQRS and ES read compliance (Rule 1 & Rule 2). |
 | `docs/audit documents/interview_schedule/2026-11-12-interview-tracker-modern-card-subcard-redesign.md` | Comprehensive architectural documentation and audit log. | Documentation standard (Rule 21). |
-| `tests/Feature/ServiceCompanyInterviewTrackerTest.php` | Automated tests verifying 5 KPIs, Company Type combobox placement adjacent to search, WAI-ARIA attributes, and UI/UX invariant assertions (113 assertions). | Isolated test suite. |
+| `tests/Feature/ServiceCompanyInterviewTrackerTest.php` | Automated tests verifying 5 KPIs, Job Type combobox placement adjacent to search, removal of inline clear crosses, relocation of Follow-Up to footer next to stage, white plus icon on feedback button, WAI-ARIA attributes, and UI/UX invariant assertions (127 assertions). | Isolated test suite. |
 
 ---
 
 ## 5. 15.6" Screen Fit & Verification Evidence
 
 - **Screen Responsiveness:** `#kt_content_container` enforces `overflow-x: hidden !important`, `.it-stat-grid` renders 5 columns in a single row on 1920px and 1366×768 (15.6" screens), dropping gracefully to 3 columns on <=1100px and 2 columns on mobile.
-- **Syntax & Compilation:** `php -l` passed on `InterviewScheduleController.php` and `php artisan view:cache` compiled all views cleanly.
+- **Syntax & Compilation:** `php -l` passed on all modified Blade and PHP files; views compiled cleanly.
 - **Laravel Pint:** `./vendor/bin/pint --test` passed cleanly across modified PHP files.
-- **Automated Tests:** `php artisan test tests/Feature/ServiceCompanyInterviewTrackerTest.php` passed 100% (5 tests, 113 assertions).
+- **Automated Tests:** `php artisan test tests/Feature/ServiceCompanyInterviewTrackerTest.php` passed 100% (5 tests, 127 assertions).

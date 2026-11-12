@@ -351,29 +351,6 @@
                 <div class="it-subcard it-subcard-candidate">
                     <div class="it-subcard-header">
                         <span class="it-subcard-label">Candidate</span>
-                        <div class="it-followup-dropdown" data-fid="{{ $row->id }}">
-                            <button class="it-followup-btn it-followup-trigger {{ $fuClass }}" onclick="toggleFollowUp(this)" type="button" title="Update candidate follow-up status">
-                                @if(!$fuStatus)
-                                    <i class="far fa-comment-dots fu-cta-icon"></i>
-                                @endif
-                                <span class="fu-label">{{ $fuLabel }}</span>
-                                <i class="fas fa-chevron-down it-fu-caret"></i>
-                            </button>
-                            <div class="it-followup-menu">
-                                <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'confirmed')">
-                                    <i class="fas fa-check text-success"></i>
-                                    <span>Confirmed</span>
-                                </div>
-                                <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'no-response')">
-                                    <i class="fas fa-times text-danger"></i>
-                                    <span>No Response</span>
-                                </div>
-                                <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'rescheduled')">
-                                    <i class="fas fa-redo text-primary"></i>
-                                    <span>Rescheduled</span>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     <div class="it-cand-body">
                         <div class="it-avatar {{ $bgTextDecore }} {{ $profile_detail }}" data-row-id="{{ @$row->wiseID }}" title="View candidate profile">
@@ -602,7 +579,7 @@
                             </div>
                             @if($canAddFeedback)
                                 <button type="button" class="it-feedback-btn it-fb-btn-add {{ $customHtml }}" data-row-id="{{ $row->id }}">
-                                    <i class="fas fa-plus"></i> Add Feedback
+                                    <i class="fas fa-plus text-white" style="color: #ffffff !important; margin-right: 4px;"></i> Add Feedback
                                 </button>
                             @else
                                 <span class="it-fb-locked-text">Pending Feedback</span>
@@ -623,6 +600,29 @@
                         @if($childStageName)
                             <span class="it-substage-pill">{{ $childStageName }}</span>
                         @endif
+                    </div>
+                    <div class="it-followup-dropdown ms-1" data-fid="{{ $row->id }}">
+                        <button class="it-followup-btn it-followup-trigger {{ $fuClass }}" onclick="toggleFollowUp(this)" type="button" title="Update candidate follow-up status">
+                            @if(!$fuStatus)
+                                <i class="far fa-comment-dots fu-cta-icon"></i>
+                            @endif
+                            <span class="fu-label">{{ $fuLabel }}</span>
+                            <i class="fas fa-chevron-down it-fu-caret"></i>
+                        </button>
+                        <div class="it-followup-menu">
+                            <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'confirmed')">
+                                <i class="fas fa-check text-success"></i>
+                                <span>Confirmed</span>
+                            </div>
+                            <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'no-response')">
+                                <i class="fas fa-times text-danger"></i>
+                                <span>No Response</span>
+                            </div>
+                            <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'rescheduled')">
+                                <i class="fas fa-redo text-primary"></i>
+                                <span>Rescheduled</span>
+                            </div>
+                        </div>
                     </div>
                     @if($fuStatus && $fuAt)
                         <span class="it-dot-sep">&bull;</span>
