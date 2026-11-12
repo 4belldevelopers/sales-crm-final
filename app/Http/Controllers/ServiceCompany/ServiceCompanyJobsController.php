@@ -2796,7 +2796,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
             'requisition_type' => $requisition_type,
-            'v' => 'status_v17',
+            'v' => 'status_v18',
         ];
 
         // Multi-axis version key: user + company jobs + company/user job requests so Accept/Reject immediately refreshes Total Jobs.
@@ -3355,6 +3355,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             $salaryMode = GeneralMethod::salaryMode();
             $currencySymbole = GeneralMethod::currencySymbole();
+            $appTimezone = (string) (config('app.timezone') ?: 'Asia/Kolkata');
+            $companyTimezone = (string) (GeneralMethod::defaultTimeZone($company_id) ?: $appTimezone);
 
             foreach ($data as $rowArr) {
                 $row = (object) $rowArr;
@@ -3448,7 +3450,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $employment_type = ($row->employment_type ?? 0) == 1 ? 'Contract' : 'Full-time';
 
                 $created_at = $row->created_at ?? null;
-                $newDate = GeneralMethod::ymdTodmyNotTime($created_at);
+                $postedMeta = $this->formatTenantDateTimeWithTz($created_at, $companyTimezone, $appTimezone);
+                $newDate = $postedMeta['full'] !== '—' ? $postedMeta['full'] : GeneralMethod::ymdTodmyNotTime($created_at);
 
                 $skills = [];
                 if (! empty($row->job_metronics_skills)) {
@@ -3681,6 +3684,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'application_counter' => $applicationCounter,
                     'interview_counter' => $interview_counter,
                     'stage_counts' => $stageCounts,
+                    'posted_date' => $newDate,
                     'added_date' => $newDate,
                     'skills' => $skills,
                 ];
@@ -5817,6 +5821,49 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     }
 
     /**
+     * Format a timestamp in the authenticated company/user's Account Settings default timezone
+     * with date, time, and timezone abbreviation (`d M y, h:i A T`).
+     */
+    protected function formatTenantDateTimeWithTz(mixed $rawDate, string $companyTimezone, string $appTimezone = 'Asia/Kolkata'): array
+    {
+        if (empty($rawDate)) {
+            return [
+                'carbon' => null,
+                'iso' => null,
+                'date' => '—',
+                'time_tz' => '',
+                'full' => '—',
+                'tz' => '',
+                'is_midnight' => true,
+            ];
+        }
+
+        try {
+            $carbon = Carbon::parse($rawDate, $appTimezone)->setTimezone($companyTimezone);
+
+            return [
+                'carbon' => $carbon,
+                'iso' => $carbon->toIso8601String(),
+                'date' => $carbon->format('d M y'),
+                'time_tz' => $carbon->format('h:i A T'),
+                'full' => $carbon->format('d M y, h:i A T'),
+                'tz' => $carbon->format('T'),
+                'is_midnight' => $carbon->format('H:i:s') === '00:00:00',
+            ];
+        } catch (\Throwable) {
+            return [
+                'carbon' => null,
+                'iso' => null,
+                'date' => '—',
+                'time_tz' => '',
+                'full' => '—',
+                'tz' => '',
+                'is_midnight' => true,
+            ];
+        }
+    }
+
+    /**
      * Query & batch-hydrate active, unexpired inbound Job Requests 100% from Elasticsearch (0% MySQL reads).
      * Shared by both the Job Requests KPI tab and the unified Total Jobs tab.
      *
@@ -6142,58 +6189,34 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $sentRaw = ! empty($row['created_at_rec'])
                     ? $row['created_at_rec']
                     : (! empty($row['from_created_at']) ? $row['from_created_at'] : ($row['created_at'] ?? null));
-                $sentCarbon = null;
-                if (! empty($sentRaw)) {
-                    try {
-                        $sentCarbon = Carbon::parse($sentRaw, $appTimezone)->setTimezone($companyTimezone);
-                    } catch (\Throwable) {
-                    }
-                }
-                $sentAtIso = $sentCarbon ? $sentCarbon->toIso8601String() : null;
-                $sentAtDisplay = $sentCarbon ? $sentCarbon->format('d M y') : '—';
-                $sentTimeDisplay = ($sentCarbon && $sentCarbon->format('H:i:s') !== '00:00:00')
-                    ? $sentCarbon->format('h:i A T')
-                    : '';
+                $sentMeta = $this->formatTenantDateTimeWithTz($sentRaw, $companyTimezone, $appTimezone);
+                $sentAtIso = $sentMeta['iso'];
+                $sentAtDisplay = $sentMeta['date'];
+                $sentTimeDisplay = $sentMeta['time_tz'];
 
                 // Request SLA Expiry (explicit expires_at or JIT 7-day SLA from sent timestamp) with tenant timezone
                 $expRaw = ! empty($row['expires_at'])
                     ? $row['expires_at']
-                    : ($sentCarbon ? $sentCarbon->copy()->addDays(7)->toIso8601String() : null);
-                $expCarbon = null;
-                if (! empty($expRaw)) {
-                    try {
-                        $expCarbon = Carbon::parse($expRaw, $appTimezone)->setTimezone($companyTimezone);
-                    } catch (\Throwable) {
-                    }
-                }
-                $expiresAtIso = $expCarbon ? $expCarbon->toIso8601String() : null;
-                $expiresAtDate = $expCarbon ? $expCarbon->format('d M y') : '—';
-                $expiresAtTimeTz = $expCarbon ? $expCarbon->format('h:i A T') : '';
-                $expiresAtDisplay = $expCarbon ? $expCarbon->format('d M y, h:i A T') : '—';
-                $timezoneAbbr = $expCarbon ? $expCarbon->format('T') : ($sentCarbon ? $sentCarbon->format('T') : '');
+                    : ($sentMeta['carbon'] ? $sentMeta['carbon']->copy()->addDays(7)->toIso8601String() : null);
+                $expMeta = $this->formatTenantDateTimeWithTz($expRaw, $companyTimezone, $appTimezone);
+                $expiresAtIso = $expMeta['iso'];
+                $expiresAtDate = $expMeta['date'];
+                $expiresAtTimeTz = $expMeta['time_tz'];
+                $expiresAtDisplay = $expMeta['full'];
+                $timezoneAbbr = $expMeta['tz'] ?: $sentMeta['tz'];
 
-                // Job Posted Date (from ELASTIC_JOBS created_at, fallback to request sent date)
+                // Job Posted Date (from ELASTIC_JOBS created_at, fallback to request sent timestamp) with Date, Time & Timezone
                 $jobCreatedRaw = $esJob['created_at'] ?? ($row['job_created_at'] ?? $sentRaw);
-                $postedCarbon = null;
-                if (! empty($jobCreatedRaw)) {
-                    try {
-                        $postedCarbon = Carbon::parse($jobCreatedRaw, $appTimezone)->setTimezone($companyTimezone);
-                    } catch (\Throwable) {
-                    }
-                }
-                $postedDateDisplay = $postedCarbon ? $postedCarbon->format('d M y') : $sentAtDisplay;
+                $postedMeta = $this->formatTenantDateTimeWithTz($jobCreatedRaw, $companyTimezone, $appTimezone);
+                $postedDateDisplay = $postedMeta['full'] !== '—'
+                    ? $postedMeta['full']
+                    : ($sentMeta['full'] !== '—' ? $sentMeta['full'] : $sentAtDisplay);
 
                 // Job Requisition Closing / Expiry Date (end_date or auto_date_job)
                 $jobEndRaw = $row['end_date'] ?? ($esJob['end_date'] ?? ($esJob['auto_date_job'] ?? null));
-                $jobEndCarbon = null;
-                if (! empty($jobEndRaw)) {
-                    try {
-                        $jobEndCarbon = Carbon::parse($jobEndRaw, $appTimezone)->setTimezone($companyTimezone);
-                    } catch (\Throwable) {
-                    }
-                }
-                $jobEndDateIso = $jobEndCarbon ? $jobEndCarbon->toIso8601String() : null;
-                $jobEndDateDisplay = $jobEndCarbon ? $jobEndCarbon->format('d M y') : null;
+                $jobEndMeta = $this->formatTenantDateTimeWithTz($jobEndRaw, $companyTimezone, $appTimezone);
+                $jobEndDateIso = $jobEndMeta['iso'];
+                $jobEndDateDisplay = $jobEndMeta['full'] !== '—' ? $jobEndMeta['full'] : null;
 
                 $empTypeRaw = (int) ($esJob['employment_type'] ?? ($row['employment_type'] ?? 0));
                 $empTypeLabel = ['Full-time', 'Contract', 'Freelance', 'Part Time'][$empTypeRaw] ?? 'Full-time';
