@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -333,5 +334,184 @@ class IndustryTaxonomyService
             'confidence' => $classification['confidence'] ?? 0.0,
             'matched_term' => $classification['matched_term'] ?? null,
         ];
+    }
+
+    /**
+     * Dynamically resolve the canonical industry from the cached global taxonomy manifest
+     * for a given signup business model profile key (`training`, `education`, `recruitment`).
+     *
+     * Intent: 0% MySQL reads on registration & onboarding request paths; avoids hardcoded IDs.
+     * Tenancy Note: Global master industry catalog cached via L1 Redis / L2 filesystem manifest.
+     *
+     * @return array{id: int, name: string}|null
+     */
+    public static function resolveIndustryForProfile(string $profileKey): ?array
+    {
+        $rules = [
+            'recruitment' => [
+                'exact' => ['staffing & recruiting', 'staffing and recruiting'],
+                'keywords' => ['staffing', 'recruiting', 'recruitment'],
+            ],
+            'training' => [
+                'exact' => ['professional training & coaching', 'professional training and coaching'],
+                'keywords' => ['training', 'coaching', 'upskilling'],
+            ],
+            'education' => [
+                'exact' => ['higher education', 'education management', 'edtech & digital learning', 'primary/secondary education'],
+                'keywords' => ['higher education', 'education management', 'university', 'college', 'education'],
+            ],
+        ];
+
+        $rule = $rules[$profileKey] ?? null;
+        if (! $rule) {
+            return null;
+        }
+
+        $manifest = self::getGlobalManifest();
+        $industries = $manifest['industries'] ?? [];
+        if (empty($industries) || ! is_array($industries)) {
+            return null;
+        }
+
+        // Pass 1: Ordered exact name lookup against active manifest
+        foreach ($rule['exact'] as $preferredName) {
+            foreach ($industries as $item) {
+                $itemName = strtolower(trim((string) ($item['name'] ?? '')));
+                if ($itemName === $preferredName) {
+                    return [
+                        'id' => (int) $item['id'],
+                        'name' => (string) $item['name'],
+                    ];
+                }
+            }
+        }
+
+        // Pass 2: Ordered substring match on industry name
+        foreach ($rule['keywords'] as $kw) {
+            foreach ($industries as $item) {
+                $itemName = strtolower((string) ($item['name'] ?? ''));
+                if ($itemName !== '' && str_contains($itemName, $kw)) {
+                    return [
+                        'id' => (int) $item['id'],
+                        'name' => (string) $item['name'],
+                    ];
+                }
+            }
+        }
+
+        // Pass 3: Fallback keyword match on cached taxonomy metadata
+        foreach ($rule['keywords'] as $kw) {
+            foreach ($industries as $item) {
+                $itemKeywords = strtolower((string) ($item['keywords'] ?? ''));
+                if ($itemKeywords !== '' && str_contains($itemKeywords, $kw)) {
+                    return [
+                        'id' => (int) $item['id'],
+                        'name' => (string) $item['name'],
+                    ];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Build the dynamic enterprise account profile catalog for the registration combobox.
+     *
+     * Intent: Single authoritative source of truth for ordering, workspace account types,
+     * capability badges (ATS / CRM), concise copy, and dynamically resolved default industries.
+     * Tenancy Note: Read-only cached taxonomy metadata (0% MySQL reads).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function getSignupProfileCatalog(): array
+    {
+        $definitions = [
+            [
+                'key' => 'product',
+                'company_type' => 3,
+                'title' => 'Product Company',
+                'subtag' => '(Direct Employer)',
+                'desc' => 'In-house hiring · Requisitions, interviews & offers',
+                'badges' => [
+                    ['text' => 'ATS Only', 'cls' => 'jw-tag-ats-only'],
+                ],
+                'icon_class' => 'jw-icon-product',
+                'svg' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>',
+                'default_hint' => 'Direct Employer Workspace',
+            ],
+            [
+                'key' => 'it_services',
+                'company_type' => 2,
+                'title' => 'IT Services & Consulting',
+                'subtag' => '',
+                'desc' => 'Bench talent deployment, client projects & billing',
+                'badges' => [
+                    ['text' => 'ATS', 'cls' => 'jw-tag-ats'],
+                    ['text' => 'CRM', 'cls' => 'jw-tag-crm'],
+                ],
+                'icon_class' => 'jw-icon-services',
+                'svg' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
+                'default_hint' => 'Service & Consulting Workspace',
+            ],
+            [
+                'key' => 'recruitment',
+                'company_type' => 1,
+                'title' => 'Recruitment & Staffing',
+                'subtag' => '',
+                'desc' => 'Agency recruiting · Candidate sourcing, job orders & placements',
+                'badges' => [
+                    ['text' => 'ATS', 'cls' => 'jw-tag-ats'],
+                    ['text' => 'CRM', 'cls' => 'jw-tag-crm'],
+                ],
+                'icon_class' => 'jw-icon-recruitment',
+                'svg' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
+                'default_hint' => 'Staffing Agency Workspace',
+            ],
+            [
+                'key' => 'training',
+                'company_type' => 2,
+                'title' => 'Training & Upskilling Academy',
+                'subtag' => '',
+                'desc' => 'Offer trained bench candidates directly to hiring companies',
+                'badges' => [
+                    ['text' => 'ATS', 'cls' => 'jw-tag-ats'],
+                    ['text' => 'CRM', 'cls' => 'jw-tag-crm'],
+                ],
+                'icon_class' => 'jw-icon-training',
+                'svg' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg>',
+                'default_hint' => 'Service Account · Training Workspace',
+            ],
+            [
+                'key' => 'education',
+                'company_type' => 2,
+                'title' => 'Educational Institutions & Campuses',
+                'subtag' => '',
+                'desc' => 'Offer students directly to companies via bench listings',
+                'badges' => [
+                    ['text' => 'ATS', 'cls' => 'jw-tag-ats'],
+                    ['text' => 'CRM', 'cls' => 'jw-tag-crm'],
+                ],
+                'icon_class' => 'jw-icon-education',
+                'svg' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>',
+                'default_hint' => 'Service Account · Campus Workspace',
+            ],
+        ];
+
+        $profiles = [];
+        foreach ($definitions as $def) {
+            $resolvedIndustry = self::resolveIndustryForProfile($def['key']);
+            $industryId = $resolvedIndustry['id'] ?? null;
+            $industryName = $resolvedIndustry['name'] ?? null;
+
+            $profiles[] = array_merge($def, [
+                'industry_id' => $industryId,
+                'industry_name' => $industryName,
+                'hint' => $industryName ? ('✓ Industry: '.$industryName) : $def['default_hint'],
+                'full_title' => $def['subtag'] !== '' ? ($def['title'].' '.$def['subtag']) : $def['title'],
+            ]);
+        }
+
+        return $profiles;
     }
 }
