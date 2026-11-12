@@ -1544,10 +1544,10 @@
            ========================================================================== */
         @media (min-width: 1181px) {
             body#kt_body.toolbar-fixed {
-                --kt-toolbar-height: 66px !important;
+                --kt-toolbar-height: 70px !important;
             }
             body#kt_body.toolbar-fixed .wrapper {
-                padding-top: calc(var(--kt-header-height, 65px) + 66px) !important;
+                padding-top: calc(var(--kt-header-height, 65px) + 70px) !important;
             }
         }
         @media (max-width: 1180px) {
@@ -1567,26 +1567,28 @@
             border-bottom: none !important;
             box-shadow: none !important;
             height: auto !important;
-            min-height: 62px;
-            padding: 4px 0 !important;
+            min-height: 66px;
+            padding: 5px 0 3px 0 !important;
         }
         #kt_toolbar.aptk-job-toolbar #kt_toolbar_container {
             width: 100% !important;
             max-width: 100% !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
             display: block !important;
         }
         .aptk-hdr-card {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
+            gap: 16px;
             width: 100%;
-            min-height: 58px;
+            min-height: 60px;
             background: var(--hdr-bg, #ffffff);
             border: 1px solid var(--hdr-border, #dbeafe);
             border-left: 4px solid var(--hdr-accent, #2563eb);
             border-radius: 10px;
-            padding: 8px 14px;
+            padding: 9px 16px;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
             overflow: hidden;
@@ -1651,11 +1653,12 @@
             min-width: 0;
             display: flex;
             align-items: center;
-            gap: 14px;
+            justify-content: space-between;
+            gap: 12px;
         }
         .aptk-hdr-sep {
             width: 1px;
-            height: 28px;
+            height: 30px;
             background: #e2e8f0;
             flex-shrink: 0;
         }
@@ -1669,8 +1672,9 @@
             flex-direction: row;
             align-items: center;
             gap: 10px;
-            flex: 1 1 auto;
-            max-width: clamp(200px, 24vw, 340px);
+            flex: 0 1 320px;
+            min-width: 185px;
+            max-width: clamp(220px, 26vw, 350px);
             cursor: pointer;
         }
         .aptk-hdr-col--status {
@@ -1685,9 +1689,9 @@
             flex-shrink: 0;
         }
         .aptk-hdr-logo-wrap {
-            width: 36px;
-            height: 36px;
-            min-width: 36px;
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
             border-radius: 8px;
             border: 1px solid #e2e8f0;
             background: #ffffff;
@@ -1836,17 +1840,26 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            padding-left: 16px;
+            border-left: 1px solid #e2e8f0;
+            min-height: 38px;
             white-space: nowrap;
         }
         .aptk-hdr-btn-outline {
             background: #ffffff !important;
             border: 1.5px solid var(--hdr-btn-outline-border, #60a5fa) !important;
             color: var(--hdr-btn-outline-color, #1d4ed8) !important;
-            border-radius: 7px !important;
-            padding: 6px 12px !important;
-            font-size: 12px !important;
+            border-radius: 8px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            padding: 0 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            font-size: 12.5px !important;
             font-weight: 600 !important;
-            line-height: 1.2 !important;
+            line-height: 1 !important;
             margin: 0 !important;
             transition: all 0.15s ease !important;
         }
@@ -1860,11 +1873,17 @@
             background: var(--hdr-btn-solid-bg, #2563eb) !important;
             border: 1.5px solid var(--hdr-btn-solid-bg, #2563eb) !important;
             color: #ffffff !important;
-            border-radius: 7px !important;
-            padding: 6px 13px !important;
-            font-size: 12px !important;
+            border-radius: 8px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            padding: 0 16px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            font-size: 12.5px !important;
             font-weight: 600 !important;
-            line-height: 1.2 !important;
+            line-height: 1 !important;
             margin: 0 !important;
             box-shadow: 0 2px 5px var(--hdr-btn-shadow, rgba(37, 99, 235, 0.20)) !important;
             transition: all 0.15s ease !important;
@@ -1881,19 +1900,31 @@
         }
         @media (max-width: 1440px) {
             .aptk-hdr-card {
-                gap: 10px;
-                padding: 7px 12px;
+                gap: 12px;
+                padding: 8px 14px;
             }
             .aptk-hdr-main {
-                gap: 10px;
+                gap: 8px;
             }
             .aptk-hdr-col--identity {
-                max-width: 245px;
+                flex: 0 1 285px;
+                max-width: 295px;
             }
-            .aptk-hdr-btn-outline,
+            .aptk-hdr-actions {
+                padding-left: 12px;
+                min-height: 36px;
+            }
+            .aptk-hdr-btn-outline {
+                height: 36px !important;
+                min-height: 36px !important;
+                padding: 0 12px !important;
+                font-size: 12px !important;
+            }
             .aptk-hdr-btn-solid {
-                padding: 5.5px 10px !important;
-                font-size: 11.5px !important;
+                height: 36px !important;
+                min-height: 36px !important;
+                padding: 0 14px !important;
+                font-size: 12px !important;
             }
         }
         @media (max-width: 1180px) {
@@ -1904,19 +1935,25 @@
                 padding: 10px 12px;
             }
             .aptk-hdr-main {
+                justify-content: flex-start;
                 flex-wrap: wrap;
-                gap: 10px 16px;
+                gap: 10px 18px;
             }
             .aptk-hdr-sep {
                 display: none !important;
             }
             .aptk-hdr-col--identity {
                 max-width: 100%;
-                flex-basis: 100%;
+                flex: 1 1 100%;
             }
             .aptk-hdr-actions {
                 width: 100%;
+                min-height: auto;
                 justify-content: flex-end;
+                border-left: none;
+                border-top: 1px solid #e2e8f0;
+                padding-left: 0;
+                padding-top: 8px;
             }
         }
         @media (max-width: 640px) {
