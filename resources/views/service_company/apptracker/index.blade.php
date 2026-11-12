@@ -447,6 +447,61 @@
         }
         .hp-total.bg-total-active {
             background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+        }
+        /* Organization-specific Total Candidates palettes: My Org = Sunlit Canary Yellow, Internal Client = Deep Royal Cobalt, Direct Client = Emerald */
+        .hp-total.hp-org-my.bg-total-active {
+            background: linear-gradient(135deg, #fde047 0%, #eab308 100%);
+            box-shadow: 0 6px 16px rgba(234, 179, 8, 0.28);
+        }
+        .hp-total.hp-org-my.bg-total-active .hp-total-icon,
+        .hp-total.hp-org-my.bg-total-active .hp-total-count {
+            color: #422006;
+        }
+        .hp-total.hp-org-my.bg-total-active .hp-total-label {
+            color: #713f12;
+            font-weight: 600;
+        }
+        .hp-total.hp-org-my.bg-gray {
+            background: #fefce8;
+            border: 1.5px solid #fde047;
+        }
+        .hp-total.hp-org-my.bg-gray .hp-total-icon,
+        .hp-total.hp-org-my.bg-gray .hp-total-count,
+        .hp-total.hp-org-my.bg-gray .hp-total-label {
+            color: #854d0e;
+        }
+        .hp-total.hp-org-internal.bg-total-active {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+            box-shadow: 0 6px 16px rgba(29, 78, 216, 0.30);
+        }
+        .hp-total.hp-org-internal.bg-total-active .hp-total-label {
+            color: #dbeafe;
+        }
+        .hp-total.hp-org-internal.bg-gray {
+            background: #eff6ff;
+            border: 1.5px solid #93c5fd;
+        }
+        .hp-total.hp-org-internal.bg-gray .hp-total-icon,
+        .hp-total.hp-org-internal.bg-gray .hp-total-count,
+        .hp-total.hp-org-internal.bg-gray .hp-total-label {
+            color: #1e3a8a;
+        }
+        .hp-total.hp-org-direct.bg-total-active {
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+            box-shadow: 0 6px 16px rgba(4, 120, 87, 0.28);
+        }
+        .hp-total.hp-org-direct.bg-total-active .hp-total-label {
+            color: #d1fae5;
+        }
+        .hp-total.hp-org-direct.bg-gray {
+            background: #ecfdf5;
+            border: 1.5px solid #a7f3d0;
+        }
+        .hp-total.hp-org-direct.bg-gray .hp-total-icon,
+        .hp-total.hp-org-direct.bg-gray .hp-total-count,
+        .hp-total.hp-org-direct.bg-gray .hp-total-label {
+            color: #047857;
         }
         .hp-total.bg-gray {
             background: #e4e6ef;
@@ -774,6 +829,7 @@
             overflow: hidden;
             width: 100%;
             max-width: 100%;
+            cursor: pointer;
         }
         .aptk-cand-card:hover {
             border-color: #cbd5e1;
@@ -1007,7 +1063,7 @@
         .aptk-notice-snp { color: #7c3aed; }
         .aptk-notice-default { color: #64748b; }
 
-        /* Sub-Card 3: Location & Edu */
+        /* Sub-Card 3: Location & Degree */
         .aptk-loc-city {
             font-size: 11.5px;
             font-weight: 600;
@@ -1019,6 +1075,20 @@
         }
         .aptk-loc-city i {
             font-size: 10px;
+            color: #94a3b8;
+        }
+        .aptk-loc-mode {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .aptk-loc-mode i {
+            font-size: 9.5px;
             color: #94a3b8;
         }
         .aptk-loc-edu {
@@ -1115,8 +1185,33 @@
             font-size: 9.5px;
             color: #94a3b8;
         }
+        .aptk-owner-submitted {
+            font-size: 10px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .aptk-owner-submitted i {
+            font-size: 9.5px;
+            color: #94a3b8;
+        }
 
-        /* Sub-Card 6: Pipeline & Stage */
+        /* Sub-Card 6: Pipeline & Stage (Entire Card Clickable) */
+        .aptk-subcard-stage {
+            cursor: pointer;
+        }
+        .aptk-subcard-stage:hover,
+        .aptk-subcard-stage:focus-visible {
+            border-color: #93c5fd !important;
+            background: #f0f9ff;
+            outline: none;
+        }
+        .aptk-subcard-stage:hover .aptk-stage-cue {
+            text-decoration: underline;
+        }
         .aptk-stage-trigger {
             display: flex;
             flex-direction: column;
@@ -1233,26 +1328,48 @@
             flex-shrink: 0;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
-        .aptk-view-profile-btn {
+        .aptk-linkedin-pill {
             display: inline-flex;
             align-items: center;
-            padding: 3px 10px;
-            border-radius: 6px;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
             background: #eff6ff;
-            color: #009ef7;
+            color: #1d4ed8;
             border: 1px solid #bfdbfe;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             text-decoration: none;
+            line-height: 1.4;
             white-space: nowrap;
+            flex-shrink: 0;
             transition: all 0.15s ease;
         }
-        .aptk-view-profile-btn:hover {
-            background: #009ef7;
-            color: #ffffff;
-            border-color: #009ef7;
+        .aptk-linkedin-pill:hover {
+            background: #dbeafe;
+            color: #1e40af;
+            border-color: #93c5fd;
+        }
+        .aptk-visa-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .aptk-visa-pill i {
+            font-size: 10px;
+            color: #64748b;
         }
 
         /* Empty & Skeleton States */
@@ -1718,7 +1835,7 @@
                     <div class="card-body">
                         <div class="hp-flow">
                             <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
-                                <div class="{{ $hpTotalActive ? 'bg-total-active' : 'bg-gray' }} text-center hp-total" role="alert" id="bg_all">
+                                <div class="{{ $hpTotalActive ? 'bg-total-active' : 'bg-gray' }} {{ $hpOrgClass ?? 'hp-org-internal' }} text-center hp-total" role="alert" id="bg_all">
                                     <span class="hp-total-icon">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
@@ -2420,6 +2537,7 @@
         $(document).on('click', '.stage_sub_stage', async function(e) {
 
             e.preventDefault();
+            e.stopPropagation();
             const connectedsub = await isInternetAvailable();
                 if (!connectedsub) {
                     Swal.fire({
@@ -2450,6 +2568,29 @@
                 }
             });
 
+        });
+
+        $(document).on('keydown', '.aptk-subcard-stage[role="button"]', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).trigger('click');
+            }
+        });
+
+        // Clicking anywhere on a candidate card opens the Candidate Drawer,
+        // except interactive controls (checkbox, Pipeline & Stage card, LinkedIn link, buttons/links).
+        $(document).on('click', '.aptk-cand-card', function(e) {
+            if ($(e.target).closest('.chk_list_item, .aptk-chk-wrap, .aptk-subcard-stage, .stage_sub_stage, .aptk-linkedin-pill, .show-application-detail, a[href^="http"], button, input, select, textarea').length) {
+                return;
+            }
+            if (window.getSelection && window.getSelection().toString().trim() !== '') {
+                return;
+            }
+            var $drawerTrigger = $(this).find('.show-application-detail').first();
+            if ($drawerTrigger.length) {
+                $drawerTrigger.trigger('click');
+            }
         });
 
         // Stage-pill click handling now lives in stage_body_content.blade.php

@@ -1,5 +1,6 @@
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\AppTrackerCardPresenter;
     use App\Services\ReferenceDataCache;
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
@@ -99,9 +100,9 @@
             $flag = $duplicate === 1 ? 1 : 0;
             $isBench = (@$row->condidate_type == 'bench_condidate');
             $photo = !empty(@$row->photo) ? $row->photo : '';
-            $displayDesignation = trim((string) (@$row->current_designation ?? '')) !== '' ? ucwords(trim((string) $row->current_designation)) : '—';
-            $rawCurrentCompany = trim((string) (@$row->current_company ?: (@$row->apl_company_name ?? '')));
-            $displayCurrentCompany = $rawCurrentCompany !== '' ? ucwords($rawCurrentCompany) : '—';
+            $cardMeta = AppTrackerCardPresenter::present($row, trim((string) (@$row->country_name ?? '')), false);
+            $displayDesignation = $cardMeta['designation'];
+            $displayCurrentCompany = $cardMeta['current_company'];
 
             // Experience formatting (preserving exact decimal formatting like 3.0, 5.6, 9.10; trimming dangling dots like "10.")
             $fmtExp = function ($val) {
@@ -159,32 +160,9 @@
                 ? ($current_ctc_cur . $billAmountFormatted . $ectcModeSuffix . ($isBench ? ' (' . $outsourcing_type . ')' : ' | Cur: ' . $current_ctc_cur . $payAmountFormatted . $ctcModeSuffix))
                 : 'N/A';
 
-            // Notice period
-            $np = $row->np_id ?? '';
-            if (empty($np)) {
-                $np = 'N/A';
-            }
-            if ((int) ($row->serving_notice_period_mode ?? -1) === 0 && !empty($row->np_id)) {
-                $np = ((int) $row->np_id === 1) ? ($row->np_id . ' Day') : ($row->np_id . ' Days');
-            } elseif ((int) ($row->serving_notice_period_mode ?? -1) === 1) {
-                $np = $row->np_id;
-                if ($np != 'Immediate' && !empty($np)) {
-                    $np = date('d M y', strtotime($row->np_id));
-                    $today = date('Y-m-d');
-                    if (date('Y-m-d', strtotime($row->np_id)) < $today) {
-                        $np = 'Immediate';
-                    }
-                }
-            }
-            $npClass = 'aptk-notice-default';
-            if ($np === 'Immediate') {
-                $npClass = 'aptk-notice-immediate';
-            } elseif ((int) ($row->serving_notice_period_mode ?? -1) === 0 && !empty($row->np_id)) {
-                $npClass = 'aptk-notice-days';
-            } elseif ((int) ($row->serving_notice_period_mode ?? -1) === 1 && !empty($row->np_id)) {
-                $np = 'SNP LWD ' . $np;
-                $npClass = 'aptk-notice-snp';
-            }
+            // Notice period (only `NP: X Days` / `NP: Immediate` / `SNP LWD ...`; hidden if empty)
+            $np = $cardMeta['notice_display'];
+            $npClass = 'aptk-notice-' . $cardMeta['notice_class'];
 
             // Interview schedule (uses pre-fetched map; fallback to DB if not passed)
             $schedule_date = '';
@@ -229,13 +207,13 @@
                 : 'Not Scheduled';
 
             // Location & Qualification
-            $row_city_name = trim((string) (@$row->city_name ?? ''));
-            $row_country_name = trim((string) (@$row->country_name ?? ''));
+            $row_city_name = AppTrackerCardPresenter::cleanText(@$row->city_name ?? '');
+            $row_country_name = AppTrackerCardPresenter::cleanText(@$row->country_name ?? '');
             $locShort = ($row_city_name !== '' || $row_country_name !== '')
                 ? trim(($row_city_name !== '' ? ucwords(mb_substr($row_city_name, 0, 18)) : '') . ($row_country_name !== '' ? ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) : ''), ', ')
-                : '—';
-            $locFull = trim(($row_city_name !== '' ? ucwords($row_city_name) : '') . ($row_country_name !== '' ? ', ' . strtoupper($row_country_name) : ''), ', ') ?: '—';
-            $displayQualification = trim((string) (@$row->qualification_name ?? '')) !== '' ? trim((string) $row->qualification_name) : '—';
+                : '';
+            $locFull = trim(($row_city_name !== '' ? ucwords($row_city_name) : '') . ($row_country_name !== '' ? ', ' . strtoupper($row_country_name) : ''), ', ');
+            $displayQualification = $cardMeta['qualification'];
 
             // Ownership
             if ($company_id != ($row->ClientComID ?? 0) && !empty($row->ClientComID) && $row->ClientComID > 0) {
@@ -256,9 +234,9 @@
             } else {
                 $rowpostedby = ucwords((string) @$row->posted_by);
             }
-            $rowpostedby = trim((string) $rowpostedby) !== '' ? $rowpostedby : '—';
-            $post_company_name = trim((string) (@$row->post_company_name ?: (@$row->company_name ?? ''))) ?: '—';
-            $printOwnerStr = $rowpostedby . ' (' . $post_company_name . ')';
+            $rowpostedby = AppTrackerCardPresenter::cleanText($rowpostedby);
+            $post_company_name = AppTrackerCardPresenter::cleanText(@$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->company_name ?? '')));
+            $printOwnerStr = trim($rowpostedby . ($post_company_name !== '' ? ' (' . $post_company_name . ')' : ''));
 
             // Stage & Sub-stage
             $masterStatusId = (int) ($row->job_master_status_id ?? 8);
@@ -355,12 +333,16 @@
                                    title="{{ e($displayFullName) }}">
                                     {{ $displayFullName }}
                                 </a>
-                                <div class="aptk-cand-desig {{ $flag === 1 ? 'text-danger' : '' }}" title="{{ e($displayDesignation) }}">
-                                    {{ $displayDesignation }}
-                                </div>
-                                <div class="aptk-cand-company" title="{{ e($displayCurrentCompany) }}">
-                                    <i class="fas fa-building me-1"></i><span>{{ $displayCurrentCompany }}</span>
-                                </div>
+                                @if ($displayDesignation !== '')
+                                    <div class="aptk-cand-desig {{ $flag === 1 ? 'text-danger' : '' }}" title="{{ e($displayDesignation) }}">
+                                        {{ $displayDesignation }}
+                                    </div>
+                                @endif
+                                @if ($displayCurrentCompany !== '')
+                                    <div class="aptk-cand-company" title="{{ e($displayCurrentCompany) }}">
+                                        <i class="fas fa-building me-1"></i><span>{{ $displayCurrentCompany }}</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -394,25 +376,36 @@
                                 <span><strong>{{ $rel_formattedExperience }} Y</strong> Rel</span>
                             @endif
                         </div>
-                        <div class="aptk-val-notice" title="Notice Period: {{ e($np) }}">
-                            <i class="fas fa-hourglass-half me-1"></i>
-                            <span class="aptk-notice-txt {{ $npClass }}">{{ $np }}</span>
-                        </div>
+                        @if ($np !== '')
+                            <div class="aptk-val-notice" title="Notice Period: {{ e($np) }}">
+                                <i class="fas fa-hourglass-half me-1"></i>
+                                <span class="aptk-notice-txt {{ $npClass }}">{{ $np }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
-                <!-- SUB-CARD 3: LOCATION & EDUCATION -->
+                <!-- SUB-CARD 3: LOCATION & DEGREE -->
                 <div class="aptk-cand-subcard aptk-subcard-loc">
                     <div class="aptk-subcard-hdr">
-                        <span class="aptk-subcard-label">Location &amp; Edu</span>
+                        <span class="aptk-subcard-label">Location &amp; Degree</span>
                     </div>
                     <div class="aptk-subcard-body">
-                        <div class="aptk-loc-city" title="{{ e($locFull) }}">
-                            <i class="fas fa-map-marker-alt me-1"></i><span>{{ $locShort }}</span>
-                        </div>
-                        <div class="aptk-loc-edu" title="{{ e(strtoupper($displayQualification)) }}">
-                            <i class="fas fa-graduation-cap me-1"></i><span class="aptk-edu-uppercase">{{ $displayQualification }}</span>
-                        </div>
+                        @if ($locShort !== '')
+                            <div class="aptk-loc-city" title="{{ e($locFull) }}">
+                                <i class="fas fa-map-marker-alt me-1"></i><span>{{ $locShort }}</span>
+                            </div>
+                        @endif
+                        @if ($cardMeta['work_mode_label'] !== '')
+                            <div class="aptk-loc-mode" title="{{ e($cardMeta['work_mode_label']) }}">
+                                <i class="{{ $cardMeta['work_mode_icon'] }} me-1"></i><span>{{ $cardMeta['work_mode_label'] }}</span>
+                            </div>
+                        @endif
+                        @if ($displayQualification !== '')
+                            <div class="aptk-loc-edu" title="{{ e(strtoupper($displayQualification)) }}">
+                                <i class="fas fa-graduation-cap me-1"></i><span class="aptk-edu-uppercase">{{ $displayQualification }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -451,41 +444,53 @@
                     </div>
                 </div>
 
-                <!-- SUB-CARD 5: OWNERSHIP -->
+                <!-- SUB-CARD 5: RECRUITER & SOURCING -->
                 <div class="aptk-cand-subcard aptk-subcard-owner">
                     <div class="aptk-subcard-hdr">
-                        <span class="aptk-subcard-label">Ownership</span>
+                        <span class="aptk-subcard-label"><i class="fas fa-user-tie me-1"></i>Recruiter &amp; Sourcing</span>
                     </div>
                     <div class="aptk-subcard-body">
-                        <div class="aptk-owner-name" title="{{ e($rowpostedby) }}">
-                            <i class="fas fa-user-circle text-primary me-1"></i><span>{{ $rowpostedby }}</span>
-                        </div>
-                        <div class="aptk-owner-company" title="{{ e($post_company_name) }}">
-                            <i class="fas fa-building me-1"></i><span>{{ $post_company_name }}</span>
-                        </div>
+                        @if ($rowpostedby !== '')
+                            <div class="aptk-owner-name" title="{{ e($rowpostedby) }}">
+                                <i class="fas fa-user-circle text-primary me-1"></i><span>{{ $rowpostedby }}</span>
+                            </div>
+                        @endif
+                        @if ($post_company_name !== '')
+                            <div class="aptk-owner-company" title="{{ e($post_company_name) }}">
+                                <i class="fas fa-building me-1"></i><span>{{ $post_company_name }}</span>
+                            </div>
+                        @endif
+                        @if ($cardMeta['submitted_ago'] !== '')
+                            <div class="aptk-owner-submitted" title="{{ e('Submitted: ' . $cardMeta['submitted_ago']) }}">
+                                <i class="far fa-calendar-alt me-1"></i><span>Submitted: {{ $cardMeta['submitted_ago'] }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
-                <!-- SUB-CARD 6: PIPELINE & STAGE -->
-                <div class="aptk-cand-subcard aptk-subcard-stage">
+                <!-- SUB-CARD 6: PIPELINE & STAGE (Entire Card Clickable) -->
+                <div class="aptk-cand-subcard aptk-subcard-stage stage_sub_stage"
+                     data-row-id="{{ $wiseId }}"
+                     data-toggle="modal"
+                     data-target="#stage_sub_stage"
+                     role="button"
+                     tabindex="0"
+                     title="Click anywhere on this stage card to update candidate stage">
                     <div class="aptk-subcard-hdr">
                         <span class="aptk-subcard-label">Pipeline &amp; Stage</span>
                     </div>
                     <div class="aptk-subcard-body">
-                        <a href="javascript:void(0);"
-                           data-row-id="{{ $wiseId }}"
-                           class="aptk-stage-trigger stage_sub_stage"
-                           data-toggle="modal"
-                           data-target="#stage_sub_stage"
-                           title="Click to update candidate stage">
+                        <div class="aptk-stage-trigger">
                             <span class="aptk-stage-pill {{ @$row->css_style }}" style="{{ $stagePillTheme }}">
                                 {{ ucwords(mb_substr($masterStageLabel, 0, 20)) }}
                             </span>
-                            <span class="aptk-substage-txt" title="{{ e($subStageName) }}">
-                                Sub: <strong>{{ $subStageName }}</strong>
-                            </span>
+                            @if ($subStageName !== '' && $subStageName !== '—')
+                                <span class="aptk-substage-txt" title="{{ e($subStageName) }}">
+                                    Sub: <strong>{{ $subStageName }}</strong>
+                                </span>
+                            @endif
                             <span class="aptk-stage-cue">Update Stage <i class="fas fa-chevron-right ms-1"></i></span>
-                        </a>
+                        </div>
                     </div>
                 </div>
 
@@ -509,19 +514,27 @@
                             @foreach ($unmatchedSkillsArr as $sval)
                                 <span class="aptk-skill-pill">{{ ucfirst($sval) }}</span>
                             @endforeach
-                        @else
-                            <span class="aptk-skills-empty">No skills listed</span>
                         @endif
                     </div>
                 </div>
-                <div class="aptk-bottom-right">
-                    <a href="javascript:void(0);"
-                       data-row-id="{{ $wiseId }}"
-                       data-wise-id="{{ $candAppId }}"
-                       class="aptk-view-profile-btn show-application-detail">
-                        <i class="far fa-user me-1"></i>View Profile <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
-                </div>
+                @if ($cardMeta['linkedin_url'] !== '' || $cardMeta['visa_display'] !== '')
+                    <div class="aptk-bottom-right">
+                        @if ($cardMeta['linkedin_url'] !== '')
+                            <a href="{{ e($cardMeta['linkedin_url']) }}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="aptk-linkedin-pill"
+                               title="LinkedIn Profile Verified">
+                                <i class="fab fa-linkedin"></i><span>LinkedIn Verified</span>
+                            </a>
+                        @endif
+                        @if ($cardMeta['visa_display'] !== '')
+                            <span class="aptk-visa-pill" title="{{ e('Visa Status: ' . $cardMeta['visa_raw']) }}">
+                                <i class="fas fa-passport"></i><span>{{ $cardMeta['visa_display'] }}</span>
+                            </span>
+                        @endif
+                    </div>
+                @endif
             </div>
 
         </div>
