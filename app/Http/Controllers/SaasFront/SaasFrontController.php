@@ -243,6 +243,8 @@ class SaasFrontController extends SaasFrontBaseController
             'name' => 'required|string|min:2|max:100',
             'email' => 'required|string|email:rfc|max:191|unique:users,email',
             'company_type' => 'required|in:1,2,3,4',
+            'company_profile_key' => 'nullable|string|max:50',
+            'default_industry_id' => 'nullable|integer|min:1',
             'contact_number' => 'required|string|min:6|max:20',
             'contact_code' => 'required|string|max:10',
             'password' => 'required|string|min:8|max:128',
@@ -327,7 +329,22 @@ class SaasFrontController extends SaasFrontBaseController
                 '+91' => 'Asia/Kolkata',
             ];
             $company->timezone = $tzMap[$formattedCallingCode] ?? 'Asia/Kolkata';
-            if ($request->company_type == 1) {
+
+            // Intent: Dynamically resolve and auto-assign default industry for Training, Educational Institutions,
+            // and Recruitment profiles from cached IndustryTaxonomyService manifest (0% MySQL reads).
+            $profileKey = trim((string) $request->input('company_profile_key', ''));
+            if ($profileKey === '' && (int) $request->company_type === 1) {
+                $profileKey = 'recruitment';
+            }
+            $resolvedIndustry = $profileKey !== ''
+                ? \App\Services\IndustryTaxonomyService::resolveIndustryForProfile($profileKey)
+                : null;
+
+            if ($resolvedIndustry && ! empty($resolvedIndustry['id'])) {
+                $company->industries = (int) $resolvedIndustry['id'];
+            } elseif ($request->filled('default_industry_id') && is_numeric($request->input('default_industry_id'))) {
+                $company->industries = (int) $request->input('default_industry_id');
+            } elseif ((int) $request->company_type == 1) {
                 $company->industries = 131;
             }
 
@@ -1140,6 +1157,7 @@ class SaasFrontController extends SaasFrontBaseController
                     'company_id' => $company->id,
                     'name' => $clientCompanyName,
                     'website' => $request->website,
+                    'industry' => (int) ($company->industries ?? 0),
                     'self_company' => 1,
                     'created_at' => date('Y-m-d'),
                     'updated_at' => date('Y-m-d'),
@@ -2037,6 +2055,7 @@ class SaasFrontController extends SaasFrontBaseController
                     'company_id' => $company->id,
                     'name' => $clientCompanyName,
                     'website' => $request->website,
+                    'industry' => (int) ($company->industries ?? 0),
                     'self_company' => 1,
                     'created_at' => date('Y-m-d'),
                     'updated_at' => date('Y-m-d'),
@@ -3161,6 +3180,7 @@ class SaasFrontController extends SaasFrontBaseController
                     'company_id' => $company->id,
                     'name' => $clientCompanyName,
                     'website' => $request->website,
+                    'industry' => (int) ($company->industries ?? 0),
                     'self_company' => 1,
                     'created_at' => date('Y-m-d'),
                     'updated_at' => date('Y-m-d'),
