@@ -1,472 +1,640 @@
+{{--
+  JERO ATS — Service Company Interview Tracker Card Stream Partial
+  Intent: Renders Elasticsearch interview projections as Rule 20 Modern Primary Cards
+          with 5 discrete upper sub-cards and a bottom activity/stage strip.
+  Tenancy & Security: Strictly scoped by company_id in controller; all outputs Blade-escaped.
+  Screen Fit: Fractional minmax(0, ...fr) grid prevents horizontal overflow on 15.6" screens.
+--}}
 @php
     use App\Helper\GeneralMethod;
-    use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
 
-    $salaryMode = GeneralMethod::salaryMode();
-    $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
-    $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
+    $feedback_status = $feedback_status ?? GeneralMethod::feedback_status();
+    $followupMap     = $followupMap ?? collect();
+    $feedbackMap     = $feedbackMap ?? collect();
+    $spokpersonMap   = $spokpersonMap ?? collect();
+    $clientCompanyMap = $clientCompanyMap ?? [];
+    $userCaptainJobIds = $userCaptainJobIds ?? [];
 
-    // Follow-up statuses pre-fetched from controller batch hydration
-    $followupMap = $followupMap ?? collect();
-    $spokpersonMap = $spokpersonMap ?? collect();
+    $panelPalette = [
+        ['bg' => '#eff6ff', 'color' => '#2563eb'],
+        ['bg' => '#f3e8ff', 'color' => '#7c3aed'],
+        ['bg' => '#ecfdf5', 'color' => '#059669'],
+        ['bg' => '#fff7ed', 'color' => '#ea580c'],
+        ['bg' => '#fef2f2', 'color' => '#dc2626'],
+        ['bg' => '#f0fdfa', 'color' => '#0d9488'],
+    ];
 @endphp
 
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
+        @php
+            $row = (object) $rowArr;
 
-    @php
-    $row = (object) $rowArr;
-    @endphp
+            // ── 1. Candidate Identity & Avatar ─────────────────────────────
+            $fullNameRaw = trim((string) (@$row->full_name ?: 'Candidate'));
+            $fullName    = ucwords($fullNameRaw);
+            $firstChar   = strtolower(mb_substr($fullNameRaw, 0, 1) ?: 'c');
+            $strVal      = strtoupper($firstChar);
+            $ord         = ord($firstChar);
+            if ($ord >= 97 && $ord <= 101) {
+                $bgTextDecore = 'it-avatar-red';
+            } elseif ($ord >= 102 && $ord <= 106) {
+                $bgTextDecore = 'it-avatar-orange';
+            } elseif ($ord >= 107 && $ord <= 111) {
+                $bgTextDecore = 'it-avatar-blue';
+            } elseif ($ord >= 112 && $ord <= 116) {
+                $bgTextDecore = 'it-avatar-green';
+            } elseif ($ord >= 117 && $ord <= 121) {
+                $bgTextDecore = 'it-avatar-purple';
+            } else {
+                $bgTextDecore = 'it-avatar-gray';
+            }
 
-        <tr data-interview-id="{{ $row->id }}">
-            {{-- Checkbox --}}
-            <td>
-                <div class="it-checkbox" data-row-check onclick="toggleRowSelect(this, {{ $row->id }})">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                </div>
-            </td>
+            $designation = ucwords(trim((string) (@$row->current_designation ?? '')));
+            $candCity    = ucwords(trim((string) (@$row->city_name ?? '')));
+            $candCountry = ucwords(trim((string) (@$row->country_name ?? '')));
+            $candLocation = implode(', ', array_filter([$candCity, $candCountry]));
+            $candEmail   = trim((string) (@$row->email ?? ''));
+            $profile_detail = 'show-application-detail';
 
-            {{-- Candidate Cell: Name + Role + Status --}}
-            <td>
-                @php
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$row->full_name);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'it-avatar-red';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'it-avatar-orange';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'it-avatar-blue';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'it-avatar-green';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'it-avatar-purple';
+            // ── 2. Follow-Up Status ────────────────────────────────────────
+            $fuRow    = $followupMap->get($row->id);
+            $fuStatus = is_object($fuRow) ? ($fuRow->followup_status ?? null) : null;
+            $fuAt     = is_object($fuRow) ? ($fuRow->followup_status_at ?? null) : null;
+            $fuLabels = ['confirmed' => 'Confirmed', 'no-response' => 'No Response', 'rescheduled' => 'Rescheduled'];
+            $fuLabel  = $fuLabels[$fuStatus] ?? 'Follow Up';
+            $fuClass  = $fuStatus ? ('is-' . $fuStatus) : '';
+
+            // ── 3. Requisition & Client Classification ─────────────────────
+            $jobId = (int) (@$row->job_id ?? @$row->jobId ?? 0);
+            $client_title_name = $clientCompanyMap[$jobId] ?? (@$row->client_name ?? '');
+            $isDirectClient = ((int) (@$row->recommendation_id ?? 0) > 0 && (int) (@$row->to_company_id ?? 0) === (int) $company_id);
+
+            $jobTypeLabel = $isDirectClient ? 'Direct Client' : 'Internal';
+            $jobTypeClass = $isDirectClient ? 'it-scope-direct' : 'it-scope-internal';
+            $displayCompName = $isDirectClient
+                ? (!empty($row->company_name) ? $row->company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : $client_title_name))
+                : $client_title_name;
+            $displayCompName = ucwords(trim((string) $displayCompName));
+            $jobTitle = ucwords(trim((string) (@$row->job_title ?: 'Untitled Role')));
+            $roundLevel = ucwords(trim((string) (@$row->mode_lavel_name ?? '')));
+            $isRescheduledType = ((int) (@$row->interview_type ?? 1) === 2);
+
+            // ── 4. Schedule Date, Time, Mode & Meeting Link ────────────────
+            $scheduleCarbon = null;
+            $dateFormatted = '—';
+            $timeBadgeText = '';
+            $timeBadgeClass = 'it-time-upcoming';
+            try {
+                if (!empty($row->schedule_date)) {
+                    $scheduleCarbon = Carbon::parse($row->schedule_date);
+                    $dateFormatted  = $scheduleCarbon->format('d M, Y');
+                    if ($scheduleCarbon->isToday()) {
+                        $timeBadgeText  = 'Today';
+                        $timeBadgeClass = 'it-time-today';
+                    } elseif ($scheduleCarbon->isFuture()) {
+                        $timeBadgeText  = 'Upcoming';
+                        $timeBadgeClass = 'it-time-upcoming';
                     } else {
-                        $bgTextDecore = 'it-avatar-gray';
+                        $timeBadgeText  = 'Completed';
+                        $timeBadgeClass = 'it-time-past';
                     }
+                }
+            } catch (\Throwable $e) {
+                $dateFormatted = (string) (@$row->schedule_date ?? '—');
+            }
 
-                    $profile_detail = 'show-application-detail';
-                    if ($row->thirdparty_company_id == $company_id) {
-                        $profile_detail = 'show-application-detail';
+            $timeDisplay = trim((string) (@$row->schedule_to_time ?: (@$row->schedule_from_time ?? '')));
+            $tzDisplay   = trim((string) (@$row->timezone_abbreviation ?? ''));
+            $timeFormatted = $timeDisplay ? ($timeDisplay . ($tzDisplay ? ' (' . $tzDisplay . ')' : '')) : '—';
+
+            $modeId = (int) (@$row->interview_mode ?? 2);
+            $modeLabel = ucwords(trim((string) (@$row->mode_name ?: ([1 => 'Telecon', 2 => 'Video', 3 => 'F2F', 4 => 'Other'][$modeId] ?? 'Video'))));
+            if ($modeId === 1) {
+                $modePillClass = 'it-mode-telecon';
+                $modeFaIcon = 'fas fa-phone-alt';
+            } elseif ($modeId === 3) {
+                $modePillClass = 'it-mode-f2f';
+                $modeFaIcon = 'fas fa-map-marker-alt';
+            } elseif ($modeId === 2) {
+                $modePillClass = 'it-mode-video';
+                $modeFaIcon = 'fas fa-video';
+            } else {
+                $modePillClass = 'it-mode-other';
+                $modeFaIcon = 'fas fa-calendar-check';
+            }
+
+            // Mode: 1=Telecon, 2=Video, 3=Face to Face
+            $mLink = trim((string) (@$row->interview_mention_link ?? ''));
+            $isUrl = (bool) preg_match('#^https?://#i', $mLink);
+            $ilType = null;
+            $ilLabel = '';
+            if ($modeId === 3 && $mLink !== '') {
+                $ilType = 'address';
+                $ilLabel = 'View Address';
+            } elseif ($isUrl) {
+                $ilType = 'link';
+                $ilLabel = 'Interview Link';
+            }
+
+            // ── 5. Interviewers / Panel ────────────────────────────────────
+            $panelists = [];
+            if (!empty($row->interviewers)) {
+                $rawNames = preg_split('/\s*,\s*/', trim((string) $row->interviewers), -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($rawNames as $pName) {
+                    $cleanName = ucwords(trim((string) $pName));
+                    if ($cleanName !== '' && strtoupper($cleanName) !== 'N/A') {
+                        $hash = abs(crc32(strtolower($cleanName)));
+                        $panelists[] = [
+                            'name'    => $cleanName,
+                            'initial' => strtoupper(mb_substr($cleanName, 0, 1)),
+                            'palette' => $panelPalette[$hash % count($panelPalette)],
+                        ];
                     }
+                }
+            }
+            $panelCount    = count($panelists);
+            $panelCompany  = ucwords(trim((string) (@$row->uc_company_name ?: (@$row->company_name ?? ''))));
 
-                    // Status for candidate meta
-                    $candidateStatusClass = 'info';
-                    $candidateStatusText = 'Scheduled';
-                    $candidateStatusTime = '';
+            // ── 6. Source (Recruiter / SPOC) ───────────────────────────────
+            if ((int) $company_id !== (int) (@$row->ClientComID ?? 0) && (int) (@$row->ClientComID ?? 0) > 0) {
+                $spokKey = ($row->jobId ?? $row->job_id ?? 0) . '_' . $row->ClientComID;
+                $spokName = (is_object($spokpersonMap)) ? ($spokpersonMap->get($spokKey) ?? null) : null;
+                $rowpostedby = $spokName ?: (@$row->posted_by ?? '');
+                $rowpostedby = !empty($row->rec_candidate_assign_id) ? (@$row->posted_by ?? $rowpostedby) : $rowpostedby;
+            } else {
+                $rowpostedby = @$row->posted_by ?? '';
+            }
+            if (empty($rowpostedby)) {
+                $rowpostedby = !empty($row->submitted_by_name)
+                    ? $row->submitted_by_name
+                    : (!empty($row->spokperson_name) ? $row->spokperson_name : (@$row->source ?: ''));
+            }
+            $post_company_name = !empty($row->submitted_by_company_name)
+                ? $row->submitted_by_company_name
+                : (!empty($row->post_company_name)
+                    ? $row->post_company_name
+                    : (!empty($row->from_company_name)
+                        ? $row->from_company_name
+                        : (!empty($row->uc_company_name) ? $row->uc_company_name : (@$row->company_name ?? ''))));
 
-                    $schedule_date = $row->schedule_date;
-                    $current_date = date('Y-m-d H:i:s');
-                    $schedule_timestamp = strtotime($schedule_date);
-                    $current_timestamp = strtotime($current_date);
+            // ── 7. Stage & Substage ────────────────────────────────────────
+            $childStageName = '';
+            if ((int) (@$row->master_status_id ?? 0) === 8) {
+                $childStageName = 'Private';
+            }
+            if (!empty($row->child_status_id) && (int) $row->child_status_id > 0) {
+                $childStageName = (string) (@$row->child_status_name ?? '');
+            }
+            $masterStatusName = trim((string) (@$row->master_status_name ?: 'In Review'));
+            $stageNameLower   = strtolower($masterStatusName);
+            if (str_contains($stageNameLower, 'review') || str_contains($stageNameLower, 'inw')) {
+                $stageBadgeClass = 'it-stage-inw';
+            } elseif (str_contains($stageNameLower, 'sourc') || str_contains($stageNameLower, 'sou')) {
+                $stageBadgeClass = 'it-stage-sou';
+            } elseif (str_contains($stageNameLower, 'screen') || str_contains($stageNameLower, 'scr')) {
+                $stageBadgeClass = 'it-stage-scr';
+            } elseif (str_contains($stageNameLower, 'evaluat') || str_contains($stageNameLower, 'eva')) {
+                $stageBadgeClass = 'it-stage-eva';
+            } elseif (str_contains($stageNameLower, 'negot') || str_contains($stageNameLower, 'neg')) {
+                $stageBadgeClass = 'it-stage-neg';
+            } elseif (str_contains($stageNameLower, 'offer') || str_contains($stageNameLower, 'off')) {
+                $stageBadgeClass = 'it-stage-off';
+            } elseif (str_contains($stageNameLower, 'join') || str_contains($stageNameLower, 'joi')) {
+                $stageBadgeClass = 'it-stage-joi';
+            } elseif (str_contains($stageNameLower, 'reject') || str_contains($stageNameLower, 'rej')) {
+                $stageBadgeClass = 'it-stage-rej';
+            } else {
+                $stageBadgeClass = 'it-stage-eva';
+            }
 
-                    if ($schedule_timestamp >= $current_timestamp) {
-                        $candidateStatusClass = 'confirmed';
-                        $candidateStatusText = 'Confirmed';
-                    } else {
-                        $candidateStatusClass = 'warning';
-                        $candidateStatusText = 'Pending';
+            // ── 8. Feedback, Attendance & Permissions ──────────────────────
+            $latestFb       = $feedbackMap->get($row->id) ?? null;
+            $hasAnyFeedback = !empty($latestFb);
+            $attId          = (int) (@$latestFb->available_status ?? 0); // 1=Attended
+
+            $attLabelMap = [
+                1 => 'Attended',
+                2 => 'No Show',
+                3 => 'Rescheduled',
+                4 => 'Cancelled by Company',
+                6 => 'Other Reason',
+                7 => 'Cancelled by Candidate',
+            ];
+
+            $resultLabels = [
+                'selected'         => 'Selected',
+                'hold'             => 'Hold',
+                'rejected'         => 'Rejected',
+                'fake_proxy'       => 'Fake / Proxy',
+                'feedback_pending' => 'Feedback Pending',
+            ];
+            $resultKey  = @$latestFb->interview_result;
+            $resultText = '';
+            if (!empty($resultKey) && isset($resultLabels[$resultKey])) {
+                $resultText = $resultLabels[$resultKey];
+            } elseif (!empty($row->feedback) && isset($feedback_status[$row->feedback])) {
+                $resultText = ucwords((string) $feedback_status[$row->feedback]['name']);
+            }
+            $legacyFb = (int) (@$row->feedback ?? 0); // 1=Selected,2=Hold,3=Rejected,4=Fake,5=Feedback Pending
+            $resultColor = '#10b981';
+            if (in_array($resultKey, ['rejected', 'fake_proxy'], true) || in_array($legacyFb, [3, 4], true)) {
+                $resultColor = '#ef4444';
+            } elseif (in_array($resultKey, ['hold', 'feedback_pending'], true) || in_array($legacyFb, [2, 5], true)) {
+                $resultColor = '#d97706';
+            }
+
+            $recLabels = [
+                'strong_hire'    => 'Strong Hire',
+                'hire'           => 'Hire',
+                'consider'       => 'Consider',
+                'no_hire'        => 'No Hire',
+                'strong_no_hire' => 'Strong No Hire',
+            ];
+            $recKey  = @$latestFb->overall_recommendation;
+            $recText = (!empty($recKey) && isset($recLabels[$recKey])) ? $recLabels[$recKey] : '';
+            $recBg = '#eff6ff'; $recColor = '#2563eb';
+            if (in_array($recKey, ['strong_hire', 'hire'], true)) {
+                $recBg = '#dcfce7'; $recColor = '#15803d';
+            } elseif (in_array($recKey, ['no_hire', 'strong_no_hire'], true)) {
+                $recBg = '#fee2e2'; $recColor = '#b91c1c';
+            } elseif ($recKey === 'consider') {
+                $recBg = '#fef3c7'; $recColor = '#b45309';
+            }
+
+            $attended    = ($attId === 1);
+            $notAttended = ($hasAnyFeedback && $attId > 0 && $attId !== 1);
+
+            // Permissions (pre-hydrated check preserved 100%)
+            $canAddFeedback = true;
+            $customHtml     = 'show-feedback';
+            if ((int) (@$row->thirdparty_company_id ?? 0) === (int) $company_id) {
+                $customHtml = '';
+                $canAddFeedback = false;
+            }
+            if ((int) (@$row->to_company_id ?? 0) === (int) $company_id) {
+                $customHtml = '';
+                $canAddFeedback = false;
+            }
+            $allowChk = isset($userCaptainJobIds[@$row->jobId]) ? 1 : 0;
+            $isInterviewerOnRow = false;
+            $myNameChk = strtolower(trim(auth()->user()->name ?? ''));
+            if ($myNameChk !== '' && !empty($row->interviewers)) {
+                foreach (preg_split('/\s*,\s*/', (string) $row->interviewers) as $intvName) {
+                    if (strtolower(trim($intvName)) === $myNameChk) {
+                        $isInterviewerOnRow = true;
+                        break;
                     }
+                }
+            }
+            if ((int) $chkAdminRole !== 1) {
+                if ($allowChk === 0 && !$isInterviewerOnRow) {
+                    $customHtml = 'notAllow-feedback';
+                    $canAddFeedback = false;
+                }
+            }
 
-                    if (!empty($row->feedback)) {
-                        $candidateStatusTime = ucwords(mb_substr(@$feedback_status[@$row->feedback]['name'], 0, 22));
-                    }
-                @endphp
-                <div class="it-candidate-cell">
-                    <div class="it-avatar {{ $bgTextDecore }} {{ $profile_detail }}" data-row-id="{{ $row->wiseID }}">
-                        {{ ucwords($strVal) }}
-                    </div>
-                    <div class="it-candidate-info">
-                        <div class="it-candidate-name">
-                            <a href="javascript:void(0);" data-row-id="{{ $row->wiseID }}" class="text-dark fw-bolder text-hover-primary fs-6 {{ $profile_detail }}" data-toggle="tooltip" title="{{ ucwords(@$row->full_name) }}" style="text-decoration:none;color:inherit;">
-                                {{ ucwords(mb_substr(@$row->full_name, 0, 20)) }}
-                            </a>
-                        </div>
-                        <div class="it-candidate-role">
-                            <a href="javascript:void(0);" data-row-id="{{ $row->wiseID }}" class="fw-bold text-muted d-block fs-7 {{ $profile_detail }} text-hover-primary" data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}" style="text-decoration:none;color:inherit;">
-                                {{ ucwords(mb_substr(@$row->current_designation, 0, 21)) }}
-                            </a>
-                        </div>
-                        @php
-                            $scheduleDate = Carbon::parse($row->schedule_date);
-                            $now = Carbon::now();
-                            $timeText = '';
-                            if ($scheduleDate->isToday()) {
-                                $timeText = 'Today, ' . $scheduleDate->format('h:i A');
-                            } elseif ($scheduleDate->isYesterday()) {
-                                $timeText = 'Yesterday, ' . $scheduleDate->format('h:i A');
-                            } else {
-                                $timeText = $scheduleDate->format('d M, h:i A');
-                            }
-                        @endphp
-                        <div class="it-candidate-meta">
-                            @php
-                                $fuRow = $followupMap->get($row->id);
-                                $fuStatus = is_object($fuRow) ? ($fuRow->followup_status ?? null) : null;
-                                $fuAt = is_object($fuRow) ? ($fuRow->followup_status_at ?? null) : null;
-                                $fuLabels = ['confirmed'=>'Confirmed','no-response'=>'No Response','rescheduled'=>'Rescheduled'];
-                                $fuLabel = $fuLabels[$fuStatus] ?? 'Follow Up';
-                                $fuStyle = '';
-                                if ($fuStatus === 'confirmed') { $fuStyle = 'color:var(--it-success);border-color:var(--it-success);'; }
-                                elseif ($fuStatus === 'no-response') { $fuStyle = 'color:var(--it-danger);border-color:var(--it-danger);'; }
-                                elseif ($fuStatus === 'rescheduled') { $fuStyle = 'color:var(--it-primary);border-color:var(--it-primary);'; }
-                            @endphp
-                            <div class="it-followup-dropdown" data-fid="{{ $row->id }}" style="position: relative; display: inline-block; margin-top: 2px;">
-                                <button class="it-followup-btn it-followup-trigger" onclick="toggleFollowUp(this)" type="button" style="{{ $fuStyle }}">
-                                    @if(!$fuStatus)
-                                        <svg class="fu-cta-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                    @endif
-                                    <span class="fu-label">{{ $fuLabel }}</span>
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                                </button>
-                                <div class="it-followup-menu">
-                                    <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'confirmed')">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                        Confirmed
-                                    </div>
-                                    <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'no-response')">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                        No Response
-                                    </div>
-                                    <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'rescheduled')">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                                        Rescheduled
-                                    </div>
+            // Attendance pill for Evaluation sub-card header
+            if ($attended) {
+                $evalHeaderPillText  = 'Attended';
+                $evalHeaderPillClass = 'it-eval-attended';
+            } elseif ($notAttended) {
+                $evalHeaderPillText  = $attId === 3 ? 'Rescheduled' : ($attId === 2 ? 'No Show' : 'Not Attended');
+                $evalHeaderPillClass = ($attId === 3) ? 'it-eval-rescheduled' : 'it-eval-noshow';
+            } else {
+                $evalHeaderPillText  = ($scheduleCarbon && $scheduleCarbon->isFuture()) ? 'Scheduled' : 'Pending';
+                $evalHeaderPillClass = ($scheduleCarbon && $scheduleCarbon->isFuture()) ? 'it-eval-scheduled' : 'it-eval-pending';
+            }
+
+            // Card Left Accent Border Color
+            if ($attended && ($resultKey === 'selected' || $legacyFb === 1)) {
+                $cardAccentColor = '#10b981'; // Green — Selected
+            } elseif (in_array($resultKey, ['rejected', 'fake_proxy'], true) || in_array($legacyFb, [3, 4], true) || in_array($attId, [4, 7], true)) {
+                $cardAccentColor = '#ef4444'; // Red — Rejected / Cancelled
+            } elseif ($notAttended || in_array($resultKey, ['hold', 'feedback_pending'], true) || in_array($legacyFb, [2, 5], true) || (!$attended && $scheduleCarbon && $scheduleCarbon->isPast())) {
+                $cardAccentColor = '#f59e0b'; // Amber — Pending / Hold / No Show
+            } else {
+                $cardAccentColor = '#009ef7'; // Primary Blue — Scheduled / Upcoming
+            }
+
+            $starRating = (float) (@$row->average_star_rating ?? 0);
+        @endphp
+
+        <!-- Master Primary Interview Card (Rule 20 Card + Sub-Card System) -->
+        <div class="it-card" data-interview-id="{{ $row->id }}" data-wise-id="{{ @$row->wiseID }}" data-job-id="{{ $jobId }}" style="border-left: 3.5px solid {{ $cardAccentColor }} !important;">
+
+            <!-- Upper Discrete Sub-Cards Grid (5 Responsive Enterprise Sub-Cards) -->
+            <div class="it-card-grid">
+
+                <!-- Sub-Card 1: CANDIDATE -->
+                <div class="it-subcard it-subcard-candidate">
+                    <div class="it-subcard-header">
+                        <span class="it-subcard-label">Candidate</span>
+                        <div class="it-followup-dropdown" data-fid="{{ $row->id }}">
+                            <button class="it-followup-btn it-followup-trigger {{ $fuClass }}" onclick="toggleFollowUp(this)" type="button" title="Update candidate follow-up status">
+                                @if(!$fuStatus)
+                                    <i class="far fa-comment-dots fu-cta-icon"></i>
+                                @endif
+                                <span class="fu-label">{{ $fuLabel }}</span>
+                                <i class="fas fa-chevron-down it-fu-caret"></i>
+                            </button>
+                            <div class="it-followup-menu">
+                                <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'confirmed')">
+                                    <i class="fas fa-check text-success"></i>
+                                    <span>Confirmed</span>
+                                </div>
+                                <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'no-response')">
+                                    <i class="fas fa-times text-danger"></i>
+                                    <span>No Response</span>
+                                </div>
+                                <div class="it-followup-item" onclick="setFollowUpStatus(this, {{ $row->id }}, 'rescheduled')">
+                                    <i class="fas fa-redo text-primary"></i>
+                                    <span>Rescheduled</span>
                                 </div>
                             </div>
-                            @if($fuStatus && $fuAt)
-                                <div class="it-meta-tag info" style="font-size: 10px; color: var(--it-text-muted); margin-top: 2px;">
-                                    {{ \Carbon\Carbon::parse($fuAt)->format('d M, h:i A') }}
+                        </div>
+                    </div>
+                    <div class="it-cand-body">
+                        <div class="it-avatar {{ $bgTextDecore }} {{ $profile_detail }}" data-row-id="{{ @$row->wiseID }}" title="View candidate profile">
+                            {{ $strVal }}
+                        </div>
+                        <div class="it-cand-text">
+                            <a href="javascript:void(0);" data-row-id="{{ @$row->wiseID }}" class="it-cand-name {{ $profile_detail }}" title="{{ $fullName }}">
+                                {{ $fullName }}
+                            </a>
+                            <div class="it-cand-role {{ $profile_detail }}" data-row-id="{{ @$row->wiseID }}" title="{{ $designation ?: '—' }}">
+                                {{ $designation ?: '—' }}
+                            </div>
+                            @if($candLocation !== '' || $candEmail !== '')
+                                <div class="it-cand-submeta" title="{{ $candLocation !== '' ? $candLocation : $candEmail }}">
+                                    @if($candLocation !== '')
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>{{ $candLocation }}</span>
+                                    @else
+                                        <i class="far fa-envelope"></i>
+                                        <span>{{ $candEmail }}</span>
+                                    @endif
                                 </div>
                             @endif
                         </div>
                     </div>
                 </div>
-            </td>
 
-            {{-- Job Requisitions: Title + Company + Type + JobID --}}
-            <td>
-                @php
-                    $client_title_name = $clientCompanyMap[$row->job_id] ?? ($row->client_name ?? '');
-
-                    // Job type / recommendation
-                    $recommendation_text = __('messages.internal_tag');
-                    $jobTypeLabel = 'Internal';
-                    $jobTypeClass = 'it-job-type-internal';
-                    $displayCompName = $client_title_name;
-
-                    if ($row->recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
-                        // Direct Client job: show parent company name, not client name
-                        $displayCompName = !empty($row->company_name) ? $row->company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : ($client_title_name ?? ''));
-                        $recommendation_text = __('messages.clinet_tag');
-                        $jobTypeLabel = 'Direct Client';
-                        $jobTypeClass = 'it-job-type-direct';
-                    }
-                    $client_name = ucwords(mb_substr($displayCompName, 0, 18));
-                @endphp
-                <div class="it-job-title" data-toggle="tooltip" title="{{ ucwords($row->job_title) }}">
-                    {{ ucwords(mb_substr($row->job_title, 0, 18)) }}
-                </div>
-                <div class="it-job-company" data-toggle="tooltip" title="{{ ucwords($displayCompName) }}">
-                    {{ $client_name }}
-                </div>
-                <div class="it-job-tags">
-                    <span class="it-job-type {{ $jobTypeClass }}">{{ $jobTypeLabel }}</span>
-                    <span class="it-dot-separator"></span>
-                    <a href="javascript:void(0);" class="it-job-id">{{ @$row->job_id }}</a>
-                </div>
-            </td>
-
-            {{-- Interview Date & Time + Mode --}}
-            <td>
-                @php
-                    $modeIcon = '';
-                    if ($row->interview_mode == 1) {
-                        // Face to Face
-                        $modeIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-                    } elseif ($row->interview_mode == 2) {
-                        // Video Call
-                        $modeIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
-                    } else {
-                        // Phone Call
-                        $modeIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
-                    }
-                @endphp
-                <div class="it-date-cell">
-                    <div class="it-date-row">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
-                        {{ Carbon::parse($row->schedule_date)->format('d M, Y') }}
+                <!-- Sub-Card 2: REQUISITION -->
+                <div class="it-subcard it-subcard-job">
+                    <div class="it-subcard-header">
+                        <span class="it-subcard-label">Requisition</span>
+                        <span class="it-scope-badge {{ $jobTypeClass }}">
+                            <i class="fas {{ $isDirectClient ? 'fa-handshake' : 'fa-building' }}"></i>
+                            {{ $jobTypeLabel }}
+                        </span>
                     </div>
-                    <div class="it-date-row">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                        {{ $row->schedule_to_time }}{{ $row->timezone_abbreviation ? ' (' . $row->timezone_abbreviation . ')' : '' }}
-                    </div>
-                    <div class="it-date-row it-mode">
-                        {!! $modeIcon !!}
-                        {{ ucwords(mb_substr($row->mode_name, 0, 13)) }}
-                    </div>
-                    @php
-                        // Mode: 1=Telecon, 2=Video, 3=Face to Face. interview_mention_link holds a URL (video/telecon link) or an address (F2F).
-                        $mLink = trim((string) @$row->interview_mention_link);
-                        $isUrl = (bool) preg_match('#^https?://#i', $mLink);
-                        $ilType = null; $ilLabel = '';
-                        if ($row->interview_mode == 3 && $mLink !== '') {      // Face to Face -> address
-                            $ilType = 'address'; $ilLabel = 'View Address';
-                        } elseif ($isUrl) {                                    // Video / Telecon with a meeting link
-                            $ilType = 'link'; $ilLabel = 'Interview Link';
-                        }
-                    @endphp
-                    @if($ilType)
-                        <a href="javascript:void(0);" class="it-date-row open-interview-link"
-                           style="color:var(--it-primary);font-weight:500;cursor:pointer;margin-top:2px;"
-                           data-link="{{ $mLink }}"
-                           data-id="{{ $row->id }}"
-                           data-name="{{ ucwords(@$row->full_name) }}"
-                           data-type="{{ $ilType }}">
-                            @if($ilType === 'address')
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            @else
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                            @endif
-                            {{ $ilLabel }}
+                    <div class="it-job-body">
+                        <a href="javascript:void(0);"
+                           class="it-job-title js-it-open-jd"
+                           data-job-id="{{ $jobId }}"
+                           data-direct="{{ $isDirectClient ? '1' : '0' }}"
+                           title="{{ $jobTitle }}">
+                            {{ $jobTitle }}
                         </a>
-                    @endif
+                        <div class="it-job-meta">
+                            <a href="javascript:void(0);"
+                               class="it-job-id js-it-open-jd"
+                               data-job-id="{{ $jobId }}"
+                               data-direct="{{ $isDirectClient ? '1' : '0' }}">#{{ $jobId }}</a>
+                            <span class="it-dot-sep">&bull;</span>
+                            <span class="it-job-client" title="{{ $displayCompName }}">{{ $displayCompName ?: '—' }}</span>
+                        </div>
+                        @if($roundLevel !== '' || $isRescheduledType)
+                            <div class="it-job-pills">
+                                @if($roundLevel !== '')
+                                    <span class="it-round-pill" title="Interview Round">{{ $roundLevel }}</span>
+                                @endif
+                                @if($isRescheduledType)
+                                    <span class="it-resched-tag"><i class="fas fa-history"></i> Rescheduled</span>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
                 </div>
-            </td>
 
-            {{-- Interviewers (Panel) --}}
-            <td>
-                @php
-                    $interviewers = $row->interviewers;
-                    $real_company_id = $row->real_company_id;
-                    $mailstatus = $row->mailstatus;
-                    $recommendation_id = $row->recommendation_id;
-                    $mailsend = '';
+                <!-- Sub-Card 3: SCHEDULE & LINK -->
+                <div class="it-subcard it-subcard-schedule">
+                    <div class="it-subcard-header">
+                        <span class="it-subcard-label">Schedule</span>
+                        <span class="it-mode-pill {{ $modePillClass }}">
+                            <i class="{{ $modeFaIcon }}"></i>
+                            {{ $modeLabel }}
+                        </span>
+                    </div>
+                    <div class="it-sched-body">
+                        <div class="it-sched-date-row">
+                            <span class="it-sched-date">
+                                <i class="far fa-calendar-alt"></i>
+                                <span>{{ $dateFormatted }}</span>
+                            </span>
+                            @if($timeBadgeText !== '')
+                                <span class="it-time-tag {{ $timeBadgeClass }}">{{ $timeBadgeText }}</span>
+                            @endif
+                        </div>
+                        <div class="it-sched-time-row">
+                            <i class="far fa-clock"></i>
+                            <span>{{ $timeFormatted }}</span>
+                        </div>
+                        @if($ilType)
+                            <a href="javascript:void(0);"
+                               class="it-link-pill open-interview-link"
+                               data-link="{{ $mLink }}"
+                               data-id="{{ $row->id }}"
+                               data-name="{{ $fullName }}"
+                               data-type="{{ $ilType }}"
+                               title="{{ $mLink }}">
+                                <i class="fas {{ $ilType === 'address' ? 'fa-map-marked-alt' : 'fa-link' }}"></i>
+                                <span>{{ $ilLabel }}</span>
+                            </a>
+                        @else
+                            <div class="it-no-link-note">No link attached</div>
+                        @endif
+                    </div>
+                </div>
 
-                    $schedule_date = $row->schedule_date;
-                    $current_date = date('Y-m-d H:i:s');
-                    $schedule_timestamp = strtotime($schedule_date);
-                    $current_timestamp = strtotime($current_date);
-                    $current_timestamp_plus_4_hours = strtotime('+4 hours', $current_timestamp);
-
-                    if ($row->interview_mode == 2) {
-                        if ($schedule_timestamp >= $current_timestamp_plus_4_hours) {
-                            if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
-                                $mailsend = '';
-                            } else {
-                                if ($mailstatus == 1) {
-                                    $mailsend = '<a href="javascript:void(0);" class="it-job-id app_mail_schedule" rel="' . $row->wiseID . '" relint="' . $row->id . '" data-toggle="modal" data-target="#interview_schedule">Mail Resend</a>';
-                                } else {
-                                    $mailsend = '<a href="javascript:void(0);" class="it-job-id app_mail_schedule" rel="' . $row->wiseID . '" relint="' . $row->id . '" data-toggle="modal" data-target="#interview_schedule">Mail Send</a>';
-                                }
-                            }
-                        }
-                    }
-
-                    $firstInterviewer = '';
-                    $interviewerCompany = '';
-                    $extraInterviewers = 0;
-
-                    if (!empty($interviewers)) {
-                        $interviewersArr = explode(' , ', trim($interviewers));
-                        if (!empty($interviewersArr)) {
-                            $firstInterviewer = ucwords(trim($interviewersArr[0]));
-                            $extraInterviewers = count($interviewersArr) - 1;
-                        }
-                    }
-                @endphp
-                <div class="it-person-cell">
-                    <div class="it-person-name">{{ $firstInterviewer ?: 'N/A' }}</div>
-                    <div class="it-person-company">{{ ucwords(mb_substr(@$row->uc_company_name, 0, 13)) }}</div>
-                    @if($extraInterviewers > 0)
-                        <div class="it-person-extra">
-                            <span class="it-extra-badge">+{{ $extraInterviewers }}</span>
-                            <span class="it-extra-text">{{ $extraInterviewers + 1 }} Interviewers</span>
+                <!-- Sub-Card 4: INTERVIEW PANEL -->
+                <div class="it-subcard it-subcard-panel">
+                    <div class="it-subcard-header">
+                        <span class="it-subcard-label">Panelists</span>
+                        <span class="it-panel-count {{ $panelCount === 0 ? 'is-empty' : '' }}">
+                            {{ $panelCount > 0 ? ($panelCount . ' ' . ($panelCount === 1 ? 'Panelist' : 'Panelists')) : '—' }}
+                        </span>
+                    </div>
+                    @if($panelCount === 0)
+                        <div class="it-panel-empty">
+                            <span class="it-empty-dash">—</span>
+                            <span class="it-empty-sub">Not Assigned</span>
+                        </div>
+                    @elseif($panelCount === 1)
+                        @php $p = $panelists[0]; @endphp
+                        <div class="it-panel-single" title="{{ $p['name'] }}{{ $panelCompany ? ' (' . $panelCompany . ')' : '' }}">
+                            <div class="it-panel-avatar" style="background: {{ $p['palette']['bg'] }}; color: {{ $p['palette']['color'] }};">
+                                {{ $p['initial'] }}
+                            </div>
+                            <div class="it-panel-meta">
+                                <div class="it-panel-name">{{ $p['name'] }}</div>
+                                <div class="it-panel-company">{{ $panelCompany ?: '—' }}</div>
+                            </div>
+                        </div>
+                    @else
+                        @php
+                            $visiblePanelists = array_slice($panelists, 0, 3);
+                            $remainingCount = $panelCount - 3;
+                            $lead = $panelists[0];
+                            $extraCount = $panelCount - 1;
+                        @endphp
+                        <div class="it-panel-multi">
+                            <div class="it-panel-stack">
+                                @foreach($visiblePanelists as $p)
+                                    <div class="it-panel-avatar-sm" style="background: {{ $p['palette']['bg'] }}; color: {{ $p['palette']['color'] }};" title="{{ $p['name'] }}">
+                                        {{ $p['initial'] }}
+                                    </div>
+                                @endforeach
+                                @if($remainingCount > 0)
+                                    <div class="it-panel-avatar-sm it-panel-avatar-extra" title="+{{ $remainingCount }} more">+{{ $remainingCount }}</div>
+                                @endif
+                            </div>
+                            <div class="it-panel-meta">
+                                <div class="it-panel-name" title="{{ $lead['name'] }} + {{ $extraCount }} more">
+                                    {{ $lead['name'] }} <span class="it-panel-more">+{{ $extraCount }}</span>
+                                </div>
+                                <div class="it-panel-company">{{ $panelCompany ?: '—' }}</div>
+                            </div>
+                            <div class="it-panel-popover">
+                                <div class="it-panel-popover-head">
+                                    <span>Interview Panel</span>
+                                    <span>{{ $panelCount }}</span>
+                                </div>
+                                @foreach($panelists as $idx => $p)
+                                    <div class="it-panel-popover-row">
+                                        <span class="it-panel-pop-dot" style="background: {{ $p['palette']['bg'] }}; color: {{ $p['palette']['color'] }};">{{ $p['initial'] }}</span>
+                                        <span class="it-panel-pop-name">{{ $p['name'] }}</span>
+                                        @if($idx === 0)
+                                            <span class="it-panel-lead-tag">Lead</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 </div>
-            </td>
 
-            {{-- Source (Owner) --}}
-            <td>
-                @php
-                    if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
-                        $spokKey = ($row->jobId ?? $row->job_id ?? 0) . '_' . $row->ClientComID;
-                        $spokName = (isset($spokpersonMap) && is_object($spokpersonMap)) ? ($spokpersonMap->get($spokKey) ?? null) : null;
-                        $rowpostedby = $spokName ? $spokName : $row->posted_by;
-                        $rowpostedby = @$row->rec_candidate_assign_id ? $row->posted_by : $rowpostedby;
-                    } else {
-                        $rowpostedby = $row->posted_by;
-                    }
-                    if (empty($rowpostedby)) {
-                        $rowpostedby = !empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (@$row->source ?: ''));
-                    }
-                    $post_company_name = !empty($row->submitted_by_company_name) ? $row->submitted_by_company_name : (!empty($row->post_company_name) ? $row->post_company_name : (!empty($row->from_company_name) ? $row->from_company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : (!empty($row->company_name) ? $row->company_name : ''))));
-                @endphp
-                <div class="it-person-cell">
-                    <div class="it-person-name" data-toggle="tooltip" title="{{ @$rowpostedby }}">
-                        {{ ucwords(mb_substr($rowpostedby, 0, 15)) }}
+                <!-- Sub-Card 5: EVALUATION & FEEDBACK -->
+                <div class="it-subcard it-subcard-feedback">
+                    <div class="it-subcard-header">
+                        <span class="it-subcard-label">Evaluation</span>
+                        <span class="it-eval-pill {{ $evalHeaderPillClass }}">{{ $evalHeaderPillText }}</span>
                     </div>
-                    <div class="it-person-company" data-toggle="tooltip" title="{{ @$post_company_name }}">
-                        {{ ucwords(mb_substr(@$post_company_name, 0, 15)) }}
-                    </div>
-                </div>
-            </td>
-
-            {{-- Stage --}}
-            <td>
-                @php
-                    $name = '';
-                    if ($row->master_status_id == 8) {
-                        $name = 'Private';
-                    }
-                    if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
-                        $name = @$row->child_status_name;
-                    }
-
-                    // Map stage name to pipeline badge colors (INW/SOU/SCR/EVA/NEG/OFF/JOI/REJ)
-                    $masterStatusName = mb_substr(@$row->master_status_name, 0, 10);
-                    $stageNameLower = strtolower(@$row->master_status_name);
-                    if (str_contains($stageNameLower, 'review') || str_contains($stageNameLower, 'inw')) {
-                        $stageBadgeClass = 'it-badge-yellow';   // INW – In Review
-                    } elseif (str_contains($stageNameLower, 'sourc') || str_contains($stageNameLower, 'sou')) {
-                        $stageBadgeClass = 'it-badge-gray';     // SOU – Sourcing
-                    } elseif (str_contains($stageNameLower, 'screen') || str_contains($stageNameLower, 'scr')) {
-                        $stageBadgeClass = 'it-badge-purple';   // SCR – Screening
-                    } elseif (str_contains($stageNameLower, 'evaluat') || str_contains($stageNameLower, 'eva')) {
-                        $stageBadgeClass = 'it-badge-blue';     // EVA – Evaluation
-                    } elseif (str_contains($stageNameLower, 'negot') || str_contains($stageNameLower, 'neg')) {
-                        $stageBadgeClass = 'it-badge-pink';     // NEG – Negotiation
-                    } elseif (str_contains($stageNameLower, 'offer') || str_contains($stageNameLower, 'off')) {
-                        $stageBadgeClass = 'it-badge-orange';   // OFF – Offer
-                    } elseif (str_contains($stageNameLower, 'join') || str_contains($stageNameLower, 'joi')) {
-                        $stageBadgeClass = 'it-badge-green';    // JOI – Joining
-                    } elseif (str_contains($stageNameLower, 'reject') || str_contains($stageNameLower, 'rej')) {
-                        $stageBadgeClass = 'it-badge-red';      // REJ – Rejected
-                    } else {
-                        $stageBadgeClass = 'it-badge-blue';     // fallback
-                    }
-
-                @endphp
-                <div class="it-stage-cell">
-                    <span class="it-badge {{ $stageBadgeClass }}">{{ $masterStatusName }}</span>
-                    @if($name)
-                        <span class="text-muted fw-bold text-muted d-block fs-7" style="font-size:10px;color:var(--it-text-muted);margin-top:2px;">{{ $name }}</span>
-                    @endif
-                </div>
-            </td>
-
-            {{-- Feedback --}}
-            <td>
-                @php
-                    // Latest feedback row for this interview from pre-hydrated feedbackMap
-                    $latestFb = $feedbackMap->get($row->id) ?? null;
-                    $hasAnyFeedback = !empty($latestFb);
-                    $attId = (int) (@$latestFb->available_status ?? 0); // 1=Attended
-
-                    $attLabelMap = [1=>'Attended', 2=>'No Show', 3=>'Rescheduled', 4=>'Cancelled by Company', 6=>'Other Reason', 7=>'Cancelled by Candidate'];
-
-                    // Result (row 1) — prefer new interview_result, else fall back to legacy feedback status
-                    $resultLabels = ['selected'=>'Selected','hold'=>'Hold','rejected'=>'Rejected','fake_proxy'=>'Fake / Proxy','feedback_pending'=>'Feedback Pending'];
-                    $resultKey = @$latestFb->interview_result;
-                    $resultText = '';
-                    if (!empty($resultKey) && isset($resultLabels[$resultKey])) {
-                        $resultText = $resultLabels[$resultKey];
-                    } elseif (!empty($row->feedback) && isset($feedback_status[$row->feedback])) {
-                        $resultText = ucwords(mb_substr($feedback_status[$row->feedback]['name'], 0, 22));
-                    }
-                    $legacyFb = (int) (@$row->feedback ?? 0); // 1=Selected,2=Hold,3=Rejected,4=Fake,5=Feedback Pending
-                    $resultColor = 'var(--it-success)';
-                    if (in_array($resultKey, ['rejected','fake_proxy']) || in_array($legacyFb, [3,4])) { $resultColor = 'var(--it-danger)'; }
-                    elseif (in_array($resultKey, ['hold','feedback_pending']) || in_array($legacyFb, [2,5])) { $resultColor = 'var(--it-warning)'; }
-
-                    // Recommendation (row 2) — replaces the star rating
-                    $recLabels = ['strong_hire'=>'Strong Hire','hire'=>'Hire','consider'=>'Consider','no_hire'=>'No Hire','strong_no_hire'=>'Strong No Hire'];
-                    $recKey = @$latestFb->overall_recommendation;
-                    $recText = (!empty($recKey) && isset($recLabels[$recKey])) ? $recLabels[$recKey] : '';
-                    $recBg = '#eef2ff'; $recColor = '#4f46e5';
-                    if (in_array($recKey, ['strong_hire','hire'])) { $recBg = '#dcfce7'; $recColor = '#16a34a'; }
-                    elseif (in_array($recKey, ['no_hire','strong_no_hire'])) { $recBg = '#fee2e2'; $recColor = '#dc2626'; }
-                    elseif ($recKey === 'consider') { $recBg = '#fef3c7'; $recColor = '#d97706'; }
-
-                    $attended = ($attId === 1);
-                    $notAttended = ($hasAnyFeedback && $attId > 0 && $attId !== 1);
-
-                    // Permissions (pre-hydrated check)
-                    $canAddFeedback = true;
-                    $customHtml = 'show-feedback';
-                    if ($row->thirdparty_company_id == $company_id) { $customHtml = ''; $canAddFeedback = false; }
-                    if ($row->to_company_id == $company_id) { $customHtml = ''; $canAddFeedback = false; }
-                    $allowChk = isset($userCaptainJobIds[$row->jobId]) ? 1 : 0;
-                    // Anyone named as an interviewer on this schedule may add feedback too (not just the captain)
-                    $isInterviewerOnRow = false;
-                    $myNameChk = strtolower(trim(auth()->user()->name ?? ''));
-                    if ($myNameChk !== '' && !empty($row->interviewers)) {
-                        foreach (preg_split('/\s*,\s*/', $row->interviewers) as $intvName) {
-                            if (strtolower(trim($intvName)) === $myNameChk) { $isInterviewerOnRow = true; break; }
-                        }
-                    }
-                    if($chkAdminRole != 1){ if($allowChk == 0 && !$isInterviewerOnRow){ $customHtml = 'notAllow-feedback'; $canAddFeedback = false; } }
-                @endphp
-                <div class="it-feedback-cell">
-                    @if($attended)
-                        {{-- Condition 1: candidate attended -> result + recommendation + View Feedback --}}
-                        <span style="font-size: 10px; font-weight: 600; color: {{ $resultColor }}; display: inline-flex; align-items: center; gap: 3px;">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            {{ $resultText ?: 'Feedback Pending' }}
-                        </span>
-                        @if($recText)
-                            <span style="display:inline-flex;align-items:center;width:fit-content;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:600;background:{{ $recBg }};color:{{ $recColor }};">{{ $recText }}</span>
-                        @endif
-                        <button type="button" class="it-feedback-btn it-feedback-btn-outline-green show-feedback" data-row-id="{{ $row->id }}">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            View Feedback
-                        </button>
-                    @elseif($notAttended)
-                        {{-- Condition 2: candidate did not attend -> attendance reason + No Feedback (click to review/correct) --}}
-                        <span style="font-size: 10px; font-weight: 600; color: var(--it-warning); display: inline-flex; align-items: center; gap: 3px;">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            {{ $attLabelMap[$attId] ?? 'Not Attended' }}
-                        </span>
-                        <button type="button" class="it-feedback-btn show-feedback" data-row-id="{{ $row->id }}" style="border:1px solid var(--it-border);color:var(--it-text-muted);background:#fff;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
-                            No Feedback
-                        </button>
-                    @else
-                        {{-- Condition 3: nothing recorded yet -> Add Feedback --}}
-                        <span style="font-size: 10px; font-weight: 600; color: var(--it-warning); display: inline-flex; align-items: center; gap: 3px;">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            Pending
-                        </span>
-                        @if($canAddFeedback)
-                            <button type="button" class="it-feedback-btn it-feedback-btn-solid-blue {{ $customHtml }}" data-row-id="{{ $row->id }}">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                Add Feedback
+                    <div class="it-feedback-cell">
+                        @if($attended)
+                            <div class="it-fb-status-row" style="color: {{ $resultColor }};">
+                                <i class="fas fa-check-circle"></i>
+                                <span>{{ $resultText ?: 'Feedback Pending' }}</span>
+                            </div>
+                            <div class="it-fb-badges-row">
+                                @if($recText)
+                                    <span class="it-rec-pill" style="background: {{ $recBg }}; color: {{ $recColor }};">{{ $recText }}</span>
+                                @endif
+                                @if($starRating > 0)
+                                    <span class="it-star-pill"><i class="fas fa-star"></i> {{ number_format($starRating, 1) }}</span>
+                                @endif
+                            </div>
+                            <button type="button" class="it-feedback-btn it-fb-btn-view show-feedback" data-row-id="{{ $row->id }}">
+                                <i class="far fa-eye"></i> View Feedback
+                            </button>
+                        @elseif($notAttended)
+                            <div class="it-fb-status-row" style="color: #d97706;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>{{ $attLabelMap[$attId] ?? 'Not Attended' }}</span>
+                            </div>
+                            <button type="button" class="it-feedback-btn it-fb-btn-neutral show-feedback" data-row-id="{{ $row->id }}">
+                                <i class="far fa-file-alt"></i> No Feedback
                             </button>
                         @else
-                            <span style="font-size:10px;color:var(--it-text-muted);">Pending Feedback</span>
+                            <div class="it-fb-status-row" style="color: #d97706;">
+                                <i class="far fa-clock"></i>
+                                <span>Pending</span>
+                            </div>
+                            @if($canAddFeedback)
+                                <button type="button" class="it-feedback-btn it-fb-btn-add {{ $customHtml }}" data-row-id="{{ $row->id }}">
+                                    <i class="fas fa-plus"></i> Add Feedback
+                                </button>
+                            @else
+                                <span class="it-fb-locked-text">Pending Feedback</span>
+                            @endif
                         @endif
+                    </div>
+                </div>
+
+            </div>
+            <!-- End Upper Sub-Cards Grid -->
+
+            <!-- Sub-Card 6: Bottom Activity & Pipeline Strip -->
+            <div class="it-card-bottom">
+                <div class="it-bottom-left">
+                    <div class="it-bottom-item it-stage-cell">
+                        <span class="it-bottom-lbl">Stage:</span>
+                        <span class="it-stage-badge {{ $stageBadgeClass }}">{{ $masterStatusName }}</span>
+                        @if($childStageName)
+                            <span class="it-substage-pill">{{ $childStageName }}</span>
+                        @endif
+                    </div>
+                    <span class="it-dot-sep">&bull;</span>
+                    <div class="it-bottom-item" title="{{ ucwords((string) $rowpostedby) }}{{ $post_company_name ? ' (' . ucwords((string) $post_company_name) . ')' : '' }}">
+                        <span class="it-bottom-lbl">Source:</span>
+                        <strong class="it-bottom-strong">{{ ucwords((string) ($rowpostedby ?: '—')) }}</strong>
+                        @if($post_company_name)
+                            <span class="it-bottom-muted">({{ ucwords((string) $post_company_name) }})</span>
+                        @endif
+                    </div>
+                    @if($fuStatus && $fuAt)
+                        <span class="it-dot-sep">&bull;</span>
+                        <div class="it-bottom-item">
+                            <span class="it-bottom-lbl">Follow-up:</span>
+                            <span class="it-bottom-muted">{{ Carbon::parse($fuAt)->format('d M, h:i A') }}</span>
+                        </div>
                     @endif
                 </div>
-            </td>
 
-        </tr>
+                <div class="it-bottom-right">
+                    @if(!$attended && $canAddFeedback && !empty($row->wiseID))
+                        <button type="button"
+                                class="it-action-ghost js-it-reschedule-btn"
+                                data-wise-id="{{ $row->wiseID }}"
+                                data-interview-id="{{ $row->id }}"
+                                title="Reschedule this interview">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Reschedule</span>
+                        </button>
+                    @endif
+                    <button type="button"
+                            class="it-action-primary {{ $profile_detail }}"
+                            data-row-id="{{ @$row->wiseID }}"
+                            title="Open Candidate Drawer">
+                        <span>Candidate Profile</span>
+                        <i class="fas fa-external-link-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
     @endforeach
 @else
-    <tr>
-        <td colspan="8" style="text-align:center;padding:30px;color:var(--it-text-muted);font-size:12px;background:#fffcfc7a;">
-            No data available in table
-        </td>
-    </tr>
+    <div class="it-empty-card">
+        <div class="it-empty-icon">
+            <i class="far fa-calendar-times"></i>
+        </div>
+        <div class="it-empty-title">No Interviews Found</div>
+        <div class="it-empty-sub">No scheduled interviews match your current search, tab, or mode filters.</div>
+        <button type="button" class="btn btn-sm btn-light-primary fw-bold mt-3" onclick="resetFilters()">
+            <i class="fas fa-sync-alt me-1"></i> Reset All Filters
+        </button>
+    </div>
 @endif

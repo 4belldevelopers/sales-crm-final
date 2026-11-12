@@ -90,6 +90,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $sort = [];
 
         $cachePayload = [
+            'ui_v' => 'card_v2',
             'page' => $page,
             'size' => $size,
             'company' => $company_id,
@@ -134,6 +135,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 'to' => 0,
                 'pagination' => view('service_company.ajax_pages.pagination', ['pagination' => ['total' => 0, 'current_page' => 1, 'per_page' => $size, 'last_page' => 1, 'listType' => 'allcandidate']])->render(),
                 'stats' => ['interview_month' => 0, 'today' => 0, 'upcoming' => 0, 'feedback_pending' => 0],
+                'tab_counts' => ['all' => 0, 'this_month' => 0, 'today' => 0, 'upcoming' => 0, 'pending_feedback' => 0, 'selected' => 0, 'rejected' => 0, 'rescheduled' => 0],
             ];
 
             return response()->json($responseData);
@@ -221,7 +223,17 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         }
 
         // Tab Filters
-        if ($tab == 'today') {
+        if ($tab == 'this_month') {
+            $filter[] = [
+                'range' => [
+                    'schedule_date' => [
+                        'gte' => Carbon::now()->startOfMonth()->toIso8601String(),
+                        'lte' => Carbon::now()->endOfMonth()->toIso8601String(),
+                        'format' => 'strict_date_optional_time',
+                    ],
+                ],
+            ];
+        } elseif ($tab == 'today') {
             $filter[] = [
                 'range' => [
                     'schedule_date' => [
@@ -421,6 +433,16 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'to' => $toEntry,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'stats' => $stats,
+            'tab_counts' => $stats['tab_counts'] ?? [
+                'all' => $total,
+                'this_month' => $stats['interview_month'] ?? 0,
+                'today' => $stats['today'] ?? 0,
+                'upcoming' => $stats['upcoming'] ?? 0,
+                'pending_feedback' => $stats['feedback_pending'] ?? 0,
+                'selected' => 0,
+                'rejected' => 0,
+                'rescheduled' => 0,
+            ],
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_INTERVIEW_SCHEDULE_TIME));
@@ -809,6 +831,16 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'stats' => $stats,
+            'tab_counts' => $stats['tab_counts'] ?? [
+                'all' => $total,
+                'this_month' => $stats['interview_month'] ?? 0,
+                'today' => $stats['today'] ?? 0,
+                'upcoming' => $stats['upcoming'] ?? 0,
+                'pending_feedback' => $stats['feedback_pending'] ?? 0,
+                'selected' => 0,
+                'rejected' => 0,
+                'rescheduled' => 0,
+            ],
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_INTERVIEW_BENCH_CANDIDATES_TIME));
@@ -2254,7 +2286,22 @@ class InterviewScheduleController extends ServiceCompanyBaseController
 
     private function dashboardStats($company_id, $chkAdminRole, $page)
     {
-        $stats = ['interview_month' => 0, 'today' => 0, 'upcoming' => 0, 'feedback_pending' => 0];
+        $stats = [
+            'interview_month' => 0,
+            'today' => 0,
+            'upcoming' => 0,
+            'feedback_pending' => 0,
+            'tab_counts' => [
+                'all' => 0,
+                'this_month' => 0,
+                'today' => 0,
+                'upcoming' => 0,
+                'pending_feedback' => 0,
+                'selected' => 0,
+                'rejected' => 0,
+                'rescheduled' => 0,
+            ],
+        ];
         // Stats are company-wide (not page-specific) so they must be returned on EVERY page,
         // otherwise the hero cards blank out when the user navigates past page 1.
         try {
@@ -2265,12 +2312,14 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             $statsMust = [
                 ['bool' => ['should' => [
                     ['term' => ['job_company_id' => $company_id]],
+                    ['term' => ['real_company_id' => $company_id]],
                     ['bool' => ['must' => [['term' => ['ClientComID' => $company_id]], ['term' => ['candidate_type' => 'other']]]]],
                 ], 'minimum_should_match' => 1]],
             ];
             if (! $chkAdminRole) {
                 // Assigned to the job OR named as an interviewer on the schedule
                 $statsShould = [['nested' => ['path' => 'job_assign', 'query' => ['term' => ['job_assign.user_id' => auth()->user()->id]]]]];
+                $statsShould[] = ['term' => ['interview_created_by' => (int) auth()->user()->id]];
                 $statsMyName = trim(auth()->user()->name ?? '');
                 if ($statsMyName !== '') {
                     $statsShould[] = ['match_phrase' => ['interviewers' => $statsMyName]];
@@ -2285,6 +2334,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 'index' => ELASTIC_INERTVIEW_TRACKER,
                 'body' => [
                     'size' => 0,
+                    'track_total_hits' => true,
                     'query' => ['bool' => ['must' => $statsMust]],
                     'aggs' => [
                         'this_month' => ['filter' => ['range' => ['schedule_date' => ['gte' => $nowC->copy()->startOfMonth()->toIso8601String(), 'lte' => $nowC->copy()->endOfMonth()->toIso8601String(), 'format' => 'strict_date_optional_time']]]],
@@ -2295,16 +2345,38 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                         //   - Interview Result was set to "Feedback Pending" (legacy feedback id 5).
                         // A real attendance (No Show / Rescheduled / Cancelled etc.) is NOT pending.
                         'feedback_pending' => ['filter' => ['bool' => ['must' => [['range' => ['schedule_date' => ['lte' => $nowC->copy()->subHour()->toIso8601String(), 'format' => 'strict_date_optional_time']]], ['bool' => ['should' => [['bool' => ['must_not' => ['exists' => ['field' => 'available_status']]]], ['term' => ['available_status' => 0]], ['term' => ['feedback' => 5]]], 'minimum_should_match' => 1]]]]]],
+                        'selected' => ['filter' => ['bool' => ['should' => [['term' => ['feedback' => 1]], ['term' => ['interview_result' => 'selected']]], 'minimum_should_match' => 1]]],
+                        'rejected' => ['filter' => ['bool' => ['should' => [['term' => ['feedback' => 3]], ['term' => ['interview_result' => 'rejected']], ['term' => ['status' => 'rejected']]], 'minimum_should_match' => 1]]],
+                        'rescheduled' => ['filter' => ['bool' => ['should' => [['term' => ['available_status' => 3]], ['term' => ['interview_result' => 'rescheduled']]], 'minimum_should_match' => 1]]],
                     ],
                 ],
             ];
             $statsResp = $this->elasticService->getClient()->search($statsParams);
             $agg = $statsResp['aggregations'] ?? [];
+            $allCount = (int) ($statsResp['hits']['total']['value'] ?? 0);
+            $monthCount = (int) ($agg['this_month']['doc_count'] ?? 0);
+            $todayCount = (int) ($agg['today']['doc_count'] ?? 0);
+            $upcomingCount = (int) ($agg['upcoming']['doc_count'] ?? 0);
+            $pendingCount = (int) ($agg['feedback_pending']['doc_count'] ?? 0);
+            $selectedCount = (int) ($agg['selected']['doc_count'] ?? 0);
+            $rejectedCount = (int) ($agg['rejected']['doc_count'] ?? 0);
+            $rescheduledCount = (int) ($agg['rescheduled']['doc_count'] ?? 0);
+
             $stats = [
-                'interview_month' => $agg['this_month']['doc_count'] ?? 0,
-                'today' => $agg['today']['doc_count'] ?? 0,
-                'upcoming' => $agg['upcoming']['doc_count'] ?? 0,
-                'feedback_pending' => $agg['feedback_pending']['doc_count'] ?? 0,
+                'interview_month' => $monthCount,
+                'today' => $todayCount,
+                'upcoming' => $upcomingCount,
+                'feedback_pending' => $pendingCount,
+                'tab_counts' => [
+                    'all' => $allCount,
+                    'this_month' => $monthCount,
+                    'today' => $todayCount,
+                    'upcoming' => $upcomingCount,
+                    'pending_feedback' => $pendingCount,
+                    'selected' => $selectedCount,
+                    'rejected' => $rejectedCount,
+                    'rescheduled' => $rescheduledCount,
+                ],
             ];
         } catch (\Throwable $e) {
         }
