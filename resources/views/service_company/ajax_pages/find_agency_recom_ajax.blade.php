@@ -164,9 +164,20 @@
 
                     {{-- Bottom Row: Match % + Compact Skill Tags starting from left edge under logo --}}
                     <div class="d-flex align-items-center gap-1 flex-wrap mt-2">
-                        <span class="badge" style="background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
-                            Match {{ $percentage }}%
-                        </span>
+                        @if($percentage > 0)
+                            <span class="badge" style="background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                                Match {{ $percentage }}%
+                            </span>
+                        @else
+                            <span class="badge" style="background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;">
+                                Match 0%
+                            </span>
+                        @endif
+                        @if(!empty($row->_is_additional))
+                            <span class="badge text-muted fw-normal" style="background:#f8fafc; border: 1px solid #e2e8f0; font-size: 9.5px; padding: 1px 5px; border-radius: 4px;" title="Additional partner agency from eligible pool">
+                                Additional Agency
+                            </span>
+                        @endif
                         @php
                             $rawMatched = $row->matched_skills ?? [];
                             $matchedArray = is_array($rawMatched) ? $rawMatched : (is_iterable($rawMatched) ? iterator_to_array($rawMatched) : []);

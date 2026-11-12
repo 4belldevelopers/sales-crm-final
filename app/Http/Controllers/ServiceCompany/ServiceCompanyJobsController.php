@@ -10946,9 +10946,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $this->user = $this->user ?? auth()->user();
         $isSuperAdmin = ($this->user && ((int) $this->user->is_superadmin === 1 || in_array((int) $this->user->id, GeneralMethod::superAdminUserIds())));
-        $company_id = auth()->user()->company_id;
-
-        $jobId = $request->jobid;
+        $company_id = (int) ($this->user->company_id ?? auth()->user()->company_id ?? 0);
+        $jobId = $request->jobid ?? $request->job_id ?? request('jobid') ?? request('job_id');
 
         // Retrieve Job Details and Skills (Cached to ensure 0% DB reads on 304 Not Modified & Redis hits)
         $jobMetaCacheKey = 'ats:job_summary_meta:'.$jobId;
@@ -11055,7 +11054,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $traceId = 'ats_'.bin2hex(random_bytes(6));
         $etag = '"v7:recom:'.GeneralMethod::canonicalHash($cacheKeySet).'"';
         $ifNoneMatch = $request->header('If-None-Match') ?? request()->header('If-None-Match');
-        $hasForce = $request->has('_force') || request()->has('_force');
+        $hasForce = $request->has('_force') || request()->has('_force') || $request->has('force_refresh') || request()->has('force_refresh');
         $hasRepresentation = ($request->header('X-Has-Representation') == '1' || request()->header('X-Has-Representation') == '1');
 
         $matchesEtag = GeneralMethod::matchesIfNoneMatch($ifNoneMatch, $etag);
@@ -11340,68 +11339,92 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
-        // 4. SEPARATION OF MATCHING AGENCIES vs FALLBACK POOL
-        // Priority 1: Recommended Matching Agencies
-        // Priority 2: Fallback to 20 Agencies when ZERO matching agencies exist
+        // Exclude agencies already actively assigned to this job (recommendation_relation.final_status = 1 and non-expired)
+        $activeAssignedAgencyIds = DB::table('recommendation_relation')
+            ->where('from_company_id', $company_id)
+            ->where('job_id', $jobId)
+            ->where('final_status', 1)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->pluck('to_company_id')
+            ->toArray();
+
+        // 4. SEPARATION: MATCHING AGENCIES vs ELIGIBLE NON-MATCHING AGENCIES
+        // Order Priority:
+        // 1. Fetch & display matching agencies first, sorted by match percentage DESC.
+        // 2. If matching agencies are fewer than 20, fill remaining positions with eligible non-matching agencies.
+        // 3. Select non-matching agencies using an efficient random-selection strategy (seeded by jobId, zero ORDER BY RAND).
         $matchingAgencies = [];
-        $eligiblePool = [];
+        $nonMatchingAgencies = [];
 
         foreach ($processedAgencies as $agency) {
-            $eligiblePool[] = $agency;
+            $aId = (int) ($agency['id'] ?? 0);
+            if (in_array($aId, $activeAssignedAgencyIds, true)) {
+                continue; // Exclude already assigned agencies from Recommended tab
+            }
+
             if (($agency['matched_skill_count'] ?? 0) > 0 || ! empty($agency['is_name_matched'])) {
+                $agency['_is_additional'] = false;
                 $matchingAgencies[] = $agency;
+            } else {
+                $agency['_is_additional'] = true;
+                $nonMatchingAgencies[] = $agency;
             }
         }
 
-        if (count($matchingAgencies) > 0) {
-            // Priority 1: Show matching agencies first, sorted by matching percentage in descending order
+        // Sort matching agencies strictly by:
+        // 1. skill_match_percentage DESC (highest first)
+        // 2. leadCount ASC
+        // 3. id ASC (deterministic tie-breaker)
+        if (! empty($matchingAgencies)) {
             usort($matchingAgencies, function ($a, $b) {
-                // Priority 1: Skill Match — DESC
                 $aPct = (float) ($a['skill_match_percentage'] ?? 0);
                 $bPct = (float) ($b['skill_match_percentage'] ?? 0);
                 if ($aPct != $bPct) {
                     return $bPct <=> $aPct;
                 }
 
-                // Priority 2: leadCount — ASC
                 $aLead = (int) ($a['leadCount'] ?? 0);
                 $bLead = (int) ($b['leadCount'] ?? 0);
                 if ($aLead !== $bLead) {
                     return $aLead <=> $bLead;
                 }
 
-                // Priority 3: Stable deterministic tie-breaker: agency ID — ASC
                 return ($a['id'] ?? 0) <=> ($b['id'] ?? 0);
             });
+        }
 
-            // If matching agencies exist: display all matching agencies. Do not force 20 records.
+        $matchingCount = count($matchingAgencies);
+
+        if ($matchingCount >= 20) {
+            // Case 1: 20 or more matching agencies -> show all matching agencies (0 non-matching on page 1)
             $finalAgencies = $matchingAgencies;
-            $totalEligible = count($finalAgencies);
+            $totalEligible = $matchingCount;
         } else {
-            // Priority 2: Fallback to 20 Agencies when zero matching agencies found
-            $poolCount = count($eligiblePool);
+            // Case 2: Fewer than 20 matching agencies -> fill remaining positions with non-matching agencies up to 20
+            $remainingNeeded = 20 - $matchingCount;
+            $nonMatchingCount = count($nonMatchingAgencies);
 
-            if ($poolCount === 0) {
-                // 0 matching and 0 eligible agencies -> empty state
-                $finalAgencies = [];
-                $totalEligible = 0;
-            } elseif ($poolCount <= 20) {
-                // All available eligible agencies when 20 or fewer exist
-                $finalAgencies = $eligiblePool;
-                $totalEligible = $poolCount;
-            } else {
-                // Efficient random selection of 20 distinct agencies without ORDER BY RAND()
-                // Deterministic pseudo-random seed per jobId guarantees stability and refreshes for new job
-                mt_srand((int) $jobId);
-                $randomKeys = (array) array_rand($eligiblePool, 20);
-                mt_srand();
+            $selectedNonMatching = [];
+            if ($nonMatchingCount > 0) {
+                if ($nonMatchingCount <= $remainingNeeded) {
+                    $selectedNonMatching = $nonMatchingAgencies;
+                } else {
+                    // Efficient random selection of remainingNeeded distinct agencies without ORDER BY RAND()
+                    mt_srand((int) $jobId);
+                    $randomKeys = (array) array_rand($nonMatchingAgencies, $remainingNeeded);
+                    mt_srand();
 
-                $finalAgencies = [];
-                foreach ($randomKeys as $k) {
-                    $finalAgencies[] = $eligiblePool[$k];
+                    foreach ($randomKeys as $k) {
+                        $selectedNonMatching[] = $nonMatchingAgencies[$k];
+                    }
                 }
-                $totalEligible = 20;
             }
+
+            // Matching agencies ALWAYS appear before non-matching agencies
+            $finalAgencies = array_merge($matchingAgencies, $selectedNonMatching);
+            $totalEligible = count($finalAgencies);
         }
 
         // 5. SERVER-SIDE PAGINATION (Slice max 20 records per page)
@@ -11505,6 +11528,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'html' => view('service_company.ajax_pages.'.$page_view, compact('data', 'userPermissions', 'app_int_outsource', 'jobid', 'searchSkills', 'hiringtype', 'parent_employment_type', 'company_id'))->render(),
             'total' => $totalEligible,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'data' => $data,
         ];
 
         cache()->put($cacheKeySet, $responseData, 3600);
