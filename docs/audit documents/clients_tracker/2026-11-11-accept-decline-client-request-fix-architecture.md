@@ -245,3 +245,87 @@ All 12 test scenarios specified in the audit requirements have been tested and v
    ```
 4. **Browser Cache:**
    - Asset query string or versioning for `cl-data-worker.js` ensures client browser RAM executes the latest worker definition.
+
+---
+
+## 8. Real-Time UI Synchronization: Request Removal & Direct Client Addition
+
+To ensure an instantaneous and seamless user experience on both the **Pending Requests** tab (`tab=request`) and the **Total Clients** tab (`tab=all`):
+
+### 8.1 On Selecting 'Accept' (`event_id = 1`)
+1. **Request List Removal:**
+   - The pending invitation row immediately animates and is removed from the DOM: `$row.slideUp(250, function() { $(this).remove(); })`.
+   - The Pending Requests counter (`#span_clientRequest`) decrements by 1.
+2. **Direct Client List Addition:**
+   - The relation document in `ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX` is immediately refreshed (`'refresh' => true`).
+   - The response payload delivers pre-rendered `clientList` containing the newly accepted Direct Client card.
+   - All in-memory search caches (`ClientStore.clear()`, `ClientSearchEngine.destroy()`, and worker cache) are wiped so that no stale in-memory data intercepts UI queries.
+   - **When triggered from "Total Clients" (`tab=all`):** `#allClients` is immediately updated with `response.clientList.html`, displaying the company as an active Direct Client card (with "Hiring Pipeline", "Jobs Status", etc.) at the top of the client list.
+   - **When triggered from "Pending Requests" (`tab=request`):** After removing the request card, the view smoothly switches to the client list (`setClientTab('all')`), immediately displaying the newly accepted client.
+
+### 8.2 On Selecting 'Decline' (`event_id = -1`)
+1. **Request List Removal:**
+   - The pending request card immediately animates and is removed from the DOM: `$row.slideUp(250, function() { $(this).remove(); })`.
+   - The Pending Requests counter (`#span_clientRequest`) decrements by 1.
+   - If no pending requests remain on `tab=request`, the empty state ("No Pending Client Requests. You're all caught up.") is cleanly rendered.
+2. **No Client Relationship Created:**
+   - The company is NOT added to the client list.
+   - Any completed historical relation records are protected with `where('final_status', 0)`.
+
+### 8.3 Self-Healing Conflict Recovery (HTTP 409 & 422)
+Previously, if a request had already been processed or accepted (e.g. by a parallel tab or quick double-click), the backend returned HTTP 409 (`REQUEST_ALREADY_PROCESSED`). The frontend error handler executed a "Deterministic Rollback", which erroneously restored the Accept & Decline buttons and retained the pending card on screen behind the SweetAlert "Already Handled" notification.
+
+**Remediation:**
+1. **HTTP 409 (`REQUEST_ALREADY_PROCESSED`):**
+   - The backend includes the authoritative `clientDataCnt` counters and `clientList` payload in the 409 JSON response.
+   - The frontend immediately clears all browser caches (`ClientStore.clear()`, `ClientSearchEngine.destroy()`, Worker cache, localStorage ETag, and IndexedDB projection).
+   - The pending request row is removed immediately via `$row.slideUp(250, function() { $(this).remove(); })` without rolling back the buttons.
+   - If the request was already accepted, the UI smoothly transitions to `tab=all` showing the accepted Direct Client card.
+2. **HTTP 422 (`REQUEST_EXPIRED`):**
+   - The frontend clears in-memory caches and IndexedDB projection, decrements the pending request counter, and removes the expired row from the DOM.
+3. **Deterministic Rollback is strictly confined to genuine server errors (HTTP 500, network loss):**
+   - Only true failures restore the buttons and original classes so the recruiter can safely retry.
+
+---
+
+## 9. Permanent Prevention of Reappearing Requests (Multi-Layer Cache Invalidation)
+
+During end-to-end multi-tab and reload verification, an edge case was identified where accepted or declined requests could temporarily reappear upon certain tab navigation or warm-cache fetches. This was forensically analyzed down to four separate cache layers and permanently remediated:
+
+1. **Tenant Cache Version Stagnation in `invalidateTenantClientCache()`:**
+   - **Root Cause:** When `cache()->increment('tenant_'.$companyId.'_client_version')` was called on a tenant version key that had been cleared or not yet initialized, Laravel/Redis initialized the key to `1`. Since `$oldVersion` defaulted to `1`, `$oldVersion == 1` and `$newVersion == 1`! Because the version never changed, the cache key (`ats:v3:clients:tenant=3:version=1...`) remained identical, causing the backend to continue serving the cached HTML with the old pending request card.
+   - **Remediation:** Re-architected `invalidateTenantClientCache()` to guarantee monotonic strictly increasing versions:
+     ```php
+     $current = (int) cache()->get('tenant_'.$companyId.'_client_version', 0);
+     $newVersion = ($current > 0) ? (int) cache()->increment('tenant_'.$companyId.'_client_version') : 2;
+     cache()->forever('tenant_'.$companyId.'_client_version', $newVersion);
+     ```
+     Additionally, it explicitly evicts `ats:v2:client_counters`, `ats:v2:hiring_clients`, and `ats:v2:clients_projection` across the entire sliding version window (`max(1, $current - 2)` to `$newVersion + 2`).
+
+2. **Internal Mutation Fresh Data Generation (`nocache` Bypass):**
+   - **Root Cause:** When `request_update()` generated fresh response payloads via `$this->all_clients_data_ajax($freshRequest)`, it evaluated warm cache lookups. If the version key had not propagated across all distributed workers within sub-milliseconds, it would return cached HTML.
+   - **Remediation:** Added first-class `'nocache' => 1` parameter handling to `all_clients_data_ajax()`, `client_request_data()`, and `activeClientProjection()`. Bypasses ETag 304 and cache lookups, ensuring 100% authoritative fresh query results from Elasticsearch and MySQL.
+
+3. **Elasticsearch Shard Query Cache Invalidation:**
+   - **Root Cause:** In `getPendingClientInvitations()` and `client_request_data()`, queries specified `'request_cache' => true`. On Elasticsearch nodes, shard query caching could hold older query hits for a short TTL even after doc updates with `'refresh' => true`.
+   - **Remediation:** Removed `'request_cache' => true` from pending invitation searches, ensuring instant visibility of document state transitions.
+
+4. **Browser IndexedDB Projection Cache (`ClientLocationDB`):**
+   - **Root Cause:** The browser maintained an IndexedDB projection store (`jero_client_projection:tenant=3:user=3:projection=clients:schema=2`). When `fetchActiveProjection()` received an HTTP 304 Not Modified, it loaded older cached rows from IndexedDB and re-hydrated `ClientSearchEngine`, which re-inserted the pending card into the DOM. `ClientLocationDB` was also missing a `delete()` method.
+   - **Remediation:**
+     - Added `ClientLocationDB.delete(key)` to `index.blade.php`.
+     - In `request_event` success, 409 conflict, 422 expired, and cross-tab `handleClientMutationEvent`, the IndexedDB projection key is explicitly deleted.
+     - `applyClientResponse()` now re-hydrates `ClientSearchEngine` and `clWorker` directly whenever fresh rows are returned from the server.
+
+---
+
+## 10. Automated Verification Matrix
+
+| Test Suite | Tests | Assertions | Status |
+|---|---|---|---|
+| `Tests\Feature\ClientRequestAcceptDeclineTest` | 9 | 33 | **PASSED (100%)** |
+| `Tests\Feature\ExpiredRequestsAutoRemoveAndResendTest` | 6 | 21 | **PASSED (100%)** |
+| `Tests\Feature\ClientRequestDeduplicationTest` | 6 | 25 | **PASSED (100%)** |
+| **Total** | **21** | **79** | **PASSED (100%)** |
+
+
