@@ -11132,8 +11132,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->get();
 
         $html = '';
-        // dd($candidate_status_Arr);
-        if (! empty($candidate_status_Arr)) {
+        $subStageCount = $candidate_status_Arr ? $candidate_status_Arr->count() : 0;
+        if ($subStageCount > 0) {
             foreach ($candidate_status_Arr as $cstatus) {
                 $csdMeta = GeneralMethod::csdSubStatusMeta(@$cstatus->name);
                 $csdName = e(@$cstatus->name);
@@ -11154,12 +11154,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 										<div class="nm">'.$csdName.'</div>
 										'.$csdDesc.'
 									</div>
+									<span class="csd-sub-chk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
 								</div>';
             }
         }
 
-        // dd($html);
-        return Reply::dataOnly(['status' => 'success', 'html' => $html]);
+        return Reply::dataOnly(['status' => 'success', 'html' => $html, 'count' => $subStageCount]);
 
     }
 
