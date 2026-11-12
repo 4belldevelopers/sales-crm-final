@@ -522,21 +522,22 @@
         }
         #bg_all.hp-total.hp-org-direct.bg-total-active,
         .hp-total.hp-org-direct.bg-total-active {
-            background-color: #047857 !important;
-            background-image: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
-            background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
-            border-color: #047857 !important;
-            box-shadow: 0 6px 16px rgba(4, 120, 87, 0.28) !important;
+            background-color: #a7f3d0 !important;
+            background-image: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%) !important;
+            background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%) !important;
+            border-color: #34d399 !important;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.22) !important;
         }
         #bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-icon,
         #bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-count,
         .hp-total.hp-org-direct.bg-total-active .hp-total-icon,
         .hp-total.hp-org-direct.bg-total-active .hp-total-count {
-            color: #ffffff !important;
+            color: #064e3b !important;
         }
         #bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-label,
         .hp-total.hp-org-direct.bg-total-active .hp-total-label {
-            color: #d1fae5 !important;
+            color: #065f46 !important;
+            font-weight: 600;
         }
         #bg_all.hp-total.hp-org-direct.bg-gray,
         .hp-total.hp-org-direct.bg-gray {
@@ -1656,12 +1657,12 @@
             --hdr-btn-outline-color: #15803d;
             --hdr-btn-outline-hover-bg: #d1fae5;
             --hdr-btn-outline-hover-color: #14532d;
-            --hdr-btn-solid-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);
-            --hdr-btn-solid-border: #047857;
-            --hdr-btn-solid-color: #ffffff;
-            --hdr-btn-solid-hover: linear-gradient(135deg, #065f46 0%, #064e3b 100%);
-            --hdr-btn-solid-hover-border: #065f46;
-            --hdr-btn-shadow: rgba(4, 120, 87, 0.28);
+            --hdr-btn-solid-bg: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
+            --hdr-btn-solid-border: #34d399;
+            --hdr-btn-solid-color: #064e3b;
+            --hdr-btn-solid-hover: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
+            --hdr-btn-solid-hover-border: #10b981;
+            --hdr-btn-shadow: rgba(16, 185, 129, 0.22);
         }
         .aptk-hdr-main {
             flex: 1 1 auto;
