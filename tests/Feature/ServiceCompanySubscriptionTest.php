@@ -88,13 +88,17 @@ class ServiceCompanySubscriptionTest extends TestCase
         ])->render();
 
         $this->assertStringNotContainsString('<table', $html);
+        $this->assertStringContainsString('sub-tx-kpi-grid', $html);
+        $this->assertStringContainsString('sub-tx-filter-card', $html);
+        $this->assertStringContainsString('js-tx-filter-btn', $html);
         $this->assertStringContainsString('sub-tx-stream', $html);
         $this->assertStringContainsString('sub-tx-card', $html);
+        $this->assertStringContainsString('sub-tx-bottom-strip', $html);
         $this->assertStringContainsString('#00042', $html);
         $this->assertStringContainsString('Pro Hiring Pack', $html);
         $this->assertStringContainsString('Sales Booster', $html);
         $this->assertStringContainsString('Failed', $html);
-        $this->assertStringContainsString('Receipt', $html);
+        $this->assertStringContainsString('Download Receipt', $html);
     }
 
     public function test_subscription_transactions_renders_empty_state(): void
@@ -131,5 +135,44 @@ class ServiceCompanySubscriptionTest extends TestCase
         $this->assertStringContainsString('#wallet-pane-transactions .sub-tx-stream', $source);
         $this->assertStringContainsString('service_company.subscribe.checkoutSubscribe', $source);
         $this->assertStringContainsString('service_company.subscribe.customCheckoutSubscribe', $source);
+    }
+
+    public function test_transection_logs_template_enforces_three_tier_architecture_and_preserves_contracts(): void
+    {
+        $this->assertTrue(View::exists('service_company.subscription.transection-logs'));
+
+        $source = file_get_contents(resource_path('views/service_company/subscription/transection-logs.blade.php'));
+        $this->assertNotFalse($source);
+
+        // Rule 20 3-tier Card + Sub-Card structure & zero HTML tables
+        $this->assertStringContainsString('txact-wrapper', $source);
+        $this->assertStringContainsString('tier1-toolbar-card', $source);
+        $this->assertStringContainsString('tier2-subtabs-card', $source);
+        $this->assertStringContainsString('tier3-cards-stream', $source);
+        $this->assertStringContainsString('txact-kpi-grid', $source);
+        $this->assertStringContainsString('txact-kpi-subcard', $source);
+        $this->assertStringContainsString('txact-entry-card', $source);
+        $this->assertStringContainsString('txact-entry-grid', $source);
+        $this->assertStringContainsString('txact-entry-bottom', $source);
+        $this->assertStringNotContainsString('<table', $source);
+
+        // Preserved DOM IDs, JS hooks, and AJAX / Reverb contracts
+        $this->assertStringContainsString('id="txlog-search"', $source);
+        $this->assertStringContainsString('id="txlog-search-clear"', $source);
+        $this->assertStringContainsString('id="txlog-date-from"', $source);
+        $this->assertStringContainsString('id="txlog-date-to"', $source);
+        $this->assertStringContainsString('id="txlog-type"', $source);
+        $this->assertStringContainsString('id="txlog-per-page"', $source);
+        $this->assertStringContainsString('id="txlog-reset"', $source);
+        $this->assertStringContainsString('id="tab-operational"', $source);
+        $this->assertStringContainsString('id="tab-sales"', $source);
+        $this->assertStringContainsString('txlog-tab', $source);
+        $this->assertStringContainsString('txlog-chip', $source);
+        $this->assertStringContainsString('id="txlog-live-notice"', $source);
+        $this->assertStringContainsString('id="btn-txlog-live-reload"', $source);
+        $this->assertStringContainsString('id="txlog-content"', $source);
+        $this->assertStringContainsString('id="txlog-pagination"', $source);
+        $this->assertStringContainsString('transection-log/data', $source);
+        $this->assertStringContainsString('window.JWTransactionLog', $source);
     }
 }
