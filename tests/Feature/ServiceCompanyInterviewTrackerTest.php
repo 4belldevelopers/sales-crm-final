@@ -312,24 +312,29 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $this->assertStringContainsString('*:not(i):not(.fa):not(.fas)', $content);
         $this->assertStringNotContainsString('href="assets/plugins/global/plugins.bundle.css"', $content);
 
-        // Client Tracker KPI design parity — 7 total interactive metric cards
+        // Compact Executive 5-KPI strip layout
         $this->assertStringContainsString('class="it-stat-grid"', $content);
-        $this->assertStringContainsString('class="it-stat-card it-stat-filter"', $content);
+        $this->assertStringContainsString('class="it-stat-card it-stat-filter', $content);
         $this->assertStringContainsString('class="it-stat-icon blue"', $content);
         $this->assertStringContainsString('class="it-stat-num"', $content);
         $this->assertStringContainsString('class="it-stat-sub', $content);
 
-        // All 7 KPI cards present with data-kpi-filter
+        // Exactly 5 KPI cards present with data-kpi-filter
+        $this->assertStringContainsString('data-kpi-filter="all"', $content);
         $this->assertStringContainsString('data-kpi-filter="this_month"', $content);
         $this->assertStringContainsString('data-kpi-filter="today"', $content);
         $this->assertStringContainsString('data-kpi-filter="upcoming"', $content);
         $this->assertStringContainsString('data-kpi-filter="pending_feedback"', $content);
-        $this->assertStringContainsString('data-kpi-filter="direct_client"', $content);
-        $this->assertStringContainsString('data-kpi-filter="internal_client"', $content);
-        $this->assertStringContainsString('data-kpi-filter="my_organization"', $content);
-        $this->assertStringContainsString('Direct Client Interviews', $content);
-        $this->assertStringContainsString('Internal Client Interviews', $content);
-        $this->assertStringContainsString('My Organization Interviews', $content);
+        $this->assertStringContainsString('id="stat-all-interviews"', $content);
+        $this->assertStringContainsString('id="stat-interview-month"', $content);
+        $this->assertStringContainsString('id="stat-today"', $content);
+        $this->assertStringContainsString('id="stat-upcoming"', $content);
+        $this->assertStringContainsString('id="stat-feedback-pending"', $content);
+        $this->assertStringContainsString('All Interviews', $content);
+        $this->assertStringContainsString('Interviews This Month', $content);
+        $this->assertStringContainsString("Today's Interviews", $content);
+        $this->assertStringContainsString('Upcoming Interviews', $content);
+        $this->assertStringContainsString('Feedback Pending', $content);
 
         // Subtabs completely removed
         $this->assertStringNotContainsString('class="it-tabs-card"', $content);
@@ -339,17 +344,23 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         // Search clear X button removed
         $this->assertStringNotContainsString('id="itSearchClear"', $content);
 
-        // Single dedicated white toolbar card holding Search, Mode, Sort & Reset together
+        // Single dedicated white toolbar card holding Search, Company Type, Mode, Sort & Reset together
         $this->assertStringContainsString('class="it-toolbar-card"', $content);
         $this->assertStringContainsString('class="it-filter-bar"', $content);
         $this->assertStringContainsString('id="itSearchBoxWrapper"', $content);
         $this->assertStringContainsString('id="itSearchMatchCount"', $content);
         $this->assertStringContainsString('id="itSearchKbdHint"', $content);
+        $this->assertStringContainsString('id="itCompanyTypeDropdownWrapper"', $content);
+        $this->assertStringContainsString('id="itCompanyTypeBtn"', $content);
+        $this->assertStringContainsString('id="itCompanyTypeDropdownPanel"', $content);
+        $this->assertStringContainsString('data-type-val="direct_client"', $content);
+        $this->assertStringContainsString('data-type-val="internal_client"', $content);
+        $this->assertStringContainsString('data-type-val="my_organization"', $content);
         $this->assertStringContainsString('id="itModeDropdownWrapper"', $content);
         $this->assertStringContainsString('id="itSortDropdownWrapper"', $content);
         $this->assertStringContainsString('id="itResetFiltersBtn"', $content);
 
-        // Verify Search, Mode, Sort & Reset all live inside .it-toolbar-card (before .it-stream-wrapper)
+        // Verify Search, Company Type, Mode, Sort & Reset all live inside .it-toolbar-card (before .it-stream-wrapper)
         $toolbarPos = strpos($content, '<div class="it-toolbar-card">');
         $streamPos = strpos($content, '<div class="it-stream-wrapper">');
         $this->assertNotFalse($toolbarPos);
@@ -358,8 +369,19 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
 
         $toolbarSection = substr($content, $toolbarPos, $streamPos - $toolbarPos);
         $this->assertStringContainsString('id="kt_tagify_2"', $toolbarSection);
+        $this->assertStringContainsString('id="itCompanyTypeFilter"', $toolbarSection);
         $this->assertStringContainsString('id="itModeFilter"', $toolbarSection);
         $this->assertStringContainsString('id="sortingfilter"', $toolbarSection);
         $this->assertStringContainsString('id="itResetFiltersBtn"', $toolbarSection);
+
+        // Verify Company Type Combobox is placed immediately after Search Box
+        $searchPos = strpos($toolbarSection, 'id="itSearchBoxWrapper"');
+        $companyTypePos = strpos($toolbarSection, 'id="itCompanyTypeDropdownWrapper"');
+        $modePos = strpos($toolbarSection, 'id="itModeDropdownWrapper"');
+        $this->assertNotFalse($searchPos);
+        $this->assertNotFalse($companyTypePos);
+        $this->assertNotFalse($modePos);
+        $this->assertLessThan($companyTypePos, $searchPos);
+        $this->assertLessThan($modePos, $companyTypePos);
     }
 }

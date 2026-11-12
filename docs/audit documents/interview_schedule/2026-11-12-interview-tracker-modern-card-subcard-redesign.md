@@ -85,17 +85,8 @@ Each card features a `3.5px` semantic left-border accent (`#10b981` Selected, `#
 - Excluded `i`, `.fa`, `.fas`, `.far`, `.fab`, `.fa-solid`, `.fa-regular`, `.fa-brands`, `.ti`, `.bi` from `.it-dashboard *` Poppins `font-family !important`, explicitly loaded Font Awesome 6.5.1 CSS with enforced `"Font Awesome 6 Free"` font rules, and removed the broken relative `assets/plugins/global/plugins.bundle.css` link.
 - IndexedDB cache version bumped to `DB_VERSION = 3` cleanly.
 
-### 7-KPI Metric Strip & Complete Subtab Elimination
+### 7-KPI Metric Strip & Complete Subtab Elimination (Phase 1)
 - **Subtabs Completely Removed:** Completely removed `.it-tabs-card`, `.it-tabs-group`, `.it-tab-btn`, and `#tab-count-*` elements, state, and redundant server payload (`tab_counts`). Replaced subtabs with clean KPI metric filtering via `filterByKpi()`, `syncActiveKpiCards()`, and `activeKpiFilter`.
-- **7 Clickable KPI Metric Cards:** Expanded executive metric strip to 7 interactive KPI cards styled with AppTracker emerald, cobalt blue, and amber tokens:
-  1. `Interviews This Month` (`data-kpi-filter="this_month"`)
-  2. `Today's Interviews` (`data-kpi-filter="today"`)
-  3. `Upcoming Interviews` (`data-kpi-filter="upcoming"`)
-  4. `Feedback Pending` (`data-kpi-filter="pending_feedback"`)
-  5. `Direct Client Interviews` (`data-kpi-filter="direct_client"`, Emerald palette)
-  6. `Internal Client Interviews` (`data-kpi-filter="internal_client"`, Cobalt Blue palette)
-  7. `My Organization Interviews` (`data-kpi-filter="my_organization"`, Amber palette)
-  Mutually exclusive ES queries ensure `direct_client + my_organization + internal_client === total`. Responsive layout: `repeat(7, minmax(0, 1fr))` on 1920px, `repeat(4, minmax(0, 1fr))` on <=1520px / 15.6" screens (`1366×768`).
 - **Deep Search, Mode & Sort Audit:**
   - Multi-match search: normalized search terms (`custom_search` / `search` / `q`), supported `#86` / `86` numeric job IDs via exact term matching on `job_id`, `jobId`, `id`, and expanded `match_phrase_prefix` + wildcards across `job_title`, `client_name`, `company_name`, `uc_company_name`, `full_name`, `interviewers`, `current_designation`, `current_company`, `posted_by`, `master_status_name`, `city_name`, `state_name`, `country_name`, `email`, and `phone`.
   - Mode filter: supports both integer and string-mapped ES docs (`[(int) $mode_filter, (string) $mode_filter]`).
@@ -103,7 +94,28 @@ Each card features a `3.5px` semantic left-border accent (`#10b981` Selected, `#
 - **Search Bar Clear (X) Removal:** Removed redundant `#itSearchClear` (`✕`) button from HTML/CSS/JS since the dedicated `Reset` button resets all query inputs, mode dropdown, sort dropdown, and active KPI filters.
 - **Requisition Header Anti-Clipping Layout:** Adjusted `.it-card-grid` fractional weights (`1.7fr 1.9fr 1.32fr 1.2fr 1.5fr 1.36fr`) and applied `flex-shrink: 0`, `font-size: 8px`, `padding: 1.5px 5.5px` to `.it-scope-badge`, completely eliminating text clipping of `REQUISITION` and `[INTERNAL CLIENT]` on 1366×768 and 1920×1080 screens.
 - **Google Meet Text Removal:** Completely removed `"Google Meet"` text and the `.it-platform-pill` from cards, while preserving interview mode badges (`Video`, `Telecon`, `F2F`), mode dropdown filtering, and `Interview Link` / `View Address` action pills.
-- **Cache Invalidation:** Bumped cache keys to `ui_v => 'card_v4'` and IndexedDB to `DB_VERSION = 5`.
+
+### Compact 5-KPI Strip & Dedicated Company Type Filter Combobox (Phase 2)
+- **Problem Resolved:** The 7-card KPI strip previously overcrowded the top viewport and wrapped onto two rows on 15.6" screens (`1366×768`), diluting the primary chronological categories.
+- **Compact Single-Row 5-KPI Strip:** Reorganized Tier 2 into a single, compact, high-density 5-card strip (`repeat(5, minmax(0, 1fr))`):
+  1. `All Interviews` (`data-kpi-filter="all"`, `#stat-all-interviews`) — Master count and listing toggle.
+  2. `Interviews This Month` (`data-kpi-filter="this_month"`, `#stat-interview-month`) — Scheduled in current calendar month.
+  3. `Today's Interviews` (`data-kpi-filter="today"`, `#stat-today`) — Scheduled on today's calendar date.
+  4. `Upcoming Interviews` (`data-kpi-filter="upcoming"`, `#stat-upcoming`) — Future scheduled interviews.
+  5. `Feedback Pending` (`data-kpi-filter="pending_feedback"`, `#stat-feedback-pending`) — Completed interviews awaiting feedback.
+- **Dedicated Company Type Combobox Filter:** Moved the 3 company types (`Direct Client`, `Internal Client`, `My Organization`) from the KPI cards into a dedicated WAI-ARIA combobox dropdown in Tier 3, positioned immediately adjacent to the Search box (`#itSearchBoxWrapper`):
+  - `#itCompanyTypeDropdownWrapper` with button `#itCompanyTypeBtn` and panel `#itCompanyTypeDropdownPanel`.
+  - Filter options with Rule 25 canonical color combinations:
+    - `All Types`
+    - `Direct Client` (Emerald `#ecfdf5` bg / `#059669` text / dot `#059669` / badge `Marketplace`)
+    - `Internal Client` (Blue `#eff6ff` bg / `#2563eb` text / dot `#2563eb` / badge `Managed`)
+    - `My Organization` (Cyan `#ecfeff` bg / `#0891b2` text / dot `#0891b2` / badge `Own Company`)
+  - Includes active highlight, clear filter button (`✕`), keyboard navigation (ArrowUp/ArrowDown/Enter/Escape), and outside-click auto-close.
+- **Dynamic 0ms RAM + Elasticsearch CQRS Synchronization:**
+  - `InterviewScheduleController::dashboardStats()` runs sub-aggregations for `this_month`, `today`, `upcoming`, and `feedback_pending` under each company type filter in a single Elasticsearch query, returning `stats_by_type` mapped to `all`, `direct_client`, `internal_client`, and `my_organization`.
+  - When the user selects a company type, `applyCompanyTypeStatsLocally()` instantly updates the 5 KPI counts in user RAM with 0ms latency, while `fetchCandidates()` sends `company_type` to Elasticsearch to filter the interview stream.
+  - Reset button resets all query inputs, sets company type back to `All Types`, resets mode, resets sort, and reactivates `All Interviews`.
+- **Cache Invalidation:** Bumped cache keys to `ui_v => 'card_v5'` and IndexedDB to `DB_VERSION = 6`.
 
 ---
 
@@ -111,17 +123,17 @@ Each card features a `3.5px` semantic left-border accent (`#10b981` Selected, `#
 
 | File | Purpose | Isolation & Safety |
 |---|---|---|
-| `resources/views/service_company/interview-schedule/table.blade.php` | Complete Rule 20 Card + 6-Subcard layout, 7 interactive KPI cards (`Direct Client`, `Internal Client`, `My Organization` added), complete removal of `.it-tabs-card` and clear X button, Requisition non-clipping width fix, `itLastAppliedSort` fix, `syncActiveKpiCards()`, IndexedDB `v5` upgrade. | Scoped strictly to Service Company Interview Tracker (Rule 17 & Rule 18). |
+| `resources/views/service_company/interview-schedule/table.blade.php` | Compact 5-KPI single-row strip (`All Interviews`, `This Month`, `Today`, `Upcoming`, `Feedback Pending`); dedicated Company Type combobox filter adjacent to search; `applyCompanyTypeStatsLocally()` for 0ms User RAM KPI updates; IndexedDB `v6` upgrade. | Scoped strictly to Service Company Interview Tracker (Rule 17 & Rule 18). |
 | `resources/views/service_company/ajax_pages/interview-tracker-ajax.blade.php` | Replaced legacy table with `.it-card` stream; removed `"Google Meet"` text pill from cards; retained interview mode pill, link/address buttons, and 6-subcard layout (`Candidate` with current company, `Requisition` with employment type and non-clipping org badge, `Schedule`, `Panelists`, `Ownership & Recruiter`, `Evaluation`). | All user strings Blade-escaped (`{{ }}`). Zero business logic alterations. |
-| `app/Http/Controllers/ServiceCompany/InterviewScheduleController.php` | Added `resolveMyOrgClientIds()` and `buildOrgClassificationFilters()`, updated `dashboardStats()` to calculate all 7 KPIs (`direct_client`, `internal_client`, `my_organization`, `this_month`, `today`, `upcoming`, `feedback_pending`), updated `data_ajax()` to support multi-field search + numeric job ID `#id`, mode filter, deterministic sort tie-breakers, and dropped `tab_counts`. | 100% CQRS and ES read compliance. |
+| `app/Http/Controllers/ServiceCompany/InterviewScheduleController.php` | Updated `dashboardStats()` to perform sub-aggregations per company type in a single ES call; updated `data_ajax()` to accept `company_type`, filter Elasticsearch queries accordingly, scope KPI counts to the active company type, and return `stats_by_type`. | 100% CQRS and ES read compliance (Rule 1 & Rule 2). |
 | `docs/audit documents/interview_schedule/2026-11-12-interview-tracker-modern-card-subcard-redesign.md` | Comprehensive architectural documentation and audit log. | Documentation standard (Rule 21). |
-| `tests/Feature/ServiceCompanyInterviewTrackerTest.php` | Automated tests verifying 7 KPIs, zero subtabs, zero clear X icon, zero Google Meet text on cards, Requisition layout, and UI/UX invariant assertions (96 assertions). | Isolated test suite. |
+| `tests/Feature/ServiceCompanyInterviewTrackerTest.php` | Automated tests verifying 5 KPIs, Company Type combobox placement adjacent to search, WAI-ARIA attributes, and UI/UX invariant assertions (113 assertions). | Isolated test suite. |
 
 ---
 
 ## 5. 15.6" Screen Fit & Verification Evidence
 
-- **Screen Responsiveness:** `#kt_content_container` enforces `overflow-x: hidden !important`, `.it-stat-grid` renders 7 columns on 1920px and 4 columns on <=1520px (1366×768), and `.it-card-grid` uses fractional `minmax(0, ...fr)` units preventing horizontal overflow and text clipping.
-- **Syntax & Compilation:** `php -l` passed on `InterviewScheduleController.php` and Blade-compiled PHP output of both `table.blade.php` and `interview-tracker-ajax.blade.php`.
+- **Screen Responsiveness:** `#kt_content_container` enforces `overflow-x: hidden !important`, `.it-stat-grid` renders 5 columns in a single row on 1920px and 1366×768 (15.6" screens), dropping gracefully to 3 columns on <=1100px and 2 columns on mobile.
+- **Syntax & Compilation:** `php -l` passed on `InterviewScheduleController.php` and `php artisan view:cache` compiled all views cleanly.
 - **Laravel Pint:** `./vendor/bin/pint --test` passed cleanly across modified PHP files.
-- **Automated Tests:** `php artisan test tests/Feature/ServiceCompanyInterviewTrackerTest.php` passed 100% (5 tests, 96 assertions).
+- **Automated Tests:** `php artisan test tests/Feature/ServiceCompanyInterviewTrackerTest.php` passed 100% (5 tests, 113 assertions).
