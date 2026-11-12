@@ -110,6 +110,8 @@ return [
     'ELASTIC_SUPERADMIN_PROFILE' => env('ELASTIC_SUPERADMIN_PROFILE', 'local_superadmin_profile'),
     'ELASTIC_CURRENCIES' => env('ELASTIC_CURRENCIES', 'local_currencies'),
     'ELASTIC_LANGUAGE_SETTINGS' => env('ELASTIC_LANGUAGE_SETTINGS', 'local_language_settings'),
+    'ELASTIC_THEME_SETTINGS' => env('ELASTIC_THEME_SETTINGS', 'local_theme_settings'),
+    'ELASTIC_FEATURES_LIST' => env('ELASTIC_FEATURES_LIST', 'local_features_list'),
+    'ELASTIC_LINKEDIN_SETTINGS' => env('ELASTIC_LINKEDIN_SETTINGS', 'local_linkedin_settings'),
     'COUNTRY_INDIA_ID' => 101,
 ];
-

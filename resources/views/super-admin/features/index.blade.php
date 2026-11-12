@@ -1243,11 +1243,59 @@
         }
 
         // =========================================================================
-        // 2. Optimistic Status Toggle Switch (.ft-toggle-switch)
+        // 2. Optimistic Status Toggle Switch (.ft-toggle-switch) & Idempotency Engine
         // =========================================================================
+
+        let isMutationInFlight = false;
+
+        function generateUUID() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // Multi-Tab Real-Time Sync via BroadcastChannel
+        const syncChannel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('jero_features_sync') : null;
+        if (syncChannel) {
+            syncChannel.onmessage = function(event) {
+                if (event.data && event.data.type === 'FEATURE_STATUS_TOGGLED' && event.data.id) {
+                    const card = document.querySelector('.ft-card[data-id="' + event.data.id + '"]');
+                    if (card) {
+                        const toggle = card.querySelector('.ft-toggle-switch');
+                        const statusLabel = document.getElementById('statusLabel_' + event.data.id);
+                        const isChecked = parseInt(event.data.status, 10) === 1;
+                        if (toggle && toggle.checked !== isChecked) {
+                            toggle.checked = isChecked;
+                            if (statusLabel) {
+                                statusLabel.textContent = isChecked ? 'Active' : 'Inactive';
+                                statusLabel.className = 'ft-switch-label ' + (isChecked ? 'text-success' : 'text-inactive');
+                            }
+                            card.setAttribute('data-status', isChecked ? 'active' : 'inactive');
+                            card.classList.toggle('status-active', isChecked);
+                            card.classList.toggle('status-inactive', !isChecked);
+                            updateKpiBadges();
+                        }
+                    }
+                } else if (event.data && event.data.type === 'FEATURE_SAVED') {
+                    // Refresh view if drawer is closed to maintain state consistency
+                    if (!isDrawerOpen) {
+                        window.location.reload();
+                    }
+                }
+            };
+        }
 
         document.addEventListener('change', function(e) {
             if (!e.target.matches('.ft-toggle-switch')) return;
+
+            if (isMutationInFlight) {
+                e.preventDefault();
+                return;
+            }
 
             const toggle = e.target;
             const featureId = toggle.getAttribute('data-id');
@@ -1255,6 +1303,9 @@
             const newStatus = isChecked ? 1 : 0;
             const card = toggle.closest('.ft-card');
             const statusLabel = document.getElementById('statusLabel_' + featureId);
+
+            isMutationInFlight = true;
+            toggle.disabled = true;
 
             // Optimistic UI updates
             if (statusLabel) {
@@ -1267,17 +1318,34 @@
                 card.classList.toggle('status-inactive', !isChecked);
             }
 
-            // AJAX Mutation
+            // AJAX Mutation with Two-Tier Idempotency Key
             $.ajax({
                 type: 'POST',
                 url: "{{ route('superadmin.company.featuresToggleStatus') }}",
+                headers: {
+                    'X-Idempotency-Key': generateUUID(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 data: {
                     _token: "{{ csrf_token() }}",
                     id: featureId,
                     status: newStatus
                 },
+                complete: function() {
+                    isMutationInFlight = false;
+                    toggle.disabled = false;
+                },
                 success: function(response) {
                     if (response.status === 'success') {
+                        // Multi-tab broadcast
+                        if (syncChannel) {
+                            syncChannel.postMessage({
+                                type: 'FEATURE_STATUS_TOGGLED',
+                                id: featureId,
+                                status: newStatus
+                            });
+                        }
+
                         // Toast notification
                         if (typeof Swal !== 'undefined') {
                             const Toast = Swal.mixin({
@@ -1480,10 +1548,42 @@
                 });
             }
 
+            // Autosave and restore draft in sessionStorage
+            const drawerTokenId = document.getElementById('ftDrawerTokenId') ? document.getElementById('ftDrawerTokenId').value : '0';
+            const DRAFT_KEY = 'jero_superadmin_feature_draft_' + drawerTokenId;
+
+            // Restore draft if present
+            try {
+                const savedDraft = sessionStorage.getItem(DRAFT_KEY);
+                if (savedDraft) {
+                    const draftObj = JSON.parse(savedDraft);
+                    if (draftObj && titleInput && !titleInput.value && draftObj.title) {
+                        titleInput.value = draftObj.title;
+                    }
+                    if (draftObj && daysInput && !daysInput.value && draftObj.days) {
+                        daysInput.value = draftObj.days;
+                    }
+                }
+            } catch(e) {}
+
+            function saveDraft() {
+                try {
+                    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+                        title: titleInput ? titleInput.value : '',
+                        days: daysInput ? daysInput.value : '',
+                        status: statusHidden ? statusHidden.value : '1'
+                    }));
+                } catch(e) {}
+            }
+            if (titleInput) titleInput.addEventListener('input', saveDraft);
+            if (daysInput) daysInput.addEventListener('input', saveDraft);
+
             // Save Button in Drawer
             if (saveBtn) {
                 saveBtn.addEventListener('click', function(e) {
                     e.preventDefault();
+
+                    if (isMutationInFlight) return;
 
                     const title = titleInput ? titleInput.value.trim() : '';
                     const days = daysInput ? daysInput.value.trim() : '';
@@ -1520,6 +1620,7 @@
                         return;
                     }
 
+                    isMutationInFlight = true;
                     const labelEl = saveBtn.querySelector('.indicator-label');
                     const progressEl = saveBtn.querySelector('.indicator-progress');
                     if (labelEl) labelEl.classList.add('d-none');
@@ -1529,6 +1630,10 @@
                     $.ajax({
                         type: 'POST',
                         url: "{{ route('superadmin.company.addEditfeaturesListupdate') }}",
+                        headers: {
+                            'X-Idempotency-Key': generateUUID(),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
                         data: {
                             _token: "{{ csrf_token() }}",
                             tokenId: tokenId,
@@ -1536,12 +1641,21 @@
                             days: days,
                             status_is: statusIs
                         },
-                        success: function(response) {
+                        complete: function() {
+                            isMutationInFlight = false;
                             if (labelEl) labelEl.classList.remove('d-none');
                             if (progressEl) progressEl.classList.add('d-none');
                             saveBtn.disabled = false;
-
+                        },
+                        success: function(response) {
                             if (response.status === 'success') {
+                                try { sessionStorage.removeItem(DRAFT_KEY); } catch(e) {}
+                                if (syncChannel) {
+                                    syncChannel.postMessage({
+                                        type: 'FEATURE_SAVED',
+                                        id: tokenId
+                                    });
+                                }
                                 closeDrawer();
 
                                 if (typeof Swal !== 'undefined') {
@@ -1571,10 +1685,6 @@
                             }
                         },
                         error: function(xhr) {
-                            if (labelEl) labelEl.classList.remove('d-none');
-                            if (progressEl) progressEl.classList.add('d-none');
-                            saveBtn.disabled = false;
-
                             let errorMsg = 'An unexpected server error occurred.';
                             if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMsg = xhr.responseJSON.message;

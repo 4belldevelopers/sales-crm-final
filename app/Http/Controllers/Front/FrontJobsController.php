@@ -39,9 +39,8 @@ class FrontJobsController extends FrontBaseController
         parent::__construct();
         $this->pageTitle = __('modules.front.jobOpenings');
 
-        $linkedinSetting = LinkedInSetting::where('status', 'enable')->first();
-        /*dd($linkedinSetting);*/
-        if ($linkedinSetting) {
+        $linkedinSetting = LinkedInSetting::getGlobalSetting();
+        if ($linkedinSetting && $linkedinSetting->status === 'enable') {
             Config::set('services.linkedin.client_id', $linkedinSetting->client_id);
             Config::set('services.linkedin.client_secret', $linkedinSetting->client_secret);
             Config::set('services.linkedin.redirect', $linkedinSetting->callback_url);
@@ -192,7 +191,7 @@ class FrontJobsController extends FrontBaseController
             ->where('status', 'active')
             ->where('company_id', $companyId)
             ->firstOrFail();
-        $this->linkedinGlobal = LinkedInSetting::first();
+        $this->linkedinGlobal = LinkedInSetting::getGlobalSetting();
         Session::put('slug', $slug);
         Session::put('companyId', $companyId);
 
