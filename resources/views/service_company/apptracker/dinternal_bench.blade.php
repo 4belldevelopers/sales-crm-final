@@ -872,11 +872,186 @@
             cursor: pointer;
         }
         .dib-applied-more:hover { background: #e5e7eb; }
+
+        /* Crisp Search Clear & Refresh Controls in Toolbar */
+        .dib-search-wrap { position: relative; }
+        .dib-search-input.form-control { padding-right: 30px !important; }
+        .dib-search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .dib-search-clear:hover { background: #e2e8f0; color: #0f172a; }
+        .dib-refresh-btn {
+            height: 44px;
+            border-radius: 10px !important;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            padding: 0 14px !important;
+            background: #ffffff !important;
+            border: 1px solid #e4e6ef !important;
+            color: #3f4254 !important;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .dib-refresh-btn:hover { background: #f8fafc !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+        .dib-refresh-btn.is-spinning svg { animation: dibSpin 0.8s linear infinite; }
+        @keyframes dibSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Rule 20 Card + Sub-Card Candidate Stream (.dib-stream-wrapper / .dib-cand-*) */
+        .dib-stream-wrapper { background: transparent; border: none; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .dib-stream-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 14px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); flex-wrap: wrap; }
+        .dib-stream-bar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .dib-select-all-label { display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; font-size: 12px; font-weight: 600; color: #334155; }
+        .dib-active-pill { display: inline-flex; align-items: center; padding: 2.5px 10px; border-radius: 6px; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 11px; font-weight: 700; }
+        .dib-stream-summary { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .dib-stream-count { font-size: 12px; color: #64748b; font-weight: 500; }
+        .dib-stream-count strong { color: #0f172a; font-weight: 700; }
+        .dib-stream-hint { font-size: 11px; color: #64748b; font-weight: 500; }
+        .dib-cand-stream { display: flex; flex-direction: column; gap: 8px; }
+        .dib-cand-card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 3.5px solid #cbd5e1; border-radius: 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); transition: border-color 0.15s ease, box-shadow 0.15s ease; overflow: hidden; position: relative; }
+        .dib-cand-card:hover { border-color: #bae6fd; border-left-color: #009ef7; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06); }
+        .dib-cand-card.is-selected { border-color: #93c5fd; border-left-color: #009ef7; background: #f8fbff; }
+        .dib-cand-grid { display: grid; grid-template-columns: minmax(0, 2.0fr) minmax(0, 1.35fr) minmax(0, 1.05fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 1.25fr); gap: 8px; padding: 10px 12px; align-items: stretch; }
+        .dib-cand-subcard { background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 9px; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; transition: background-color 0.15s ease, border-color 0.15s ease; }
+        .dib-cand-card:hover .dib-cand-subcard { border-color: #e2e8f0; }
+        .dib-subcard-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+        .dib-subcard-label { display: inline-flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #64748b; }
+        .dib-bench-badge { display: inline-flex; align-items: center; gap: 3px; padding: 1.5px 6px; border-radius: 4px; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 9.5px; font-weight: 700; }
+        .dib-cand-subcard--info { cursor: pointer; }
+        .dib-cand-info-row { display: flex; align-items: center; gap: 9px; min-width: 0; }
+        .dib-avatar { width: 34px; height: 34px; min-width: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; text-decoration: none; }
+        .dib-cand-info-meta { min-width: 0; flex: 1; }
+        .dib-cand-name { display: block; font-size: 12.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; line-height: 1.25; }
+        .dib-cand-name:hover { color: #009ef7; }
+        .dib-cand-role { font-size: 11px; font-weight: 500; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; margin-top: 1px; }
+        .dib-sal-main { font-size: 12.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+        .dib-sal-mode { font-size: 10.5px; font-weight: 500; color: #64748b; }
+        .dib-sal-sub { font-size: 10.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+        .dib-val-exp { display: flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: #334155; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dib-val-exp i { font-size: 10px; color: #94a3b8; }
+        .dib-dot { color: #cbd5e1; }
+        .dib-avail-main { font-size: 11.5px; font-weight: 700; line-height: 1.3; }
+        .dib-avail-sub { font-size: 10.5px; font-weight: 500; color: #64748b; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dib-loc-city { font-size: 11.5px; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+        .dib-loc-city i { font-size: 10px; color: #94a3b8; }
+        .dib-loc-edu { font-size: 10.5px; font-weight: 500; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-top: 2px; }
+        .dib-loc-edu i { font-size: 10px; color: #94a3b8; }
+        .dib-edu-uppercase { text-transform: uppercase; }
+        .dib-active-date { font-size: 11px; font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dib-active-date i { font-size: 10px; color: #94a3b8; }
+        .dib-owner-company { font-size: 10.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dib-action-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+        .dib-status-pill { display: inline-flex; align-items: center; justify-content: center; width: fit-content; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-decoration: none; }
+        .dib-cand-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 12px; background: #ffffff; border-top: 1px solid #f1f5f9; width: 100%; overflow: hidden; }
+        .dib-bottom-left { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
+        .dib-match-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 5px; font-size: 10.5px; font-weight: 700; line-height: 1.3; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+        .dib-skills-scroll { display: flex; align-items: center; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -ms-overflow-style: none; white-space: nowrap; min-width: 0; }
+        .dib-skills-scroll::-webkit-scrollbar { display: none; }
+        .dib-skill-pill { display: inline-flex; align-items: center; gap: 3px; padding: 1.5px 7px; border-radius: 4px; background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; font-size: 10px; font-weight: 500; line-height: 1.4; flex-shrink: 0; }
+        .dib-skill-pill.is-matched { background: #dcfce7; color: #15803d; border-color: #bbf7d0; font-weight: 600; }
+        .dib-skill-pill.is-mandatory { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; font-weight: 600; }
+        .dib-skills-empty { font-size: 10.5px; color: #94a3b8; }
+        .dib-empty-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 42px 20px; text-align: center; }
+        .dib-empty-icon { width: 48px; height: 48px; border-radius: 12px; background: #f1f5f9; color: #94a3b8; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+        .dib-empty-title { font-size: 14px; font-weight: 600; color: #1e293b; }
+        .dib-empty-sub { font-size: 12px; color: #64748b; margin-top: 3px; }
+        .dib-skeleton-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+        .dib-skeleton-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+        .dib-skeleton-box { height: 62px; border-radius: 8px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: dibShimmer 1.3s infinite; }
+        @keyframes dibShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .dib-pagination-card { margin-top: 12px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; background: #ffffff; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); }
+        @media (max-width: 1440px) {
+            .dib-cand-grid { grid-template-columns: minmax(0, 1.95fr) minmax(0, 1.3fr) minmax(0, 1.0fr) minmax(0, 1.2fr) minmax(0, 1.25fr) minmax(0, 1.3fr); gap: 6px; padding: 8px 10px; }
+            .dib-cand-subcard { padding: 6px 8px; }
+        }
+        @media (max-width: 1180px) { .dib-cand-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
+        @media (max-width: 640px) {
+            .dib-cand-grid { grid-template-columns: 1fr; gap: 8px; }
+            .dib-cand-bottom { flex-direction: column; align-items: flex-start; gap: 6px; }
+        }
+
+        /* Client AppTracker Flat Light-Tinted Enterprise Header (.dib-job-toolbar / .dib-hdr-*) */
+        @media (min-width: 1181px) {
+            body#kt_body.toolbar-fixed { --kt-toolbar-height: 62px !important; }
+            body#kt_body.toolbar-fixed .wrapper { padding-top: calc(var(--kt-header-height, 65px) + 62px) !important; }
+        }
+        @media (max-width: 1180px) {
+            #kt_toolbar.dib-job-toolbar { position: relative !important; top: auto !important; left: auto !important; right: auto !important; height: auto !important; }
+            body#kt_body.toolbar-fixed .wrapper { padding-top: var(--kt-header-height, 65px) !important; }
+        }
+        #kt_toolbar.dib-job-toolbar { background: #ffffff !important; border-bottom: none !important; box-shadow: none !important; height: auto !important; min-height: 60px; padding: 0 !important; margin: 0 !important; }
+        #kt_toolbar.dib-job-toolbar #kt_toolbar_container { width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; display: block !important; }
+        .dib-hdr-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 60px; background: var(--hdr-bg, #ffffff); border: none; border-bottom: 1px solid var(--hdr-border, #dbeafe); border-left: 4px solid var(--hdr-accent, #2563eb); border-radius: 0 !important; padding: 10px 20px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
+        .dib-hdr-card.hp-org-my { --hdr-bg: linear-gradient(90deg, #fffbeb 0%, #fffdf7 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #fde68a; --hdr-accent: #d97706; --hdr-logo-bg: #fffbeb; --hdr-logo-border: #fde68a; --hdr-icon-color: #d97706; --hdr-pill-bg: #fef3c7; --hdr-pill-border: #fcd34d; --hdr-pill-color: #92400e; --hdr-btn-outline-border: #f59e0b; --hdr-btn-outline-color: #b45309; --hdr-btn-outline-hover-bg: #fef3c7; --hdr-btn-outline-hover-color: #78350f; }
+        .dib-hdr-card.hp-org-internal { --hdr-bg: linear-gradient(90deg, #eff6ff 0%, #f7faff 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #bfdbfe; --hdr-accent: #2563eb; --hdr-logo-bg: #eff6ff; --hdr-logo-border: #bfdbfe; --hdr-icon-color: #2563eb; --hdr-pill-bg: #dbeafe; --hdr-pill-border: #93c5fd; --hdr-pill-color: #1e40af; --hdr-btn-outline-border: #60a5fa; --hdr-btn-outline-color: #1d4ed8; --hdr-btn-outline-hover-bg: #dbeafe; --hdr-btn-outline-hover-color: #1e3a8a; }
+        .dib-hdr-card.hp-org-direct { --hdr-bg: linear-gradient(90deg, #ecfdf5 0%, #f5fdf9 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #a7f3d0; --hdr-accent: #16a34a; --hdr-logo-bg: #ecfdf5; --hdr-logo-border: #a7f3d0; --hdr-icon-color: #16a34a; --hdr-pill-bg: #d1fae5; --hdr-pill-border: #6ee7b7; --hdr-pill-color: #166534; --hdr-btn-outline-border: #34d399; --hdr-btn-outline-color: #15803d; --hdr-btn-outline-hover-bg: #d1fae5; --hdr-btn-outline-hover-color: #14532d; }
+        .dib-hdr-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .dib-hdr-sep { width: 1px; height: 30px; background: #e2e8f0; flex-shrink: 0; }
+        .dib-hdr-col { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        .dib-hdr-col--identity { flex-direction: row; align-items: center; gap: 10px; flex: 0 1 320px; min-width: 185px; max-width: clamp(220px, 26vw, 350px); cursor: pointer; }
+        .dib-hdr-col--status { gap: 3px; flex-shrink: 0; cursor: pointer; }
+        .dib-hdr-col--comp, .dib-hdr-col--loc, .dib-hdr-col--meta { gap: 2px; flex-shrink: 0; }
+        .dib-hdr-logo-wrap { width: 38px; height: 38px; min-width: 38px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+        .dib-hdr-logo-img { width: 100%; height: 100%; object-fit: cover; }
+        .dib-hdr-logo-mono { background: var(--hdr-logo-bg, #eff6ff) !important; border-color: var(--hdr-logo-border, #bfdbfe) !important; color: var(--hdr-icon-color, #2563eb) !important; font-size: 14px !important; font-weight: 700 !important; }
+        .dib-hdr-identity-txt { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+        .dib-hdr-job-title { font-size: 13px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; text-decoration: none; transition: color 0.15s ease; }
+        .dib-hdr-col--identity:hover .dib-hdr-job-title { color: var(--hdr-accent, #2563eb); }
+        .dib-hdr-company-name { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 500; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; text-decoration: none; }
+        .dib-hdr-company-name i { font-size: 10.5px; color: #94a3b8; flex-shrink: 0; }
+        .dib-hdr-sub-top { display: flex; align-items: center; gap: 6px; }
+        .dib-hdr-status-badge { font-size: 11px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 5px !important; line-height: 1.25 !important; }
+        .dib-hdr-job-id { font-size: 11px; font-weight: 600; color: #64748b; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .dib-hdr-sub-btm { display: flex; align-items: center; }
+        .dib-hdr-org-pill { display: inline-flex; align-items: center; gap: 4px; padding: 1.5px 7px; border-radius: 5px; background: var(--hdr-pill-bg, #dbeafe); border: 1px solid var(--hdr-pill-border, #93c5fd); color: var(--hdr-pill-color, #1e40af); font-size: 10.5px; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+        .dib-hdr-org-pill i { font-size: 9.5px; flex-shrink: 0; }
+        .dib-hdr-sub-row { display: flex; align-items: center; gap: 5px; min-width: 0; }
+        .dib-hdr-col-icon { font-size: 11px; color: var(--hdr-icon-color, #2563eb); flex-shrink: 0; }
+        .dib-hdr-sub-val { font-size: 12.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; font-variant-numeric: tabular-nums; }
+        .dib-hdr-loc-plus { font-size: 11px; font-weight: 700; color: var(--hdr-icon-color, #2563eb); margin-left: 2px; }
+        .dib-hdr-sub-meta { font-size: 11.5px; font-weight: 500; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; font-variant-numeric: tabular-nums; }
+        .dib-hdr-actions-form { flex: 0 0 auto; display: flex; align-items: center; margin: 0 !important; }
+        .dib-hdr-actions { display: flex; align-items: center; gap: 8px; padding-left: 16px; border-left: 1px solid #e2e8f0; min-height: 38px; white-space: nowrap; }
+        .dib-hdr-btn-outline { background: #ffffff !important; border: 1.5px solid var(--hdr-btn-outline-border, #60a5fa) !important; color: var(--hdr-btn-outline-color, #1d4ed8) !important; border-radius: 8px !important; height: 38px !important; min-height: 38px !important; padding: 0 14px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; font-size: 12.5px !important; font-weight: 600 !important; line-height: 1 !important; margin: 0 !important; transition: all 0.15s ease !important; }
+        .dib-hdr-btn-outline:hover, .dib-hdr-btn-outline:focus { background: var(--hdr-btn-outline-hover-bg, #dbeafe) !important; border-color: var(--hdr-accent, #2563eb) !important; color: var(--hdr-btn-outline-hover-color, #1e3a8a) !important; }
+        @media (max-width: 1440px) {
+            .dib-hdr-card { gap: 12px; padding: 9px 16px; }
+            .dib-hdr-main { gap: 8px; }
+            .dib-hdr-col--identity { flex: 0 1 285px; max-width: 295px; }
+            .dib-hdr-actions { padding-left: 12px; min-height: 36px; }
+            .dib-hdr-btn-outline { height: 36px !important; min-height: 36px !important; padding: 0 12px !important; font-size: 12px !important; }
+        }
+        @media (max-width: 1180px) {
+            .dib-hdr-card { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 14px; }
+            .dib-hdr-main { justify-content: flex-start; flex-wrap: wrap; gap: 10px 18px; }
+            .dib-hdr-sep { display: none !important; }
+            .dib-hdr-col--identity { max-width: 100%; flex: 1 1 100%; }
+            .dib-hdr-actions { width: 100%; min-height: auto; justify-content: flex-end; border-left: none; border-top: 1px solid #e2e8f0; padding-left: 0; padding-top: 8px; }
+        }
+        @media (max-width: 640px) { .dib-hdr-actions { flex-wrap: wrap; } .dib-hdr-actions > * { flex: 1; } }
     </style>
 @endpush
 @section('content')
     <!--begin::Toolbar-->
-    <div class="toolbar" id="kt_toolbar">
+    <div class="toolbar dib-job-toolbar {{ $hpOrgClass ?? 'hp-org-internal' }}" id="kt_toolbar">
         @php
            use App\Helper\GeneralMethod;
            $req_path = url(
@@ -917,48 +1092,35 @@
 
         @endphp
         <!--begin::Container-->
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+        <div id="kt_toolbar_container" class="container-fluid">
+            <div class="dib-hdr-card {{ $hpOrgClass ?? 'hp-org-internal' }}">
             <!--begin::Page title-->
-            @include('sections.service_company.toolbar',['id' => $job->id])
+            @include('sections.service_company.toolbar', [
+                'id' => $job->id,
+                'apptrackerHeaderCard' => true,
+                'headerPrefix' => 'dib-hdr',
+                'hpOrgClass' => $hpOrgClass ?? null,
+            ])
 
             <!--end::Page title-->
-            <form action="" id="filter-form" style="">
+            <form action="" id="filter-form" class="dib-hdr-actions-form" style="">
                 @csrf
                 <input type="hidden" name="jobid" id="jobid" value="{{ @$job->id }}" />
                 <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
+                <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" value="" />
                 <!--begin::Actions-->
-                <div class="d-flex align-items-center py-1">
+                <div class="dib-hdr-actions">
                     @if (in_array('view_jobs', $userPermissions))
-                        {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
-                             defined once in the shared layout) that the job title/logo already
-                             uses elsewhere — .show-detail-open's click handler in
-                             service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
                         <a href="javascript:void(0);" data-id="{{ $job->id }}"
-                            class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
-                            View Job
+                            class="btn btn-sm dib-hdr-btn-outline show-detail-open">
+                            <i class="far fa-eye" aria-hidden="true"></i>
+                            <span>View Job</span>
                         </a>
                     @endif
-                    <!--begin::Search-->
-                    <div class="d-flex align-items-center position-relative my-1 me-3">
-                        <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-
-                        <!--end::Svg Icon-->
-                        <input type="hidden" id="inputSearch" data-kt-user-table-filter="search"
-                            class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                            placeholder="Search..." />
-                    </div>
-                    <!--end::Search-->
-                    <div class="card-toolbar">
-                        <!--begin::Toolbar-->
-                        <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-
-
-                        </div>
-                        <!--end::Toolbar-->
-                    </div>
                 </div>
                 <!--end::Actions-->
             </form>
+            </div>
         </div>
         <!--end::Container-->
     </div>
@@ -1029,6 +1191,9 @@
                                 </span>
                                 <input type="text" class="form-control dib-search-input" name="inputJobSearch"
                                     placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" autocomplete="off" />
+                                <button type="button" id="btnDibSearchClear" class="dib-search-clear d-none" title="Clear search" aria-label="Clear search">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
                             </div>
                             <div class="dib-sort-wrap" id="dib_sort_wrap">
                                 <span class="dib-sort-icon">
@@ -1057,6 +1222,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
                                 <span>Filter<span id="dib_filter_count_text"></span></span>
                                 <span class="badge badge-circle badge-primary dib-count-badge d-none" id="dib_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
+                            </button>
+                            <button type="button" id="btnDibRefreshList" class="btn dib-refresh-btn" title="Refresh candidates">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                                <span>Refresh</span>
                             </button>
                         </div>
                     </div>
@@ -1821,39 +1990,47 @@
                 </div>
 
                 <!--begin::Card-->
-                <div class="card" id="sc_table_card" style="display:none;">
-                    <!--begin::Card body-->
-                    <div class="card-body pt-3 px-5" style="position: relative;">
-                        <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class" id="myTable">
-                            <!--begin::Table head-->
-                            <thead>
-                                <!--begin::Table row-->
-                                <tr class="fw-bolder text-muted">
-                                    <th class="w-10px pe-0">
-                                        <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                            <input class="form-check-input chk_list" type="checkbox" data-kt-check="true"
-                                                data-kt-check-target="#kt_table_users .form-check-input" value="1" />
-                                        </div>
-                                    </th>
-                                    <th class="">Candidate Name</th>
-                                    <th class="">Exp.</th>
-                                    <th class="">Salary</th>
-                                    <th class="">Availability</th>
-                                    <th class="">Location</th>
-                                    {{-- <th class="">Type</th> --}}
-                                    <!--<th class="">Offer by</th>-->
-                                    <th class="">Last Active</th>
-                                    <th class="">Action</th>
-                                </tr>
-                                <!--end::Table row-->
-                            </thead>
-                            <!--end::Table head-->
-                            <tbody class="text-gray-600 fw-bold" id="candidatetList">
-                            </tbody>
-                        </table>
-                        <div id="paginationcandidate"></div>
+                <div class="dib-stream-wrapper" id="sc_table_card" style="display:none;">
+                    <div class="dib-stream-bar">
+                        <div class="dib-stream-bar-left">
+                            <label class="dib-select-all-label">
+                                <span class="form-check form-check-sm form-check-custom form-check-solid">
+                                    <input class="form-check-input chk_list" id="dib_select_all" type="checkbox" value="1" />
+                                </span>
+                                <span>Select All</span>
+                            </label>
+                            <span class="dib-active-pill">In-house Bench</span>
+                            <span class="dib-stream-count"><strong id="dib_visible_count">0</strong> bench candidates</span>
+                        </div>
+                        <div class="dib-stream-hint d-none d-md-block">
+                            <i class="fa-solid fa-circle-info text-primary me-1"></i>Click candidate for profile drawer &bull; Add to Job moves talent to pipeline
+                        </div>
                     </div>
-                    <!--end::Card body-->
+
+                    <div id="candidatetList" class="dib-cand-stream">
+                        <div class="dib-skeleton-card">
+                            <div class="dib-skeleton-grid">
+                                <div class="dib-skeleton-box"></div>
+                                <div class="dib-skeleton-box"></div>
+                                <div class="dib-skeleton-box"></div>
+                                <div class="dib-skeleton-box"></div>
+                                <div class="dib-skeleton-box"></div>
+                                <div class="dib-skeleton-box"></div>
+                            </div>
+                        </div>
+                        <div class="dib-skeleton-card">
+                            <div class="dib-skeleton-grid">
+                                <div class="dib-skeleton-box"></div>
+                                <div class="dib-skeleton-box"></div>
+                                <div class="dib-skeleton-box"></div>
+                                <div class="dib-skeleton-box"></div>
+                                <div class="dib-skeleton-box"></div>
+                                <div class="dib-skeleton-box"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="paginationcandidate" class="dib-pagination-card"></div>
                 </div>
                 <!--end::Card-->
             </div>
@@ -2271,6 +2448,8 @@
                     $('#candidatetList').html(response.html);
                     $('#inhouseBench_counter').html(response.total);
                     $('#dib_footer_number').text(response.total);
+                    $('#dib_visible_count').text($('#candidatetList .dib-cand-card').length || response.total || 0);
+                    $('#dib_select_all').prop('checked', false);
                     $('#paginationcandidate').html(response.pagination);
                 },
                 error: function(xhr) {
@@ -2282,13 +2461,50 @@
             });
         }
 
-        // Free-text search box: Enter re-runs the same fetchCandidates() call
-        // the sort dropdown and pagination already use.
+        // Free-text search box: Enter re-runs fetchCandidates(); Clear & Refresh buttons
         $(document).on('keydown', '#kt_tagify_2', function(e) {
             if (e.key === 'Enter' || e.keyCode === 13) {
                 e.preventDefault();
                 fetchCandidates();
             }
+        });
+        $(document).on('input', '#kt_tagify_2', function() {
+            $('#btnDibSearchClear').toggleClass('d-none', $.trim($(this).val()) === '');
+        });
+        $(document).on('click', '#btnDibSearchClear', function() {
+            $('#kt_tagify_2').val('');
+            $(this).addClass('d-none');
+            if (typeof filtersdataget === 'function') {
+                filtersdataget();
+            } else {
+                fetchCandidates();
+            }
+        });
+        $(document).on('click', '#btnDibRefreshList', function() {
+            var $btn = $(this);
+            $btn.addClass('is-spinning');
+            $.when(fetchCandidates(1)).always(function() {
+                setTimeout(function() { $btn.removeClass('is-spinning'); }, 350);
+            });
+        });
+
+        // Select All / per-card selection highlight
+        $(document).on('change', '#dib_select_all', function() {
+            var checked = $(this).is(':checked');
+            $('#candidatetList .chk_list_item').prop('checked', checked).closest('.dib-cand-card').toggleClass('is-selected', checked);
+        });
+        $(document).on('change', '#candidatetList .chk_list_item', function() {
+            $(this).closest('.dib-cand-card').toggleClass('is-selected', $(this).is(':checked'));
+            var total = $('#candidatetList .chk_list_item').length;
+            var checkedCount = $('#candidatetList .chk_list_item:checked').length;
+            $('#dib_select_all').prop('checked', total > 0 && checkedCount === total);
+        });
+
+        // Clicking Candidate Info sub-card opens detail drawer cleanly
+        $(document).on('click', '.dib-cand-subcard--info', function(e) {
+            if ($(e.target).closest('input, label, a, button, .form-check').length) return;
+            var trigger = $(this).find('.bench_show_application_detail').first();
+            if (trigger.length) trigger.trigger('click');
         });
 
         // Custom Sort dropdown — reads options straight from the real

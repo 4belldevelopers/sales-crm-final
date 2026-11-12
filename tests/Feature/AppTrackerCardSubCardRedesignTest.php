@@ -27,6 +27,9 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
             1 => ['id' => 1, 'name' => 'Recommended', 'classname' => 'badge-light-success'],
             2 => ['id' => 2, 'name' => 'Not Recommended', 'classname' => 'badge-light-danger'],
         ], 86400);
+
+        Cache::forever('ref:interview_sub_status:all', collect([]));
+        Cache::forever('ref_country_name:101', [['id' => 101, 'name' => 'India', 'sortname' => 'IN']]);
     }
 
     private function makeCandidateRow(array $overrides = []): array
@@ -94,6 +97,10 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
             'interviews' => [],
             'spokperson_map' => [],
             'child_status_map' => [],
+            'rec_assigned' => [],
+            'source_from_type' => [],
+            'parent_assigned' => [],
+            'existing_in_job' => [],
         ];
     }
 
@@ -615,5 +622,139 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);', $clientAppView);
         $this->assertStringContainsString('justify-content: space-between;', $clientAppView);
         $this->assertStringContainsString('height: 38px !important;', $clientAppView);
+    }
+
+    public function test_extended_channel_host_views_enforce_approved_header_and_rule_20_card_stream(): void
+    {
+        $channels = [
+            'similar' => ['path' => resource_path('views/service_company/apptracker/similar_candidates.blade.php'),  'pfx' => 'simf'],
+            'dsimilar' => ['path' => resource_path('views/service_company/apptracker/dsimilar_candidates.blade.php'), 'pfx' => 'dsf'],
+            'internal_bench' => ['path' => resource_path('views/service_company/apptracker/internal_bench.blade.php'),     'pfx' => 'ibf'],
+            'dinternal_bench' => ['path' => resource_path('views/service_company/apptracker/dinternal_bench.blade.php'),    'pfx' => 'dib'],
+            'public_bench' => ['path' => resource_path('views/service_company/apptracker/public_bench.blade.php'),       'pfx' => 'abf'],
+            'candidates_req' => ['path' => resource_path('views/service_company/apptracker/candidates_request.blade.php'),  'pfx' => 'brf'],
+            'career_apply' => ['path' => resource_path('views/service_company/apptracker/career_apply.blade.php'),       'pfx' => 'wcf'],
+        ];
+
+        foreach ($channels as $key => $conf) {
+            $view = file_get_contents($conf['path']);
+            $pfx = $conf['pfx'];
+
+            // 1. Approved header toolbar inclusion
+            $this->assertStringContainsString("'apptrackerHeaderCard' => true", $view, "Missing apptrackerHeaderCard in $key");
+            $this->assertStringContainsString("'headerPrefix' => '{$pfx}-hdr'", $view, "Missing headerPrefix in $key");
+            $this->assertStringContainsString("class=\"toolbar {$pfx}-job-toolbar", $view, "Missing toolbar class in $key");
+
+            // 2. Toolbar action buttons & org color combinations
+            $this->assertStringContainsString("{$pfx}-hdr-btn-outline", $view, "Missing outline button in $key");
+            $this->assertStringContainsString(".{$pfx}-hdr-card.hp-org-my", $view, "Missing hp-org-my in $key");
+            $this->assertStringContainsString(".{$pfx}-hdr-card.hp-org-internal", $view, "Missing hp-org-internal in $key");
+            $this->assertStringContainsString(".{$pfx}-hdr-card.hp-org-direct", $view, "Missing hp-org-direct in $key");
+
+            // 3. Search subcard & live controls
+            $this->assertStringContainsString('id="btn'.ucfirst($pfx).'SearchClear"', $view, "Missing search clear in $key");
+            $this->assertStringContainsString('id="btn'.ucfirst($pfx).'RefreshList"', $view, "Missing refresh in $key");
+
+            // 4. Stream wrapper & legacy table absence
+            $this->assertStringContainsString("class=\"{$pfx}-stream-wrapper\"", $view, "Missing stream-wrapper in $key");
+            $this->assertStringNotContainsString('<table class="table align-middle table-row-dashed', $view, "Legacy table present in $key");
+        }
+    }
+
+    public function test_extended_channel_ajax_partials_render_rule_20_subcards_and_preserve_action_handlers(): void
+    {
+        $this->actingUser();
+
+        $row = $this->makeCandidateRow([
+            'id' => 881,
+            'candidate_id' => 881,
+            'wiseId' => 991,
+            'current_company' => 'Acme Labs',
+            'current_designation' => 'Senior Developer',
+            'total_exp' => '5.',
+            'rel_exp' => '3.',
+            'wm' => 'hybrid',
+            'np_id' => '15',
+            'serving_notice_period_mode' => 0,
+            'status' => 2,
+            'is_inreview' => 0,
+            'job_master_status_id' => 8,
+        ]);
+
+        $baseParams = [
+            'data' => [$row],
+            'userPermissions' => ['view_job_applications', 'salary_view'],
+            'rowMaps' => $this->baseRowMaps(),
+            'jobid' => 117,
+            'job' => (object) ['id' => 117, 'status' => 'active'],
+        ];
+
+        // 1. Similar Candidates (AppTracker)
+        $simHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $baseParams)->render();
+        $this->assertStringContainsString('simf-cand-card', $simHtml);
+        $this->assertStringContainsString('show-application-detail', $simHtml);
+        $this->assertStringContainsString('add_to_inreview', $simHtml);
+        $this->assertStringContainsString('Acme Labs', $simHtml);
+
+        // 2. Client Similar Candidates (ClientAppTracker)
+        $dsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $baseParams)->render();
+        $this->assertStringContainsString('dsf-cand-card', $dsimHtml);
+        $this->assertStringContainsString('client-show-application-detail', $dsimHtml);
+        $this->assertStringContainsString('add_to_inreview', $dsimHtml);
+
+        // 3. Inhouse Bench Talent (AppTracker)
+        $ibHtml = View::make('service_company.ajax_pages.internal_bench_ajax', $baseParams)->render();
+        $this->assertStringContainsString('ibf-cand-card', $ibHtml);
+        $this->assertStringContainsString('bench_show_application_detail', $ibHtml);
+        $this->assertStringContainsString('add_to_inreview', $ibHtml);
+
+        // 4. Client Inhouse Bench Talent (ClientAppTracker)
+        $dibHtml = View::make('service_company.ajax_pages.dinternal_bench_ajax', $baseParams)->render();
+        $this->assertStringContainsString('dib-cand-card', $dibHtml);
+        $this->assertStringContainsString('bench_show_application_detail', $dibHtml);
+        $this->assertStringContainsString('add_to_inreview', $dibHtml);
+
+        // 5. Agency Bench Talent (AppTracker)
+        $pbHtml = View::make('service_company.ajax_pages.public_bench_ajax', array_merge($baseParams, [
+            'boostbenchApplications' => [],
+        ]))->render();
+        $this->assertStringContainsString('abf-cand-card', $pbHtml);
+        $this->assertStringContainsString('pbench_show_application_detail', $pbHtml);
+        $this->assertStringContainsString('data-row-source_from_type="2"', $pbHtml);
+
+        // 6. Bench Talent Requests (AppTracker)
+        $brHtml = View::make('service_company.ajax_pages.candidates_request_ajax', $baseParams)->render();
+        $this->assertStringContainsString('brf-cand-card', $brHtml);
+        $this->assertStringContainsString('pbench_show_application_detail', $brHtml);
+        $this->assertStringContainsString('add_to_list', $brHtml);
+
+        // 7. Career Pages (AppTracker / ClientAppTracker)
+        $wcHtml = View::make('service_company.ajax_pages.career_apply_ajax', $baseParams)->render();
+        $this->assertStringContainsString('wcf-cand-card', $wcHtml);
+        $this->assertStringContainsString('website-show-application-detail', $wcHtml);
+        $this->assertStringContainsString('data-row-source_from_type="3"', $wcHtml);
+
+        // Verify empty state templates
+        $emptyParams = array_merge($baseParams, ['data' => []]);
+        $this->assertStringContainsString('simf-empty-card', View::make('service_company.ajax_pages.similar_existing_ajax', $emptyParams)->render());
+        $this->assertStringContainsString('dsf-empty-card', View::make('service_company.ajax_pages.dsimilar_existing_ajax', $emptyParams)->render());
+        $this->assertStringContainsString('ibf-empty-card', View::make('service_company.ajax_pages.internal_bench_ajax', $emptyParams)->render());
+        $this->assertStringContainsString('dib-empty-card', View::make('service_company.ajax_pages.dinternal_bench_ajax', $emptyParams)->render());
+        $this->assertStringContainsString('abf-empty-card', View::make('service_company.ajax_pages.public_bench_ajax', array_merge($emptyParams, ['boostbenchApplications' => []]))->render());
+        $this->assertStringContainsString('brf-empty-card', View::make('service_company.ajax_pages.candidates_request_ajax', $emptyParams)->render());
+        $this->assertStringContainsString('wcf-empty-card', View::make('service_company.ajax_pages.career_apply_ajax', $emptyParams)->render());
+    }
+
+    public function test_controller_sets_hp_org_class_and_card_v7_cache_version_for_all_channels(): void
+    {
+        $controllerFile = file_get_contents(app_path('Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php'));
+
+        // All 7 host actions set $this->hpOrgClass
+        $this->assertStringContainsString('$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);', $controllerFile);
+        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, '$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);'));
+
+        // All AJAX actions pass card_v7 in $cachePayload
+        $this->assertStringContainsString("'ui_v' => 'card_v7'", $controllerFile);
+        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v7'"));
     }
 }
