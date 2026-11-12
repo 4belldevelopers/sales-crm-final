@@ -1,6 +1,3 @@
-<div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0" style="position: relative;">
                 @php
                     use App\Helper\GeneralMethod;
 					$company_id = auth()->user()->company_id;
@@ -93,7 +90,101 @@
                     }
 					
 
+                    $resolvedOrgClass = ! empty($hpOrgClass)
+                        ? $hpOrgClass
+                        : ($isDirectClientJob ? 'hp-org-direct' : ($selfCompVal === 1 ? 'hp-org-my' : 'hp-org-internal'));
+                    $hdrPrefix = ! empty($headerPrefix) ? $headerPrefix : 'aptk-hdr';
+                    $orgDisplayMap = [
+                        'hp-org-my'       => ['label' => 'My Organization', 'icon' => 'fa-solid fa-building'],
+                        'hp-org-internal' => ['label' => 'Internal Client', 'icon' => 'fa-solid fa-sitemap'],
+                        'hp-org-direct'   => ['label' => 'Direct Client',   'icon' => 'fa-solid fa-handshake'],
+                    ];
+                    $orgDisplayMeta = $orgDisplayMap[$resolvedOrgClass] ?? $orgDisplayMap['hp-org-internal'];
                 @endphp
+
+                @if(!empty($apptrackerHeaderCard))
+                    {{-- Rule 20 Opt-In Card + Sub-Card Job Header Strip (isolated to AppTracker & ClientAppTracker) --}}
+                    <div class="{{ $hdrPrefix }}-main {{ $resolvedOrgClass }}">
+                        {{-- Sub-Card 1: Company Logo + Job Title & Client Name --}}
+                        <div class="{{ $hdrPrefix }}-subcard {{ $hdrPrefix }}-sub--identity show-detail-open" data-id="{{ $id }}" title="{{ $jobtitle }}">
+                            @if (!empty($logo_path))
+                                <div class="{{ $hdrPrefix }}-logo-wrap">
+                                    <img src="{{ str_replace('index.php', '', @$logo_path) }}" alt="Company Logo" class="{{ $hdrPrefix }}-logo-img">
+                                </div>
+                            @else
+                                <div class="{{ $hdrPrefix }}-logo-wrap {{ $hdrPrefix }}-logo-mono {{ @$bgTextDecore }}">
+                                    <span>{{ strtoupper(@$strVal ?: 'J') }}</span>
+                                </div>
+                            @endif
+                            <div class="{{ $hdrPrefix }}-identity-txt">
+                                <a href="javascript:void(0);" class="{{ $hdrPrefix }}-job-title" title="{{ $jobtitle }}">
+                                    {{ strtoupper(substr(@$jobtitle, 0, 26)) }}
+                                </a>
+                                <a href="javascript:void(0);" class="{{ $hdrPrefix }}-company-name" title="{{ $company_or_client }}">
+                                    <i class="fa-regular fa-building" aria-hidden="true"></i>
+                                    <span>{{ ucwords(substr(@$company_or_client, 0, 40)) }}</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        {{-- Sub-Card 2: Hiring Status Badge, Job ID & Organization Type --}}
+                        <div class="{{ $hdrPrefix }}-subcard {{ $hdrPrefix }}-sub--status show-detail-open" data-id="{{ $id }}">
+                            <div class="{{ $hdrPrefix }}-sub-top">
+                                <span class="badge {{ @$statusClass }} {{ $hdrPrefix }}-status-badge">{{ @$statusName }}</span>
+                                <span class="{{ $hdrPrefix }}-job-id">#{{ @$id }}</span>
+                            </div>
+                            <div class="{{ $hdrPrefix }}-sub-btm">
+                                <span class="{{ $hdrPrefix }}-org-pill {{ $resolvedOrgClass }}">
+                                    <i class="{{ $orgDisplayMeta['icon'] }}" aria-hidden="true"></i>
+                                    <span>{{ $orgDisplayMeta['label'] }}</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        {{-- Sub-Card 3: Experience Range & Compensation --}}
+                        <div class="{{ $hdrPrefix }}-subcard {{ $hdrPrefix }}-sub--comp">
+                            <div class="{{ $hdrPrefix }}-sub-kicker">EXP &amp; COMPENSATION</div>
+                            <div class="{{ $hdrPrefix }}-sub-row">
+                                <span class="{{ $hdrPrefix }}-sub-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                                <span class="{{ $hdrPrefix }}-sub-val">{{ @$job->min_exp ?? '–' }}-{{ @$job->max_exp ?? '–' }} Yrs</span>
+                            </div>
+                            <div class="{{ $hdrPrefix }}-sub-meta" title="{!! strip_tags($salaryRangeCurrency) !!} {{ $min_salary_abbr }}-{{ $max_salary_abbr }}/{{ $salaryModeWord }}">
+                                {!! $salaryRangeCurrency !!} {{ $min_salary_abbr }}-{{ $max_salary_abbr }}/{{ $salaryModeWord }}
+                            </div>
+                        </div>
+
+                        @if(empty($hideLocationDate))
+                            {{-- Sub-Card 4: Job Location --}}
+                            <div class="{{ $hdrPrefix }}-subcard {{ $hdrPrefix }}-sub--loc" data-toggle="tooltip" title="{{ $firstJobcities['tooltip'] }}">
+                                <div class="{{ $hdrPrefix }}-sub-kicker">LOCATION</div>
+                                <div class="{{ $hdrPrefix }}-sub-row">
+                                    <span class="{{ $hdrPrefix }}-sub-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
+                                    <span class="{{ $hdrPrefix }}-sub-val">
+                                        {{ !empty($locations[0]) ? ucwords(substr($locations[0], 0, 20)) : '–' }} {{ ucwords($firstJobcities['countPlus']) }}
+                                    </span>
+                                </div>
+                                @if(!empty($locations[1]))
+                                    <div class="{{ $hdrPrefix }}-sub-meta">{{ ucwords(substr($locations[1], 0, 20)) }}</div>
+                                @endif
+                            </div>
+
+                            {{-- Sub-Card 5: Posted Date & Openings --}}
+                            <div class="{{ $hdrPrefix }}-subcard {{ $hdrPrefix }}-sub--meta">
+                                <div class="{{ $hdrPrefix }}-sub-kicker">POSTED &amp; OPENINGS</div>
+                                <div class="{{ $hdrPrefix }}-sub-row">
+                                    <span class="{{ $hdrPrefix }}-sub-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>
+                                    <span class="{{ $hdrPrefix }}-sub-val">{{ @$created_at ?: '–' }}</span>
+                                </div>
+                                <div class="{{ $hdrPrefix }}-sub-meta">
+                                    <i class="fa-solid fa-users-line me-1" aria-hidden="true"></i>{{ (@$job->total_positions) ? @$job->total_positions.' Opening' : '–' }}
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @else
+                <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
+                    data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
+                    class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0" style="position: relative;">
                 <!--begin::Requisitions=-->
                 
 
@@ -214,3 +305,4 @@
                 <!--end::Recommend Candidates-->
 
 </div>
+                @endif
