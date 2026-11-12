@@ -319,8 +319,113 @@
     gap: 2px;
     transition: background-color .15s;
 }
+#bg_all.hp-total.bg-total-active,
 .hp-total.bg-total-active {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background-color: #1d4ed8 !important;
+    background-image: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25) !important;
+}
+/* Organization-specific Total Candidates palettes: My Org = Sunlit Canary Yellow, Internal Client = Deep Royal Cobalt, Direct Client = Emerald */
+#bg_all.hp-total.hp-org-my.bg-total-active,
+.hp-total.hp-org-my.bg-total-active {
+    background-color: #eab308 !important;
+    background-image: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+    background: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+    border-color: #eab308 !important;
+    box-shadow: 0 6px 16px rgba(234, 179, 8, 0.28) !important;
+}
+#bg_all.hp-total.hp-org-my.bg-total-active .hp-total-icon,
+#bg_all.hp-total.hp-org-my.bg-total-active .hp-total-count,
+.hp-total.hp-org-my.bg-total-active .hp-total-icon,
+.hp-total.hp-org-my.bg-total-active .hp-total-count {
+    color: #422006 !important;
+}
+#bg_all.hp-total.hp-org-my.bg-total-active .hp-total-label,
+.hp-total.hp-org-my.bg-total-active .hp-total-label {
+    color: #713f12 !important;
+    font-weight: 600;
+}
+#bg_all.hp-total.hp-org-my.bg-gray,
+.hp-total.hp-org-my.bg-gray {
+    background-color: #fefce8 !important;
+    background-image: none !important;
+    background: #fefce8 !important;
+    border: 1.5px solid #fde047 !important;
+}
+#bg_all.hp-total.hp-org-my.bg-gray .hp-total-icon,
+#bg_all.hp-total.hp-org-my.bg-gray .hp-total-count,
+#bg_all.hp-total.hp-org-my.bg-gray .hp-total-label,
+.hp-total.hp-org-my.bg-gray .hp-total-icon,
+.hp-total.hp-org-my.bg-gray .hp-total-count,
+.hp-total.hp-org-my.bg-gray .hp-total-label {
+    color: #854d0e !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-total-active,
+.hp-total.hp-org-internal.bg-total-active {
+    background-color: #1d4ed8 !important;
+    background-image: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 6px 16px rgba(29, 78, 216, 0.30) !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-icon,
+#bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-count,
+.hp-total.hp-org-internal.bg-total-active .hp-total-icon,
+.hp-total.hp-org-internal.bg-total-active .hp-total-count {
+    color: #ffffff !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-label,
+.hp-total.hp-org-internal.bg-total-active .hp-total-label {
+    color: #dbeafe !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-gray,
+.hp-total.hp-org-internal.bg-gray {
+    background-color: #eff6ff !important;
+    background-image: none !important;
+    background: #eff6ff !important;
+    border: 1.5px solid #93c5fd !important;
+}
+#bg_all.hp-total.hp-org-internal.bg-gray .hp-total-icon,
+#bg_all.hp-total.hp-org-internal.bg-gray .hp-total-count,
+#bg_all.hp-total.hp-org-internal.bg-gray .hp-total-label,
+.hp-total.hp-org-internal.bg-gray .hp-total-icon,
+.hp-total.hp-org-internal.bg-gray .hp-total-count,
+.hp-total.hp-org-internal.bg-gray .hp-total-label {
+    color: #1e3a8a !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-total-active,
+.hp-total.hp-org-direct.bg-total-active {
+    background-color: #047857 !important;
+    background-image: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+    border-color: #047857 !important;
+    box-shadow: 0 6px 16px rgba(4, 120, 87, 0.28) !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-icon,
+#bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-count,
+.hp-total.hp-org-direct.bg-total-active .hp-total-icon,
+.hp-total.hp-org-direct.bg-total-active .hp-total-count {
+    color: #ffffff !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-label,
+.hp-total.hp-org-direct.bg-total-active .hp-total-label {
+    color: #d1fae5 !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-gray,
+.hp-total.hp-org-direct.bg-gray {
+    background-color: #ecfdf5 !important;
+    background-image: none !important;
+    background: #ecfdf5 !important;
+    border: 1.5px solid #a7f3d0 !important;
+}
+#bg_all.hp-total.hp-org-direct.bg-gray .hp-total-icon,
+#bg_all.hp-total.hp-org-direct.bg-gray .hp-total-count,
+#bg_all.hp-total.hp-org-direct.bg-gray .hp-total-label,
+.hp-total.hp-org-direct.bg-gray .hp-total-icon,
+.hp-total.hp-org-direct.bg-gray .hp-total-count,
+.hp-total.hp-org-direct.bg-gray .hp-total-label {
+    color: #047857 !important;
 }
 .hp-total.bg-gray {
     background: #e4e6ef;
@@ -443,6 +548,854 @@
 }
 @media (max-width: 576px) {
     .hp-flow { justify-content: flex-start; }
+}
+
+/* ==========================================================================
+   Rule 20: ClientAppTracker Modern Enterprise Card + Sub-Card Design System
+   Page-Isolated (.caf-*) | 15.6" Laptop Fit (1366x768 & 1920x1080)
+   ========================================================================== */
+#kt_content.caf-enterprise-bg {
+    background: #eef2f7 !important;
+    min-height: calc(100vh - 110px);
+}
+#kt_content_container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+.second_header {
+    padding: 0 !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+}
+
+/* Toolbar & Pipeline Cards — Rule 20 Sharp White Card Surface */
+.caf-toolbar-card,
+.hp-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    margin-bottom: 12px !important;
+}
+.caf-toolbar-card .card-body {
+    padding: 10px 14px !important;
+}
+.caf-search-wrap,
+.caf-sort-wrap {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    height: 38px !important;
+    transition: all 0.15s ease !important;
+}
+.caf-search-wrap:hover,
+.caf-sort-wrap:hover {
+    background: #ffffff !important;
+    border-color: #94a3b8 !important;
+}
+.caf-search-wrap:focus-within,
+.caf-sort-wrap:focus-within {
+    background: #ffffff !important;
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+.caf-search-input.form-control {
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    padding-right: 26px !important;
+}
+.caf-search-clear {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1;
+    padding: 4px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.caf-search-clear:hover {
+    color: #475569;
+}
+.caf-refresh-btn {
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+.caf-refresh-btn:hover {
+    background: #ffffff;
+    border-color: #009ef7;
+    color: #009ef7;
+}
+.hp-card .card-body {
+    padding: 12px 16px !important;
+}
+.hp-total-count,
+.hp-circle .hp-count {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Stream Control Sub-Header Bar */
+.caf-stream-bar {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 9px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    font-family: 'Poppins', sans-serif;
+}
+.caf-stream-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.caf-select-all-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    user-select: none;
+}
+.caf-stream-divider {
+    width: 1px;
+    height: 16px;
+    background: #e2e8f0;
+}
+.caf-stage-pill-summary {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+.caf-stream-count-badge {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+}
+.caf-stream-count-badge strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+.caf-stream-right {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Selection Bar Polish */
+.aptk-selection-bar {
+    background: #f8fbff !important;
+    border: 1px solid #93c5fd !important;
+    border-radius: 10px !important;
+    padding: 9px 14px !important;
+    margin-bottom: 10px !important;
+    box-shadow: 0 2px 8px rgba(0, 158, 247, 0.08) !important;
+}
+
+/* Stream Wrapper & Cards Container */
+.caf-stream-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 180px;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.caf-stream-wrapper,
+.caf-stream-wrapper * {
+    box-sizing: border-box;
+}
+.caf-cand-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+/* Master Primary Card */
+.caf-cand-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    cursor: pointer;
+    transition: background-color 0.25s ease-out, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.caf-cand-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+.caf-cand-card:has(.chk_list_item:checked),
+.caf-cand-card.is-selected {
+    background-color: #f8fbff !important;
+    border-color: #009ef7 !important;
+    border-left-color: #009ef7 !important;
+    box-shadow: 0 2px 10px rgba(0, 158, 247, 0.1) !important;
+}
+
+/* Upper 6 Discrete Sub-Cards Grid */
+.caf-cand-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.3fr);
+    gap: 8px;
+    padding: 10px 12px;
+    width: 100%;
+    max-width: 100%;
+    align-items: stretch;
+}
+.caf-cand-subcard {
+    background: #f8fafc;
+    border: 1px solid #edf2f7;
+    border-radius: 8px;
+    padding: 7px 9px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    overflow: hidden;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.caf-cand-card:hover .caf-cand-subcard {
+    border-color: #e2e8f0;
+}
+.caf-subcard-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    margin-bottom: 6px;
+    line-height: 1;
+}
+.caf-subcard-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.caf-chk-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    cursor: pointer;
+    min-width: 0;
+}
+.caf-chk-wrap .form-check-input {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.caf-hdr-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+.caf-pill-bench {
+    font-size: 8.5px;
+    font-weight: 700;
+    padding: 1.5px 6px;
+    border-radius: 4px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    text-transform: uppercase;
+}
+.caf-pill-dup {
+    font-size: 8.5px;
+    font-weight: 700;
+    padding: 1.5px 6px;
+    border-radius: 4px;
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    text-transform: uppercase;
+}
+.caf-subcard-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Sub-Card 1: Candidate Identity */
+.caf-identity-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+.caf-avatar-box {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+.caf-avatar-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.caf-identity-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+.caf-cand-name {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-decoration: none;
+}
+.caf-cand-name:hover {
+    color: #009ef7;
+}
+.caf-cand-desig {
+    font-size: 11px;
+    font-weight: 500;
+    color: #475569;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+}
+.caf-cand-company {
+    font-size: 10.5px;
+    color: #64748b;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+.caf-cand-company i {
+    font-size: 9.5px;
+    color: #94a3b8;
+}
+
+/* Sub-Card 2: Compensation & Exp */
+.caf-val-salary {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    font-variant-numeric: tabular-nums;
+}
+.caf-sal-main {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+}
+.caf-sal-mode {
+    font-size: 10px;
+    font-weight: 500;
+    color: #64748b;
+}
+.caf-sal-sub {
+    font-size: 10px;
+    font-weight: 500;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.caf-val-exp,
+.caf-val-notice {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.3;
+}
+.caf-val-exp i,
+.caf-val-notice i {
+    font-size: 10px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+.caf-dot {
+    color: #cbd5e1;
+    font-size: 8px;
+}
+.caf-notice-txt {
+    font-weight: 600;
+}
+.caf-notice-immediate { color: #16a34a; }
+.caf-notice-days { color: #d97706; }
+.caf-notice-snp { color: #7c3aed; }
+.caf-notice-default { color: #64748b; }
+
+/* Sub-Card 3: Location & Degree */
+.caf-loc-city {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+.caf-loc-city i {
+    font-size: 10px;
+    color: #94a3b8;
+}
+.caf-loc-mode {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    margin-top: 2px;
+}
+.caf-loc-mode i {
+    font-size: 9.5px;
+    color: #94a3b8;
+}
+.caf-loc-edu {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    margin-top: 2px;
+}
+.caf-loc-edu i {
+    font-size: 10px;
+    color: #94a3b8;
+}
+.caf-edu-uppercase {
+    text-transform: uppercase;
+}
+
+/* Sub-Card 4: Interview */
+.caf-int-date {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+.caf-int-time {
+    font-size: 10.5px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+.caf-int-time i {
+    font-size: 10px;
+    color: #94a3b8;
+}
+.caf-int-mode-pill {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    padding: 1.5px 7px;
+    border-radius: 5px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 2px;
+}
+.caf-int-fb-badge {
+    font-size: 10px !important;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 2px;
+    padding: 2px 7px !important;
+}
+.caf-int-empty {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+}
+.caf-int-empty-sub {
+    font-size: 10px;
+    color: #cbd5e1;
+}
+
+/* Sub-Card 5: Ownership */
+.caf-owner-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+.caf-owner-company {
+    font-size: 10.5px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    margin-top: 2px;
+}
+.caf-owner-company i {
+    font-size: 9.5px;
+    color: #94a3b8;
+}
+.caf-owner-submitted {
+    font-size: 10px;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    margin-top: 2px;
+}
+.caf-owner-submitted i {
+    font-size: 9.5px;
+    color: #94a3b8;
+}
+
+/* Sub-Card 6: Pipeline & Stage (Entire Card Clickable) */
+.caf-subcard-stage {
+    cursor: pointer;
+}
+.caf-subcard-stage:hover,
+.caf-subcard-stage:focus-visible {
+    border-color: #93c5fd !important;
+    background: #f0f9ff;
+    outline: none;
+}
+.caf-subcard-stage:hover .caf-stage-cue {
+    text-decoration: underline;
+}
+.caf-stage-trigger {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-decoration: none;
+    min-width: 0;
+}
+.caf-stage-pill {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    padding: 2.5px 8px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.caf-substage-txt {
+    font-size: 10.5px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.caf-substage-txt strong {
+    color: #334155;
+    font-weight: 600;
+}
+.caf-stage-cue {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #009ef7;
+    line-height: 1.2;
+}
+.caf-stage-cue.is-locked {
+    color: #64748b;
+    font-weight: 500;
+}
+.caf-stage-trigger:hover .caf-stage-cue {
+    text-decoration: underline;
+}
+
+/* Sub-Card 7: Bottom Intelligence & Skills Strip */
+.caf-cand-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 12px;
+    background: #ffffff;
+    border-top: 1px solid #f1f5f9;
+    width: 100%;
+    overflow: hidden;
+}
+.caf-bottom-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+.caf-match-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+.caf-skills-scroll {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    white-space: nowrap;
+    min-width: 0;
+}
+.caf-skills-scroll::-webkit-scrollbar {
+    display: none;
+}
+.caf-skill-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 1.5px 7px;
+    border-radius: 4px;
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.4;
+    flex-shrink: 0;
+}
+.caf-skill-pill.is-matched {
+    background: #dcfce7;
+    color: #15803d;
+    border-color: #bbf7d0;
+    font-weight: 600;
+}
+.caf-skills-empty {
+    font-size: 10.5px;
+    color: #94a3b8;
+}
+.caf-bottom-right {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.caf-linkedin-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #ecfdf5;
+    color: #15803d;
+    border: 1px solid #86efac;
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+.caf-linkedin-pill:hover {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #4ade80;
+}
+.caf-visa-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.caf-visa-pill i {
+    font-size: 10px;
+    color: #64748b;
+}
+
+/* Empty & Skeleton States */
+.caf-empty-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 42px 20px;
+    text-align: center;
+}
+.caf-empty-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #f1f5f9;
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+.caf-empty-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+.caf-empty-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 3px;
+}
+.caf-skeleton-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+}
+.caf-skeleton-box {
+    height: 62px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: cafShimmer 1.3s infinite;
+}
+@keyframes cafShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Pagination Card Frame */
+.caf-pagination-card {
+    margin-top: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+/* Responsive Breakpoints (15.6" 1366x768 & Smaller) */
+@media (max-width: 1440px) {
+    .caf-cand-grid {
+        grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.25fr);
+        gap: 6px;
+        padding: 8px 10px;
+    }
+    .caf-cand-subcard {
+        padding: 6px 8px;
+    }
+}
+@media (max-width: 1180px) {
+    .caf-cand-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+}
+@media (max-width: 640px) {
+    .caf-cand-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    .caf-cand-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
 }
 
 </style>
@@ -693,7 +1646,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 				$RejectedCounter		=	@$applicationCounter->Rejected > 0 ? @$applicationCounter->Rejected : 0;	
 ?>
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-4 caf-enterprise-bg" id="kt_content">
   <!--begin::Post-->
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <!--begin::Container-->
@@ -704,14 +1657,17 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
       </div>
         
         <div class="card mb-4 caf-toolbar-card">
-            <div class="card-body py-3">
-                <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
                     <div class="caf-search-wrap" style="position: relative;">
                         <span class="caf-search-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
                         </span>
                         <input type="text" class="form-control caf-search-input" name="inputJobSearch"
-                            value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" onchange="filtersdataget()" autocomplete="off" />
+                            value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" autocomplete="off" />
+                        <button type="button" class="caf-search-clear" id="btnCafSearchClear" title="Clear search">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                     <div class="caf-sort-wrap" id="caf_sort_wrap">
                         <span class="caf-sort-icon">
@@ -735,6 +1691,10 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                         </select>
                         <div class="caf-sort-panel d-none" id="caf_sort_panel"></div>
                     </div>
+                    <button type="button" class="caf-refresh-btn" id="btnCafRefreshList" title="Refresh candidate list">
+                        <i class="fas fa-sync-alt"></i>
+                        <span class="d-none d-sm-inline">Refresh</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -747,7 +1707,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
             $hpTotalActive = !empty($mstatus_id) && $mstatus_id == 'all';
 
             $hpStages = [
-                ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing', 'color' => '#7e8299', 'bg' => '#eef0f2',
+                ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing', 'color' => '#0891b2', 'bg' => '#ecfeff',
                     'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
                 ['key' => 'Screening', 'rel' => '2', 'label' => 'Screening', 'color' => '#c000ff', 'bg' => '#f9e6ff',
                     'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
@@ -777,7 +1737,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
             <div class="card-body">
                 <div class="hp-flow">
                     <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
-                        <div class="<?php echo $hpTotalActive ? 'bg-total-active' : 'bg-gray'; ?> text-center hp-total" id="bg_all">
+                        <div class="<?php echo $hpTotalActive ? 'bg-total-active' : 'bg-gray'; ?> <?php echo $hpOrgClass ?? 'hp-org-direct'; ?> text-center hp-total" id="bg_all">
                             <span class="hp-total-icon">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
@@ -864,45 +1824,42 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
         </div>
-      <!--begin::Card-->
-      <div class="card">
-        <!--begin::Card body-->
-        <div class="card-body pt-3 px-5"> @if(in_array("view_job_applications", $userPermissions))
-          <!--begin::Table-->
-          <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
-          <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class" id="myTable">
-            <!--begin::Table head-->
-            <thead>
-              <!--begin::Table row-->
-              <tr class="fw-bolder text-muted">
-                <th class="w-10px pe-0"> <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                    <input class="form-check-input chk_list" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_table_users .form-check-input" value="1" />
-                  </div></th>
-                <th class="">Candidate Name</th>
-                <th class="">Exp.</th>
-                <th class="">Salary</th>
-                <th class="">Notice</th>
-                <th class="">Interview</th>
-                <th class="">Location</th>
-                <th class="">Ownership</th>
-                <th class="">Stage</th>
-              </tr>
-              <!--end::Table row-->
-            </thead>
-            <!--end::Table head-->
-            <tbody class="text-gray-600 fw-bold" id="candidatetList">
-            </tbody>
-          </table>
-          <!--end::Table-->
-          <div id="paginationcandidate"></div>
-          {{-- Print target — populated client-side from the checked rows already
-               on this page (see the .aptk_print_btn click handler); no server
-               round-trip involved. --}}
+      <!--begin::Candidate Card Stream Wrapper-->
+      <div id="sc_table_card" class="caf-stream-wrapper">
+        @if(in_array("view_job_applications", $userPermissions))
+          <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+            <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+          </div>
+
+          <!-- Stream Control Sub-Header (Select All, Active Stage & Live Count) -->
+          <div class="caf-stream-bar">
+            <div class="caf-stream-left">
+              <label class="caf-select-all-label">
+                <input class="form-check-input chk_list" type="checkbox" id="caf_select_all_chk" value="1" />
+                <span>Select All</span>
+              </label>
+              <span class="caf-stream-divider"></span>
+              <span class="nav_status caf-stage-pill-summary">All Candidate</span>
+              <span class="caf-stream-count-badge"><strong id="caf_visible_count">{{ @$allCandidateCounter ?: 0 }}</strong> candidates</span>
+            </div>
+            <div class="caf-stream-right d-none d-md-block">
+              <i class="far fa-hand-pointer me-1 text-primary"></i>Click candidate for profile drawer &bull; InReview stage editable before client review
+            </div>
+          </div>
+
+          <!-- Primary Candidate Card + Sub-Card Stream (Populated via AJAX) -->
+          <div id="candidatetList" class="caf-cand-stream">
+            <div class="caf-skeleton-card"><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div></div>
+            <div class="caf-skeleton-card"><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div></div>
+            <div class="caf-skeleton-card"><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div><div class="caf-skeleton-box"></div></div>
+          </div>
+
+          <div id="paginationcandidate" class="caf-pagination-card"></div>
+          {{-- Print target — populated client-side from checked cards; no server round-trip. --}}
           <div id="aptk_print_area"></div>
-          @endif </div>
-        <!--end::Card body-->
+        @endif
       </div>
-      <!--end::Card-->
+      <!--end::Candidate Card Stream Wrapper-->
     </div>
     <!--end::Container-->
   </div>
@@ -1087,6 +2044,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
     // nothing.
     $(document).on('click', '.client_stage_locked_notice', function (e) {
         e.preventDefault();
+        e.stopPropagation();
         Swal.fire({
             width: 460,
             padding: '1.75em',
@@ -1273,12 +2231,47 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 </script>
 <script>
 
-	   $(document).ready(function() { 
-        $('#kt_tagify_2').keyup(function() {
-        
-          // tableLoad('filter');   
-          fetchCandidates();
-          //alert("call");   
+	   var _cafSearchTimer = null;
+	   var _cafListXhr = null;
+	   var _cafReqSeq = 0;
+
+	   $(document).ready(function() {
+        var $searchInput = $('#kt_tagify_2');
+        var $clearBtn = $('#btnCafSearchClear');
+
+        function syncCafClearBtn() {
+            $clearBtn.css('display', ($searchInput.val() || '').length > 0 ? 'flex' : 'none');
+        }
+
+        $searchInput.on('input', syncCafClearBtn);
+        $searchInput.on('keyup', function(e) {
+            syncCafClearBtn();
+            if (_cafSearchTimer) {
+                clearTimeout(_cafSearchTimer);
+            }
+            if (e && (e.key === 'Enter' || e.keyCode === 13)) {
+                fetchCandidates(1);
+                return;
+            }
+            _cafSearchTimer = setTimeout(function() {
+                fetchCandidates(1);
+            }, 250);
+        });
+
+        $clearBtn.on('click', function() {
+            $searchInput.val('');
+            $clearBtn.hide();
+            $searchInput.focus();
+            fetchCandidates(1);
+        });
+
+        $('#btnCafRefreshList').on('click', function() {
+            var $icon = $(this).find('i');
+            $icon.addClass('fa-spin');
+            var activePage = $('#paginationcandidate .pagi-page.pagi-active').data('page') || 1;
+            fetchCandidates(activePage).always(function() {
+                $icon.removeClass('fa-spin');
+            });
         });
 	   });
           
@@ -1733,44 +2726,24 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
     </script>
 <script>
 
-	$('.chk_list').click(function(){
-
-		if($(".chk_list").prop('checked') == true){
-			var chk_list 	=	$('.chk_list').val();
-      $('.custom_hide').addClass("d-none");
-			$('.chk_list_item').prop('checked', true);
-		}else{
-			$('.chk_list_item').prop('checked', false);
-      $('.custom_hide').removeClass("d-none");
-		}
-	});
-
-</script>
-<script>
-
-	$('.chk_list').click(function(){
+	$(document).on('click', '.chk_list', function() {
+		var isChecked = $(this).prop('checked') === true;
+		$('.chk_list_item').prop('checked', isChecked);
+		$('.caf-cand-card').toggleClass('is-selected', isChecked);
 		$('#application_test_fwd_resume_body_content').html('');
-		if($(".chk_list").prop('checked') == true){
-			var chk_list 	=	$('.chk_list').val();
-			$('.test_fwd_resume').removeClass("d-none");
-      $('.custom_hide').addClass("d-none");
-			$('.send_email').removeClass("d-none");
-			$('.app_copy').removeClass("d-none");
-			$('.application_copy').removeClass("d-none");
-
-		}else{
-			$('.test_fwd_resume').addClass("d-none");
-			$('.send_email').addClass("d-none");
-      $('.custom_hide').removeClass("d-none");
-			$('.app_copy').addClass("d-none");
-			$('.application_copy').addClass("d-none");
+		if (isChecked && $('.chk_list_item').length > 0) {
+			$('.test_fwd_resume, .send_email, .app_copy, .application_copy').removeClass("d-none");
+			$('.custom_hide').addClass("d-none");
+		} else {
+			$('.test_fwd_resume, .send_email, .app_copy, .application_copy').addClass("d-none");
+			$('.custom_hide').removeClass("d-none");
 		}
 		updateAptkSelectionBar();
-	 });
+	});
 
-	// Purely client-side — clones the checked rows' already-rendered markup
-	// (no new request, no server load) into #aptk_print_area and hands off
-	// to the browser's own print dialog. Same pattern as CV Tracker/apptracker.
+	// Purely client-side — builds a clean print summary table from the checked
+	// candidate cards (no new request, no server load) into #aptk_print_area and
+	// hands off to the browser's own print dialog.
 	$(document).on('click', '.aptk_print_btn', function() {
 		var $checked = $('.chk_list_item:checked');
 		if ($checked.length === 0) {
@@ -1779,15 +2752,25 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 		}
 
 		var $table = $('<table></table>');
-		var $thead = $('#myTable thead tr').clone();
-		$thead.find('th').first().remove(); // drop the checkbox header column
-		$table.append($('<thead></thead>').append($thead));
+		var $thead = $('<thead><tr><th>Candidate</th><th>Match</th><th>Exp.</th><th>Salary</th><th>Notice &amp; Company</th><th>Interview</th><th>Location &amp; Edu</th><th>Ownership</th><th>Stage</th></tr></thead>');
+		$table.append($thead);
 
 		var $tbody = $('<tbody></tbody>');
 		$checked.each(function() {
-			var $row = $(this).closest('tr').clone();
-			$row.find('td').first().remove(); // drop the checkbox cell
-			$tbody.append($row);
+			var $card = $(this).closest('.caf-cand-card');
+			if ($card.length) {
+				var $tr = $('<tr></tr>');
+				$tr.append($('<td></td>').html('<strong>' + $('<div>').text($card.attr('data-print-name') || '').html() + '</strong><br><small>' + $('<div>').text($card.attr('data-print-desig') || '').html() + '</small>'));
+				$tr.append($('<td></td>').text($card.attr('data-print-match') || '0%'));
+				$tr.append($('<td></td>').text($card.attr('data-print-exp') || '—'));
+				$tr.append($('<td></td>').text($card.attr('data-print-salary') || '—'));
+				$tr.append($('<td></td>').html($('<div>').text($card.attr('data-print-notice') || '').html() + '<br><small>' + $('<div>').text($card.attr('data-print-company') || '').html() + '</small>'));
+				$tr.append($('<td></td>').text($card.attr('data-print-interview') || '—'));
+				$tr.append($('<td></td>').html($('<div>').text($card.attr('data-print-location') || '').html() + '<br><small>' + $('<div>').text($card.attr('data-print-edu') || '').html() + '</small>'));
+				$tr.append($('<td></td>').text($card.attr('data-print-owner') || '—'));
+				$tr.append($('<td></td>').text($card.attr('data-print-stage') || '—'));
+				$tbody.append($tr);
+			}
 		});
 		$table.append($tbody);
 
@@ -1800,31 +2783,22 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 		window.print();
 	});
 
-	$(document).on('click', '.chk_list_item', ()=>{
+	$(document).on('click', '.chk_list_item', function() {
 		$('#application_test_fwd_resume_body_content').html('');
-	   var i=0;
-	   var arr = [];
-       $('.chk_list_item:checked').each(function () {
-		   arr.push($(this).val());
-       });
+		$(this).closest('.caf-cand-card').toggleClass('is-selected', $(this).is(':checked'));
+		var totalItems = $('.chk_list_item').length;
+		var checkedItems = $('.chk_list_item:checked').length;
+		$('.chk_list').prop('checked', totalItems > 0 && checkedItems === totalItems);
 
-	   if(arr.length > 0){
-	   		$('.test_fwd_resume').removeClass("d-none");
-			$('.send_email').removeClass("d-none");
-			$('.app_copy').removeClass("d-none");
-			$('.application_copy').removeClass("d-none");
-      $('.custom_hide').addClass("d-none");
-
-
-	   }else{
-	   		$('.test_fwd_resume').addClass("d-none");
-			$('.send_email').addClass("d-none");
-			$('.app_copy').addClass("d-none");
-			$('.application_copy').addClass("d-none");
-      $('.custom_hide').removeClass("d-none");
-	   }
+		if (checkedItems > 0) {
+			$('.test_fwd_resume, .send_email, .app_copy, .application_copy').removeClass("d-none");
+			$('.custom_hide').addClass("d-none");
+		} else {
+			$('.test_fwd_resume, .send_email, .app_copy, .application_copy').addClass("d-none");
+			$('.custom_hide').removeClass("d-none");
+		}
 		updateAptkSelectionBar();
-	 });
+	});
 
 	/* Selection bar: live count + clear-selection controls (checkbox + close X). */
 	function updateAptkSelectionBar() {
@@ -1835,6 +2809,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 	}
 	function clearAptkSelection() {
 		$('.chk_list, .chk_list_item').prop('checked', false);
+		$('.caf-cand-card').removeClass('is-selected');
 		$('.test_fwd_resume, .send_email, .app_copy, .application_copy').addClass('d-none');
 		$('.custom_hide').removeClass('d-none');
 		$('#application_test_fwd_resume_body_content').html('');
@@ -2094,7 +3069,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 																					    
 																						// var table;
 																						// tableLoad('load');
-                                            var page = $('#paginationcandidate .active_disabled').data('page');
+                                            var page = $('#paginationcandidate .pagi-page.pagi-active').data('page') || 1;
                                             fetchCandidates(page);
 																						
 																						$.unblockUI();
@@ -2210,7 +3185,8 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 				 
 				   
 				   		   
-  $('body').on('click', '.client_stage_sub_stage', function(){              
+  $('body').on('click', '.client_stage_sub_stage', function(e){              
+              if (e) { e.preventDefault(); e.stopPropagation(); }
               var app_id       = $(this).data('row-id');		
               var eventId = 4;										
 								
@@ -2298,6 +3274,10 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
         });
 
         function fetchCandidates(page = 1, search = '') {
+            var seq = ++_cafReqSeq;
+            if (_cafListXhr && _cafListXhr.readyState !== 4) {
+                _cafListXhr.abort();
+            }
             var jobid = $('#jobid').val();
             var mstatus_id = $('#mstatus_id').val();
             var inputSearch = $('#inputSearch').val();
@@ -2305,9 +3285,9 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
             var country = '';
             var cus_search = $('#kt_tagify_2').val();
             $('.loadingMessage').css({
-                display: 'block'
+                display: 'flex'
             });
-            return $.ajax({
+            _cafListXhr = $.ajax({
                 url: `{!! route('service_company.apptracker.clientappdata_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -2319,11 +3299,13 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                     cus_search: cus_search
                 },
                 success: function(response) {
+                    if (seq !== _cafReqSeq) return;
                     $('.loadingMessage').css({
                         display: 'none'
                     });
                     $('#candidatetList').html(response.html);
                     $('#pool_counter').html(response.total);
+                    $('#caf_visible_count').text(response.total || 0);
                     $('#paginationcandidate').html(response.pagination);
                     $('#bg_alldata').html(response.allCandidateCounter);
                     $('#bg_1').html(response.SourcingCounter);
@@ -2333,11 +3315,40 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                     $('#bg_5').html(response.OfferedCounter);
                     $('#bg_6').html(response.JoinedCounter);
                     $('#bg_7').html(response.RejectedCounter);
-
+                    if (typeof clearAptkSelection === 'function') {
+                        clearAptkSelection();
+                    }
+                },
+                error: function(xhr, status) {
+                    if (status === 'abort' || seq !== _cafReqSeq) return;
+                    $('.loadingMessage').css({ display: 'none' });
                 }
             });
+            return _cafListXhr;
         }
-        
+
+        $(document).on('keydown', '.caf-subcard-stage[role="button"]', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).trigger('click');
+            }
+        });
+
+        // Clicking anywhere on a candidate card opens the Candidate Drawer,
+        // except interactive controls (checkbox, Pipeline & Stage card, LinkedIn link, buttons/links).
+        $(document).on('click', '.caf-cand-card', function(e) {
+            if ($(e.target).closest('.chk_list_item, .caf-chk-wrap, .caf-subcard-stage, .client_stage_sub_stage, .client_stage_locked_notice, .caf-linkedin-pill, .show-application-detail, a[href^="http"], button, input, select, textarea').length) {
+                return;
+            }
+            if (window.getSelection && window.getSelection().toString().trim() !== '') {
+                return;
+            }
+            var $drawerTrigger = $(this).find('.show-application-detail').first();
+            if ($drawerTrigger.length) {
+                $drawerTrigger.trigger('click');
+            }
+        });
 
 </script>
 

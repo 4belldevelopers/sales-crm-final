@@ -1,286 +1,1550 @@
+{{--
+  JERO ATS — Service Company Interview Tracker (Rule 20 Modern Card + Sub-Card Design System)
+  Intent: Provides an enterprise-grade, page-isolated Interview Tracker powered by Elasticsearch
+          read projections (0% server table HTML overhead), 3-tier RAM/IndexedDB/Redis caching,
+          and real-time Reverb synchronization.
+  Tenancy & Security: Strictly scoped by auth()->user()->company_id across IndexedDB, Redis, and Reverb.
+  Screen Fit: 100% fluid fit on 15.6" screens (1366x768 & 1920x1080) with zero horizontal overflow.
+--}}
 @extends('layouts.service_company_layout')
+
 @push('head-script')
-
 <style>
-
-@media  only screen and (min-width: 900px) and (max-width: 2560px){
-  .table td, .table th, .table tr {width: max-content!important;}
-  .table > :not(caption) > * > * {padding: 0rem;}
-  td:nth-child(n+2),
-  th:nth-child(n+2) {width: revert!important; }
-}
-@media only screen and (min-width: 1024px) and (max-width: 1440px){
-  #client_stage_sub_stage {width: 1025px;}
-}
-@media only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_client_activitiesApplication {width: 1025px;}
-}
-@media only screen and (min-width: 1440px) and (max-width: 2560px){
-  #client_stage_sub_stage {width: 1200px;}
-}
-@media only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_client_activitiesApplication {width: 1200px;}
-}
-
-/* ===== Interview Tracker New Design ===== */
+/* ==========================================================================
+   Interview Tracker — Page-Isolated Rule 20 Modern Card + Sub-Card Design
+   ========================================================================== */
 :root {
-    --it-primary: #2563eb;
-    --it-primary-light: #eff6ff;
-    --it-primary-dark: #1d4ed8;
+    --it-primary: #009ef7;
+    --it-primary-deep: #2563eb;
+    --it-primary-soft: #eff6ff;
     --it-success: #10b981;
-    --it-success-light: #f0fdf4;
+    --it-success-soft: #ecfdf5;
     --it-warning: #f59e0b;
-    --it-warning-light: #fffbeb;
+    --it-warning-soft: #fffbeb;
     --it-danger: #ef4444;
-    --it-danger-light: #fef2f2;
-    --it-purple: #8b5cf6;
-    --it-purple-light: #f5f3ff;
-    --it-orange: #f97316;
-    --it-orange-light: #fff7ed;
-    --it-text-main: #1e293b;
+    --it-danger-soft: #fef2f2;
+    --it-purple: #7c3aed;
+    --it-purple-soft: #f5f3ff;
+    --it-text-main: #0f172a;
+    --it-text-mid: #475569;
     --it-text-muted: #64748b;
     --it-text-light: #94a3b8;
     --it-border: #e2e8f0;
-    --it-border-light: #f1f5f9;
-    --it-bg-main: #f8fafc;
-    --it-bg-card: #ffffff;
-    --it-radius: 6px;
-    --it-radius-lg: 10px;
-    --it-radius-xl: 12px;
-    --it-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    --it-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-    --it-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-    --it-transition: all 0.2s ease;
+    --it-border-soft: #f1f5f9;
+    --it-bg-subcard: #f8fafc;
 }
 
-.it-dashboard { font-family: 'Poppins', sans-serif; background: var(--it-bg-main); color: var(--it-text-main); line-height: 1.45; -webkit-font-smoothing: antialiased; width: 100%; }
+/* Remove legacy toolbar gap & guarantee 0% horizontal page scroll */
+#kt_toolbar { display: none !important; }
+#kt_content { margin-top: 0 !important; }
+#kt_post { margin-top: 0 !important; }
+#kt_content_container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+.it-dashboard,
+.it-dashboard * {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    box-sizing: border-box !important;
+}
+
+.it-dashboard {
+    width: 100% !important;
+    max-width: 100% !important;
+    color: var(--it-text-main);
+    -webkit-font-smoothing: antialiased;
+}
+
 .it-dashboard ::-webkit-scrollbar { width: 5px; height: 5px; }
 .it-dashboard ::-webkit-scrollbar-track { background: transparent; }
 .it-dashboard ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 .it-dashboard ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* Stats Grid */
-.it-stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 14px; }
-.it-stat-card { background: white; border-radius: var(--it-radius-xl); padding: 12px 14px; box-shadow: var(--it-shadow); border: 1px solid var(--it-border-light); transition: var(--it-transition); cursor: pointer; min-width: 0; display: flex; align-items: center; gap: 10px; }
-.it-stat-card:hover { transform: translateY(-2px); box-shadow: var(--it-shadow-md); }
-.it-stat-icon-wrap { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.it-stat-icon-wrap svg { width: 18px; height: 18px; }
-.it-stat-icon-blue { background: #dbeafe; color: #2563eb; }
-.it-stat-icon-yellow { background: #fef3c7; color: #d97706; }
-.it-stat-icon-purple { background: #f3e8ff; color: #7c3aed; }
-.it-stat-icon-green { background: #d1fae5; color: #059669; }
-.it-stat-icon-red { background: #fee2e2; color: #dc2626; }
-.it-stat-icon-sky { background: #e0f2fe; color: #0284c7; }
-.it-stat-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.it-stat-label { font-size: 10px; color: var(--it-text-muted); font-weight: 500; line-height: 1.2; }
-.it-stat-value-row { display: flex; align-items: center; gap: 5px; line-height: 1; }
-.it-stat-value { font-size: 16px; font-weight: 700; color: var(--it-text-main); letter-spacing: -0.3px; }
-.it-stat-trend { font-size: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 1px; }
-.it-stat-trend svg { width: 10px; height: 10px; }
-.it-trend-up { color: var(--it-success); }
-.it-trend-down { color: var(--it-danger); }
-
-/* Filters Bar */
-.it-filters-bar { background: white; border-radius: var(--it-radius-xl); padding: 8px 12px; display: flex; gap: 8px; align-items: center; margin-bottom: 12px; box-shadow: var(--it-shadow); border: 1px solid var(--it-border-light); flex-wrap: wrap; }
-.it-search-box { flex: 1 1 auto !important; width: auto !important; max-width: none !important; min-width: 180px; position: relative; }
-.it-search-box input { width: 100%; padding: 6px 10px 6px 30px; border: 1px solid var(--it-border); border-radius: var(--it-radius); font-size: 11px; font-family: 'Poppins', sans-serif; color: var(--it-text-main); outline: none; transition: var(--it-transition); background: var(--it-bg-main); height: 32px; }
-.it-search-box input:focus { border-color: var(--it-primary); background: white; box-shadow: 0 0 0 3px var(--it-primary-light); }
-.it-search-box svg { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--it-text-light); pointer-events: none; width: 14px; height: 14px; }
-.it-filter-dropdown { position: relative; min-width: 100px; flex: 0 0 auto; }
-.it-filter-trigger { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 10px; border: 1px solid var(--it-border); border-radius: var(--it-radius); font-size: 11px; font-family: 'Poppins', sans-serif; color: var(--it-text-main); background: white; cursor: pointer; transition: var(--it-transition); white-space: nowrap; width: 100%; height: 32px; }
-.it-filter-trigger:hover { border-color: var(--it-text-light); }
-.it-filter-trigger .it-label { color: var(--it-text-muted); font-size: 10px; margin-right: 3px; }
-.it-filter-trigger .it-value { font-weight: 500; }
-.it-filter-trigger svg { width: 12px; height: 12px; }
-.it-filter-menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: white; border: 1px solid var(--it-border); border-radius: var(--it-radius-lg); box-shadow: var(--it-shadow-lg); z-index: 60; display: none; overflow: hidden; max-height: 220px; overflow-y: auto; }
-.it-filter-menu.open { display: block; }
-.it-filter-menu-item { padding: 7px 10px; font-size: 11px; cursor: pointer; transition: var(--it-transition); display: flex; align-items: center; gap: 6px; }
-.it-filter-menu-item:hover { background: var(--it-bg-main); }
-.it-filter-menu-item.selected { background: var(--it-primary-light); color: var(--it-primary); font-weight: 500; }
-.it-filter-actions { display: flex; gap: 6px; margin-left: auto; }
-.it-btn-filter { background: white; border: 1px solid var(--it-border); color: var(--it-text-main); padding: 6px 12px; height: 32px; display: inline-flex; align-items: center; gap: 5px; border-radius: var(--it-radius); font-size: 11px; font-weight: 500; font-family: 'Poppins', sans-serif; cursor: pointer; transition: var(--it-transition); }
-.it-btn-filter:hover { background: var(--it-bg-main); }
-.it-btn-filter svg { width: 12px; height: 12px; }
-.it-btn-reset { background: transparent; border: none; color: var(--it-primary); font-weight: 500; padding: 6px 8px; height: 32px; display: inline-flex; align-items: center; gap: 5px; border-radius: var(--it-radius); font-size: 11px; font-family: 'Poppins', sans-serif; cursor: pointer; transition: var(--it-transition); }
-.it-btn-reset:hover { background: var(--it-primary-light); }
-
-/* Tabs */
-.it-tabs-nav { display: flex; gap: 3px; margin-bottom: 12px; flex-wrap: wrap; }
-.it-tab-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: var(--it-radius-lg); font-size: 11px; font-weight: 500; font-family: 'Poppins', sans-serif; border: none; background: transparent; color: var(--it-text-muted); cursor: pointer; transition: var(--it-transition); white-space: nowrap; height: 32px; }
-.it-tab-btn:hover { background: rgba(37,99,235,0.06); color: var(--it-primary); }
-.it-tab-btn.active { background: var(--it-primary); color: white; box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
-.it-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 16px; padding: 0 5px; border-radius: 999px; font-size: 10px; font-weight: 600; background: rgba(0,0,0,0.06); color: currentColor; }
-.it-tab-btn.active .it-tab-count { background: rgba(255,255,255,0.2); }
-
-/* Table Container */
-.it-table-container { background: white; border-radius: var(--it-radius-xl); box-shadow: var(--it-shadow); border: 1px solid var(--it-border-light); overflow: hidden; }
-.it-table-scroll { overflow-x: auto; }
-.it-data-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1100px; }
-.it-data-table th { background: #f8fafc; padding: 8px 10px; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--it-text-muted); font-weight: 600; border-bottom: 1px solid var(--it-border); white-space: nowrap; position: sticky; top: 0; z-index: 5; line-height: 1.4; }
-.it-data-table th:first-child { border-radius: var(--it-radius-xl) 0 0 0; padding-left: 14px; width: 36px; }
-.it-data-table th:last-child { border-radius: 0 var(--it-radius-xl) 0 0; padding-right: 14px; }
-.it-data-table td { padding: 10px 10px; border-bottom: 1px solid var(--it-border-light); font-size: 11px; vertical-align: top; transition: background 0.15s; }
-.it-data-table tbody tr:hover td { background: #f8fafc; }
-.it-data-table tbody tr:last-child td { border-bottom: none; }
-.it-data-table td:first-child { padding-left: 14px; }
-.it-data-table td:last-child { padding-right: 14px; }
-
-/* Checkbox — hidden */
-.it-checkbox { display: none !important; }
-.it-data-table th:first-child,
-.it-data-table td:first-child { display: none !important; }
-
-/* Candidate Cell */
-.it-candidate-cell { display: flex; gap: 8px; }
-.it-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 600; flex-shrink: 0; text-transform: uppercase; }
-.it-avatar-green { background: #10b981; }
-.it-avatar-red { background: #ef4444; }
-.it-avatar-blue { background: #3b82f6; }
-.it-avatar-purple { background: #8b5cf6; }
-.it-avatar-orange { background: #f97316; }
-.it-avatar-gray { background: #6b7280; }
-.it-candidate-info { min-width: 0; }
-.it-candidate-name { font-weight: 600; font-size: 11px; color: var(--it-text-main); margin-bottom: 1px; display: flex; align-items: center; gap: 5px; }
-.it-candidate-role { font-size: 10px; color: var(--it-text-muted); margin-bottom: 3px; }
-.it-candidate-meta { display: flex; flex-direction: column; gap: 2px; }
-.it-meta-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 500; }
-.it-meta-tag.confirmed { color: var(--it-success); }
-.it-meta-tag.warning { color: var(--it-warning); }
-.it-meta-tag.danger { color: var(--it-danger); }
-.it-meta-tag.info { color: var(--it-text-muted); }
-.it-meta-tag svg { width: 10px; height: 10px; }
-.it-contact-btn { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; color: var(--it-text-light); cursor: pointer; transition: var(--it-transition); padding: 0; flex-shrink: 0; }
-.it-contact-btn:hover { background: var(--it-primary-light); color: var(--it-primary); }
-.it-contact-btn svg { width: 12px; height: 12px; }
-
-/* Job Cell */
-.it-job-title { font-weight: 600; font-size: 11px; color: var(--it-text-main); margin-bottom: 1px; }
-.it-job-company { font-size: 10px; color: var(--it-text-muted); margin-bottom: 4px; }
-.it-job-tags { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-.it-job-type { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; background: var(--it-primary-light); color: var(--it-primary); }
-.it-job-type-internal { background: #eef2ff; color: #4f46e5; }
-.it-job-type-direct   { background: #f0fdf4; color: #16a34a; }
-.it-job-id { font-size: 10px; color: var(--it-primary); font-weight: 500; text-decoration: none; }
-.it-job-id:hover { text-decoration: underline; }
-.it-dot-separator { width: 3px; height: 3px; border-radius: 50%; background: var(--it-border); }
-
-/* Date Cell */
-.it-date-cell { display: flex; flex-direction: column; gap: 3px; }
-.it-date-row { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--it-text-main); font-weight: 500; }
-.it-date-row svg { color: var(--it-text-light); flex-shrink: 0; width: 12px; height: 12px; }
-.it-date-row .it-mode { color: var(--it-text-muted); font-size: 10px; font-weight: 400; }
-
-/* Person Cell */
-.it-person-cell { display: flex; flex-direction: column; gap: 2px; }
-.it-person-name { font-weight: 600; font-size: 11px; color: var(--it-text-main); }
-.it-person-company { font-size: 10px; color: var(--it-text-muted); }
-.it-person-extra { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
-.it-extra-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 16px; padding: 0 4px; background: var(--it-bg-main); border: 1px solid var(--it-border); border-radius: 4px; font-size: 9px; font-weight: 600; color: var(--it-text-muted); }
-.it-extra-text { font-size: 10px; color: var(--it-text-muted); }
-
-/* Stage Cell */
-.it-stage-cell { display: flex; flex-direction: column; gap: 3px; }
-.it-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 500; width: fit-content; }
-.it-badge-blue   { background: #dbeafe; color: #1e40af; }
-.it-badge-purple { background: #f3e8ff; color: #6b21a8; }
-.it-badge-orange { background: #ffedd5; color: #9a3412; }
-.it-badge-red    { background: #fee2e2; color: #991b1b; }
-.it-badge-green  { background: #d1fae5; color: #065f46; }
-.it-badge-yellow { background: #fef9c3; color: #854d0e; }
-.it-badge-gray   { background: #e2e8f0; color: #374151; }
-.it-badge-pink   { background: #fce7f3; color: #9d174d; }
-.it-stage-status { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 500; }
-.it-stage-status.confirmed { color: var(--it-success); }
-.it-stage-status.pending { color: var(--it-warning); }
-.it-stage-status svg { width: 10px; height: 10px; }
-
-/* Feedback Cell */
-.it-feedback-cell { display: flex; flex-direction: column; gap: 4px; }
-.it-feedback-rating { display: flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--it-warning); }
-.it-feedback-rating svg { width: 12px; height: 12px; fill: currentColor; }
-.it-feedback-btn { width: fit-content; padding: 4px 10px; border-radius: var(--it-radius); font-size: 10px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: var(--it-transition); display: inline-flex; align-items: center; gap: 3px; border: 1px solid transparent; }
-.it-feedback-btn-outline-orange { border-color: var(--it-orange); color: var(--it-orange); background: transparent; }
-.it-feedback-btn-outline-orange:hover { background: var(--it-orange-light); }
-.it-feedback-btn-outline-green { border-color: var(--it-success); color: var(--it-success); background: transparent; }
-.it-feedback-btn-outline-green:hover { background: var(--it-success-light); }
-.it-feedback-btn-solid-blue { background: var(--it-primary); color: white; border-color: var(--it-primary); }
-.it-feedback-btn-solid-blue:hover { background: var(--it-primary-dark); }
-
-/* Table Footer */
-.it-table-footer { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-top: 1px solid var(--it-border-light); font-size: 10px; color: var(--it-text-muted); }
-.it-pagination { display: flex; align-items: center; gap: 3px; }
-.it-page-btn { min-width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: var(--it-radius); border: none; background: transparent; color: var(--it-text-muted); font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: var(--it-transition); padding: 0 6px; }
-.it-page-btn:hover { background: var(--it-bg-main); color: var(--it-text-main); }
-.it-page-btn.active { background: var(--it-primary); color: white; }
-.it-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.it-page-btn svg { width: 14px; height: 14px; }
-.it-page-ellipsis { padding: 0 3px; color: var(--it-text-light); }
-.it-rows-per-page { display: flex; align-items: center; gap: 6px; }
-.it-rows-dropdown { padding: 3px 6px; border: 1px solid var(--it-border); border-radius: var(--it-radius); font-size: 11px; font-family: 'Poppins', sans-serif; color: var(--it-text-main); background: white; cursor: pointer; outline: none; }
-
-/* Responsive */
-@media (max-width: 1440px) {
-    .it-stats-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; }
-    .it-filters-bar { gap: 6px; padding: 6px 10px; }
-    .it-search-box { max-width: 220px; }
+/* Legacy drawer sizing kept intact */
+@media only screen and (min-width: 1024px) and (max-width: 1440px) {
+    #client_stage_sub_stage, #kt_client_activitiesApplication { width: 1025px; }
 }
-@media (max-width: 1280px) {
-    .it-stats-grid { grid-template-columns: repeat(6, 1fr); gap: 8px; }
-}
-@media (max-width: 1150px) {
-    .it-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .it-stat-card { padding: 12px 14px; }
-    .it-filters-bar { flex-wrap: wrap; }
-    .it-search-box { min-width: 160px; flex: 0 1 280px; max-width: 280px; }
-    .it-filter-dropdown { min-width: 90px; }
-    .it-filter-actions { margin-left: 0; width: 100%; justify-content: flex-end; margin-top: 4px; }
-}
-@media (max-width: 768px) {
-    .it-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .it-filters-bar { flex-direction: column; align-items: stretch; gap: 6px; }
-    .it-search-box { max-width: none; min-width: auto; width: 100%; }
-    .it-filter-dropdown { width: 100%; }
-    .it-filter-actions { margin-left: 0; justify-content: flex-end; margin-top: 0; }
-    .it-tabs-nav { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; gap: 2px; }
-    .it-tab-btn { flex-shrink: 0; }
-    .it-table-footer { flex-direction: column; gap: 8px; align-items: flex-start; }
-}
-@media (max-width: 480px) {
-    .it-stats-grid { grid-template-columns: 1fr 1fr; }
-    .it-table-footer { font-size: 9px; }
-    .it-rows-per-page { display: none; }
+@media only screen and (min-width: 1440px) and (max-width: 2560px) {
+    #client_stage_sub_stage, #kt_client_activitiesApplication { width: 1200px; }
 }
 
-/* Loading */
-.it-loading { display: none; padding: 30px; text-align: center; color: var(--it-text-muted); font-size: 12px; }
-.it-loading.show { display: block; }
+/* ==========================================================================
+   TIER 1: Pure White Top Header Toolbar Card
+   ========================================================================== */
+.it-header-card {
+    background: #ffffff !important;
+    border: 1px solid var(--it-border) !important;
+    border-radius: 10px !important;
+    padding: 12px 18px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+}
 
-/* Old table compatibility */
-#Interview-trackers { display: contents; }
+.it-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+}
 
-/* Remove toolbar gap — toolbar was removed from this page */
-#kt_toolbar { display: none !important; }
-#kt_content { margin-top: 0 !important; }
-#kt_post { margin-top: 0 !important; }
+.it-header-icon {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 8px !important;
+    background: var(--it-primary-soft) !important;
+    color: var(--it-primary-deep) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    flex-shrink: 0 !important;
+}
 
-/* Hide the duplicate "Showing X to Y of Z" text that comes from the
-   pagination partial — the #showingText div already provides this. */
+.it-header-title-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+}
+
+.it-header-title {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: var(--it-text-main) !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.2px !important;
+    margin: 0 !important;
+}
+
+.it-header-count-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2px 9px !important;
+    border-radius: 999px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    background: var(--it-primary-soft) !important;
+    color: var(--it-primary-deep) !important;
+    border: 1px solid #bfdbfe !important;
+    font-variant-numeric: tabular-nums !important;
+    line-height: 1.3 !important;
+}
+
+.it-header-sub {
+    font-size: 11.5px !important;
+    color: var(--it-text-muted) !important;
+    margin-top: 2px !important;
+    line-height: 1.25 !important;
+}
+
+.it-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+/* Search Sub-Card inside Tier 1 Right Corner */
+.it-search-subcard {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    background: #f8fafc !important;
+    border: 1px solid var(--it-border) !important;
+    border-radius: 8px !important;
+    padding: 0 12px !important;
+    height: 36px !important;
+    width: 300px !important;
+    max-width: 100% !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+.it-search-subcard:hover {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+}
+
+.it-search-subcard:focus-within {
+    background: #ffffff !important;
+    border-color: var(--it-primary) !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+
+.it-search-subcard i.fa-search {
+    color: var(--it-text-light) !important;
+    font-size: 12.5px !important;
+    flex-shrink: 0 !important;
+}
+
+.it-search-subcard input {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: var(--it-text-main) !important;
+    width: 100% !important;
+    padding: 0 !important;
+    height: 34px !important;
+    line-height: 34px !important;
+}
+
+.it-search-subcard input::placeholder {
+    color: var(--it-text-light) !important;
+    font-size: 11.5px !important;
+    font-weight: 400 !important;
+}
+
+.it-search-clear {
+    background: none !important;
+    border: none !important;
+    color: var(--it-text-light) !important;
+    font-size: 11px !important;
+    padding: 2px 4px !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.it-search-clear:hover {
+    color: var(--it-danger) !important;
+}
+
+.it-refresh-btn {
+    height: 36px !important;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--it-border) !important;
+    background: #ffffff !important;
+    color: var(--it-text-mid) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+}
+
+.it-refresh-btn:hover {
+    background: #f8fafc !important;
+    border-color: var(--it-primary) !important;
+    color: var(--it-primary) !important;
+}
+
+.it-refresh-btn.is-syncing i {
+    animation: itSpin 0.8s linear infinite;
+}
+
+@keyframes itSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   TIER 2: Executive KPI Metric Strip (4 Clickable Metric Cards)
+   ========================================================================== */
+.it-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+}
+
+.it-kpi-card {
+    background: #ffffff !important;
+    border: 1px solid var(--it-border) !important;
+    border-radius: 10px !important;
+    padding: 12px 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 11px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    transition: all 0.15s ease-in-out !important;
+    cursor: pointer !important;
+    min-width: 0 !important;
+    text-align: left !important;
+}
+
+.it-kpi-card:hover {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    transform: translateY(-1px);
+}
+
+.it-kpi-card.it-kpi-active {
+    border-color: var(--it-primary) !important;
+    background: #f0f9ff !important;
+    box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.18) !important;
+}
+
+.it-kpi-icon {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 15px !important;
+    flex-shrink: 0 !important;
+}
+
+.it-kpi-icon.icon-blue    { background: #eff6ff !important; color: #2563eb !important; }
+.it-kpi-icon.icon-emerald { background: #ecfdf5 !important; color: #059669 !important; }
+.it-kpi-icon.icon-purple  { background: #f5f3ff !important; color: #7c3aed !important; }
+.it-kpi-icon.icon-red     { background: #fef2f2 !important; color: #dc2626 !important; }
+
+.it-kpi-body {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+}
+
+.it-kpi-label {
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    color: var(--it-text-muted) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.it-kpi-val-row {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 8px !important;
+    margin-top: 2px !important;
+}
+
+.it-kpi-num {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: var(--it-text-main) !important;
+    line-height: 1.15 !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+.it-kpi-card.it-kpi-active .it-kpi-num {
+    color: var(--it-primary) !important;
+}
+
+.it-kpi-hint {
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    color: var(--it-text-light) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* ==========================================================================
+   TIER 3: Pure White Sub-Tabs & Quick Filters Card
+   ========================================================================== */
+.it-tabs-card {
+    background: #ffffff !important;
+    border: 1px solid var(--it-border) !important;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+}
+
+.it-tabs-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+}
+
+.it-tab-btn {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: var(--it-text-mid) !important;
+    border: 1px solid var(--it-border) !important;
+    transition: all 0.15s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+}
+
+.it-tab-btn:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: var(--it-text-main) !important;
+}
+
+/* Single Active Primary Blue Highlight Rule */
+.it-tab-btn.active {
+    background: var(--it-primary) !important;
+    color: #ffffff !important;
+    border-color: var(--it-primary) !important;
+    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.22) !important;
+}
+
+.it-tab-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 20px !important;
+    height: 18px !important;
+    padding: 0 6px !important;
+    border-radius: 10px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    background: #f1f5f9 !important;
+    color: var(--it-text-mid) !important;
+    font-variant-numeric: tabular-nums !important;
+    line-height: 1 !important;
+}
+
+.it-tab-btn.active .it-tab-badge {
+    background: rgba(255, 255, 255, 0.28) !important;
+    color: #ffffff !important;
+}
+
+.it-tab-btn:not(.active) .it-tab-badge.badge-today     { background: #dcfce7 !important; color: #15803d !important; }
+.it-tab-btn:not(.active) .it-tab-badge.badge-upcoming  { background: #eff6ff !important; color: #1d4ed8 !important; }
+.it-tab-btn:not(.active) .it-tab-badge.badge-pending   { background: #fef3c7 !important; color: #b45309 !important; }
+.it-tab-btn:not(.active) .it-tab-badge.badge-selected  { background: #dcfce7 !important; color: #15803d !important; }
+.it-tab-btn:not(.active) .it-tab-badge.badge-resched   { background: #e0f2fe !important; color: #0369a1 !important; }
+.it-tab-btn:not(.active) .it-tab-badge.badge-rejected  { background: #fee2e2 !important; color: #b91c1c !important; }
+
+.it-inline-filters {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    flex-shrink: 0 !important;
+}
+
+.it-filter-pill {
+    display: flex !important;
+    align-items: center !important;
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 0 10px !important;
+    height: 34px !important;
+    gap: 6px !important;
+    transition: all 0.15s ease !important;
+}
+
+.it-filter-pill:hover {
+    background: #ffffff !important;
+    border-color: #94a3b8 !important;
+}
+
+.it-filter-pill:focus-within {
+    background: #ffffff !important;
+    border-color: var(--it-primary) !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+
+.it-filter-pill-lbl {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: var(--it-text-muted) !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.it-filter-select {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: var(--it-text-main) !important;
+    padding: 0 18px 0 0 !important;
+    height: 32px !important;
+    line-height: 32px !important;
+    cursor: pointer !important;
+}
+
+.it-reset-btn {
+    height: 34px !important;
+    padding: 0 11px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--it-border) !important;
+    background: #ffffff !important;
+    color: var(--it-primary-deep) !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+}
+
+.it-reset-btn:hover {
+    background: var(--it-primary-soft) !important;
+    border-color: #bfdbfe !important;
+}
+
+/* ==========================================================================
+   TIER 4: Master Primary Interview Cards & Discrete Sub-Cards Stream
+   ========================================================================== */
+.it-stream-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    min-height: 160px !important;
+}
+
+.it-cards-stream {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.it-card {
+    background: #ffffff !important;
+    border: 1px solid var(--it-border) !important;
+    border-radius: 10px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+}
+
+.it-card:hover {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Upper Discrete Sub-Cards Grid (5 Responsive Fractional Columns) */
+.it-card-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.8fr) minmax(0, 1.55fr) minmax(0, 1.45fr) minmax(0, 1.65fr) !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+}
+
+.it-subcard {
+    background: var(--it-bg-subcard) !important;
+    border: 1px solid #edf2f7 !important;
+    border-radius: 8px !important;
+    padding: 8px 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    position: relative !important;
+}
+
+.it-subcard-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    min-height: 18px !important;
+}
+
+.it-subcard-label {
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.35px !important;
+    color: var(--it-text-muted) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Sub-Card 1: Candidate + Follow-up */
+.it-cand-body {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    min-width: 0 !important;
+}
+
+.it-avatar {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    text-transform: uppercase !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+.it-avatar-red    { background: #fee2e2 !important; color: #dc2626 !important; }
+.it-avatar-orange { background: #fef3c7 !important; color: #d97706 !important; }
+.it-avatar-blue   { background: #dbeafe !important; color: #2563eb !important; }
+.it-avatar-green  { background: #dcfce7 !important; color: #16a34a !important; }
+.it-avatar-purple { background: #f3e8ff !important; color: #7c3aed !important; }
+.it-avatar-gray   { background: #f1f5f9 !important; color: #475569 !important; }
+
+.it-cand-text {
+    flex: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.it-cand-name {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: var(--it-text-main) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    line-height: 1.3 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+}
+
+.it-cand-name:hover {
+    color: var(--it-primary) !important;
+}
+
+.it-cand-role {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: var(--it-text-muted) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    margin-top: 1px !important;
+    cursor: pointer !important;
+}
+
+.it-cand-submeta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 10px !important;
+    color: var(--it-text-light) !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.it-cand-submeta span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Follow-up Pill Dropdown */
+.it-followup-dropdown {
+    position: relative !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+}
+
+.it-followup-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 2px 7px !important;
+    border-radius: 5px !important;
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    border: 1px solid var(--it-border) !important;
+    background: #ffffff !important;
+    color: var(--it-text-mid) !important;
+    cursor: pointer !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    transition: all 0.15s ease !important;
+}
+
+.it-followup-btn:hover {
+    border-color: var(--it-primary) !important;
+    color: var(--it-primary) !important;
+}
+
+.it-followup-btn.is-confirmed {
+    color: #15803d !important;
+    border-color: #bbf7d0 !important;
+    background: #f0fdf4 !important;
+}
+
+.it-followup-btn.is-no-response {
+    color: #dc2626 !important;
+    border-color: #fecaca !important;
+    background: #fef2f2 !important;
+}
+
+.it-followup-btn.is-rescheduled {
+    color: #2563eb !important;
+    border-color: #bfdbfe !important;
+    background: #eff6ff !important;
+}
+
+.it-fu-caret {
+    font-size: 8px !important;
+    opacity: 0.75 !important;
+}
+
+.it-followup-menu {
+    position: absolute !important;
+    top: calc(100% + 4px) !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid var(--it-border) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15) !important;
+    z-index: 80 !important;
+    display: none !important;
+    min-width: 145px !important;
+    padding: 4px !important;
+}
+
+.it-followup-menu.open {
+    display: block !important;
+}
+
+.it-followup-item {
+    padding: 6px 9px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    color: var(--it-text-main) !important;
+}
+
+.it-followup-item:hover {
+    background: #f1f5f9 !important;
+}
+
+/* Sub-Card 2: Requisition */
+.it-scope-badge {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1.5px 6px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    line-height: 1.3 !important;
+}
+
+.it-scope-direct {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+.it-scope-internal {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border: 1px solid #bfdbfe !important;
+}
+
+.it-job-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+}
+
+.it-job-title {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: var(--it-text-main) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    line-height: 1.3 !important;
+    text-decoration: none !important;
+}
+
+.it-job-title:hover {
+    color: var(--it-primary) !important;
+}
+
+.it-job-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 10.5px !important;
+    color: var(--it-text-muted) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+}
+
+.it-job-id {
+    font-weight: 700 !important;
+    color: #0284c7 !important;
+    text-decoration: none !important;
+    flex-shrink: 0 !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+.it-job-id:hover {
+    text-decoration: underline !important;
+}
+
+.it-job-client {
+    font-weight: 600 !important;
+    color: var(--it-text-mid) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-transform: uppercase !important;
+    font-size: 10px !important;
+}
+
+.it-job-pills {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-top: 2px !important;
+    flex-wrap: wrap !important;
+}
+
+.it-round-pill {
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    background: #ffffff !important;
+    border: 1px solid var(--it-border) !important;
+    color: var(--it-text-mid) !important;
+    white-space: nowrap !important;
+}
+
+.it-resched-tag {
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    color: #2563eb !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+}
+
+.it-dot-sep {
+    color: #cbd5e1 !important;
+    font-size: 9px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Sub-Card 3: Schedule & Link */
+.it-mode-pill {
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    padding: 1.5px 6px !important;
+    border-radius: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.it-mode-video   { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+.it-mode-telecon { background: #f5f3ff !important; color: #7c3aed !important; border: 1px solid #ddd6fe !important; }
+.it-mode-f2f     { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+.it-mode-other   { background: #f1f5f9 !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+
+.it-sched-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+}
+
+.it-sched-date-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+}
+
+.it-sched-date {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: var(--it-text-main) !important;
+    font-variant-numeric: tabular-nums !important;
+    white-space: nowrap !important;
+}
+
+.it-sched-date i {
+    color: var(--it-primary) !important;
+    font-size: 11px !important;
+}
+
+.it-time-tag {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+}
+
+.it-time-today    { background: #dcfce7 !important; color: #15803d !important; }
+.it-time-upcoming { background: #e0f2fe !important; color: #0369a1 !important; }
+.it-time-past     { background: #f1f5f9 !important; color: #64748b !important; }
+
+.it-sched-time-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: var(--it-text-mid) !important;
+    font-variant-numeric: tabular-nums !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.it-sched-time-row i {
+    color: var(--it-text-light) !important;
+    font-size: 11px !important;
+}
+
+.it-link-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    color: #0284c7 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2.5px 8px !important;
+    border-radius: 5px !important;
+    text-decoration: none !important;
+    width: fit-content !important;
+    margin-top: 2px !important;
+    transition: all 0.15s ease !important;
+    cursor: pointer !important;
+}
+
+.it-link-pill:hover {
+    background: var(--it-primary) !important;
+    border-color: var(--it-primary) !important;
+    color: #ffffff !important;
+}
+
+.it-no-link-note {
+    font-size: 10px !important;
+    color: var(--it-text-light) !important;
+    margin-top: 2px !important;
+}
+
+/* Sub-Card 4: Interview Panel */
+.it-panel-count {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border: 1px solid #bfdbfe !important;
+    white-space: nowrap !important;
+}
+
+.it-panel-count.is-empty {
+    background: #f1f5f9 !important;
+    color: var(--it-text-light) !important;
+    border-color: var(--it-border) !important;
+}
+
+.it-panel-empty {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 1px !important;
+    min-height: 44px !important;
+}
+
+.it-empty-dash {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: var(--it-text-light) !important;
+    line-height: 1.1 !important;
+}
+
+.it-empty-sub {
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    color: var(--it-text-light) !important;
+}
+
+.it-panel-single {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+}
+
+.it-panel-avatar {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    border: 1.5px solid #ffffff !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
+}
+
+.it-panel-multi {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    position: relative !important;
+    cursor: pointer !important;
+}
+
+.it-panel-stack {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.it-panel-avatar-sm {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1) !important;
+    margin-left: -7px !important;
+}
+
+.it-panel-avatar-sm:first-child { margin-left: 0 !important; }
+.it-panel-avatar-extra { background: #dc2626 !important; color: #ffffff !important; font-size: 9.5px !important; }
+
+.it-panel-meta {
+    min-width: 0 !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+}
+
+.it-panel-name {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: var(--it-text-main) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+}
+
+.it-panel-more {
+    color: #0284c7 !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+}
+
+.it-panel-company {
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: var(--it-text-muted) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 1px !important;
+}
+
+.it-panel-popover {
+    display: none !important;
+    position: absolute !important;
+    bottom: calc(100% + 8px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: #0f172a !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.35) !important;
+    z-index: 90 !important;
+    min-width: 200px !important;
+    max-width: 260px !important;
+    pointer-events: none !important;
+}
+
+.it-panel-multi:hover .it-panel-popover {
+    display: block !important;
+}
+
+.it-panel-popover-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    padding-bottom: 5px !important;
+    margin-bottom: 5px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+.it-panel-popover-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    padding: 3px 0 !important;
+    font-size: 10.5px !important;
+}
+
+.it-panel-pop-dot {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    flex-shrink: 0 !important;
+}
+
+.it-panel-pop-name {
+    flex: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.it-panel-lead-tag {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+    background: rgba(56, 189, 248, 0.2) !important;
+    color: #38bdf8 !important;
+}
+
+/* Sub-Card 5: Evaluation & Feedback */
+.it-eval-pill {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1.5px 6px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.it-eval-attended    { background: #eff6ff !important; color: #0284c7 !important; border: 1px solid #bae6fd !important; }
+.it-eval-scheduled   { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+.it-eval-rescheduled { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
+.it-eval-noshow      { background: #fee2e2 !important; color: #dc2626 !important; border: 1px solid #fecaca !important; }
+.it-eval-pending     { background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important; }
+
+.it-feedback-cell {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+}
+
+.it-fb-status-row {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+}
+
+.it-fb-badges-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-wrap: wrap !important;
+}
+
+.it-rec-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 1.5px 7px !important;
+    border-radius: 999px !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+
+.it-star-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #d97706 !important;
+    background: #fffbeb !important;
+    border: 1px solid #fde68a !important;
+    padding: 1px 6px !important;
+    border-radius: 999px !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+.it-feedback-btn {
+    width: fit-content !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    transition: all 0.15s ease !important;
+    border: 1px solid transparent !important;
+    margin-top: 2px !important;
+}
+
+.it-fb-btn-add {
+    background: var(--it-primary-deep) !important;
+    color: #ffffff !important;
+    border-color: var(--it-primary-deep) !important;
+}
+
+.it-fb-btn-add:hover {
+    background: #1d4ed8 !important;
+}
+
+.it-fb-btn-view {
+    background: #ffffff !important;
+    color: #059669 !important;
+    border-color: #a7f3d0 !important;
+}
+
+.it-fb-btn-view:hover {
+    background: #ecfdf5 !important;
+}
+
+.it-fb-btn-neutral {
+    background: #ffffff !important;
+    color: var(--it-text-mid) !important;
+    border-color: var(--it-border) !important;
+}
+
+.it-fb-btn-neutral:hover {
+    background: #f1f5f9 !important;
+}
+
+.it-fb-locked-text {
+    font-size: 10px !important;
+    color: var(--it-text-light) !important;
+    font-weight: 500 !important;
+}
+
+/* ==========================================================================
+   Sub-Card 6: Bottom Activity & Pipeline Strip
+   ========================================================================== */
+.it-card-bottom {
+    background: #ffffff !important;
+    border-top: 1px solid var(--it-border-soft) !important;
+    padding: 7px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    border-bottom-left-radius: 10px !important;
+    border-bottom-right-radius: 10px !important;
+}
+
+.it-bottom-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+    font-size: 10.5px !important;
+    color: var(--it-text-muted) !important;
+}
+
+.it-bottom-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+}
+
+.it-bottom-lbl {
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.25px !important;
+    color: var(--it-text-light) !important;
+}
+
+.it-bottom-strong {
+    color: var(--it-text-main) !important;
+    font-weight: 600 !important;
+}
+
+.it-bottom-muted {
+    color: var(--it-text-muted) !important;
+    font-weight: 500 !important;
+}
+
+/* Canonical Pipeline Stage Badges */
+.it-stage-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 1.5px 8px !important;
+    border-radius: 4px !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+    white-space: nowrap !important;
+}
+
+.it-stage-inw { background: #fef9c3 !important; color: #854d0e !important; border: 1px solid #fde047 !important; }
+.it-stage-sou { background: #f1f5f9 !important; color: #334155 !important; border: 1px solid #cbd5e1 !important; }
+.it-stage-scr { background: #f3e8ff !important; color: #6b21a8 !important; border: 1px solid #d8b4fe !important; }
+.it-stage-eva { background: #eff6ff !important; color: #1e40af !important; border: 1px solid #bfdbfe !important; }
+.it-stage-neg { background: #fce7f3 !important; color: #9d174d !important; border: 1px solid #fbcfe8 !important; }
+.it-stage-off { background: #ffedd5 !important; color: #9a3412 !important; border: 1px solid #fed7aa !important; }
+.it-stage-joi { background: #dcfce7 !important; color: #15803d !important; border: 1px solid #bbf7d0 !important; }
+.it-stage-rej { background: #fee2e2 !important; color: #991b1b !important; border: 1px solid #fecaca !important; }
+
+.it-substage-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 1.5px 7px !important;
+    border-radius: 4px !important;
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    background: #f8fafc !important;
+    color: var(--it-text-mid) !important;
+    border: 1px solid var(--it-border) !important;
+    white-space: nowrap !important;
+}
+
+.it-bottom-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+}
+
+.it-action-ghost {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    background: #ffffff !important;
+    color: var(--it-text-mid) !important;
+    border: 1px solid var(--it-border) !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.it-action-ghost:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: var(--it-text-main) !important;
+}
+
+.it-action-primary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 4px 11px !important;
+    border-radius: 6px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    background: #eff6ff !important;
+    color: var(--it-primary-deep) !important;
+    border: 1px solid #bfdbfe !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.it-action-primary:hover {
+    background: var(--it-primary) !important;
+    border-color: var(--it-primary) !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   Empty / Loading / Footer Pagination Cards
+   ========================================================================== */
+.it-empty-card {
+    background: #ffffff !important;
+    border: 1px solid var(--it-border) !important;
+    border-radius: 10px !important;
+    padding: 48px 20px !important;
+    text-align: center !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+.it-empty-icon {
+    width: 48px !important;
+    height: 48px !important;
+    margin: 0 auto 12px !important;
+    border-radius: 12px !important;
+    background: var(--it-primary-soft) !important;
+    color: var(--it-primary-deep) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+}
+
+.it-empty-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: var(--it-text-main) !important;
+}
+
+.it-empty-sub {
+    font-size: 12px !important;
+    color: var(--it-text-muted) !important;
+    margin-top: 4px !important;
+}
+
+.it-loading {
+    display: none;
+    background: #ffffff !important;
+    border: 1px dashed #cbd5e1 !important;
+    border-radius: 10px !important;
+    padding: 28px 16px !important;
+    text-align: center !important;
+    color: var(--it-text-muted) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    margin-bottom: 12px !important;
+}
+.it-loading.show { display: block !important; }
+
+.it-footer-card {
+    background: #ffffff !important;
+    border: 1px solid var(--it-border) !important;
+    border-radius: 10px !important;
+    padding: 8px 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+.it-showing-text {
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: var(--it-text-muted) !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+#pagination .pagi-bar {
+    padding: 0 !important;
+    border-top: none !important;
+    background: transparent !important;
+}
 #pagination .pagi-info { display: none !important; }
 
-/* Follow Up Dropdown */
-.it-followup-dropdown { position: relative; display: inline-block; margin-top: 2px; }
-.it-followup-btn { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: var(--it-radius); font-size: 10px; font-weight: 500; font-family: 'Poppins', sans-serif; border: 1px solid var(--it-border); background: white; color: var(--it-text-muted); cursor: pointer; transition: var(--it-transition); }
-.it-followup-btn:hover { background: var(--it-bg-main); color: var(--it-primary); border-color: var(--it-primary); }
-.it-followup-btn svg { width: 10px; height: 10px; }
-.it-followup-menu { position: absolute; top: calc(100% + 4px); left: 0; background: white; border: 1px solid var(--it-border); border-radius: var(--it-radius-lg); box-shadow: var(--it-shadow-lg); z-index: 50; display: none; min-width: 150px; overflow: hidden; }
-.it-followup-menu.open { display: block; }
-.it-followup-item { padding: 7px 10px; font-size: 10px; cursor: pointer; transition: var(--it-transition); display: flex; align-items: center; gap: 6px; color: var(--it-text-main); }
-.it-followup-item:hover { background: var(--it-bg-main); color: var(--it-primary); }
-.it-followup-item svg { width: 10px; height: 10px; }
+/* ==========================================================================
+   15.6" Screen Fit & Small-Screen Responsive Breakpoints
+   ========================================================================== */
+@media (max-width: 1440px) {
+    .it-card-grid {
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1.75fr) minmax(0, 1.55fr) minmax(0, 1.4fr) minmax(0, 1.6fr) !important;
+        gap: 7px !important;
+        padding: 9px 11px !important;
+    }
+    .it-subcard { padding: 7px 9px !important; }
+    .it-search-subcard { width: 250px !important; }
+}
 
-/* Tab counts update */
-.it-tab-btn { position: relative; }
+@media (max-width: 1200px) {
+    .it-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    .it-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+}
 
+@media (max-width: 768px) {
+    .it-header-card { padding: 12px 14px !important; }
+    .it-header-right { width: 100% !important; }
+    .it-search-subcard { flex: 1 1 auto !important; width: auto !important; }
+    .it-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .it-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+@media (max-width: 520px) {
+    .it-kpi-grid { grid-template-columns: minmax(0, 1fr) !important; }
+    .it-card-grid { grid-template-columns: minmax(0, 1fr) !important; }
+}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
@@ -297,166 +1561,187 @@
 
 @if(in_array("view_schedule", $userPermissions))
 
-      <!-- ===== New Interview Tracker Design ===== -->
       <div class="it-dashboard" id="interviewTrackerDashboard">
 
-        <!-- Page Heading -->
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px;">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:20px;font-weight:700;color:#181c32;line-height:1.2;">
-              Interview Tracker
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;">
-                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
+        <!-- ══════════════════════════════════════════════════════════════
+             TIER 1: TOP HEADER TOOLBAR CARD (Title + Dynamic Search + Sync)
+             ══════════════════════════════════════════════════════════════ -->
+        <div class="it-header-card">
+          <div class="it-header-left">
+            <div class="it-header-icon">
+              <i class="fas fa-calendar-check"></i>
             </div>
-            <div style="font-size:12px;color:#7e8299;margin-top:3px;">Track, schedule and manage all candidate interviews in one place.</div>
+            <div>
+              <div class="it-header-title-row">
+                <h1 class="it-header-title">Interview Tracker</h1>
+                <span class="it-header-count-badge" id="itHeaderTotalBadge">0</span>
+              </div>
+              <div class="it-header-sub">Track, schedule, evaluate feedback, and manage all candidate interviews in one place.</div>
+            </div>
           </div>
-        </div>
 
-        <!-- Stats Grid -->
-        <div class="it-stats-grid" id="statsGrid" style="grid-template-columns: repeat(4, 1fr);">
-          <div class="it-stat-card">
-            <div class="it-stat-icon-wrap it-stat-icon-blue">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <div class="it-header-right">
+            <div class="it-search-subcard">
+              <i class="fas fa-search"></i>
+              <input type="text" id="kt_tagify_2" placeholder="Search candidate, job, client, recruiter..." autocomplete="off">
+              <span id="loader_search" class="loader_search hidden_search" style="display:none;flex-shrink:0;"></span>
+              <button type="button" class="it-search-clear" id="itSearchClear" style="display:none;" title="Clear search">
+                <i class="fas fa-times"></i>
+              </button>
             </div>
-            <div class="it-stat-body">
-              <div class="it-stat-label">Interview This Month <span style="color:var(--it-primary);font-weight:600;">({{ now()->format('M Y') }})</span></div>
-              <div class="it-stat-value-row">
-                <div class="it-stat-value" id="stat-interview-month">0</div>
-                <div class="it-stat-trend it-trend-up">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                  +12%
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="it-stat-card">
-            <div class="it-stat-icon-wrap it-stat-icon-green">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
-            </div>
-            <div class="it-stat-body">
-              <div class="it-stat-label">Today's Interview <span style="color:var(--it-success);font-weight:600;">({{ now()->format('d M') }})</span></div>
-              <div class="it-stat-value-row">
-                <div class="it-stat-value" id="stat-today">0</div>
-                <div class="it-stat-trend it-trend-up">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                  +20%
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="it-stat-card">
-            <div class="it-stat-icon-wrap it-stat-icon-purple">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <div class="it-stat-body">
-              <div class="it-stat-label">Upcomings Interview</div>
-              <div class="it-stat-value-row">
-                <div class="it-stat-value" id="stat-upcoming">0</div>
-                <div class="it-stat-trend it-trend-up">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                  +5%
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="it-stat-card">
-            <div class="it-stat-icon-wrap it-stat-icon-red">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            </div>
-            <div class="it-stat-body">
-              <div class="it-stat-label">Feedback Pending</div>
-              <div class="it-stat-value-row">
-                <div class="it-stat-value" id="stat-feedback-pending">0</div>
-                <div class="it-stat-trend it-trend-down">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
-                  -8%
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Filters Bar -->
-        <div class="it-filters-bar">
-          <div class="it-search-box">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input type="text" id="kt_tagify_2" placeholder="Search candidate, job, recruiter..." autocomplete="off">
-          </div>
-          <div style="position: absolute; top: 0px; right: 36px;">
-            <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
-          </div>
-          <input type="hidden" id="sortingfilter" value="">
-          <div class="it-filter-dropdown" style="min-width: 200px;">
-            <button class="it-filter-trigger" onclick="toggleFilterMenu(this)" type="button">
-              <span class="it-label">Sort</span>
-              <span class="it-value" id="filter-sort-label">Newest Interviews</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="it-filter-menu" id="filter-menu-sort">
-              <div class="it-filter-menu-item selected" onclick="selectSort(this, '')">Newest Interviews</div>
-              <div class="it-filter-menu-item" onclick="selectSort(this, '1')">Today's Interview ({{ now()->format('d M Y') }})</div>
-              <div class="it-filter-menu-item" onclick="selectSort(this, 'Feedback Pending')">Feedback Pending</div>
-              <div class="it-filter-menu-item" onclick="selectSort(this, 'Interview Pending')">Upcoming Interviews</div>
-            </div>
-          </div>
-          <div class="it-filter-actions">
-            <button class="it-btn-reset" type="button" onclick="resetFilters()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-              Reset
+            <button type="button" class="it-refresh-btn" id="itRefreshBtn" onclick="forceSyncInterviewTracker()" title="Sync live interviews">
+              <i class="fas fa-sync-alt"></i>
+              <span>Sync</span>
             </button>
           </div>
         </div>
 
-        <!-- Table -->
-        <div class="it-table-container">
-          <div class="it-table-scroll">
-            <table class="it-data-table" id="myTable">
-              <thead>
-                <tr>
-                  <th>
-                    <div class="it-checkbox" id="selectAllCheckbox" onclick="toggleSelectAll()">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                    </div>
-                  </th>
-                  <th style="width:200px">Candidate</th>
-                  <th style="width:200px">Job Requisitions</th>
-                  <th style="width:160px">Interview Date &amp; Time</th>
-                  <th style="width:140px">Interviewers</th>
-                  <th style="width:120px">Source</th>
-                  <th style="width:100px">Stage</th>
-                  <th style="width:150px">Feedback</th>
-                </tr>
-              </thead>
-              <tbody class="text-gray-600 fw-bold" id="Interview-trackers">
-              </tbody>
-            </table>
-          </div>
-          <div class="it-loading" id="tableLoading">Loading interviews...</div>
-          <div class="it-table-footer">
-            <div id="showingText">Loading...</div>
-            <div style="display:flex;align-items:center;gap:14px">
-              <div class="it-pagination" id="pagination"></div>
+        <!-- ══════════════════════════════════════════════════════════════
+             TIER 2: EXECUTIVE KPI METRIC STRIP (4 Interactive Filter Cards)
+             ══════════════════════════════════════════════════════════════ -->
+        <div class="it-kpi-grid" id="statsGrid">
+          <button type="button" class="it-kpi-card" data-kpi-tab="this_month" onclick="filterByKpi('this_month')">
+            <div class="it-kpi-icon icon-blue">
+              <i class="far fa-calendar-alt"></i>
             </div>
+            <div class="it-kpi-body">
+              <div class="it-kpi-label">Interviews This Month</div>
+              <div class="it-kpi-val-row">
+                <span class="it-kpi-num" id="stat-interview-month">0</span>
+                <span class="it-kpi-hint">{{ now()->format('M Y') }}</span>
+              </div>
+            </div>
+          </button>
+
+          <button type="button" class="it-kpi-card" data-kpi-tab="today" onclick="filterByKpi('today')">
+            <div class="it-kpi-icon icon-emerald">
+              <i class="fas fa-calendar-day"></i>
+            </div>
+            <div class="it-kpi-body">
+              <div class="it-kpi-label">Today's Interviews</div>
+              <div class="it-kpi-val-row">
+                <span class="it-kpi-num" id="stat-today">0</span>
+                <span class="it-kpi-hint">{{ now()->format('d M') }}</span>
+              </div>
+            </div>
+          </button>
+
+          <button type="button" class="it-kpi-card" data-kpi-tab="upcoming" onclick="filterByKpi('upcoming')">
+            <div class="it-kpi-icon icon-purple">
+              <i class="far fa-clock"></i>
+            </div>
+            <div class="it-kpi-body">
+              <div class="it-kpi-label">Upcoming Interviews</div>
+              <div class="it-kpi-val-row">
+                <span class="it-kpi-num" id="stat-upcoming">0</span>
+                <span class="it-kpi-hint">Scheduled ahead</span>
+              </div>
+            </div>
+          </button>
+
+          <button type="button" class="it-kpi-card" data-kpi-tab="pending_feedback" onclick="filterByKpi('pending_feedback')">
+            <div class="it-kpi-icon icon-red">
+              <i class="far fa-comment-dots"></i>
+            </div>
+            <div class="it-kpi-body">
+              <div class="it-kpi-label">Feedback Pending</div>
+              <div class="it-kpi-val-row">
+                <span class="it-kpi-num" id="stat-feedback-pending">0</span>
+                <span class="it-kpi-hint">Action required</span>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             TIER 3: SUB-TABS & FILTERS CARD (Pure White #ffffff)
+             ══════════════════════════════════════════════════════════════ -->
+        <div class="it-tabs-card">
+          <div class="it-tabs-group">
+            <button type="button" class="it-tab-btn active" data-tab="all" onclick="filterByTab('all')">
+              <span>All Interviews</span>
+              <span class="it-tab-badge" id="tab-count-all">0</span>
+            </button>
+            <button type="button" class="it-tab-btn" data-tab="today" onclick="filterByTab('today')">
+              <span>Today</span>
+              <span class="it-tab-badge badge-today" id="tab-count-today">0</span>
+            </button>
+            <button type="button" class="it-tab-btn" data-tab="upcoming" onclick="filterByTab('upcoming')">
+              <span>Upcoming</span>
+              <span class="it-tab-badge badge-upcoming" id="tab-count-upcoming">0</span>
+            </button>
+            <button type="button" class="it-tab-btn" data-tab="pending_feedback" onclick="filterByTab('pending_feedback')">
+              <span>Feedback Pending</span>
+              <span class="it-tab-badge badge-pending" id="tab-count-pending">0</span>
+            </button>
+            <button type="button" class="it-tab-btn" data-tab="selected" onclick="filterByTab('selected')">
+              <span>Selected</span>
+              <span class="it-tab-badge badge-selected" id="tab-count-selected">0</span>
+            </button>
+            <button type="button" class="it-tab-btn" data-tab="rescheduled" onclick="filterByTab('rescheduled')">
+              <span>Rescheduled</span>
+              <span class="it-tab-badge badge-resched" id="tab-count-rescheduled">0</span>
+            </button>
+            <button type="button" class="it-tab-btn" data-tab="rejected" onclick="filterByTab('rejected')">
+              <span>Rejected</span>
+              <span class="it-tab-badge badge-rejected" id="tab-count-rejected">0</span>
+            </button>
           </div>
+
+          <div class="it-inline-filters">
+            <div class="it-filter-pill">
+              <span class="it-filter-pill-lbl"><i class="fas fa-video text-muted"></i> Mode:</span>
+              <select id="itModeFilter" class="form-select form-select-sm it-filter-select">
+                <option value="All" selected>All Modes</option>
+                <option value="2">Video Call</option>
+                <option value="1">Telecon</option>
+                <option value="3">Face to Face</option>
+              </select>
+            </div>
+
+            <div class="it-filter-pill">
+              <span class="it-filter-pill-lbl"><i class="fas fa-sort-amount-down text-muted"></i> Sort:</span>
+              <select id="sortingfilter" class="form-select form-select-sm it-filter-select">
+                <option value="" selected>Newest Interviews</option>
+                <option value="1">Today's Interviews ({{ now()->format('d M Y') }})</option>
+                <option value="4">Soonest Scheduled</option>
+                <option value="3">Latest Scheduled</option>
+                <option value="Feedback Pending">Feedback Pending</option>
+                <option value="Interview Pending">Upcoming Interviews</option>
+              </select>
+            </div>
+
+            <button type="button" class="it-reset-btn" onclick="resetFilters()" title="Reset search, tabs, and filters">
+              <i class="fas fa-undo-alt"></i>
+              <span>Reset</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             TIER 4: PRIMARY INTERVIEW CARD STREAM & PAGINATION CARD
+             ══════════════════════════════════════════════════════════════ -->
+        <div class="it-stream-wrapper">
+          <div class="it-loading" id="tableLoading">
+            <i class="fas fa-spinner fa-spin me-2 text-primary"></i> Loading interviews...
+          </div>
+          <div id="Interview-trackers" class="it-cards-stream"></div>
+        </div>
+
+        <div class="it-footer-card">
+          <div id="showingText" class="it-showing-text">Loading...</div>
+          <div id="pagination" class="it-pagination"></div>
         </div>
 
       </div>
-      <!-- ===== End New Design ===== -->
 
 @else
-      <div class="it-table-container" style="margin-top:20px">
-        <table class="it-data-table" id="no-access">
-          <thead>
-            <tr>
-              <th style="text-align:center">ACCESS DENIED CONTACT ADMINISTRATOR</th>
-            </tr>
-          </thead>
-        </table>
+      <div class="it-empty-card" style="margin-top:20px;">
+        <div class="it-empty-icon" style="background:#fef2f2!important;color:#dc2626!important;">
+          <i class="fas fa-lock"></i>
+        </div>
+        <div class="it-empty-title">Access Denied</div>
+        <div class="it-empty-sub">You do not have permission to view Interview Tracker. Contact your administrator.</div>
       </div>
 @endif
 
@@ -467,7 +1752,7 @@
 
 <!--begin::Modal - Interview Feedback-->
 <div href="javascript:void(0);" id="intervied_feedback_toggle" class="text-dark fw-bolder text-hover-primary fs-6" data-bs-toggle="modal" data-bs-target="#interview_feedback"></div>
-<div class="modal fade" id="interview_feedback" tabindex="-1" aria-hidden="true" >
+<div class="modal fade" id="interview_feedback" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-xl">
     <div class="modal-content custmbg">
       <div class="modal-header flex-stack">
@@ -526,7 +1811,7 @@
 </div>
 <!--end::Interview Link Popup-->
 
-<!--begin::JD / Resume overlay panel (self-contained fixed overlay — cannot push the modal) -->
+<!--begin::JD / Resume overlay panel (self-contained fixed overlay) -->
 <style>
   #jdPanelOverlay { position: fixed; inset: 0; z-index: 1200; display: none; }
   #jdPanelOverlay.show { display: block; }
@@ -543,7 +1828,6 @@
   .jdp-close { border: none; background: transparent; color: #dc2626; cursor: pointer; padding: 4px; display: inline-flex; border-radius: 6px; }
   .jdp-close:hover { background: #fef2f2; }
   #jdPanelBody { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
-  /* Read-only here: hide management actions and the fragment's own close button (the extra X) */
   #jdPanelBody .top-actions, #jdPanelBody .page-close, #jdPanelBody #kt_activitiesJob_close { display: none !important; }
 </style>
 <div id="jdPanelOverlay">
@@ -577,21 +1861,78 @@
 @push('footer-script')
 
 <script>
-// ── Debounced Search & Filter Triggers ──────────────────────────────────────
+// ── Debounced Search, Clear & Filter Triggers ──────────────────────────────
 var itSearchDebounceTimer = null;
 
 $(document).ready(function() {
     $('#kt_tagify_2').on('input', function() {
+        var val = $(this).val() || '';
+        $('#itSearchClear').toggle(val.length > 0);
         clearTimeout(itSearchDebounceTimer);
         itSearchDebounceTimer = setTimeout(function() {
             itCurrentPage = 1;
             fetchCandidates(1);
-        }, 350);
+        }, 300);
+    });
+
+    $('#itSearchClear').on('click', function() {
+        $('#kt_tagify_2').val('');
+        $(this).hide();
+        itCurrentPage = 1;
+        fetchCandidates(1);
     });
 
     $('#sortingfilter').on('change', function() {
         itCurrentPage = 1;
         fetchCandidates(1);
+    });
+
+    $('#itModeFilter').on('change', function() {
+        filterValues.mode = $(this).val() || 'All';
+        itCurrentPage = 1;
+        fetchCandidates(1);
+    });
+});
+
+// Open Job Description slide-over panel from Requisition sub-card
+$(document).on('click', '.js-it-open-jd', function(e) {
+    e.preventDefault();
+    var jobId = $(this).data('job-id');
+    if (!jobId) return;
+    var isDirect = String($(this).data('direct')) === '1';
+    var url = "{{ route('service_company.jobs.viewmore', ':id') }}".replace(':id', jobId);
+    url += isDirect ? '?viewmore=clientviewmore' : '?viewmore=viewmore';
+    if (typeof openJdPanel === 'function') {
+        openJdPanel('Job Description #' + jobId, url);
+    }
+});
+
+// Quick Reschedule button on Interview Card bottom strip
+$(document).on('click', '.js-it-reschedule-btn', function(e) {
+    e.preventDefault();
+    var wiseId = $(this).data('wise-id');
+    var intId = $(this).data('interview-id') || '';
+    if (!wiseId) return;
+    var url = "{{ route('service_company.job-applications.create-schedule', ':id') }}".replace(':id', wiseId);
+    url += '?reschedule=1' + (intId ? '&interview_id=' + intId : '');
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    (function(){
+        var _el = document.getElementById('interview_schedule_drawer');
+        if (!_el) return;
+        if (!_el.classList.contains('drawer')) _el.classList.add('drawer', 'drawer-end');
+        _el.classList.add('drawer-on');
+        _el.style.transform = 'none';
+    })();
+    if (typeof window.isdShellSetStep === 'function') window.isdShellSetStep('main');
+    $.ajax({
+        type: 'GET',
+        url: url,
+        beforeSend: function() {
+            $('#app_interview_schedule_content').html('<img src="' + baseurl + '" height="35px" width="100%">');
+        },
+        success: function(response) {
+            $('#app_interview_schedule_content').html(response.view || response);
+        }
     });
 });
 
@@ -606,7 +1947,7 @@ $(document).on('click', '.notAllow-feedback', function () {
     });
 });
 
-$(document).on('click', '.show-feedback', async function (e) {
+$(document).on('click', '.show-feedback', async function () {
     const connectedCandidateShowCustomCheck = await isInternetAvailablecheck();
     if (!connectedCandidateShowCustomCheck) {
         Swal.fire({
@@ -628,7 +1969,6 @@ $(document).on('click', '.show-feedback', async function (e) {
 
     var url = "{{ route('service_company.interview-schedule.showfeedback',':id') }}";
     url = url.replace(':id', id);
-    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
     $.ajax({
         type: 'GET',
         url: url,
@@ -638,8 +1978,8 @@ $(document).on('click', '.show-feedback', async function (e) {
         success: function (response) {
             if (response.status == "success") {
                 $('#load_interview_feedback').html(response.view);
-                if(response.download_show >=1){
-                    $('.urlchange').removeClass('d-none')
+                if (response.download_show >= 1) {
+                    $('.urlchange').removeClass('d-none');
                 }
             }
         }
@@ -647,8 +1987,6 @@ $(document).on('click', '.show-feedback', async function (e) {
 });
 
 // Reset the feedback modal on close so it always re-loads fresh next time
-// (fixes: had to refresh the page before the popup would open again, because the
-//  injected full-screen overlay stayed in the DOM after closing).
 $(document).on('hidden.bs.modal', '#interview_feedback', function () {
     $('#load_interview_feedback').html('&nbsp;');
     $('.modal-backdrop').remove();
@@ -686,11 +2024,10 @@ $(document).on('click', '.interview_mention_link', function(){
     });
 });
 
-// ── Pagination & UI Preference State (Phase 2 Local Storage Rule) ────────────
+// ── Pagination & UI Preference State ───────────────────────────────────────
 var itCurrentPage = 1;
 var itCurrentSize = 10;
 
-// Restore non-authoritative UI preferences safely
 try {
     var itSavedSize = parseInt(localStorage.getItem('it_pref_page_size'), 10);
     if (itSavedSize && [10, 20, 50, 100].indexOf(itSavedSize) !== -1) {
@@ -713,8 +2050,6 @@ $(document).ready(function() {
 
     fetchCandidates(1, '', isReload);
 
-    // Delegate clicks to both page-number buttons and prev/next arrows rendered
-    // by the pagination.blade.php partial (class .pagi-page and .pagi-arrow).
     $(document).on('click', '#pagination [data-page]', function(e) {
         e.preventDefault();
         var page = parseInt($(this).data('page'), 10);
@@ -723,7 +2058,6 @@ $(document).ready(function() {
         fetchCandidates(itCurrentPage);
     });
 
-    // "Rows per page" select rendered inside #pagination by the partial.
     $(document).on('change', '#pagination [data-perpage]', function() {
         itCurrentSize = parseInt($(this).val(), 10) || 10;
         try {
@@ -747,82 +2081,29 @@ async function isInternetAvailablecheck() {
     }
 }
 
-// ===== New Design Helper Functions =====
-
-let itSelectedIds = new Set();
-
-function toggleSelectAll() {
-    const checkbox = document.getElementById('selectAllCheckbox');
-    const isChecked = checkbox.classList.contains('checked');
-    if (isChecked) {
-        checkbox.classList.remove('checked');
-        document.querySelectorAll('.it-checkbox[data-row-check]').forEach(cb => cb.classList.remove('checked'));
-        itSelectedIds.clear();
-    } else {
-        checkbox.classList.add('checked');
-        document.querySelectorAll('.it-checkbox[data-row-check]').forEach(cb => cb.classList.add('checked'));
-    }
-}
-
-function toggleRowSelect(el, id) {
-    el.classList.toggle('checked');
-    if (el.classList.contains('checked')) {
-        itSelectedIds.add(id);
-    } else {
-        itSelectedIds.delete(id);
-    }
-}
-
-// ===== New Design Interactive Functions =====
-
+// ── Tab, KPI & Filter Controllers ──────────────────────────────────────────
 let activeTab = 'all';
 let filterValues = { stage: 'All', status: 'All', owner: 'All', vendor: 'All', mode: 'All' };
 
-function toggleFilterMenu(btn) {
-    const menu = btn.nextElementSibling;
-    const isOpen = menu.classList.contains('open');
-    document.querySelectorAll('.it-filter-menu.open').forEach(m => m.classList.remove('open'));
-    if (!isOpen) menu.classList.add('open');
-}
-
-function selectFilter(el, type, value) {
-    const menu = el.closest('.it-filter-menu');
-    const trigger = menu.previousElementSibling;
-    const labelSpan = trigger.querySelector('.it-value');
-
-    menu.querySelectorAll('.it-filter-menu-item').forEach(item => item.classList.remove('selected'));
-    el.classList.add('selected');
-    labelSpan.textContent = value;
-    menu.classList.remove('open');
-
-    filterValues[type] = value;
+function syncActiveKpiAndTabs(tab) {
+    document.querySelectorAll('.it-tab-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+    });
+    document.querySelectorAll('.it-kpi-card').forEach(function(card) {
+        card.classList.toggle('it-kpi-active', card.getAttribute('data-kpi-tab') === tab);
+    });
 }
 
 function filterByTab(tab) {
-    activeTab = tab;
-    document.querySelectorAll('.it-tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector('.it-tab-btn[data-tab="' + tab + '"]').classList.add('active');
+    activeTab = tab || 'all';
+    syncActiveKpiAndTabs(activeTab);
+    itCurrentPage = 1;
     fetchCandidates(1, $('#kt_tagify_2').val());
 }
 
-function applyFilters() {
-    fetchCandidates(1, $('#kt_tagify_2').val());
-}
-
-// Sort selection -> drives custom_hiringtype (Newest / Today / Feedback Pending / Upcoming) and reloads
-function selectSort(el, value) {
-    var menu = el.closest('.it-filter-menu');
-    var trigger = menu ? menu.previousElementSibling : null;
-    menu.querySelectorAll('.it-filter-menu-item').forEach(i => i.classList.remove('selected'));
-    el.classList.add('selected');
-    if (trigger) {
-        var lbl = trigger.querySelector('.it-value');
-        if (lbl) lbl.textContent = el.textContent.trim();
-    }
-    menu.classList.remove('open');
-    $('#sortingfilter').val(value);
-    activeTab = 'all';
-    fetchCandidates(1, $('#kt_tagify_2').val());
+function filterByKpi(kpiTab) {
+    var nextTab = (activeTab === kpiTab) ? 'all' : kpiTab;
+    filterByTab(nextTab);
 }
 
 function resetFilters() {
@@ -831,22 +2112,22 @@ function resetFilters() {
         window.JeroInterviewScheduleLocalStore.purge();
     }
     $('#sortingfilter').val('');
-    var sortMenu = document.getElementById('filter-menu-sort');
-    if (sortMenu) {
-        sortMenu.querySelectorAll('.it-filter-menu-item').forEach(function (item, idx) {
-            item.classList.toggle('selected', idx === 0);
-        });
-    }
-    var sortLabel = document.getElementById('filter-sort-label');
-    if (sortLabel) sortLabel.textContent = 'Newest Interviews';
+    $('#itModeFilter').val('All');
+    filterValues.mode = 'All';
     activeTab = 'all';
+    syncActiveKpiAndTabs('all');
     $('#kt_tagify_2').val('');
-    fetchCandidates(1, '');
+    $('#itSearchClear').hide();
+    itCurrentPage = 1;
+    fetchCandidates(1, '', true);
 }
 
-function openDatePicker() {
-    // Placeholder for date picker functionality
-    alert('Date picker functionality to be implemented');
+function forceSyncInterviewTracker() {
+    var $btn = $('#itRefreshBtn');
+    $btn.addClass('is-syncing');
+    fetchCandidates(itCurrentPage, $('#kt_tagify_2').val(), true).finally(function() {
+        setTimeout(function() { $btn.removeClass('is-syncing'); }, 350);
+    });
 }
 
 function toggleFollowUp(btn) {
@@ -856,18 +2137,18 @@ function toggleFollowUp(btn) {
     if (!isOpen) menu.classList.add('open');
 }
 
-// ── Browser-RAM LRU Cache for Loaded Views ─────────────────────────────────
+// ── Browser-RAM LRU Cache ──────────────────────────────────────────────────
 var itRamCache = new Map();
-var IT_MAX_RAM_CACHE = 25; // Keep memory strictly bounded
+var IT_MAX_RAM_CACHE = 25;
 var itCurrentXhr = null;
 
 // ── JeroInterviewScheduleLocalStore — Native Browser IndexedDB Engine ────────
 const JeroInterviewScheduleLocalStore = (function() {
     const DB_NAME = 'jero_interview_schedule_db';
-    const DB_VERSION = 1;
+    const DB_VERSION = 2; // Bumped for Card + Sub-Card HTML schema
     const CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
     const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
-    const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
+    const CACHE_TTL_MS = 15 * 60 * 1000;
 
     let dbPromise = null;
 
@@ -882,6 +2163,8 @@ const JeroInterviewScheduleLocalStore = (function() {
                     const db = e.target.result;
                     if (!db.objectStoreNames.contains('schedule_cache')) {
                         db.createObjectStore('schedule_cache', { keyPath: 'cache_key' });
+                    } else {
+                        try { e.target.transaction.objectStore('schedule_cache').clear(); } catch (err) {}
                     }
                     if (!db.objectStoreNames.contains('meta')) {
                         db.createObjectStore('meta', { keyPath: 'id' });
@@ -896,7 +2179,6 @@ const JeroInterviewScheduleLocalStore = (function() {
                         metaReq.onsuccess = function() {
                             const meta = metaReq.result;
                             if (meta && (meta.tenant_id !== CURRENT_TENANT_ID || meta.user_id !== CURRENT_USER_ID)) {
-                                // Cross-tenant partition wipe: purge immediately to prevent cross-company data leakage
                                 const wipeTx = db.transaction(['schedule_cache', 'meta'], 'readwrite');
                                 wipeTx.objectStore('schedule_cache').clear();
                                 wipeTx.objectStore('meta').put({ id: 'current_context', tenant_id: CURRENT_TENANT_ID, user_id: CURRENT_USER_ID, updated_at: Date.now() });
@@ -954,9 +2236,7 @@ const JeroInterviewScheduleLocalStore = (function() {
                     payload: payload,
                     timestamp: Date.now()
                 });
-            } catch (e) {
-                // Non-fatal if storage quota exceeded
-            }
+            } catch (e) {}
         },
         purge: async function() {
             const db = await getDB();
@@ -964,46 +2244,44 @@ const JeroInterviewScheduleLocalStore = (function() {
             try {
                 const tx = db.transaction(['schedule_cache'], 'readwrite');
                 tx.objectStore('schedule_cache').clear();
-            } catch (e) {
-                // Non-fatal
-            }
+            } catch (e) {}
         }
     };
 })();
 window.JeroInterviewScheduleLocalStore = JeroInterviewScheduleLocalStore;
 
-// ── Realtime Delta DOM Patcher (Targeted DOM Update without Full Reload) ───
+// ── Realtime Delta DOM Patcher (Targeted Card Update at 0ms) ───────────────
 function patchInterviewRowDelta(interviewId, delta) {
     if (!interviewId || !delta) return false;
-    var $row = $('tr[data-interview-id="' + interviewId + '"]');
-    if (!$row.length) return false;
+    var $card = $('.it-card[data-interview-id="' + interviewId + '"]');
+    if (!$card.length) return false;
 
-    // Follow-up status delta patch
+    // 1. Follow-up status delta patch
     if (delta.followup_status) {
-        var trigger = $row.find('.it-followup-trigger');
+        var $trigger = $card.find('.it-followup-trigger');
         var labels = { 'confirmed': 'Confirmed', 'no-response': 'No Response', 'rescheduled': 'Rescheduled' };
-        var colors = { 'confirmed': 'var(--it-success)', 'no-response': 'var(--it-danger)', 'rescheduled': 'var(--it-primary)' };
-        if (trigger.length) {
-            var lbl = trigger.find('.fu-label');
-            if (lbl.length) lbl.text(labels[delta.followup_status] || 'Follow Up');
-            trigger.css({ color: colors[delta.followup_status] || '', borderColor: colors[delta.followup_status] || '' });
-            trigger.find('.fu-cta-icon').remove();
+        if ($trigger.length) {
+            $trigger.find('.fu-label').text(labels[delta.followup_status] || 'Follow Up');
+            $trigger.removeClass('is-confirmed is-no-response is-rescheduled').addClass('is-' + delta.followup_status);
+            $trigger.find('.fu-cta-icon').remove();
         }
     }
 
-    // Stage delta patch
+    // 2. Stage delta patch
     if (delta.stage) {
-        var $stageCell = $row.find('.it-stage-cell .it-badge');
-        if ($stageCell.length) {
-            $stageCell.text(delta.stage);
+        var $stageBadge = $card.find('.it-stage-cell .it-stage-badge');
+        if ($stageBadge.length) {
+            $stageBadge.text(delta.stage);
         }
     }
 
-    // Feedback delta patch (Immediate 0ms row update upon feedback submission)
+    // 3. Feedback delta patch (Immediate 0ms card update upon feedback submission)
     if (delta.feedback) {
         var fb = delta.feedback;
         var attId = parseInt(fb.available_status, 10) || 0;
-        var $fbCell = $row.find('.it-feedback-cell');
+        var $fbCell = $card.find('.it-feedback-cell');
+        var $evalPill = $card.find('.it-subcard-feedback .it-eval-pill');
+
         if ($fbCell.length) {
             var attLabelMap = {
                 1: 'Attended',
@@ -1028,50 +2306,62 @@ function patchInterviewRowDelta(interviewId, delta) {
                 'strong_no_hire': 'Strong No Hire'
             };
             var recStyles = {
-                'strong_hire': { bg: '#dcfce7', color: '#16a34a' },
-                'hire': { bg: '#dcfce7', color: '#16a34a' },
-                'consider': { bg: '#fef3c7', color: '#d97706' },
-                'no_hire': { bg: '#fee2e2', color: '#dc2626' },
-                'strong_no_hire': { bg: '#fee2e2', color: '#dc2626' }
+                'strong_hire': { bg: '#dcfce7', color: '#15803d' },
+                'hire': { bg: '#dcfce7', color: '#15803d' },
+                'consider': { bg: '#fef3c7', color: '#b45309' },
+                'no_hire': { bg: '#fee2e2', color: '#b91c1c' },
+                'strong_no_hire': { bg: '#fee2e2', color: '#b91c1c' }
             };
 
             var html = '';
             if (attId === 1) {
                 var resKey = fb.interview_result || '';
                 var resText = resultLabels[resKey] || (resKey ? resKey : 'Feedback Pending');
-                var resColor = 'var(--it-success)';
+                var resColor = '#10b981';
+                var accentColor = '#10b981';
                 if (resKey === 'rejected' || resKey === 'fake_proxy') {
-                    resColor = 'var(--it-danger)';
+                    resColor = '#ef4444';
+                    accentColor = '#ef4444';
                 } else if (resKey === 'hold' || resKey === 'feedback_pending') {
-                    resColor = 'var(--it-warning)';
+                    resColor = '#d97706';
+                    accentColor = '#f59e0b';
+                }
+                $card.css('border-left', '3.5px solid ' + accentColor);
+                if ($evalPill.length) {
+                    $evalPill.removeClass('it-eval-scheduled it-eval-pending it-eval-noshow it-eval-rescheduled').addClass('it-eval-attended').text('Attended');
                 }
 
-                html += '<span style="font-size: 10px; font-weight: 600; color: ' + resColor + '; display: inline-flex; align-items: center; gap: 3px;">' +
-                    '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ' +
-                    $('<div>').text(resText).html() +
-                    '</span>';
+                html += '<div class="it-fb-status-row" style="color: ' + resColor + ';">' +
+                    '<i class="fas fa-check-circle"></i> ' +
+                    '<span>' + $('<div>').text(resText).html() + '</span>' +
+                    '</div>';
 
                 var recKey = fb.overall_recommendation || '';
                 if (recKey && recLabels[recKey]) {
-                    var rStyle = recStyles[recKey] || { bg: '#eef2ff', color: '#4f46e5' };
-                    html += '<span style="display:inline-flex;align-items:center;width:fit-content;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:600;background:' + rStyle.bg + ';color:' + rStyle.color + ';">' +
+                    var rStyle = recStyles[recKey] || { bg: '#eff6ff', color: '#2563eb' };
+                    html += '<div class="it-fb-badges-row"><span class="it-rec-pill" style="background:' + rStyle.bg + ';color:' + rStyle.color + ';">' +
                         $('<div>').text(recLabels[recKey]).html() +
-                        '</span>';
+                        '</span></div>';
                 }
 
-                html += '<button type="button" class="it-feedback-btn it-feedback-btn-outline-green show-feedback" data-row-id="' + interviewId + '">' +
-                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="10" r="3"/></svg> ' +
-                    'View Feedback' +
+                html += '<button type="button" class="it-feedback-btn it-fb-btn-view show-feedback" data-row-id="' + interviewId + '">' +
+                    '<i class="far fa-eye"></i> View Feedback' +
                     '</button>';
+                $card.find('.js-it-reschedule-btn').remove();
             } else if (attId > 1) {
                 var attText = attLabelMap[attId] || 'Not Attended';
-                html += '<span style="font-size: 10px; font-weight: 600; color: var(--it-warning); display: inline-flex; align-items: center; gap: 3px;">' +
-                    '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ' +
-                    $('<div>').text(attText).html() +
-                    '</span>';
-                html += '<button type="button" class="it-feedback-btn show-feedback" data-row-id="' + interviewId + '" style="border:1px solid var(--it-border);color:var(--it-text-muted);background:#fff;">' +
-                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg> ' +
-                    'No Feedback' +
+                $card.css('border-left', '3.5px solid ' + (attId === 4 || attId === 7 ? '#ef4444' : '#f59e0b'));
+                if ($evalPill.length) {
+                    $evalPill.removeClass('it-eval-scheduled it-eval-pending it-eval-attended')
+                        .addClass(attId === 3 ? 'it-eval-rescheduled' : 'it-eval-noshow')
+                        .text(attId === 3 ? 'Rescheduled' : (attId === 2 ? 'No Show' : 'Not Attended'));
+                }
+                html += '<div class="it-fb-status-row" style="color: #d97706;">' +
+                    '<i class="fas fa-exclamation-triangle"></i> ' +
+                    '<span>' + $('<div>').text(attText).html() + '</span>' +
+                    '</div>';
+                html += '<button type="button" class="it-feedback-btn it-fb-btn-neutral show-feedback" data-row-id="' + interviewId + '">' +
+                    '<i class="far fa-file-alt"></i> No Feedback' +
                     '</button>';
             }
 
@@ -1086,22 +2376,22 @@ function patchInterviewRowDelta(interviewId, delta) {
 window.patchInterviewRowDelta = patchInterviewRowDelta;
 
 function renderInterviewData(response) {
+    $('#tableLoading').removeClass('show');
     $('.loadingMessage').css({ display: 'none' });
     $('.loader_search').css({ display: 'none' });
     $('.page-loader').css('display', 'none');
+
     $('#Interview-trackers').html(response.html);
     $('#pagination').html(response.pagination);
 
-    // Update the "showing" text
     if (response.from !== undefined && response.to !== undefined && response.total !== undefined) {
         $('#showingText').text(
-            'Showing ' + response.from + ' to ' + response.to + ' of ' + response.total + ' records'
+            'Showing ' + response.from + ' to ' + response.to + ' of ' + response.total + ' interviews'
         );
-    } else if (response.total) {
-        $('#showingText').text('Showing ' + response.total + ' records');
+    } else if (response.total !== undefined) {
+        $('#showingText').text('Showing ' + response.total + ' interviews');
     }
 
-    // Update stats if provided
     if (response.stats) {
         $('#stat-interview-month').text(response.stats.interview_month ?? 0);
         $('#stat-today').text(response.stats.today ?? 0);
@@ -1109,19 +2399,19 @@ function renderInterviewData(response) {
         $('#stat-feedback-pending').text(response.stats.feedback_pending ?? 0);
     }
 
-    // Update tab counts if provided
-    if (response.tab_counts) {
-        if (response.tab_counts.all)              $('#tab-count-all').text(response.tab_counts.all);
-        if (response.tab_counts.today)            $('#tab-count-today').text(response.tab_counts.today);
-        if (response.tab_counts.upcoming)         $('#tab-count-upcoming').text(response.tab_counts.upcoming);
-        if (response.tab_counts.pending_feedback) $('#tab-count-pending').text(response.tab_counts.pending_feedback);
-        if (response.tab_counts.selected)         $('#tab-count-selected').text(response.tab_counts.selected);
-        if (response.tab_counts.rejected)         $('#tab-count-rejected').text(response.tab_counts.rejected);
-        if (response.tab_counts.rescheduled)      $('#tab-count-rescheduled').text(response.tab_counts.rescheduled);
-    }
+    var tc = response.tab_counts || {};
+    var totalAll = tc.all !== undefined ? tc.all : (response.total ?? 0);
+    $('#itHeaderTotalBadge').text(totalAll);
+    $('#tab-count-all').text(totalAll);
+    $('#tab-count-today').text(tc.today ?? (response.stats ? (response.stats.today ?? 0) : 0));
+    $('#tab-count-upcoming').text(tc.upcoming ?? (response.stats ? (response.stats.upcoming ?? 0) : 0));
+    $('#tab-count-pending').text(tc.pending_feedback ?? (response.stats ? (response.stats.feedback_pending ?? 0) : 0));
+    $('#tab-count-selected').text(tc.selected ?? 0);
+    $('#tab-count-rejected').text(tc.rejected ?? 0);
+    $('#tab-count-rescheduled').text(tc.rescheduled ?? 0);
 }
 
-// ── Phase 5: Failure Matrix & Concurrency Safety ────────────────────────────
+// ── Failure Matrix & Concurrency Safety ────────────────────────────────────
 var itPendingFollowUps = new Set();
 
 function itHandleAjaxFailure(xhr, defaultMsg) {
@@ -1133,9 +2423,7 @@ function itHandleAjaxFailure(xhr, defaultMsg) {
             icon: "warning",
             confirmButtonText: "Log In",
             customClass: { confirmButton: "btn btn-primary" }
-        }).then(function() {
-            window.location.reload();
-        });
+        }).then(function() { window.location.reload(); });
         return;
     }
     if (status === 419) {
@@ -1145,9 +2433,7 @@ function itHandleAjaxFailure(xhr, defaultMsg) {
             icon: "info",
             confirmButtonText: "Refresh Now",
             customClass: { confirmButton: "btn btn-primary" }
-        }).then(function() {
-            window.location.reload();
-        });
+        }).then(function() { window.location.reload(); });
         return;
     }
     if (status === 403) {
@@ -1181,17 +2467,11 @@ function itHandleAjaxFailure(xhr, defaultMsg) {
 
 function setFollowUpStatus(el, id, status) {
     document.querySelectorAll('.it-followup-menu.open').forEach(m => m.classList.remove('open'));
-    
-    // Double-click / rapid-click mutex
+
     if (itPendingFollowUps.has(id)) {
         return;
     }
     itPendingFollowUps.add(id);
-
-    var dropdown = el.closest('.it-followup-dropdown');
-    var trigger = dropdown ? dropdown.querySelector('.it-followup-trigger') : null;
-    var labels = { 'confirmed': 'Confirmed', 'no-response': 'No Response', 'rescheduled': 'Rescheduled' };
-    var colors = { 'confirmed': 'var(--it-success)', 'no-response': 'var(--it-danger)', 'rescheduled': 'var(--it-primary)' };
 
     $.ajax({
         url: '{!! route('service_company.interview-schedule.followup_update') !!}',
@@ -1203,14 +2483,6 @@ function setFollowUpStatus(el, id, status) {
                 itRamCache.clear();
                 JeroInterviewScheduleLocalStore.purge();
                 patchInterviewRowDelta(id, { followup_status: status });
-                if (trigger) {
-                    var lbl = trigger.querySelector('.fu-label');
-                    if (lbl) lbl.textContent = labels[status] || 'Follow Up';
-                    trigger.style.color = colors[status] || '';
-                    trigger.style.borderColor = colors[status] || '';
-                    var ctaIcon = trigger.querySelector('.fu-cta-icon');
-                    if (ctaIcon) ctaIcon.remove();
-                }
             } else {
                 Swal.fire({ text: (resp && resp.msg) ? resp.msg : 'Could not update follow-up status.', icon: 'error', confirmButtonText: 'Ok' });
             }
@@ -1222,7 +2494,7 @@ function setFollowUpStatus(el, id, status) {
     });
 }
 
-// Update fetchCandidates to include 3-Layer Caching: RAM -> IndexedDB -> Server
+// ── 3-Layer Caching Fetch Pipeline: RAM -> IndexedDB -> Server ─────────────
 async function fetchCandidates(page, search, forceRefresh) {
     if (page !== undefined) { itCurrentPage = page; }
 
@@ -1257,13 +2529,11 @@ async function fetchCandidates(page, search, forceRefresh) {
             window._jero_it_ram_mounted_at = Date.now();
         }
 
-        // 1. Layer 1: Browser RAM lookup first (0ms instantaneous page turn / tab switch)
         if (itRamCache.has(cacheKey)) {
             renderInterviewData(itRamCache.get(cacheKey));
             return;
         }
 
-        // 2. Layer 2: Native IndexedDB lookup (< 15ms instant render on refresh / back navigation)
         var idbCached = await JeroInterviewScheduleLocalStore.get(cacheKey);
         if (idbCached) {
             itRamCache.set(cacheKey, idbCached);
@@ -1272,15 +2542,14 @@ async function fetchCandidates(page, search, forceRefresh) {
         }
     }
 
-    // 3. Layer 3: Server API (only when hitting server)
     if (itCurrentXhr && itCurrentXhr.readyState !== 4) {
         itCurrentXhr.abort();
     }
 
     if ($('#kt_tagify_2').val() !== '') {
-        $('.loader_search').css({ display: 'block' });
+        $('.loader_search').css({ display: 'inline-block' });
     } else {
-        $('.page-loader').css('display', 'flex');
+        $('#tableLoading').addClass('show');
     }
 
     itCurrentXhr = $.ajax({
@@ -1288,22 +2557,19 @@ async function fetchCandidates(page, search, forceRefresh) {
         type: 'GET',
         data: payload,
         success: function(response) {
-            // Save in bounded RAM cache (Layer 1)
             if (itRamCache.size >= IT_MAX_RAM_CACHE) {
                 var oldestKey = itRamCache.keys().next().value;
                 itRamCache.delete(oldestKey);
             }
             itRamCache.set(cacheKey, response);
-
-            // Save in IndexedDB (Layer 2)
             JeroInterviewScheduleLocalStore.set(cacheKey, response);
-
             renderInterviewData(response);
         },
         error: function(xhr, status) {
             if (status === 'abort') {
-                return; // Handled safely; intentionally aborted for newer request
+                return;
             }
+            $('#tableLoading').removeClass('show');
             $('.loadingMessage').css({ display: 'none' });
             $('.loader_search').css({ display: 'none' });
             $('.page-loader').css('display', 'none');
@@ -1311,7 +2577,13 @@ async function fetchCandidates(page, search, forceRefresh) {
             if (xhr.status === 419) {
                 itHandleAjaxFailure(xhr);
             } else if (!navigator.onLine || xhr.status === 0) {
-                $('#Interview-trackers').html('<tr><td colspan="8" style="text-align:center;padding:40px;color:#ef4444;"><div style="font-weight:600;margin-bottom:6px;">Network Connection Lost</div><div style="font-size:11px;color:#64748b;">You are currently offline. Check your internet connection.</div></td></tr>');
+                $('#Interview-trackers').html(
+                    '<div class="it-empty-card">' +
+                    '  <div class="it-empty-icon" style="background:#fef2f2!important;color:#dc2626!important;"><i class="fas fa-wifi"></i></div>' +
+                    '  <div class="it-empty-title">Network Connection Lost</div>' +
+                    '  <div class="it-empty-sub">You are currently offline. Check your internet connection and click Sync.</div>' +
+                    '</div>'
+                );
             }
         }
     });
@@ -1319,11 +2591,8 @@ async function fetchCandidates(page, search, forceRefresh) {
 window.fetchCandidates = fetchCandidates;
 window.itRamCache = itRamCache;
 
-// Close filter menus and followup menus when clicking outside
+// Close followup menus on outside click
 document.addEventListener('click', function(e) {
-    if (!e.target.closest('.it-filter-dropdown')) {
-        document.querySelectorAll('.it-filter-menu.open').forEach(m => m.classList.remove('open'));
-    }
     if (!e.target.closest('.it-followup-dropdown')) {
         document.querySelectorAll('.it-followup-menu.open').forEach(m => m.classList.remove('open'));
     }
@@ -1348,7 +2617,6 @@ $(document).on('click', '.open-interview-link', function () {
     $('#ilLink').text(ilCurrent.link).attr('href', isAddress ? 'javascript:void(0);' : (ilCurrent.link || '#'));
     $('#ilOpenLabel').text(isAddress ? 'Open in Maps' : 'Open Link');
 
-    // reset email button state
     $('#ilEmailBtn').prop('disabled', false);
     $('.il-email-label').removeClass('d-none');
     $('.il-email-loading').addClass('d-none');
@@ -1356,7 +2624,6 @@ $(document).on('click', '.open-interview-link', function () {
     document.getElementById('ilOverlay').classList.add('show');
 });
 
-// Open the link, or open the address in Google Maps
 $(document).on('click', '#ilOpenBtn', function () {
     if (!ilCurrent.link) {
         Swal.fire({ text: 'Nothing to open.', icon: 'warning', confirmButtonText: 'Ok' });
@@ -1371,7 +2638,7 @@ $(document).on('click', '#ilOpenBtn', function () {
 $(document).on('click', '#ilEmailBtn', function () {
     if (!ilCurrent.id) return;
     var $btn = $(this);
-    if ($btn.prop('disabled')) return; // double-click protection
+    if ($btn.prop('disabled')) return;
     $btn.prop('disabled', true);
     $('.il-email-label').addClass('d-none');
     $('.il-email-loading').removeClass('d-none');
@@ -1402,11 +2669,10 @@ $(document).on('click', '#ilEmailBtn', function () {
     });
 });
 
-// Close on click outside the box, and on Escape
 $(document).on('click', '#ilOverlay', function (e) { if (e.target === this) closeInterviewLink(); });
 $(document).on('keydown', function (e) { if (e.key === 'Escape') closeInterviewLink(); });
 
-// ── Network Connectivity Watchers (Failure Matrix Rule 20) ─────────────────
+// ── Network Connectivity Watchers ──────────────────────────────────────────
 window.addEventListener('offline', function() {
     Swal.fire({
         toast: true,
@@ -1426,20 +2692,18 @@ window.addEventListener('online', function() {
     fetchCandidates(itCurrentPage);
 });
 
-// ── Phase 4: Real-time Reverb / Echo Synchronization & Reconnect Reconciliation ──
+// ── Real-time Reverb / Echo Synchronization & Reconnect Reconciliation ─────
 @if(auth()->check() && auth()->user()->company_id)
 $(document).ready(function() {
     if (typeof window.Echo !== 'undefined') {
         var companyChannel = 'company.{{ (int) auth()->user()->company_id }}';
 
-        // 1. Listen for interview scheduled/updated events on company channel
         window.Echo.private(companyChannel)
             .listen('.interview.updated', function(e) {
                 itRamCache.clear();
                 if (window.JeroInterviewScheduleLocalStore) {
                     window.JeroInterviewScheduleLocalStore.purge();
                 }
-                // Targeted Delta DOM Update
                 if (e && e.interview_id) {
                     var patched = patchInterviewRowDelta(e.interview_id, e);
                     if (!patched) {
@@ -1454,7 +2718,6 @@ $(document).ready(function() {
                 if (window.JeroInterviewScheduleLocalStore) {
                     window.JeroInterviewScheduleLocalStore.purge();
                 }
-                // Realtime delta stat counter update
                 var curUpcoming = parseInt($('#stat-upcoming').text(), 10) || 0;
                 $('#stat-upcoming').text(curUpcoming + 1);
                 fetchCandidates(itCurrentPage, null, true);
@@ -1467,12 +2730,10 @@ $(document).ready(function() {
                 fetchCandidates(itCurrentPage, null, true);
             });
 
-        // 2. Disconnect / Reconnect State Machine (Section 12 Compliance)
         try {
             var connector = window.Echo.connector;
             if (connector && connector.pusher && connector.pusher.connection) {
                 connector.pusher.connection.bind('state_change', function(states) {
-                    // When recovering from disconnected/unavailable back to connected
                     if (states.current === 'connected' && (states.previous === 'disconnected' || states.previous === 'unavailable')) {
                         itRamCache.clear();
                         if (window.JeroInterviewScheduleLocalStore) {
@@ -1482,9 +2743,7 @@ $(document).ready(function() {
                     }
                 });
             }
-        } catch (err) {
-            // Graceful fallback if connector internals differ
-        }
+        } catch (err) {}
     }
 });
 @endif

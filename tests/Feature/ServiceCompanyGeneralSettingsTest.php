@@ -37,13 +37,13 @@ class ServiceCompanyGeneralSettingsTest extends TestCase
             'departmentArr' => $fakeDepartments,
         ])->render();
 
-        $this->assertStringContainsString('dept-subcard', $html);
+        $this->assertStringContainsString('gs-dept-subcard', $html);
         $this->assertStringContainsString('Engineering &amp; Technology', $html);
         $this->assertStringContainsString('Human Resources &amp; Talent', $html);
         $this->assertStringContainsString('dept_delete', $html);
         $this->assertStringContainsString('rel="101"', $html);
         $this->assertStringContainsString('rel="102"', $html);
-        $this->assertStringContainsString('fa-solid fa-briefcase', $html);
+        $this->assertStringContainsString('fas fa-briefcase', $html);
     }
 
     /**
