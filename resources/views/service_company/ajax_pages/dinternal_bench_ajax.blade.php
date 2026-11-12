@@ -218,10 +218,9 @@
                         <div class="dib-sal-sub">Cur: {{ $bill_rate_currency }}{{ $pay_rate_amount }}/{{ $bill_rate_mode }}</div>
                     </div>
                     <div class="dib-val-exp" title="Total: {{ $formattedExperience }} Y | Relevant: {{ $rel_formattedExperience }} Y">
-                        <i class="fa-solid fa-briefcase"></i>
+                        <i class="fa-solid fa-briefcase me-1 text-muted"></i>
                         <span>{{ $formattedExperience }} Y Total</span>
-                        <span class="dib-dot">&bull;</span>
-                        <span>{{ $rel_formattedExperience }} Y Rel</span>
+                        <span class="ms-1" style="color:#64748b; font-size:11px;">(Rel {{ $rel_formattedExperience }} Y)</span>
                     </div>
                 </div>
 

@@ -760,9 +760,9 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);', $controllerFile);
         $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, '$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);'));
 
-        // All AJAX actions pass card_v8 in $cachePayload
-        $this->assertStringContainsString("'ui_v' => 'card_v8'", $controllerFile);
-        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v8'"));
+        // All AJAX actions pass card_v9 in $cachePayload
+        $this->assertStringContainsString("'ui_v' => 'card_v9'", $controllerFile);
+        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v9'"));
     }
 
     public function test_matched_job_subcard_and_restored_work_mode_and_add_candidate_button(): void
@@ -805,20 +805,27 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
             'assignedCandidateIds' => [],
         ];
 
-        // 1. Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode, and clean glyph
+        // 1. Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode, bracketed Rel exp, resume badge, and NO icon box or HIRING tag
         $simHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $baseParams)->render();
         $this->assertStringContainsString('TARGET REQ', $simHtml);
         $this->assertStringContainsString('Internal Client', $simHtml);
-        $this->assertStringContainsString('Hiring', $simHtml);
+        $this->assertStringNotContainsString('simf-req-icon-box', $simHtml);
+        $this->assertStringNotContainsString('simf-status-pill', $simHtml);
+        $this->assertStringContainsString('(Rel 4.0 Y)', $simHtml);
+        $this->assertStringContainsString('No CV', $simHtml);
         $this->assertStringContainsString('#81', $simHtml);
         $this->assertStringContainsString('Technology', $simHtml);
         $this->assertStringContainsString('simf-loc-mode', $simHtml);
         $this->assertStringNotContainsString('<i class="fa fa-inr"', $simHtml);
 
-        // 2. Client Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode
+        // 2. Client Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode, bracketed Rel exp, resume badge, and NO icon box or HIRING tag
         $dsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $baseParams)->render();
         $this->assertStringContainsString('TARGET REQ', $dsimHtml);
         $this->assertStringContainsString('Internal Client', $dsimHtml);
+        $this->assertStringNotContainsString('dsf-req-icon-box', $dsimHtml);
+        $this->assertStringNotContainsString('dsf-status-pill', $dsimHtml);
+        $this->assertStringContainsString('(Rel 4.0 Y)', $dsimHtml);
+        $this->assertStringContainsString('No CV', $dsimHtml);
         $this->assertStringContainsString('dsf-loc-mode', $dsimHtml);
         $this->assertStringNotContainsString('<i class="fa fa-inr"', $dsimHtml);
 
