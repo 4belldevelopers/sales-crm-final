@@ -2724,22 +2724,20 @@ window.buildTestCareerInsightsTrackerHtml = function() {
 
         var reasonChange = cand.reason_for_job_change || cand.recruiter_note_text || 'Seeking professional career growth & new technical challenges matching core competencies.';
 
-        // Skills Breakdown
+        // Skills Breakdown (verified skills & actual ratings only - zero fabrication)
         var skillsList = [];
         if (Array.isArray(cand.skills) && cand.skills.length > 0) {
             skillsList = cand.skills.map(function(s) {
                 if (typeof s === 'object') {
-                    return { name: s.name || s.skill_name || 'Skill', exp: s.expText || exp, rating: s.rating || 4 };
+                    var parsedRating = parseInt(s.rating, 10);
+                    return { name: s.name || s.skill_name || 'Skill', exp: s.expText || '--', rating: isNaN(parsedRating) ? 0 : Math.min(5, Math.max(0, parsedRating)) };
                 }
-                return { name: String(s), exp: exp, rating: 4 };
+                return { name: String(s), exp: '--', rating: 0 };
             });
         } else if (typeof cand.skills === 'string' && cand.skills.trim() !== '') {
-            skillsList = cand.skills.split(',').slice(0, 5).map(function(s) {
-                return { name: s.trim(), exp: exp, rating: 4 };
-            });
-        }
-        if (skillsList.length === 0) {
-            skillsList.push({ name: 'Primary Technical Domain Expertise', exp: exp, rating: 5 });
+            skillsList = cand.skills.split(',').slice(0, 7).map(function(s) {
+                return { name: s.trim(), exp: '--', rating: 0 };
+            }).filter(function(s) { return s.name !== ''; });
         }
 
         // Q&A
@@ -2792,17 +2790,22 @@ window.buildTestCareerInsightsTrackerHtml = function() {
         html += '<th style="border:solid 1px #0284C7;padding:7px 10px;text-align:center;width:25%;">PROFICIENCY / RATING</th>';
         html += '</tr>';
 
-        skillsList.forEach(function (skItem, sIdx) {
-            var rNum = Math.min(5, Math.max(1, skItem.rating || 4));
-            var ratingStars = '★★★★★'.substring(0, rNum) + '☆☆☆☆☆'.substring(0, 5 - rNum);
-            var bg = (sIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
-            html += '<tr style="background:' + bg + ';">';
-            html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;font-weight:bold;color:#0284C7;">' + (sIdx + 1) + '</td>';
-            html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:600;color:#111827;">' + (skItem.name || '') + '</td>';
-            html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#374151;">' + (skItem.exp || '') + '</td>';
-            html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#D97706;font-weight:bold;">' + ratingStars + ' (' + rNum + '/5)</td>';
-            html += '</tr>';
-        });
+        if (skillsList.length === 0) {
+            html += '<tr><td colspan="4" style="border:solid 1px #D1D5DB;padding:8px 10px;text-align:center;color:#6B7280;">No verified candidate skills recorded in profile.</td></tr>';
+        } else {
+            skillsList.forEach(function (skItem, sIdx) {
+                var rNum = Math.min(5, Math.max(0, parseInt(skItem.rating, 10) || 0));
+                var ratingStars = '★★★★★'.substring(0, rNum) + '☆☆☆☆☆'.substring(0, 5 - rNum);
+                var ratingLabel = rNum > 0 ? (ratingStars + ' (' + rNum + '/5)') : (ratingStars + ' (Not Rated)');
+                var bg = (sIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                html += '<tr style="background:' + bg + ';">';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;font-weight:bold;color:#0284C7;">' + (sIdx + 1) + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:600;color:#111827;">' + (skItem.name || '') + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#374151;">' + (skItem.exp || '--') + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#D97706;font-weight:bold;">' + ratingLabel + '</td>';
+                html += '</tr>';
+            });
+        }
 
         // Section 3: Telephonic Screening Q&A
         html += '<tr style="background:#1E3A8A;color:#FFFFFF;font-weight:bold;">';
@@ -2842,17 +2845,18 @@ window.buildTestSkillsExperienceTrackerHtml = function() {
         if (Array.isArray(cand.skills) && cand.skills.length > 0) {
             skillsList = cand.skills.map(function(s) {
                 if (typeof s === 'object') {
-                    return { name: s.name || s.skill_name || 'Skill', exp: s.expText || exp, rating: s.rating || 4 };
+                    return {
+                        name: String(s.name || s.skill_name || '').trim(),
+                        exp: s.expText || s.exp || '--',
+                        rating: Math.min(5, Math.max(0, parseInt(s.rating, 10) || 0))
+                    };
                 }
-                return { name: String(s), exp: exp, rating: 4 };
-            });
+                return { name: String(s).trim(), exp: '--', rating: 0 };
+            }).filter(function(s) { return s.name !== ''; });
         } else if (typeof cand.skills === 'string' && cand.skills.trim() !== '') {
-            skillsList = cand.skills.split(',').slice(0, 7).map(function(s) {
-                return { name: s.trim(), exp: exp, rating: 4 };
-            });
-        }
-        if (skillsList.length === 0) {
-            skillsList.push({ name: 'Primary Domain Technical Expertise', exp: exp, rating: 5 });
+            skillsList = cand.skills.split(',').map(function(s) {
+                return { name: s.trim(), exp: '--', rating: 0 };
+            }).filter(function(s) { return s.name !== ''; }).slice(0, 7);
         }
 
         html += '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:980px;font-family:Calibri,Arial,sans-serif;font-size:12px;color:#1F2937;border:solid 1px #0284C7;margin:14px 0;">';
@@ -2868,17 +2872,22 @@ window.buildTestSkillsExperienceTrackerHtml = function() {
         html += '</tr>';
         html += '</thead><tbody>';
 
-        skillsList.forEach(function (skItem, sIdx) {
-            var rNum = Math.min(5, Math.max(1, skItem.rating || 4));
-            var ratingStars = '★★★★★'.substring(0, rNum) + '☆☆☆☆☆'.substring(0, 5 - rNum);
-            var bg = (sIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
-            html += '<tr style="background:' + bg + ';">';
-            html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;font-weight:bold;color:#0284C7;">' + (sIdx + 1) + '</td>';
-            html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:600;color:#111827;">' + (skItem.name || '') + '</td>';
-            html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#374151;">' + (skItem.exp || '') + '</td>';
-            html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#D97706;font-weight:bold;">' + ratingStars + ' (' + rNum + '/5)</td>';
-            html += '</tr>';
-        });
+        if (skillsList.length === 0) {
+            html += '<tr><td colspan="4" style="border:solid 1px #D1D5DB;padding:8px 10px;text-align:center;color:#6B7280;">No verified candidate skills recorded in profile.</td></tr>';
+        } else {
+            skillsList.forEach(function (skItem, sIdx) {
+                var rNum = Math.min(5, Math.max(0, parseInt(skItem.rating, 10) || 0));
+                var ratingStars = '★★★★★'.substring(0, rNum) + '☆☆☆☆☆'.substring(0, 5 - rNum);
+                var ratingLabel = rNum > 0 ? (ratingStars + ' (' + rNum + '/5)') : (ratingStars + ' (Not Rated)');
+                var bg = (sIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                html += '<tr style="background:' + bg + ';">';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;font-weight:bold;color:#0284C7;">' + (sIdx + 1) + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:600;color:#111827;">' + (skItem.name || '') + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#374151;">' + (skItem.exp || '--') + '</td>';
+                html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#D97706;font-weight:bold;">' + ratingLabel + '</td>';
+                html += '</tr>';
+            });
+        }
 
         html += '</tbody></table>';
     });

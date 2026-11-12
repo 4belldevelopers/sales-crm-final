@@ -2409,14 +2409,12 @@
       skills = candidate.skills;
     } else if (typeof candidate.skills === 'string' && candidate.skills.trim()) {
       var sList = candidate.skills.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-      var defaultRating = candidate.rating ? Math.min(5, Math.max(0, parseInt(candidate.rating, 10))) : 0;
-      var defaultExp = clean(candidate.experience, 'Not Specified');
       skills = sList.slice(0, 12).map(function (sName) {
         return {
           name: sName,
-          expText: defaultExp,
-          exp: parseFloat(defaultExp) || 0,
-          rating: defaultRating
+          expText: '--',
+          exp: 0,
+          rating: 0
         };
       });
     }
@@ -2447,10 +2445,6 @@
       matchScore = safeNumber(candidate.match, 0, 100);
     } else if (candidate.skill_match !== undefined && candidate.skill_match !== null && candidate.skill_match !== '') {
       matchScore = safeNumber(candidate.skill_match, 0, 100);
-    } else if (candidate.rating) {
-      matchScore = Math.min(100, Math.max(40, parseInt(candidate.rating, 10) * 20));
-    } else {
-      matchScore = 85;
     }
 
     var isBench = (candidate.condidate_type === 'bench_condidate' || candidate.candidate_type === 'bench_condidate');

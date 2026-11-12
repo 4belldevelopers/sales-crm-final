@@ -321,6 +321,8 @@ END:VCALENDAR";
         $svgShield = '<path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3Z"/>';
         $svgLogOut = '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>';
         $svgPlusCircle = '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>';
+        $svgSlash = '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>';
+        $svgDiff = '<path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>';
         $svgDot = '<circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>';
 
         // [needle, icon, color, bg, description] — first match wins, so more
@@ -329,12 +331,12 @@ END:VCALENDAR";
             ['duplicate',       $svgCopy,       '#f1416c', '#fdedf0', 'Duplicate profile'],
             ['not interest',    $svgClock,      '#ffa800', '#fff4de', 'Candidate not interested'],
             ['not looking',     $svgClock,      '#ffa800', '#fff4de', 'Not actively looking'],
-            ['not relevant',    $svgUser,       '#3e97ff', '#eef4ff', 'Profile not relevant to role'],
-            ['mismatch',        $svgUser,       '#3e97ff', '#eef4ff', 'Does not match role'],
+            ['not relevant',    $svgSlash,      '#dc2626', '#fee2e2', 'Profile not relevant to role'],
+            ['mismatch',        $svgDiff,       '#7c3aed', '#f3e8ff', 'Does not match role'],
             ['stability',       $svgAlert,      '#ffa800', '#fff4de', 'Stability concerns'],
-            ['high salary',     $svgDollar,     '#17c653', '#eafcf3', 'Salary expectations high'],
-            ['salary',          $svgDollar,     '#17c653', '#eafcf3', 'Salary expectations high'],
-            ['compensation',    $svgDollar,     '#17c653', '#eafcf3', 'Compensation expectations high'],
+            ['high salary',     $svgDollar,     '#ea580c', '#ffedd5', 'Salary expectations high'],
+            ['salary',          $svgDollar,     '#ea580c', '#ffedd5', 'Salary expectations high'],
+            ['compensation',    $svgDollar,     '#ea580c', '#ffedd5', 'Compensation expectations high'],
             ['notice',          $svgCalendar,   '#7239ea', '#f8f5ff', 'Notice period too long'],
             ['interview reject', $svgXCircle,    '#f1416c', '#fdedf0', 'Rejected in interview'],
             ['fake',            $svgAlert,      '#ffa800', '#fff4de', 'Fake or proxy candidate'],
@@ -9910,6 +9912,7 @@ END:VCALENDAR";
                 'interview_schedules.stage as master_status_id',
                 'interview_schedules.substage as child_status_id',
                 'clients.name as client_name',
+                'clients.self_company',
                 'state_list.state as state_name',
                 'city_list.city as city_name',
                 'countries.country_name',
@@ -9942,11 +9945,13 @@ END:VCALENDAR";
                 'master_status.name as master_status_name',
                 'candidate_status.name as child_status_name',
                 'jobs.title as job_title',
+                'jobs.employment_type',
                 'jobs.client_id',
                 'jobs.company_id as job_company_id',
                 'interview_schedules.interview_job_id as job_id',
                 'companies.company_name',
                 'job_applications.current_designation',
+                'job_applications.current_company',
                 'job_applications.condidate_type',
                 'job_applications.thirdparty_company_id',
                 'interview_mode.name as mode_name',
@@ -9960,6 +9965,7 @@ END:VCALENDAR";
                 'recommendation_relation.to_company_id',
                 'add_job_wise_condidates.rec_candidate_assign_id',
                 'add_job_wise_condidates.id as wiseID',
+                'add_job_wise_condidates.created_at as submitted_at',
                 'add_job_wise_condidates.thirdparty_company_id as ClientComID',
                 'add_job_wise_condidates.job_id as jobId',
                 'add_job_wise_condidates.submitted_by',
@@ -10034,6 +10040,8 @@ END:VCALENDAR";
                         $row->email = $data->email ?? $row->email;
                         $row->phone = $data->phone ?? $row->phone;
                         $row->current_designation = $data->current_designation ?? $row->current_designation;
+                        $row->current_company = $data->current_company ?? ($row->current_company ?? '');
+                        $row->submitted_at = $data->created_at ?? ($row->submitted_at ?? $row->created_at);
                         $row->condidate_type = $data->condidate_type ?? $row->condidate_type;
                     }
                 } catch (\Throwable $esCandEx) {
@@ -10080,10 +10088,14 @@ END:VCALENDAR";
                         'master_status_name' => $row->master_status_name,
                         'child_status_name' => $row->child_status_name,
                         'job_title' => $row->job_title,
+                        'employment_type' => $row->employment_type ?? 0,
+                        'self_company' => $row->self_company ?? 0,
                         'client_id' => $row->client_id,
                         'job_id' => $row->job_id,
                         'company_name' => $row->company_name,
                         'current_designation' => $row->current_designation,
+                        'current_company' => $row->current_company ?? null,
+                        'submitted_at' => (! empty($row->submitted_at) && $row->submitted_at !== '0000-00-00 00:00:00') ? Carbon::parse($row->submitted_at)->toIso8601String() : null,
                         'thirdparty_company_id' => $row->thirdparty_company_id,
                         'mode_name' => $row->mode_name,
                         'mode_lavel_name' => $row->mode_lavel_name,
