@@ -548,4 +548,52 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('caf-int-schedule-btn app_interview_schedule', $clientNextStageHtml);
         $this->assertStringContainsString('Schedule Interview', $clientNextStageHtml);
     }
+
+    public function test_job_header_card_subcard_design_with_org_light_backgrounds_and_matching_buttons(): void
+    {
+        $toolbarView = file_get_contents(resource_path('views/sections/service_company/toolbar.blade.php'));
+        $indexView = file_get_contents(resource_path('views/service_company/apptracker/index.blade.php'));
+        $clientAppView = file_get_contents(resource_path('views/service_company/apptracker/clientapp.blade.php'));
+
+        // Opt-in Card + Sub-Card block in toolbar keeps non-AppTracker views isolated (Rule 17)
+        $this->assertStringContainsString('@if(!empty($apptrackerHeaderCard))', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-main {{ $resolvedOrgClass }}', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-sub--identity show-detail-open', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-sub--status show-detail-open', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-sub--comp', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-sub--loc', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-sub--meta', $toolbarView);
+        $this->assertStringContainsString("'hp-org-my'       => ['label' => 'My Organization'", $toolbarView);
+        $this->assertStringContainsString("'hp-org-internal' => ['label' => 'Internal Client'", $toolbarView);
+        $this->assertStringContainsString("'hp-org-direct'   => ['label' => 'Direct Client'", $toolbarView);
+        $this->assertStringContainsString('data-kt-swapper="true"', $toolbarView);
+
+        // AppTracker host view: Card + Sub-Card header + light org backgrounds + matching button colors
+        $this->assertStringContainsString("'apptrackerHeaderCard' => true", $indexView);
+        $this->assertStringContainsString("'headerPrefix' => 'aptk-hdr'", $indexView);
+        $this->assertStringContainsString('<div class="toolbar aptk-job-toolbar', $indexView);
+        $this->assertStringContainsString('<div class="aptk-hdr-card', $indexView);
+        $this->assertStringContainsString('aptk-hdr-subcard aptk-hdr-subcard--actions', $indexView);
+        $this->assertStringContainsString('aptk-hdr-btn-outline', $indexView);
+        $this->assertStringContainsString('aptk-hdr-btn-solid', $indexView);
+        $this->assertStringContainsString('.aptk-hdr-card.hp-org-my', $indexView);
+        $this->assertStringContainsString('.aptk-hdr-card.hp-org-internal', $indexView);
+        $this->assertStringContainsString('.aptk-hdr-card.hp-org-direct', $indexView);
+        $this->assertStringContainsString('#fffbeb', $indexView);
+        $this->assertStringContainsString('#eff6ff', $indexView);
+        $this->assertStringContainsString('#ecfdf5', $indexView);
+
+        // ClientAppTracker host view: page-isolated caf-hdr Card + Sub-Card header & data-job-status preservation
+        $this->assertStringContainsString("'apptrackerHeaderCard' => true", $clientAppView);
+        $this->assertStringContainsString("'headerPrefix' => 'caf-hdr'", $clientAppView);
+        $this->assertStringContainsString('<div class="toolbar caf-job-toolbar', $clientAppView);
+        $this->assertStringContainsString('<div class="caf-hdr-card', $clientAppView);
+        $this->assertStringContainsString('caf-hdr-subcard caf-hdr-subcard--actions', $clientAppView);
+        $this->assertStringContainsString('caf-hdr-btn-outline', $clientAppView);
+        $this->assertStringContainsString('caf-hdr-btn-solid', $clientAppView);
+        $this->assertStringContainsString('id="addServiceCandidate" data-job-status="{{ $job->status }}"', $clientAppView);
+        $this->assertStringContainsString('.caf-hdr-card.hp-org-my', $clientAppView);
+        $this->assertStringContainsString('.caf-hdr-card.hp-org-internal', $clientAppView);
+        $this->assertStringContainsString('.caf-hdr-card.hp-org-direct', $clientAppView);
+    }
 }
