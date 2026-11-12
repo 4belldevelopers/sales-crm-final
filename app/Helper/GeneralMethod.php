@@ -321,6 +321,8 @@ END:VCALENDAR";
         $svgShield = '<path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3Z"/>';
         $svgLogOut = '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>';
         $svgPlusCircle = '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>';
+        $svgSlash = '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>';
+        $svgDiff = '<path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>';
         $svgDot = '<circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>';
 
         // [needle, icon, color, bg, description] — first match wins, so more
@@ -329,12 +331,12 @@ END:VCALENDAR";
             ['duplicate',       $svgCopy,       '#f1416c', '#fdedf0', 'Duplicate profile'],
             ['not interest',    $svgClock,      '#ffa800', '#fff4de', 'Candidate not interested'],
             ['not looking',     $svgClock,      '#ffa800', '#fff4de', 'Not actively looking'],
-            ['not relevant',    $svgUser,       '#3e97ff', '#eef4ff', 'Profile not relevant to role'],
-            ['mismatch',        $svgUser,       '#3e97ff', '#eef4ff', 'Does not match role'],
+            ['not relevant',    $svgSlash,      '#dc2626', '#fee2e2', 'Profile not relevant to role'],
+            ['mismatch',        $svgDiff,       '#7c3aed', '#f3e8ff', 'Does not match role'],
             ['stability',       $svgAlert,      '#ffa800', '#fff4de', 'Stability concerns'],
-            ['high salary',     $svgDollar,     '#17c653', '#eafcf3', 'Salary expectations high'],
-            ['salary',          $svgDollar,     '#17c653', '#eafcf3', 'Salary expectations high'],
-            ['compensation',    $svgDollar,     '#17c653', '#eafcf3', 'Compensation expectations high'],
+            ['high salary',     $svgDollar,     '#ea580c', '#ffedd5', 'Salary expectations high'],
+            ['salary',          $svgDollar,     '#ea580c', '#ffedd5', 'Salary expectations high'],
+            ['compensation',    $svgDollar,     '#ea580c', '#ffedd5', 'Compensation expectations high'],
             ['notice',          $svgCalendar,   '#7239ea', '#f8f5ff', 'Notice period too long'],
             ['interview reject', $svgXCircle,    '#f1416c', '#fdedf0', 'Rejected in interview'],
             ['fake',            $svgAlert,      '#ffa800', '#fff4de', 'Fake or proxy candidate'],
