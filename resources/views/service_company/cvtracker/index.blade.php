@@ -222,7 +222,7 @@
         .cv-kpi-grid {
             display: grid !important;
             grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
-            gap: 8px !important;
+            gap: 6px !important;
             margin-bottom: 14px !important;
             width: 100% !important;
             box-sizing: border-box !important;
@@ -231,8 +231,8 @@
         .cl-card.cv-kpi-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 11px;
-            padding: 9px 10px;
+            border-radius: 10px;
+            padding: 7px 8px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -252,15 +252,15 @@
         .cl-card-top {
             display: flex;
             align-items: center;
-            gap: 7px;
-            margin-bottom: 4px;
+            gap: 6px;
+            margin-bottom: 3px;
             min-width: 0;
         }
         .cl-card-icon {
-            width: 32px;
-            height: 32px;
-            min-width: 32px;
-            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -268,8 +268,8 @@
             transition: all 0.15s ease;
         }
         .cl-card-icon svg {
-            width: 16px;
-            height: 16px;
+            width: 14px !important;
+            height: 14px !important;
         }
         .cl-card-icon.blue   { background: #eff6ff; color: #2563eb; }
         .cl-card-icon.yellow { background: #fefce8; color: #ca8a04; }
@@ -287,14 +287,17 @@
             overflow: hidden;
         }
         .cl-card-num {
-            font-size: 17px;
+            font-size: 15px;
             font-weight: 700;
             color: #0f172a;
-            line-height: 1.15;
+            line-height: 1.1;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-variant-numeric: tabular-nums;
         }
         .cl-card-lbl {
-            font-size: 10.5px;
+            font-size: 10px;
             font-weight: 600;
             color: #64748b;
             margin-top: 1px;
@@ -306,16 +309,17 @@
         .cl-card-sub {
             display: flex;
             align-items: center;
-            gap: 4px;
-            font-size: 9.5px;
+            gap: 3px;
+            font-size: 9px;
             font-weight: 500;
-            line-height: 1.2;
+            line-height: 1.1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             margin-top: 2px;
         }
-        .cl-card-sub svg { flex-shrink: 0; width: 11px; height: 11px; }
+        .cl-card-sub svg { flex-shrink: 0; width: 10px !important; height: 10px !important; }
+        .cl-card-sub span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .cl-card-sub.blue   { color: #2563eb; }
         .cl-card-sub.yellow { color: #a16207; }
         .cl-card-sub.gray   { color: #64748b; }
@@ -390,60 +394,115 @@
         }
         .cv-kpi-card.active[data-tab="7,9"] .cl-card-icon { background: #ffffff !important; }
 
-        @media (max-width: 1400px) {
-            .cv-kpi-grid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; gap: 8px !important; }
-        }
-        @media (max-width: 992px) {
-            .cv-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-        }
-        @media (max-width: 576px) {
-            .cv-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        /* Ensure all 9 KPIs strictly stay in ONE single row across all viewports */
+        @media (max-width: 1200px) {
+            .cv-kpi-grid {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                overflow-y: hidden !important;
+                padding-bottom: 6px !important;
+                gap: 6px !important;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+            }
+            .cv-kpi-grid::-webkit-scrollbar {
+                height: 4px;
+            }
+            .cv-kpi-grid::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+            }
+            .cl-card.cv-kpi-card {
+                min-width: 110px !important;
+                flex: 0 0 auto !important;
+            }
         }
 
-        /* Rule 25 Canonical Organization Filter Pills */
-        .cv-org-pills {
-            background: #f8fafc;
+        /* Rule 25 Canonical Organization Filter Dropdown (Dropdown List Only) */
+        .cvh-tb-org-wrap {
+            background: #ffffff;
             border: 1px solid #e2e8f0;
-            padding: 3px;
-            border-radius: 24px;
+            border-radius: 10px;
+            padding: 0 12px;
+            height: 44px;
+            flex-shrink: 0;
+            width: 215px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
-        .cv-org-pill {
-            border-radius: 20px !important;
-            font-size: 11.5px !important;
-            font-weight: 600 !important;
-            padding: 5px 12px !important;
-            color: #64748b !important;
-            background: transparent !important;
-            border: 1px solid transparent !important;
-            transition: all 0.15s ease !important;
-            white-space: nowrap !important;
-            line-height: 1.3 !important;
+        .cvh-tb-org-wrap:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .cv-org-pill:hover {
-            color: #0f172a !important;
-            background: rgba(0, 0, 0, 0.04) !important;
+        .cvh-tb-org-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            text-align: left;
+            cursor: pointer;
         }
-        .cv-org-pill.active {
-            background: #ffffff !important;
-            color: #0f172a !important;
-            border-color: #cbd5e1 !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        .cvh-tb-org-btn:focus { outline: none; }
+        .cvh-tb-org-icon {
+            width: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
         }
-        .cv-org-pill.type-my-org.active {
-            background: #ecfeff !important;
-            color: #0891b2 !important;
-            border-color: #a5f3fc !important;
+        .cvh-tb-org-label {
+            flex: 1 1 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        .cv-org-pill.type-internal.active {
-            background: #eff6ff !important;
-            color: #2563eb !important;
-            border-color: #bfdbfe !important;
+        .cvh-tb-org-btn .chevron {
+            flex-shrink: 0;
+            color: #94a3b8;
+            transition: transform .15s;
         }
-        .cv-org-pill.type-direct.active {
-            background: #ecfdf5 !important;
-            color: #059669 !important;
-            border-color: #a7f3d0 !important;
+        .cvh-tb-org-btn.open .chevron { transform: rotate(180deg); }
+        .cvh-tb-org-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            min-width: 220px;
+            background: #ffffff;
+            border: 1px solid #eef0f4;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(16,24,40,.12), 0 4px 6px -2px rgba(16,24,40,.06);
+            padding: 6px;
+            z-index: 60;
         }
+        .cvh-tb-org-item {
+            padding: 8px 12px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #3f4254;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.15s ease;
+        }
+        .cvh-tb-org-item:hover { background: #f8f9fb; }
+        .cvh-tb-org-item.active { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+        .cvh-tb-org-item .cvh-tb-org-check { margin-left: auto; font-size: 11px; display: none; }
+        .cvh-tb-org-item.active .cvh-tb-org-check { display: inline-block; color: #1d4ed8; }
 
         /* Organization badge tokens (matching Rule 25) */
         .type-my-org { background: #ecfeff !important; color: #0891b2 !important; border-color: #a5f3fc !important; }
@@ -1463,24 +1522,47 @@
                     </div>
                 </div>
 
-                <!-- ── TOOLBAR CARD: COMPANY TYPE PILLS + SEARCH + SORT + FILTER ── -->
+                <!-- ── TOOLBAR CARD: ORGANIZATION TYPE DROPDOWN + SEARCH + SORT + FILTER ── -->
                 <div class="card cvh-tb-card mb-4">
                     <div class="card-body py-3 px-4">
                         <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
-                            {{-- Left: Rule 25 Canonical Organization Filter Pills --}}
-                            <div class="cv-org-pills d-flex align-items-center gap-1 flex-wrap">
-                                <button type="button" class="btn btn-sm cv-org-pill active" onclick="setCvCompanyType('all', this)">
-                                    <i class="fa fa-layer-group me-1 fs-8"></i> All Organizations
+                            {{-- Left: Rule 25 Canonical Organization Filter Dropdown (Dropdown List Only) --}}
+                            <div class="cvh-tb-org-wrap" id="cvh_org_wrap">
+                                <button type="button" class="cvh-tb-org-btn" id="cvh_org_btn">
+                                    <span class="cvh-tb-org-icon" id="cvh_org_btn_icon">
+                                        <i class="fa fa-layer-group" style="color: #2563eb;"></i>
+                                    </span>
+                                    <span class="cvh-tb-org-label" id="cvh_org_label">All Organizations</span>
+                                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                 </button>
-                                <button type="button" class="btn btn-sm cv-org-pill type-my-org" onclick="setCvCompanyType('my_organization', this)">
-                                    <i class="fa fa-id-badge me-1 fs-8"></i> My Organization
-                                </button>
-                                <button type="button" class="btn btn-sm cv-org-pill type-internal" onclick="setCvCompanyType('internal_client', this)">
-                                    <i class="fa fa-building me-1 fs-8"></i> Internal Client
-                                </button>
-                                <button type="button" class="btn btn-sm cv-org-pill type-direct" onclick="setCvCompanyType('direct_client', this)">
-                                    <i class="fa fa-shield-alt me-1 fs-8"></i> Direct Client
-                                </button>
+                                <select id="cv_company_type_select" style="display:none;">
+                                    <option value="all" selected>All Organizations</option>
+                                    <option value="my_organization">My Organization</option>
+                                    <option value="internal_client">Internal Client</option>
+                                    <option value="direct_client">Direct Client</option>
+                                </select>
+                                <div class="cvh-tb-org-panel d-none" id="cvh_org_panel">
+                                    <div class="cvh-tb-org-item active" data-value="all" data-icon="fa fa-layer-group" data-icon-color="#2563eb">
+                                        <span class="cvh-tb-org-item-icon" style="color: #2563eb; width: 16px; text-align: center;"><i class="fa fa-layer-group"></i></span>
+                                        <span class="cvh-tb-org-item-text">All Organizations</span>
+                                        <span class="cvh-tb-org-check"><i class="fa fa-check"></i></span>
+                                    </div>
+                                    <div class="cvh-tb-org-item" data-value="my_organization" data-icon="fa fa-id-badge" data-icon-color="#0891b2">
+                                        <span class="cvh-tb-org-item-icon" style="color: #0891b2; width: 16px; text-align: center;"><i class="fa fa-id-badge"></i></span>
+                                        <span class="cvh-tb-org-item-text">My Organization</span>
+                                        <span class="cvh-tb-org-check"><i class="fa fa-check"></i></span>
+                                    </div>
+                                    <div class="cvh-tb-org-item" data-value="internal_client" data-icon="fa fa-building" data-icon-color="#2563eb">
+                                        <span class="cvh-tb-org-item-icon" style="color: #2563eb; width: 16px; text-align: center;"><i class="fa fa-building"></i></span>
+                                        <span class="cvh-tb-org-item-text">Internal Client</span>
+                                        <span class="cvh-tb-org-check"><i class="fa fa-check"></i></span>
+                                    </div>
+                                    <div class="cvh-tb-org-item" data-value="direct_client" data-icon="fa fa-shield-alt" data-icon-color="#059669">
+                                        <span class="cvh-tb-org-item-icon" style="color: #059669; width: 16px; text-align: center;"><i class="fa fa-shield-alt"></i></span>
+                                        <span class="cvh-tb-org-item-text">Direct Client</span>
+                                        <span class="cvh-tb-org-check"><i class="fa fa-check"></i></span>
+                                    </div>
+                                </div>
                             </div>
 
                             {{-- Right: Search + Sort + Filter --}}
@@ -2139,9 +2221,6 @@
                 </div>
                 <!--End Filter Drawer-->
 
-                {{-- ── Stage Tabs (separate card, ES-backed counts) — sits directly above
-                     the candidate list, below the search/filter bar. ── --}}
-                @php
                 {{-- ── Row selection action bar — hidden until candidates are checked.
                      Reuses the exact same trigger classes/data-target attributes as the
                      legacy toolbar buttons (mass_mail / fwd_resume / application_copy /
@@ -2180,7 +2259,7 @@
                     </button>
                 </div>
 
-                <div class="card border-0 shadow-none bg-transparent" id="cvh_table_card" style="display:none;">
+                <div class="card border-0 shadow-none bg-transparent" id="cvh_table_card">
                     <div class="card-body p-0" style="position: relative">
                         @if (in_array('view_job_applications', $userPermissions))
                            <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
@@ -3308,14 +3387,47 @@
         window.setCvKpiTab = setCvKpiTab;
 
         function setCvCompanyType(orgType, el) {
-            $('.cv-org-pill').removeClass('active');
-            $(el).closest('.cv-org-pill').addClass('active');
+            $('.cvh-tb-org-item').removeClass('active');
+            var $target = $('.cvh-tb-org-item[data-value="' + orgType + '"]');
+            if ($target.length) {
+                $target.addClass('active');
+                $('#cvh_org_label').text($target.find('.cvh-tb-org-item-text').text());
+                $('#cvh_org_btn_icon').html('<i class="' + $target.data('icon') + '" style="color:' + $target.data('icon-color') + ';"></i>');
+            }
+            $('#cv_company_type_select').val(orgType);
             activeCompanyType = orgType;
             page_no = 1;
             localStorage.setItem('currentPage', 1);
             fetchCandidates(1);
         }
         window.setCvCompanyType = setCvCompanyType;
+
+        function cvhOpenOrgPanel() {
+            if (typeof cvhCloseSortPanel === 'function') cvhCloseSortPanel();
+            $('#cvh_org_panel').removeClass('d-none');
+            $('#cvh_org_btn').addClass('open');
+        }
+        function cvhCloseOrgPanel() {
+            $('#cvh_org_panel').addClass('d-none');
+            $('#cvh_org_btn').removeClass('open');
+        }
+        $(document).on('click', '#cvh_org_btn', function(e) {
+            e.stopPropagation();
+            if ($('#cvh_org_panel').hasClass('d-none')) {
+                cvhOpenOrgPanel();
+            } else {
+                cvhCloseOrgPanel();
+            }
+        });
+        $(document).on('click', '.cvh-tb-org-item', function(e) {
+            e.stopPropagation();
+            var val = $(this).data('value');
+            setCvCompanyType(val, this);
+            cvhCloseOrgPanel();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#cvh_org_wrap').length) cvhCloseOrgPanel();
+        });
 
         /* ── Phase 7: GOD-Level Client Caching (L1 RAM + L2 IndexedDB + SWR + Request Abort + Multi-Tab Sync) ──
          * Reference: service_company/job-onboard
@@ -3845,10 +3957,6 @@
                     $newEl.text(cnt.toLocaleString());
                 }
             }
-                    var cnt = (parseInt($newTab.text().replace(/,/g, ''), 10) || 0) + 1;
-                    $newTab.text(cnt.toLocaleString());
-                }
-            }
         };
 
        $(document).on('change', '.chk_copy_item', function () {
@@ -3957,6 +4065,7 @@
         }
         $(document).on('click', '#cvh_sort_btn', function(e) {
             e.stopPropagation();
+            if (typeof cvhCloseOrgPanel === 'function') cvhCloseOrgPanel();
             if ($('#cvh_sort_panel').hasClass('d-none')) cvhOpenSortPanel();
             else cvhCloseSortPanel();
         });
