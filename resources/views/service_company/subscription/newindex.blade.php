@@ -1160,6 +1160,99 @@
         }
         .sub-tx-receipt-btn i { color: #ef4444 !important; font-size: 11px; }
 
+        .sub-tx-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .sub-tx-filter-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+        }
+        .sub-tx-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .sub-tx-filter-btn {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #475569 !important;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+        .sub-tx-filter-btn i { color: #64748b !important; font-size: 11px; }
+        .sub-tx-filter-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a !important; }
+        .sub-tx-filter-btn.active {
+            background: #009ef7 !important;
+            border-color: #009ef7 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2);
+        }
+        .sub-tx-filter-btn.active i { color: #ffffff !important; }
+        .sub-tx-filter-badge {
+            min-width: 19px;
+            height: 18px;
+            padding: 0 6px;
+            border-radius: 10px;
+            font-size: 10.5px;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sub-tx-filter-badge.badge-paid { background: #dcfce7; color: #15803d; }
+        .sub-tx-filter-badge.badge-pending { background: #fef3c7; color: #b45309; }
+        .sub-tx-filter-badge.badge-failed { background: #fee2e2; color: #b91c1c; }
+        .sub-tx-filter-btn.active .sub-tx-filter-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+        }
+        .sub-tx-filter-meta {
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .sub-tx-bottom-strip {
+            margin-top: 10px;
+            padding-top: 9px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .sub-tx-bottom-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: #64748b;
+        }
+        .sub-tx-bottom-meta i { color: #94a3b8 !important; font-size: 11px; margin-right: 3px; }
+        .sub-tx-dot { color: #cbd5e1; }
+
         .sub-tx-footer {
             display: flex;
             align-items: center;
@@ -1222,9 +1315,8 @@
         }
         @media (max-width: 1199px) {
             .sub-pkg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .sub-plan-grid, .sub-kpi-grid, .sub-sla-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .sub-plan-grid, .sub-kpi-grid, .sub-sla-grid, .sub-tx-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .sub-tx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .sub-tx-subcard-action { grid-column: span 2; }
         }
         @media (max-width: 991px) {
             .sub-wallets-grid, .sub-value-grid { grid-template-columns: minmax(0, 1fr); }
@@ -1233,10 +1325,9 @@
             .sub-toolbar-card { padding: 12px 14px; }
             .sub-toolbar-right { width: 100%; }
             .sub-search-box { width: 100%; }
-            .sub-pkg-grid, .sub-plan-grid, .sub-kpi-grid, .sub-sla-grid, .sub-why-mini-grid, .sub-tx-grid {
+            .sub-pkg-grid, .sub-plan-grid, .sub-kpi-grid, .sub-sla-grid, .sub-why-mini-grid, .sub-tx-grid, .sub-tx-kpi-grid {
                 grid-template-columns: minmax(0, 1fr);
             }
-            .sub-tx-subcard-action { grid-column: span 1; }
             .sub-security-chip { display: none; }
         }
     </style>
@@ -2302,19 +2393,38 @@
             });
             $('#pkgSearchEmptySal').toggle(salVisible === 0 && salPkgTotalCount > 0);
 
-            // 3. Filter Transaction Cards (if loaded)
+            // 3. Filter Transaction Cards (combined with .js-tx-filter-btn if loaded)
             var $txCards = $('#wallet-pane-transactions .sub-tx-card');
             if ($txCards.length > 0) {
+                var activeFilter = window.activeTxFilter || 'all';
                 var txVisible = 0;
                 $txCards.each(function() {
                     var hay = ($(this).data('search-text') || '') + ' ' + $(this).text().toLowerCase();
-                    var match = !query || hay.indexOf(query) !== -1;
-                    $(this).toggle(match);
-                    if (match) txVisible++;
+                    var searchMatch = !query || hay.indexOf(query) !== -1;
+
+                    var walletAttr = $(this).data('tx-wallet') || '';
+                    var statusAttr = $(this).data('tx-status') || '';
+                    var filterMatch = (activeFilter === 'all')
+                        || (activeFilter === walletAttr)
+                        || (activeFilter === statusAttr);
+
+                    var show = searchMatch && filterMatch;
+                    $(this).toggle(show);
+                    if (show) txVisible++;
                 });
                 $('#txSearchEmptyState').toggle(txVisible === 0);
+                $('#txVisibleCountLabel').text('Showing ' + txVisible + ' ' + (txVisible === 1 ? 'order' : 'orders') + ' on this page');
             }
         }
+
+        // Sub-tab filter pills inside the Transactions pane
+        window.activeTxFilter = 'all';
+        $(document).on('click', '.js-tx-filter-btn', function() {
+            window.activeTxFilter = $(this).data('tx-filter') || 'all';
+            $('.js-tx-filter-btn').removeClass('active');
+            $(this).addClass('active');
+            applySubscriptionSearch($('#subscription_search').val() || '');
+        });
 
         var subSearchTimer = null;
         $(document).on('keyup input', '#subscription_search', function() {
@@ -2346,6 +2456,7 @@
 
         window.switchWalletCenterTab = function(tab, noScroll) {
             if (tab === 'overview' || tab === 'packages') {
+                $('#subscription_search').attr('placeholder', 'Search packages, features, orders...');
                 $('.wallet-tab-pane:not(#wallet-pane-overview)').hide();
                 $('#overview-only-section').show();
 
@@ -2365,12 +2476,17 @@
                 return;
             }
 
+            if (tab === 'transactions') {
+                $('#subscription_search').attr('placeholder', 'Search orders by ID, package, status...');
+            }
+
             $('.wallet-tab-pane:not(#wallet-pane-overview)').hide();
             $('#overview-only-section').hide();
             $('#wallet-pane-' + tab).show();
 
             if (tab === 'transactions' && (!txTabLoaded || $('#wallet-pane-transactions .sub-tx-stream').length === 0)) {
                 txTabLoaded = true;
+                window.activeTxFilter = 'all';
                 $('#wallet-pane-transactions').css('opacity', '0.55');
                 $.ajax({
                     url: txAjaxUrl,
@@ -2627,6 +2743,7 @@
                 data: { page: page },
                 success: function(res) {
                     var htmlContent = (res && res.html) ? res.html : res;
+                    window.activeTxFilter = 'all';
                     $pane.html(htmlContent).css('opacity', '1');
                     updateTxCountBadge();
                     applySubscriptionSearch($('#subscription_search').val() || '');
