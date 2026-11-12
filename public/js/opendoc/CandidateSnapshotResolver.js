@@ -202,9 +202,15 @@
       var match = expText.match(STRICT_EXP_REGEX);
       if (match) expNum = parseFloat(match[1]);
 
+      // Guard: Skip un-evaluated job skill placeholder rows (no experience & 0 stars)
+      var isEmptyPlaceholderExp = (!expText || expText === '--' || expNum <= 0);
+      if (isEmptyPlaceholderExp && rating <= 0) {
+        continue;
+      }
+
       harvested.push({
         name: sName,
-        expText: expText || '--',
+        expText: expNum > 0 ? expText : '--',
         exp: expNum,
         rating: rating
       });
@@ -426,12 +432,19 @@
     var rawRating = getModifiedFormVal('input[name="rating"]') || getSemantic('candidate_rating') || rawData.rating;
     var candidateRating = Math.max(0, Math.min(5, parseInt(rawRating, 10) || 0));
 
-    // 10. Skills (Live DOM Table -> Modified Form -> Server Payload)
-    var skills = harvestSkillsFromDom(rootEl);
-    var skillsTrust = 'view_derived';
-    if (!skills && Array.isArray(rawData.skills) && rawData.skills.length) {
+    // 10. Skills (Prefer server-authoritative dossier when flagged, else live evaluated DOM / payload)
+    var skills = null;
+    var skillsTrust = 'unspecified';
+    if (rawData.skills_authoritative && Array.isArray(rawData.skills)) {
       skills = rawData.skills;
       skillsTrust = 'server_authoritative';
+    } else {
+      skills = harvestSkillsFromDom(rootEl);
+      skillsTrust = 'view_derived';
+      if (!skills && Array.isArray(rawData.skills) && rawData.skills.length) {
+        skills = rawData.skills;
+        skillsTrust = 'server_authoritative';
+      }
     }
     if (!skills) {
       skills = [];

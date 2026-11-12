@@ -280,6 +280,9 @@ class CandidateSkillSyncService
             cache()->forget('candidate:'.$tid);
         }
 
+        // Purge Forward Resume & Prescreen Dossier caches scoped by (company_id, job_id, candidate_id)
+        PrescreenDossierService::invalidateDossierCaches($candidateId, null, $companyId);
+
         // Multi-tenant Redis/Dragonfly non-blocking wildcard pattern purge for drawer HTML
         try {
             if (config('cache.default') === 'redis' && class_exists(\Illuminate\Support\Facades\Redis::class)) {

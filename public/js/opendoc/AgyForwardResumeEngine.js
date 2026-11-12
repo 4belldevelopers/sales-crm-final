@@ -3212,16 +3212,16 @@
       skills = candidate.parsed_skills;
     } else if (Array.isArray(candidate.skills) && candidate.skills.length) {
       skills = candidate.skills;
+    } else if (candidate.skills_authoritative && Array.isArray(candidate.skills)) {
+      skills = candidate.skills;
     } else if (typeof candidate.skills === 'string' && candidate.skills.trim()) {
       var sList = candidate.skills.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-      var defaultRating = candidate.rating ? Math.min(5, Math.max(0, parseInt(candidate.rating, 10))) : 0;
-      var defaultExp = clean(candidate.experience, 'Not Specified');
-      skills = sList.slice(0, 7).map(function (sName) {
+      skills = sList.slice(0, 12).map(function (sName) {
         return {
           name: sName,
-          expText: defaultExp,
-          exp: parseFloat(defaultExp) || 0,
-          rating: defaultRating
+          expText: '--',
+          exp: 0,
+          rating: 0
         };
       });
     }
@@ -3250,10 +3250,6 @@
       matchScore = safeNumber(candidate.match, 0, 100);
     } else if (candidate.skill_match !== undefined && candidate.skill_match !== null && candidate.skill_match !== '') {
       matchScore = safeNumber(candidate.skill_match, 0, 100);
-    } else if (candidate.rating) {
-      matchScore = Math.min(100, Math.max(40, parseInt(candidate.rating, 10) * 20));
-    } else {
-      matchScore = 85;
     }
 
     var isBench = (candidate.condidate_type === 'bench_condidate');

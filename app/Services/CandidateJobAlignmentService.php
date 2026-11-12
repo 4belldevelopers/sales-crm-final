@@ -314,9 +314,11 @@ class CandidateJobAlignmentService
                     Cache::forget('tenant:'.$tCompanyId.':candidate_details:'.$tid);
                 }
             }
-            // 2. Invalidate Forward Resume caches
+            // 2. Invalidate Forward Resume & Prescreen Dossier caches scoped by job and candidate
             Cache::forget("tenant:{$tCompanyId}:fwd_branding");
             Cache::forget("tenant:{$tCompanyId}:fwd_template_metadata");
+            PrescreenDossierService::invalidateDossierCaches($candidateId, $targetJobId, $tCompanyId);
+            PrescreenDossierService::invalidateDossierCaches($candidateId, null, $tCompanyId);
         }
 
         // 3. Invalidate Datatable tenant-scoped and user-scoped version counters (Rule 6: Multi-Tenant Atomic Cache Invalidation)

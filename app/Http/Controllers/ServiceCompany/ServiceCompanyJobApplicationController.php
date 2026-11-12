@@ -430,9 +430,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $html = '';
             $jobSkill = DB::table('job_metronics_skills')
-                ->leftJoin('candidate_job_skill_exp', function ($join) use ($appId) {
+                ->leftJoin('candidate_job_skill_exp', function ($join) use ($appId, $job_id) {
                     $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                        ->where('candidate_job_skill_exp.candidate_id', '=', $appId);
+                        ->where('candidate_job_skill_exp.candidate_id', '=', $appId)
+                        ->where('candidate_job_skill_exp.job_id', '=', $job_id);
                 })
                 ->select(
                     DB::raw('MIN(job_metronics_skills.id) as job_skill_id'), // alias as job_skill_id for blade/form consistency
@@ -660,10 +661,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $companyId = (int) auth()->user()->company_id;
 
         foreach ($targetIds as $tid) {
+            \App\Services\PrescreenDossierService::invalidateDossierCaches((int) $tid, null, (int) $companyId);
             foreach ($slugs as $slug) {
                 cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
             }
         }
+        \App\Services\PrescreenDossierService::invalidateDossierCaches((int) $appId, ! empty($job_id) ? (int) $job_id : null, (int) $companyId);
 
         $cachekeys = [
             'candidateDetails_version_user_'.$this->user->id,
@@ -945,10 +948,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
 
         foreach ($targetIds as $tid) {
+            \App\Services\PrescreenDossierService::invalidateDossierCaches((int) $tid, null, (int) $companyId);
             foreach ($slugs as $slug) {
                 cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
             }
         }
+        \App\Services\PrescreenDossierService::invalidateDossierCaches((int) $appId, null, (int) $companyId);
 
         $cachekeys = ['candidateDetails_version_user_'.$this->user->id];
         foreach ($cachekeys as $key) {
@@ -1086,10 +1091,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
 
         foreach ($targetIds as $tid) {
+            \App\Services\PrescreenDossierService::invalidateDossierCaches((int) $tid, null, (int) $companyId);
             foreach ($slugs as $slug) {
                 cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
             }
         }
+        \App\Services\PrescreenDossierService::invalidateDossierCaches((int) $appId, null, (int) $companyId);
 
         $cachekeys = ['candidateDetails_version_user_'.$this->user->id];
         foreach ($cachekeys as $key) {
@@ -1232,6 +1239,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
 
         foreach ($targetIds as $tid) {
+            \App\Services\PrescreenDossierService::invalidateDossierCaches((int) $tid, null, (int) $companyId);
             foreach ($slugs as $slug) {
                 cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
             }
@@ -3484,26 +3492,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $r2SignUrl = route('service_company.job-applications.r2-download-url', ['id' => $application->id]);
         $optId = (int) $request->query('opt', 61);
 
-        // Full Pre-Screen Report Dossier Data (matching buildDefinition from showdetail.blade.php)
-        $rsSkills = [];
-        $candidateSkillsCombined = array_values(array_unique(array_filter(array_merge($candSkills, $jobSkills))));
-        $idx = 0;
-        foreach ($candidateSkillsCombined as $sk) {
-            $expNum = max(1, 6 - ($idx % 4));
-            $rating = max(3, 5 - ($idx % 3));
-            $rsSkills[] = [
-                'name' => $sk,
-                'expText' => $expNum.' Years',
-                'exp' => $expNum,
-                'rating' => $rating,
-            ];
-            $idx++;
-            if ($idx >= 7) {
-                break;
-            }
-        }
+        // Full Pre-Screen Report Dossier Data (authoritative, zero-fabrication via PrescreenDossierService)
+        $studioDossiers = app(\App\Services\PrescreenDossierService::class)->resolveCandidateDossiers(
+            [$application],
+            ! empty($application->job_id) ? (int) $application->job_id : null,
+            (int) $companyId,
+            $jobSkills
+        );
+        $studioDossier = $studioDossiers[(int) $application->id] ?? [];
+        $rsSkills = $studioDossier['skills'] ?? [];
 
-        $rsEducation = 'Graduate';
+        $rsEducation = 'Not Specified';
         if (! empty($application->qualification_name)) {
             $rsEducation = $application->qualification_name;
         } elseif (! empty($application->qualification_id)) {
@@ -3513,16 +3512,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
-        $rsTotalExp = trim((string) (@$application->total_exp ?? ''));
-        $rsExperience = ($rsTotalExp !== '' && (float) $rsTotalExp > 0) ? $rsTotalExp.' Years' : '5 Years';
+        $rsExperience = $studioDossier['total_exp_display'] ?? \App\Services\PrescreenDossierService::formatExperienceDisplay(@$application->total_exp, false);
 
         $rsWm = trim((string) (@$application->work_mode ?: (@$application->wm ?: 'Hybrid')));
         $rsWorkMode = ucwords(str_replace(['_', '-'], ' ', strtolower($rsWm)));
 
-        $rsMatchPct = (int) round((float) (@$application->skill_match ?? 0));
-        if ($rsMatchPct <= 0) {
-            $rsMatchPct = ! empty($application->rating) ? (int) ($application->rating * 20) : 88;
-        }
+        $rsMatchPct = (int) ($studioDossier['match'] ?? round((float) (@$application->skill_match ?? 0)));
 
         $rsCareerSummary = trim(strip_tags(html_entity_decode((string) (@$application->careersummary ?: (@$application->career_summary ?: (@$application->cover_letter ?: ''))), ENT_QUOTES, 'UTF-8')));
         if (empty($rsCareerSummary)) {
@@ -5429,9 +5424,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $job_details = Job::withoutGlobalScopes()->find($this->job_id);
 
         $this->jobSkill = DB::table('job_metronics_skills')
-            ->leftJoin('candidate_job_skill_exp', function ($join) {
+            ->leftJoin('candidate_job_skill_exp', function ($join) use ($job_id) {
                 $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                    ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id); // Add the candidate condition
+                    ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id)
+                    ->where('candidate_job_skill_exp.job_id', '=', $job_id);
             })
             ->select(
                 DB::raw('MIN(job_metronics_skills.id) as job_skill_id'), // alias as job_skill_id for blade form name keys
