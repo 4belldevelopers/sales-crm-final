@@ -823,6 +823,103 @@
 .cd-jobs-tabs-card {
     margin-bottom: 12px !important;
 }
+.cd-jobs-kpi-req-hidden {
+    display: none !important;
+}
+/* Unified Total Jobs Two-Section Separation (Rule 20 Card + Sub-Card + 15.6" fit) */
+.cd-jobs-unified-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.cd-jobs-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 9px 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+.cd-jobs-section-header.section-requests {
+    border-left: 3.5px solid #7c3aed;
+    background: linear-gradient(90deg, rgba(124, 58, 237, 0.045) 0%, #ffffff 38%);
+}
+.cd-jobs-section-header.section-hiring {
+    border-left: 3.5px solid #009ef7;
+    background: linear-gradient(90deg, rgba(0, 158, 247, 0.045) 0%, #ffffff 38%);
+}
+.cd-jobs-section-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.cd-jobs-section-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+.section-requests .cd-jobs-section-icon {
+    background: #f5f3ff;
+    color: #7c3aed;
+    border: 1px solid #ddd6fe;
+}
+.section-hiring .cd-jobs-section-icon {
+    background: #f0f9ff;
+    color: #009ef7;
+    border: 1px solid #bae6fd;
+}
+.cd-jobs-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+}
+.cd-jobs-section-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.section-requests .cd-jobs-section-badge {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+.section-hiring .cd-jobs-section-badge {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+.cd-jobs-section-sub {
+    font-size: 11.5px;
+    color: #64748b;
+    font-weight: 500;
+}
+.cd-jobs-section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(226, 232, 240, 0) 0%, #cbd5e1 15%, #cbd5e1 85%, rgba(226, 232, 240, 0) 100%);
+    margin: 8px 0 4px;
+}
+.cd-jobs-hiring-empty {
+    background: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    padding: 28px 20px;
+    text-align: center;
+}
 
 .cd-jobs-search-filter-card .cd-jobs-search-subcard {
     flex: 1 1 280px !important;
@@ -1881,15 +1978,49 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         }
     }
 
+    /**
+     * Immediately synchronize status tab badges and header pill counter from controller dataCnt payload
+     * (prevents stale counts during asynchronous refresh after Accept / Reject).
+     */
+    function syncStatusTabCountsFromDataCnt(dataCnt) {
+        if (!dataCnt) return;
+        var kpi = window.currentKpiFilter || 'all';
+        if (kpi === 'job_request' || kpi === 'request') {
+            var reqTotal = Number(dataCnt.jobRequest || 0);
+            $('#all_jobs_count').text(reqTotal);
+            return;
+        }
+        if (kpi === 'all' || !kpi) {
+            var allCnt = Number(dataCnt.allRequisition !== undefined ? dataCnt.allRequisition : (dataCnt.allTabCount || 0));
+            var hireCnt = Number(dataCnt.hiringCount || 0);
+            var holdCnt = Number(dataCnt.holdCount || 0);
+            var closeCnt = Number(dataCnt.closedCount || 0);
+            var remCnt = Number(dataCnt.removedCount || 0);
+            $('#filterCountAll, .jh-tab[data-status="all"] .jh-badge, .cd-jobs-tab-btn[data-status="all"] .cd-jobs-tab-badge').text(allCnt);
+            $('#filterCountHiring, .jh-tab[data-status="active"] .jh-badge, .cd-jobs-tab-btn[data-status="active"] .cd-jobs-tab-badge').text(hireCnt);
+            $('#filterCountHold, .jh-tab[data-status="hold"] .jh-badge, .cd-jobs-tab-btn[data-status="hold"] .cd-jobs-tab-badge').text(holdCnt);
+            $('#filterCountClosed, .jh-tab[data-status="inactive"] .jh-badge, .cd-jobs-tab-btn[data-status="inactive"] .cd-jobs-tab-badge').text(closeCnt);
+            $('#filterCountRemoved, .jh-tab[data-status="removed"] .jh-badge, .cd-jobs-tab-btn[data-status="removed"] .cd-jobs-tab-badge').text(remCnt);
+
+            var activeStatus = ($('#status').val() || 'all').toLowerCase();
+            var statusHeaderCount = allCnt;
+            if (activeStatus === 'active') statusHeaderCount = hireCnt;
+            else if (activeStatus === 'hold') statusHeaderCount = holdCnt;
+            else if (activeStatus === 'inactive') statusHeaderCount = closeCnt;
+            else if (activeStatus === 'removed') statusHeaderCount = remCnt;
+            $('#all_jobs_count').text(statusHeaderCount);
+        }
+    }
+
     function updateKpiViewToggle(kpiType) {
         var isReq = (kpiType === 'job_request' || kpiType === 'request');
         var $reqSortOpt = $('#hiringtype option.js-req-only-sort');
         if (isReq) {
-            $('.cd-jobs-tabs-card, .jh-tabs-card, .pipeline-legend-card').hide();
-            $('.cd-jobs-search-filter-card').show();
+            $('.cd-jobs-tabs-card, .jh-tabs-card, .pipeline-legend-card').addClass('cd-jobs-kpi-req-hidden').hide();
+            $('.cd-jobs-search-filter-card').removeClass('cd-jobs-kpi-req-hidden').show();
             $reqSortOpt.prop('hidden', false).prop('disabled', false).show();
         } else {
-            $('.cd-jobs-tabs-card, .cd-jobs-search-filter-card, .jh-filter-bar, .jh-tabs-card, .pipeline-legend-card').show();
+            $('.cd-jobs-tabs-card, .cd-jobs-search-filter-card, .jh-filter-bar, .jh-tabs-card, .pipeline-legend-card').removeClass('cd-jobs-kpi-req-hidden').show();
             $reqSortOpt.prop('hidden', true).prop('disabled', true).hide();
             if ($('#hiringtype').val() === '7') {
                 $('#hiringtype').val('1');
@@ -2448,35 +2579,29 @@ $(document).on('click', '.client-hm-listing', function ()
             },
             success: function (response) {
                 if (response.status === 'success' || response.status === 'accept') {
-                    if (window.JeroJobsLocalStore) {
-                        window.JeroJobsLocalStore.purge();
-                    }
-                    syncTopKpiCounts(response.dataCnt);
-                    Swal.fire({
-                        text: 'Job request accepted successfully.',
-                        icon: 'success',
-                        buttonsStyling: false,
-                        confirmButtonText: 'Ok, got it!',
-                        customClass: {
-                            confirmButton: 'btn btn-primary'
-                        }
+                    window.handleJobRequestMutationSuccess(recommendation_relation_id, response, function () {
+                        Swal.fire({
+                            text: 'Job request accepted successfully.',
+                            icon: 'success',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok, got it!',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        });
                     });
-                    fetchCandidates(1);
                 } else if (response.code === 'REQUEST_EXPIRED') {
-                    if (window.JeroJobsLocalStore) {
-                        window.JeroJobsLocalStore.purge();
-                    }
-                    syncTopKpiCounts(response.dataCnt);
-                    Swal.fire({
-                        text: response.message || 'This job request has expired and cannot be accepted.',
-                        icon: 'warning',
-                        buttonsStyling: false,
-                        confirmButtonText: 'Ok',
-                        customClass: {
-                            confirmButton: 'btn btn-primary'
-                        }
+                    window.handleJobRequestMutationSuccess(recommendation_relation_id, response, function () {
+                        Swal.fire({
+                            text: response.message || 'This job request has expired and cannot be accepted.',
+                            icon: 'warning',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        });
                     });
-                    fetchCandidates(1);
                 } else if (response.status === 'ignoreClient') {
                     $btn.prop('disabled', false).html(originalHtml);
                     Swal.fire({
@@ -2558,12 +2683,9 @@ $(document).on('click', '.client-hm-listing', function ()
                         status: status
                     },
                     success: function (response) {
-                        if (window.JeroJobsLocalStore) {
-                            window.JeroJobsLocalStore.purge();
-                        }
-                        syncTopKpiCounts(response.dataCnt);
-                        swalWithBootstrapButtons.fire('Rejected!', 'Selected request has been rejected.', 'success');
-                        fetchCandidates(1);
+                        window.handleJobRequestMutationSuccess(recommendation_relation_id, response, function () {
+                            swalWithBootstrapButtons.fire('Rejected!', 'Selected request has been rejected.', 'success');
+                        });
                     },
                     error: function () {
                         $btn.prop('disabled', false).html(originalHtml);
@@ -3240,34 +3362,161 @@ $(document).on('click', '.client-hm-listing', function ()
             return html;
         }
 
+        /**
+         * Synchronizes UI state immediately after Job Request Accept / Reject / Expired actions:
+         * drops acted request optimistically, updates all KPI & status badges, purges IndexedDB,
+         * and reloads fresh authoritative ES data bypassing local cache.
+         */
+        window.handleJobRequestMutationSuccess = function(recId, response, onNotify) {
+            var dataCnt = (response && response.dataCnt) ? response.dataCnt : null;
+            if (dataCnt) {
+                syncTopKpiCounts(dataCnt);
+                syncStatusTabCountsFromDataCnt(dataCnt);
+            }
+
+            if (window.jobsState && Array.isArray(window.jobsState.jobRequests)) {
+                window.jobsState.jobRequests = window.jobsState.jobRequests.filter(function(r) {
+                    return String(r.recommendation_relation_id || r.id) !== String(recId);
+                });
+            }
+
+            var kpi = window.currentKpiFilter || 'all';
+            if (kpi === 'job_request' || kpi === 'request') {
+                if (window.jobsState && Array.isArray(window.jobsState.all)) {
+                    window.jobsState.all = window.jobsState.all.filter(function(r) {
+                        return String(r.recommendation_relation_id || r.id) !== String(recId);
+                    });
+                    window.jobsState.filtered = window.jobsState.all;
+                    $('#allJobList').html(renderJobRequestsClientSide(window.jobsState.all));
+                    if (window.jobsState.all.length > 0) {
+                        ensureJobRequestCountdownTimer();
+                    } else if (window.jobRequestTimerId) {
+                        clearInterval(window.jobRequestTimerId);
+                        window.jobRequestTimerId = null;
+                    }
+                }
+            } else if (kpi === 'all' || !kpi) {
+                var curJobs = (window.jobsState && Array.isArray(window.jobsState.filtered))
+                    ? window.jobsState.filtered
+                    : ((window.jobsState && Array.isArray(window.jobsState.all)) ? window.jobsState.all : []);
+                var curReqs = (window.jobsState && Array.isArray(window.jobsState.jobRequests))
+                    ? window.jobsState.jobRequests
+                    : [];
+                if (window.jobsState) {
+                    window.jobsState.filteredRequests = curReqs;
+                }
+                renderTotalJobsUnifiedStream(curReqs, curJobs);
+            }
+
+            if (typeof onNotify === 'function') {
+                onNotify();
+            }
+
+            var refreshLive = function() {
+                fetchCandidates(1, '', undefined, { bypassCache: true });
+            };
+            if (window.JeroJobsLocalStore && typeof window.JeroJobsLocalStore.purge === 'function') {
+                Promise.resolve(window.JeroJobsLocalStore.purge()).then(refreshLive, refreshLive);
+            } else {
+                refreshLive();
+            }
+        };
+
+        /**
+         * Renders the unified Total Jobs tab view:
+         * 1) Active/unexpired Job Requests at the top (when count > 0) using exact Job Request Card UI
+         * 2) Existing Hiring Jobs below with clear section separation (or clean empty state)
+         */
+        function renderTotalJobsUnifiedStream(requests, jobs) {
+            var activeReqs = (Array.isArray(requests) ? requests : []).filter(function(req) {
+                return !computeExpiryTelemetry(req.expires_at_iso, req.job_end_date_iso).isExpired;
+            });
+            var activeJobs = Array.isArray(jobs) ? jobs : [];
+            var html = '';
+
+            if (activeReqs.length > 0) {
+                html += '<div class="cd-jobs-unified-section cd-jobs-unified-requests">';
+                html += '  <div class="cd-jobs-section-header section-requests">';
+                html += '    <div class="cd-jobs-section-header-left">';
+                html += '      <span class="cd-jobs-section-icon"><i class="fas fa-handshake"></i></span>';
+                html += '      <span class="cd-jobs-section-title">Pending Job Requests</span>';
+                html += '      <span class="cd-jobs-section-badge">' + activeReqs.length + '</span>';
+                html += '    </div>';
+                html += '    <span class="cd-jobs-section-sub">Accept to convert into an active Hiring Job or Reject to dismiss</span>';
+                html += '  </div>';
+                html += renderJobRequestsClientSide(activeReqs);
+                html += '</div>';
+                html += '<div class="cd-jobs-section-divider"></div>';
+                html += '<div class="cd-jobs-unified-section cd-jobs-unified-hiring">';
+                html += '  <div class="cd-jobs-section-header section-hiring">';
+                html += '    <div class="cd-jobs-section-header-left">';
+                html += '      <span class="cd-jobs-section-icon"><i class="fas fa-briefcase"></i></span>';
+                html += '      <span class="cd-jobs-section-title">Hiring Jobs</span>';
+                html += '      <span class="cd-jobs-section-badge">' + activeJobs.length + '</span>';
+                html += '    </div>';
+                html += '    <span class="cd-jobs-section-sub">Active &amp; managed job requisitions</span>';
+                html += '  </div>';
+                if (activeJobs.length > 0) {
+                    html += renderJobsClientSide(activeJobs);
+                } else {
+                    html += '<div class="cd-jobs-hiring-empty">' +
+                            '<i class="fa fa-briefcase fa-lg text-muted mb-2 d-block"></i>' +
+                            '<div class="fw-bold fs-6 text-gray-700 mb-1">No Hiring Jobs Found</div>' +
+                            '<div class="text-muted fs-7">Accept a pending job request above or add a new job to see it listed here.</div></div>';
+                }
+                html += '</div>';
+            } else if (activeJobs.length > 0) {
+                html += renderJobsClientSide(activeJobs);
+            } else {
+                html += '<div class="cd-jobs-empty text-center py-16 px-6 my-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px;">' +
+                        '<i class="fa fa-briefcase fa-2x mb-3 text-muted d-block"></i>' +
+                        '<div class="fw-bold fs-6 text-gray-700 mb-1">No Job Requisitions Found</div>' +
+                        '<div class="text-muted fs-7">No jobs match the current criteria.</div></div>';
+            }
+
+            $('#allJobList').html(html);
+            if (activeReqs.length > 0) {
+                ensureJobRequestCountdownTimer();
+            } else if (window.jobRequestTimerId) {
+                clearInterval(window.jobRequestTimerId);
+                window.jobRequestTimerId = null;
+            }
+        }
+
         function filtersdata() {
-            if (!window.jobsState || !window.jobsState.all || window.jobsState.all.length === 0) {
+            var hasJobs = window.jobsState && Array.isArray(window.jobsState.all) && window.jobsState.all.length > 0;
+            var hasReqs = window.jobsState && Array.isArray(window.jobsState.jobRequests) && window.jobsState.jobRequests.length > 0;
+            if (!hasJobs && !hasReqs) {
                 return fetchCandidates(1);
             }
 
-            var isJobRequestTab = (window.currentKpiFilter === 'job_request' || window.currentKpiFilter === 'request');
+            var kpi = window.currentKpiFilter || 'all';
+            var isJobRequestTab = (kpi === 'job_request' || kpi === 'request');
+            var isTotalJobsTab = (!kpi || kpi === 'all');
             var searchTerm = ($('.inputJobSearch').val() || $('#inputSearch').val() || '').toLowerCase().trim();
             var status = $('#status').val() || 'all';
             var employmentType = $('#employment_type').val() || 'all';
             var expFilter = $('#experience_filter').val() || 'all';
             var sortVal = $('#hiringtype').val() || '1';
 
-            var filtered = window.jobsState.all.filter(function(job) {
-                if (isJobRequestTab) {
-                    var reqMeta = computeExpiryTelemetry(job.expires_at_iso, job.job_end_date_iso);
-                    if (reqMeta.isExpired) return false;
+            // Shared matcher across both job request cards & hiring job cards (zero duplicated filter rules)
+            function matchesSharedCriteria(item, isReqItem) {
+                if (isReqItem) {
+                    if (computeExpiryTelemetry(item.expires_at_iso, item.job_end_date_iso).isExpired) {
+                        return false;
+                    }
                 } else {
-                    if (window.currentKpiFilter === 'my_organization') {
-                        if (job.is_direct_client || !job.is_self_company) return false;
-                    } else if (window.currentKpiFilter === 'internal') {
-                        if (job.is_direct_client || job.is_self_company) return false;
-                    } else if (window.currentKpiFilter === 'direct') {
-                        if (!job.is_direct_client) return false;
+                    if (kpi === 'my_organization') {
+                        if (item.is_direct_client || !item.is_self_company) return false;
+                    } else if (kpi === 'internal') {
+                        if (item.is_direct_client || item.is_self_company) return false;
+                    } else if (kpi === 'direct') {
+                        if (!item.is_direct_client) return false;
                     }
 
                     if (status !== 'all' && status !== '') {
-                        var s = (job.status || '').toLowerCase();
-                        var sr = (job.status_raw || '').toLowerCase();
+                        var s = (item.status || '').toLowerCase();
+                        var sr = (item.status_raw || '').toLowerCase();
                         if (status === 'active' && s !== 'hiring' && sr !== 'active') return false;
                         if (status === 'hold' && s !== 'hold' && sr !== 'hold') return false;
                         if (status === 'inactive' && s !== 'closed' && sr !== 'inactive') return false;
@@ -3276,27 +3525,27 @@ $(document).on('click', '.client-hm-listing', function ()
                 }
 
                 if (searchTerm !== '') {
-                    var matchTitle = (job.title || '').toLowerCase().includes(searchTerm);
-                    var matchDept = (job.department || '').toLowerCase().includes(searchTerm);
-                    var matchClient = (job.clients_name || '').toLowerCase().includes(searchTerm);
-                    var matchCity = (job.city || '').toLowerCase().includes(searchTerm) ||
-                        (Array.isArray(job.cities) && job.cities.some(function(c) { return String(c).toLowerCase().includes(searchTerm); })) ||
-                        (Array.isArray(job.work_locations) && job.work_locations.some(function(wl) { return (wl.city_name || '').toLowerCase().includes(searchTerm) || (wl.country_name || '').toLowerCase().includes(searchTerm); }));
-                    var matchHM = (job.hiring_manager || '').toLowerCase().includes(searchTerm) || (job.sent_by_name || '').toLowerCase().includes(searchTerm);
-                    var matchSkills = (job.skills || []).some(function(sk) { return sk.toLowerCase().includes(searchTerm); });
-                    var matchId = String(job.id) === searchTerm || String(job.recommendation_relation_id || '') === searchTerm;
+                    var matchTitle = (item.title || '').toLowerCase().includes(searchTerm);
+                    var matchDept = (item.department || '').toLowerCase().includes(searchTerm);
+                    var matchClient = (item.clients_name || '').toLowerCase().includes(searchTerm);
+                    var matchCity = (item.city || '').toLowerCase().includes(searchTerm) ||
+                        (Array.isArray(item.cities) && item.cities.some(function(c) { return String(c).toLowerCase().includes(searchTerm); })) ||
+                        (Array.isArray(item.work_locations) && item.work_locations.some(function(wl) { return (wl.city_name || '').toLowerCase().includes(searchTerm) || (wl.country_name || '').toLowerCase().includes(searchTerm); }));
+                    var matchHM = (item.hiring_manager || '').toLowerCase().includes(searchTerm) || (item.sent_by_name || '').toLowerCase().includes(searchTerm);
+                    var matchSkills = (item.skills || []).some(function(sk) { return sk.toLowerCase().includes(searchTerm); });
+                    var matchId = String(item.id) === searchTerm || String(item.recommendation_relation_id || '') === searchTerm;
                     if (!matchTitle && !matchDept && !matchClient && !matchCity && !matchHM && !matchSkills && !matchId) {
                         return false;
                     }
                 }
 
                 if (employmentType !== 'all' && employmentType !== '') {
-                    if (String(job.employment_type_raw) !== String(employmentType)) return false;
+                    if (String(item.employment_type_raw) !== String(employmentType)) return false;
                 }
 
                 if (expFilter !== 'all' && expFilter !== '') {
-                    var minE = parseInt(job.min_exp) || 0;
-                    var maxE = parseInt(job.max_exp) || 0;
+                    var minE = parseInt(item.min_exp) || 0;
+                    var maxE = parseInt(item.max_exp) || 0;
                     if (expFilter === '0-1' && !(minE <= 1 && maxE >= 0)) return false;
                     if (expFilter === '1-3' && !(minE <= 3 && maxE >= 1)) return false;
                     if (expFilter === '3-5' && !(minE <= 5 && maxE >= 3)) return false;
@@ -3304,39 +3553,63 @@ $(document).on('click', '.client-hm-listing', function ()
                 }
 
                 return true;
-            });
-
-            filtered.sort(function(a, b) {
-                if (sortVal === '7' && isJobRequestTab) {
-                    var aRem = computeExpiryTelemetry(a.expires_at_iso, a.job_end_date_iso).remainingMs;
-                    var bRem = computeExpiryTelemetry(b.expires_at_iso, b.job_end_date_iso).remainingMs;
-                    return aRem - bRem;
-                }
-                if (sortVal === '1') {
-                    return isJobRequestTab
-                        ? ((b.recommendation_relation_id || b.id) - (a.recommendation_relation_id || a.id))
-                        : (b.id - a.id);
-                }
-                if (sortVal === '2') {
-                    return isJobRequestTab
-                        ? ((a.recommendation_relation_id || a.id) - (b.recommendation_relation_id || b.id))
-                        : (a.id - b.id);
-                }
-                if (sortVal === '3') return (parseFloat(a.max_salary_raw ?? a.min_salary) || 0) - (parseFloat(b.max_salary_raw ?? b.min_salary) || 0);
-                if (sortVal === '4') return (parseFloat(b.max_salary_raw ?? b.max_salary) || 0) - (parseFloat(a.max_salary_raw ?? a.max_salary) || 0);
-                if (sortVal === '5') return (a.clients_name || '').localeCompare(b.clients_name || '');
-                if (sortVal === '6') return (b.clients_name || '').localeCompare(a.clients_name || '');
-                return b.id - a.id;
-            });
-
-            window.jobsState.filtered = filtered;
-            if (isJobRequestTab) {
-                $('#allJobList').html(renderJobRequestsClientSide(filtered));
-                ensureJobRequestCountdownTimer();
-            } else {
-                $('#allJobList').html(renderJobsClientSide(filtered));
             }
-            $('#all_jobs_count').html(filtered.length);
+
+            function sortItems(items, isReqList) {
+                return items.slice().sort(function(a, b) {
+                    if (sortVal === '7' && isReqList) {
+                        var aRem = computeExpiryTelemetry(a.expires_at_iso, a.job_end_date_iso).remainingMs;
+                        var bRem = computeExpiryTelemetry(b.expires_at_iso, b.job_end_date_iso).remainingMs;
+                        return aRem - bRem;
+                    }
+                    if (sortVal === '1') {
+                        return isReqList
+                            ? ((b.recommendation_relation_id || b.id) - (a.recommendation_relation_id || a.id))
+                            : (b.id - a.id);
+                    }
+                    if (sortVal === '2') {
+                        return isReqList
+                            ? ((a.recommendation_relation_id || a.id) - (b.recommendation_relation_id || b.id))
+                            : (a.id - b.id);
+                    }
+                    if (sortVal === '3') return (parseFloat(a.max_salary_raw ?? a.min_salary) || 0) - (parseFloat(b.max_salary_raw ?? b.min_salary) || 0);
+                    if (sortVal === '4') return (parseFloat(b.max_salary_raw ?? b.max_salary) || 0) - (parseFloat(a.max_salary_raw ?? a.max_salary) || 0);
+                    if (sortVal === '5') return (a.clients_name || '').localeCompare(b.clients_name || '');
+                    if (sortVal === '6') return (b.clients_name || '').localeCompare(a.clients_name || '');
+                    return b.id - a.id;
+                });
+            }
+
+            if (isJobRequestTab) {
+                var filteredReqsOnly = sortItems(
+                    (window.jobsState.all || []).filter(function(item) { return matchesSharedCriteria(item, true); }),
+                    true
+                );
+                window.jobsState.filtered = filteredReqsOnly;
+                $('#allJobList').html(renderJobRequestsClientSide(filteredReqsOnly));
+                ensureJobRequestCountdownTimer();
+                $('#all_jobs_count').html(filteredReqsOnly.length);
+                return;
+            }
+
+            var filteredJobs = sortItems(
+                (window.jobsState.all || []).filter(function(item) { return matchesSharedCriteria(item, false); }),
+                false
+            );
+            window.jobsState.filtered = filteredJobs;
+
+            if (isTotalJobsTab) {
+                // Pending requests always appear at top regardless of selected status filter tab
+                var filteredTopReqs = sortItems(
+                    (window.jobsState.jobRequests || []).filter(function(req) { return matchesSharedCriteria(req, true); }),
+                    true
+                );
+                window.jobsState.filteredRequests = filteredTopReqs;
+                renderTotalJobsUnifiedStream(filteredTopReqs, filteredJobs);
+            } else {
+                $('#allJobList').html(renderJobsClientSide(filteredJobs));
+            }
+            $('#all_jobs_count').html(filteredJobs.length);
         }
 
         function applyJobsResponse(response, page) {
@@ -3350,12 +3623,17 @@ $(document).on('click', '.client-hm-listing', function ()
 
             updateKpiViewToggle(window.currentKpiFilter);
 
-            var isJobRequestTab = (window.currentKpiFilter === 'job_request' || window.currentKpiFilter === 'request');
+            var kpi = window.currentKpiFilter || 'all';
+            var isJobRequestTab = (kpi === 'job_request' || kpi === 'request');
+            var isTotalJobsTab = (!kpi || kpi === 'all');
+
             if (isJobRequestTab) {
                 if (response.jobs && response.jobs.length > 0) {
                     window.jobsState = {
                         all: response.jobs,
                         filtered: response.jobs,
+                        jobRequests: response.jobs,
+                        filteredRequests: response.jobs,
                         total: response.total
                     };
                     $('#allJobList').html(renderJobRequestsClientSide(response.jobs));
@@ -3363,21 +3641,43 @@ $(document).on('click', '.client-hm-listing', function ()
                 } else if (response.html && response.html.trim() !== '') {
                     $('#allJobList').html(response.html);
                 } else {
-                    window.jobsState = { all: [], filtered: [], total: 0 };
+                    window.jobsState = { all: [], filtered: [], jobRequests: [], filteredRequests: [], total: 0 };
                     $('#allJobList').html(renderJobRequestsClientSide([]));
+                }
+            } else if (isTotalJobsTab) {
+                var rawJobs = Array.isArray(response.jobs) ? response.jobs : [];
+                var rawReqs = Array.isArray(response.job_requests)
+                    ? response.job_requests.filter(function(req) {
+                        return !computeExpiryTelemetry(req.expires_at_iso, req.job_end_date_iso).isExpired;
+                    })
+                    : [];
+                window.jobsState = {
+                    all: rawJobs,
+                    filtered: rawJobs,
+                    jobRequests: rawReqs,
+                    filteredRequests: rawReqs,
+                    total: response.total !== undefined ? response.total : rawJobs.length,
+                    requestsTotal: rawReqs.length
+                };
+                if (rawJobs.length === 0 && rawReqs.length === 0 && response.html && response.html.trim() !== '') {
+                    $('#allJobList').html(response.html);
+                } else {
+                    renderTotalJobsUnifiedStream(rawReqs, rawJobs);
                 }
             } else {
                 if (response.jobs && response.jobs.length > 0) {
                     window.jobsState = {
                         all: response.jobs,
                         filtered: response.jobs,
+                        jobRequests: [],
+                        filteredRequests: [],
                         total: response.total
                     };
                     $('#allJobList').html(renderJobsClientSide(response.jobs));
                 } else if (response.html) {
                     $('#allJobList').html(response.html);
                 } else {
-                    window.jobsState = { all: [], filtered: [], total: 0 };
+                    window.jobsState = { all: [], filtered: [], jobRequests: [], filteredRequests: [], total: 0 };
                     $('#allJobList').html(
                         '<div class="cd-jobs-empty text-center py-16 px-6 my-4" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px;">' +
                         '<i class="fa fa-briefcase fa-2x mb-3 text-muted d-block"></i>' +
@@ -3400,13 +3700,14 @@ $(document).on('click', '.client-hm-listing', function ()
             syncTopKpiCounts(response.dataCnt);
         }
 
-        async function fetchCandidates(page = page_no, search = '', size = pageSize) {
+        async function fetchCandidates(page = page_no, search = '', size = pageSize, options = {}) {
+            options = options || {};
             window.latestSearchRequestId = (window.latestSearchRequestId || 0) + 1;
             const thisRequestId = window.latestSearchRequestId;
 
             const searchVal = ($('.inputJobSearch').val() || $('#inputSearch').val() || search || '').trim();
             const cacheKey = [
-                'v3',
+                'v4',
                 window.currentKpiFilter || 'all',
                 $('#status').val() || 'all',
                 $('#hiringtype').val() || '',
@@ -3417,11 +3718,13 @@ $(document).on('click', '.client-hm-listing', function ()
                 size
             ].join('_');
 
-            // Phase 2: Instant Cache Hydration from IndexedDB (<20ms render)
+            // Phase 2: Instant Cache Hydration from IndexedDB (<20ms render) unless explicitly bypassed
             let cached = null;
-            try {
-                cached = await JeroJobsLocalStore.get(cacheKey);
-            } catch (err) {}
+            if (!options.bypassCache) {
+                try {
+                    cached = await JeroJobsLocalStore.get(cacheKey);
+                } catch (err) {}
+            }
 
             if (cached && thisRequestId === window.latestSearchRequestId) {
                 applyJobsResponse(cached, page);
@@ -3580,8 +3883,12 @@ $(document).on('click', '.client-hm-listing', function ()
                             targetJob.status_raw = newStatus;
                             targetJob.status = (newStatus === 'active') ? 'Hiring' : ((newStatus === 'hold') ? 'Hold' : 'Closed');
                             
-                            // Re-render currently visible filtered list in RAM (<2ms)
-                            $('#allJobList').html(renderJobsClientSide(window.jobsState.filtered));
+                            // Re-render currently visible filtered list in RAM (<2ms) preserving Total Jobs unified view
+                            if ((!window.currentKpiFilter || window.currentKpiFilter === 'all') && typeof renderTotalJobsUnifiedStream === 'function') {
+                                renderTotalJobsUnifiedStream(window.jobsState.filteredRequests || window.jobsState.jobRequests || [], window.jobsState.filtered || []);
+                            } else {
+                                $('#allJobList').html(renderJobsClientSide(window.jobsState.filtered));
+                            }
                         }
                     }
 
