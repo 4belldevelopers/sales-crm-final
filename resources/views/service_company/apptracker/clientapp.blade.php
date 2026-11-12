@@ -1430,10 +1430,10 @@
    ========================================================================== */
 @media (min-width: 1181px) {
     body#kt_body.toolbar-fixed {
-        --kt-toolbar-height: 70px !important;
+        --kt-toolbar-height: 62px !important;
     }
     body#kt_body.toolbar-fixed .wrapper {
-        padding-top: calc(var(--kt-header-height, 65px) + 70px) !important;
+        padding-top: calc(var(--kt-header-height, 65px) + 62px) !important;
     }
 }
 @media (max-width: 1180px) {
@@ -1449,18 +1449,21 @@
     }
 }
 #kt_toolbar.caf-job-toolbar {
-    background: #eef2f7 !important;
+    background: #ffffff !important;
     border-bottom: none !important;
     box-shadow: none !important;
     height: auto !important;
-    min-height: 66px;
-    padding: 5px 0 3px 0 !important;
+    min-height: 60px;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 #kt_toolbar.caf-job-toolbar #kt_toolbar_container {
     width: 100% !important;
     max-width: 100% !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+    padding: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
     display: block !important;
 }
 .caf-hdr-card {
@@ -1471,10 +1474,13 @@
     width: 100%;
     min-height: 60px;
     background: var(--hdr-bg, #ffffff);
-    border: 1px solid var(--hdr-border, #a7f3d0);
+    border: none;
+    border-top: none;
+    border-right: none;
+    border-bottom: 1px solid var(--hdr-border, #a7f3d0);
     border-left: 4px solid var(--hdr-accent, #16a34a);
-    border-radius: 10px;
-    padding: 9px 16px;
+    border-radius: 0 !important;
+    padding: 10px 20px;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
     overflow: hidden;
@@ -1494,9 +1500,12 @@
     --hdr-btn-outline-color: #b45309;
     --hdr-btn-outline-hover-bg: #fef3c7;
     --hdr-btn-outline-hover-color: #78350f;
-    --hdr-btn-solid-bg: #d97706;
-    --hdr-btn-solid-hover: #b45309;
-    --hdr-btn-shadow: rgba(217, 119, 6, 0.22);
+    --hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%);
+    --hdr-btn-solid-border: #eab308;
+    --hdr-btn-solid-color: #422006;
+    --hdr-btn-solid-hover: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
+    --hdr-btn-solid-hover-border: #ca8a04;
+    --hdr-btn-shadow: rgba(234, 179, 8, 0.28);
 }
 .caf-hdr-card.hp-org-internal {
     --hdr-bg: linear-gradient(90deg, #eff6ff 0%, #f7faff 34%, #ffffff 64%, #ffffff 100%);
@@ -1512,9 +1521,12 @@
     --hdr-btn-outline-color: #1d4ed8;
     --hdr-btn-outline-hover-bg: #dbeafe;
     --hdr-btn-outline-hover-color: #1e3a8a;
-    --hdr-btn-solid-bg: #2563eb;
-    --hdr-btn-solid-hover: #1d4ed8;
-    --hdr-btn-shadow: rgba(37, 99, 235, 0.20);
+    --hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+    --hdr-btn-solid-border: #1d4ed8;
+    --hdr-btn-solid-color: #ffffff;
+    --hdr-btn-solid-hover: linear-gradient(135deg, #1e40af 0%, #172554 100%);
+    --hdr-btn-solid-hover-border: #1e3a8a;
+    --hdr-btn-shadow: rgba(29, 78, 216, 0.30);
 }
 .caf-hdr-card.hp-org-direct {
     --hdr-bg: linear-gradient(90deg, #ecfdf5 0%, #f5fdf9 34%, #ffffff 64%, #ffffff 100%);
@@ -1530,9 +1542,12 @@
     --hdr-btn-outline-color: #15803d;
     --hdr-btn-outline-hover-bg: #d1fae5;
     --hdr-btn-outline-hover-color: #14532d;
-    --hdr-btn-solid-bg: #16a34a;
-    --hdr-btn-solid-hover: #15803d;
-    --hdr-btn-shadow: rgba(22, 163, 74, 0.20);
+    --hdr-btn-solid-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    --hdr-btn-solid-border: #047857;
+    --hdr-btn-solid-color: #ffffff;
+    --hdr-btn-solid-hover: linear-gradient(135deg, #065f46 0%, #064e3b 100%);
+    --hdr-btn-solid-hover-border: #065f46;
+    --hdr-btn-shadow: rgba(4, 120, 87, 0.28);
 }
 .caf-hdr-main {
     flex: 1 1 auto;
@@ -1756,9 +1771,9 @@
     color: var(--hdr-btn-outline-hover-color, #14532d) !important;
 }
 .caf-hdr-btn-solid {
-    background: var(--hdr-btn-solid-bg, #16a34a) !important;
-    border: 1.5px solid var(--hdr-btn-solid-bg, #16a34a) !important;
-    color: #ffffff !important;
+    background: var(--hdr-btn-solid-bg, linear-gradient(135deg, #047857 0%, #065f46 100%)) !important;
+    border: 1.5px solid var(--hdr-btn-solid-border, #047857) !important;
+    color: var(--hdr-btn-solid-color, #ffffff) !important;
     border-radius: 8px !important;
     height: 38px !important;
     min-height: 38px !important;
@@ -1771,23 +1786,23 @@
     font-weight: 600 !important;
     line-height: 1 !important;
     margin: 0 !important;
-    box-shadow: 0 2px 5px var(--hdr-btn-shadow, rgba(22, 163, 74, 0.20)) !important;
+    box-shadow: 0 2px 5px var(--hdr-btn-shadow, rgba(4, 120, 87, 0.28)) !important;
     transition: all 0.15s ease !important;
 }
 .caf-hdr-btn-solid:hover,
 .caf-hdr-btn-solid:focus {
-    background: var(--hdr-btn-solid-hover, #15803d) !important;
-    border-color: var(--hdr-btn-solid-hover, #15803d) !important;
-    color: #ffffff !important;
+    background: var(--hdr-btn-solid-hover, linear-gradient(135deg, #065f46 0%, #064e3b 100%)) !important;
+    border-color: var(--hdr-btn-solid-hover-border, #065f46) !important;
+    color: var(--hdr-btn-solid-color, #ffffff) !important;
     transform: translateY(-0.5px);
 }
 .caf-hdr-btn-solid .svg-icon svg path {
-    fill: #ffffff !important;
+    fill: var(--hdr-btn-solid-color, #ffffff) !important;
 }
 @media (max-width: 1440px) {
     .caf-hdr-card {
         gap: 12px;
-        padding: 8px 14px;
+        padding: 9px 16px;
     }
     .caf-hdr-main {
         gap: 8px;
@@ -1818,7 +1833,7 @@
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
-        padding: 10px 12px;
+        padding: 10px 14px;
     }
     .caf-hdr-main {
         justify-content: flex-start;

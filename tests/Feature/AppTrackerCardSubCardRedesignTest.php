@@ -584,8 +584,13 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('#fffbeb', $indexView);
         $this->assertStringContainsString('#eff6ff', $indexView);
         $this->assertStringContainsString('#ecfdf5', $indexView);
-        $this->assertStringContainsString('--kt-toolbar-height: 70px', $indexView);
-        $this->assertStringContainsString('padding-left: 12px !important;', $indexView);
+        $this->assertStringContainsString('--kt-toolbar-height: 62px', $indexView);
+        $this->assertStringContainsString('padding-left: 0 !important;', $indexView);
+        $this->assertStringContainsString('border-radius: 0 !important;', $indexView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%);', $indexView);
+        $this->assertStringContainsString('--hdr-btn-solid-color: #422006;', $indexView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);', $indexView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);', $indexView);
         $this->assertStringContainsString('justify-content: space-between;', $indexView);
         $this->assertStringContainsString('height: 38px !important;', $indexView);
 
@@ -601,8 +606,13 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('.caf-hdr-card.hp-org-my', $clientAppView);
         $this->assertStringContainsString('.caf-hdr-card.hp-org-internal', $clientAppView);
         $this->assertStringContainsString('.caf-hdr-card.hp-org-direct', $clientAppView);
-        $this->assertStringContainsString('--kt-toolbar-height: 70px', $clientAppView);
-        $this->assertStringContainsString('padding-left: 12px !important;', $clientAppView);
+        $this->assertStringContainsString('--kt-toolbar-height: 62px', $clientAppView);
+        $this->assertStringContainsString('padding-left: 0 !important;', $clientAppView);
+        $this->assertStringContainsString('border-radius: 0 !important;', $clientAppView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%);', $clientAppView);
+        $this->assertStringContainsString('--hdr-btn-solid-color: #422006;', $clientAppView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);', $clientAppView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);', $clientAppView);
         $this->assertStringContainsString('justify-content: space-between;', $clientAppView);
         $this->assertStringContainsString('height: 38px !important;', $clientAppView);
     }
