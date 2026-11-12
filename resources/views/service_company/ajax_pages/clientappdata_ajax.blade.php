@@ -354,16 +354,12 @@
                                    title="{{ e($displayFullName) }}">
                                     {{ $displayFullName }}
                                 </a>
-                                @if ($displayDesignation !== '')
-                                    <div class="caf-cand-desig {{ $flag === 1 ? 'text-danger' : '' }}" title="{{ e($displayDesignation) }}">
-                                        {{ $displayDesignation }}
-                                    </div>
-                                @endif
-                                @if ($displayCurrentCompany !== '')
-                                    <div class="caf-cand-company" title="{{ e($displayCurrentCompany) }}">
-                                        <i class="fas fa-building me-1"></i><span>{{ $displayCurrentCompany }}</span>
-                                    </div>
-                                @endif
+                                <div class="caf-cand-desig {{ $flag === 1 ? 'text-danger' : '' }}" title="{{ $displayDesignation !== '' ? e($displayDesignation) : 'Designation: –' }}">
+                                    {{ $displayDesignation !== '' ? $displayDesignation : '–' }}
+                                </div>
+                                <div class="caf-cand-company" title="{{ $displayCurrentCompany !== '' ? e($displayCurrentCompany) : 'Current Company: –' }}">
+                                    <i class="fas fa-building me-1"></i><span>{{ $displayCurrentCompany !== '' ? $displayCurrentCompany : '–' }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -387,16 +383,17 @@
                             <i class="far fa-clock me-1"></i>
                             <span><strong>{{ $formattedExperience }} Y</strong> Total</span>
                             @if ($rel_formattedExperience !== '')
-                                <span class="caf-dot">&bull;</span>
-                                <span><strong>{{ $rel_formattedExperience }} Y</strong> Rel</span>
+                                <span class="caf-rel-bracket">(Rel <strong>{{ $rel_formattedExperience }} Y</strong>)</span>
                             @endif
                         </div>
-                        @if ($np !== '')
-                            <div class="caf-val-notice" title="Notice Period: {{ e($np) }}">
-                                <i class="fas fa-hourglass-half me-1"></i>
+                        <div class="caf-val-notice" title="Notice Period: {{ $np !== '' ? e($np) : '–' }}">
+                            <i class="fas fa-hourglass-half me-1"></i>
+                            @if ($np !== '')
                                 <span class="caf-notice-txt {{ $npClass }}">{{ $np }}</span>
-                            </div>
-                        @endif
+                            @else
+                                <span class="caf-notice-txt text-muted">–</span>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -406,21 +403,19 @@
                         <span class="caf-subcard-label">Location &amp; Degree</span>
                     </div>
                     <div class="caf-subcard-body">
-                        @if ($locShort !== '')
-                            <div class="caf-loc-city" title="{{ e($locFull) }}">
-                                <i class="fas fa-map-marker-alt me-1"></i><span>{{ $locShort }}</span>
-                            </div>
-                        @endif
-                        @if ($cardMeta['work_mode_label'] !== '')
-                            <div class="caf-loc-mode" title="{{ e($cardMeta['work_mode_label']) }}">
-                                <i class="{{ $cardMeta['work_mode_icon'] }} me-1"></i><span>{{ $cardMeta['work_mode_label'] }}</span>
-                            </div>
-                        @endif
-                        @if ($displayQualification !== '')
-                            <div class="caf-loc-edu" title="{{ e(strtoupper($displayQualification)) }}">
-                                <i class="fas fa-graduation-cap me-1"></i><span class="caf-edu-uppercase">{{ $displayQualification }}</span>
-                            </div>
-                        @endif
+                        <div class="caf-loc-city" title="{{ $locFull !== '' ? e($locFull) : 'Location: –' }}">
+                            <i class="fas fa-map-marker-alt me-1"></i><span>{{ $locShort !== '' ? $locShort : '–' }}</span>
+                        </div>
+                        @php
+                            $wmIcon = $cardMeta['work_mode_icon'] !== '' ? $cardMeta['work_mode_icon'] : 'fas fa-building';
+                            $wmLabel = $cardMeta['work_mode_label'] !== '' ? $cardMeta['work_mode_label'] : '–';
+                        @endphp
+                        <div class="caf-loc-mode" title="{{ $cardMeta['work_mode_label'] !== '' ? e($cardMeta['work_mode_label']) : 'Work Mode: –' }}">
+                            <i class="{{ $wmIcon }} me-1"></i><span>{{ $wmLabel }}</span>
+                        </div>
+                        <div class="caf-loc-edu" title="{{ $displayQualification !== '' ? e(strtoupper($displayQualification)) : 'Education / Degree: –' }}">
+                            <i class="fas fa-graduation-cap me-1"></i><span class="{{ $displayQualification !== '' ? 'caf-edu-uppercase' : '' }}">{{ $displayQualification !== '' ? $displayQualification : '–' }}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -459,27 +454,21 @@
                     </div>
                 </div>
 
-                <!-- SUB-CARD 5: RECRUITER & SOURCING -->
+                <!-- SUB-CARD 5: OWNERSHIP & RECRUITER -->
                 <div class="caf-cand-subcard caf-subcard-owner">
                     <div class="caf-subcard-hdr">
-                        <span class="caf-subcard-label"><i class="fas fa-user-tie me-1"></i>Recruiter &amp; Sourcing</span>
+                        <span class="caf-subcard-label"><i class="fas fa-user-tie me-1"></i>Ownership &amp; Recruiter</span>
                     </div>
                     <div class="caf-subcard-body">
-                        @if ($rowpostedby !== '')
-                            <div class="caf-owner-name" title="{{ e($rowpostedby) }}">
-                                <i class="fas fa-user-circle text-primary me-1"></i><span>{{ $rowpostedby }}</span>
-                            </div>
-                        @endif
-                        @if ($post_company_name !== '')
-                            <div class="caf-owner-company" title="{{ e($post_company_name) }}">
-                                <i class="fas fa-building me-1"></i><span>{{ $post_company_name }}</span>
-                            </div>
-                        @endif
-                        @if ($cardMeta['submitted_ago'] !== '')
-                            <div class="caf-owner-submitted" title="{{ e('Submitted: ' . $cardMeta['submitted_ago']) }}">
-                                <i class="far fa-calendar-alt me-1"></i><span>Submitted: {{ $cardMeta['submitted_ago'] }}</span>
-                            </div>
-                        @endif
+                        <div class="caf-owner-name" title="{{ $rowpostedby !== '' ? e($rowpostedby) : 'Recruiter: –' }}">
+                            <i class="fas fa-user-circle text-primary me-1"></i><span>{{ $rowpostedby !== '' ? $rowpostedby : '–' }}</span>
+                        </div>
+                        <div class="caf-owner-company" title="{{ $post_company_name !== '' ? e($post_company_name) : 'Company: –' }}">
+                            <i class="fas fa-building me-1"></i><span>{{ $post_company_name !== '' ? $post_company_name : '–' }}</span>
+                        </div>
+                        <div class="caf-owner-submitted" title="{{ $cardMeta['submitted_ago'] !== '' ? e('Submitted: ' . $cardMeta['submitted_ago']) : 'Submitted: –' }}">
+                            <i class="far fa-calendar-alt me-1"></i><span>Submitted: {{ $cardMeta['submitted_ago'] !== '' ? $cardMeta['submitted_ago'] : '–' }}</span>
+                        </div>
                     </div>
                 </div>
 
