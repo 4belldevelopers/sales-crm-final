@@ -1425,15 +1425,15 @@
 }
 
 /* ==========================================================================
-   Rule 20: Job Header Card + Sub-Card Design System (.caf-job-toolbar / .caf-hdr-*)
-   Org-Differentiated Light Palettes & Button Colors (Total Candidates Parity)
+   ClientAppTracker Flat Light-Tinted Enterprise Header (.caf-job-toolbar / .caf-hdr-*)
+   V2 Audit-Refined: Open White Strip + Soft Org Tint Wash & Matching Buttons
    ========================================================================== */
 @media (min-width: 1181px) {
     body#kt_body.toolbar-fixed {
-        --kt-toolbar-height: 88px !important;
+        --kt-toolbar-height: 66px !important;
     }
     body#kt_body.toolbar-fixed .wrapper {
-        padding-top: calc(var(--kt-header-height, 65px) + 88px) !important;
+        padding-top: calc(var(--kt-header-height, 65px) + 66px) !important;
     }
 }
 @media (max-width: 1180px) {
@@ -1453,8 +1453,8 @@
     border-bottom: none !important;
     box-shadow: none !important;
     height: auto !important;
-    min-height: 76px;
-    padding: 8px 0 6px 0 !important;
+    min-height: 62px;
+    padding: 4px 0 !important;
 }
 #kt_toolbar.caf-job-toolbar #kt_toolbar_container {
     width: 100% !important;
@@ -1463,26 +1463,27 @@
 }
 .caf-hdr-card {
     display: flex;
-    align-items: stretch;
+    align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 14px;
     width: 100%;
-    background: var(--hdr-bg, #ecfdf5);
-    border: 1px solid var(--hdr-border, #34d399);
+    min-height: 58px;
+    background: var(--hdr-bg, #ffffff);
+    border: 1px solid var(--hdr-border, #a7f3d0);
     border-left: 4px solid var(--hdr-accent, #16a34a);
     border-radius: 10px;
-    padding: 7px 10px;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    padding: 8px 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
     overflow: hidden;
 }
-/* Org Theme Tokens — Aligned with Total Candidates Card Palettes */
+/* Org Theme Tokens — Whisper-Light Directional Tint on White + Org Actions */
 .caf-hdr-card.hp-org-my {
-    --hdr-bg: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-    --hdr-border: #fbbf24;
+    --hdr-bg: linear-gradient(90deg, #fffbeb 0%, #fffdf7 34%, #ffffff 64%, #ffffff 100%);
+    --hdr-border: #fde68a;
     --hdr-accent: #d97706;
-    --hdr-sub-border: #fde68a;
-    --hdr-icon-bg: #fffbeb;
+    --hdr-logo-bg: #fffbeb;
+    --hdr-logo-border: #fde68a;
     --hdr-icon-color: #d97706;
     --hdr-pill-bg: #fef3c7;
     --hdr-pill-border: #fcd34d;
@@ -1493,14 +1494,14 @@
     --hdr-btn-outline-hover-color: #78350f;
     --hdr-btn-solid-bg: #d97706;
     --hdr-btn-solid-hover: #b45309;
-    --hdr-btn-shadow: rgba(217, 119, 6, 0.24);
+    --hdr-btn-shadow: rgba(217, 119, 6, 0.22);
 }
 .caf-hdr-card.hp-org-internal {
-    --hdr-bg: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    --hdr-border: #60a5fa;
+    --hdr-bg: linear-gradient(90deg, #eff6ff 0%, #f7faff 34%, #ffffff 64%, #ffffff 100%);
+    --hdr-border: #bfdbfe;
     --hdr-accent: #2563eb;
-    --hdr-sub-border: #bfdbfe;
-    --hdr-icon-bg: #eff6ff;
+    --hdr-logo-bg: #eff6ff;
+    --hdr-logo-border: #bfdbfe;
     --hdr-icon-color: #2563eb;
     --hdr-pill-bg: #dbeafe;
     --hdr-pill-border: #93c5fd;
@@ -1511,14 +1512,14 @@
     --hdr-btn-outline-hover-color: #1e3a8a;
     --hdr-btn-solid-bg: #2563eb;
     --hdr-btn-solid-hover: #1d4ed8;
-    --hdr-btn-shadow: rgba(37, 99, 235, 0.22);
+    --hdr-btn-shadow: rgba(37, 99, 235, 0.20);
 }
 .caf-hdr-card.hp-org-direct {
-    --hdr-bg: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    --hdr-border: #34d399;
+    --hdr-bg: linear-gradient(90deg, #ecfdf5 0%, #f5fdf9 34%, #ffffff 64%, #ffffff 100%);
+    --hdr-border: #a7f3d0;
     --hdr-accent: #16a34a;
-    --hdr-sub-border: #a7f3d0;
-    --hdr-icon-bg: #ecfdf5;
+    --hdr-logo-bg: #ecfdf5;
+    --hdr-logo-border: #a7f3d0;
     --hdr-icon-color: #16a34a;
     --hdr-pill-bg: #d1fae5;
     --hdr-pill-border: #6ee7b7;
@@ -1529,42 +1530,45 @@
     --hdr-btn-outline-hover-color: #14532d;
     --hdr-btn-solid-bg: #16a34a;
     --hdr-btn-solid-hover: #15803d;
-    --hdr-btn-shadow: rgba(22, 163, 74, 0.22);
+    --hdr-btn-shadow: rgba(22, 163, 74, 0.20);
 }
 .caf-hdr-main {
     flex: 1 1 auto;
     min-width: 0;
-    display: grid;
-    grid-template-columns: minmax(195px, 1.85fr) minmax(130px, 1.05fr) minmax(145px, 1.2fr) minmax(115px, 0.95fr) minmax(120px, 1.0fr);
-    gap: 8px;
-    align-items: stretch;
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
-.caf-hdr-subcard {
-    background: #ffffff;
-    border: 1px solid var(--hdr-sub-border, #e2e8f0);
-    border-radius: 8px;
-    padding: 6px 10px;
+.caf-hdr-sep {
+    width: 1px;
+    height: 28px;
+    background: #e2e8f0;
+    flex-shrink: 0;
+}
+.caf-hdr-col {
     display: flex;
     flex-direction: column;
     justify-content: center;
     min-width: 0;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.caf-hdr-sub--identity {
+.caf-hdr-col--identity {
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    gap: 9px;
+    gap: 10px;
+    flex: 1 1 auto;
+    max-width: clamp(200px, 24vw, 340px);
     cursor: pointer;
 }
-.caf-hdr-sub--status {
+.caf-hdr-col--status {
+    gap: 3px;
+    flex-shrink: 0;
     cursor: pointer;
-    gap: 4px;
 }
-.caf-hdr-sub--identity:hover,
-.caf-hdr-sub--status:hover {
-    border-color: var(--hdr-accent, #16a34a);
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+.caf-hdr-col--comp,
+.caf-hdr-col--loc,
+.caf-hdr-col--meta {
+    gap: 2px;
+    flex-shrink: 0;
 }
 .caf-hdr-logo-wrap {
     width: 36px;
@@ -1572,11 +1576,12 @@
     min-width: 36px;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    background: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 .caf-hdr-logo-img {
     width: 100%;
@@ -1584,7 +1589,10 @@
     object-fit: cover;
 }
 .caf-hdr-logo-mono {
-    font-size: 13px !important;
+    background: var(--hdr-logo-bg, #ecfdf5) !important;
+    border-color: var(--hdr-logo-border, #a7f3d0) !important;
+    color: var(--hdr-icon-color, #16a34a) !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
 }
 .caf-hdr-identity-txt {
@@ -1595,7 +1603,7 @@
     gap: 1px;
 }
 .caf-hdr-job-title {
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 700;
     color: #0f172a;
     white-space: nowrap;
@@ -1603,15 +1611,16 @@
     text-overflow: ellipsis;
     line-height: 1.25;
     text-decoration: none;
+    transition: color 0.15s ease;
 }
-.caf-hdr-sub--identity:hover .caf-hdr-job-title {
+.caf-hdr-col--identity:hover .caf-hdr-job-title {
     color: var(--hdr-accent, #16a34a);
 }
 .caf-hdr-company-name {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 500;
     color: #64748b;
     white-space: nowrap;
@@ -1621,25 +1630,24 @@
     text-decoration: none;
 }
 .caf-hdr-company-name i {
-    font-size: 10px;
+    font-size: 10.5px;
     color: #94a3b8;
     flex-shrink: 0;
 }
 .caf-hdr-sub-top {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 6px;
 }
 .caf-hdr-status-badge {
-    font-size: 10.5px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     padding: 2px 8px !important;
     border-radius: 5px !important;
     line-height: 1.25 !important;
 }
 .caf-hdr-job-id {
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 600;
     color: #64748b;
     font-variant-numeric: tabular-nums;
@@ -1653,32 +1661,19 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 7px;
+    padding: 1.5px 7px;
     border-radius: 5px;
     background: var(--hdr-pill-bg, #d1fae5);
     border: 1px solid var(--hdr-pill-border, #6ee7b7);
     color: var(--hdr-pill-color, #166534);
-    font-size: 10px;
-    font-weight: 700;
+    font-size: 10.5px;
+    font-weight: 600;
     line-height: 1.25;
     white-space: nowrap;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 .caf-hdr-org-pill i {
-    font-size: 9px;
+    font-size: 9.5px;
     flex-shrink: 0;
-}
-.caf-hdr-sub-kicker {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.55px;
-    color: #94a3b8;
-    text-transform: uppercase;
-    line-height: 1.1;
-    margin-bottom: 3px;
-    white-space: nowrap;
 }
 .caf-hdr-sub-row {
     display: flex;
@@ -1686,21 +1681,13 @@
     gap: 5px;
     min-width: 0;
 }
-.caf-hdr-sub-icon {
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
-    border-radius: 4px;
-    background: var(--hdr-icon-bg, #ecfdf5);
+.caf-hdr-col-icon {
+    font-size: 11px;
     color: var(--hdr-icon-color, #16a34a);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
     flex-shrink: 0;
 }
 .caf-hdr-sub-val {
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 700;
     color: #0f172a;
     white-space: nowrap;
@@ -1709,28 +1696,32 @@
     line-height: 1.25;
     font-variant-numeric: tabular-nums;
 }
+.caf-hdr-loc-plus {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--hdr-icon-color, #16a34a);
+    margin-left: 2px;
+}
 .caf-hdr-sub-meta {
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-weight: 500;
     color: #475569;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.25;
-    margin-top: 2px;
     font-variant-numeric: tabular-nums;
 }
 .caf-hdr-actions-form {
     flex: 0 0 auto;
     display: flex;
-    align-items: stretch;
+    align-items: center;
     margin: 0 !important;
 }
-.caf-hdr-subcard--actions {
-    flex-direction: row;
+.caf-hdr-actions {
+    display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 6px 9px;
+    gap: 8px;
     white-space: nowrap;
 }
 .caf-hdr-btn-outline {
@@ -1761,7 +1752,7 @@
     font-weight: 600 !important;
     line-height: 1.2 !important;
     margin: 0 !important;
-    box-shadow: 0 2px 6px var(--hdr-btn-shadow, rgba(22, 163, 74, 0.22)) !important;
+    box-shadow: 0 2px 5px var(--hdr-btn-shadow, rgba(22, 163, 74, 0.20)) !important;
     transition: all 0.15s ease !important;
 }
 .caf-hdr-btn-solid:hover,
@@ -1776,42 +1767,46 @@
 }
 @media (max-width: 1440px) {
     .caf-hdr-card {
-        gap: 6px;
-        padding: 6px 8px;
+        gap: 10px;
+        padding: 7px 12px;
     }
     .caf-hdr-main {
-        grid-template-columns: minmax(175px, 1.8fr) minmax(120px, 1.05fr) minmax(135px, 1.2fr) minmax(105px, 0.9fr) minmax(112px, 0.95fr);
-        gap: 6px;
+        gap: 10px;
     }
-    .caf-hdr-subcard {
-        padding: 5px 8px;
+    .caf-hdr-col--identity {
+        max-width: 245px;
     }
     .caf-hdr-btn-outline,
     .caf-hdr-btn-solid {
-        padding: 6px 10px !important;
+        padding: 5.5px 10px !important;
         font-size: 11.5px !important;
     }
 }
 @media (max-width: 1180px) {
     .caf-hdr-card {
         flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 10px 12px;
     }
     .caf-hdr-main {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        flex-wrap: wrap;
+        gap: 10px 16px;
     }
-    .caf-hdr-subcard--actions {
+    .caf-hdr-sep {
+        display: none !important;
+    }
+    .caf-hdr-col--identity {
+        max-width: 100%;
+        flex-basis: 100%;
+    }
+    .caf-hdr-actions {
+        width: 100%;
         justify-content: flex-end;
     }
 }
 @media (max-width: 640px) {
-    .caf-hdr-main {
-        grid-template-columns: 1fr;
-    }
-    .caf-hdr-subcard--actions {
-        width: 100%;
-        justify-content: stretch;
-    }
-    .caf-hdr-subcard--actions > * {
+    .caf-hdr-actions > * {
         flex: 1;
     }
 }
@@ -1878,8 +1873,8 @@
       <input type="hidden" name="jobid" id="jobid" value="{{ @$job->id }}" />
       <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
       <!--begin::Actions-->
-      <div class="d-flex align-items-stretch">
-        <div class="caf-hdr-subcard caf-hdr-subcard--actions">
+      <div class="d-flex align-items-center">
+        <div class="caf-hdr-actions">
         @if (in_array('view_jobs', $userPermissions))
             {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
                  defined once in the shared layout) that the job title/logo already
