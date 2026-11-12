@@ -412,268 +412,238 @@
             .plf-sort-wrap { width: 140px; }
         }
 
-        /* Hiring Pipeline card */
+        /* AppTracker KPI Stat Grid — Client Tracker Card Style (Rule 14/20, Page-Isolated .aptk-kpi-*) */
         .hp-toolbar-card .card-body {
             padding: 14px 16px;
         }
-        .hp-card .card-body {
-            padding: 16px 20px;
-        }
-        .hp-flow {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            width: 100%;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            padding-bottom: 2px;
+        .aptk-kpi-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.15fr) repeat(7, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin-bottom: 12px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
             font-family: 'Poppins', sans-serif;
         }
-        .hp-total-link {
-            text-decoration: none;
-            flex-shrink: 0;
+        .aptk-kpi-link {
+            text-decoration: none !important;
+            display: flex;
+            min-width: 0;
         }
-        .hp-total {
-            width: 82px;
-            height: 82px;
-            border-radius: 14px;
+        .aptk-kpi-link:hover,
+        .aptk-kpi-link:focus {
+            text-decoration: none !important;
+        }
+        .aptk-kpi-card {
+            width: 100%;
+            min-width: 0;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 11px;
+            padding: 10px 11px;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            text-align: left !important;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+        .aptk-kpi-card:hover {
+            transform: translateY(-1px);
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+        .aptk-kpi-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            min-width: 0;
+        }
+        .aptk-kpi-icon {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            border-radius: 8px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 2px;
-            transition: background-color .15s;
+            flex-shrink: 0;
+            background: var(--kpi-bg, #eff6ff);
+            color: var(--kpi-color, #2563eb);
+            transition: all 0.15s ease;
         }
-        #bg_all.hp-total.bg-total-active,
-        .hp-total.bg-total-active {
-            background-color: #1d4ed8 !important;
-            background-image: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
-            background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25) !important;
+        .aptk-kpi-icon svg {
+            width: 17px;
+            height: 17px;
         }
-        /* Organization-specific Total Candidates palettes: My Org = Sunlit Canary Yellow, Internal Client = Deep Royal Cobalt, Direct Client = Emerald */
-        #bg_all.hp-total.hp-org-my.bg-total-active,
-        .hp-total.hp-org-my.bg-total-active {
-            background-color: #eab308 !important;
-            background-image: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
-            background: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
-            border-color: #eab308 !important;
-            box-shadow: 0 6px 16px rgba(234, 179, 8, 0.28) !important;
+        .aptk-kpi-meta {
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
         }
-        #bg_all.hp-total.hp-org-my.bg-total-active .hp-total-icon,
-        #bg_all.hp-total.hp-org-my.bg-total-active .hp-total-count,
-        .hp-total.hp-org-my.bg-total-active .hp-total-icon,
-        .hp-total.hp-org-my.bg-total-active .hp-total-count {
-            color: #422006 !important;
-        }
-        #bg_all.hp-total.hp-org-my.bg-total-active .hp-total-label,
-        .hp-total.hp-org-my.bg-total-active .hp-total-label {
-            color: #713f12 !important;
-            font-weight: 600;
-        }
-        #bg_all.hp-total.hp-org-my.bg-gray,
-        .hp-total.hp-org-my.bg-gray {
-            background-color: #fefce8 !important;
-            background-image: none !important;
-            background: #fefce8 !important;
-            border: 1.5px solid #fde047 !important;
-        }
-        #bg_all.hp-total.hp-org-my.bg-gray .hp-total-icon,
-        #bg_all.hp-total.hp-org-my.bg-gray .hp-total-count,
-        #bg_all.hp-total.hp-org-my.bg-gray .hp-total-label,
-        .hp-total.hp-org-my.bg-gray .hp-total-icon,
-        .hp-total.hp-org-my.bg-gray .hp-total-count,
-        .hp-total.hp-org-my.bg-gray .hp-total-label {
-            color: #854d0e !important;
-        }
-        #bg_all.hp-total.hp-org-internal.bg-total-active,
-        .hp-total.hp-org-internal.bg-total-active {
-            background-color: #1d4ed8 !important;
-            background-image: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
-            background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
-            border-color: #1d4ed8 !important;
-            box-shadow: 0 6px 16px rgba(29, 78, 216, 0.30) !important;
-        }
-        #bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-icon,
-        #bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-count,
-        .hp-total.hp-org-internal.bg-total-active .hp-total-icon,
-        .hp-total.hp-org-internal.bg-total-active .hp-total-count {
-            color: #ffffff !important;
-        }
-        #bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-label,
-        .hp-total.hp-org-internal.bg-total-active .hp-total-label {
-            color: #dbeafe !important;
-        }
-        #bg_all.hp-total.hp-org-internal.bg-gray,
-        .hp-total.hp-org-internal.bg-gray {
-            background-color: #eff6ff !important;
-            background-image: none !important;
-            background: #eff6ff !important;
-            border: 1.5px solid #93c5fd !important;
-        }
-        #bg_all.hp-total.hp-org-internal.bg-gray .hp-total-icon,
-        #bg_all.hp-total.hp-org-internal.bg-gray .hp-total-count,
-        #bg_all.hp-total.hp-org-internal.bg-gray .hp-total-label,
-        .hp-total.hp-org-internal.bg-gray .hp-total-icon,
-        .hp-total.hp-org-internal.bg-gray .hp-total-count,
-        .hp-total.hp-org-internal.bg-gray .hp-total-label {
-            color: #1e3a8a !important;
-        }
-        #bg_all.hp-total.hp-org-direct.bg-total-active,
-        .hp-total.hp-org-direct.bg-total-active {
-            background-color: #047857 !important;
-            background-image: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
-            background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
-            border-color: #047857 !important;
-            box-shadow: 0 6px 16px rgba(4, 120, 87, 0.28) !important;
-        }
-        #bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-icon,
-        #bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-count,
-        .hp-total.hp-org-direct.bg-total-active .hp-total-icon,
-        .hp-total.hp-org-direct.bg-total-active .hp-total-count {
-            color: #ffffff !important;
-        }
-        #bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-label,
-        .hp-total.hp-org-direct.bg-total-active .hp-total-label {
-            color: #d1fae5 !important;
-        }
-        #bg_all.hp-total.hp-org-direct.bg-gray,
-        .hp-total.hp-org-direct.bg-gray {
-            background-color: #ecfdf5 !important;
-            background-image: none !important;
-            background: #ecfdf5 !important;
-            border: 1.5px solid #a7f3d0 !important;
-        }
-        #bg_all.hp-total.hp-org-direct.bg-gray .hp-total-icon,
-        #bg_all.hp-total.hp-org-direct.bg-gray .hp-total-count,
-        #bg_all.hp-total.hp-org-direct.bg-gray .hp-total-label,
-        .hp-total.hp-org-direct.bg-gray .hp-total-icon,
-        .hp-total.hp-org-direct.bg-gray .hp-total-count,
-        .hp-total.hp-org-direct.bg-gray .hp-total-label {
-            color: #047857 !important;
-        }
-        .hp-total.bg-gray {
-            background: #e4e6ef;
-        }
-        .hp-total-icon {
-            color: #fff;
-            display: flex;
-        }
-        .hp-total.bg-gray .hp-total-icon {
-            color: #7e8299;
-        }
-        .hp-total-icon svg {
-            width: 16px;
-            height: 16px;
-        }
-        .hp-total-count {
-            font-size: 15px;
+        .aptk-kpi-num {
+            font-size: 19px;
             font-weight: 700;
-            color: #fff;
-            line-height: 1.2;
-        }
-        .hp-total.bg-gray .hp-total-count {
-            color: #3f4254;
-        }
-        .hp-total-label {
-            font-size: 9px;
-            font-weight: 500;
-            color: #dbeafe;
-            text-align: center;
-            line-height: 1.2;
-            padding: 0 4px;
-        }
-        .hp-total.bg-gray .hp-total-label {
-            color: #7e8299;
-        }
-        .hp-eq {
-            font-size: 18px;
-            font-weight: 600;
-            color: #b5b5c3;
-            flex-shrink: 0;
-        }
-        .hp-chevron {
-            display: flex;
-            color: #c2c5cc;
-            flex-shrink: 0;
-        }
-        .hp-chevron svg {
-            width: 16px;
-            height: 16px;
-        }
-        .hp-divider {
-            width: 1px;
-            height: 44px;
-            background: #e4e6ef;
-            flex-shrink: 0;
-            margin: 0 4px;
-        }
-        .hp-stage {
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
-        }
-        .hp-circle {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 1px;
-            background: #f2f3f7;
-            border: 2px solid #e4e6ef;
-            transition: border-color .15s, background-color .15s;
-        }
-        .hp-circle .hp-icon {
-            display: flex;
-            color: #99a1b7;
-            transition: color .15s;
-        }
-        .hp-circle .hp-icon svg {
-            width: 14px;
-            height: 14px;
-        }
-        .hp-circle .hp-count {
-            font-size: 13px;
-            font-weight: 700;
-            color: #5e6278;
-            line-height: 1.2;
-            transition: color .15s;
-        }
-        .hp-circle.active {
-            border-color: var(--hp-color);
-            background: var(--hp-bg);
-        }
-        .hp-circle.active .hp-icon {
-            color: var(--hp-color);
-        }
-        .hp-circle.active .hp-count {
-            color: var(--hp-color);
-        }
-        .hp-label {
-            font-size: 11px;
-            font-weight: 500;
-            color: #7e8299;
-            text-align: center;
+            color: #0f172a;
+            line-height: 1.1;
             white-space: nowrap;
-            transition: color .15s, font-weight .15s;
+            font-variant-numeric: tabular-nums;
+            transition: color 0.15s ease;
         }
-        .hp-label.active {
-            font-weight: 700;
-            color: #181c32;
+        .aptk-kpi-lbl {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+            text-align: left !important;
+            transition: color 0.15s ease, font-weight 0.15s ease;
         }
+        .aptk-kpi-sub {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+            color: var(--kpi-color, #64748b);
+        }
+        .aptk-kpi-sub svg {
+            flex-shrink: 0;
+            width: 11px;
+            height: 11px;
+        }
+
+        /* Stage KPI Card Active State (.hp-circle.active preserved for existing JS hooks) */
+        .aptk-kpi-card.hp-circle.active {
+            background: var(--kpi-tint, #eff6ff) !important;
+            border-color: var(--kpi-border, #60a5fa) !important;
+            box-shadow: 0 0 0 1.5px var(--kpi-color, #2563eb), 0 4px 14px var(--kpi-glow, rgba(37, 99, 235, 0.12)) !important;
+        }
+        .aptk-kpi-card.hp-circle.active .aptk-kpi-icon {
+            background: #ffffff !important;
+            color: var(--kpi-color, #2563eb) !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12) !important;
+        }
+        .aptk-kpi-card.hp-circle.active .aptk-kpi-num {
+            color: var(--kpi-deep, #1e3a8a) !important;
+        }
+        .aptk-kpi-card.hp-circle.active .aptk-kpi-lbl,
+        .aptk-kpi-card .hp-label.active {
+            color: var(--kpi-color, #1d4ed8) !important;
+            font-weight: 700 !important;
+        }
+
+        /* Total Candidates KPI Card — Inactive & Organization-Specific Active Palettes */
+        #bg_all.aptk-kpi-total.bg-gray {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+        }
+        #bg_all.aptk-kpi-total.hp-org-internal {
+            --kpi-color: #2563eb;
+            --kpi-bg: #eff6ff;
+            --kpi-tint: #eff6ff;
+            --kpi-border: #60a5fa;
+            --kpi-deep: #1e3a8a;
+            --kpi-label-active: #1d4ed8;
+            --kpi-glow: rgba(37, 99, 235, 0.12);
+        }
+        #bg_all.aptk-kpi-total.hp-org-my {
+            --kpi-color: #d97706;
+            --kpi-bg: #fffbeb;
+            --kpi-tint: #fffbeb;
+            --kpi-border: #fbbf24;
+            --kpi-deep: #78350f;
+            --kpi-label-active: #b45309;
+            --kpi-glow: rgba(217, 119, 6, 0.14);
+        }
+        #bg_all.aptk-kpi-total.hp-org-direct {
+            --kpi-color: #16a34a;
+            --kpi-bg: #ecfdf5;
+            --kpi-tint: #ecfdf5;
+            --kpi-border: #34d399;
+            --kpi-deep: #14532d;
+            --kpi-label-active: #15803d;
+            --kpi-glow: rgba(22, 163, 74, 0.12);
+        }
+        #bg_all.aptk-kpi-total.bg-total-active {
+            background: var(--kpi-tint, #eff6ff) !important;
+            border: 1px solid var(--kpi-border, #60a5fa) !important;
+            box-shadow: 0 0 0 1.5px var(--kpi-color, #2563eb), 0 4px 14px var(--kpi-glow, rgba(37, 99, 235, 0.12)) !important;
+        }
+        #bg_all.aptk-kpi-total.bg-total-active .aptk-kpi-icon {
+            background: #ffffff !important;
+            color: var(--kpi-color, #2563eb) !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12) !important;
+        }
+        #bg_all.aptk-kpi-total.bg-total-active .aptk-kpi-num {
+            color: var(--kpi-deep, #1e3a8a) !important;
+        }
+        #bg_all.aptk-kpi-total.bg-total-active .aptk-kpi-lbl {
+            color: var(--kpi-label-active, #1d4ed8) !important;
+            font-weight: 700 !important;
+        }
+
+        /* 15.6" Laptop (1366x768) & Tablet/Mobile Responsive Scaling — Matches Client Tracker */
         @media (max-width: 1440px) {
-            .hp-total { width: 72px; height: 72px; }
-            .hp-circle { width: 52px; height: 52px; }
+            .aptk-kpi-grid {
+                grid-template-columns: minmax(0, 1.15fr) repeat(7, minmax(0, 1fr)) !important;
+                gap: 6px !important;
+            }
+            .aptk-kpi-card {
+                padding: 8px 8px !important;
+            }
+            .aptk-kpi-top {
+                gap: 7px !important;
+                margin-bottom: 5px !important;
+            }
+            .aptk-kpi-icon {
+                width: 30px !important;
+                height: 30px !important;
+                min-width: 30px !important;
+                border-radius: 7px !important;
+            }
+            .aptk-kpi-icon svg {
+                width: 15px !important;
+                height: 15px !important;
+            }
+            .aptk-kpi-num {
+                font-size: 17px !important;
+            }
+            .aptk-kpi-lbl {
+                font-size: 10px !important;
+            }
+            .aptk-kpi-sub {
+                font-size: 9.5px !important;
+                gap: 3.5px !important;
+                margin-top: 2px !important;
+            }
+            .aptk-kpi-sub svg {
+                width: 10px !important;
+                height: 10px !important;
+            }
         }
-        @media (max-width: 576px) {
-            .hp-flow { justify-content: flex-start; }
+        @media (max-width: 1150px) {
+            .aptk-kpi-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                gap: 6px !important;
+            }
+        }
+        @media (max-width: 640px) {
+            .aptk-kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 6px !important;
+            }
         }
 
         /* ==========================================================================
@@ -695,9 +665,8 @@
             width: 100% !important;
         }
 
-        /* Toolbar & Pipeline Cards — Rule 20 Sharp White Card Surface */
-        .plf-toolbar-card,
-        .hp-card {
+        /* Toolbar Card — Rule 20 Sharp White Card Surface */
+        .plf-toolbar-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
@@ -772,11 +741,7 @@
             border-color: #009ef7;
             color: #009ef7;
         }
-        .hp-card .card-body {
-            padding: 12px 16px !important;
-        }
-        .hp-total-count,
-        .hp-circle .hp-count {
+        .aptk-kpi-num {
             font-variant-numeric: tabular-nums;
         }
 
@@ -1832,25 +1797,31 @@
             : null;
         $hpTotalActive = !empty($mstatus_id) && $mstatus_id == 'all';
 
-        // Colors/icons reuse this app's existing "Pipeline Stages" legend
-        // (resources/views/sections/service_company/pipeline.blade.php) rather than
-        // inventing new ones, so this card matches every other pipeline-stage display.
+        // Client-Tracker-matched KPI palette per pipeline stage (page-isolated CSS tokens).
         $hpStages = [
-            ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing', 'color' => '#0891b2', 'bg' => '#ecfeff',
+            ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing',
+                'color' => '#0891b2', 'bg' => '#ecfeff', 'tint' => '#ecfeff', 'border' => '#67e8f9', 'deep' => '#155e75', 'glow' => 'rgba(8, 145, 178, 0.12)',
                 'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
-            ['key' => 'Screening', 'rel' => '2', 'label' => 'Screening', 'color' => '#c000ff', 'bg' => '#f9e6ff',
+            ['key' => 'Screening', 'rel' => '2', 'label' => 'Screening',
+                'color' => '#9333ea', 'bg' => '#faf5ff', 'tint' => '#faf5ff', 'border' => '#c084fc', 'deep' => '#6b21a8', 'glow' => 'rgba(147, 51, 234, 0.12)',
                 'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
-            ['key' => 'Interview', 'rel' => '3', 'label' => 'Evaluation', 'color' => '#2896ff', 'bg' => '#e8f4ff',
+            ['key' => 'Interview', 'rel' => '3', 'label' => 'Evaluation',
+                'color' => '#2563eb', 'bg' => '#eff6ff', 'tint' => '#eff6ff', 'border' => '#60a5fa', 'deep' => '#1e3a8a', 'glow' => 'rgba(37, 99, 235, 0.12)',
                 'icon' => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
-            ['key' => 'Negotiation', 'rel' => '4', 'label' => 'Negotiation', 'color' => '#ff4098', 'bg' => '#ffe6f2',
+            ['key' => 'Negotiation', 'rel' => '4', 'label' => 'Negotiation',
+                'color' => '#db2777', 'bg' => '#fdf2f8', 'tint' => '#fdf2f8', 'border' => '#f472b6', 'deep' => '#9d174d', 'glow' => 'rgba(219, 39, 119, 0.12)',
                 'icon' => 'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
-            ['key' => 'Offered', 'rel' => '5', 'label' => 'Offer', 'color' => '#ffab00', 'bg' => '#fff4e0',
+            ['key' => 'Offered', 'rel' => '5', 'label' => 'Offer',
+                'color' => '#d97706', 'bg' => '#fffbeb', 'tint' => '#fffbeb', 'border' => '#fbbf24', 'deep' => '#92400e', 'glow' => 'rgba(217, 119, 6, 0.12)',
                 'icon' => 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
-            ['key' => 'Joined', 'rel' => '6', 'label' => 'Joined', 'color' => '#06c732', 'bg' => '#e3fbe9',
+            ['key' => 'Joined', 'rel' => '6', 'label' => 'Joined',
+                'color' => '#16a34a', 'bg' => '#ecfdf5', 'tint' => '#ecfdf5', 'border' => '#34d399', 'deep' => '#14532d', 'glow' => 'rgba(22, 163, 74, 0.12)',
                 'icon' => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
         ];
-        $hpRejected = ['key' => 'Rejected', 'rel' => '7', 'label' => 'Rejected', 'color' => '#ff0202', 'bg' => '#ffe3e3',
+        $hpRejected = ['key' => 'Rejected', 'rel' => '7', 'label' => 'Rejected',
+            'color' => '#dc2626', 'bg' => '#fef2f2', 'tint' => '#fef2f2', 'border' => '#f87171', 'deep' => '#991b1b', 'glow' => 'rgba(220, 38, 38, 0.12)',
             'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'];
+        $hpAllKpiCards = array_merge($hpStages, [$hpRejected]);
     @endphp
 
     <div class="content d-flex flex-column flex-column-fluid pt-4 aptk-enterprise-bg" id="kt_content">
@@ -1907,66 +1878,72 @@
                     </div>
                 </div>
 
-                <div class="card hp-card mb-4">
-                    <div class="card-body">
-                        <div class="hp-flow">
-                            <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
-                                <div class="{{ $hpTotalActive ? 'bg-total-active' : 'bg-gray' }} {{ $hpOrgClass ?? 'hp-org-internal' }} text-center hp-total" role="alert" id="bg_all">
-                                    <span class="hp-total-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-                                        </svg>
-                                    </span>
-                                    <span class="hp-total-count" id="totalcnt">0</span>
-                                    <span class="hp-total-label">Total Candidates</span>
+                <!-- ── 8 PIPELINE KPI STAT CARDS (Client Tracker Style) ── -->
+                <div class="aptk-kpi-grid" role="navigation" aria-label="Pipeline stage KPIs">
+                    {{-- KPI 1: Total Candidates --}}
+                    <a class="application_sttus_nav aptk-kpi-link" href="javascript:void(0);" rel="all">
+                        <div class="aptk-kpi-card aptk-kpi-total {{ $hpTotalActive ? 'bg-total-active' : 'bg-gray' }} {{ $hpOrgClass ?? 'hp-org-internal' }}" role="alert" id="bg_all">
+                            <div class="aptk-kpi-top">
+                                <div class="aptk-kpi-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                    </svg>
                                 </div>
-                            </a>
-                            <span class="hp-eq">=</span>
-                            @foreach ($hpStages as $stage)
-                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="{{ $stage['rel'] }}">
-                                    <div class="hp-circle {{ $hpActiveStage === $stage['key'] ? 'active' : '' }}"
-                                        data-hp="{{ $stage['rel'] }}"
-                                        style="--hp-color: {{ $stage['color'] }}; --hp-bg: {{ $stage['bg'] }};">
-                                        <span class="hp-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                                stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="{{ $stage['icon'] }}" />
-                                            </svg>
-                                        </span>
-                                        <span class="hp-count" id="bg_{{ $stage['rel'] }}">0</span>
-                                    </div>
-                                    <div class="hp-label {{ $hpActiveStage === $stage['key'] ? 'active' : '' }}" id="tx_{{ $stage['rel'] }}">
-                                        {{ $stage['label'] }}
-                                    </div>
-                                </a>
-                                @if (!$loop->last)
-                                    <span class="hp-chevron">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="m9 6 6 6-6 6" />
-                                        </svg>
-                                    </span>
-                                @endif
-                            @endforeach
-                            <span class="hp-divider"></span>
-                            <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="{{ $hpRejected['rel'] }}">
-                                <div class="hp-circle {{ $hpActiveStage === $hpRejected['key'] ? 'active' : '' }}"
-                                    data-hp="{{ $hpRejected['rel'] }}"
-                                    style="--hp-color: {{ $hpRejected['color'] }}; --hp-bg: {{ $hpRejected['bg'] }};">
-                                    <span class="hp-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="{{ $hpRejected['icon'] }}" />
-                                        </svg>
-                                    </span>
-                                    <span class="hp-count" id="bg_{{ $hpRejected['rel'] }}">0</span>
+                                <div class="aptk-kpi-meta">
+                                    <div class="aptk-kpi-num" id="totalcnt">0</div>
+                                    <div class="aptk-kpi-lbl">Total Candidates</div>
                                 </div>
-                                <div class="hp-label {{ $hpActiveStage === $hpRejected['key'] ? 'active' : '' }}" id="tx_{{ $hpRejected['rel'] }}">
-                                    {{ $hpRejected['label'] }}
-                                </div>
-                            </a>
+                            </div>
+                            <div class="aptk-kpi-sub">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                </svg>
+                                <span id="aptk_kpi_sub_all">0 in pipeline</span>
+                            </div>
                         </div>
-                    </div>
+                    </a>
+
+                    {{-- KPI 2-8: Pipeline Stages (Sourcing..Joined + Rejected) --}}
+                    @foreach ($hpAllKpiCards as $stage)
+                        <a class="application_sttus_nav aptk-kpi-link" href="javascript:void(0);" rel="{{ $stage['rel'] }}">
+                            <div class="aptk-kpi-card hp-circle {{ $hpActiveStage === $stage['key'] ? 'active' : '' }}"
+                                data-hp="{{ $stage['rel'] }}"
+                                style="--kpi-color: {{ $stage['color'] }}; --kpi-bg: {{ $stage['bg'] }}; --kpi-tint: {{ $stage['tint'] }}; --kpi-border: {{ $stage['border'] }}; --kpi-deep: {{ $stage['deep'] }}; --kpi-glow: {{ $stage['glow'] }};">
+                                <div class="aptk-kpi-top">
+                                    <div class="aptk-kpi-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="{{ $stage['icon'] }}" />
+                                        </svg>
+                                    </div>
+                                    <div class="aptk-kpi-meta">
+                                        <div class="aptk-kpi-num" id="bg_{{ $stage['rel'] }}">0</div>
+                                        <div class="aptk-kpi-lbl hp-label {{ $hpActiveStage === $stage['key'] ? 'active' : '' }}" id="tx_{{ $stage['rel'] }}">
+                                            {{ $stage['label'] }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="aptk-kpi-sub">
+                                    @if ($stage['rel'] === '7')
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/>
+                                        </svg>
+                                    @elseif ($stage['rel'] === '6')
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                    @else
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="m18 15-6-6-6 6"/>
+                                        </svg>
+                                    @endif
+                                    <span id="aptk_kpi_sub_{{ $stage['rel'] }}">0% of total</span>
+                                </div>
+                            </div>
+                        </a>
+                    @endforeach
                 </div>
 
                 {{-- Row selection action bar — hidden until candidates are checked.
@@ -2561,6 +2538,20 @@
 
 
 
+        function syncAptkKpiSublines() {
+            var total = parseInt($('#totalcnt').text(), 10) || 0;
+            var rejected = parseInt($('#bg_7').text(), 10) || 0;
+            var activeCount = Math.max(0, total - rejected);
+            $('#aptk_kpi_sub_all').text(activeCount + ' active');
+
+            for (var i = 1; i <= 7; i++) {
+                var val = parseInt($('#bg_' + i).text(), 10) || 0;
+                var pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                var pctText = (val > 0 && pct === 0) ? '<1% of total' : (pct + '% of total');
+                $('#aptk_kpi_sub_' + i).text(pctText);
+            }
+        }
+
         function applyAptkCounts(counts) {
             if (!counts) return;
             var allCandidate = counts.allCandidate || 0;
@@ -2580,6 +2571,7 @@
             $('#bg_6').html(Joined);
             $('#bg_7').html(Rejected);
             $('#totalcnt').html(allCandidate);
+            syncAptkKpiSublines();
         }
 
         function countder() {
@@ -3712,6 +3704,9 @@
 
                 if (statusId >= 1 && statusId <= 7) {
                     incrementDomBadge('#bg_' + statusId, delta);
+                }
+                if (typeof syncAptkKpiSublines === 'function') {
+                    syncAptkKpiSublines();
                 }
             }
 
