@@ -125,3 +125,26 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
     - **5. Tenancy & Cache Invalidation:**
       * Bumped cache version across all 9 AppTracker controller endpoints to `card_v8` to immediately invalidate legacy HTML.
       * 13 feature tests in `AppTrackerCardSubCardRedesignTest` passing with 332 assertions.
+
+11. **Similar Candidates Card Refinement & Subcard Alignments (Job Subcard, Resume Badge, 3-Row Standardization):**
+    - **1. Matched Job Subcard Text Expansion (Subcard 4):**
+      * **Removed 34×34px Icon Box:** Eliminated the left gradient code icon (`simf-req-icon-box` / `dsf-req-icon-box`) which compressed the body column and forced job titles, requisition numbers, categories, and companies into excessive ellipsis truncation (`Senior Java Devel...`, `#54`). Body details now utilize 100% of the subcard width with clean single/multi-line readability.
+      * **Removed Redundant `HIRING` Tag in Header:** Eliminated the `HIRING` status pill from the Subcard 4 header which crowded out the left label, preventing `TARGET REQ` from clipping into `TJ`. The header now cleanly accommodates `TARGET REQ` on the left and the canonical organization classification tag (`MY ORGANIZATION` / `INTERNAL CLIENT` / `DIRECT CLIENT`) on the right.
+    - **2. Stage & Action Subcard Resume Status Badge (Subcard 6 Header):**
+      * Integrated CV Tracker parity indicator into the header of Subcard 6 across both `similar_existing_ajax` and `dsimilar_existing_ajax`:
+        - **Resume Available:** `<span class="badge badge-light-success ..."><i class="fas fa-check-circle me-1 text-success"></i>Resume</span>` (Mint green background `#ecfdf5`, `#10b981` text).
+        - **Resume Missing:** `<span class="badge badge-light-danger ..."><i class="fas fa-exclamation-circle me-1 text-danger"></i>No CV</span>` (Light red background `#fef2f2`, `#ef4444` text).
+      * Pre-fetched `resume_map` in `prepareSimilarCandidatesRowMaps()` and included `resume` in `GRID_SOURCE_FIELDS` for zero-query execution.
+    - **3. Strict 3-Row Vertical Alignment (Subcards 3 & 5):**
+      * Standardized vertical rhythm, heights, and icon widths across **Subcard 3 (Location & Degree)** and **Subcard 5 (Ownership & Added)**:
+        - **Row 1:** Primary identifier (City/Country vs Recruiter name) with fixed-width icon (`width: 13px; text-align: center;`), `min-height: 18px`, `font-size: 11.5px`, `font-weight: 600`.
+        - **Row 2:** Secondary attribute (Work Mode vs Company name) with fixed-width icon (`width: 13px; text-align: center;`), `min-height: 18px`, `font-size: 11px`, `color: #475569`, `margin-top: 4px`.
+        - **Row 3:** Tertiary attribute (Degree/Education vs Created Date) with fixed-width icon (`width: 13px; text-align: center;`), `min-height: 18px`, `font-size: 11px`, `color: #64748b`, `margin-top: 4px`.
+      * Ensured pixel-level horizontal alignment across both subcards without staggered baselines or wrapping shifts.
+    - **4. Bracketed Relevant Experience Formatting (Subcard 2):**
+      * Replaced the bullet-separated relevant experience with standard bracket notation: `0.0 Y Total (Rel 4.0 Y)` instead of `0.0 Y Total • 4.0 Y Rel`.
+      * Applied synchronously across `similar_existing_ajax`, `dsimilar_existing_ajax`, and `dinternal_bench_ajax`.
+    - **5. Tenancy, Cache Invalidation & Verification:**
+      * Bumped cache version across all 9 AppTracker controller endpoints to `card_v9`.
+      * Updated feature tests in `AppTrackerCardSubCardRedesignTest.php` asserting `card_v9`, `TARGET REQ`, `No CV`/`Resume`, `(Rel `, and absence of `simf-req-icon-box` and `simf-status-pill`.
+      * All 13 feature tests pass with 339 assertions.

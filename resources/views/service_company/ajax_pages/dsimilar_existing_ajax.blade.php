@@ -210,6 +210,7 @@
             $wmMeta = AppTrackerCardPresenter::resolveWorkMode($row);
             $wmIcon = !empty($wmMeta['icon']) ? $wmMeta['icon'] : 'fa-solid fa-building';
             $wmLabel = !empty($wmMeta['label']) ? $wmMeta['label'] : '–';
+            $hasResume = !empty($row->resume) || !empty($rowMaps['resume_map'][$candId] ?? null);
 
             // Matched Job & Status
             $wiseInfo = $rowMaps['wise_job_info'][$row->id] ?? null;
@@ -374,10 +375,9 @@
                         <div class="dsf-sal-sub">Cur: {{ $current_ctc_cur }}{{ $ctc }}/{{ $current_ctc_mode }}</div>
                     </div>
                     <div class="dsf-val-exp" title="Total: {{ $formattedExperience }} Y | Relevant: {{ $rel_formattedExperience }} Y">
-                        <i class="fa-solid fa-briefcase"></i>
+                        <i class="fa-solid fa-briefcase me-1 text-muted"></i>
                         <span>{{ $formattedExperience !== '' ? $formattedExperience : '0' }} Y Total</span>
-                        <span class="dsf-dot">&bull;</span>
-                        <span>{{ $rel_formattedExperience !== '' ? $rel_formattedExperience : '0' }} Y Rel</span>
+                        <span class="ms-1" style="color:#64748b; font-size:11px;">(Rel {{ $rel_formattedExperience !== '' ? $rel_formattedExperience : '0' }} Y)</span>
                     </div>
                     <div class="dsf-val-notice">
                         <i class="fa-regular fa-clock"></i>
@@ -387,86 +387,93 @@
 
                 {{-- Sub-Card 3: Location & Degree (With Restored Work Mode) --}}
                 <div class="dsf-cand-subcard">
-                    <div class="dsf-subcard-head">
-                        <span class="dsf-subcard-label">Location &amp; Degree</span>
+                    <div class="dsf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="dsf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;">Location &amp; Degree</span>
                     </div>
-                    <div>
-                        <div class="dsf-loc-city text-truncate" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
-                            <i class="fa-solid fa-location-dot me-1"></i>{{ ucwords((string) $row_city_name) ?: '—' }}@if(!empty($row_country_name) && $row_country_name !== '----'), {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}@endif
+                    <div class="pt-1">
+                        <div class="dsf-loc-city text-truncate d-flex align-items-center" style="font-size:11.5px; font-weight:600; line-height:1.35; min-height:18px;" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
+                            <i class="fa-solid fa-location-dot me-1 text-muted" style="width:13px; text-align:center; font-size:10px;"></i>
+                            <span class="text-truncate">{{ ucwords((string) $row_city_name) ?: '—' }}@if(!empty($row_country_name) && $row_country_name !== '----'), {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}@endif</span>
                         </div>
-                        <div class="dsf-loc-mode text-truncate" style="font-size:11px; color:#475569; margin:2px 0;" title="{{ !empty($wmMeta['label']) ? e($wmMeta['label']) : 'Work Mode: –' }}">
-                            <i class="{{ $wmIcon }} me-1 text-primary" style="font-size:10px;"></i><span>{{ $wmLabel }}</span>
+                        <div class="dsf-loc-mode text-truncate d-flex align-items-center mt-1" style="font-size:11px; font-weight:500; color:#475569; line-height:1.35; min-height:18px;" title="{{ !empty($wmMeta['label']) ? e($wmMeta['label']) : 'Work Mode: –' }}">
+                            <i class="{{ $wmIcon }} me-1 text-primary" style="width:13px; text-align:center; font-size:10px;"></i>
+                            <span class="text-truncate">{{ $wmLabel }}</span>
                         </div>
-                    </div>
-                    <div class="dsf-loc-edu dsf-edu-uppercase text-truncate" style="font-size:11px;" title="{{ $qualFull ?: '—' }}">
-                        <i class="fa-solid fa-graduation-cap me-1"></i>{{ $qualFull ?: '—' }}
+                        <div class="dsf-loc-edu dsf-edu-uppercase text-truncate d-flex align-items-center mt-1" style="font-size:11px; font-weight:500; color:#64748b; line-height:1.35; min-height:18px;" title="{{ $qualFull ?: '—' }}">
+                            <i class="fa-solid fa-graduation-cap me-1 text-muted" style="width:13px; text-align:center; font-size:10px;"></i>
+                            <span class="text-truncate">{{ $qualFull ?: '—' }}</span>
+                        </div>
                     </div>
                 </div>
 
                 {{-- Sub-Card 4: Matched Job & Status (Target Req Redesign) --}}
                 <div class="dsf-cand-subcard dsf-cand-subcard--target">
                     <div class="dsf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
-                        <span class="dsf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;" title="TARGET REQ">TARGET REQ...</span>
-                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                            <span class="dsf-target-type-badge {{ $targetTypeClass }}" style="font-size:9px; font-weight:700; padding:1px 5px; border-radius:4px; text-transform:uppercase; {{ $targetTypeStyle }}">
-                                {{ $targetTypeLabel }}
-                            </span>
-                            <span class="dsf-target-status-badge" style="font-size:9px; font-weight:700; padding:1px 5px; border-radius:4px; text-transform:uppercase; {{ $targetStatusStyle }}">
-                                {{ $targetStatusLabel }}
-                            </span>
-                        </div>
+                        <span class="dsf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;" title="TARGET REQ">TARGET REQ</span>
+                        <span class="dsf-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:4px; text-transform:uppercase; {{ $targetTypeStyle }}">
+                            {{ $targetTypeLabel }}
+                        </span>
                     </div>
-                    <div class="d-flex align-items-start gap-2 pt-1">
-                        <div class="dsf-req-icon-box flex-shrink-0 d-flex align-items-center justify-content-center" style="width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color:#ffffff; box-shadow:0 1px 3px rgba(79,70,229,0.25);">
-                            <i class="fa-solid fa-code" style="font-size:13px; color:#ffffff;"></i>
+                    <div class="dsf-req-body pt-1">
+                        <div class="dsf-req-title text-truncate fw-bold text-dark" style="font-size:12.5px; line-height:1.35; color:#0f172a;" title="{{ $matchedJobTitle }}">
+                            {{ $matchedJobTitle ?: '—' }}
                         </div>
-                        <div class="flex-grow-1 min-w-0" style="overflow:hidden;">
-                            <div class="dsf-req-title text-truncate fw-bold text-dark" style="font-size:12.5px; line-height:1.25; color:#0f172a;" title="{{ $matchedJobTitle }}">
-                                {{ $matchedJobTitle ?: '—' }}
-                            </div>
-                            <div class="dsf-req-meta-line text-truncate mt-1" style="font-size:11px; line-height:1.2;">
-                                <span class="fw-bold" style="color:#0284c7;">#{{ $matchedJobId }}</span>
-                                @if(!empty($matchedCategory))
-                                    <span class="mx-1" style="color:#94a3b8;">&bull;</span>
-                                    <span style="color:#64748b;">{{ $matchedCategory }}</span>
-                                @endif
-                            </div>
-                            <div class="dsf-req-sub-line text-truncate mt-1" style="font-size:11px; line-height:1.2; color:#475569;">
-                                <span class="fw-medium text-dark">{{ $client_name ?: '—' }}</span>
-                                @if(!empty($empTypeLabel))
-                                    <span class="mx-1" style="color:#94a3b8;">&bull;</span>
-                                    <i class="fa-solid fa-briefcase text-primary me-1" style="font-size:10px;"></i>
-                                    <span style="color:#64748b;">{{ $empTypeLabel }}</span>
-                                @endif
-                            </div>
+                        <div class="dsf-req-meta-line text-truncate mt-1" style="font-size:11px; line-height:1.35;">
+                            <span class="fw-bold" style="color:#0284c7;">#{{ $matchedJobId }}</span>
+                            @if(!empty($matchedCategory))
+                                <span class="mx-1" style="color:#94a3b8;">&bull;</span>
+                                <span style="color:#64748b;">{{ $matchedCategory }}</span>
+                            @endif
+                        </div>
+                        <div class="dsf-req-sub-line text-truncate mt-1" style="font-size:11px; line-height:1.35; color:#475569;">
+                            <span class="fw-medium text-dark">{{ $client_name ?: '—' }}</span>
+                            @if(!empty($empTypeLabel))
+                                <span class="mx-1" style="color:#94a3b8;">&bull;</span>
+                                <i class="fa-solid fa-briefcase text-primary me-1" style="font-size:10px;"></i>
+                                <span style="color:#64748b;">{{ $empTypeLabel }}</span>
+                            @endif
                         </div>
                     </div>
                 </div>
 
                 {{-- Sub-Card 5: Ownership & Submitted --}}
                 <div class="dsf-cand-subcard">
-                    <div class="dsf-subcard-head">
-                        <span class="dsf-subcard-label">Ownership &amp; Added</span>
+                    <div class="dsf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="dsf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;">Ownership &amp; Added</span>
                     </div>
-                    <div>
-                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="show-detail dsf-owner-name d-block" title="{{ @$rowpostedby }}">
-                            <i class="fa-regular fa-circle-user me-1 text-primary"></i>{{ ucfirst((string) @$rowpostedby) ?: '—' }}
-                        </a>
-                        <div class="dsf-owner-company" title="{{ @$post_company_name }}">
-                            <i class="fa-regular fa-building me-1"></i>{{ @$post_company_name ?: '—' }}
+                    <div class="pt-1">
+                        <div class="dsf-owner-name text-truncate d-flex align-items-center" style="font-size:11.5px; font-weight:600; line-height:1.35; min-height:18px;" title="{{ @$rowpostedby }}">
+                            <i class="fa-regular fa-circle-user me-1 text-primary" style="width:13px; text-align:center; font-size:10.5px;"></i>
+                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="show-detail text-dark text-hover-primary text-truncate">
+                                {{ ucfirst((string) @$rowpostedby) ?: '—' }}
+                            </a>
                         </div>
-                    </div>
-                    <div class="dsf-owner-submitted" title="Uploaded on {{ $created_at }}">
-                        <i class="fa-regular fa-calendar me-1"></i>{{ $created_at }}
+                        <div class="dsf-owner-company text-truncate d-flex align-items-center mt-1" style="font-size:11px; font-weight:500; color:#475569; line-height:1.35; min-height:18px;" title="{{ @$post_company_name }}">
+                            <i class="fa-regular fa-building me-1 text-muted" style="width:13px; text-align:center; font-size:10px;"></i>
+                            <span class="text-truncate">{{ @$post_company_name ?: '—' }}</span>
+                        </div>
+                        <div class="dsf-owner-submitted text-truncate d-flex align-items-center mt-1" style="font-size:11px; font-weight:500; color:#64748b; line-height:1.35; min-height:18px;" title="Uploaded on {{ $created_at }}">
+                            <i class="fa-regular fa-calendar me-1 text-muted" style="width:13px; text-align:center; font-size:10px;"></i>
+                            <span class="text-truncate">{{ $created_at }}</span>
+                        </div>
                     </div>
                 </div>
 
                 {{-- Sub-Card 6: Stage & Action --}}
                 <div class="dsf-cand-subcard">
-                    <div class="dsf-subcard-head">
-                        <span class="dsf-subcard-label">Stage &amp; Action</span>
+                    <div class="dsf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="dsf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;">Stage &amp; Action</span>
+                        @if ($hasResume)
+                            <span class="badge badge-light-success fw-bold py-1 px-2 d-inline-flex align-items-center" style="font-size:9.5px; border-radius:4px;" title="Resume uploaded">
+                                <i class="fas fa-check-circle me-1 text-success" style="font-size:10px;"></i>Resume
+                            </span>
+                        @else
+                            <span class="badge badge-light-danger fw-bold py-1 px-2 d-inline-flex align-items-center" style="font-size:9.5px; border-radius:4px;" title="Resume missing">
+                                <i class="fas fa-exclamation-circle me-1 text-danger" style="font-size:10px;"></i>No CV
+                            </span>
+                        @endif
                     </div>
-                    <div class="dsf-stage-action-wrap">
+                    <div class="dsf-stage-action-wrap pt-1">
                         <a href="javascript:void(0);" data-row-id="{{ @$row->id }}"
                             class="dsf-stage-trigger {{ $stage_default_css }}"
                             @if (!empty($stage_default_css)) data-toggle="modal" data-target="#{{ $stage_default_css }}" @endif>
