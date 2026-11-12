@@ -22,290 +22,269 @@
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <input type="hidden" name="pagename" id="pagename" value="settings" />
   <input type="hidden" name="bench_show_mode" id="bench_show_mode" value="{{ $account->bench_show_mode ?? 0 }}" />
-  @csrf  
+  @csrf
   @method('POST')
 
   @if($hasViewPerm)
-  <div class="general-settings-card-system">
+  <div class="gs-wrapper general-settings-card-system">
 
     {{-- ══════════════════════════════════════════════════════════════
          TIER 1: PURE WHITE TOOLBAR HEADER CARD
          ══════════════════════════════════════════════════════════════ --}}
-    <div class="card mb-4 bg-white border border-gray-300 rounded-3 shadow-none tier1-toolbar-card">
-      <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div class="d-flex align-items-center gap-3">
-          <div class="d-flex align-items-center justify-content-center bg-light-primary text-primary rounded-3 w-45px h-45px border border-primary-subtle flex-shrink-0">
-            <i class="fa-solid fa-sliders fs-3"></i>
+    <div class="gs-toolbar-card tier1-toolbar-card">
+      <div class="gs-toolbar-left">
+        <div class="gs-toolbar-icon-box">
+          <i class="fas fa-sliders-h"></i>
+        </div>
+        <div>
+          <div class="gs-toolbar-title-row">
+            <h3 class="gs-toolbar-title">General Settings</h3>
+            <span class="gs-domain-pill" id="domains_counter_badge">4 Configuration Domains</span>
           </div>
-          <div>
-            <div class="d-flex align-items-center gap-2">
-              <h3 class="fw-bolder text-dark mb-0 fs-4">General Settings</h3>
-              <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1" id="domains_counter_badge">4 Configuration Domains</span>
-            </div>
-            <p class="text-muted fs-7 mb-0 mt-1">Configure global locale preferences, candidate deduplication boundaries, company departments, and integration bridges.</p>
-          </div>
+          <p class="gs-toolbar-sub">Control organization locale, duplicate detection rules, company departments, and service integrations.</p>
+        </div>
+      </div>
+
+      <div class="gs-toolbar-right">
+        <div class="gs-search-box">
+          <i class="fas fa-search gs-search-icon"></i>
+          <input type="text" id="general_settings_search" class="gs-search-input" placeholder="Search settings or departments..." autocomplete="off">
+          <button type="button" id="general_search_clear_btn" class="gs-search-clear" title="Clear search"><i class="fas fa-times"></i></button>
         </div>
 
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-          {{-- 300ms Debounced Search Bar with Clear Button --}}
-          <div class="position-relative w-250px">
-            <span class="position-absolute top-50 translate-middle-y ms-3 text-gray-500">
-              <i class="fa-solid fa-magnifying-glass fs-7"></i>
-            </span>
-            <input type="text" id="general_settings_search" class="form-control form-control-sm form-control-solid ps-9 pe-8 fs-7" placeholder="Search settings or departments..." autocomplete="off">
-            <button type="button" id="general_search_clear_btn" class="btn btn-icon btn-sm position-absolute top-50 end-0 translate-middle-y text-gray-400 text-hover-danger p-0 me-2" style="display: none; width: 22px; height: 22px;">
-              <i class="fa-solid fa-xmark fs-7"></i>
-            </button>
-          </div>
-
-          @if($hasEditPerm)
-          <button class="btn btn-primary btn-sm updateCompanyProfile d-inline-flex align-items-center gap-2 px-4" type="button" id="updateCompanyProfileHeader">
-            <span class="csv2-save-spinner" aria-hidden="true" style="display: none;"></span>
-            <span class="csv2-save-label"><i class="fa-solid fa-check fs-7"></i> Save Changes</span>
-          </button>
-          @endif
-        </div>
+        @if($hasEditPerm)
+        <button class="gs-btn-save updateCompanyProfile" type="button" id="updateCompanyProfileHeader">
+          <span class="csv2-save-spinner" aria-hidden="true"></span>
+          <span class="csv2-save-label"><i class="fas fa-check"></i> Save Changes</span>
+        </button>
+        @endif
       </div>
     </div>
 
     {{-- ══════════════════════════════════════════════════════════════
          TIER 2: PURE WHITE SUB-TABS FILTER CARD
          ══════════════════════════════════════════════════════════════ --}}
-    <div class="card mb-4 bg-white border border-gray-300 rounded-3 shadow-none tier2-subtabs-card">
-      <div class="card-body p-2 d-flex align-items-center gap-2 overflow-auto" id="settings_subtabs_bar" style="scrollbar-width: none;">
-        <button type="button" class="btn btn-sm btn-subtab active d-inline-flex align-items-center gap-2 px-3 py-2" data-target="all">
-          <i class="fa-solid fa-border-all fs-7"></i>
-          <span>All Settings</span>
-          <span class="badge badge-light-primary rounded-pill fs-8 px-2">4</span>
-        </button>
-        <button type="button" class="btn btn-sm btn-subtab d-inline-flex align-items-center gap-2 px-3 py-2 text-gray-600" data-target="card_locale">
-          <i class="fa-solid fa-globe fs-7"></i>
-          <span>System Locale</span>
-          <span class="badge badge-light-dark rounded-pill fs-8 px-2">4</span>
-        </button>
-        <button type="button" class="btn btn-sm btn-subtab d-inline-flex align-items-center gap-2 px-3 py-2 text-gray-600" data-target="card_duplicates">
-          <i class="fa-solid fa-clone fs-7"></i>
-          <span>Duplicate Rules</span>
-          <span class="badge badge-light-dark rounded-pill fs-8 px-2">3</span>
-        </button>
-        <button type="button" class="btn btn-sm btn-subtab d-inline-flex align-items-center gap-2 px-3 py-2 text-gray-600" data-target="card_departments">
-          <i class="fa-solid fa-building fs-7"></i>
-          <span>Departments</span>
-          <span class="badge badge-light-dark rounded-pill fs-8 px-2" id="dept_tab_badge">{{ $deptCount }}</span>
-        </button>
-        <button type="button" class="btn btn-sm btn-subtab d-inline-flex align-items-center gap-2 px-3 py-2 text-gray-600" data-target="card_integrations">
-          <i class="fa-solid fa-plug fs-7"></i>
-          <span>Connected Accounts</span>
-          <span class="badge badge-light-dark rounded-pill fs-8 px-2">3</span>
-        </button>
-      </div>
+    <div class="gs-subtabs-card tier2-subtabs-card" id="settings_subtabs_bar">
+      <button type="button" class="gs-subtab-pill btn-subtab active" data-target="all">
+        <i class="fas fa-th-large"></i>
+        <span>All Settings</span>
+        <span class="gs-subtab-counter">4</span>
+      </button>
+      <button type="button" class="gs-subtab-pill btn-subtab" data-target="card_locale">
+        <i class="fas fa-globe"></i>
+        <span>System Locale</span>
+        <span class="gs-subtab-counter">4</span>
+      </button>
+      <button type="button" class="gs-subtab-pill btn-subtab" data-target="card_duplicates">
+        <i class="fas fa-clone"></i>
+        <span>Duplicate Rules</span>
+        <span class="gs-subtab-counter">3</span>
+      </button>
+      <button type="button" class="gs-subtab-pill btn-subtab" data-target="card_departments">
+        <i class="fas fa-building"></i>
+        <span>Departments</span>
+        <span class="gs-subtab-counter" id="dept_tab_badge">{{ $deptCount }}</span>
+      </button>
+      <button type="button" class="gs-subtab-pill btn-subtab" data-target="card_integrations">
+        <i class="fas fa-plug"></i>
+        <span>Connected Accounts</span>
+        <span class="gs-subtab-counter">3</span>
+      </button>
     </div>
 
     {{-- ══════════════════════════════════════════════════════════════
          TIER 3: PRIMARY CARD STREAM
          ══════════════════════════════════════════════════════════════ --}}
-    <div class="d-flex flex-column gap-4 tier3-cards-stream">
+    <div class="gs-stream tier3-cards-stream">
 
       {{-- ────────────────────────────────────────────────────────────
            PRIMARY CARD 1: SYSTEM LOCALE & FORMATTING
            ──────────────────────────────────────────────────────────── --}}
-      <div class="card bg-white border border-gray-300 rounded-3 shadow-none primary-settings-card" id="card_locale" data-search-scope="locale language timezone currency time format date format english kolkata inr">
-        <div class="card-header border-bottom border-gray-200 px-6 py-4 d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-3">
-            <div class="w-35px h-35px rounded-3 bg-light-primary text-primary d-flex align-items-center justify-content-center border border-primary-subtle flex-shrink-0">
-              <i class="fa-solid fa-globe fs-5"></i>
+      <div class="gs-primary-card primary-settings-card" id="card_locale" data-search-scope="locale language timezone currency time format date format english kolkata inr">
+        <div class="gs-card-header">
+          <div class="gs-card-header-left">
+            <div class="gs-cat-icon gs-icon-blue">
+              <i class="fas fa-globe"></i>
             </div>
             <div>
-              <h4 class="fw-bolder text-dark mb-0 fs-5">System Locale & Formatting</h4>
-              <p class="text-muted fs-8 mb-0">Regional preferences controlling UI language, default timezone, operating currency, and timestamp standards.</p>
+              <h4 class="gs-card-title">System Locale & Formatting</h4>
+              <p class="gs-card-desc">Regional preferences controlling UI language, default timezone, operating currency, and timestamp standards.</p>
             </div>
           </div>
-          <span class="badge badge-light-primary fw-bolder fs-8 px-3 py-2">
-            <i class="fa-solid fa-circle-check text-primary me-1"></i> Active Regional Config
+          <span class="gs-status-badge gs-badge-blue">
+            <i class="fas fa-check-circle"></i> Standard Regional Configuration
           </span>
         </div>
 
-        <div class="card-body p-6">
-          <div class="row g-4">
+        <div class="gs-card-body">
+          <div class="gs-locale-grid">
 
             {{-- Sub-Card 1: Language --}}
-            <div class="col-lg-6 col-12">
-              <div class="setting-subcard p-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                <div>
-                  <div class="d-flex align-items-start gap-3 mb-3">
-                    <div class="w-30px h-30px rounded-2 bg-light-info text-info d-flex align-items-center justify-content-center flex-shrink-0 mt-1">
-                      <i class="fa-solid fa-language fs-6"></i>
-                    </div>
-                    <div>
-                      <label class="fw-bold text-dark fs-6 required" for="language">Language</label>
-                      <div class="text-muted fs-8">Primary system language for interface labels, alerts, and candidate email notices.</div>
-                    </div>
+            <div class="gs-subcard">
+              <div>
+                <div class="gs-subcard-head">
+                  <div class="gs-field-icon gs-icon-blue">
+                    <i class="fas fa-language"></i>
+                  </div>
+                  <div class="gs-label-wrap">
+                    <label class="gs-field-label" for="language">System Language <span class="gs-req">*</span></label>
+                    <div class="gs-field-help">Primary interface language used for system labels, candidate emails, and ATS workflows.</div>
                   </div>
                 </div>
-                <div class="mt-2">
-                  <select name="language" id="language" aria-label="Select a Language" data-placeholder="Select a language..." class="form-select form-select-solid fs-7">
-                    <option value="">Select a Language...</option>
-                    @if(!empty($languagesArr))
-                      @foreach($languagesArr as $lval)
-                        @php 
-                          $sel = ''; 
-                          if ($account->language == $lval->id) {
-                            $sel = 'selected="selected"'; 
-                          } elseif ($lval->id == 1 && empty($account->language)) {
-                            $sel = 'selected="selected"';
-                          }
-                        @endphp 
-                        {!! '<option value="'.$lval->id.'" '.$sel.'>'.$lval->name.'</option>' !!}
-                      @endforeach
-                    @endif 
-                  </select>
-                </div>
+              </div>
+              <div class="gs-control-wrap">
+                <select name="language" id="language" aria-label="Select a Language" class="gs-select">
+                  <option value="">Select a Language...</option>
+                  @if(!empty($languagesArr))
+                    @foreach($languagesArr as $lval)
+                      @php 
+                        $sel = ''; 
+                        if ($account->language == $lval->id) {
+                          $sel = 'selected="selected"'; 
+                        } elseif ($lval->id == 1 && empty($account->language)) {
+                          $sel = 'selected="selected"';
+                        }
+                      @endphp 
+                      {!! '<option value="'.$lval->id.'" '.$sel.'>'.$lval->name.'</option>' !!}
+                    @endforeach
+                  @endif 
+                </select>
               </div>
             </div>
 
             {{-- Sub-Card 2: Time Zone --}}
-            <div class="col-lg-6 col-12">
-              <div class="setting-subcard p-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                <div>
-                  <div class="d-flex align-items-start gap-3 mb-3">
-                    <div class="w-30px h-30px rounded-2 bg-light-purple text-purple d-flex align-items-center justify-content-center flex-shrink-0 mt-1" style="background: #f5f3ff; color: #8b5cf6;">
-                      <i class="fa-solid fa-clock fs-6"></i>
-                    </div>
-                    <div>
-                      <label class="fw-bold text-dark fs-6 required" for="timezone">Default Time Zone</label>
-                      <div class="text-muted fs-8">Timestamp anchor for interview scheduling, candidate invitations, and activity logs.</div>
-                    </div>
+            <div class="gs-subcard">
+              <div>
+                <div class="gs-subcard-head">
+                  <div class="gs-field-icon gs-icon-purple">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <div class="gs-label-wrap">
+                    <label class="gs-field-label" for="timezone">Default Time Zone <span class="gs-req">*</span></label>
+                    <div class="gs-field-help">Timestamp synchronization for interview scheduling, candidate notifications, and activity logs.</div>
                   </div>
                 </div>
-                <div class="mt-2">
-                  <select name="timezone" id="timezone" aria-label="Select a Time Zone" data-placeholder="Select a time zone..." class="form-select form-select-solid fs-7">
-                    <option value="">Select a timezone...</option>
-                    @if(!empty($timezone))
-                      <optgroup label="Popular Time Zones">
-                        @foreach($timezone as $tval)
-                          @if($tval->priority)
-                            @php
-                              $sel = '';
-                              if ($account->timezone == $tval->time_zone) {
-                                $sel = 'selected="selected"';
-                              } elseif ($tval->time_zone == "Asia/Kolkata" && empty($account->timezone)) {
-                                $sel = 'selected="selected"';
-                              }
-                            @endphp
-                            {!! '<option value="'.$tval->time_zone.'" '.$sel.'>('.$tval->gmt_offse.') '.$tval->country_name.' ('.$tval->time_zone.') - '.$tval->timezone_abbreviation.'</option>' !!}
-                          @endif
-                        @endforeach
-                      </optgroup>
-                      <optgroup label="All Time Zones">
-                        @foreach($timezone as $tval)
-                          @if(!$tval->priority)
-                            @php
-                              $sel = '';
-                              if ($account->timezone == $tval->time_zone) {
-                                $sel = 'selected="selected"';
-                              } elseif ($tval->time_zone == "Asia/Kolkata" && empty($account->timezone)) {
-                                $sel = 'selected="selected"';
-                              }
-                            @endphp
-                            {!! '<option value="'.$tval->time_zone.'" '.$sel.'>('.$tval->gmt_offse.') '.$tval->country_name.' ('.$tval->time_zone.') - '.$tval->timezone_abbreviation.'</option>' !!}
-                          @endif
-                        @endforeach
-                      </optgroup>
-                    @endif
-                  </select>
-                </div>
+              </div>
+              <div class="gs-control-wrap">
+                <select name="timezone" id="timezone" aria-label="Select a Time Zone" class="gs-select">
+                  <option value="">Select a timezone...</option>
+                  @if(!empty($timezone))
+                    <optgroup label="Popular Time Zones">
+                      @foreach($timezone as $tval)
+                        @if($tval->priority)
+                          @php
+                            $sel = '';
+                            if ($account->timezone == $tval->time_zone) {
+                              $sel = 'selected="selected"';
+                            } elseif ($tval->time_zone == "Asia/Kolkata" && empty($account->timezone)) {
+                              $sel = 'selected="selected"';
+                            }
+                          @endphp
+                          {!! '<option value="'.$tval->time_zone.'" '.$sel.'>('.$tval->gmt_offse.') '.$tval->country_name.' ('.$tval->time_zone.') - '.$tval->timezone_abbreviation.'</option>' !!}
+                        @endif
+                      @endforeach
+                    </optgroup>
+                    <optgroup label="All Time Zones">
+                      @foreach($timezone as $tval)
+                        @if(!$tval->priority)
+                          @php
+                            $sel = '';
+                            if ($account->timezone == $tval->time_zone) {
+                              $sel = 'selected="selected"';
+                            } elseif ($tval->time_zone == "Asia/Kolkata" && empty($account->timezone)) {
+                              $sel = 'selected="selected"';
+                            }
+                          @endphp
+                          {!! '<option value="'.$tval->time_zone.'" '.$sel.'>('.$tval->gmt_offse.') '.$tval->country_name.' ('.$tval->time_zone.') - '.$tval->timezone_abbreviation.'</option>' !!}
+                        @endif
+                      @endforeach
+                    </optgroup>
+                  @endif
+                </select>
               </div>
             </div>
 
             {{-- Sub-Card 3: Operating Currency --}}
-            <div class="col-lg-6 col-12">
-              <div class="setting-subcard p-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                <div>
-                  <div class="d-flex align-items-start gap-3 mb-3">
-                    <div class="w-30px h-30px rounded-2 bg-light-success text-success d-flex align-items-center justify-content-center flex-shrink-0 mt-1">
-                      <i class="fa-solid fa-coins fs-6"></i>
-                    </div>
-                    <div>
-                      <label class="fw-bold text-dark fs-6" for="currency">Operating Currency</label>
-                      <div class="text-muted fs-8">Standard currency code & symbol applied to job compensation, CTCs, and commercials.</div>
-                    </div>
+            <div class="gs-subcard">
+              <div>
+                <div class="gs-subcard-head">
+                  <div class="gs-field-icon gs-icon-emerald">
+                    <i class="fas fa-coins"></i>
+                  </div>
+                  <div class="gs-label-wrap">
+                    <label class="gs-field-label" for="currency">Operating Currency</label>
+                    <div class="gs-field-help">Default currency symbol & conversion anchor for job requisitions, candidate CTCs, and commercials.</div>
                   </div>
                 </div>
-                <div class="mt-2">
-                  <select name="currency" id="currency" aria-label="Select a Currency" data-placeholder="Select a currency..." class="form-select form-select-solid fs-7">
-                    <option value="">Select a currency...</option>
-                    @if(!empty($currencyArr))
-                      @foreach($currencyArr as $cval)
-                        @php
-                          $sel = '';
-                          if (!empty($account->currency)) {
-                            if ($account->currency == $cval->id || (is_string($account->currency) && strtoupper($account->currency) === strtoupper($cval->code))) {
-                              $sel = 'selected="selected"';
-                            }
-                          } elseif ($cval->id == 53) {
+              </div>
+              <div class="gs-control-wrap">
+                <select name="currency" id="currency" aria-label="Select a Currency" class="gs-select">
+                  <option value="">Select a currency...</option>
+                  @if(!empty($currencyArr))
+                    @foreach($currencyArr as $cval)
+                      @php
+                        $sel = '';
+                        if (!empty($account->currency)) {
+                          if ($account->currency == $cval->id || (is_string($account->currency) && strtoupper($account->currency) === strtoupper($cval->code))) {
                             $sel = 'selected="selected"';
                           }
-                        @endphp
-                        {!! '<option value="'.$cval->id.'" '.$sel.'>'.$cval->code.' - '.$cval->country.'</option>' !!}
-                      @endforeach
-                    @endif
-                  </select>
-                </div>
+                        } elseif ($cval->id == 53) {
+                          $sel = 'selected="selected"';
+                        }
+                      @endphp
+                      {!! '<option value="'.$cval->id.'" '.$sel.'>'.$cval->code.' - '.$cval->country.'</option>' !!}
+                    @endforeach
+                  @endif
+                </select>
               </div>
             </div>
 
-            {{-- Sub-Card 4: Time Format & Date Format --}}
-            <div class="col-lg-6 col-12">
-              <div class="setting-subcard p-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                <div>
-                  <div class="d-flex align-items-start gap-3 mb-3">
-                    <div class="w-30px h-30px rounded-2 bg-light-warning text-warning d-flex align-items-center justify-content-center flex-shrink-0 mt-1">
-                      <i class="fa-solid fa-calendar-days fs-6"></i>
-                    </div>
-                    <div>
-                      <label class="fw-bold text-dark fs-6" for="time_format">Time & Date Display Style</label>
-                      <div class="text-muted fs-8">Preferred 12/24-hour timestamp format and date arrangement rendered in tables and emails.</div>
-                    </div>
+            {{-- Sub-Card 4: Time & Date Display Style --}}
+            <div class="gs-subcard">
+              <div>
+                <div class="gs-subcard-head">
+                  <div class="gs-field-icon gs-icon-indigo">
+                    <i class="fas fa-calendar-alt"></i>
+                  </div>
+                  <div class="gs-label-wrap">
+                    <label class="gs-field-label" for="time_format">Time & Date Display Style</label>
+                    <div class="gs-field-help">Preferred 12-hour or 24-hour timestamp standard rendered across recruitment pipeline.</div>
                   </div>
                 </div>
-                <div class="mt-2 row g-2">
-                  <div class="col-6">
-                    <select name="time_format" id="time_format" aria-label="Select a time format" class="form-select form-select-solid fs-7">
-                      <option value="">Time Format...</option>
-                      @if(!empty($time_formatArr))
-                        @foreach($time_formatArr as $tval)
-                          @php 
-                            $sel = '';
-                            if ($account->time_format == $tval->id) {
-                              $sel = 'selected="selected"'; 
-                            } elseif ($tval->id == 1 && empty($account->time_format)) {
-                              $sel = 'selected="selected"'; 
-                            }
-                          @endphp 
-                          {!! '<option value="'.$tval->id.'" '.$sel.'>'.$tval->name.'</option>' !!}
-                        @endforeach
-                      @endif	
-                    </select>
-                  </div>
-                  <div class="col-6">
-                    <select name="date_format" id="date_format" aria-label="Select a date format" class="form-select form-select-solid fs-7">
-                      <option value="">Date Format...</option>
-                      @if(!empty($date_formatArr))
-                        @foreach($date_formatArr as $dval)
-                          @php 
-                            $sel = ''; 
-                            if ($account->date_format == $dval->id) {
-                              $sel = 'selected="selected"';
-                            } elseif ($dval->id == 1 && empty($account->date_format)) {
-                              $sel = 'selected="selected"';
-                            }
-                          @endphp 
-                          {!! '<option value="'.$dval->id.'" '.$sel.'>'.$dval->name.'</option>' !!}
-                        @endforeach
-                      @endif
-                    </select>
-                  </div>
-                </div>
+              </div>
+              <div class="gs-control-wrap gs-split-selects">
+                <select name="time_format" id="time_format" aria-label="Select a time format" class="gs-select">
+                  <option value="">Time Format...</option>
+                  @if(!empty($time_formatArr))
+                    @foreach($time_formatArr as $tval)
+                      @php 
+                        $sel = '';
+                        if ($account->time_format == $tval->id) {
+                          $sel = 'selected="selected"'; 
+                        } elseif ($tval->id == 1 && empty($account->time_format)) {
+                          $sel = 'selected="selected"'; 
+                        }
+                      @endphp 
+                      {!! '<option value="'.$tval->id.'" '.$sel.'>'.$tval->name.'</option>' !!}
+                    @endforeach
+                  @endif
+                </select>
+                <select name="date_format" id="date_format" aria-label="Select a date format" class="gs-select">
+                  <option value="">Date Format...</option>
+                  @if(!empty($date_formatArr))
+                    @foreach($date_formatArr as $dval)
+                      @php 
+                        $sel = ''; 
+                        if ($account->date_format == $dval->id) {
+                          $sel = 'selected="selected"';
+                        } elseif ($dval->id == 1 && empty($account->date_format)) {
+                          $sel = 'selected="selected"';
+                        }
+                      @endphp 
+                      {!! '<option value="'.$dval->id.'" '.$sel.'>'.$dval->name.'</option>' !!}
+                    @endforeach
+                  @endif
+                </select>
               </div>
             </div>
 
@@ -316,19 +295,19 @@
       {{-- ────────────────────────────────────────────────────────────
            PRIMARY CARD 2: DUPLICATE CANDIDATE DETECTION RULES
            ──────────────────────────────────────────────────────────── --}}
-      <div class="card bg-white border border-gray-300 rounded-3 shadow-none primary-settings-card" id="card_duplicates" data-search-scope="duplicate rules detection candidate application requisition global job wise disabled days">
-        <div class="card-header border-bottom border-gray-200 px-6 py-4 d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-3">
-            <div class="w-35px h-35px rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="background: #f5f3ff; color: #8b5cf6; border: 1px solid #ede9fe;">
-              <i class="fa-solid fa-clone fs-5"></i>
+      <div class="gs-primary-card primary-settings-card" id="card_duplicates" data-search-scope="duplicate rules detection candidate application requisition global job wise disabled days">
+        <div class="gs-card-header">
+          <div class="gs-card-header-left">
+            <div class="gs-cat-icon gs-icon-purple">
+              <i class="fas fa-clone"></i>
             </div>
             <div>
-              <h4 class="fw-bolder text-dark mb-0 fs-5">Duplicate Candidate Rules</h4>
-              <p class="text-muted fs-8 mb-0">Define automated deduplication boundaries to prevent double-submissions and protect agency ownership.</p>
+              <h4 class="gs-card-title">Duplicate Candidate Detection Rules</h4>
+              <p class="gs-card-desc">Define automated deduplication boundaries to prevent double-submissions and protect agency ownership.</p>
             </div>
           </div>
-          <span class="badge fw-bolder fs-8 px-3 py-2" id="duplicate_status_badge" style="background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe;">
-            <i class="fa-solid fa-check text-purple me-1"></i>
+          <span class="gs-status-badge {{ $appDuplicateVal === 2 ? 'gs-badge-purple' : ($appDuplicateVal === 1 ? 'gs-badge-blue' : 'gs-badge-red') }}" id="duplicate_status_badge">
+            <i class="fas {{ $appDuplicateVal === 0 ? 'fa-exclamation-triangle' : 'fa-check' }}"></i>
             @if($appDuplicateVal === 2) Global Detection Active ({{ $appDuplicateOverrollVal }} Days)
             @elseif($appDuplicateVal === 1) Job-Wise Detection Active ({{ $appDuplicateReqWiseVal }} Days)
             @else Deduplication Disabled
@@ -336,86 +315,80 @@
           </span>
         </div>
 
-        <div class="card-body p-6">
-          <div class="row g-4 duplicate-options-grid">
+        <div class="gs-card-body">
+          <div class="gs-dup-grid">
 
             {{-- Option 1: Global Duplicate Detection (val = 2) --}}
-            <div class="col-lg-4 col-12">
-              <div class="duplicate-tile p-4 rounded-3 h-100 d-flex flex-column justify-content-between cursor-pointer {{ $appDuplicateVal === 2 ? 'selected' : '' }}" data-radio-val="2" style="background: #ffffff; border: 1.5px solid {{ $appDuplicateVal === 2 ? '#009ef7' : '#e2e8f0' }}; transition: all 0.2s ease;">
-                <input type="radio" name="app_duplicate" value="2" class="d-none duplicate-radio-input" {{ $appDuplicateVal === 2 ? 'checked="checked"' : '' }}>
-                <div>
-                  <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="w-35px h-35px rounded-3 bg-light-primary text-primary d-flex align-items-center justify-content-center">
-                      <i class="fa-solid fa-network-wired fs-5"></i>
-                    </div>
-                    <div class="radio-indicator-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid {{ $appDuplicateVal === 2 ? '#009ef7' : '#cbd5e1' }};">
-                      <div class="radio-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #009ef7; opacity: {{ $appDuplicateVal === 2 ? '1' : '0' }};"></div>
-                    </div>
+            <div class="gs-dup-tile duplicate-tile {{ $appDuplicateVal === 2 ? 'selected' : '' }}" data-radio-val="2">
+              <input type="radio" name="app_duplicate" value="2" class="d-none duplicate-radio-input" {{ $appDuplicateVal === 2 ? 'checked="checked"' : '' }}>
+              <div>
+                <div class="gs-dup-top">
+                  <div class="gs-dup-icon gs-icon-blue">
+                    <i class="fas fa-network-wired"></i>
                   </div>
-                  <div class="fw-bolder text-dark fs-6 mb-1">Global Duplicate Detection</div>
-                  <div class="text-muted fs-8 mb-3">Detects duplicate candidates across <strong>all job requisitions</strong> in the system within the specified window.</div>
-                </div>
-                <div>
-                  <div class="d-flex align-items-center gap-2 p-2 rounded-2 mb-2" style="background: {{ $appDuplicateVal === 2 ? '#eff6ff' : '#f8fafc' }}; border: 1px solid {{ $appDuplicateVal === 2 ? '#bfdbfe' : '#e2e8f0' }};">
-                    <span class="fs-8 text-gray-700">Check within:</span>
-                    <input type="number" name="app_duplicate_overroll" id="app_duplicate_overroll" value="{{ $appDuplicateOverrollVal }}" placeholder="60" class="form-control form-control-sm text-center fw-bold fs-7 p-1 w-65px bg-white" min="1" max="365">
-                    <span class="fs-8 text-gray-700">days</span>
+                  <div class="gs-radio-circle">
+                    <div class="gs-radio-dot"></div>
                   </div>
-                  <span class="badge badge-light-success fs-9 fw-bolder py-1 px-2"><i class="fa-solid fa-star me-1 text-success"></i> Recommended for ATS Integrity</span>
                 </div>
+                <div class="gs-dup-title">Global Duplicate Detection</div>
+                <div class="gs-dup-desc">Detects identical candidates across <strong>all job requisitions</strong> across the entire company within the configured window.</div>
+              </div>
+              <div>
+                <div class="gs-days-box">
+                  <span>Check within:</span>
+                  <input type="number" name="app_duplicate_overroll" id="app_duplicate_overroll" value="{{ $appDuplicateOverrollVal }}" placeholder="60" class="gs-days-input" min="1" max="365">
+                  <span>days</span>
+                </div>
+                <span class="gs-rec-badge"><i class="fas fa-star"></i> Recommended for ATS Integrity</span>
               </div>
             </div>
 
             {{-- Option 2: Job-Wise Duplicate Detection (val = 1) --}}
-            <div class="col-lg-4 col-12">
-              <div class="duplicate-tile p-4 rounded-3 h-100 d-flex flex-column justify-content-between cursor-pointer {{ $appDuplicateVal === 1 ? 'selected' : '' }}" data-radio-val="1" style="background: #ffffff; border: 1.5px solid {{ $appDuplicateVal === 1 ? '#009ef7' : '#e2e8f0' }}; transition: all 0.2s ease;">
-                <input type="radio" name="app_duplicate" value="1" class="d-none duplicate-radio-input" {{ $appDuplicateVal === 1 ? 'checked="checked"' : '' }}>
-                <div>
-                  <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="w-35px h-35px rounded-3 bg-light-purple text-purple d-flex align-items-center justify-content-center" style="background: #f5f3ff; color: #8b5cf6;">
-                      <i class="fa-solid fa-briefcase fs-5"></i>
-                    </div>
-                    <div class="radio-indicator-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid {{ $appDuplicateVal === 1 ? '#009ef7' : '#cbd5e1' }};">
-                      <div class="radio-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #009ef7; opacity: {{ $appDuplicateVal === 1 ? '1' : '0' }};"></div>
-                    </div>
+            <div class="gs-dup-tile duplicate-tile {{ $appDuplicateVal === 1 ? 'selected' : '' }}" data-radio-val="1">
+              <input type="radio" name="app_duplicate" value="1" class="d-none duplicate-radio-input" {{ $appDuplicateVal === 1 ? 'checked="checked"' : '' }}>
+              <div>
+                <div class="gs-dup-top">
+                  <div class="gs-dup-icon gs-icon-purple">
+                    <i class="fas fa-briefcase"></i>
                   </div>
-                  <div class="fw-bolder text-dark fs-6 mb-1">Job-Wise Duplicate Detection</div>
-                  <div class="text-muted fs-8 mb-3">Detects duplicates <strong>only within the exact same job requisition</strong>. Candidates may freely apply to distinct jobs.</div>
-                </div>
-                <div>
-                  <div class="d-flex align-items-center gap-2 p-2 rounded-2 mb-2" style="background: {{ $appDuplicateVal === 1 ? '#eff6ff' : '#f8fafc' }}; border: 1px solid {{ $appDuplicateVal === 1 ? '#bfdbfe' : '#e2e8f0' }};">
-                    <span class="fs-8 text-gray-700">Check within:</span>
-                    <input type="number" name="app_duplicate_requisition_wise" id="app_duplicate_requisition_wise" value="{{ $appDuplicateReqWiseVal }}" placeholder="60" class="form-control form-control-sm text-center fw-bold fs-7 p-1 w-65px bg-white" min="1" max="365">
-                    <span class="fs-8 text-gray-700">days</span>
+                  <div class="gs-radio-circle">
+                    <div class="gs-radio-dot"></div>
                   </div>
-                  <span class="text-muted fs-9 d-block">&nbsp;</span>
                 </div>
+                <div class="gs-dup-title">Job-Wise Duplicate Detection</div>
+                <div class="gs-dup-desc">Detects duplicates <strong>only within the exact same job requisition</strong>. Candidates may freely apply to distinct jobs.</div>
+              </div>
+              <div>
+                <div class="gs-days-box">
+                  <span>Check within:</span>
+                  <input type="number" name="app_duplicate_requisition_wise" id="app_duplicate_requisition_wise" value="{{ $appDuplicateReqWiseVal }}" placeholder="60" class="gs-days-input" min="1" max="365">
+                  <span>days</span>
+                </div>
+                <span class="gs-spacer-tag">&nbsp;</span>
               </div>
             </div>
 
             {{-- Option 3: Duplicate Detection Disabled (val = 0) --}}
-            <div class="col-lg-4 col-12">
-              <div class="duplicate-tile p-4 rounded-3 h-100 d-flex flex-column justify-content-between cursor-pointer {{ $appDuplicateVal === 0 ? 'selected' : '' }}" data-radio-val="0" style="background: #ffffff; border: 1.5px solid {{ $appDuplicateVal === 0 ? '#009ef7' : '#e2e8f0' }}; transition: all 0.2s ease;">
-                <input type="radio" name="app_duplicate" value="0" class="d-none duplicate-radio-input" {{ $appDuplicateVal === 0 ? 'checked="checked"' : '' }}>
-                <div>
-                  <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="w-35px h-35px rounded-3 bg-light-danger text-danger d-flex align-items-center justify-content-center">
-                      <i class="fa-solid fa-ban fs-5"></i>
-                    </div>
-                    <div class="radio-indicator-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid {{ $appDuplicateVal === 0 ? '#009ef7' : '#cbd5e1' }};">
-                      <div class="radio-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #009ef7; opacity: {{ $appDuplicateVal === 0 ? '1' : '0' }};"></div>
-                    </div>
+            <div class="gs-dup-tile duplicate-tile {{ $appDuplicateVal === 0 ? 'selected' : '' }}" data-radio-val="0">
+              <input type="radio" name="app_duplicate" value="0" class="d-none duplicate-radio-input" {{ $appDuplicateVal === 0 ? 'checked="checked"' : '' }}>
+              <div>
+                <div class="gs-dup-top">
+                  <div class="gs-dup-icon gs-icon-red">
+                    <i class="fas fa-ban"></i>
                   </div>
-                  <div class="fw-bolder text-dark fs-6 mb-1">Duplicate Detection Disabled</div>
-                  <div class="text-muted fs-8 mb-3">Do not detect any duplicate candidates. Candidates can be submitted repeatedly without any barrier or warning.</div>
-                </div>
-                <div>
-                  <div class="d-flex align-items-center gap-2 p-2 rounded-2 mb-2 bg-light text-muted border border-gray-200">
-                    <i class="fa-solid fa-circle-info fs-7 text-muted"></i>
-                    <span class="fs-8">No day threshold required</span>
+                  <div class="gs-radio-circle">
+                    <div class="gs-radio-dot"></div>
                   </div>
-                  <span class="text-muted fs-9 d-block">&nbsp;</span>
                 </div>
+                <div class="gs-dup-title">Deduplication Disabled</div>
+                <div class="gs-dup-desc">Do not detect any duplicate candidates. Candidates can be submitted repeatedly without any system alert or barrier.</div>
+              </div>
+              <div>
+                <div class="gs-days-box gs-days-muted">
+                  <i class="fas fa-info-circle"></i>
+                  <span>No day threshold required</span>
+                </div>
+                <span class="gs-spacer-tag">&nbsp;</span>
               </div>
             </div>
 
@@ -426,122 +399,123 @@
       {{-- ────────────────────────────────────────────────────────────
            PRIMARY CARD 3: DEPARTMENT MANAGEMENT
            ──────────────────────────────────────────────────────────── --}}
-      <div class="card bg-white border border-gray-300 rounded-3 shadow-none primary-settings-card" id="card_departments" data-search-scope="department management departments engineering sales marketing finance operations human resources product support">
-        <div class="card-header border-bottom border-gray-200 px-6 py-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
-          <div class="d-flex align-items-center gap-3">
-            <div class="w-35px h-35px rounded-3 bg-light-success text-success d-flex align-items-center justify-content-center border border-success-subtle flex-shrink-0">
-              <i class="fa-solid fa-building fs-5"></i>
+      <div class="gs-primary-card primary-settings-card" id="card_departments" data-search-scope="department management departments engineering sales marketing finance operations human resources product support">
+        <div class="gs-card-header">
+          <div class="gs-card-header-left">
+            <div class="gs-cat-icon gs-icon-emerald">
+              <i class="fas fa-building"></i>
             </div>
             <div>
-              <h4 class="fw-bolder text-dark mb-0 fs-5">Department Management</h4>
-              <p class="text-muted fs-8 mb-0">Organize your company structure into operational departments and align job requisitions.</p>
+              <h4 class="gs-card-title">Department Management</h4>
+              <p class="gs-card-desc">Structure internal organization units and assign job requisitions to departmental hierarchies.</p>
             </div>
           </div>
-          <div class="d-flex align-items-center gap-3">
-            <span class="badge badge-light-success fw-bolder fs-8 px-3 py-2" id="dept_card_badge">{{ $deptCount }} Departments</span>
+          <span class="gs-status-badge gs-badge-emerald" id="dept_card_badge">
+            <i class="fas fa-sitemap"></i> {{ $deptCount }} Active Departments
+          </span>
+        </div>
+
+        <div class="gs-card-body">
+          <div class="gs-dept-actions-bar">
+            <div class="gs-dept-summary-text">
+              Departments allow recruiters to filter requisitions, manage hiring managers, and structure candidate funnels.
+            </div>
             @if($hasAddPerm)
-            <a href="javascript:void(0);" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-2 px-3 py-2" data-bs-toggle="modal" data-bs-target="#add_department" data-toggle="modal" data-target="#add_department">
-              <i class="fa-solid fa-plus fs-7"></i> Add Department
+            <a href="javascript:void(0);" class="gs-btn-add-dept" data-bs-toggle="modal" data-bs-target="#add_department" data-toggle="modal" data-target="#add_department">
+              <i class="fas fa-plus"></i> Add Department
             </a>
             @endif
           </div>
-        </div>
 
-        {{-- Dynamic Department Content Container (Updated via AJAX) --}}
-        <div class="card-body p-6 dept_content" id="dept_container_box">
-          @include('service_company.account.components.departments-list', ['departmentArr' => $departmentArr ?? []])
+          <div class="dept_content" id="dept_container_box">
+            @include('service_company.account.components.departments-list', ['departmentArr' => $departmentArr ?? []])
+          </div>
         </div>
       </div>
 
       {{-- ────────────────────────────────────────────────────────────
            PRIMARY CARD 4: CONNECTED ACCOUNTS & INTEGRATIONS
            ──────────────────────────────────────────────────────────── --}}
-      <div class="card bg-white border border-gray-300 rounded-3 shadow-none primary-settings-card" id="card_integrations" data-search-scope="connected accounts integrations google calendar zoom video meeting microsoft teams slack">
-        <div class="card-header border-bottom border-gray-200 px-6 py-4 d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-3">
-            <div class="w-35px h-35px rounded-3 bg-light-info text-info d-flex align-items-center justify-content-center border border-info-subtle flex-shrink-0">
-              <i class="fa-solid fa-plug fs-5"></i>
+      <div class="gs-primary-card primary-settings-card" id="card_integrations" data-search-scope="connected accounts integrations google calendar zoom video meeting microsoft teams slack">
+        <div class="gs-card-header">
+          <div class="gs-card-header-left">
+            <div class="gs-cat-icon gs-icon-indigo">
+              <i class="fas fa-plug"></i>
             </div>
             <div>
-              <h4 class="fw-bolder text-dark mb-0 fs-5">Connected Accounts & Integrations</h4>
-              <p class="text-muted fs-8 mb-0">Connect external video conferencing and productivity tools for automatic interview generation.</p>
+              <h4 class="gs-card-title">Connected Accounts & Integrations</h4>
+              <p class="gs-card-desc">Connect external productivity and video conferencing suites for real-time interview automation.</p>
             </div>
           </div>
-          <span class="badge badge-light-info fw-bolder fs-8 px-3 py-2">
-            <i class="fa-solid fa-link me-1"></i> Multi-Platform Bridge
+          <span class="gs-status-badge gs-badge-blue">
+            <i class="fas fa-link"></i> Multi-Platform Bridge
           </span>
         </div>
 
-        <div class="card-body p-6">
-          <div class="row g-4">
+        <div class="gs-card-body">
+          <div class="gs-int-grid">
 
-            {{-- Integration 1: Google --}}
-            <div class="col-lg-4 col-12">
-              <div class="integration-subcard p-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+            {{-- Integration 1: Google Workspace --}}
+            <div class="gs-int-subcard">
+              <div class="gs-int-top">
+                <div class="gs-int-logo gs-logo-google">
+                  <i class="fab fa-google"></i>
+                </div>
                 <div>
-                  <div class="d-flex align-items-center gap-3 mb-3">
-                    <img src="{{ asset('img/images/google-icon.svg') }}" class="w-35px h-35px flex-shrink-0" alt="Google" onerror="this.src='https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png';">
-                    <div>
-                      <div class="fw-bolder text-dark fs-6">Google Workspace</div>
-                      <div class="text-muted fs-8">Calendar sync & Google Meet</div>
-                    </div>
-                  </div>
-                  <p class="text-gray-600 fs-8 mb-4">Synchronize candidate interview rounds directly with Google Calendar and generate instant Google Meet links.</p>
+                  <div class="gs-int-name">Google Workspace</div>
+                  <div class="gs-int-desc">Synchronize calendar invites, interview slots, and automated Google Meet links.</div>
                 </div>
-                <div class="d-flex align-items-center justify-content-between pt-3 border-top border-gray-200">
-                  <a href="javascript:void(0);" class="google_config text-primary fw-bold fs-7 d-inline-flex align-items-center gap-1" rel="GOOGLE" data-bs-toggle="modal" data-bs-target="#google_config" data-toggle="modal" data-target="#google_config">
-                    <i class="fa-solid fa-gear fs-7"></i> Configuration
-                  </a>
-                  <div class="form-check form-switch form-check-custom form-check-solid m-0">
-                    <input class="form-check-input w-35px h-20px" type="checkbox" id="google_status" name="google_status" value="1" {{ ($account->google_status ?? 0) == 1 ? 'checked="checked"' : '' }}>
-                  </div>
-                </div>
+              </div>
+              <div class="gs-int-bottom">
+                <a href="javascript:void(0);" class="google_config gs-int-config-link" rel="GOOGLE" data-bs-toggle="modal" data-bs-target="#google_config" data-toggle="modal" data-target="#google_config">
+                  <i class="fas fa-cog"></i> Configuration
+                </a>
+                <label class="gs-switch">
+                  <input type="checkbox" id="google_status" name="google_status" value="1" {{ ($account->google_status ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                  <span class="gs-slider"></span>
+                </label>
               </div>
             </div>
 
-            {{-- Integration 2: Zoom --}}
-            <div class="col-lg-4 col-12">
-              <div class="integration-subcard p-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+            {{-- Integration 2: Zoom Video Meetings --}}
+            <div class="gs-int-subcard">
+              <div class="gs-int-top">
+                <div class="gs-int-logo gs-logo-zoom">
+                  <i class="fas fa-video"></i>
+                </div>
                 <div>
-                  <div class="d-flex align-items-center gap-3 mb-3">
-                    <img src="{{ asset('img/images/github.svg') }}" class="w-35px h-35px flex-shrink-0" alt="Zoom" onerror="this.style.display='none';">
-                    <div>
-                      <div class="fw-bolder text-dark fs-6">Zoom Video Meetings</div>
-                      <div class="text-muted fs-8">Automated Interview Rooms</div>
-                    </div>
-                  </div>
-                  <p class="text-gray-600 fs-8 mb-4">Automatically provision dedicated Zoom meetings with waiting rooms and passcode security for scheduled rounds.</p>
+                  <div class="gs-int-name">Zoom Video Meetings</div>
+                  <div class="gs-int-desc">Generate secure meeting links automatically when interview rounds are scheduled.</div>
                 </div>
-                <div class="d-flex align-items-center justify-content-between pt-3 border-top border-gray-200">
-                  <a href="javascript:void(0);" class="zoom_config text-primary fw-bold fs-7 d-inline-flex align-items-center gap-1" rel="ZOOM" data-bs-toggle="modal" data-bs-target="#zoom_config" data-toggle="modal" data-target="#zoom_config">
-                    <i class="fa-solid fa-gear fs-7"></i> Configuration
-                  </a>
-                  <div class="form-check form-switch form-check-custom form-check-solid m-0">
-                    <input class="form-check-input w-35px h-20px" type="checkbox" id="zoom_status" name="zoom_status" value="1" {{ ($account->zoom_status ?? 0) == 1 ? 'checked="checked"' : '' }}>
-                  </div>
-                </div>
+              </div>
+              <div class="gs-int-bottom">
+                <a href="javascript:void(0);" class="zoom_config gs-int-config-link" rel="ZOOM" data-bs-toggle="modal" data-bs-target="#zoom_config" data-toggle="modal" data-target="#zoom_config">
+                  <i class="fas fa-cog"></i> Configuration
+                </a>
+                <label class="gs-switch">
+                  <input type="checkbox" id="zoom_status" name="zoom_status" value="1" {{ ($account->zoom_status ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                  <span class="gs-slider"></span>
+                </label>
               </div>
             </div>
 
-            {{-- Integration 3: Microsoft --}}
-            <div class="col-lg-4 col-12">
-              <div class="integration-subcard p-4 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+            {{-- Integration 3: Microsoft Teams & 365 --}}
+            <div class="gs-int-subcard">
+              <div class="gs-int-top">
+                <div class="gs-int-logo gs-logo-ms">
+                  <i class="fab fa-microsoft"></i>
+                </div>
                 <div>
-                  <div class="d-flex align-items-center gap-3 mb-3">
-                    <img src="{{ asset('img/images/slack-icon.svg') }}" class="w-35px h-35px flex-shrink-0" alt="Microsoft" onerror="this.style.display='none';">
-                    <div>
-                      <div class="fw-bolder text-dark fs-6">Microsoft Teams</div>
-                      <div class="text-muted fs-8">365 Calendar & Teams Calls</div>
-                    </div>
-                  </div>
-                  <p class="text-gray-600 fs-8 mb-4">Connect Microsoft 365 organization calendars and coordinate recruiter and candidate discussion channels.</p>
+                  <div class="gs-int-name">Microsoft Teams & 365</div>
+                  <div class="gs-int-desc">Integrate calendar schedules, round notifications, and candidate discussion bridges.</div>
                 </div>
-                <div class="d-flex align-items-center justify-content-between pt-3 border-top border-gray-200">
-                  <span class="text-muted fs-8">Direct OAuth 2.0</span>
-                  <div class="form-check form-switch form-check-custom form-check-solid m-0">
-                    <input class="form-check-input w-35px h-20px" type="checkbox" id="microsoft_status" name="microsoft_status" value="1" {{ ($account->microsoft_status ?? 0) == 1 ? 'checked="checked"' : '' }}>
-                  </div>
-                </div>
+              </div>
+              <div class="gs-int-bottom">
+                <span class="gs-int-oauth-tag">Direct OAuth 2.0</span>
+                <label class="gs-switch">
+                  <input type="checkbox" id="microsoft_status" name="microsoft_status" value="1" {{ ($account->microsoft_status ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                  <span class="gs-slider"></span>
+                </label>
               </div>
             </div>
 
@@ -554,97 +528,787 @@
     {{-- ══════════════════════════════════════════════════════════════
          BOTTOM ACTIVITY & TENANCY STRIP
          ══════════════════════════════════════════════════════════════ --}}
-    <div class="card mt-4 bg-white border border-gray-300 rounded-3 shadow-none activity-strip-card">
-      <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-          <div class="badge badge-light-dark fs-8 fw-bolder px-3 py-2 border border-gray-200">
-            <i class="fa-solid fa-shield-halved text-primary me-2"></i>
-            Tenant Context: {{ auth()->user()->company->company_name ?? 'Organization' }} (#{{ auth()->user()->company_id ?? 0 }})
-          </div>
-          <div class="text-muted fs-8 d-flex align-items-center gap-2">
-            <i class="fa-solid fa-bolt text-warning fs-7"></i>
-            <span>Atomic Redis cache invalidation triggers immediately on save. Zero stale configuration data.</span>
-          </div>
+    <div class="gs-bottom-strip activity-strip-card">
+      <div class="gs-strip-left">
+        <div class="gs-tenancy-badge">
+          <i class="fas fa-shield-alt"></i>
+          <span>Tenant Context: {{ auth()->user()->company->company_name ?? 'Organization' }} (#{{ auth()->user()->company_id ?? 0 }})</span>
         </div>
-
-        @if($hasEditPerm)
-        <div class="d-flex align-items-center gap-2">
-          <a href="{{ route('service_company.account.index') }}" class="btn btn-sm btn-light text-muted px-4">
-            Discard
-          </a>
-          <button class="btn btn-sm btn-primary updateCompanyProfile d-inline-flex align-items-center gap-2 px-5" type="button" id="updateCompanyProfile">
-            <span class="csv2-save-spinner" aria-hidden="true" style="display: none;"></span>
-            <span class="csv2-save-label">Save Changes</span>
-          </button>
+        <div class="gs-sync-note">
+          <i class="fas fa-bolt"></i>
+          <span>Redis atomic cache invalidation triggers instantly upon save. Zero stale data across recruiters.</span>
         </div>
-        @endif
       </div>
+
+      @if($hasEditPerm)
+      <div class="gs-strip-actions">
+        <a href="{{ route('service_company.account.index') }}" class="gs-btn-discard">Discard</a>
+        <button class="gs-btn-save updateCompanyProfile" type="button" id="updateCompanyProfile">
+          <span class="csv2-save-spinner" aria-hidden="true"></span>
+          <span class="csv2-save-label"><i class="fas fa-check"></i> Save Changes</span>
+        </button>
+      </div>
+      @endif
     </div>
 
   </div>
   @else
-  <div class="card bg-white border border-gray-300 rounded-3 p-8 text-center">
-    <div class="text-danger fw-bold fs-6">You do not have permission to view general settings.</div>
+  <div class="gs-primary-card" style="padding: 36px; text-align: center;">
+    <div style="color: #ef4444; font-weight: 600; font-size: 14px;">You do not have permission to view general settings.</div>
   </div>
   @endif
 
 </form>
 
-{{-- Inline Scoped Styling & Interactive Scripts --}}
+{{-- Dedicated Isolated Stylesheet for 1:1 Rule 20 Preview Fidelity --}}
 <style>
-  /* 15.6" Screen Fit & Typography */
-  .general-settings-card-system {
+  .gs-wrapper {
+    width: 100%;
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #0f172a;
+    box-sizing: border-box;
   }
-  .general-settings-card-system .btn-subtab {
-    background: transparent;
-    border: none;
-    border-radius: 6px;
-    font-weight: 500;
-    transition: all 0.15s ease;
-    white-space: nowrap;
+  .gs-wrapper *, .gs-wrapper *::before, .gs-wrapper *::after {
+    box-sizing: border-box;
   }
-  .general-settings-card-system .btn-subtab:hover {
-    background: #f1f5f9;
-    color: #0f172a !important;
+  /* Guarantee FontAwesome 5 & 6 fonts render crisply without theme interference */
+  .gs-wrapper i, .gs-wrapper [class*="fa-"] {
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+    font-style: normal !important;
+    line-height: 1 !important;
   }
-  .general-settings-card-system .btn-subtab.active {
+  .gs-wrapper .fab {
+    font-family: "Font Awesome 6 Brands", "Font Awesome 5 Brands" !important;
+    font-weight: 400 !important;
+  }
+  .gs-wrapper .fas, .gs-wrapper .fa-solid {
+    font-weight: 900 !important;
+  }
+  .gs-wrapper .far, .gs-wrapper .fa-regular {
+    font-weight: 400 !important;
+  }
+
+  /* ── COLOR SYSTEM TOKENS ── */
+  .gs-icon-blue { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #dbeafe !important; }
+  .gs-icon-blue i { color: #2563eb !important; }
+  .gs-icon-purple { background: #f5f3ff !important; color: #8b5cf6 !important; border: 1px solid #ede9fe !important; }
+  .gs-icon-purple i { color: #8b5cf6 !important; }
+  .gs-icon-emerald { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+  .gs-icon-emerald i { color: #059669 !important; }
+  .gs-icon-indigo { background: #eef2ff !important; color: #4f46e5 !important; border: 1px solid #e0e7ff !important; }
+  .gs-icon-indigo i { color: #4f46e5 !important; }
+  .gs-icon-red { background: #fef2f2 !important; color: #ef4444 !important; border: 1px solid #fee2e2 !important; }
+  .gs-icon-red i { color: #ef4444 !important; }
+
+  .gs-badge-blue { background: #eff6ff !important; color: #0284c7 !important; border: 1px solid #bae6fd !important; }
+  .gs-badge-blue i { color: #0284c7 !important; }
+  .gs-badge-purple { background: #f5f3ff !important; color: #7c3aed !important; border: 1px solid #ddd6fe !important; }
+  .gs-badge-purple i { color: #7c3aed !important; }
+  .gs-badge-emerald { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+  .gs-badge-emerald i { color: #059669 !important; }
+  .gs-badge-red { background: #fef2f2 !important; color: #ef4444 !important; border: 1px solid #fee2e2 !important; }
+  .gs-badge-red i { color: #ef4444 !important; }
+
+  /* ── TIER 1: TOOLBAR HEADER CARD ── */
+  .gs-toolbar-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    flex-wrap: wrap;
+  }
+  .gs-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+  .gs-toolbar-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
     background: #eff6ff;
-    color: #009ef7 !important;
+    color: #009ef7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    border: 1px solid #dbeafe;
+    flex-shrink: 0;
+  }
+  .gs-toolbar-icon-box i { color: #009ef7 !important; }
+  .gs-toolbar-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .gs-toolbar-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .gs-domain-pill {
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 11px;
     font-weight: 600;
-    box-shadow: inset 0 0 0 1px rgba(0, 158, 247, 0.25);
+    padding: 2px 9px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
   }
-  .general-settings-card-system .duplicate-tile:hover {
-    border-color: #94a3b8 !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  .gs-toolbar-sub {
+    font-size: 12.5px;
+    color: #64748b;
+    margin: 2px 0 0 0;
   }
-  .general-settings-card-system .duplicate-tile.selected {
-    border-color: #009ef7 !important;
-    box-shadow: 0 0 0 1px #009ef7, 0 4px 14px rgba(0, 158, 247, 0.08);
+  .gs-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
   }
-  .general-settings-card-system .dept-subcard:hover {
-    background: #ffffff !important;
-    border-color: #cbd5e1 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  .gs-search-box {
+    position: relative;
+    min-width: 260px;
   }
-  .general-settings-card-system .integration-subcard:hover {
-    background: #ffffff !important;
-    border-color: #cbd5e1 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  .gs-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: #94a3b8 !important;
+    pointer-events: none;
   }
-  /* Save spinner animation */
-  .updateCompanyProfile.is-loading .csv2-save-spinner {
-    display: inline-block !important;
+  .gs-search-input {
+    width: 100%;
+    height: 38px;
+    padding: 0 34px 0 36px;
+    font-size: 12.5px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #0f172a;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+  .gs-search-input:focus {
+    background: #ffffff;
+    border-color: #009ef7;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+  }
+  .gs-search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: #94a3b8;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: none;
+    padding: 2px;
+  }
+  .gs-search-clear:hover i { color: #ef4444 !important; }
+  .gs-btn-save {
+    height: 38px;
+    padding: 0 18px;
+    background: #009ef7;
+    color: #ffffff !important;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2);
+  }
+  .gs-btn-save:hover {
+    background: #0086d4;
+    box-shadow: 0 4px 8px rgba(0, 158, 247, 0.3);
+  }
+  .gs-btn-save i { color: #ffffff !important; margin-right: 4px; }
+  .gs-btn-save .csv2-save-spinner {
+    display: none;
     width: 14px;
     height: 14px;
     border: 2px solid #ffffff;
     border-top-color: transparent;
     border-radius: 50%;
-    animation: csv2-spin 0.6s linear infinite;
-    margin-right: 6px;
+    animation: gsSpin 0.6s linear infinite;
   }
-  @keyframes csv2-spin {
-    to { transform: rotate(360deg); }
+  .gs-btn-save.is-loading .csv2-save-spinner { display: inline-block; }
+  @keyframes gsSpin { to { transform: rotate(360deg); } }
+
+  /* ── TIER 2: SUB-TABS FILTER CARD ── */
+  .gs-subtabs-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 6px 10px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .gs-subtabs-card::-webkit-scrollbar { display: none; }
+  .gs-subtab-pill {
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    padding: 8px 16px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .gs-subtab-pill i { color: #64748b !important; font-size: 13px; }
+  .gs-subtab-pill:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+  .gs-subtab-pill:hover i { color: #1e293b !important; }
+  .gs-subtab-pill.active {
+    background: #eff6ff;
+    color: #009ef7;
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(0, 158, 247, 0.3);
+  }
+  .gs-subtab-pill.active i { color: #009ef7 !important; }
+  .gs-subtab-counter {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: #e2e8f0;
+    color: #475569;
+    font-weight: 600;
+  }
+  .gs-subtab-pill.active .gs-subtab-counter {
+    background: #009ef7;
+    color: #ffffff;
+  }
+
+  /* ── TIER 3: PRIMARY CARDS STREAM ── */
+  .gs-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .gs-primary-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .gs-primary-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  }
+  .gs-card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: #ffffff;
+    flex-wrap: wrap;
+  }
+  .gs-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .gs-cat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .gs-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .gs-card-desc {
+    font-size: 12px;
+    color: #64748b;
+    margin: 1px 0 0 0;
+  }
+  .gs-status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .gs-card-body {
+    padding: 20px;
+  }
+
+  /* ── SECTION 1: SYSTEM LOCALE SUB-CARDS ── */
+  .gs-locale-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .gs-subcard {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+  }
+  .gs-subcard:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+  }
+  .gs-subcard-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .gs-field-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .gs-label-wrap { flex: 1; }
+  .gs-field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+  }
+  .gs-req { color: #ef4444; font-weight: 700; }
+  .gs-field-help {
+    font-size: 11.5px;
+    color: #64748b;
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .gs-control-wrap { margin-top: 4px; }
+  .gs-split-selects { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gs-select {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .gs-select:focus {
+    border-color: #009ef7;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+  }
+
+  /* ── SECTION 2: DUPLICATE DETECTION TILES ── */
+  .gs-dup-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .gs-dup-tile {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+  }
+  .gs-dup-tile:hover {
+    background: #ffffff;
+    border-color: #94a3b8;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+  .gs-dup-tile.selected {
+    background: #ffffff;
+    border-color: #009ef7;
+    box-shadow: 0 0 0 1px #009ef7, 0 4px 12px rgba(0, 158, 247, 0.08);
+  }
+  .gs-dup-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .gs-dup-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .gs-radio-circle {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    transition: all 0.2s ease;
+  }
+  .gs-dup-tile.selected .gs-radio-circle { border-color: #009ef7; }
+  .gs-radio-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #009ef7;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s ease;
+  }
+  .gs-dup-tile.selected .gs-radio-dot { opacity: 1; transform: scale(1); }
+  .gs-dup-title { font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+  .gs-dup-desc { font-size: 11.5px; color: #64748b; line-height: 1.45; margin-bottom: 12px; }
+  .gs-days-box {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #334155;
+  }
+  .gs-dup-tile.selected .gs-days-box { background: #eff6ff; border-color: #bfdbfe; }
+  .gs-days-muted { color: #94a3b8; }
+  .gs-days-muted i { color: #94a3b8 !important; }
+  .gs-days-input {
+    width: 62px;
+    height: 28px;
+    text-align: center;
+    font-weight: 700;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    outline: none;
+    font-size: 12.5px;
+  }
+  .gs-days-input:focus { border-color: #009ef7; }
+  .gs-rec-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+    margin-top: 8px;
+  }
+  .gs-rec-badge i { color: #059669 !important; }
+  .gs-spacer-tag { display: inline-block; height: 22px; margin-top: 8px; }
+
+  /* ── SECTION 3: DEPARTMENT SUB-CARDS ── */
+  .gs-dept-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .gs-dept-summary-text { font-size: 12px; color: #64748b; }
+  .gs-btn-add-dept {
+    height: 34px;
+    padding: 0 14px;
+    background: #eff6ff;
+    color: #009ef7 !important;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .gs-btn-add-dept i { color: #009ef7 !important; }
+  .gs-btn-add-dept:hover {
+    background: #009ef7;
+    color: #ffffff !important;
+    border-color: #009ef7;
+  }
+  .gs-btn-add-dept:hover i { color: #ffffff !important; }
+  .gs-dept-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .gs-dept-subcard {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.15s ease;
+  }
+  .gs-dept-subcard:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+  }
+  .gs-dept-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .gs-dept-icon-box {
+    width: 34px;
+    height: 34px;
+    border-radius: 7px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #dbeafe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .gs-dept-icon-box i { color: #2563eb !important; }
+  .gs-dept-info { overflow: hidden; }
+  .gs-dept-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gs-dept-tag { font-size: 10.5px; color: #94a3b8; }
+  .gs-dept-delete-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8 !important;
+    border: 1px solid transparent;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  .gs-dept-delete-btn i { color: #94a3b8 !important; font-size: 13px; }
+  .gs-dept-delete-btn:hover {
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+  .gs-dept-delete-btn:hover i { color: #ef4444 !important; }
+  .gs-dept-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 36px 20px;
+  }
+  .gs-dept-empty-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #009ef7;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  .gs-dept-empty-icon i { color: #009ef7 !important; }
+  .gs-dept-empty-title { font-weight: 700; color: #1e293b; font-size: 14px; }
+  .gs-dept-empty-sub { color: #64748b; font-size: 12px; margin-top: 2px; }
+
+  /* ── SECTION 4: INTEGRATIONS ── */
+  .gs-int-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .gs-int-subcard {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+  }
+  .gs-int-subcard:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+  }
+  .gs-int-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .gs-int-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .gs-logo-google i { color: #ea4335 !important; }
+  .gs-logo-zoom i { color: #2d8cff !important; }
+  .gs-logo-ms i { color: #00a4ef !important; }
+  .gs-int-name { font-size: 13.5px; font-weight: 700; color: #0f172a; }
+  .gs-int-desc { font-size: 11.5px; color: #64748b; line-height: 1.4; margin-top: 2px; }
+  .gs-int-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+  }
+  .gs-int-config-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: #009ef7 !important;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .gs-int-config-link i { color: #009ef7 !important; }
+  .gs-int-config-link:hover { text-decoration: underline; }
+  .gs-int-oauth-tag { font-size: 11.5px; color: #94a3b8; }
+
+  /* Switch toggle */
+  .gs-switch { position: relative; display: inline-block; width: 40px; height: 22px; margin: 0; }
+  .gs-switch input { opacity: 0; width: 0; height: 0; }
+  .gs-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .2s; border-radius: 22px; }
+  .gs-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: #ffffff; transition: .2s; border-radius: 50%; }
+  .gs-switch input:checked + .gs-slider { background-color: #009ef7; }
+  .gs-switch input:checked + .gs-slider:before { transform: translateX(18px); }
+
+  /* ── BOTTOM ACTIVITY & TENANCY STRIP ── */
+  .gs-bottom-strip {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+    flex-wrap: wrap;
+  }
+  .gs-strip-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .gs-tenancy-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+  }
+  .gs-tenancy-badge i { color: #009ef7 !important; }
+  .gs-sync-note { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 6px; }
+  .gs-sync-note i { color: #f59e0b !important; }
+  .gs-strip-actions { display: flex; align-items: center; gap: 10px; }
+  .gs-btn-discard {
+    height: 38px;
+    padding: 0 16px;
+    background: #f1f5f9;
+    color: #475569 !important;
+    font-size: 12.5px;
+    font-weight: 600;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s ease;
+  }
+  .gs-btn-discard:hover { background: #e2e8f0; color: #0f172a !important; }
+
+  /* ── 15.6" SCREEN FIT RESPONSIVE BREAKPOINTS ── */
+  @media (max-width: 1199px) {
+    .gs-dup-grid, .gs-dept-grid, .gs-int-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 767px) {
+    .gs-locale-grid, .gs-dup-grid, .gs-dept-grid, .gs-int-grid, .gs-split-selects {
+      grid-template-columns: 1fr;
+    }
+    .gs-toolbar-card { flex-direction: column; align-items: flex-start; }
+    .gs-toolbar-right, .gs-search-box { width: 100%; }
   }
 </style>
 
@@ -686,20 +1350,11 @@
 
         if (scope.indexOf(query) !== -1 || cardText.indexOf(query) !== -1) {
           $card.show();
-
-          // If inside departments card, filter individual department tiles
           if ($card.attr('id') === 'card_departments') {
-            var anyDeptMatch = false;
             $card.find('.dept-item-col').each(function() {
               var deptName = $(this).attr('data-dept-name') || '';
-              var matches = deptName.indexOf(query) !== -1;
-              $(this).toggle(matches);
-              if (matches) anyDeptMatch = true;
+              $(this).toggle(deptName.indexOf(query) !== -1);
             });
-            // If query is not general "department" word but specific dept name
-            if (!anyDeptMatch && query.indexOf('dept') === -1) {
-              // still show card if query matches card-level scope
-            }
           }
         } else {
           $card.hide();
@@ -729,29 +1384,22 @@
       var $tile = $(this);
       var val = $tile.attr('data-radio-val');
 
-      $('.duplicate-tile').removeClass('selected').css('border-color', '#e2e8f0');
-      $('.duplicate-tile .radio-dot').css('opacity', '0');
-      $('.duplicate-tile .radio-indicator-circle').css('border-color', '#cbd5e1');
+      $('.duplicate-tile').removeClass('selected');
       $('.duplicate-radio-input').prop('checked', false);
 
-      $tile.addClass('selected').css('border-color', '#009ef7');
-      $tile.find('.radio-dot').css('opacity', '1');
-      $tile.find('.radio-indicator-circle').css('border-color', '#009ef7');
+      $tile.addClass('selected');
       $tile.find('.duplicate-radio-input').prop('checked', true);
 
-      // Update badge
       var $badge = $('#duplicate_status_badge');
+      $badge.removeClass('gs-badge-purple gs-badge-blue gs-badge-red');
       if (val === '2') {
         var days = $('#app_duplicate_overroll').val() || '60';
-        $badge.attr('style', 'background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe;');
-        $badge.html('<i class="fa-solid fa-check text-purple me-1"></i> Global Detection Active (' + days + ' Days)');
+        $badge.addClass('gs-badge-purple').html('<i class="fas fa-check"></i> Global Detection Active (' + days + ' Days)');
       } else if (val === '1') {
         var days = $('#app_duplicate_requisition_wise').val() || '60';
-        $badge.attr('style', 'background: #eff6ff; color: #009ef7; border: 1px solid #bfdbfe;');
-        $badge.html('<i class="fa-solid fa-check text-primary me-1"></i> Job-Wise Detection Active (' + days + ' Days)');
+        $badge.addClass('gs-badge-blue').html('<i class="fas fa-check"></i> Job-Wise Detection Active (' + days + ' Days)');
       } else {
-        $badge.attr('style', 'background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2;');
-        $badge.html('<i class="fa-solid fa-ban text-danger me-1"></i> Deduplication Disabled');
+        $badge.addClass('gs-badge-red').html('<i class="fas fa-exclamation-triangle"></i> Deduplication Disabled');
       }
     });
 
@@ -764,10 +1412,9 @@
     function refreshDeptCounters() {
       var count = $('.dept_content').find('.dept-item-col').length;
       $('#dept_tab_badge').text(count);
-      $('#dept_card_badge').text(count + ' Departments');
+      $('#dept_card_badge').html('<i class="fas fa-sitemap"></i> ' + count + ' Active Departments');
     }
 
-    // Observer to automatically refresh counters when AJAX updates .dept_content
     var deptContainer = document.querySelector('.dept_content');
     if (deptContainer && window.MutationObserver) {
       var observer = new MutationObserver(function() {

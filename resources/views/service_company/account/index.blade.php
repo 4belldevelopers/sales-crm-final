@@ -4024,7 +4024,7 @@ input[type="radio"]:checked {
 <!--end::Settings Content-->
 
 <!--begin::Notifications Content-->
-<div class="tab-pane csn" id="notifications" role="tabpanel">
+<div class="tab-pane" id="notifications" role="tabpanel">
   @include('service_company.account.components.tab-notifications')
 </div>
 <!--end::Notifications Content-->
