@@ -224,8 +224,8 @@
    ========================================================================== */
 .it-stat-grid {
     display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 10px !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 8px !important;
     margin-bottom: 14px !important;
     width: 100% !important;
     box-sizing: border-box !important;
@@ -286,6 +286,7 @@
 .it-stat-icon.purple { background: #faf5ff !important; color: #9333ea !important; }
 .it-stat-icon.pink   { background: #fdf2f8 !important; color: #db2777 !important; }
 .it-stat-icon.red    { background: #fef2f2 !important; color: #dc2626 !important; }
+.it-stat-icon.amber  { background: #fef3c7 !important; color: #d97706 !important; }
 
 .it-stat-meta {
     min-width: 0 !important;
@@ -339,6 +340,7 @@
 .it-stat-sub.purple { color: #9333ea !important; }
 .it-stat-sub.pink   { color: #db2777 !important; }
 .it-stat-sub.red    { color: #dc2626 !important; }
+.it-stat-sub.amber  { color: #d97706 !important; }
 .it-stat-sub svg    { flex-shrink: 0 !important; width: 12px !important; height: 12px !important; }
 
 .it-kpi-pill-badge {
@@ -366,57 +368,113 @@
 }
 
 /* KPI Selected States (Color-matched exactly like Client Tracker .cl-card.active) */
+.it-stat-card.it-kpi-active[data-kpi-filter="this_month"],
 .it-stat-card.it-kpi-active[data-kpi-tab="this_month"] {
     background: #eff6ff !important;
     border-color: #60a5fa !important;
     box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
 }
+.it-stat-card.it-kpi-active[data-kpi-filter="this_month"] .it-stat-icon,
 .it-stat-card.it-kpi-active[data-kpi-tab="this_month"] .it-stat-icon {
     background: #ffffff !important;
     color: #2563eb !important;
     box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
 }
+.it-stat-card.it-kpi-active[data-kpi-filter="this_month"] .it-stat-num,
 .it-stat-card.it-kpi-active[data-kpi-tab="this_month"] .it-stat-num { color: #1d4ed8 !important; }
+.it-stat-card.it-kpi-active[data-kpi-filter="this_month"] .it-stat-lbl,
 .it-stat-card.it-kpi-active[data-kpi-tab="this_month"] .it-stat-lbl { color: #1e40af !important; font-weight: 700 !important; }
 
+.it-stat-card.it-kpi-active[data-kpi-filter="today"],
 .it-stat-card.it-kpi-active[data-kpi-tab="today"] {
     background: #ecfdf5 !important;
     border-color: #34d399 !important;
     box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
 }
+.it-stat-card.it-kpi-active[data-kpi-filter="today"] .it-stat-icon,
 .it-stat-card.it-kpi-active[data-kpi-tab="today"] .it-stat-icon {
     background: #ffffff !important;
     color: #059669 !important;
     box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
 }
+.it-stat-card.it-kpi-active[data-kpi-filter="today"] .it-stat-num,
 .it-stat-card.it-kpi-active[data-kpi-tab="today"] .it-stat-num { color: #065f46 !important; }
+.it-stat-card.it-kpi-active[data-kpi-filter="today"] .it-stat-lbl,
 .it-stat-card.it-kpi-active[data-kpi-tab="today"] .it-stat-lbl { color: #047857 !important; font-weight: 700 !important; }
 
+.it-stat-card.it-kpi-active[data-kpi-filter="upcoming"],
 .it-stat-card.it-kpi-active[data-kpi-tab="upcoming"] {
     background: #faf5ff !important;
     border-color: #c084fc !important;
     box-shadow: 0 0 0 1.5px #9333ea, 0 4px 14px rgba(147, 51, 234, 0.12) !important;
 }
+.it-stat-card.it-kpi-active[data-kpi-filter="upcoming"] .it-stat-icon,
 .it-stat-card.it-kpi-active[data-kpi-tab="upcoming"] .it-stat-icon {
     background: #ffffff !important;
     color: #9333ea !important;
     box-shadow: 0 1px 3px rgba(147, 51, 234, 0.15) !important;
 }
+.it-stat-card.it-kpi-active[data-kpi-filter="upcoming"] .it-stat-num,
 .it-stat-card.it-kpi-active[data-kpi-tab="upcoming"] .it-stat-num { color: #6b21a8 !important; }
+.it-stat-card.it-kpi-active[data-kpi-filter="upcoming"] .it-stat-lbl,
 .it-stat-card.it-kpi-active[data-kpi-tab="upcoming"] .it-stat-lbl { color: #7e22ce !important; font-weight: 700 !important; }
 
+.it-stat-card.it-kpi-active[data-kpi-filter="pending_feedback"],
 .it-stat-card.it-kpi-active[data-kpi-tab="pending_feedback"] {
     background: #fef2f2 !important;
     border-color: #f87171 !important;
     box-shadow: 0 0 0 1.5px #dc2626, 0 4px 14px rgba(220, 38, 38, 0.14) !important;
 }
+.it-stat-card.it-kpi-active[data-kpi-filter="pending_feedback"] .it-stat-icon,
 .it-stat-card.it-kpi-active[data-kpi-tab="pending_feedback"] .it-stat-icon {
     background: #ffffff !important;
     color: #dc2626 !important;
     box-shadow: 0 1px 3px rgba(220, 38, 38, 0.16) !important;
 }
+.it-stat-card.it-kpi-active[data-kpi-filter="pending_feedback"] .it-stat-num,
 .it-stat-card.it-kpi-active[data-kpi-tab="pending_feedback"] .it-stat-num { color: #991b1b !important; }
+.it-stat-card.it-kpi-active[data-kpi-filter="pending_feedback"] .it-stat-lbl,
 .it-stat-card.it-kpi-active[data-kpi-tab="pending_feedback"] .it-stat-lbl { color: #b91c1c !important; font-weight: 700 !important; }
+
+/* Standardized Organization Metric Active States */
+.it-stat-card.it-kpi-active[data-kpi-filter="direct_client"] {
+    background: #ecfdf5 !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-filter="direct_client"] .it-stat-icon {
+    background: #ffffff !important;
+    color: #059669 !important;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-filter="direct_client"] .it-stat-num { color: #065f46 !important; }
+.it-stat-card.it-kpi-active[data-kpi-filter="direct_client"] .it-stat-lbl { color: #047857 !important; font-weight: 700 !important; }
+
+.it-stat-card.it-kpi-active[data-kpi-filter="internal_client"] {
+    background: #eff6ff !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-filter="internal_client"] .it-stat-icon {
+    background: #ffffff !important;
+    color: #2563eb !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-filter="internal_client"] .it-stat-num { color: #1d4ed8 !important; }
+.it-stat-card.it-kpi-active[data-kpi-filter="internal_client"] .it-stat-lbl { color: #1e40af !important; font-weight: 700 !important; }
+
+.it-stat-card.it-kpi-active[data-kpi-filter="my_organization"] {
+    background: #fffbeb !important;
+    border-color: #fbbf24 !important;
+    box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.14) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-filter="my_organization"] .it-stat-icon {
+    background: #ffffff !important;
+    color: #d97706 !important;
+    box-shadow: 0 1px 3px rgba(217, 119, 6, 0.16) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-filter="my_organization"] .it-stat-num { color: #78350f !important; }
+.it-stat-card.it-kpi-active[data-kpi-filter="my_organization"] .it-stat-lbl { color: #92400e !important; font-weight: 700 !important; }
 
 /* ==========================================================================
    TIER 3: Unified Single White Card — Search, Mode, Sort & Reset (Client Tracker UX)
@@ -463,7 +521,7 @@
     height: 42px !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
-    padding: 0 112px 0 38px !important;
+    padding: 0 82px 0 38px !important;
     font-size: 12.5px !important;
     font-weight: 400 !important;
     color: #0f172a !important;
@@ -504,28 +562,6 @@
     font-variant-numeric: tabular-nums !important;
 }
 
-.it-search-clear-btn {
-    border: none !important;
-    background: #e2e8f0 !important;
-    color: #64748b !important;
-    width: 19px !important;
-    height: 19px !important;
-    border-radius: 50% !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    line-height: 1 !important;
-    padding: 0 !important;
-    transition: all 0.15s ease !important;
-}
-
-.it-search-clear-btn:hover {
-    background: #cbd5e1 !important;
-    color: #0f172a !important;
-}
 
 .it-search-kbd-hint {
     font-size: 9.5px !important;
@@ -843,91 +879,6 @@
     line-height: 1.3 !important;
 }
 
-/* ==========================================================================
-   TIER 4: Pure White Sub-Tabs Card
-   ========================================================================== */
-.it-tabs-card {
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 10px !important;
-    padding: 8px 12px !important;
-    margin-bottom: 12px !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    flex-wrap: wrap !important;
-    width: 100% !important;
-}
-
-.it-tabs-group {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    flex-wrap: wrap !important;
-    min-width: 0 !important;
-}
-
-.it-tab-btn {
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
-    padding: 6px 12px !important;
-    border-radius: 8px !important;
-    background: #ffffff !important;
-    color: var(--it-text-mid) !important;
-    border: 1px solid var(--it-border) !important;
-    transition: all 0.15s ease !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    cursor: pointer !important;
-    line-height: 1.3 !important;
-    white-space: nowrap !important;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
-}
-
-.it-tab-btn:hover {
-    background: #f8fafc !important;
-    border-color: #cbd5e1 !important;
-    color: var(--it-text-main) !important;
-}
-
-/* Single Active Primary Blue Highlight Rule */
-.it-tab-btn.active {
-    background: var(--it-primary) !important;
-    color: #ffffff !important;
-    border-color: var(--it-primary) !important;
-    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.22) !important;
-}
-
-.it-tab-badge {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-width: 20px !important;
-    height: 18px !important;
-    padding: 0 6px !important;
-    border-radius: 10px !important;
-    font-size: 10.5px !important;
-    font-weight: 700 !important;
-    background: #f1f5f9 !important;
-    color: var(--it-text-mid) !important;
-    font-variant-numeric: tabular-nums !important;
-    line-height: 1 !important;
-}
-
-.it-tab-btn.active .it-tab-badge {
-    background: rgba(255, 255, 255, 0.28) !important;
-    color: #ffffff !important;
-}
-
-.it-tab-btn:not(.active) .it-tab-badge.badge-today     { background: #dcfce7 !important; color: #15803d !important; }
-.it-tab-btn:not(.active) .it-tab-badge.badge-upcoming  { background: #eff6ff !important; color: #1d4ed8 !important; }
-.it-tab-btn:not(.active) .it-tab-badge.badge-pending   { background: #fef3c7 !important; color: #b45309 !important; }
-.it-tab-btn:not(.active) .it-tab-badge.badge-selected  { background: #dcfce7 !important; color: #15803d !important; }
-.it-tab-btn:not(.active) .it-tab-badge.badge-resched   { background: #e0f2fe !important; color: #0369a1 !important; }
-.it-tab-btn:not(.active) .it-tab-badge.badge-rejected  { background: #fee2e2 !important; color: #b91c1c !important; }
 
 /* ==========================================================================
    TIER 4: Master Primary Interview Cards & Discrete Sub-Cards Stream
@@ -963,7 +914,7 @@
 /* Upper Discrete Sub-Cards Grid (6 Responsive Fractional Columns) */
 .it-card-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.65fr) minmax(0, 1.48fr) minmax(0, 1.25fr) minmax(0, 1.52fr) minmax(0, 1.42fr) !important;
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.9fr) minmax(0, 1.32fr) minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, 1.36fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -987,23 +938,22 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 6px !important;
+    gap: 4px !important;
     min-height: 18px !important;
 }
 
 .it-subcard-label {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    font-size: 9.5px !important;
+    gap: 3px !important;
+    font-size: 9px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.35px !important;
     color: var(--it-text-muted) !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    min-width: 0 !important;
+    flex-shrink: 0 !important;
+    line-height: 1.3 !important;
 }
 
 .it-subcard-label i {
@@ -1190,15 +1140,15 @@
 
 /* Sub-Card 2: Requisition */
 .it-scope-badge {
-    font-size: 8.5px !important;
+    font-size: 8px !important;
     font-weight: 700 !important;
-    padding: 1.5px 6px !important;
+    padding: 1.5px 5.5px !important;
     border-radius: 4px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.2px !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 3px !important;
+    gap: 2.5px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     line-height: 1.3 !important;
@@ -1374,38 +1324,6 @@
     font-size: 11px !important;
 }
 
-.it-platform-pill {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 3.5px !important;
-    font-size: 8.5px !important;
-    font-weight: 700 !important;
-    padding: 1.5px 6px !important;
-    border-radius: 4px !important;
-    white-space: nowrap !important;
-    max-width: 50% !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    flex-shrink: 0 !important;
-    line-height: 1.3 !important;
-}
-
-.it-platform-pill span {
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-.it-platform-pill i {
-    font-size: 8.5px !important;
-    flex-shrink: 0 !important;
-}
-
-.it-plat-gmeet { background: #ecfdf5 !important; color: #047857 !important; border: 1px solid #a7f3d0 !important; }
-.it-plat-zoom  { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
-.it-plat-teams { background: #f5f3ff !important; color: #6d28d9 !important; border: 1px solid #ddd6fe !important; }
-.it-plat-phone { background: #f5f3ff !important; color: #7c3aed !important; border: 1px solid #ddd6fe !important; }
-.it-plat-f2f   { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
-.it-plat-video { background: #e0f2fe !important; color: #0369a1 !important; border: 1px solid #bae6fd !important; }
 
 .it-sched-time-row {
     display: flex !important;
@@ -2059,10 +1977,14 @@
 /* ==========================================================================
    15.6" Screen Fit & Small-Screen Responsive Breakpoints
    ========================================================================== */
-@media (max-width: 1440px) {
+@media (max-width: 1520px) {
     .it-stat-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
         gap: 8px !important;
     }
+}
+
+@media (max-width: 1440px) {
     .it-stat-card {
         padding: 9px 11px !important;
     }
@@ -2098,13 +2020,13 @@
     }
     .it-search-inp {
         height: 40px !important;
-        padding: 0 78px 0 36px !important;
+        padding: 0 65px 0 36px !important;
     }
     .it-search-kbd-hint {
         display: none !important;
     }
     .it-card-grid {
-        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.6fr) minmax(0, 1.45fr) minmax(0, 1.2fr) minmax(0, 1.48fr) minmax(0, 1.38fr) !important;
+        grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.9fr) minmax(0, 1.32fr) minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, 1.36fr) !important;
         gap: 7px !important;
         padding: 9px 10px !important;
     }
@@ -2185,11 +2107,11 @@
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════
-             TIER 2: CLIENT TRACKER KPI STAT CARDS (4 Interactive Metric Cards)
+             TIER 2: CLIENT TRACKER KPI STAT CARDS (7 Interactive Metric Cards)
              ══════════════════════════════════════════════════════════════ -->
         <div class="it-stat-grid" id="statsGrid">
           {{-- KPI 1: Interviews This Month --}}
-          <button type="button" class="it-stat-card it-stat-filter" data-kpi-tab="this_month" onclick="filterByKpi('this_month')">
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="this_month" onclick="filterByKpi('this_month')">
             <div class="it-stat-top">
               <div class="it-stat-icon blue">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2215,7 +2137,7 @@
           </button>
 
           {{-- KPI 2: Today's Interviews --}}
-          <button type="button" class="it-stat-card it-stat-filter" data-kpi-tab="today" onclick="filterByKpi('today')">
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="today" onclick="filterByKpi('today')">
             <div class="it-stat-top">
               <div class="it-stat-icon green">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2243,7 +2165,7 @@
           </button>
 
           {{-- KPI 3: Upcoming Interviews --}}
-          <button type="button" class="it-stat-card it-stat-filter" data-kpi-tab="upcoming" onclick="filterByKpi('upcoming')">
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="upcoming" onclick="filterByKpi('upcoming')">
             <div class="it-stat-top">
               <div class="it-stat-icon purple">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2268,7 +2190,7 @@
           </button>
 
           {{-- KPI 4: Feedback Pending --}}
-          <button type="button" class="it-stat-card it-stat-filter" data-kpi-tab="pending_feedback" onclick="filterByKpi('pending_feedback')">
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="pending_feedback" onclick="filterByKpi('pending_feedback')">
             <div class="it-stat-top">
               <div class="it-stat-icon red">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2295,6 +2217,88 @@
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               <span id="span_itPendingSub">Evaluation awaiting review</span>
+            </div>
+          </button>
+
+          {{-- KPI 5: Direct Client Interviews --}}
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="direct_client" onclick="filterByKpi('direct_client')">
+            <div class="it-stat-top">
+              <div class="it-stat-icon green" style="background:#d1fae5!important;color:#166534!important;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+              <div class="it-stat-meta">
+                <div class="it-stat-num-row">
+                  <div class="it-stat-num" id="stat-direct-client">0</div>
+                </div>
+                <div class="it-stat-lbl">Direct Client Interviews</div>
+              </div>
+            </div>
+            <div class="it-stat-sub green" style="color:#16a34a!important;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>Marketplace client</span>
+            </div>
+          </button>
+
+          {{-- KPI 6: Internal Client Interviews --}}
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="internal_client" onclick="filterByKpi('internal_client')">
+            <div class="it-stat-top">
+              <div class="it-stat-icon blue" style="background:#dbeafe!important;color:#1e40af!important;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                  <line x1="9" y1="22" x2="9" y2="22.01"/>
+                  <line x1="15" y1="22" x2="15" y2="22.01"/>
+                  <line x1="9" y1="6" x2="9" y2="6.01"/>
+                  <line x1="15" y1="6" x2="15" y2="6.01"/>
+                  <line x1="9" y1="10" x2="9" y2="10.01"/>
+                  <line x1="15" y1="10" x2="15" y2="10.01"/>
+                  <line x1="9" y1="14" x2="9" y2="14.01"/>
+                  <line x1="15" y1="14" x2="15" y2="14.01"/>
+                  <line x1="9" y1="18" x2="9" y2="18.01"/>
+                  <line x1="15" y1="18" x2="15" y2="18.01"/>
+                </svg>
+              </div>
+              <div class="it-stat-meta">
+                <div class="it-stat-num-row">
+                  <div class="it-stat-num" id="stat-internal-client">0</div>
+                </div>
+                <div class="it-stat-lbl">Internal Client Interviews</div>
+              </div>
+            </div>
+            <div class="it-stat-sub blue" style="color:#2563eb!important;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+              </svg>
+              <span>Managed non-marketplace</span>
+            </div>
+          </button>
+
+          {{-- KPI 7: My Organization Interviews --}}
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-filter="my_organization" onclick="filterByKpi('my_organization')">
+            <div class="it-stat-top">
+              <div class="it-stat-icon amber" style="background:#fef3c7!important;color:#92400e!important;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+              </div>
+              <div class="it-stat-meta">
+                <div class="it-stat-num-row">
+                  <div class="it-stat-num" id="stat-my-organization">0</div>
+                </div>
+                <div class="it-stat-lbl">My Organization Interviews</div>
+              </div>
+            </div>
+            <div class="it-stat-sub amber" style="color:#d97706!important;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 14 14"/>
+              </svg>
+              <span>Own company hiring</span>
             </div>
           </button>
         </div>
@@ -2324,9 +2328,6 @@
               />
               <div class="it-search-right-affix">
                 <span class="it-search-count-pill" id="itSearchMatchCount" style="display:none;" title="Matching interviews count">0 matches</span>
-                <button type="button" class="it-search-clear-btn" id="itSearchClear" title="Clear search (Esc)" aria-label="Clear search" style="display:none;" onclick="clearInterviewSearchInput(event)">
-                  &#10005;
-                </button>
                 <kbd class="it-search-kbd-hint" id="itSearchKbdHint" title="Press Ctrl+K to search">Ctrl+K</kbd>
                 <span id="loader_search" class="loader_search hidden_search" style="display:none;"></span>
               </div>
@@ -2508,41 +2509,6 @@
           </div>
         </div>
 
-        <!-- ══════════════════════════════════════════════════════════════
-             TIER 4: STATUS SUB-TABS CARD (Pure White #ffffff)
-             ══════════════════════════════════════════════════════════════ -->
-        <div class="it-tabs-card">
-          <div class="it-tabs-group">
-            <button type="button" class="it-tab-btn active" data-tab="all" onclick="filterByTab('all')">
-              <span>All Interviews</span>
-              <span class="it-tab-badge" id="tab-count-all">0</span>
-            </button>
-            <button type="button" class="it-tab-btn" data-tab="today" onclick="filterByTab('today')">
-              <span>Today</span>
-              <span class="it-tab-badge badge-today" id="tab-count-today">0</span>
-            </button>
-            <button type="button" class="it-tab-btn" data-tab="upcoming" onclick="filterByTab('upcoming')">
-              <span>Upcoming</span>
-              <span class="it-tab-badge badge-upcoming" id="tab-count-upcoming">0</span>
-            </button>
-            <button type="button" class="it-tab-btn" data-tab="pending_feedback" onclick="filterByTab('pending_feedback')">
-              <span>Feedback Pending</span>
-              <span class="it-tab-badge badge-pending" id="tab-count-pending">0</span>
-            </button>
-            <button type="button" class="it-tab-btn" data-tab="selected" onclick="filterByTab('selected')">
-              <span>Selected</span>
-              <span class="it-tab-badge badge-selected" id="tab-count-selected">0</span>
-            </button>
-            <button type="button" class="it-tab-btn" data-tab="rescheduled" onclick="filterByTab('rescheduled')">
-              <span>Rescheduled</span>
-              <span class="it-tab-badge badge-resched" id="tab-count-rescheduled">0</span>
-            </button>
-            <button type="button" class="it-tab-btn" data-tab="rejected" onclick="filterByTab('rejected')">
-              <span>Rejected</span>
-              <span class="it-tab-badge badge-rejected" id="tab-count-rejected">0</span>
-            </button>
-          </div>
-        </div>
 
         <!-- ══════════════════════════════════════════════════════════════
              TIER 4: PRIMARY INTERVIEW CARD STREAM & PAGINATION CARD
@@ -2691,23 +2657,6 @@
 var itSearchDebounceTimer = null;
 var itLastTotalCount = 0;
 
-function clearInterviewSearchInput(e) {
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    var $inp = $('#kt_tagify_2');
-    $inp.val('');
-    $('#itSearchClear').hide();
-    $('#itSearchMatchCount').hide();
-    $('#itSearchKbdHint').show();
-    updateItToolbarIndicators();
-    itCurrentPage = 1;
-    fetchCandidates(1, '');
-    $inp.focus();
-}
-window.clearInterviewSearchInput = clearInterviewSearchInput;
-
 function updateItToolbarIndicators() {
     var count = 0;
     var q = ($('#kt_tagify_2').val() || '').trim();
@@ -2716,7 +2665,7 @@ function updateItToolbarIndicators() {
     if (q.length > 0) count++;
     if (m !== 'All') count++;
     if (s !== '') count++;
-    if (typeof activeTab !== 'undefined' && activeTab !== 'all') count++;
+    if (typeof activeKpiFilter !== 'undefined' && activeKpiFilter !== 'all') count++;
 
     var $btn = $('#itResetFiltersBtn');
     var $badge = $('#itActiveFilterCount');
@@ -2894,10 +2843,16 @@ function selectItSortOption(val, text, e, skipFetch) {
         $('#itSortBtn').removeClass('is-custom-sorted');
     }
 
+    var prevSort = itLastAppliedSort;
+    itLastAppliedSort = canonical;
+
     updateItToolbarIndicators();
     if (skipFetch) return;
 
-    if (sortDomInterviewsLocally(canonical)) {
+    var wasFilterSort = (prevSort === '1' || prevSort === 'Feedback Pending' || prevSort === 'Interview Pending');
+    var isFilterSort = (canonical === '1' || canonical === 'Feedback Pending' || canonical === 'Interview Pending');
+
+    if (!wasFilterSort && !isFilterSort && sortDomInterviewsLocally(canonical)) {
         return;
     }
 
@@ -2912,10 +2867,8 @@ $(document).ready(function() {
     $searchInp.on('input', function() {
         var queryVal = ($(this).val() || '').trim();
         if (queryVal.length > 0) {
-            $('#itSearchClear').show();
             $('#itSearchKbdHint').hide();
         } else {
-            $('#itSearchClear').hide();
             $('#itSearchMatchCount').hide();
             $('#itSearchKbdHint').show();
         }
@@ -2931,7 +2884,6 @@ $(document).ready(function() {
     $searchInp.on('keydown', function(e) {
         if (e.key === 'Escape') {
             e.preventDefault();
-            clearInterviewSearchInput();
             $(this).blur();
         } else if (e.key === 'Enter') {
             e.preventDefault();
@@ -3176,49 +3128,50 @@ async function isInternetAvailablecheck() {
     }
 }
 
-// ── Tab, KPI & Filter Controllers ──────────────────────────────────────────
-let activeTab = 'all';
-let filterValues = { stage: 'All', status: 'All', owner: 'All', vendor: 'All', mode: 'All' };
+// ── KPI & Filter Controllers (Client Tracker Parity — Zero Subtabs) ─────────
+let activeKpiFilter = 'all';
+let filterValues = { mode: 'All', sort: '', search: '', kpi_filter: 'all' };
 
-function syncActiveKpiAndTabs(tab) {
-    document.querySelectorAll('.it-tab-btn').forEach(function(btn) {
-        btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
-    });
+function syncActiveKpiCards(filterName) {
     document.querySelectorAll('.it-stat-card').forEach(function(card) {
-        card.classList.toggle('it-kpi-active', card.getAttribute('data-kpi-tab') === tab);
+        var f = card.getAttribute('data-kpi-filter') || card.getAttribute('data-kpi-tab');
+        card.classList.toggle('it-kpi-active', f === filterName);
     });
     updateItToolbarIndicators();
 }
 
-function filterByTab(tab) {
-    activeTab = tab || 'all';
-    syncActiveKpiAndTabs(activeTab);
+function filterByKpi(filterName) {
+    activeKpiFilter = (activeKpiFilter === filterName) ? 'all' : (filterName || 'all');
+    filterValues.kpi_filter = activeKpiFilter;
+    syncActiveKpiCards(activeKpiFilter);
     itCurrentPage = 1;
     fetchCandidates(1, $('#kt_tagify_2').val());
 }
-
-function filterByKpi(kpiTab) {
-    var nextTab = (activeTab === kpiTab) ? 'all' : kpiTab;
-    filterByTab(nextTab);
-}
+window.filterByKpi = filterByKpi;
 
 function resetFilters() {
     itRamCache.clear();
     if (window.JeroInterviewScheduleLocalStore) {
         window.JeroInterviewScheduleLocalStore.purge();
     }
+    itLastAppliedSort = '';
     selectItSortOption('', 'Newest Interviews', null, true);
     selectItModeOption('All', 'All Modes', null, true);
-    activeTab = 'all';
-    syncActiveKpiAndTabs('all');
+    activeKpiFilter = 'all';
+    filterValues.kpi_filter = 'all';
+    filterValues.mode = 'All';
+    filterValues.sort = '';
+    filterValues.search = '';
+    syncActiveKpiCards('all');
     $('#kt_tagify_2').val('');
-    $('#itSearchClear').hide();
+    $('#inputSearch').val('');
     $('#itSearchMatchCount').hide();
     $('#itSearchKbdHint').show();
     updateItToolbarIndicators();
     itCurrentPage = 1;
     fetchCandidates(1, '', true);
 }
+window.resetFilters = resetFilters;
 
 function forceSyncInterviewTracker() {
     var $btn = $('#itRefreshBtn');
@@ -3243,7 +3196,7 @@ var itCurrentXhr = null;
 // ── JeroInterviewScheduleLocalStore — Native Browser IndexedDB Engine ────────
 const JeroInterviewScheduleLocalStore = (function() {
     const DB_NAME = 'jero_interview_schedule_db';
-    const DB_VERSION = 4; // Bumped for 6-subcard Ownership + Company + EmploymentType + Platform layout
+    const DB_VERSION = 5; // Bumped for 7 KPIs, zero subtabs, and unified toolbar reset
     const CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
     const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
     const CACHE_TTL_MS = 15 * 60 * 1000;
@@ -3496,11 +3449,9 @@ function renderInterviewData(response) {
     if (trimmedQuery.length > 0) {
         var matchCount = itLastTotalCount;
         $('#itSearchMatchCount').text(matchCount + (matchCount === 1 ? ' match' : ' matches')).show();
-        $('#itSearchClear').show();
         $('#itSearchKbdHint').hide();
     } else {
         $('#itSearchMatchCount').hide();
-        $('#itSearchClear').hide();
         $('#itSearchKbdHint').show();
     }
 
@@ -3517,18 +3468,13 @@ function renderInterviewData(response) {
             $('#badge_itPendingAction').hide();
             $('#span_itPendingSub').text("You're all caught up");
         }
+        $('#stat-direct-client').text(response.stats.direct_client ?? 0);
+        $('#stat-internal-client').text(response.stats.internal_client ?? 0);
+        $('#stat-my-organization').text(response.stats.my_organization ?? 0);
     }
 
-    var tc = response.tab_counts || {};
-    var totalAll = tc.all !== undefined ? tc.all : (response.total ?? 0);
+    var totalAll = response.stats && response.stats.total !== undefined ? response.stats.total : (response.total ?? 0);
     $('#itHeaderTotalBadge').text(totalAll);
-    $('#tab-count-all').text(totalAll);
-    $('#tab-count-today').text(tc.today ?? (response.stats ? (response.stats.today ?? 0) : 0));
-    $('#tab-count-upcoming').text(tc.upcoming ?? (response.stats ? (response.stats.upcoming ?? 0) : 0));
-    $('#tab-count-pending').text(tc.pending_feedback ?? (response.stats ? (response.stats.feedback_pending ?? 0) : 0));
-    $('#tab-count-selected').text(tc.selected ?? 0);
-    $('#tab-count-rejected').text(tc.rejected ?? 0);
-    $('#tab-count-rescheduled').text(tc.rescheduled ?? 0);
     updateItToolbarIndicators();
 }
 
@@ -3619,19 +3565,17 @@ function setFollowUpStatus(el, id, status) {
 async function fetchCandidates(page, search, forceRefresh) {
     if (page !== undefined) { itCurrentPage = page; }
 
+    var currentSearch = ($('#kt_tagify_2').val() || '').trim();
     var payload = {
         page:               itCurrentPage,
         size:               itCurrentSize,
         custom_status:      $('#status').val() || '',
-        search:             $('#inputSearch').val() || '',
+        search:             currentSearch,
         custom_hiringtype:  $('#sortingfilter').val() || '',
-        custom_search:      $('#kt_tagify_2').val() || '',
-        tab:                activeTab,
-        stage_filter:       filterValues.stage,
-        status_filter:      filterValues.status,
-        owner_filter:       filterValues.owner,
-        vendor_filter:      filterValues.vendor,
-        mode_filter:        filterValues.mode
+        custom_search:      currentSearch,
+        tab:                activeKpiFilter,
+        kpi_filter:         activeKpiFilter,
+        mode_filter:        filterValues.mode || 'All'
     };
 
     var cacheKey = JSON.stringify(payload);
