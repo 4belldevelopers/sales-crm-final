@@ -863,39 +863,17 @@
   // content: the content calls window.isdShellSetStep('main'|'email') when it
   // switches steps, and this shell adapts its one primary button accordingly
   // instead of the content drawing its own duplicate header/footer.
-  window._isdDrawerMode = window._isdDrawerMode || 'schedule';
-  window.isdShellSetMode = function(mode) {
-    window._isdDrawerMode = mode || 'schedule';
-    var $primaryBtn = $('#interview_schedule_drawer_primary');
-    if (window._isdDrawerMode === 'locked') {
-      $('#interview_schedule_drawer_title').text('Interview Already Scheduled');
-      $('#interview_schedule_drawer_subtitle').text('An active interview is already scheduled for the current pipeline stage');
-      $('#interview_schedule_drawer_back').hide();
-      $primaryBtn.hide();
-      return;
-    }
-    $primaryBtn.show();
-    if (window._isdDrawerMode === 'reschedule') {
-      $('#interview_schedule_drawer_title').text('Reschedule Interview');
-      $('#interview_schedule_drawer_subtitle').text('Update date, time, mode, or panel for the scheduled stage interview');
-      $('#interview_schedule_drawer_back').hide();
-      $('#interview_schedule_drawer_primary .indicator-label').html('<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);stroke:#ffffff !important;color:#ffffff !important;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> <span style="color:#ffffff !important;">Reschedule Interview</span> <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;margin-left:2px;color:#ffffff !important;"></i>');
-      return;
-    }
-    $('#interview_schedule_drawer_title').text('Schedule Interview');
-    $('#interview_schedule_drawer_subtitle').text('Schedule and invite candidates to the interview panel');
-    $('#interview_schedule_drawer_back').hide();
-    $('#interview_schedule_drawer_primary .indicator-label').html('<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);stroke:#ffffff !important;color:#ffffff !important;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> <span style="color:#ffffff !important;">Schedule Interview</span> <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;margin-left:2px;color:#ffffff !important;"></i>');
-  };
   window.isdShellSetStep = function(step){
     if (step === 'email') {
       $('#interview_schedule_drawer_title').text('Interview Schedule Email');
       $('#interview_schedule_drawer_subtitle').text('Review and customize the email invitation');
       $('#interview_schedule_drawer_back').show();
-      $('#interview_schedule_drawer_primary').show();
       $('#interview_schedule_drawer_primary .indicator-label').html('<i class="ti ti-mail" style="font-size:15px;color:#ffffff !important;"></i> <span style="color:#ffffff !important;">Send Email</span> <i class="ti ti-arrow-right" style="font-size:15px;margin-left:2px;color:#ffffff !important;"></i>');
     } else {
-      window.isdShellSetMode(window._isdDrawerMode === 'reschedule' ? 'reschedule' : (window._isdDrawerMode === 'locked' ? 'locked' : 'schedule'));
+      $('#interview_schedule_drawer_title').text('Schedule Interview');
+      $('#interview_schedule_drawer_subtitle').text('Schedule and invite candidates to the interview panel');
+      $('#interview_schedule_drawer_back').hide();
+      $('#interview_schedule_drawer_primary .indicator-label').html('<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-20deg);stroke:#ffffff !important;color:#ffffff !important;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> <span style="color:#ffffff !important;">Schedule Interview</span> <i class="ti ti-arrow-right" style="font-size:15px;stroke-width:2.5;margin-left:2px;color:#ffffff !important;"></i>');
     }
   };
   $(document).on('click', '#interview_schedule_drawer_back', function(){
@@ -2718,8 +2696,6 @@ $(document).ready(function(){
             var wiseId = $btn.attr('data-wise-id') || $btn.data('wise-id') || id;
             var jobId = $btn.attr('data-job-id') || $btn.data('job-id') || '';
             var appId = $btn.attr('data-app-id') || $btn.data('app-id') || '';
-            var interviewId = $btn.attr('data-interview-id') || $btn.data('interview-id') || '';
-            var isReschedule = $btn.attr('data-reschedule') || $btn.data('reschedule') || '';
 
             var url = "{{ route('service_company.job-applications.create-schedule',':id') }}";
             url = url.replace(':id', id);
@@ -2731,14 +2707,11 @@ $(document).ready(function(){
             if (wiseId) query.push('wiseId=' + encodeURIComponent(wiseId));
             if (jobId) query.push('jobId=' + encodeURIComponent(jobId));
             if (appId) query.push('application_id=' + encodeURIComponent(appId));
-            if (interviewId) query.push('interview_id=' + encodeURIComponent(interviewId));
-            if (isReschedule) query.push('reschedule=' + encodeURIComponent(isReschedule));
             if (query.length > 0) {
                 url += '?' + query.join('&');
             }
             var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
             (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
-            window._isdDrawerMode = isReschedule ? 'reschedule' : 'schedule';
             window.isdShellSetStep('main');
             $.ajax({
                 type : 'GET',
@@ -4844,15 +4817,13 @@ $( document ).ready(function() {
           }
       });
   });   
-        $(document).on('click', '#app_interview_schedule, #app_interview_reschedule, .cdr-btn-interview, .app_interview_schedule', function(e){
+        $(document).on('click', '#app_interview_schedule, .cdr-btn-interview, .app_interview_schedule', function(e){
             e.preventDefault();
             var $btn = $(this);
             var id = $btn.attr('rel');
             var wiseId = $btn.attr('data-wise-id') || $btn.data('wise-id') || '';
             var jobId = $btn.attr('data-job-id') || $btn.data('job-id') || '';
             var appId = $btn.attr('data-app-id') || $btn.data('app-id') || '';
-            var interviewId = $btn.attr('data-interview-id') || $btn.data('interview-id') || '';
-            var isReschedule = ($btn.attr('data-reschedule') == '1') || ($btn.attr('id') === 'app_interview_reschedule') || !!interviewId;
 
             var url = "{{ route('service_company.job-applications.create-schedule',':id') }}";
             url = url.replace(':id', id);
@@ -4861,15 +4832,12 @@ $( document ).ready(function() {
             if (wiseId) query.push('wiseId=' + encodeURIComponent(wiseId));
             if (jobId) query.push('jobId=' + encodeURIComponent(jobId));
             if (appId) query.push('application_id=' + encodeURIComponent(appId));
-            if (interviewId) query.push('interview_id=' + encodeURIComponent(interviewId));
-            if (isReschedule) query.push('reschedule=1');
             if (query.length > 0) {
                 url += (url.indexOf('?') === -1 ? '?' : '&') + query.join('&');
             }
 
             var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
             (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
-            window._isdDrawerMode = isReschedule ? 'reschedule' : 'schedule';
             window.isdShellSetStep('main');
             $.ajax({
                 type : 'GET',
@@ -4894,7 +4862,6 @@ $( document ).ready(function() {
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
               (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; _el.style.overflow='hidden'; })();
-              window._isdDrawerMode = relint ? 'reschedule' : 'schedule';
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
