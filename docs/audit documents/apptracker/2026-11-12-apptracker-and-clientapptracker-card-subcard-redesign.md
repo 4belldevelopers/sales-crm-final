@@ -88,3 +88,13 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
      5. **Career Pages:** `career_apply.blade.php` + `career_apply_ajax.blade.php` (`wcf-*`).
    - Preserved 100% of channel-specific domain logic, filters, drawer triggers (`.show-application-detail`, `.client-show-application-detail`, `.bench_show_application_detail`, `.pbench_show_application_detail`, `.website-show-application-detail`), action buttons (`add_to_inreview`, `add_to_list`, `data-row-source_from_type`), and Rule 17 prefix isolation.
    - Cleaned duplicate assignments in `ServiceCompanyAppTrackerController`, resolved `$this->hpOrgClass` for all 7 channel actions, and bumped `$cachePayload['ui_v']` to `card_v7` across all channel AJAX endpoints.
+9. **Direct Client Exclusive Light Background Green Palette (`apptracker/index`, `apptracker/clientapp`, `AppTrackerCardSubCardRedesignTest`):**
+   - **Problem:** The previous dark green background (`#047857` → `#065f46`) on the Direct Client AppTracker pages (`hp-org-direct`) was too dark and visually heavy, creating poor contrast against dark text and overpowering the header layout.
+   - **Solution:** Replaced the dark green background with an exclusive, light, enterprise-grade Mint Emerald Light Glow palette applied synchronously to **both** the **`+ Add Candidate`** header button and the active **`Total Candidates`** pipeline card:
+     * **Background Gradient:** `linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)` (emerald-200 to emerald-300 light radiant tint).
+     * **Border Color:** `#34d399` (emerald-400 crisp boundary).
+     * **Typography & Icon Color:** `#064e3b` (emerald-950 rich forest text with WCAG AAA high contrast).
+     * **Label Color:** `#065f46` (emerald-800).
+     * **Button Hover State:** `linear-gradient(135deg, #6ee7b7 0%, #34d399 100%)`, border `#10b981`, text `#064e3b`.
+     * **Shadow Glow:** `0 4px 14px rgba(16, 185, 129, 0.22)`.
+   - **Parity & Consistency:** Applied identically across AppTracker (`index.blade.php`), ClientAppTracker (`clientapp.blade.php`), and automated test assertions (`AppTrackerCardSubCardRedesignTest.php`).

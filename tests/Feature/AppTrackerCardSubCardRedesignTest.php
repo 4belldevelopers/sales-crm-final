@@ -297,6 +297,8 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('#bg_all.hp-total.hp-org-internal.bg-total-active', $indexView);
         $this->assertStringContainsString('#1e3a8a', $indexView);
         $this->assertStringContainsString('#bg_all.hp-total.hp-org-direct.bg-total-active', $indexView);
+        $this->assertStringContainsString('#a7f3d0', $indexView);
+        $this->assertStringContainsString('#064e3b', $indexView);
         $this->assertStringContainsString('.aptk-linkedin-pill', $indexView);
         $this->assertStringContainsString('#ecfdf5', $indexView);
         $this->assertStringContainsString('#15803d', $indexView);
@@ -315,6 +317,8 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('#bg_all.hp-total.hp-org-internal.bg-total-active', $clientAppView);
         $this->assertStringContainsString('#1e3a8a', $clientAppView);
         $this->assertStringContainsString('#bg_all.hp-total.hp-org-direct.bg-total-active', $clientAppView);
+        $this->assertStringContainsString('#a7f3d0', $clientAppView);
+        $this->assertStringContainsString('#064e3b', $clientAppView);
         $this->assertStringContainsString('.caf-linkedin-pill', $clientAppView);
         $this->assertStringContainsString('#ecfdf5', $clientAppView);
         $this->assertStringContainsString('#15803d', $clientAppView);
@@ -597,7 +601,8 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%);', $indexView);
         $this->assertStringContainsString('--hdr-btn-solid-color: #422006;', $indexView);
         $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);', $indexView);
-        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);', $indexView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);', $indexView);
+        $this->assertStringContainsString('--hdr-btn-solid-color: #064e3b;', $indexView);
         $this->assertStringContainsString('justify-content: space-between;', $indexView);
         $this->assertStringContainsString('height: 38px !important;', $indexView);
 
@@ -619,7 +624,8 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%);', $clientAppView);
         $this->assertStringContainsString('--hdr-btn-solid-color: #422006;', $clientAppView);
         $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);', $clientAppView);
-        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);', $clientAppView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);', $clientAppView);
+        $this->assertStringContainsString('--hdr-btn-solid-color: #064e3b;', $clientAppView);
         $this->assertStringContainsString('justify-content: space-between;', $clientAppView);
         $this->assertStringContainsString('height: 38px !important;', $clientAppView);
     }
