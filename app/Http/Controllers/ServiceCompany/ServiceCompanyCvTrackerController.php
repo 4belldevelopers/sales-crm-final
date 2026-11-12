@@ -174,6 +174,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'immediate' => 0,
             'without_resume' => 0,
             'tabs' => [
+                'all' => (int) $this->applicationCounter,
                 'inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0,
                 'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0,
             ],
@@ -376,6 +377,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'pipeline_range' => request('pipeline_range'),
                 // CV Tracker stage tab must also vary the cache key for the same reason.
                 'stage_tab' => request('stage_tab'),
+                'company_type' => request('company_type'),
             ];
 
             $salView = in_array('salary_view', (array) $this->userPermissions) ? 's1' : 's0';
@@ -1182,6 +1184,64 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // 	];
             // }
 
+            // Company Type Filter: My Organization, Internal Client, Direct Client (Rule 25 compliant)
+            // Applied to base query so BOTH hits and status KPI tab counts reflect the active company type.
+            $company_type = request('company_type');
+            if (! empty($company_type) && $company_type !== 'all') {
+                if ($company_type === 'my_organization') {
+                    $boolQuery['bool']['filter'][] = [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['client_self_company' => 1]],
+                                ['term' => ['ClientComID' => 0]],
+                                ['term' => ['self_company' => 1]],
+                            ],
+                            'minimum_should_match' => 1,
+                            'must_not' => [
+                                ['term' => ['is_direct_client' => true]],
+                                ['term' => ['is_direct_client' => 1]],
+                            ],
+                        ],
+                    ];
+                } elseif ($company_type === 'direct_client') {
+                    $boolQuery['bool']['filter'][] = [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['is_direct_client' => true]],
+                                ['term' => ['is_direct_client' => 1]],
+                                ['range' => ['recommendation_id' => ['gt' => 0]]],
+                                [
+                                    'bool' => [
+                                        'must' => [
+                                            ['range' => ['ClientComID' => ['gt' => 0]]],
+                                        ],
+                                        'must_not' => [
+                                            ['term' => ['ClientComID' => $company_id]],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                } elseif ($company_type === 'internal_client') {
+                    $boolQuery['bool']['filter'][] = [
+                        'bool' => [
+                            'must' => [
+                                ['range' => ['ClientComID' => ['gt' => 0]]],
+                            ],
+                            'must_not' => [
+                                ['term' => ['client_self_company' => 1]],
+                                ['term' => ['self_company' => 1]],
+                                ['term' => ['is_direct_client' => true]],
+                                ['term' => ['is_direct_client' => 1]],
+                                ['range' => ['recommendation_id' => ['gt' => 0]]],
+                            ],
+                        ],
+                    ];
+                }
+            }
+
             // Snapshot the base query (all filters EXCEPT the active tab) for the count
             // aggregation, then apply the tab filter to the paginated hits query only.
             $offerCountsBase = $boolQuery;
@@ -1395,6 +1455,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     'immediate' => (int) ($ca['immediate']['doc_count'] ?? 0),
                     'without_resume' => (int) ($ca['without_resume']['doc_count'] ?? 0),
                     'tabs' => [
+                        'all' => (int) ($cResp['hits']['total']['value'] ?? 0),
                         'inreview' => $statusBuckets[8] ?? 0,
                         'sourcing' => $statusBuckets[1] ?? 0,
                         'screening' => $statusBuckets[2] ?? 0,
