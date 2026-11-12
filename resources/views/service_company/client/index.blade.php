@@ -4783,6 +4783,18 @@ const ClientLocationDB = {
                 tx.onerror = function() { resolve(false); };
             }).catch(function() { resolve(false); });
         });
+    },
+
+    delete: function(key) {
+        return new Promise(function(resolve) {
+            ClientLocationDB.open().then(function(db) {
+                const tx = db.transaction(ClientLocationDB.storeName, 'readwrite');
+                const store = tx.objectStore(ClientLocationDB.storeName);
+                store.delete(key);
+                tx.oncomplete = function() { resolve(true); };
+                tx.onerror = function() { resolve(false); };
+            }).catch(function() { resolve(false); });
+        });
     }
 };
 
@@ -6293,6 +6305,18 @@ function applyClientResponse(response, targetPage) {
         if (response.pipeline_counts) {
             updatePipelineCounts(response.pipeline_counts);
         }
+        if (response.rows && Array.isArray(response.rows) && response.rows.length > 0) {
+            if (typeof ClientSearchEngine !== 'undefined') {
+                ClientSearchEngine.hydrate(response.rows, response.data_version || 1, false);
+            }
+            if (typeof clWorker !== 'undefined' && clWorker) {
+                clWorker.postMessage({
+                    type: 'INIT_DATASET',
+                    rows: response.rows,
+                    version: response.data_version || 1
+                });
+            }
+        }
     });
 }
 
@@ -6623,6 +6647,8 @@ $(document).on('click', '.request_event', function (e) {
             clientAll: newAllCount
         });
 
+        var currentCompanyId = {{ (int)auth()->user()->company_id }};
+        var currentUserId = {{ (int)auth()->id() }};
         var mutationId = 'mut_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         var url = "{{ route('service_company.clients.request_update') }}";
         var csrfToken = $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}';
@@ -6642,9 +6668,23 @@ $(document).on('click', '.request_event', function (e) {
                 'mutation_id': mutationId
             },
             success: function (response) {
-                ClientStore.invalidateTab('request');
-                ClientStore.invalidateTab('all');
-                ClientStore.invalidateTab('direct');
+                // 1. Invalidate all client stores and in-memory search caches
+                ClientStore.clear();
+                if (typeof ClientSearchEngine !== 'undefined') {
+                    ClientSearchEngine.destroy();
+                }
+                if (typeof clWorker !== 'undefined' && clWorker) {
+                    try {
+                        clWorker.postMessage({ type: 'CLEAR_CACHE' });
+                    } catch (e) {}
+                }
+                try {
+                    localStorage.removeItem('jero_cl_etag_tenant_' + currentCompanyId + '_user_' + currentUserId);
+                } catch (e) {}
+                const idbStoreKey = 'jero_client_projection:tenant=' + currentCompanyId + ':user=' + currentUserId + ':projection=clients:schema=2';
+                if (typeof ClientLocationDB !== 'undefined' && typeof ClientLocationDB.delete === 'function') {
+                    try { ClientLocationDB.delete(idbStoreKey); } catch (e) {}
+                }
 
                 if (response.mutation_version) {
                     ClientStore.latestMutationVersion = response.mutation_version;
@@ -6665,22 +6705,141 @@ $(document).on('click', '.request_event', function (e) {
                     });
                 }
 
-                $actionContainer.html(`
-                    <span class="badge bg-light-${event_id == 1 ? 'success text-success' : 'danger text-danger'} fw-bold px-3 py-1.5 d-inline-flex align-items-center gap-1">
-                        ${event_id == 1 ? '✓ Accepted' : '✕ Declined'}
-                    </span>
-                `);
-
                 swalWithBootstrapButtons.fire(
                     actionText + 'ed!',
                     response.message || ('Request has been ' + actionText.toLowerCase() + 'ed.'),
                     'success'
                 );
 
-                if (ClientStateManager.state.activeTab === 'request' || event_id == -1) {
+                if (event_id == 1) {
+                    // ── ACCEPT: Remove from request list, add directly to client list ──
+                    if (ClientStateManager.state.activeTab === 'request') {
+                        $row.slideUp(250, function() {
+                            $(this).remove();
+                            // Switch directly to the client list tab so user immediately sees the accepted client
+                            setTimeout(function() {
+                                setClientTab('all', null, true);
+                            }, 200);
+                        });
+                    } else {
+                        // User was on "Total Clients" / "All" tab:
+                        // The request row is removed and client list is immediately refreshed with accepted client
+                        $row.slideUp(200, function() {
+                            $(this).remove();
+                            if (response.clientList && response.clientList.html) {
+                                applyClientResponse(response.clientList, 1);
+                            } else {
+                                loadClientList(1, false);
+                            }
+                        });
+                    }
+                } else {
+                    // ── DECLINE: Remove from request list ──
                     $row.slideUp(250, function() {
                         $(this).remove();
-                        if ($('#allClients .tbl-r').length === 0) {
+                        if (ClientStateManager.state.activeTab === 'request') {
+                            if ($('#allClients .tbl-r').length === 0) {
+                                $('#allClients').html(`
+                                    <div class="cl-empty-state">
+                                        <div class="cl-empty-icon">
+                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+                                        </div>
+                                        <div class="cl-empty-title">No Pending Client Requests</div>
+                                        <div class="cl-empty-desc">You're all caught up. New client partnership requests will appear here when received.</div>
+                                    </div>
+                                `);
+                            }
+                        } else {
+                            if (response.clientList && response.clientList.html) {
+                                applyClientResponse(response.clientList, 1);
+                            } else {
+                                loadClientList(1, false);
+                            }
+                        }
+                    });
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 409) {
+                    // ── Self-healing Conflict Recovery: Backend already processed this request ──
+                    ClientStore.clear();
+                    if (typeof ClientSearchEngine !== 'undefined') {
+                        ClientSearchEngine.destroy();
+                    }
+                    if (typeof clWorker !== 'undefined' && clWorker) {
+                        try { clWorker.postMessage({ type: 'CLEAR_CACHE' }); } catch (e) {}
+                    }
+                    try {
+                        localStorage.removeItem('jero_cl_etag_tenant_' + currentCompanyId + '_user_' + currentUserId);
+                    } catch (e) {}
+                    const idbStoreKey = 'jero_client_projection:tenant=' + currentCompanyId + ':user=' + currentUserId + ':projection=clients:schema=2';
+                    if (typeof ClientLocationDB !== 'undefined' && typeof ClientLocationDB.delete === 'function') {
+                        try { ClientLocationDB.delete(idbStoreKey); } catch (e) {}
+                    }
+
+                    if (xhr.responseJSON && xhr.responseJSON.clientDataCnt) {
+                        updateClientTabCounters(xhr.responseJSON.clientDataCnt);
+                    }
+
+                    var conflictMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'This request has already been processed.';
+                    swalWithBootstrapButtons.fire('Already Handled', conflictMsg, 'info');
+
+                    // Immediately remove request card from DOM
+                    $row.slideUp(250, function() {
+                        $(this).remove();
+                        if (ClientStateManager.state.activeTab === 'request') {
+                            if (conflictMsg.indexOf('Accepted') !== -1) {
+                                setTimeout(function() {
+                                    setClientTab('all', null, true);
+                                }, 200);
+                            } else {
+                                if ($('#allClients .tbl-r').length === 0) {
+                                    $('#allClients').html(`
+                                        <div class="cl-empty-state">
+                                            <div class="cl-empty-icon">
+                                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+                                            </div>
+                                            <div class="cl-empty-title">No Pending Client Requests</div>
+                                            <div class="cl-empty-desc">You're all caught up. New client partnership requests will appear here when received.</div>
+                                        </div>
+                                    `);
+                                }
+                            }
+                        } else {
+                            if (xhr.responseJSON && xhr.responseJSON.clientList && xhr.responseJSON.clientList.html) {
+                                applyClientResponse(xhr.responseJSON.clientList, 1);
+                            } else {
+                                loadClientList(1, false);
+                            }
+                        }
+                    });
+                } else if (xhr.status === 422) {
+                    // ── Request Expired ──
+                    ClientStore.clear();
+                    if (typeof ClientSearchEngine !== 'undefined') {
+                        ClientSearchEngine.destroy();
+                    }
+                    if (typeof clWorker !== 'undefined' && clWorker) {
+                        try { clWorker.postMessage({ type: 'CLEAR_CACHE' }); } catch (e) {}
+                    }
+                    try {
+                        localStorage.removeItem('jero_cl_etag_tenant_' + currentCompanyId + '_user_' + currentUserId);
+                    } catch (e) {}
+                    const idbStoreKey = 'jero_client_projection:tenant=' + currentCompanyId + ':user=' + currentUserId + ':projection=clients:schema=2';
+                    if (typeof ClientLocationDB !== 'undefined' && typeof ClientLocationDB.delete === 'function') {
+                        try { ClientLocationDB.delete(idbStoreKey); } catch (e) {}
+                    }
+
+                    if (xhr.responseJSON && xhr.responseJSON.clientDataCnt) {
+                        updateClientTabCounters(xhr.responseJSON.clientDataCnt);
+                    }
+
+                    var expiredMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'This partnership request has expired and cannot be processed.';
+                    swalWithBootstrapButtons.fire('Request Expired', expiredMsg, 'warning');
+
+                    $row.slideUp(250, function() {
+                        $(this).remove();
+                        if (ClientStateManager.state.activeTab === 'request' && $('#allClients .tbl-r').length === 0) {
                             $('#allClients').html(`
                                 <div class="cl-empty-state">
                                     <div class="cl-empty-icon">
@@ -6693,31 +6852,15 @@ $(document).on('click', '.request_event', function (e) {
                         }
                     });
                 } else {
-                    // Refresh after brief delay so ES projection index propagates and row becomes normal Direct Client
-                    setTimeout(function() {
-                        loadClientList(1, false);
-                    }, 500);
-                }
-            },
-            error: function(xhr) {
-                // Deterministic Rollback
-                $actionContainer.html(originalActionsHtml);
-                $row.attr('class', originalClasses);
-                updateClientTabCounters({
-                    clientRequest: origReqCount,
-                    clientDirect: origDirCount,
-                    clientAll: origAllCount
-                });
+                    // ── Actual Server Failure: Deterministic Rollback ──
+                    $actionContainer.html(originalActionsHtml);
+                    $row.attr('class', originalClasses);
+                    updateClientTabCounters({
+                        clientRequest: origReqCount,
+                        clientDirect: origDirCount,
+                        clientAll: origAllCount
+                    });
 
-                if (xhr.status === 409) {
-                    var conflictMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'This request has already been processed by another recruiter.';
-                    swalWithBootstrapButtons.fire('Already Handled', conflictMsg, 'warning');
-                    loadClientList(1, false);
-                } else if (xhr.status === 422) {
-                    var expiredMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'This partnership request has expired and cannot be processed.';
-                    swalWithBootstrapButtons.fire('Request Expired', expiredMsg, 'warning');
-                    loadClientList(1, false);
-                } else {
                     var errDetail = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to update request status. Please check your connection and try again.';
                     swalWithBootstrapButtons.fire('Error', errDetail, 'error');
                 }
@@ -6741,6 +6884,10 @@ function handleClientMutationEvent(data) {
     const companyId = {{ (int)auth()->user()->company_id }};
     const userId = {{ (int)auth()->id() }};
     localStorage.removeItem('jero_cl_etag_tenant_' + companyId + '_user_' + userId);
+    const idbStoreKey = 'jero_client_projection:tenant=' + companyId + ':user=' + userId + ':projection=clients:schema=2';
+    if (typeof ClientLocationDB !== 'undefined' && typeof ClientLocationDB.delete === 'function') {
+        try { ClientLocationDB.delete(idbStoreKey); } catch (e) {}
+    }
 
     // Invalidate main browser RAM stores
     ClientStore.clear();
@@ -6761,6 +6908,11 @@ function handleClientMutationEvent(data) {
             if (delId) ClientSearchEngine.deleteEntity(delId);
         } else if (data.client) {
             ClientSearchEngine.upsertEntity(data.client);
+        } else if (data.type === 'CLIENT_REQUEST_MUTATED') {
+            ClientSearchEngine.destroy();
+            if (typeof clWorker !== 'undefined' && clWorker) {
+                try { clWorker.postMessage({ type: 'CLEAR_CACHE' }); } catch (e) {}
+            }
         }
     }
 

@@ -10410,6 +10410,7 @@ END:VCALENDAR";
                 'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
                 'id' => $row->id,
                 'retry_on_conflict' => 5,
+                'refresh' => true,
                 'body' => [
                     'doc' => [
                         'id' => $row->id,
