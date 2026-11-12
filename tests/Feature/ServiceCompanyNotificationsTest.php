@@ -50,28 +50,27 @@ class ServiceCompanyNotificationsTest extends TestCase
 
         // Tier 2 Sub-Tabs
         $this->assertStringContainsString('tier2-subtabs-card', $html);
-        $this->assertStringContainsString('data-target="card_notif_routing"', $html);
+        $this->assertStringContainsString('data-target="all"', $html);
         $this->assertStringContainsString('data-target="card_notif_recruitment"', $html);
         $this->assertStringContainsString('data-target="card_notif_sales"', $html);
 
-        // Tier 3 Card 1: Routing
-        $this->assertStringContainsString('id="card_notif_routing"', $html);
+        // Tier 3 Card 1: Recruitment Notifications (Email Sub-Card + 8 Services Underneath)
+        $this->assertStringContainsString('id="card_notif_recruitment"', $html);
+        $this->assertStringContainsString('ns-inbox-subcard', $html);
         $this->assertStringContainsString('id="recuitment_email"', $html);
         $this->assertStringContainsString('value="talent@company.com"', $html);
         $this->assertStringContainsString('id="recuitment_email_typo_hint"', $html);
+        $this->assertStringContainsString('ns-service-subcard', $html);
+        $this->assertStringContainsString('Candidate Pipeline &amp; Stage Moves', $html);
+        $this->assertStringContainsString('Job Offers, Approvals &amp; Responses', $html);
+
+        // Tier 3 Card 2: Sales & Commercial Notifications (Email Sub-Card + 8 Services Underneath)
+        $this->assertStringContainsString('id="card_notif_sales"', $html);
         $this->assertStringContainsString('id="sales_email"', $html);
         $this->assertStringContainsString('value="business@company.com"', $html);
         $this->assertStringContainsString('id="sales_email_typo_hint"', $html);
-
-        // Tier 3 Card 2: Recruitment Triggers
-        $this->assertStringContainsString('id="card_notif_recruitment"', $html);
-        $this->assertStringContainsString('Candidate Stages', $html);
-        $this->assertStringContainsString('Offers Update', $html);
-
-        // Tier 3 Card 3: Sales Triggers
-        $this->assertStringContainsString('id="card_notif_sales"', $html);
-        $this->assertStringContainsString('New Job Request from Direct Client', $html);
-        $this->assertStringContainsString('Invoice &amp; Payment Status', $html);
+        $this->assertStringContainsString('Direct Client Job Requisitions', $html);
+        $this->assertStringContainsString('Invoices, Payments &amp; Settlement Alerts', $html);
 
         // Form & Action Button
         $this->assertStringContainsString('id="notification_content"', $html);
