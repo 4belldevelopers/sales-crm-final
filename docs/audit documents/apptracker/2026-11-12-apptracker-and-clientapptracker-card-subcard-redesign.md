@@ -42,12 +42,13 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
 
 | File | Change Summary |
 |---|---|
-| `resources/views/service_company/apptracker/index.blade.php` | Replaced `#sc_table_card` raw `<table>` with Rule 20 `.aptk-*` Card + Sub-Card stream, skeleton loader, `.aptk-stream-bar`, search clear/refresh controls, card-based `.exportRecord` print builder, and `.aptk-cand-card` highlight/selection targets. |
-| `resources/views/service_company/ajax_pages/all_apptracker.blade.php` | Refactored `<tr>` rows into `.aptk-cand-card` with 6 discrete `.aptk-cand-subcard` cells and `.aptk-cand-bottom` intelligence strip. |
-| `resources/views/service_company/apptracker/clientapp.blade.php` | Replaced raw `<table>` with Rule 20 `.caf-*` Card + Sub-Card stream, skeleton loader, `.caf-stream-bar`, debounced search + clear/refresh controls + XHR abort, card-based `.aptk_print_btn` print builder, and active pagination page fix. |
-| `resources/views/service_company/ajax_pages/clientappdata_ajax.blade.php` | Refactored `<tr>` rows into `.caf-cand-card` with 6 discrete `.caf-cand-subcard` cells and `.caf-cand-bottom` strip; wired pre-fetched `$rowMaps` / `$citiesMap` and safe currency resolution. |
-| `app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php` | Added `ui_v` cache busting in `allDataAjax()` and `clientappdata_ajax()`, added `jobid` to `clientappdata_ajax` cache payload, and batch-prefetched `$rowMaps` & `$citiesMap`. |
-| `tests/Feature/AppTrackerCardSubCardRedesignTest.php` | Added Feature verification tests for both redesigned views, permissions, stage triggers, empty states, and Rule 17 isolation. |
+| `resources/views/service_company/apptracker/index.blade.php` | Replaced `#sc_table_card` raw `<table>` with Rule 20 `.aptk-*` Card + Sub-Card stream, skeleton loader, `.aptk-stream-bar`, search clear/refresh controls, card-based `.exportRecord` print builder, `.aptk-cand-card` highlight/selection targets, and Client Tracker cyan (`#0891b2` / `#ecfeff`) Sourcing pipeline color. |
+| `resources/views/service_company/ajax_pages/all_apptracker.blade.php` | Refactored `<tr>` rows into `.aptk-cand-card` with 6 discrete `.aptk-cand-subcard` cells, `.aptk-cand-bottom` intelligence strip, plain currency glyphs, trailing exp dot trim, and Client Tracker cyan (`#0891b2` / `#ecfeff` / `#0e7490` / `#a5f3fc`) Sourcing rail + badge. |
+| `resources/views/service_company/apptracker/clientapp.blade.php` | Replaced raw `<table>` with Rule 20 `.caf-*` Card + Sub-Card stream, skeleton loader, `.caf-stream-bar`, debounced search + clear/refresh controls + XHR abort, card-based `.aptk_print_btn` print builder, active pagination page fix, and Client Tracker cyan (`#0891b2` / `#ecfeff`) Sourcing pipeline color. |
+| `resources/views/service_company/ajax_pages/clientappdata_ajax.blade.php` | Refactored `<tr>` rows into `.caf-cand-card` with 6 discrete `.caf-cand-subcard` cells and `.caf-cand-bottom` strip; wired pre-fetched `$rowMaps` / `$citiesMap`, safe plain currency resolution, trailing exp dot trim, and Client Tracker cyan Sourcing rail + badge. |
+| `app/Services/CurrencyService.php` | Added `resolvePlainSymbolFromLegacy()` to convert legacy `GeneralMethod::currencySymbole()` HTML icon markup (`<i class="fa fa-inr">`) into clean Unicode/text currency glyphs without unescaped Blade HTML. |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php` | Added `ui_v` (`card_v3`) cache busting in `allDataAjax()` and `clientappdata_ajax()`, added `jobid` to `clientappdata_ajax` cache payload, and batch-prefetched `$rowMaps` & `$citiesMap`. |
+| `tests/Feature/AppTrackerCardSubCardRedesignTest.php` | Added Feature verification tests for both redesigned views, plain currency glyphs, trailing experience dot trimming, Client Tracker cyan Sourcing palette, permissions, stage triggers, empty states, and Rule 17 isolation. |
 
 ---
 
@@ -60,7 +61,7 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
 
 ## Verification Evidence
 
-- `php -l` passed with zero syntax errors on `ServiceCompanyAppTrackerController.php` and `AppTrackerCardSubCardRedesignTest.php`.
-- `php artisan test tests/Feature/AppTrackerCardSubCardRedesignTest.php` — **4 passed (43 assertions)**.
+- `php -l` passed with zero syntax errors across all modified controller, service, view, and test files.
+- `php artisan test tests/Feature/AppTrackerCardSubCardRedesignTest.php` — **5 passed (65 assertions)**.
 - `php artisan test tests/Feature/CandidateSubmitReadinessAndCacheTest.php --filter="apptracker"` — **2 passed (13 assertions)**.
 - `php artisan test tests/Feature/BenchToJobAppTrackerPipelineContractTest.php --filter="phase_1|phase_4|phase_5"` — verified after final edits.
