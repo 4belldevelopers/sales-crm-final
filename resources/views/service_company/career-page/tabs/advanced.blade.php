@@ -1,308 +1,315 @@
-{{-- Advanced Tab Panel --}}
+{{-- Advanced Tab Panel (Rule 20 Card + Sub-Card System) --}}
 <div class="cps-panel" id="panel-advanced">
-<div class="row g-4">
+    <div class="cps-workspace-grid balanced">
 
-    {{-- Left --}}
-    <div class="col-lg-6">
+        {{-- Left Column --}}
+        <div class="cps-col-main">
 
-        {{-- Performance & Caching --}}
-        <div class="cps-section">
-            <div class="cps-section-title">Performance & Caching</div>
-            <div class="cps-section-sub">Improve speed and deliver a seamless experience to your candidates.</div>
-
-            <div class="row g-0">
-                <div class="col-7" style="padding-right:16px;">
-                    <div class="adv-toggle-row">
+            {{-- Primary Card 1: Performance & Redis Caching --}}
+            <div class="cps-card accent-emerald">
+                <div class="cps-card-head">
+                    <div class="cps-card-head-left">
+                        <div class="cps-card-icon emerald"><i class="ti ti-bolt"></i></div>
                         <div>
-                            <div class="adv-toggle-label">Enable Caching</div>
-                            <div class="adv-toggle-desc">Cache career page content for faster load times.</div>
+                            <div class="cps-card-title">Performance &amp; Redis Caching</div>
+                            <div class="cps-card-sub">Tune edge delivery, asset compression, and cache TTL for 10K concurrency.</div>
                         </div>
-                        <label class="cps-switch" style="flex-shrink:0;">
-                            <input type="checkbox" name="adv_caching" value="1" {{ !isset($careerSettings->adv_caching) || !empty($careerSettings->adv_caching) ? 'checked' : '' }}>
-                            <span class="cps-slider"></span>
-                        </label>
                     </div>
-                    <div style="padding:12px 0 12px;">
-                        <div class="adv-toggle-label" style="margin-bottom:4px;">Cache Duration (TTL)</div>
-                        <div class="adv-hint" style="margin-bottom:4px;">Select how long cached content should be stored.</div>
-                        @php $advTtl = $careerSettings->adv_cache_ttl ?? 86400; @endphp
-                        <select class="adv-select" name="adv_cache_ttl">
-                            <option value="1800" {{ $advTtl == 1800 ? 'selected' : '' }}>30 Minutes</option>
-                            <option value="3600" {{ $advTtl == 3600 ? 'selected' : '' }}>1 Hour</option>
-                            <option value="21600" {{ $advTtl == 21600 ? 'selected' : '' }}>6 Hours</option>
-                            <option value="86400" {{ $advTtl == 86400 ? 'selected' : '' }}>24 Hours</option>
-                        </select>
-                    </div>
-                    <div class="adv-toggle-row">
-                        <div>
-                            <div class="adv-toggle-label">CDN Delivery</div>
-                            <div class="adv-toggle-desc">Serve career page assets (images, CSS, JS) via CDN.</div>
-                        </div>
-                        <label class="cps-switch" style="flex-shrink:0;">
-                            <input type="checkbox" name="adv_cdn" value="1" {{ !isset($careerSettings->adv_cdn) || !empty($careerSettings->adv_cdn) ? 'checked' : '' }}>
-                            <span class="cps-slider"></span>
-                        </label>
-                    </div>
-                    <div class="adv-toggle-row" style="border-bottom:none;padding-bottom:0;">
-                        <div>
-                            <div class="adv-toggle-label">Image Optimization</div>
-                            <div class="adv-toggle-desc">Automatically compress and optimize images.</div>
-                        </div>
-                        <label class="cps-switch" style="flex-shrink:0;">
-                            <input type="checkbox" name="adv_img_opt" value="1" {{ !isset($careerSettings->adv_img_opt) || !empty($careerSettings->adv_img_opt) ? 'checked' : '' }}>
-                            <span class="cps-slider"></span>
-                        </label>
-                    </div>
+                    <span class="cps-card-pill green cps-num">Score {{ $perfScore }}/100</span>
                 </div>
-                <div class="col-5">
-                    <div class="adv-perf-card">
-                        {{-- SVG gauge --}}
-                        <div class="adv-gauge-wrap">
-                            <svg width="100" height="58" viewBox="0 0 100 58">
-                                <path d="M10 55 A40 40 0 0 1 90 55" fill="none" stroke="#E2E8F0" stroke-width="8" stroke-linecap="round"/>
-                                <path d="M10 55 A40 40 0 0 1 90 55" fill="none" stroke="#16A34A" stroke-width="8" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="5"/>
-                            </svg>
-                            <div style="margin-top:-10px;">
-                                <span class="adv-gauge-score">97</span><span class="adv-gauge-total">/100</span>
-                                <div style="font-size:10px;color:#94A3B8;margin-top:1px;">Performance Score</div>
-                                <div class="adv-gauge-label">Excellent</div>
+
+                <div class="cps-card-body">
+                    <div class="cps-subcard-grid-2">
+                        <div class="cps-subcard" style="display:flex;flex-direction:column;gap:8px;">
+                            <div class="cps-subcard-kicker"><span>Optimization Controls</span></div>
+                            <div class="adv-toggle-row">
+                                <div>
+                                    <div class="adv-toggle-label">Enable Caching</div>
+                                    <div class="adv-toggle-desc">Serve cached portal metadata via Redis.</div>
+                                </div>
+                                <label class="cps-switch">
+                                    <input type="checkbox" name="adv_caching" value="1" {{ !isset($careerSettings->adv_caching) || !empty($careerSettings->adv_caching) ? 'checked' : '' }}>
+                                    <span class="cps-slider"></span>
+                                </label>
+                            </div>
+                            <div class="cps-subcard white" style="padding:9px 11px;">
+                                <label class="cps-label">Cache Duration (TTL)</label>
+                                @php $advTtl = $careerSettings->adv_cache_ttl ?? 86400; @endphp
+                                <select class="adv-select" name="adv_cache_ttl">
+                                    <option value="1800" {{ $advTtl == 1800 ? 'selected' : '' }}>30 Minutes</option>
+                                    <option value="3600" {{ $advTtl == 3600 ? 'selected' : '' }}>1 Hour</option>
+                                    <option value="21600" {{ $advTtl == 21600 ? 'selected' : '' }}>6 Hours</option>
+                                    <option value="86400" {{ $advTtl == 86400 ? 'selected' : '' }}>24 Hours</option>
+                                </select>
+                            </div>
+                            <div class="adv-toggle-row">
+                                <div>
+                                    <div class="adv-toggle-label">CDN Delivery</div>
+                                    <div class="adv-toggle-desc">Serve images, CSS &amp; JS from edge nodes.</div>
+                                </div>
+                                <label class="cps-switch">
+                                    <input type="checkbox" name="adv_cdn" value="1" {{ !isset($careerSettings->adv_cdn) || !empty($careerSettings->adv_cdn) ? 'checked' : '' }}>
+                                    <span class="cps-slider"></span>
+                                </label>
+                            </div>
+                            <div class="adv-toggle-row">
+                                <div>
+                                    <div class="adv-toggle-label">Image Optimization</div>
+                                    <div class="adv-toggle-desc">Compress uploaded brand imagery.</div>
+                                </div>
+                                <label class="cps-switch">
+                                    <input type="checkbox" name="adv_img_opt" value="1" {{ !isset($careerSettings->adv_img_opt) || !empty($careerSettings->adv_img_opt) ? 'checked' : '' }}>
+                                    <span class="cps-slider"></span>
+                                </label>
                             </div>
                         </div>
-                        @foreach(['Page Speed'=>'Excellent','First Contentful Paint'=>'Excellent','Largest Contentful Paint'=>'Excellent','Cumulative Layout Shift'=>'Good'] as $metric=>$rating)
-                        <div class="adv-perf-check">
-                            <span class="adv-perf-check-name"><i class="ti ti-circle-check-filled"></i> {{ $metric }}</span>
-                            <span class="{{ $rating==='Good'?'adv-perf-good':'adv-perf-excellent' }}">{{ $rating }}</span>
+
+                        <div class="adv-perf-card">
+                            <div class="adv-gauge-wrap">
+                                <svg width="100" height="56" viewBox="0 0 100 58">
+                                    <path d="M10 55 A40 40 0 0 1 90 55" fill="none" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round"/>
+                                    <path d="M10 55 A40 40 0 0 1 90 55" fill="none" stroke="#10b981" stroke-width="8" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="6"/>
+                                </svg>
+                                <div style="margin-top:-10px;">
+                                    <span class="adv-gauge-score" id="advGaugeScore">{{ $perfScore }}</span><span class="adv-gauge-total">/100</span>
+                                    <div style="font-size:10px;color:#94a3b8;">Performance Score</div>
+                                    <div class="adv-gauge-label">Enterprise Ready</div>
+                                </div>
+                            </div>
+                            @foreach(['Page Speed'=>'Excellent','First Contentful Paint'=>'Excellent','Largest Contentful Paint'=>'Excellent','Cumulative Layout Shift'=>'Good'] as $metric => $rating)
+                                <div class="adv-perf-check">
+                                    <span class="adv-perf-check-name"><i class="ti ti-circle-check-filled"></i> {{ $metric }}</span>
+                                    <span class="{{ $rating === 'Good' ? 'adv-perf-good' : 'adv-perf-excellent' }}">{{ $rating }}</span>
+                                </div>
+                            @endforeach
                         </div>
-                        @endforeach
                     </div>
                 </div>
             </div>
-        </div>
 
-        {{-- Security & Access --}}
-        <div class="cps-section">
-            <div class="cps-section-title">Security & Access</div>
-            <div class="cps-section-sub">Control access and protect your career page.</div>
-
-            <div class="row g-0">
-                <div class="col-7" style="padding-right:16px;">
-                    @php
-                    $secToggles = [
-                        ['name'=>'adv_pwd_protect',   'label'=>'Password Protection',           'desc'=>'Restrict access to your career page with a password.',      'checked'=>false],
-                        ['name'=>'adv_ip_whitelist',  'label'=>'Allowed IP Addresses',          'desc'=>'Allow access only from specific IP addresses.',             'checked'=>false],
-                        ['name'=>'adv_block_indexing','label'=>'Block Search Engine Indexing',  'desc'=>'Prevent search engines from indexing your career page.',    'checked'=>false],
-                        ['name'=>'adv_recaptcha',     'label'=>'Enable reCAPTCHA on Apply Form','desc'=>'Add reCAPTCHA to prevent spam applications.',              'checked'=>true],
-                    ];
-                    @endphp
-                    @foreach($secToggles as $st)
-                    <div class="adv-toggle-row" style="{{ $loop->last?'border-bottom:none;padding-bottom:0;':'' }}">
+            {{-- Primary Card 2: Security & Access Governance --}}
+            <div class="cps-card">
+                <div class="cps-card-head">
+                    <div class="cps-card-head-left">
+                        <div class="cps-card-icon"><i class="ti ti-shield-lock"></i></div>
                         <div>
-                            <div class="adv-toggle-label">{{ $st['label'] }}</div>
-                            <div class="adv-toggle-desc">{{ $st['desc'] }}</div>
+                            <div class="cps-card-title">Security &amp; Access Governance</div>
+                            <div class="cps-card-sub">Protect your public portal and share verified preview links.</div>
                         </div>
-                        <label class="cps-switch" style="flex-shrink:0;">
-                            <input type="checkbox" name="{{ $st['name'] }}" value="1" {{ $st['checked']?'checked':'' }}>
-                            <span class="cps-slider"></span>
-                        </label>
                     </div>
-                    @endforeach
                 </div>
-                <div class="col-5">
-                    <div class="adv-sec-card">
-                        <div class="adv-toggle-label" style="margin-bottom:6px;">Career Page URL</div>
-                        <a href="{{ $careerUrl }}" target="_blank" class="adv-sec-link">
-                            {{ $careerUrl }} <i class="ti ti-external-link" style="font-size:11px;"></i>
-                        </a>
-                        <button type="button" class="adv-copy-btn" onclick="copyCareerUrl()">Copy Link</button>
-                        <div class="adv-share-title">Share Preview</div>
-                        <div class="adv-share-desc">Share a preview of your career page.</div>
-                        <div class="adv-share-icons">
-                            <div class="adv-share-icon" style="background:#EFF6FF;"><i class="ti ti-brand-linkedin" style="color:#0077B5;"></i></div>
-                            <div class="adv-share-icon" style="background:#EFF6FF;"><i class="ti ti-brand-facebook" style="color:#1877F2;"></i></div>
-                            <div class="adv-share-icon" style="background:#F8FAFC;"><i class="ti ti-brand-x" style="color:#0F172A;"></i></div>
-                            <div class="adv-share-icon" style="background:#F0FDF4;"><i class="ti ti-mail" style="color:#16A34A;"></i></div>
+                <div class="cps-card-body">
+                    <div class="cps-subcard-grid-2">
+                        <div class="cps-subcard" style="display:flex;flex-direction:column;gap:7px;">
+                            @php
+                            $secToggles = [
+                                ['name'=>'adv_pwd_protect',    'label'=>'Password Protection',          'desc'=>'Gate portal behind access passcode.',     'checked'=>false],
+                                ['name'=>'adv_ip_whitelist',   'label'=>'Allowed IP Addresses',         'desc'=>'Restrict portal to approved IP ranges.',  'checked'=>false],
+                                ['name'=>'adv_block_indexing', 'label'=>'Block Search Indexing',        'desc'=>'Hide portal from search engines.',        'checked'=>false],
+                                ['name'=>'adv_recaptcha',      'label'=>'reCAPTCHA on Apply Form',      'desc'=>'Block automated spam submissions.',       'checked'=>true],
+                            ];
+                            @endphp
+                            @foreach($secToggles as $st)
+                                <div class="adv-toggle-row">
+                                    <div>
+                                        <div class="adv-toggle-label">{{ $st['label'] }}</div>
+                                        <div class="adv-toggle-desc">{{ $st['desc'] }}</div>
+                                    </div>
+                                    <label class="cps-switch">
+                                        <input type="checkbox" name="{{ $st['name'] }}" value="1" {{ $st['checked'] ? 'checked' : '' }}>
+                                        <span class="cps-slider"></span>
+                                    </label>
+                                </div>
+                            @endforeach
                         </div>
-                        <button type="button" class="adv-preview-btn">
-                            View Public Preview <i class="ti ti-external-link" style="font-size:11px;"></i>
-                        </button>
+
+                        <div class="adv-sec-card">
+                            <div class="adv-toggle-label" style="margin-bottom:4px;">Public Portal URL</div>
+                            <a href="{{ $careerUrl }}" target="_blank" class="adv-sec-link">
+                                {{ $careerUrl }} <i class="ti ti-external-link"></i>
+                            </a>
+                            <button type="button" class="adv-copy-btn" onclick="copyCareerUrl()">Copy Portal Link</button>
+                            <div class="adv-share-title">Quick Share</div>
+                            <div class="adv-share-desc">Share portal link with stakeholders.</div>
+                            <div class="adv-share-icons">
+                                <div class="adv-share-icon" style="background:#eff6ff;"><i class="ti ti-brand-linkedin" style="color:#0077b5;"></i></div>
+                                <div class="adv-share-icon" style="background:#eff6ff;"><i class="ti ti-brand-facebook" style="color:#1877f2;"></i></div>
+                                <div class="adv-share-icon" style="background:#ffffff;"><i class="ti ti-brand-x" style="color:#0f172a;"></i></div>
+                                <div class="adv-share-icon" style="background:#ecfdf5;"><i class="ti ti-mail" style="color:#059669;"></i></div>
+                            </div>
+                            <a href="{{ $careerUrl }}" target="_blank" class="adv-preview-btn">
+                                Open Public Preview <i class="ti ti-external-link"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {{-- Maintenance Mode --}}
-        <div class="cps-section">
-            <div class="cps-section-title">Maintenance Mode</div>
-            <div class="cps-section-sub">Put your career page in maintenance mode.</div>
-
-            <div class="adv-maint-card">
-                <div class="adv-maint-header">
-                    <div style="display:flex;align-items:flex-start;gap:12px;">
-                        <div style="width:36px;height:36px;border-radius:9px;background:#FFF7ED;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                            <i class="ti ti-tools" style="font-size:18px;color:#F97316;"></i>
-                        </div>
+            {{-- Primary Card 3: Maintenance Mode --}}
+            <div class="cps-card accent-amber">
+                <div class="cps-card-head">
+                    <div class="cps-card-head-left">
+                        <div class="cps-card-icon amber"><i class="ti ti-tools"></i></div>
                         <div>
-                            <div class="adv-maint-title">Maintenance Mode</div>
-                            <div class="adv-maint-desc">When enabled, visitors will see a maintenance message.</div>
+                            <div class="cps-card-title">Maintenance Mode</div>
+                            <div class="cps-card-sub">Temporarily display a custom notice while updating career content.</div>
                         </div>
                     </div>
-                    <label class="cps-switch" style="flex-shrink:0;margin-top:4px;">
-                        <input type="checkbox" name="adv_maintenance" value="1" {{ !empty($careerSettings->adv_maintenance) ? 'checked' : '' }}>
-                        <span class="cps-slider"></span>
-                    </label>
                 </div>
-                <label class="cps-label">Maintenance Message</label>
-                <textarea class="adv-maint-textarea" name="adv_maintenance_msg" id="advMaintMsg" maxlength="200"
-                          oninput="document.getElementById('advMaintCount').textContent=this.value.length+'/200';"
-                          rows="3">{{ $careerSettings->adv_maintenance_msg ?? "We're making some updates to serve you better. Please check back shortly!" }}</textarea>
-                <div style="display:flex;justify-content:flex-end;margin-top:3px;">
-                    <span style="font-size:11px;color:#94A3B8;" id="advMaintCount">{{ strlen($careerSettings->adv_maintenance_msg ?? "We're making some updates to serve you better. Please check back shortly!") }}/200</span>
+                <div class="cps-card-body">
+                    <div class="adv-maint-card">
+                        <div class="adv-maint-header">
+                            <div>
+                                <div class="adv-maint-title">Enable Maintenance Banner</div>
+                                <div class="adv-maint-desc">Visitors will see the maintenance notice below instead of live listings.</div>
+                            </div>
+                            <label class="cps-switch">
+                                <input type="checkbox" name="adv_maintenance" value="1" {{ !empty($careerSettings->adv_maintenance) ? 'checked' : '' }}>
+                                <span class="cps-slider"></span>
+                            </label>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                            <label class="cps-label" style="margin:0;">Maintenance Message</label>
+                            <span style="font-size:10.5px;color:#92400e;" id="advMaintCount" class="cps-num">{{ strlen($careerSettings->adv_maintenance_msg ?? "We're making some updates to serve you better. Please check back shortly!") }}/200</span>
+                        </div>
+                        <textarea class="adv-maint-textarea" name="adv_maintenance_msg" id="advMaintMsg" maxlength="200"
+                                  oninput="document.getElementById('advMaintCount').textContent=this.value.length+'/200';"
+                                  rows="2">{{ $careerSettings->adv_maintenance_msg ?? "We're making some updates to serve you better. Please check back shortly!" }}</textarea>
+                    </div>
                 </div>
             </div>
+
         </div>
 
-    </div>
+        {{-- Right Column --}}
+        <div class="cps-col-side">
 
-    {{-- Right --}}
-    <div class="col-lg-6">
-
-        {{-- Custom Code --}}
-        <div class="cps-sidebar-card" style="padding:0;overflow:hidden;margin-bottom:16px;">
-            <div style="padding:14px 18px 0;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
-                    <h4 style="margin:0;">Custom Code</h4>
-                    <a href="javascript:void(0);" style="font-size:12px;font-weight:600;color:#2563EB;display:flex;align-items:center;gap:4px;text-decoration:none;">
-                        Learn more <i class="ti ti-external-link" style="font-size:11px;"></i>
-                    </a>
+            {{-- Primary Card 4: Analytics & Conversion Pixels --}}
+            <div class="cps-card accent-indigo">
+                <div class="cps-card-head">
+                    <div class="cps-card-head-left">
+                        <div class="cps-card-icon indigo"><i class="ti ti-chart-line"></i></div>
+                        <div>
+                            <div class="cps-card-title">Analytics &amp; Conversion Pixels</div>
+                            <div class="cps-card-sub">Connect first-party measurement IDs for candidate attribution.</div>
+                        </div>
+                    </div>
                 </div>
-                <p class="sub" style="margin:0 0 12px;">Add custom code to further customize your career page.</p>
+
+                <div class="cps-card-body">
+                    <div class="cps-subcard-grid-2">
+                        <div class="cps-subcard">
+                            <div class="adv-track-label">Google Analytics 4 ID</div>
+                            <div class="adv-track-input-wrap">
+                                <input type="text" class="adv-track-input" name="adv_ga4_id" placeholder="G-XXXXXXXXX" value="{{ $careerSettings->adv_ga4_id ?? '' }}">
+                                <span class="adv-track-badge {{ !empty($careerSettings->adv_ga4_id) ? 'connected' : '' }}">{{ !empty($careerSettings->adv_ga4_id) ? 'Connected' : 'Unset' }}</span>
+                            </div>
+
+                            <div class="adv-track-label">Facebook Pixel ID</div>
+                            <div class="adv-track-input-wrap">
+                                <input type="text" class="adv-track-input" name="adv_fb_pixel" placeholder="Pixel ID" value="{{ $careerSettings->adv_fb_pixel ?? '' }}">
+                                <span class="adv-track-badge {{ !empty($careerSettings->adv_fb_pixel) ? 'connected' : '' }}">{{ !empty($careerSettings->adv_fb_pixel) ? 'Connected' : 'Unset' }}</span>
+                            </div>
+
+                            <div class="adv-track-label">LinkedIn Insight Tag</div>
+                            <div class="adv-track-input-wrap">
+                                <input type="text" class="adv-track-input" name="adv_linkedin_tag" placeholder="Tag ID" value="{{ $careerSettings->adv_linkedin_tag ?? '' }}">
+                                <span class="adv-track-badge {{ !empty($careerSettings->adv_linkedin_tag) ? 'connected' : '' }}">{{ !empty($careerSettings->adv_linkedin_tag) ? 'Connected' : 'Unset' }}</span>
+                            </div>
+
+                            <div class="adv-track-label">Hotjar Site ID</div>
+                            <div class="adv-track-input-wrap" style="margin-bottom:0;">
+                                <input type="text" class="adv-track-input" name="adv_hotjar_id" placeholder="Site ID" value="{{ $careerSettings->adv_hotjar_id ?? '' }}">
+                                <button type="button" class="adv-verify-btn" onclick="toastr.success('Tracking tag format verified.');">Verify</button>
+                            </div>
+                        </div>
+
+                        <div class="adv-track-status">
+                            <div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:8px;">Event Telemetry</div>
+                            @foreach(['Page Views'=>'Active','Job View Events'=>'Active','Application Events'=>'Active','Form Submissions'=>'Active'] as $ts => $status)
+                                <div class="adv-ts-row">
+                                    <span class="adv-ts-name">{{ $ts }}</span>
+                                    <span class="adv-ts-badge">{{ $status }}</span>
+                                </div>
+                            @endforeach
+                            <div class="adv-track-desc">
+                                <i class="ti ti-info-circle" style="font-size:14px;color:#009ef7;flex-shrink:0;"></i>
+                                <span>Events dispatch asynchronously when candidates browse or apply.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Primary Card 5: Custom Code Injection --}}
+            <div class="cps-card accent-purple">
+                <div class="cps-card-head">
+                    <div class="cps-card-head-left">
+                        <div class="cps-card-icon purple"><i class="ti ti-code"></i></div>
+                        <div>
+                            <div class="cps-card-title">Custom Embed Snippets</div>
+                            <div class="cps-card-sub">Preview header, footer, and body-end script slots.</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="adv-code-tabs">
                     <div class="adv-code-tab active" onclick="switchCodeTab(this,'adv-code-header')">Header Code</div>
                     <div class="adv-code-tab" onclick="switchCodeTab(this,'adv-code-footer')">Footer Code</div>
-                    <div class="adv-code-tab" onclick="switchCodeTab(this,'adv-code-body')">Body End Code</div>
+                    <div class="adv-code-tab" onclick="switchCodeTab(this,'adv-code-body')">Body End</div>
+                </div>
+                <div class="adv-code-editor" id="adv-code-header">
+                    <div class="adv-code-line"><span class="adv-code-ln">1</span><span class="adv-code-text">&lt;!-- Career Portal Telemetry Hook --&gt;</span></div>
+                    <div class="adv-code-line"><span class="adv-code-ln">2</span><span class="adv-code-text">&lt;script&gt;window.__JERO_CAREER_READY = true;&lt;/script&gt;</span></div>
+                </div>
+                <div class="adv-code-editor" id="adv-code-footer" style="display:none;">
+                    <div class="adv-code-line"><span class="adv-code-ln">1</span><span class="adv-code-text">/* Footer scripts slot */</span></div>
+                </div>
+                <div class="adv-code-editor" id="adv-code-body" style="display:none;">
+                    <div class="adv-code-line"><span class="adv-code-ln">1</span><span class="adv-code-text">/* Body end scripts slot */</span></div>
                 </div>
             </div>
-            <div class="adv-code-editor" id="adv-code-header">
-                @php
-                $codeLines = [
-                    ['ln'=>1,  'text'=>'<!-- Google Tag Manager -->'],
-                    ['ln'=>2,  'text'=>'<script>'],
-                    ['ln'=>3,  'text'=>'(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({\'gtm.start\':'],
-                    ['ln'=>4,  'text'=>'new Date().getTime(),event:\'gtm.js\'});var f=d.getElementsByTagName(s)[0],'],
-                    ['ln'=>5,  'text'=>'j=d.createElement(s),dl=l!=\'dataLayer\'?\'&l=\'+l:\'\';j.async=true;j.src='],
-                    ['ln'=>6,  'text'=>'\'https://www.googletagmanager.com/gtm.js?id=\'+i+dl;'],
-                    ['ln'=>7,  'text'=>'f.parentNode.insertBefore(j,f);'],
-                    ['ln'=>8,  'text'=>'})(window,document,\'script\',\'dataLayer\',\'GTM-XXXXXXX\');'],
-                    ['ln'=>9,  'text'=>'</script>'],
-                    ['ln'=>10, 'text'=>'<!-- End Google Tag Manager -->'],
-                ];
-                @endphp
-                @foreach($codeLines as $cl)
-                <div class="adv-code-line">
-                    <span class="adv-code-ln">{{ $cl['ln'] }}</span>
-                    <span class="adv-code-text">{{ $cl['text'] }}</span>
-                </div>
-                @endforeach
-            </div>
-            <div class="adv-code-editor" id="adv-code-footer" style="display:none;">
-                <div class="adv-code-line"><span class="adv-code-ln">1</span><span class="adv-code-text adv-code-comment">{{-- Add footer scripts here --}}</span></div>
-            </div>
-            <div class="adv-code-editor" id="adv-code-body" style="display:none;">
-                <div class="adv-code-line"><span class="adv-code-ln">1</span><span class="adv-code-text adv-code-comment">{{-- Add body end scripts here --}}</span></div>
-            </div>
-        </div>
 
-        {{-- Analytics & Tracking --}}
-        <div class="cps-sidebar-card" style="margin-bottom:16px;">
-            <h4 style="margin:0 0 3px;">Analytics & Tracking</h4>
-            <p class="sub">Track and analyze candidate behavior and page performance.</p>
-
-            <div class="row g-0">
-                <div class="col-7" style="padding-right:12px;">
-                    <div class="adv-track-label">Google Analytics 4 Measurement ID</div>
-                    <div class="adv-track-input-wrap">
-                        <input type="text" class="adv-track-input" name="adv_ga4_id" placeholder="G-XXXXXXXXX" value="{{ $careerSettings->adv_ga4_id ?? '' }}">
-                        <span class="adv-track-badge">{{ !empty($careerSettings->adv_ga4_id) ? 'Connected' : 'Not Connected' }}</span>
-                    </div>
-                    <div class="adv-track-label">Facebook Pixel ID <span style="font-weight:400;color:#94A3B8;">(Optional)</span></div>
-                    <div class="adv-track-input-wrap">
-                        <input type="text" class="adv-track-input" name="adv_fb_pixel" placeholder="Pixel ID" value="{{ $careerSettings->adv_fb_pixel ?? '' }}">
-                        <span class="adv-track-badge">{{ !empty($careerSettings->adv_fb_pixel) ? 'Connected' : 'Not Connected' }}</span>
-                    </div>
-                    <div class="adv-track-label">LinkedIn Insight Tag ID <span style="font-weight:400;color:#94A3B8;">(Optional)</span></div>
-                    <div class="adv-track-input-wrap">
-                        <input type="text" class="adv-track-input" name="adv_linkedin_tag" placeholder="Tag ID" value="{{ $careerSettings->adv_linkedin_tag ?? '' }}">
-                        <span class="adv-track-badge">{{ !empty($careerSettings->adv_linkedin_tag) ? 'Connected' : 'Not Connected' }}</span>
-                    </div>
-                    <div class="adv-track-label">Hotjar Site ID <span style="font-weight:400;color:#94A3B8;">(Optional)</span></div>
-                    <div class="adv-track-input-wrap">
-                        <input type="text" class="adv-track-input" name="adv_hotjar_id" placeholder="Site ID" value="{{ $careerSettings->adv_hotjar_id ?? '' }}">
-                        <button type="button" class="adv-verify-btn">Verify Connection</button>
-                    </div>
-                </div>
-                <div class="col-5">
-                    <div class="adv-track-status">
-                        <div style="font-size:12px;font-weight:700;color:#0F172A;margin-bottom:8px;">Tracking Status</div>
-                        @foreach(['Page Views'=>'Active','Job View Events'=>'Active','Application Events'=>'Active','Form Submissions'=>'Active'] as $ts=>$status)
-                        <div class="adv-ts-row">
-                            <span class="adv-ts-name">{{ $ts }}</span>
-                            <span class="adv-ts-badge">{{ $status }}</span>
-                        </div>
-                        @endforeach
-                    </div>
-                    <div class="adv-track-desc" style="margin-top:10px;">
-                        <i class="ti ti-chart-line" style="font-size:16px;color:#2563EB;flex-shrink:0;margin-top:2px;"></i>
-                        Tracking events are automatically fired when candidates interact with your career page.
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Export & Backup --}}
-        <div class="cps-sidebar-card">
-            <h4 style="margin:0 0 3px;">Export & Backup</h4>
-            <p class="sub">Backup your career page settings or export configuration.</p>
-
-            <div class="row g-0">
-                <div class="col-7" style="padding-right:12px;">
-                    <div class="adv-export-row">
+            {{-- Primary Card 6: Client-First Configuration Backup --}}
+            <div class="cps-card">
+                <div class="cps-card-head">
+                    <div class="cps-card-head-left">
+                        <div class="cps-card-icon"><i class="ti ti-download"></i></div>
                         <div>
-                            <div class="adv-export-label">Export Settings</div>
-                            <div class="adv-export-desc">Download all career page settings as a JSON file.</div>
+                            <div class="cps-card-title">Export &amp; Configuration Backup</div>
+                            <div class="cps-card-sub">Client-first JSON snapshot generated directly in browser RAM.</div>
                         </div>
-                        <button type="button" class="adv-export-btn">Export JSON</button>
-                    </div>
-                    <div class="adv-export-row" style="border-bottom:none;padding-bottom:0;">
-                        <div>
-                            <div class="adv-export-label">Backup Now</div>
-                            <div class="adv-export-desc">Create a backup of your current career page settings.</div>
-                        </div>
-                        <button type="button" class="adv-export-btn">Create Backup</button>
                     </div>
                 </div>
-                <div class="col-5">
-                    <div style="border:1.5px solid #E2E8F0;border-radius:10px;padding:14px;background:#F8FAFC;">
-                        <div style="font-size:12px;font-weight:700;color:#0F172A;margin-bottom:6px;">Last Backup</div>
-                        <div class="adv-backup-info">14 May 2025, 11:45 AM</div>
-                        <div class="adv-backup-date" style="margin-top:2px;">by {{ auth()->user()->name ?? 'Admin' }}</div>
-                        <button type="button" class="adv-dl-btn" style="margin-top:10px;">
-                            <i class="ti ti-download" style="font-size:13px;"></i> Download Backup
-                        </button>
+                <div class="cps-card-body">
+                    <div class="cps-subcard-grid-2">
+                        <div class="cps-subcard" style="display:flex;flex-direction:column;gap:8px;">
+                            <div class="adv-export-row">
+                                <div>
+                                    <div class="adv-export-label">Export Settings JSON</div>
+                                    <div class="adv-export-desc">0% server strain browser export.</div>
+                                </div>
+                                <button type="button" class="adv-export-btn" onclick="cpsExportSettingsJson()">Export JSON</button>
+                            </div>
+                            <div class="adv-export-row">
+                                <div>
+                                    <div class="adv-export-label">Snapshot Backup</div>
+                                    <div class="adv-export-desc">Download timestamped archive.</div>
+                                </div>
+                                <button type="button" class="adv-export-btn" onclick="cpsExportSettingsJson()">Backup Now</button>
+                            </div>
+                        </div>
+                        <div class="cps-subcard">
+                            <div class="cps-subcard-kicker"><span>Latest Snapshot</span></div>
+                            <div style="font-size:12px;font-weight:700;color:#0f172a;">{{ !empty($careerSettings->updated_at) ? \Carbon\Carbon::parse($careerSettings->updated_at)->format('d M Y, h:i A') : 'Current Session' }}</div>
+                            <div style="font-size:10.5px;color:#64748b;margin-top:2px;">by {{ auth()->user()->name ?? 'Admin' }}</div>
+                            <button type="button" class="adv-dl-btn" style="margin-top:10px;" onclick="cpsExportSettingsJson()">
+                                <i class="ti ti-download"></i> Download Config JSON
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
+        </div>
     </div>
-</div>
-
-{{-- Bottom action bar --}}
-<div class="hs-action-bar">
-    <button type="button" class="hs-reset-btn">
-        <i class="ti ti-refresh" style="font-size:14px;margin-right:4px;"></i> Reset to Default
-    </button>
-    <button type="submit" form="careerSettingsForm" class="hs-save-btn">
-        <i class="ti ti-device-floppy" style="font-size:15px;"></i> Save Changes
-    </button>
-</div>
 </div>

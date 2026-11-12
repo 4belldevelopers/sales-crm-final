@@ -70,14 +70,10 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
 
 ---
 
-## Addendum (2026-11-12) — Post-Review UX & Stage-Aware Interview Fixes
+## Addendum (2026-11-12) — Post-Review UX Fixes
 
 1. **Main Card Data Visibility (`all_apptracker`, `clientappdata_ajax`):** Restored persistent icon + `–` placeholder rendering on the 6 upper sub-cards when values are missing (Candidate Info designation/current company without falling back to `apl_company_name`, Compensation `NP`, Location/Work Mode/Degree, Ownership Recruiter/Company/Submitted), while keeping bottom-strip pills (`LinkedIn Verified`, `Visa Status`) strictly conditional on provided values.
 2. **Ownership Sub-Card Header (`all_apptracker`, `clientappdata_ajax`):** Renamed Sub-Card 5 label from `RECRUITER & SOURCING` to `OWNERSHIP & RECRUITER`.
 3. **Relevant Experience Inline Format (`all_apptracker`, `clientappdata_ajax`):** Updated Compensation & Exp row from `• 4.5 Y Rel` to `(Rel 4.5 Y)` next to `Total` experience.
 4. **Green LinkedIn Verified Pill (`apptracker/index`, `apptracker/clientapp`):** Restyled `.aptk-linkedin-pill` and `.caf-linkedin-pill` to green (`#ecfdf5` background, `#15803d` text, `#86efac` border).
 5. **Total Candidates Org Card Specificity (`apptracker/index`, `apptracker/clientapp`, `ServiceCompanyAppTrackerController`):** Strengthened CSS selector specificity (`#bg_all.hp-total.hp-org-*.bg-total-active` with `!important` on `background`, `background-image`, `background-color`, `border-color`, `box-shadow`, and text colors) and bumped Redis read-cache `ui_v` from `card_v4` to `card_v5`.
-6. **Stage-Aware Interview Scheduling & Duplicate Prevention (`ServiceCompanyJobApplicationController`, `showdetail`, `interview-create`, `service_company_layout`):**
-   - `show()` queries active non-canceled `interview_schedules` at the candidate's current `master_status_id` stage (`$stageInterview`).
-   - `showdetail.blade.php` renders `#app_interview_schedule` (`Schedule Interview`) only when no active interview exists at the current stage, switching top action bar and slot CTAs to `#app_interview_reschedule` / `Reschedule` otherwise.
-   - `createSchedule()` detects existing stage interviews (`$stageInterviewLocked`), `interview-create.blade.php` renders `#isdStageScheduledNotice` with a single `"Reschedule Existing Interview"` transition synced to the shell via `window.isdShellSetMode()`, and `storeSchedule()` enforces a stage-level duplicate guard (`stage_interview_exists`).
