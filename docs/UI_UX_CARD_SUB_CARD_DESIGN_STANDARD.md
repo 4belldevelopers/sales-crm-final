@@ -128,12 +128,16 @@ align-items: stretch !important;
    - Entity Title (12.5px bold, with drawer trigger routing).
    - Entity ID (`#99991` in primary blue) & Department / Category name.
    - **Dynamic Client Name & Employment Type:** Third row displays the dynamically populated Client Name (never a hardcoded company name) immediately followed by the Employment Type badge (`CLIENT NAME • 💼 Full-Time`).
-   - **Header Dual Badges (Client Scope & Status):** Sub-Card 1 header displays the dedicated **Client Scope Pill** (`[Direct Client]` in emerald green `#ecfdf5` or `[Internal Client]` in primary blue `#eff6ff`) positioned immediately beside the Canonical Status Badge (`HIRING` `#dcfce7`, `HOLD` `#fef3c7`, `CLOSED` `#fee2e2`, `INACTIVE` `#f1f5f9`).
+   - **Header Classification & Status Badges:** Sub-Card 1 header displays the unambiguous **Source / Scope Pill** (NEVER bare `"Internal"`) positioned beside the Canonical Status Badge (`HIRING` `#dcfce7`, `HOLD` `#fef3c7`, `CLOSED` `#fee2e2`, `INACTIVE` `#f1f5f9`):
+     - **`My Organization`** (own-company / self hiring): `.type-my-org` — Cyan `#ecfeff` bg, `#0891b2` text, `#a5f3fc` border
+     - **`Internal Client`** (managed non-marketplace client): `.type-internal` — Blue `#eff6ff` bg, `#2563eb` text, `#bfdbfe` border
+     - **`Direct Client`** (marketplace client mandate): `.type-direct` — Emerald `#ecfdf5` bg, `#059669` text, `#a7f3d0` border
+     - **Pending Job Requests:** Render BOTH **`Direct Client`** (`.type-direct`) AND **`Job Request`** (`.type-request` — Violet `#f5f3ff` bg, `#7c3aed` text, `#ddd6fe` border)
 2. **Sub-Card 2: Compensation & Experience (`.cd-subcard-comp-loc`, Label: `COMPENSATION & EXP`)**
    - **Row 1:** Salary range formatted cleanly in bold (`₹5,000 - 2.50 L`).
-   - **Row 2:** Experience range with dedicated clock icon (`🕒 6 - 10 Yrs`).
+   - **Row 2:** Experience range in clean typography with **no extra experience/clock icons** (`6 - 10 Yrs`).
    - **Row 3:** Location & Work Mode indicator (`📍 London +14 • Work From Office`). Standardized to **"Work From Office"** (never just "Office").
-3. **Sub-Card 3: Ownership / Internal Team (`.cd-subcard-team`)**
+3. **Sub-Card 3: Ownership / Recruitment Team (`.cd-subcard-team`)**
    - Spok / Lead recruiter name.
    - Member count (`1 Member` / `X Members`, or `—` if none).
    - **Strict Negative Law:** NEVER render fake or misleading matching badges (e.g., "15 Matching" is strictly banned).
@@ -279,7 +283,7 @@ $(document).on('click', '.js-job-filter-btn', function() {
 6. **NO Artificial Matching Badges:** Do not inject placeholder badges like "15 Matching" or "7 Matching" in Team or Agency sub-cards. Show real metrics or clean em-dashes (`—`).
 7. **Strict CQRS Compliance:** The read pipeline for cards must execute with **0% MySQL reads**, drawing 100% of data from Elasticsearch read projections.
 8. **Dynamic Client Name & Full-Time Placement:** In the Primary Details sub-card, always display the dynamically populated Client Name (never hardcode company names) with Employment Type (e.g. `Full-Time`) placed in the same row immediately next to the client name.
-9. **Compensation & Experience Sub-Card:** Sub-card 2 must be labeled `COMPENSATION & EXP` with Row 1 for salary, Row 2 for experience with clock icon (`🕒 X - Y Yrs`), and Row 3 for location & work mode.
+9. **Compensation & Experience Sub-Card:** Sub-card 2 must be labeled `COMPENSATION & EXP` with Row 1 for salary, Row 2 for clean experience range without duplicate/extra experience icons (`X - Y Yrs`), and Row 3 for location & work mode.
 10. **Consistent Work Mode Wording:** Always use `"Work From Office"` (never just `"Office"`) across all entity views and tabs.
-11. **Client Scope Header Classification:** Sub-Card 1 header must display the Client Scope Pill (`Direct Client` in emerald `#ecfdf5` or `Internal Client` in blue `#eff6ff`) positioned beside the status badge.
+11. **Client Scope & Source Classification (No Bare `"Internal"`):** Sub-Card 1 header must render the unambiguous pill beside the status badge: **`My Organization`** (`.type-my-org`, Cyan `#ecfeff` / `#0891b2` / `#a5f3fc` for own-company hiring), **`Internal Client`** (`.type-internal`, Blue `#eff6ff` / `#2563eb` / `#bfdbfe` for managed clients), **`Direct Client`** (`.type-direct`, Emerald `#ecfdf5` / `#059669` / `#a7f3d0` for marketplace clients), and for pending requests both **`Direct Client`** + **`Job Request`** (`.type-request`, Violet `#f5f3ff` / `#7c3aed` / `#ddd6fe`). Never shorten or replace `My Organization` or `Internal Client` with bare `"Internal"`.
 12. **Multi-Tenant Scoping:** All client-side storage, caches, and requests must carry explicit tenant scoping (`company_id`).
