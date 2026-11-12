@@ -164,14 +164,22 @@
             $np = $noticeData['display'];
             $npClass = 'caf-notice-' . $noticeData['classSuffix'];
 
-            // Interview schedule (pre-fetched via $rowMaps['interviews'], safe fallback)
+            // Interview schedule (pre-fetched via $rowMaps['interviews'] & stage_interviews)
+            $masterStatusId = (int) ($row->job_master_status_id ?? 8);
+            $canScheduleInterview = in_array('add_schedule', (array) ($userPermissions ?? []));
             $schedule_date = '';
             $schedule_time = '';
             $iKey = $candAppId . '_' . $jobIdInt;
             $wKey = 'w_' . $wiseId . '_' . $jobIdInt;
+            $stageIntRow = null;
             if (isset($rowMaps['interviews'])) {
                 $intRow = $rowMaps['interviews'][$wKey] ?? ($rowMaps['interviews'][$iKey] ?? null);
                 $intRowQ = $rowMaps['interviews'][$iKey] ?? ($rowMaps['interviews'][$wKey] ?? null);
+                if (isset($rowMaps['stage_interviews'])) {
+                    $stageIntRow = $rowMaps['stage_interviews'][$wKey . '_' . $masterStatusId] ?? ($rowMaps['stage_interviews'][$iKey . '_' . $masterStatusId] ?? null);
+                } elseif ($intRow && (int) ($intRow->stage ?? 0) === $masterStatusId && strtolower((string) ($intRow->status ?? '')) !== 'canceled') {
+                    $stageIntRow = $intRow;
+                }
             } else {
                 $intRow = DB::table('interview_schedules')
                     ->select('*')
@@ -183,16 +191,31 @@
                     ->where('job_application_id', $candAppId)
                     ->orderBy('interview_schedules.id', 'DESC')
                     ->first();
+                $stageIntRow = DB::table('interview_schedules')
+                    ->select('*')
+                    ->where(function ($q) use ($candAppId, $wiseId) {
+                        if ($candAppId > 0) $q->where('job_application_id', $candAppId);
+                        if ($wiseId > 0) $q->orWhere('interview_job_wise_con_id', $wiseId);
+                    })
+                    ->where('interview_job_id', $jobIdInt)
+                    ->where('stage', (string) $masterStatusId)
+                    ->where(function ($q) {
+                        $q->whereNull('status')->orWhere('status', '!=', 'canceled');
+                    })
+                    ->orderBy('interview_schedules.id', 'DESC')
+                    ->first();
             }
-            if ($intRow && !empty($intRow->schedule_date) && $intRow->schedule_date !== '0000-00-00 00:00:00') {
-                $schedule_date = date('d M, Y', strtotime($intRow->schedule_date));
-                $timezone_abbreviation = !empty($intRow->timezone_abbreviation) ? ' (' . $intRow->timezone_abbreviation . ')' : '';
-                $schedule_time = trim(Carbon::parse($intRow->schedule_date)->format('h:i A') . $timezone_abbreviation);
+            $hasStageInterview = ($stageIntRow !== null);
+            $displayIntRow = $stageIntRow ?? $intRow;
+            if ($displayIntRow && !empty($displayIntRow->schedule_date) && $displayIntRow->schedule_date !== '0000-00-00 00:00:00') {
+                $schedule_date = date('d M, Y', strtotime($displayIntRow->schedule_date));
+                $timezone_abbreviation = !empty($displayIntRow->timezone_abbreviation) ? ' (' . $displayIntRow->timezone_abbreviation . ')' : '';
+                $schedule_time = trim(Carbon::parse($displayIntRow->schedule_date)->format('h:i A') . $timezone_abbreviation);
             }
             $feedbackGiven = false;
             $row3Text = '';
             $row3Class = '';
-            $fbRow = $intRowQ ?? $intRow;
+            $fbRow = $stageIntRow ?? ($intRowQ ?? $intRow);
             if ($fbRow) {
                 if (isset($fbRow->feedback) && $fbRow->feedback >= 0) {
                     $feedbackGiven = true;
@@ -425,7 +448,7 @@
                         <span class="caf-subcard-label">Interview</span>
                     </div>
                     <div class="caf-subcard-body">
-                        @if (!empty($schedule_date))
+                        @if ($hasStageInterview && !empty($schedule_date))
                             <div class="caf-int-date">
                                 <i class="far fa-calendar-alt me-1 text-primary"></i>
                                 <span>{{ $schedule_date }}</span>
@@ -446,10 +469,30 @@
                                 @endif
                             @endif
                         @else
-                            <div class="caf-int-empty">
-                                <i class="far fa-calendar-times me-1"></i>Not Scheduled
-                            </div>
-                            <div class="caf-int-empty-sub">Pending interview</div>
+                            @if (!empty($schedule_date))
+                                <div class="caf-int-date" title="Previous stage interview: {{ e($printInterviewStr) }}">
+                                    <i class="far fa-calendar-alt me-1 text-muted"></i>
+                                    <span>{{ $schedule_date }}</span>
+                                </div>
+                            @else
+                                <div class="caf-int-empty">
+                                    <i class="far fa-calendar-times me-1"></i>Not Scheduled
+                                </div>
+                            @endif
+                            @if ($canScheduleInterview)
+                                <button type="button"
+                                        class="caf-int-schedule-btn app_interview_schedule"
+                                        rel="{{ $wiseId ?: $candAppId }}"
+                                        data-app-id="{{ $candAppId }}"
+                                        data-wise-id="{{ $wiseId }}"
+                                        data-job-id="{{ $jobIdInt }}"
+                                        title="Schedule interview for current stage">
+                                    <i class="far fa-calendar-plus"></i>
+                                    <span>Schedule Interview</span>
+                                </button>
+                            @elseif (empty($schedule_date))
+                                <div class="caf-int-empty-sub">Pending interview</div>
+                            @endif
                         @endif
                     </div>
                 </div>

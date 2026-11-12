@@ -1211,6 +1211,32 @@
             font-size: 10px;
             color: #cbd5e1;
         }
+        .aptk-int-schedule-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+            max-width: 100%;
+            margin-top: 4px;
+            padding: 3px 9px;
+            border-radius: 6px;
+            background: #eff6ff;
+            color: #009ef7;
+            border: 1px solid #bae6fd;
+            font-size: 10.5px;
+            font-weight: 600;
+            line-height: 1.25;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+        .aptk-int-schedule-btn:hover {
+            background: #009ef7;
+            border-color: #009ef7;
+            color: #ffffff;
+        }
+        .aptk-int-schedule-btn i {
+            font-size: 10px;
+        }
 
         /* Sub-Card 5: Ownership */
         .aptk-owner-name {
@@ -2631,7 +2657,7 @@
         // Clicking anywhere on a candidate card opens the Candidate Drawer,
         // except interactive controls (checkbox, Pipeline & Stage card, LinkedIn link, buttons/links).
         $(document).on('click', '.aptk-cand-card', function(e) {
-            if ($(e.target).closest('.chk_list_item, .aptk-chk-wrap, .aptk-subcard-stage, .stage_sub_stage, .aptk-linkedin-pill, .show-application-detail, a[href^="http"], button, input, select, textarea').length) {
+            if ($(e.target).closest('.chk_list_item, .aptk-chk-wrap, .aptk-subcard-stage, .stage_sub_stage, .aptk-int-schedule-btn, .app_interview_schedule, .aptk-linkedin-pill, .show-application-detail, a[href^="http"], button, input, select, textarea').length) {
                 return;
             }
             if (window.getSelection && window.getSelection().toString().trim() !== '') {
