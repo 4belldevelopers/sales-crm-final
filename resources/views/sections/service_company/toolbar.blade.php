@@ -103,32 +103,34 @@
                 @endphp
 
                 @if(!empty($apptrackerHeaderCard))
-                    {{-- Rule 20 Opt-In Card + Sub-Card Job Header Strip (isolated to AppTracker & ClientAppTracker) --}}
+                    {{-- Opt-In Flat Light-Tinted Enterprise Header Strip (Zero Nested Sub-Cards, isolated to AppTracker & ClientAppTracker) --}}
                     <div class="{{ $hdrPrefix }}-main {{ $resolvedOrgClass }}">
-                        {{-- Sub-Card 1: Company Logo + Job Title & Client Name --}}
-                        <div class="{{ $hdrPrefix }}-subcard {{ $hdrPrefix }}-sub--identity show-detail-open" data-id="{{ $id }}" title="{{ $jobtitle }}">
+                        {{-- Identity: Logo + Full Title (CSS ellipsis) + Client Name --}}
+                        <div class="{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--identity show-detail-open" data-id="{{ $id }}" title="{{ $jobtitle }}">
                             @if (!empty($logo_path))
                                 <div class="{{ $hdrPrefix }}-logo-wrap">
                                     <img src="{{ str_replace('index.php', '', @$logo_path) }}" alt="Company Logo" class="{{ $hdrPrefix }}-logo-img">
                                 </div>
                             @else
-                                <div class="{{ $hdrPrefix }}-logo-wrap {{ $hdrPrefix }}-logo-mono {{ @$bgTextDecore }}">
+                                <div class="{{ $hdrPrefix }}-logo-wrap {{ $hdrPrefix }}-logo-mono">
                                     <span>{{ strtoupper(@$strVal ?: 'J') }}</span>
                                 </div>
                             @endif
                             <div class="{{ $hdrPrefix }}-identity-txt">
                                 <a href="javascript:void(0);" class="{{ $hdrPrefix }}-job-title" title="{{ $jobtitle }}">
-                                    {{ strtoupper(substr(@$jobtitle, 0, 26)) }}
+                                    {{ strtoupper(\Illuminate\Support\Str::limit((string) @$jobtitle, 55, '...')) }}
                                 </a>
                                 <a href="javascript:void(0);" class="{{ $hdrPrefix }}-company-name" title="{{ $company_or_client }}">
                                     <i class="fa-regular fa-building" aria-hidden="true"></i>
-                                    <span>{{ ucwords(substr(@$company_or_client, 0, 40)) }}</span>
+                                    <span>{{ ucwords(\Illuminate\Support\Str::limit((string) @$company_or_client, 44, '...')) }}</span>
                                 </a>
                             </div>
                         </div>
 
-                        {{-- Sub-Card 2: Hiring Status Badge, Job ID & Organization Type --}}
-                        <div class="{{ $hdrPrefix }}-subcard {{ $hdrPrefix }}-sub--status show-detail-open" data-id="{{ $id }}">
+                        <span class="{{ $hdrPrefix }}-sep" aria-hidden="true"></span>
+
+                        {{-- Status & Org Identity --}}
+                        <div class="{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--status show-detail-open" data-id="{{ $id }}">
                             <div class="{{ $hdrPrefix }}-sub-top">
                                 <span class="badge {{ @$statusClass }} {{ $hdrPrefix }}-status-badge">{{ @$statusName }}</span>
                                 <span class="{{ $hdrPrefix }}-job-id">#{{ @$id }}</span>
@@ -141,11 +143,12 @@
                             </div>
                         </div>
 
-                        {{-- Sub-Card 3: Experience Range & Compensation --}}
-                        <div class="{{ $hdrPrefix }}-subcard {{ $hdrPrefix }}-sub--comp">
-                            <div class="{{ $hdrPrefix }}-sub-kicker">EXP &amp; COMPENSATION</div>
+                        <span class="{{ $hdrPrefix }}-sep" aria-hidden="true"></span>
+
+                        {{-- Experience & Compensation --}}
+                        <div class="{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--comp">
                             <div class="{{ $hdrPrefix }}-sub-row">
-                                <span class="{{ $hdrPrefix }}-sub-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                                <i class="fa-solid fa-briefcase {{ $hdrPrefix }}-col-icon" aria-hidden="true"></i>
                                 <span class="{{ $hdrPrefix }}-sub-val">{{ @$job->min_exp ?? '–' }}-{{ @$job->max_exp ?? '–' }} Yrs</span>
                             </div>
                             <div class="{{ $hdrPrefix }}-sub-meta" title="{!! strip_tags($salaryRangeCurrency) !!} {{ $min_salary_abbr }}-{{ $max_salary_abbr }}/{{ $salaryModeWord }}">
@@ -154,25 +157,30 @@
                         </div>
 
                         @if(empty($hideLocationDate))
-                            {{-- Sub-Card 4: Job Location --}}
-                            <div class="{{ $hdrPrefix }}-subcard {{ $hdrPrefix }}-sub--loc" data-toggle="tooltip" title="{{ $firstJobcities['tooltip'] }}">
-                                <div class="{{ $hdrPrefix }}-sub-kicker">LOCATION</div>
+                            <span class="{{ $hdrPrefix }}-sep" aria-hidden="true"></span>
+
+                            {{-- Job Location (balanced 2-line rhythm) --}}
+                            <div class="{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--loc" data-toggle="tooltip" title="{{ $firstJobcities['tooltip'] }}">
                                 <div class="{{ $hdrPrefix }}-sub-row">
-                                    <span class="{{ $hdrPrefix }}-sub-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
+                                    <i class="fa-solid fa-location-dot {{ $hdrPrefix }}-col-icon" aria-hidden="true"></i>
                                     <span class="{{ $hdrPrefix }}-sub-val">
-                                        {{ !empty($locations[0]) ? ucwords(substr($locations[0], 0, 20)) : '–' }} {{ ucwords($firstJobcities['countPlus']) }}
+                                        {{ !empty($locations[0]) ? ucwords(substr($locations[0], 0, 22)) : '–' }}
+                                        @if(!empty($firstJobcities['countPlus']))
+                                            <span class="{{ $hdrPrefix }}-loc-plus">{{ ucwords($firstJobcities['countPlus']) }}</span>
+                                        @endif
                                     </span>
                                 </div>
-                                @if(!empty($locations[1]))
-                                    <div class="{{ $hdrPrefix }}-sub-meta">{{ ucwords(substr($locations[1], 0, 20)) }}</div>
-                                @endif
+                                <div class="{{ $hdrPrefix }}-sub-meta">
+                                    {{ !empty($locations[1]) ? ucwords(substr($locations[1], 0, 24)) : 'Primary Location' }}
+                                </div>
                             </div>
 
-                            {{-- Sub-Card 5: Posted Date & Openings --}}
-                            <div class="{{ $hdrPrefix }}-subcard {{ $hdrPrefix }}-sub--meta">
-                                <div class="{{ $hdrPrefix }}-sub-kicker">POSTED &amp; OPENINGS</div>
+                            <span class="{{ $hdrPrefix }}-sep" aria-hidden="true"></span>
+
+                            {{-- Posted Date & Openings --}}
+                            <div class="{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--meta">
                                 <div class="{{ $hdrPrefix }}-sub-row">
-                                    <span class="{{ $hdrPrefix }}-sub-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>
+                                    <i class="fa-regular fa-calendar {{ $hdrPrefix }}-col-icon" aria-hidden="true"></i>
                                     <span class="{{ $hdrPrefix }}-sub-val">{{ @$created_at ?: '–' }}</span>
                                 </div>
                                 <div class="{{ $hdrPrefix }}-sub-meta">
