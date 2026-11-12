@@ -9912,6 +9912,7 @@ END:VCALENDAR";
                 'interview_schedules.stage as master_status_id',
                 'interview_schedules.substage as child_status_id',
                 'clients.name as client_name',
+                'clients.self_company',
                 'state_list.state as state_name',
                 'city_list.city as city_name',
                 'countries.country_name',
@@ -9944,11 +9945,13 @@ END:VCALENDAR";
                 'master_status.name as master_status_name',
                 'candidate_status.name as child_status_name',
                 'jobs.title as job_title',
+                'jobs.employment_type',
                 'jobs.client_id',
                 'jobs.company_id as job_company_id',
                 'interview_schedules.interview_job_id as job_id',
                 'companies.company_name',
                 'job_applications.current_designation',
+                'job_applications.current_company',
                 'job_applications.condidate_type',
                 'job_applications.thirdparty_company_id',
                 'interview_mode.name as mode_name',
@@ -9962,6 +9965,7 @@ END:VCALENDAR";
                 'recommendation_relation.to_company_id',
                 'add_job_wise_condidates.rec_candidate_assign_id',
                 'add_job_wise_condidates.id as wiseID',
+                'add_job_wise_condidates.created_at as submitted_at',
                 'add_job_wise_condidates.thirdparty_company_id as ClientComID',
                 'add_job_wise_condidates.job_id as jobId',
                 'add_job_wise_condidates.submitted_by',
@@ -10036,6 +10040,8 @@ END:VCALENDAR";
                         $row->email = $data->email ?? $row->email;
                         $row->phone = $data->phone ?? $row->phone;
                         $row->current_designation = $data->current_designation ?? $row->current_designation;
+                        $row->current_company = $data->current_company ?? ($row->current_company ?? '');
+                        $row->submitted_at = $data->created_at ?? ($row->submitted_at ?? $row->created_at);
                         $row->condidate_type = $data->condidate_type ?? $row->condidate_type;
                     }
                 } catch (\Throwable $esCandEx) {
@@ -10082,10 +10088,14 @@ END:VCALENDAR";
                         'master_status_name' => $row->master_status_name,
                         'child_status_name' => $row->child_status_name,
                         'job_title' => $row->job_title,
+                        'employment_type' => $row->employment_type ?? 0,
+                        'self_company' => $row->self_company ?? 0,
                         'client_id' => $row->client_id,
                         'job_id' => $row->job_id,
                         'company_name' => $row->company_name,
                         'current_designation' => $row->current_designation,
+                        'current_company' => $row->current_company ?? null,
+                        'submitted_at' => (! empty($row->submitted_at) && $row->submitted_at !== '0000-00-00 00:00:00') ? Carbon::parse($row->submitted_at)->toIso8601String() : null,
                         'thirdparty_company_id' => $row->thirdparty_company_id,
                         'mode_name' => $row->mode_name,
                         'mode_lavel_name' => $row->mode_lavel_name,

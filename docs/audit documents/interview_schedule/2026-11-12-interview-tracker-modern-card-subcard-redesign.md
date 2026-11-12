@@ -51,22 +51,28 @@ flowchart TD
 
 ## 3. Rule 20 Modern Card + Sub-Card Anatomy
 
-### Tier 1: Top Header Toolbar Card (`.it-header-card`)
-- **Left:** Soft blue squircle icon (`38×38px`), `Interview Tracker` title (`15px` bold `#0f172a`), live total count pill (`#itHeaderTotalBadge`), and subtitle.
-- **Right:** Embedded Dynamic Search Sub-Card (`.it-search-subcard` with `#kt_tagify_2`, 300ms debounce, inline spinner, and interactive `✕` clear button `#itSearchClear`) + `Sync` force-refresh button (`#itRefreshBtn`).
+### Tier 1: Top Header Card (`.it-header-card`)
+- **Left:** Soft blue squircle icon (`44×44px`, inline SVG), `Interview Tracker` title (`20px` bold `#0f172a`), live total count pill (`#itHeaderTotalBadge`), and subtitle.
+- **Right:** `Sync` live refresh button (`#itRefreshBtn`, inline SVG spinner).
 
-### Tier 2: Executive KPI Metric Strip (`.it-kpi-grid`)
-- 4 interactive, clickable KPI cards with `tabular-nums` counters and authentic contextual labels (zero hardcoded fake `%` trends):
-  - **Interviews This Month** (`this_month`)
-  - **Today's Interviews** (`today`)
-  - **Upcoming Interviews** (`upcoming`)
-  - **Feedback Pending** (`pending_feedback`)
+### Tier 2: Client Tracker-Aligned KPI Metric Strip (`.it-stat-grid`)
+- Adopted the exact Client Tracker `.cl-stat-grid` / `.cl-card` visual system (`it-stat-card`, `it-stat-top`, `it-stat-icon` pastel squircles with crisp SVGs, `it-stat-num` `tabular-nums`, `it-stat-lbl`, and bottom `it-stat-sub` indicator strip + color-matched active ring states):
+  - **Interviews This Month** (`this_month`) — Blue theme
+  - **Today's Interviews** (`today`) — Green theme
+  - **Upcoming Interviews** (`upcoming`) — Purple theme
+  - **Feedback Pending** (`pending_feedback`) — Red theme + dynamic `"Action due"` pulse badge
 
-### Tier 3: Sub-Tabs & Inline Filters Card (`.it-tabs-card`)
-- **Left:** 7 sub-tab filter buttons (`All Interviews`, `Today`, `Upcoming`, `Feedback Pending`, `Selected`, `Rescheduled`, `Rejected`) with semantic count pills and strict single active primary blue (`#009ef7`) highlight.
-- **Right:** Mode filter pill (`All Modes`, `Video Call`, `Telecon`, `Face to Face`), Sort pill (`Newest Interviews`, `Today's Interviews`, `Soonest Scheduled`, `Latest Scheduled`, `Feedback Pending`, `Upcoming Interviews`), and `Reset` button.
+### Tier 3: Unified Search, Mode, Sort & Reset Card (`.it-toolbar-card`)
+- Placed **Search bar, Mode filter, Sort filter, and Reset control together inside a single white card**, copying Client Tracker's UI/UX and WAI-ARIA combobox engine cleanly isolated to `.it-*` classes:
+  - **Search Box (`#itSearchBoxWrapper` / `#kt_tagify_2`):** `180ms` debounced search, dynamic `"X matches"` badge (`#itSearchMatchCount`), clear button (`✕`), keyboard shortcut hint (`Ctrl+K` / `Cmd+K`), `Escape` clear/blur, `Enter` instant search, and inline loading indicator.
+  - **Mode Combobox Popover (`#itModeDropdownWrapper`):** Two-line pill trigger with icon, `"Mode"` label, selected value display, inline `✕` clear button (`#itModeClearBtn`), and WAI-ARIA listbox panel (`All Modes`, `Video Call`, `Telecon (Phone)`, `Face to Face`).
+  - **Sort Combobox Popover (`#itSortDropdownWrapper`):** Grouped chronological/action WAI-ARIA listbox (`Newest Interviews`, `Soonest Scheduled`, `Latest Scheduled`, `Oldest Created`, `Today's Interviews`, `Feedback Pending`, `Upcoming Interviews`) with User RAM local DOM sorting (`sortDomInterviewsLocally`) on single-page datasets.
+  - **Reset Button (`#itResetFiltersBtn`):** Unified 42px pill with live active-filter badge (`#itActiveFilterCount`) resetting search, mode, sort, and tabs.
 
-### Tier 4: Master Primary Interview Cards (`.it-card`)
+### Tier 4: Status Sub-Tabs Card (`.it-tabs-card`)
+- Pure white card holding the 7 interactive sub-tab filter buttons (`All Interviews`, `Today`, `Upcoming`, `Feedback Pending`, `Selected`, `Rescheduled`, `Rejected`) with semantic count pills and strict single active primary blue (`#009ef7`) highlight.
+
+### Tier 5: Master Primary Interview Cards (`.it-card`)
 Each card features a `3.5px` semantic left-border accent (`#10b981` Selected, `#ef4444` Rejected/Cancelled, `#f59e0b` Pending/Hold/No Show, `#009ef7` Scheduled/Upcoming) and **5 discrete upper sub-cards + 1 bottom strip**:
 1. **Candidate (`.it-subcard-candidate`):** Avatar + Name + Designation (triggers `#kt_activitiesApplication` Candidate Drawer) + Location/Email meta + Interactive Follow-Up dropdown (`Confirmed`, `No Response`, `Rescheduled`).
 2. **Requisition (`.it-subcard-job`):** Scope pill (`Direct Client` / `Internal`) + Job Title & `#ID` (opens `#jdPanelOverlay` Job Description panel) + Client Name + Round level / Rescheduled badge.
@@ -75,16 +81,22 @@ Each card features a `3.5px` semantic left-border accent (`#10b981` Selected, `#
 5. **Evaluation (`.it-subcard-feedback`):** Attendance status pill + Result + Overall Recommendation pill + Star rating + permission-gated `+ Add Feedback` / `View Feedback` / `No Feedback` button.
 6. **Bottom Activity Strip (`.it-card-bottom`):** Canonical Stage badge (`INW`/`SOU`/`SCR`/`EVA`/`NEG`/`OFF`/`JOI`/`REJ`) + Substage pill + Source Recruiter/Company + Follow-up timestamp + Quick `Reschedule` button (opens `#interview_schedule_drawer`) & `Candidate Profile` button.
 
+### Icon Font Safety Fix
+- Excluded `i`, `.fa`, `.fas`, `.far`, `.fab`, `.fa-solid`, `.fa-regular`, `.fa-brands`, `.ti`, `.bi` from `.it-dashboard *` Poppins `font-family !important`, explicitly loaded Font Awesome 6.5.1 CSS with enforced `"Font Awesome 6 Free"` font rules, and removed the broken relative `assets/plugins/global/plugins.bundle.css` link.
+- IndexedDB cache version bumped to `DB_VERSION = 3` cleanly.
+
 ---
 
 ## 4. File Changes Matrix
 
 | File | Purpose | Isolation & Safety |
 |---|---|---|
-| `resources/views/service_company/interview-schedule/table.blade.php` | Complete Rule 20 4-tier Card + Sub-Card layout, page-isolated `.it-*` styles, interactive KPI/Tab/Mode/Sort/Search wiring, `patchInterviewRowDelta()` card DOM patcher, IndexedDB `v2` upgrade. | Scoped strictly to Service Company Interview Tracker (Rule 17 & Rule 18). |
-| `resources/views/service_company/ajax_pages/interview-tracker-ajax.blade.php` | Replaced legacy `<tr>`/`<td>` rows with `.it-card` primary cards, 5 discrete upper sub-cards, `.it-card-bottom` activity strip, fixed mode icons, and `.it-empty-card`. | All user strings Blade-escaped (`{{ }}`). Zero business logic alterations. |
-| `app/Http/Controllers/ServiceCompany/InterviewScheduleController.php` | Added `real_company_id` parity & tab aggregations in `dashboardStats()`, `this_month` tab filter & `tab_counts` payload in `data_ajax()`, and `ui_v => 'card_v2'` cache key. | Backwards-compatible `$stats` keys preserved. |
-| `tests/Feature/ServiceCompanyInterviewTrackerTest.php` | Automated Blade render, Rule 20 structure, XSS escaping, interactive hook, and empty state tests. | Isolated test suite. |
+| `resources/views/service_company/interview-schedule/table.blade.php` | Complete Rule 20 4-tier Card + 6-Subcard layout, Client Tracker KPI & single toolbar card, Font Awesome 6 Free fix, AppTracker `My Organization` / `Internal Client` / `Direct Client` palettes, `Ownership & Recruiter` styles, `patchInterviewRowDelta()` DOM patcher, IndexedDB `v4` upgrade. | Scoped strictly to Service Company Interview Tracker (Rule 17 & Rule 18). |
+| `resources/views/service_company/ajax_pages/interview-tracker-ajax.blade.php` | Replaced legacy `<tr>`/`<td>` rows with `.it-card` primary cards, 6 discrete upper sub-cards (`Candidate` with `current_company`, `Requisition` with `Employment Type` + standardized org badge, `Schedule` with platform/mode badge, `Panelists`, `Ownership & Recruiter`, `Evaluation`), `.it-card-bottom` activity strip, and `.it-empty-card`. | All user strings Blade-escaped (`{{ }}`). Zero business logic alterations. |
+| `app/Http/Controllers/ServiceCompany/InterviewScheduleController.php` | Added `real_company_id` parity & tab aggregations in `dashboardStats()`, `this_month` tab filter & `tab_counts` payload in `data_ajax()`, `ui_v => 'card_v3'` cache key, and batch `jobMetaMap` (`self_company`, `employment_type`) + ES-first `candidateMetaMap` (`current_company`, `submitted_at`) in `prepareViewMaps()`. | Backwards-compatible `$stats` keys preserved. |
+| `app/Helper/GeneralMethod.php` | Updated `interviewTrackerAddEditUpload()` to index `current_company`, `employment_type`, `self_company`, and `submitted_at` directly on `ELASTIC_INERTVIEW_TRACKER`. | Additive fields only. |
+| `docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` | Codified permanent application-wide `My Organization`, `Internal Client`, and `Direct Client` naming + AppTracker color standards and 6-subcard field rules (§6). | Design-system standard. |
+| `tests/Feature/ServiceCompanyInterviewTrackerTest.php` | Automated Blade render, 6-subcard Rule 20 structure, AppTracker org badge colors, `Ownership & Recruiter`, candidate `current_company`, Requisition `Full-time`/`Contract`, Schedule platform pill, XSS escaping, and shell UI/UX invariant tests. | Isolated test suite. |
 
 ---
 

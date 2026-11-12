@@ -282,7 +282,28 @@ $(document).on('click', '.js-job-filter-btn', function() {
 5. **Zero Horizontal Scrollbar (`overflow-x: hidden`):** The entire container must shrink gracefully without page-level or container horizontal scrollbars.
 6. **NO Artificial Matching Badges:** Do not inject placeholder badges like "15 Matching" or "7 Matching" in Team or Agency sub-cards. Show real metrics or clean em-dashes (`—`).
 7. **Strict CQRS Compliance:** The read pipeline for cards must execute with **0% MySQL reads**, drawing 100% of data from Elasticsearch read projections.
-8. **Dynamic Client Name & Full-Time Placement:** In the Primary Details sub-card, always display the dynamically populated Client Name (never hardcode company names) with Employment Type (e.g. `Full-Time`) placed in the same row immediately next to the client name.
+8. **Dynamic Client Name & Full-Time Placement:** In the Primary Details sub-card, always display the dynamically populated Client Name (never hardcode company names) with Employment Type (e.g. `Full-Time` / `Full-time` / `Contract`) placed in the same row immediately next to the client name.
+
+---
+
+## 6. Mandatory Organization Naming, Colour & Sub-Card Standards (Application-Wide)
+
+All modules, drawers, headers, and cards across JERO **MUST** reuse the following canonical AppTracker naming conventions, colour tokens, and sub-card field placements consistently going forward (never invent ad-hoc labels like `"Internal"` or unaligned hex palettes):
+
+### A. Organization / Client Classification Badges & Palettes
+
+| Classification Condition | Mandatory Label | Icon | Pill Background | Pill Border | Pill Text | Card / Accent Token |
+|---|---|---|---|---|---|---|
+| Own company internal requisition (`self_company == 1`) | **`My Organization`** | `fas fa-building` | `#fef3c7` | `1px solid #fcd34d` | `#92400e` | Bg `#fffbeb`, Border `#fde68a`, Accent `#d97706` |
+| Own company client requisition (`self_company == 0`) | **`Internal Client`** *(never `"Internal"`)* | `fas fa-sitemap` | `#dbeafe` | `1px solid #93c5fd` | `#1e40af` | Bg `#eff6ff`, Border `#bfdbfe`, Accent `#2563eb` |
+| External shared / partner requisition (`Direct Client`) | **`Direct Client`** | `fas fa-handshake` | `#d1fae5` | `1px solid #6ee7b7` | `#166534` | Bg `#ecfdf5`, Border `#a7f3d0`, Accent `#16a34a` |
+
+### B. Canonical Sub-Card Field Mapping Rules
+
+1. **Candidate Sub-Card:** Display Candidate Avatar, Full Name, Designation, and **Current Company** (`<i class="fas fa-building"></i>`, `current_company` with `–` fallback) instead of city/country location.
+2. **Requisition Sub-Card:** Header carries `Requisition` + the standardized `My Organization` / `Internal Client` / `Direct Client` pill; body carries Job Title, `#ID · Client Name`, and **Employment Type** (`Full-time` / `Contract` / `Part Time`). Never render meeting platform badges (`Google Meet`, `Zoom`) inside Requisition.
+3. **Schedule & Link Sub-Card:** Display the interview platform / sub-mode pill (`Google Meet`, `Zoom`, `MS Teams`, `Phone Call`, `In-Person`, etc.) alongside the scheduled date rather than a `Completed` / `Today` status tag.
+4. **Ownership & Recruiter Sub-Card (`.aptk-subcard-owner` / `.it-subcard-owner`):** Header `<i class="fas fa-user-tie"></i> Ownership & Recruiter`; Row 1 blue `<i class="fas fa-user-circle"></i>` + Recruiter Name (`#0f172a`, 11.5px, 600); Row 2 muted `<i class="fas fa-building"></i>` + Company Name (`#64748b`, 10.5px); Row 3 muted `<i class="far fa-calendar-alt"></i>` + `Submitted: <relative time>` (`#94a3b8`, 10px).
 9. **Compensation & Experience Sub-Card:** Sub-card 2 must be labeled `COMPENSATION & EXP` with Row 1 for salary, Row 2 for clean experience range without duplicate/extra experience icons (`X - Y Yrs`), and Row 3 for location & work mode.
 10. **Consistent Work Mode Wording:** Always use `"Work From Office"` (never just `"Office"`) across all entity views and tabs.
 11. **Client Scope & Source Classification (No Bare `"Internal"`):** Sub-Card 1 header must render the unambiguous pill beside the status badge: **`My Organization`** (`.type-my-org`, Cyan `#ecfeff` / `#0891b2` / `#a5f3fc` for own-company hiring), **`Internal Client`** (`.type-internal`, Blue `#eff6ff` / `#2563eb` / `#bfdbfe` for managed clients), **`Direct Client`** (`.type-direct`, Emerald `#ecfdf5` / `#059669` / `#a7f3d0` for marketplace clients), and for pending requests both **`Direct Client`** + **`Job Request`** (`.type-request`, Violet `#f5f3ff` / `#7c3aed` / `#ddd6fe`). Never shorten or replace `My Organization` or `Internal Client` with bare `"Internal"`.
