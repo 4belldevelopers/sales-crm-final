@@ -17,14 +17,14 @@
     $csdcHasCurrentSub = ($csdcCurrentSubName !== '' && strtoupper($csdcCurrentSubName) !== 'N/A');
 
     $csdStageMeta = [
-        'inreview'   => ['label' => 'InReview',   'order' => 1, 'step' => 'Step 1', 'color' => '#d97706', 'accent' => '#ffa800', 'bg' => '#fff4de', 'icon' => 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-1-8-11-8Z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z'],
-        'sourcing'   => ['label' => 'Sourcing',   'order' => 2, 'step' => 'Step 2', 'color' => '#475569', 'accent' => '#64748b', 'bg' => '#eef2f6', 'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
-        'screening'  => ['label' => 'Screening',  'order' => 3, 'step' => 'Step 3', 'color' => '#9333ea', 'accent' => '#c000ff', 'bg' => '#f9e6ff', 'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
-        'evaluation' => ['label' => 'Evaluation', 'order' => 4, 'step' => 'Step 4', 'color' => '#2563eb', 'accent' => '#2896ff', 'bg' => '#e8f4ff', 'icon' => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
-        'negotation' => ['label' => 'Negotiation','order' => 5, 'step' => 'Step 5', 'color' => '#db2777', 'accent' => '#ff4098', 'bg' => '#ffe6f2', 'icon' => 'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
-        'offer'      => ['label' => 'Offer',      'order' => 6, 'step' => 'Step 6', 'color' => '#d97706', 'accent' => '#ffab00', 'bg' => '#fff4e0', 'icon' => 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
-        'joined'     => ['label' => 'Joined',     'order' => 7, 'step' => 'Step 7', 'color' => '#059669', 'accent' => '#06c732', 'bg' => '#e3fbe9', 'icon' => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
-        'rejected'   => ['label' => 'Rejected',   'order' => 8, 'step' => 'Exit',   'color' => '#dc2626', 'accent' => '#ff0202', 'bg' => '#fee2e2', 'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+        'inreview'   => ['label' => 'InReview',   'order' => 1, 'step' => 'Step 1', 'color' => '#d97706', 'accent' => '#f59e0b', 'bg' => '#fffbeb', 'icon' => 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-1-8-11-8Z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z'],
+        'sourcing'   => ['label' => 'Sourcing',   'order' => 2, 'step' => 'Step 2', 'color' => '#0891b2', 'accent' => '#0891b2', 'bg' => '#ecfeff', 'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
+        'screening'  => ['label' => 'Screening',  'order' => 3, 'step' => 'Step 3', 'color' => '#9333ea', 'accent' => '#9333ea', 'bg' => '#faf5ff', 'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
+        'evaluation' => ['label' => 'Evaluation', 'order' => 4, 'step' => 'Step 4', 'color' => '#2563eb', 'accent' => '#2563eb', 'bg' => '#eff6ff', 'icon' => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
+        'negotation' => ['label' => 'Negotiation','order' => 5, 'step' => 'Step 5', 'color' => '#db2777', 'accent' => '#db2777', 'bg' => '#fdf2f8', 'icon' => 'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
+        'offer'      => ['label' => 'Offer',      'order' => 6, 'step' => 'Step 6', 'color' => '#d97706', 'accent' => '#d97706', 'bg' => '#fffbeb', 'icon' => 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
+        'joined'     => ['label' => 'Joined',     'order' => 7, 'step' => 'Step 7', 'color' => '#059669', 'accent' => '#16a34a', 'bg' => '#ecfdf5', 'icon' => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
+        'rejected'   => ['label' => 'Rejected',   'order' => 8, 'step' => 'Exit',   'color' => '#dc2626', 'accent' => '#dc2626', 'bg' => '#fef2f2', 'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
     ];
 
     $csdcQuickNotes = [
@@ -144,14 +144,28 @@
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
         .csd-summary-card {
-            border-left: 4px solid {{ $csdcCurrentMeta['accent'] }};
+            position: relative;
+            padding-left: 4px;
+            --csd-summary-accent: {{ $csdcCurrentMeta['accent'] }};
+        }
+        .csd-summary-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--csd-summary-accent);
+        }
+        .csd-summary-card .csd-card-body {
+            padding: 10px 14px;
         }
         .csd-card-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 12px 16px;
+            padding: 10px 14px;
             border-bottom: 1px solid #f1f5f9;
             background: #ffffff;
             flex-wrap: wrap;
@@ -206,7 +220,7 @@
             flex-wrap: wrap;
         }
         .csd-card-body {
-            padding: 14px 16px;
+            padding: 12px 14px;
         }
 
         /* Status & Legend Pills */
@@ -409,8 +423,9 @@
         }
         .csd-pill.is-selected {
             border-style: solid;
+            border-color: var(--csd-pill-color, currentColor);
             background: #ffffff;
-            box-shadow: 0 0 0 2px currentColor inset, 0 4px 10px rgba(15, 23, 42, 0.06);
+            box-shadow: 0 0 0 1px var(--csd-pill-color, currentColor) inset, 0 4px 10px rgba(15, 23, 42, 0.06);
         }
         .csd-pill-top {
             width: 100%;
@@ -442,16 +457,15 @@
         .csd-badge-moveto {
             display: none;
             font-size: 8.5px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
-            padding: 1.5px 5px;
+            letter-spacing: 0.04em;
+            padding: 2px 5px;
             border-radius: 4px;
-            color: #ffffff;
             line-height: 1.2;
         }
         .csd-pill.is-selected:not(.is-current) .csd-badge-step { display: none; }
-        .csd-pill.is-selected:not(.is-current) .csd-badge-moveto { display: inline-block; background: currentColor; }
+        .csd-pill.is-selected:not(.is-current) .csd-badge-moveto { display: inline-block; background: var(--csd-pill-color, currentColor); }
         .csd-pill.is-selected:not(.is-current) .csd-badge-moveto span { color: #ffffff; }
 
         .csd-pill .chk {
@@ -505,18 +519,18 @@
         /* Card 3: Sub-Stage Sub-Cards Grid */
         .csd-sub-row {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(192px, 1fr));
+            gap: 8px;
         }
         .csd-sub-tile {
             border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 10px 12px;
+            border-radius: 9px;
+            padding: 8px 10px;
             cursor: pointer;
             background: #ffffff;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 9px;
             min-width: 0;
             transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
         }
@@ -698,39 +712,21 @@
         }
     </style>
 
-    <form class="form" id="status_frm" name="status_frm" method="post" enctype="multipart/form-data" data-csd-flow="client" style="display:flex;flex-direction:column;gap:14px;">
+    <form class="form" id="status_frm" name="status_frm" method="post" enctype="multipart/form-data" data-csd-flow="client" style="display:flex;flex-direction:column;gap:10px;">
         <meta name="csrf-token" content="{{ csrf_token() }}" />
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <input type="hidden" name="application_id" id="application_id" value="{{ @$application->id }}" />
         <input type="hidden" name="job_wise_condidates_id" id="job_wise_condidates_id" value="{{ @$application->job_wise_condidates_id }}" />
 
-        <div class="csd-info-name d-none">{{ ucwords($csdcFullName) }}</div>
+        <div class="csd-info-name d-none">{{ ucwords($csdcFullName) ?: 'Candidate' }}{{ $csdcJobTitle !== '' ? ' • ' . $csdcJobTitle : '' }}{{ $csdcClientName !== '' ? ' (' . $csdcClientName . ')' : '' }}</div>
 
         <div class="csd-notice">
             <i class="fa fa-info-circle"></i>
             <span>This is a client-managed job. <strong>In Review</strong> and <strong>Rejected</strong> are private to your team. Moving a candidate to <strong>Sourcing</strong> makes the profile visible to the client, after which all subsequent hiring stages are managed by the client.</span>
         </div>
 
-        {{-- CARD 1: Stage Transition Overview (Current Stage -> Moving To Stage) --}}
+        {{-- CARD 1: Compact Stage Transition Strip (Current Stage -> Moving To Stage) --}}
         <div class="csd-card csd-summary-card" id="csd_summary_card">
-            <div class="csd-card-head">
-                <div class="csd-card-head-left">
-                    <span class="csd-card-ico" style="background:#eff6ff;color:#2563eb;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
-                    </span>
-                    <div>
-                        <div class="csd-card-title">Stage Transition Overview</div>
-                        <div class="csd-card-sub">
-                            {{ ucwords($csdcFullName) ?: 'Candidate' }}
-                            @if($csdcJobTitle !== '') &bull; {{ $csdcJobTitle }} @endif
-                            @if($csdcClientName !== '') ({{ $csdcClientName }}) @endif
-                        </div>
-                    </div>
-                </div>
-                <div class="csd-card-head-right">
-                    <span class="csd-status-pill" id="csd_transition_badge">Staying in Current Stage</span>
-                </div>
-            </div>
             <div class="csd-card-body">
                 <div class="csd-transition-grid">
                     {{-- Sub-Card A: Current Stage --}}
@@ -814,7 +810,7 @@
                 <div class="csd-card-head-right">
                     <div class="csd-legend">
                         <span class="csd-legend-item"><span class="csd-dot" style="background:#94a3b8;"></span> Current Stage</span>
-                        <span class="csd-legend-item"><span class="csd-dot" style="background:#009ef7;"></span> Moving To</span>
+                        <span class="csd-legend-item"><span class="csd-dot" id="csd_legend_moveto_dot" style="background:{{ $csdcCurrentMeta['accent'] }};"></span> Moving To</span>
                     </div>
                 </div>
             </div>
@@ -844,7 +840,7 @@
                                  data-stage-color="{{ $csdMeta['accent'] }}"
                                  data-stage-text-color="{{ $csdMeta['color'] }}"
                                  data-stage-bg="{{ $csdMeta['bg'] }}"
-                                 style="color:{{ $csdMeta['accent'] }};"
+                                 style="--csd-pill-color:{{ $csdMeta['accent'] }};color:{{ $csdMeta['accent'] }};"
                                  onclick="csdcSelectStage(this)">
                                 <input type="radio" class="d-none master_status" name="master_status" value="{{ @$mstatus->id }}" {{ $csdChk }} id="{{ @$mstatus->text_name }}">
                                 <div class="csd-pill-top">
@@ -996,7 +992,8 @@
         var selBg = $sel.data('stage-bg') || '#eff6ff';
         var selMeta = window.CSD_STAGE_META[selKey];
 
-        $('#csd_summary_card').css('border-left-color', selColor);
+        $('#csd_summary_card').css('--csd-summary-accent', selColor);
+        $('#csd_legend_moveto_dot').css('background', selColor);
 
         var isSame = (selId === curId);
         var $targetCard = $('#csd_target_subcard');
@@ -1041,12 +1038,12 @@
         var isActionable = (selId == 1 || selId == 9 || selId == 7);
 
         if (isSame) {
-            $arrowCircle.removeClass('is-moving');
-            $arrowLbl.text('Same Stage');
+            $arrowCircle.removeClass('is-moving').css({ background: '', borderColor: '', color: '' });
+            $arrowLbl.text('Same Stage').css('color', '#64748b');
             $badge.text(selectedSubName ? 'Updating Sub-Stage' : 'Staying in Current Stage');
         } else {
-            $arrowCircle.addClass('is-moving');
-            $arrowLbl.text('Moving To');
+            $arrowCircle.addClass('is-moving').css({ background: selBg, borderColor: selColor, color: selTextColor });
+            $arrowLbl.text('Moving To').css('color', selTextColor);
 
             if (selKey === 'rejected') {
                 $badge.addClass('is-reject').text(curLabel + ' \u2192 Rejected');

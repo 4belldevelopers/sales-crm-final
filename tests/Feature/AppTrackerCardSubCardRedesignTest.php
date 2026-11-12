@@ -548,4 +548,72 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('caf-int-schedule-btn app_interview_schedule', $clientNextStageHtml);
         $this->assertStringContainsString('Schedule Interview', $clientNextStageHtml);
     }
+
+    public function test_job_header_card_subcard_design_with_org_light_backgrounds_and_matching_buttons(): void
+    {
+        $toolbarView = file_get_contents(resource_path('views/sections/service_company/toolbar.blade.php'));
+        $indexView = file_get_contents(resource_path('views/service_company/apptracker/index.blade.php'));
+        $clientAppView = file_get_contents(resource_path('views/service_company/apptracker/clientapp.blade.php'));
+
+        // Opt-in flat light-tinted header bar in toolbar keeps non-AppTracker views isolated (Rule 17)
+        $this->assertStringContainsString('@if(!empty($apptrackerHeaderCard))', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-main {{ $resolvedOrgClass }}', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--identity show-detail-open', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--status show-detail-open', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--comp', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--loc', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--meta', $toolbarView);
+        $this->assertStringContainsString('{{ $hdrPrefix }}-sep', $toolbarView);
+        $this->assertStringNotContainsString('{{ $hdrPrefix }}-subcard', $toolbarView);
+        $this->assertStringContainsString("'hp-org-my'       => ['label' => 'My Organization'", $toolbarView);
+        $this->assertStringContainsString("'hp-org-internal' => ['label' => 'Internal Client'", $toolbarView);
+        $this->assertStringContainsString("'hp-org-direct'   => ['label' => 'Direct Client'", $toolbarView);
+        $this->assertStringContainsString('data-kt-swapper="true"', $toolbarView);
+
+        // AppTracker host view: Flat light-tinted white header strip + matching org button colors
+        $this->assertStringContainsString("'apptrackerHeaderCard' => true", $indexView);
+        $this->assertStringContainsString("'headerPrefix' => 'aptk-hdr'", $indexView);
+        $this->assertStringContainsString('<div class="toolbar aptk-job-toolbar', $indexView);
+        $this->assertStringContainsString('<div class="aptk-hdr-card', $indexView);
+        $this->assertStringContainsString('class="aptk-hdr-actions"', $indexView);
+        $this->assertStringContainsString('aptk-hdr-btn-outline', $indexView);
+        $this->assertStringContainsString('aptk-hdr-btn-solid', $indexView);
+        $this->assertStringContainsString('.aptk-hdr-card.hp-org-my', $indexView);
+        $this->assertStringContainsString('.aptk-hdr-card.hp-org-internal', $indexView);
+        $this->assertStringContainsString('.aptk-hdr-card.hp-org-direct', $indexView);
+        $this->assertStringContainsString('#fffbeb', $indexView);
+        $this->assertStringContainsString('#eff6ff', $indexView);
+        $this->assertStringContainsString('#ecfdf5', $indexView);
+        $this->assertStringContainsString('--kt-toolbar-height: 62px', $indexView);
+        $this->assertStringContainsString('padding-left: 0 !important;', $indexView);
+        $this->assertStringContainsString('border-radius: 0 !important;', $indexView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%);', $indexView);
+        $this->assertStringContainsString('--hdr-btn-solid-color: #422006;', $indexView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);', $indexView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);', $indexView);
+        $this->assertStringContainsString('justify-content: space-between;', $indexView);
+        $this->assertStringContainsString('height: 38px !important;', $indexView);
+
+        // ClientAppTracker host view: page-isolated caf-hdr flat header strip & data-job-status preservation
+        $this->assertStringContainsString("'apptrackerHeaderCard' => true", $clientAppView);
+        $this->assertStringContainsString("'headerPrefix' => 'caf-hdr'", $clientAppView);
+        $this->assertStringContainsString('<div class="toolbar caf-job-toolbar', $clientAppView);
+        $this->assertStringContainsString('<div class="caf-hdr-card', $clientAppView);
+        $this->assertStringContainsString('class="caf-hdr-actions"', $clientAppView);
+        $this->assertStringContainsString('caf-hdr-btn-outline', $clientAppView);
+        $this->assertStringContainsString('caf-hdr-btn-solid', $clientAppView);
+        $this->assertStringContainsString('id="addServiceCandidate" data-job-status="{{ $job->status }}"', $clientAppView);
+        $this->assertStringContainsString('.caf-hdr-card.hp-org-my', $clientAppView);
+        $this->assertStringContainsString('.caf-hdr-card.hp-org-internal', $clientAppView);
+        $this->assertStringContainsString('.caf-hdr-card.hp-org-direct', $clientAppView);
+        $this->assertStringContainsString('--kt-toolbar-height: 62px', $clientAppView);
+        $this->assertStringContainsString('padding-left: 0 !important;', $clientAppView);
+        $this->assertStringContainsString('border-radius: 0 !important;', $clientAppView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%);', $clientAppView);
+        $this->assertStringContainsString('--hdr-btn-solid-color: #422006;', $clientAppView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);', $clientAppView);
+        $this->assertStringContainsString('--hdr-btn-solid-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);', $clientAppView);
+        $this->assertStringContainsString('justify-content: space-between;', $clientAppView);
+        $this->assertStringContainsString('height: 38px !important;', $clientAppView);
+    }
 }

@@ -90,7 +90,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $sort = [];
 
         $cachePayload = [
-            'ui_v' => 'card_v2',
+            'ui_v' => 'card_v3',
             'page' => $page,
             'size' => $size,
             'company' => $company_id,
@@ -128,6 +128,8 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     'feedbackMap' => collect(),
                     'spokpersonMap' => collect(),
                     'clientCompanyMap' => [],
+                    'jobMetaMap' => [],
+                    'candidateMetaMap' => [],
                     'userCaptainJobIds' => [],
                 ])->render(),
                 'total' => 0,
@@ -467,12 +469,19 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 'feedbackMap' => collect(),
                 'spokpersonMap' => collect(),
                 'clientCompanyMap' => [],
+                'jobMetaMap' => [],
+                'candidateMetaMap' => [],
                 'userCaptainJobIds' => [],
             ];
         }
 
         $interviewIds = array_values(array_filter(array_column($data, 'id')));
-        $jobIds = array_values(array_unique(array_filter(array_column($data, 'jobId'))));
+        $jobIds = array_values(array_unique(array_filter(array_merge(
+            array_column($data, 'jobId'),
+            array_column($data, 'job_id')
+        ))));
+        $wiseIds = array_values(array_unique(array_filter(array_map('intval', array_column($data, 'wiseID')))));
+        $jobAppIds = array_values(array_unique(array_filter(array_map('intval', array_column($data, 'job_application_id')))));
 
         // Query 1: Follow-up status map (specific required columns)
         $followupMap = collect();
@@ -512,14 +521,104 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             }
         }
 
-        // Query 4: Client Company Names (specific columns)
+        // Query 4: Job & Client Meta (name, self_company classification, employment_type — single batch query)
         $clientCompanyMap = [];
+        $jobMetaMap = [];
         if (! empty($jobIds)) {
-            $clientCompanyMap = DB::table('jobs')
-                ->join('clients', 'clients.id', '=', 'jobs.client_id')
+            $jobRows = DB::table('jobs')
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                 ->whereIn('jobs.id', $jobIds)
-                ->pluck('clients.name', 'jobs.id')
-                ->all();
+                ->get(['jobs.id', 'jobs.employment_type', 'clients.name as client_name', 'clients.self_company']);
+
+            foreach ($jobRows as $jr) {
+                $jid = (int) $jr->id;
+                $cName = (string) ($jr->client_name ?? '');
+                if ($cName !== '') {
+                    $clientCompanyMap[$jid] = $cName;
+                }
+                $jobMetaMap[$jid] = [
+                    'client_name' => $cName,
+                    'self_company' => (int) ($jr->self_company ?? 0),
+                    'employment_type' => $jr->employment_type !== null ? (int) $jr->employment_type : 0,
+                ];
+            }
+        }
+
+        // Batch Candidate Meta (current_company + submitted_at) — ES-first via ELASTIC_CANDIDATES mget with scoped fallback
+        $candidateMetaMap = [
+            'by_wise' => [],
+            'by_app' => [],
+        ];
+        $missingWiseIds = $wiseIds;
+        if (! empty($wiseIds) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+            try {
+                $mgetRes = $this->elasticService->getClient()->mget([
+                    'index' => ELASTIC_CANDIDATES,
+                    '_source' => ['id', 'current_company', 'created_at', 'job_application_id'],
+                    'body' => ['ids' => array_map('strval', $wiseIds)],
+                ]);
+                $foundWise = [];
+                foreach ($mgetRes['docs'] ?? [] as $doc) {
+                    if (! empty($doc['found']) && ! empty($doc['_source'])) {
+                        $src = $doc['_source'];
+                        $wId = (int) ($doc['_id'] ?? ($src['id'] ?? 0));
+                        if ($wId > 0) {
+                            $meta = [
+                                'current_company' => trim((string) ($src['current_company'] ?? '')),
+                                'submitted_at' => (string) ($src['created_at'] ?? ''),
+                            ];
+                            $candidateMetaMap['by_wise'][$wId] = $meta;
+                            if (! empty($src['job_application_id'])) {
+                                $candidateMetaMap['by_app'][(int) $src['job_application_id']] = $meta;
+                            }
+                            if ($meta['current_company'] !== '' || $meta['submitted_at'] !== '') {
+                                $foundWise[] = $wId;
+                            }
+                        }
+                    }
+                }
+                $missingWiseIds = array_values(array_diff($wiseIds, $foundWise));
+            } catch (\Throwable $esCandEx) {
+                \Log::debug('InterviewTracker mget ELASTIC_CANDIDATES fallback: '.$esCandEx->getMessage());
+            }
+        }
+
+        if (! empty($missingWiseIds) || (! empty($jobAppIds) && empty($candidateMetaMap['by_app']))) {
+            if (! empty($missingWiseIds)) {
+                $wiseRows = DB::table('add_job_wise_condidates')
+                    ->leftJoin('job_applications', 'job_applications.id', '=', 'add_job_wise_condidates.job_application_id')
+                    ->whereIn('add_job_wise_condidates.id', $missingWiseIds)
+                    ->get([
+                        'add_job_wise_condidates.id as wise_id',
+                        'add_job_wise_condidates.job_application_id',
+                        'add_job_wise_condidates.created_at as submitted_at',
+                        'job_applications.current_company',
+                    ]);
+                foreach ($wiseRows as $wr) {
+                    $existing = $candidateMetaMap['by_wise'][(int) $wr->wise_id] ?? [];
+                    $meta = [
+                        'current_company' => trim((string) ($wr->current_company ?? ($existing['current_company'] ?? ''))),
+                        'submitted_at' => (string) ($wr->submitted_at ?? ($existing['submitted_at'] ?? '')),
+                    ];
+                    $candidateMetaMap['by_wise'][(int) $wr->wise_id] = $meta;
+                    if (! empty($wr->job_application_id)) {
+                        $candidateMetaMap['by_app'][(int) $wr->job_application_id] = $meta;
+                    }
+                }
+            }
+
+            $missingAppIds = array_values(array_diff($jobAppIds, array_keys($candidateMetaMap['by_app'])));
+            if (! empty($missingAppIds)) {
+                $appRows = DB::table('job_applications')
+                    ->whereIn('id', $missingAppIds)
+                    ->get(['id', 'current_company', 'created_at']);
+                foreach ($appRows as $ar) {
+                    $candidateMetaMap['by_app'][(int) $ar->id] = [
+                        'current_company' => trim((string) ($ar->current_company ?? '')),
+                        'submitted_at' => (string) ($ar->created_at ?? ''),
+                    ];
+                }
+            }
         }
 
         return [
@@ -527,6 +626,8 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'feedbackMap' => $feedbackMap,
             'spokpersonMap' => $spokpersonMap,
             'clientCompanyMap' => $clientCompanyMap,
+            'jobMetaMap' => $jobMetaMap,
+            'candidateMetaMap' => $candidateMetaMap,
             'userCaptainJobIds' => $userCaptainJobIds,
         ];
     }

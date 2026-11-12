@@ -121,3 +121,27 @@ The platform infrastructure is provisioned with high-performance dedicated resou
   2. **On Access / Action:** When an expired record or token is accessed, validated, or re-invited, evaluate expiration inline and lazily transition state (e.g. `to_invitation_status = -2, active_invite_slot = NULL`) within the incoming request transaction.
   3. **One-Time Event Handling:** If a state transition strictly requires asynchronous handling, use a delayed queue job (`->delay(now()->addDays(N))`) on Redis/Horizon so it executes exactly once, rather than running infinite polling cron jobs.
 - **Target:** 0% idle CPU strain, 0 KB bandwidth overhead, zero cron maintenance.
+
+22. **Mandatory Default User/Account-Setting Timezone on All Dates & Times:**
+- **Always Honor User/Account Setting Timezone:** Never render raw un-converted timestamps or hardcode fixed timezones (such as `'UTC'` or `'Asia/Kolkata'`). Always resolve the user/organization's configured default timezone from Account Settings (`companies.timezone`, cached in Dragonfly/Redis and served via `GeneralMethod::defaultTimeZone($company_id)` on the backend or `GeneralMethod::getTenantDefaultsPayload($company_id)` for client rendering).
+- **Mandatory Date + Time + Timezone Format:** Convert every displayed timestamp into that default setting timezone (`Carbon::parse($raw, config('app.timezone', 'Asia/Kolkata'))->setTimezone($companyTimezone)`) and visibly display **date, time, and timezone abbreviation together** (e.g. `12 Nov 26, 03:45 PM IST` using `d M y, h:i A T`) across all Job Cards, Job Request Cards, Posted Dates, Expiry Dates, timelines, drawers, tables, notifications, and exports.
+
+23. **Canonical Job Classification Tags & Color Combinations (Zero Ambiguous "Internal" Naming):**
+- **Prohibit Bare `"Internal"` Labels:** NEVER display bare `"Internal"`, `"Internal Job"`, or `"Internal Team"` in any visible UI badge, header, button, or card sub-label. Always use the unambiguous canonical classification tag matching ownership and source:
+  1. **Hiring for Own Company / Self-Organization (`self_company == 1`, `is_self_company === true`):**
+     - **Tag Label & Icon:** `My Organization` (`fas fa-id-badge`)
+     - **Tag Color Combination (`.cd-badge-client-type.type-my-org`):** Background `#ecfeff`, Text `#0891b2`, Border `1px solid #a5f3fc`
+     - **KPI Card Active Combination (`data-kpi="my_organization"`):** Background `#ecfeff`, Border `#22d3ee`, Ring/Icon `#0891b2`, Count `#155e75`, Label `#0e7490`
+     - **Strict Rule:** Do NOT label internal own-company hiring as `"Internal"` or `"Internal Client"`.
+  2. **Managed Non-Marketplace Client (`self_company == 0 && !is_direct_client`):**
+     - **Tag Label & Icon:** `Internal Client` (`fas fa-building`)
+     - **Tag Color Combination (`.cd-badge-client-type.type-internal`):** Background `#eff6ff`, Text `#2563eb`, Border `1px solid #bfdbfe`
+     - **KPI Card Active Combination (`data-kpi="internal"`):** Background `#fff7ed`, Border `#fb923c`, Ring/Icon `#ea580c`, Count `#9a3412`, Label `#c2410c` (`Internal Client Jobs`)
+     - **Strict Rule:** Always keep the full phrase `Internal Client` — never abbreviate it to `"Internal"`.
+  3. **Marketplace Direct Client (`is_direct_client === true`):**
+     - **Tag Label & Icon:** `Direct Client` (`fas fa-shield-alt`)
+     - **Tag Color Combination (`.cd-badge-client-type.type-direct`):** Background `#ecfdf5`, Text `#059669`, Border `1px solid #a7f3d0`
+     - **KPI Card Active Combination (`data-kpi="direct"`):** Background `#ecfdf5`, Border `#34d399`, Ring/Icon `#059669`, Count `#065f46`, Label `#047857` (`Direct Client Jobs`)
+  4. **Pending Direct Client Job Request (`is_job_request === true`):**
+     - **Dual Tag Requirement:** Render **`Direct Client`** (`.type-direct` Emerald `#ecfdf5` / `#059669`) + **`Job Request`** (`fas fa-handshake`, `.type-request`: Background `#f5f3ff`, Text `#7c3aed`, Border `1px solid #ddd6fe`) beside the status badge.
+     - **KPI Card Active Combination (`data-kpi="job_request"`):** Background `#faf5ff`, Border `#c084fc`, Ring/Icon `#9333ea`, Count `#6b21a8`, Label `#7e22ce` (`Job Requests`)
