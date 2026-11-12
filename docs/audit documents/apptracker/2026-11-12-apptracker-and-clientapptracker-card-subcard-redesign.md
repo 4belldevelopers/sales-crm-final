@@ -24,16 +24,16 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
 4. **Stream Control Sub-Header & Bulk Selection Bar:**
    - `.aptk-stream-bar` / `.caf-stream-bar` provides `Select All` (`.chk_list`), active stage summary badge (`.nav_status`), and live candidate count (`#aptk_visible_count` / `#caf_visible_count`).
    - `#aptk_selection_bar` reveals bulk actions (`Send Email` on AppTracker, `Forward Resume`, `Copy`, `Export`/Print) when one or more candidate cards are checked.
-5. **Primary Candidate Card + 6 Discrete Sub-Cards + Bottom Intelligence Strip:**
-   - **Sub-Card 1 (`Candidate Info`):** Selection checkbox (`.chk_list_item`), `[Bench]` / `[Duplicate]` header badges, 38px avatar/photo, clickable name (`.show-application-detail`), designation, and full current company.
-   - **Sub-Card 2 (`Compensation & Exp`):** Expected/Bill CTC (`tabular-nums`, gated by `salary_view` on AppTracker), Current CTC or `Fulltime`/`Contract`, Total + Relevant experience, and color-coded notice period (`Immediate` green, `Days` amber, `SNP LWD` purple).
-   - **Sub-Card 3 (`Location & Edu`):** City + Country code and **UPPERCASE** qualification (`text-transform: uppercase`).
+5. **Primary Candidate Card + 6 Discrete Sub-Cards + Bottom Intelligence Strip (Empty-Safe via `AppTrackerCardPresenter`):**
+   - **Sub-Card 1 (`Candidate Info`):** Selection checkbox (`.chk_list_item`), `[Bench]` / `[Duplicate]` header badges, 38px avatar/photo, clickable name (`.show-application-detail`), designation (hidden when empty), and strictly the candidate's `current_company` from Add Candidate submission (never agency `apl_company_name`).
+   - **Sub-Card 2 (`Compensation & Exp`):** Expected/Bill CTC (`tabular-nums`, gated by `salary_view` on AppTracker), Current CTC or `Fulltime`/`Contract`, Total + Relevant experience, and normalized notice period (`NP: Immediate` green, `NP: <N> Days` amber, `SNP LWD ...` purple; empty/N/A hidden).
+   - **Sub-Card 3 (`LOCATION & DEGREE`):** City + Country code, second-row Work Mode (`Work From Office` / `Work From Home` / `Remote` / `Hybrid`) with FontAwesome icon, and **UPPERCASE** qualification (`text-transform: uppercase`), hiding missing rows.
    - **Sub-Card 4 (`Interview`):** Scheduled date, time + timezone, and either recorded feedback badge or interview mode pill (or clean `Not Scheduled` state).
-   - **Sub-Card 5 (`Ownership`):** Recruiter/Spokesperson and submitting company.
-   - **Sub-Card 6 (`Pipeline & Stage`):** Stage badge, sub-stage label, and stage action trigger (`.stage_sub_stage` on AppTracker; `.client_stage_sub_stage` for `InReview` or `.client_stage_locked_notice` `"Client Managed"` on ClientAppTracker).
-   - **Sub-Card 7 (Bottom Intelligence Strip):** Standardized `Match X%` badge (`.jw-row-match-badge`), horizontally scrollable required-skill-highlighted pills (`is-matched`), and `"View Profile"` drawer CTA.
+   - **Sub-Card 5 (`RECRUITER & SOURCING`):** Header icon (`fas fa-user-tie`), Recruiter/Spokesperson, submitting company, and `Submitted: <time ago>` row, hiding empty rows.
+   - **Sub-Card 6 (`Pipeline & Stage`):** Stage badge, sub-stage label, and **entire sub-card clickable** (`.aptk-subcard-stage` / `.caf-subcard-stage` with `stopPropagation()` and Enter/Space keyboard support) to open `.stage_sub_stage` on AppTracker or `.client_stage_sub_stage` / `.client_stage_locked_notice` on ClientAppTracker; clicking anywhere else on the card opens the Candidate Drawer (`.show-application-detail`), excluding checkboxes, buttons, inputs, and external LinkedIn links.
+   - **Sub-Card 7 (Bottom Intelligence Strip):** Standardized `Match X%` badge (`.jw-row-match-badge`), horizontally scrollable required-skill-highlighted pills (`is-matched`), and right-side metadata pills replacing `"View Profile"`: `LinkedIn Verified` pill + Visa Status `(Country, Visa Type)` pill (rendered only when provided).
 6. **Controller Cache & N+1 Improvements:**
-   - Added `'jobid' => $jobid` and `'ui_v' => 'card_v1'` to `$cachePayload` in `clientappdata_ajax()` (fixing cross-job cache collision and stale HTML caching) and `'ui_v' => 'card_v1'` to `allDataAjax()`.
+   - Added `'jobid' => $jobid` and `'ui_v' => 'card_v4'` to `$cachePayload` in `clientappdata_ajax()`, `'ui_v' => 'card_v4'` in `allDataAjax()`, and expanded `GRID_SOURCE_FIELDS` + `ElasticCandidatesIndex` payload (`wm`, `linkedin`, `visastatu`, `created_at`, `submitted_by_company_name`).
    - Pre-fetched `$rowMaps` and `$citiesMap` in `clientappdata_ajax()` to eliminate per-row N+1 DB queries in `clientappdata_ajax.blade.php`.
 
 ---
@@ -42,13 +42,15 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
 
 | File | Change Summary |
 |---|---|
-| `resources/views/service_company/apptracker/index.blade.php` | Replaced `#sc_table_card` raw `<table>` with Rule 20 `.aptk-*` Card + Sub-Card stream, skeleton loader, `.aptk-stream-bar`, search clear/refresh controls, card-based `.exportRecord` print builder, `.aptk-cand-card` highlight/selection targets, and Client Tracker cyan (`#0891b2` / `#ecfeff`) Sourcing pipeline color. |
-| `resources/views/service_company/ajax_pages/all_apptracker.blade.php` | Refactored `<tr>` rows into `.aptk-cand-card` with 6 discrete `.aptk-cand-subcard` cells, `.aptk-cand-bottom` intelligence strip, plain currency glyphs, trailing exp dot trim, and Client Tracker cyan (`#0891b2` / `#ecfeff` / `#0e7490` / `#a5f3fc`) Sourcing rail + badge. |
-| `resources/views/service_company/apptracker/clientapp.blade.php` | Replaced raw `<table>` with Rule 20 `.caf-*` Card + Sub-Card stream, skeleton loader, `.caf-stream-bar`, debounced search + clear/refresh controls + XHR abort, card-based `.aptk_print_btn` print builder, active pagination page fix, and Client Tracker cyan (`#0891b2` / `#ecfeff`) Sourcing pipeline color. |
-| `resources/views/service_company/ajax_pages/clientappdata_ajax.blade.php` | Refactored `<tr>` rows into `.caf-cand-card` with 6 discrete `.caf-cand-subcard` cells and `.caf-cand-bottom` strip; wired pre-fetched `$rowMaps` / `$citiesMap`, safe plain currency resolution, trailing exp dot trim, and Client Tracker cyan Sourcing rail + badge. |
+| `app/Services/AppTrackerCardPresenter.php` | Added shared empty-safe presenter normalizing `current_company` strictly from submission, Work Mode (`wm`), `NP: <N> Days` / `NP: Immediate` notice periods, `LinkedIn Verified` URLs, Visa `(Country, Visa Type)`, and `Submitted: <time ago>` strings. |
+| `app/Services/ElasticCandidatesIndex.php` | Added `job_applications.wm`, `job_applications.linkedin`, and `job_applications.visastatu` to SELECT and ES document indexing payload. |
+| `resources/views/service_company/apptracker/index.blade.php` | Replaced `#sc_table_card` raw `<table>` with Rule 20 `.aptk-*` Card + Sub-Card stream, skeleton loader, `.aptk-stream-bar`, search clear/refresh controls, card-based `.exportRecord` print builder, full-card Candidate Drawer click delegation + full `.aptk-subcard-stage` click/keyboard handling, Client Tracker cyan Sourcing color, and org-scoped `.hp-total` themes. |
+| `resources/views/service_company/ajax_pages/all_apptracker.blade.php` | Refactored `<tr>` rows into `.aptk-cand-card` with 6 discrete `.aptk-cand-subcard` cells, `.aptk-cand-bottom` intelligence strip, empty-safe `AppTrackerCardPresenter` rendering, Work Mode row, `RECRUITER & SOURCING` + `Submitted:` row, and `LinkedIn Verified` + Visa pills replacing `View Profile`. |
+| `resources/views/service_company/apptracker/clientapp.blade.php` | Replaced raw `<table>` with Rule 20 `.caf-*` Card + Sub-Card stream, skeleton loader, `.caf-stream-bar`, debounced search + clear/refresh controls + XHR abort, card-based `.aptk_print_btn` print builder, full-card Candidate Drawer click delegation + full `.caf-subcard-stage` click/keyboard handling, Client Tracker cyan Sourcing color, and org-scoped `.hp-total` themes. |
+| `resources/views/service_company/ajax_pages/clientappdata_ajax.blade.php` | Refactored `<tr>` rows into `.caf-cand-card` with 6 discrete `.caf-cand-subcard` cells and `.caf-cand-bottom` strip; wired pre-fetched `$rowMaps` / `$citiesMap`, empty-safe `AppTrackerCardPresenter` rendering, Work Mode row, `RECRUITER & SOURCING` + `Submitted:` row, and `LinkedIn Verified` + Visa pills replacing `View Profile`. |
 | `app/Services/CurrencyService.php` | Added `resolvePlainSymbolFromLegacy()` to convert legacy `GeneralMethod::currencySymbole()` HTML icon markup (`<i class="fa fa-inr">`) into clean Unicode/text currency glyphs without unescaped Blade HTML. |
-| `app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php` | Added `ui_v` (`card_v3`) cache busting in `allDataAjax()` and `clientappdata_ajax()`, added `jobid` to `clientappdata_ajax` cache payload, and batch-prefetched `$rowMaps` & `$citiesMap`. |
-| `tests/Feature/AppTrackerCardSubCardRedesignTest.php` | Added Feature verification tests for both redesigned views, plain currency glyphs, trailing experience dot trimming, Client Tracker cyan Sourcing palette, permissions, stage triggers, empty states, and Rule 17 isolation. |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php` | Added `ui_v` (`card_v4`) cache busting and expanded `GRID_SOURCE_FIELDS` (`wm`, `job_mode`, `work_mode`, `linkedin`, `ci_linkedin`, `visastatu`, `visa_status`, `visa`, `created_at`, `submitted_by_company_name`), added `jobid` to `clientappdata_ajax` cache payload, batch-prefetched `$rowMaps` & `$citiesMap`, and added `resolveJobOrgClass()` for Total Candidates org color theming. |
+| `tests/Feature/AppTrackerCardSubCardRedesignTest.php` | Added Feature verification tests for both redesigned views, candidate card UI/UX enhancements & empty placeholder suppression, stage card click isolation, plain currency glyphs, trailing experience dot trimming, Client Tracker cyan Sourcing palette, org-scoped Total Candidates color classes, and Rule 17 isolation. |
 
 ---
 
@@ -61,7 +63,7 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
 
 ## Verification Evidence
 
-- `php -l` passed with zero syntax errors across all modified controller, service, view, and test files.
-- `php artisan test tests/Feature/AppTrackerCardSubCardRedesignTest.php` — **5 passed (65 assertions)**.
-- `php artisan test tests/Feature/CandidateSubmitReadinessAndCacheTest.php --filter="apptracker"` — **2 passed (13 assertions)**.
-- `php artisan test tests/Feature/BenchToJobAppTrackerPipelineContractTest.php --filter="phase_1|phase_4|phase_5"` — verified after final edits.
+- `php -l` passed with zero syntax errors across all 8 modified/created controller, service, view, and test files.
+- `php vendor/bin/pint --test` passed across all 4 PHP files (`AppTrackerCardPresenter.php`, `ElasticCandidatesIndex.php`, `ServiceCompanyAppTrackerController.php`, `AppTrackerCardSubCardRedesignTest.php`).
+- `php artisan view:clear` completed cleanly.
+- `php artisan test tests/Feature/AppTrackerCardSubCardRedesignTest.php` — **7 passed (105 assertions)**.

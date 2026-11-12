@@ -128,12 +128,15 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('aptk-cand-bottom', $html);
         $this->assertStringContainsString('aptk-edu-uppercase', $html);
         $this->assertStringContainsString('show-application-detail', $html);
-        $this->assertStringContainsString('stage_sub_stage', $html);
+        $this->assertStringContainsString('aptk-subcard-stage stage_sub_stage', $html);
         $this->assertStringContainsString('jw-row-match-badge', $html);
         $this->assertStringContainsString('data-candidate-id="101"', $html);
         $this->assertStringContainsString('data-wise-id="5001"', $html);
         $this->assertStringContainsString('Disha Gupta', $html);
+        $this->assertStringContainsString('NP: 30 Days', $html);
         $this->assertStringContainsString('Matches a required skill', $html);
+        $this->assertStringNotContainsString('aptk-view-profile-btn', $html);
+        $this->assertStringNotContainsString('View Profile', $html);
         $this->assertStringNotContainsString('<tr', $html);
         $this->assertStringNotContainsString('<td', $html);
     }
@@ -194,10 +197,13 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('caf-cand-subcard', $html);
         $this->assertStringContainsString('caf-cand-bottom', $html);
         $this->assertStringContainsString('caf-edu-uppercase', $html);
-        $this->assertStringContainsString('client_stage_sub_stage', $html);
-        $this->assertStringContainsString('client_stage_locked_notice', $html);
+        $this->assertStringContainsString('caf-subcard-stage client_stage_sub_stage', $html);
+        $this->assertStringContainsString('caf-subcard-stage client_stage_locked_notice', $html);
         $this->assertStringContainsString('Client Managed', $html);
         $this->assertStringContainsString('show-application-detail', $html);
+        $this->assertStringContainsString('NP: 30 Days', $html);
+        $this->assertStringNotContainsString('caf-view-profile-btn', $html);
+        $this->assertStringNotContainsString('View Profile', $html);
         $this->assertStringContainsString('#0891b2', $html);
         $this->assertStringContainsString('background:#ecfeff;color:#0e7490;border-color:#a5f3fc;', $html);
         $this->assertStringNotContainsString('<tr', $html);
@@ -279,6 +285,11 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringNotContainsString('<table class="table align-middle table-row-dashed', $indexView);
         $this->assertStringNotContainsString('caf-cand-card', $indexView);
         $this->assertStringContainsString("'color' => '#0891b2', 'bg' => '#ecfeff'", $indexView);
+        $this->assertStringContainsString('.hp-total.hp-org-my.bg-total-active', $indexView);
+        $this->assertStringContainsString('#fde047', $indexView);
+        $this->assertStringContainsString('.hp-total.hp-org-internal.bg-total-active', $indexView);
+        $this->assertStringContainsString('#1e3a8a', $indexView);
+        $this->assertStringContainsString('.hp-total.hp-org-direct.bg-total-active', $indexView);
 
         $this->assertStringContainsString('id="candidatetList" class="caf-cand-stream"', $clientAppView);
         $this->assertStringContainsString('id="btnCafSearchClear"', $clientAppView);
@@ -289,5 +300,102 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringNotContainsString('<table class="table align-middle table-row-dashed', $clientAppView);
         $this->assertStringNotContainsString('aptk-cand-card', $clientAppView);
         $this->assertStringContainsString("'color' => '#0891b2', 'bg' => '#ecfeff'", $clientAppView);
+        $this->assertStringContainsString('.hp-total.hp-org-my.bg-total-active', $clientAppView);
+        $this->assertStringContainsString('#fde047', $clientAppView);
+        $this->assertStringContainsString('.hp-total.hp-org-internal.bg-total-active', $clientAppView);
+        $this->assertStringContainsString('#1e3a8a', $clientAppView);
+        $this->assertStringContainsString('.hp-total.hp-org-direct.bg-total-active', $clientAppView);
+    }
+
+    public function test_resolve_job_org_class_distinguishes_my_org_internal_and_direct_client(): void
+    {
+        $myOrgJob = (object) ['company_id' => 10, 'self_company' => 1, 'client_id' => 1];
+        $internalClientJob = (object) ['company_id' => 10, 'self_company' => 0, 'client_id' => 2];
+        $directClientJob = (object) ['company_id' => 99, 'self_company' => 0, 'client_id' => 3];
+
+        $this->assertSame(
+            'hp-org-my',
+            \App\Http\Controllers\ServiceCompany\ServiceCompanyAppTrackerController::resolveJobOrgClass($myOrgJob, 10)
+        );
+        $this->assertSame(
+            'hp-org-internal',
+            \App\Http\Controllers\ServiceCompany\ServiceCompanyAppTrackerController::resolveJobOrgClass($internalClientJob, 10)
+        );
+        $this->assertSame(
+            'hp-org-direct',
+            \App\Http\Controllers\ServiceCompany\ServiceCompanyAppTrackerController::resolveJobOrgClass($directClientJob, 10)
+        );
+    }
+
+    public function test_candidate_card_enhancements_display_provided_fields_and_hide_missing_placeholders(): void
+    {
+        $this->actingUser();
+
+        $richRow = $this->makeCandidateRow([
+            'current_company' => 'Acme Systems',
+            'apl_company_name' => 'Fallback Agency Name',
+            'wm' => 'remote',
+            'np_id' => '9',
+            'serving_notice_period_mode' => 0,
+            'created_at' => now()->subDays(20)->toIso8601String(),
+            'linkedin' => 'https://www.linkedin.com/in/disha-gupta',
+            'visastatu' => 'H-1B',
+            'country_name' => 'United States',
+        ]);
+
+        $richAppHtml = View::make('service_company.ajax_pages.all_apptracker', [
+            'data' => [$richRow],
+            'userPermissions' => ['view_job_applications', 'salary_view'],
+            'rowMaps' => $this->baseRowMaps(),
+        ])->render();
+
+        $this->assertStringContainsString('Acme Systems', $richAppHtml);
+        $this->assertStringContainsString('Location &amp; Degree', $richAppHtml);
+        $this->assertStringContainsString('Remote', $richAppHtml);
+        $this->assertStringContainsString('Recruiter &amp; Sourcing', $richAppHtml);
+        $this->assertStringContainsString('Submitted: 20 days ago', $richAppHtml);
+        $this->assertStringContainsString('NP: 9 Days', $richAppHtml);
+        $this->assertStringContainsString('LinkedIn Verified', $richAppHtml);
+        $this->assertStringContainsString('https://www.linkedin.com/in/disha-gupta', $richAppHtml);
+        $this->assertStringContainsString('(US, H-1B)', $richAppHtml);
+        $this->assertStringNotContainsString('View Profile', $richAppHtml);
+
+        $minimalRow = $this->makeCandidateRow([
+            'current_company' => '',
+            'apl_company_name' => 'Agency Only Name',
+            'current_designation' => '',
+            'wm' => '',
+            'job_mode' => '',
+            'qualification_name' => '',
+            'np_id' => 'Immediate',
+            'serving_notice_period_mode' => 0,
+            'linkedin' => '',
+            'visastatu' => '',
+            'created_at' => null,
+        ]);
+
+        $minimalClientHtml = View::make('service_company.ajax_pages.clientappdata_ajax', [
+            'data' => [$minimalRow],
+            'userPermissions' => ['view_job_applications'],
+            'rowMaps' => $this->baseRowMaps(),
+            'citiesMap' => [],
+            'jobid' => 117,
+            'company_id' => 1,
+        ])->render();
+
+        $this->assertStringNotContainsString('Agency Only Name', $minimalClientHtml);
+        $this->assertStringNotContainsString('caf-cand-company', $minimalClientHtml);
+        $this->assertStringNotContainsString('caf-cand-desig', $minimalClientHtml);
+        $this->assertStringNotContainsString('caf-loc-mode', $minimalClientHtml);
+        $this->assertStringNotContainsString('caf-loc-edu', $minimalClientHtml);
+        $this->assertStringNotContainsString('caf-owner-submitted', $minimalClientHtml);
+        $this->assertStringNotContainsString('LinkedIn Verified', $minimalClientHtml);
+        $this->assertStringNotContainsString('caf-visa-pill', $minimalClientHtml);
+        $this->assertStringContainsString('NP: Immediate', $minimalClientHtml);
+
+        $indexView = file_get_contents(resource_path('views/service_company/apptracker/index.blade.php'));
+        $clientAppView = file_get_contents(resource_path('views/service_company/apptracker/clientapp.blade.php'));
+        $this->assertStringContainsString("$(document).on('click', '.aptk-cand-card'", $indexView);
+        $this->assertStringContainsString("$(document).on('click', '.caf-cand-card'", $clientAppView);
     }
 }

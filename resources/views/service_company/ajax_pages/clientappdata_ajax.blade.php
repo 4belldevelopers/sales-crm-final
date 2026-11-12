@@ -1,5 +1,6 @@
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\AppTrackerCardPresenter;
     use App\Services\ReferenceDataCache;
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
@@ -106,9 +107,6 @@
             $flag = $duplicate === 1 ? 1 : 0;
             $isBench = (@$row->condidate_type == 'bench_condidate');
             $photo = !empty(@$row->photo) ? $row->photo : '';
-            $displayDesignation = trim((string) (@$row->current_designation ?? '')) !== '' ? ucwords(trim((string) $row->current_designation)) : '—';
-            $rawCurrentCompany = trim((string) (@$row->current_company ?: (@$row->apl_company_name ?? '')));
-            $displayCurrentCompany = $rawCurrentCompany !== '' ? ucwords($rawCurrentCompany) : '—';
 
             // Experience formatting (preserving exact decimals like 3.0, 5.6, 9.10; trimming dangling dots like "10.")
             $fmtExp = function ($val) {
@@ -161,32 +159,10 @@
             $outsourcing_type = (@$row->outsourcing_type == 1) ? 'Fulltime' : 'Contract';
             $printSalaryStr = $current_ctc_cur . $ectc . $ectcModeSuffix . ($isBench ? ' (' . $outsourcing_type . ')' : ' | Cur: ' . $current_ctc_cur . $ctc . $ctcModeSuffix);
 
-            // Notice period
-            $np = $row->np_id ?? '';
-            if (empty($np)) {
-                $np = 'N/A';
-            }
-            if ((int) ($row->serving_notice_period_mode ?? -1) === 0 && !empty($row->np_id)) {
-                $np = ((int) $row->np_id === 1) ? ($row->np_id . ' Day') : ($row->np_id . ' Days');
-            } elseif ((int) ($row->serving_notice_period_mode ?? -1) === 1) {
-                $np = $row->np_id;
-                if ($np != 'Immediate' && !empty($np)) {
-                    $np = date('d-M-Y', strtotime($row->np_id));
-                    $today = date('Y-m-d');
-                    if (date('Y-m-d', strtotime($row->np_id)) < $today) {
-                        $np = 'Immediate';
-                    }
-                }
-            }
-            $npClass = 'caf-notice-default';
-            if ($np === 'Immediate') {
-                $npClass = 'caf-notice-immediate';
-            } elseif ((int) ($row->serving_notice_period_mode ?? -1) === 0 && !empty($row->np_id)) {
-                $npClass = 'caf-notice-days';
-            } elseif ((int) ($row->serving_notice_period_mode ?? -1) === 1 && !empty($row->np_id)) {
-                $np = 'SNP LWD ' . $np;
-                $npClass = 'caf-notice-snp';
-            }
+            // Notice period (only `NP: X Days` / `NP: Immediate` / `SNP LWD ...`; hidden if empty)
+            $noticeData = AppTrackerCardPresenter::resolveNoticePeriod($row, true);
+            $np = $noticeData['display'];
+            $npClass = 'caf-notice-' . $noticeData['classSuffix'];
 
             // Interview schedule (pre-fetched via $rowMaps['interviews'], safe fallback)
             $schedule_date = '';
@@ -257,11 +233,17 @@
                 }
             }
 
+            $row_city_name = AppTrackerCardPresenter::cleanText($row_city_name);
+            $row_country_name = AppTrackerCardPresenter::cleanText($row_country_name);
             $locShort = ($row_city_name !== '' || $row_country_name !== '')
                 ? trim(($row_city_name !== '' ? ucwords(mb_substr($row_city_name, 0, 18)) : '') . ($row_country_name !== '' ? ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) : ''), ', ')
-                : '—';
-            $locFull = trim(($row_city_name !== '' ? ucwords($row_city_name) : '') . ($row_country_name !== '' ? ', ' . strtoupper($row_country_name) : ''), ', ') ?: '—';
-            $displayQualification = trim((string) (@$row->qualification_name ?? '')) !== '' ? trim((string) $row->qualification_name) : '—';
+                : '';
+            $locFull = trim(($row_city_name !== '' ? ucwords($row_city_name) : '') . ($row_country_name !== '' ? ', ' . strtoupper($row_country_name) : ''), ', ');
+
+            $cardMeta = AppTrackerCardPresenter::present($row, $row_country_name, true);
+            $displayDesignation = $cardMeta['designation'];
+            $displayCurrentCompany = $cardMeta['current_company'];
+            $displayQualification = $cardMeta['qualification'];
 
             // Ownership (Agency recruiter & actual submitting company)
             $post_company_name = @$row->submitted_by_company_name;
@@ -271,9 +253,10 @@
             if (!$post_company_name) {
                 $post_company_name = @$row->company_name;
             }
-            $rowpostedby = trim((string) (@$row->posted_by ?? '')) !== '' ? ucwords((string) $row->posted_by) : '—';
-            $post_company_name = trim((string) $post_company_name) !== '' ? $post_company_name : '—';
-            $printOwnerStr = $rowpostedby . ' (' . $post_company_name . ')';
+            $rowpostedby = AppTrackerCardPresenter::cleanText(@$row->posted_by ?? '');
+            $rowpostedby = $rowpostedby !== '' ? ucwords($rowpostedby) : '';
+            $post_company_name = AppTrackerCardPresenter::cleanText($post_company_name);
+            $printOwnerStr = trim($rowpostedby . ($post_company_name !== '' ? ' (' . $post_company_name . ')' : ''));
 
             // Stage & Sub-stage (InReview = 8 editable by agency; else client-managed locked notice)
             $masterStatusId = (int) ($row->job_master_status_id ?? 8);
@@ -371,12 +354,16 @@
                                    title="{{ e($displayFullName) }}">
                                     {{ $displayFullName }}
                                 </a>
-                                <div class="caf-cand-desig {{ $flag === 1 ? 'text-danger' : '' }}" title="{{ e($displayDesignation) }}">
-                                    {{ $displayDesignation }}
-                                </div>
-                                <div class="caf-cand-company" title="{{ e($displayCurrentCompany) }}">
-                                    <i class="fas fa-building me-1"></i><span>{{ $displayCurrentCompany }}</span>
-                                </div>
+                                @if ($displayDesignation !== '')
+                                    <div class="caf-cand-desig {{ $flag === 1 ? 'text-danger' : '' }}" title="{{ e($displayDesignation) }}">
+                                        {{ $displayDesignation }}
+                                    </div>
+                                @endif
+                                @if ($displayCurrentCompany !== '')
+                                    <div class="caf-cand-company" title="{{ e($displayCurrentCompany) }}">
+                                        <i class="fas fa-building me-1"></i><span>{{ $displayCurrentCompany }}</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -404,25 +391,36 @@
                                 <span><strong>{{ $rel_formattedExperience }} Y</strong> Rel</span>
                             @endif
                         </div>
-                        <div class="caf-val-notice" title="Notice Period: {{ e($np) }}">
-                            <i class="fas fa-hourglass-half me-1"></i>
-                            <span class="caf-notice-txt {{ $npClass }}">{{ $np }}</span>
-                        </div>
+                        @if ($np !== '')
+                            <div class="caf-val-notice" title="Notice Period: {{ e($np) }}">
+                                <i class="fas fa-hourglass-half me-1"></i>
+                                <span class="caf-notice-txt {{ $npClass }}">{{ $np }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
-                <!-- SUB-CARD 3: LOCATION & EDUCATION -->
+                <!-- SUB-CARD 3: LOCATION & DEGREE -->
                 <div class="caf-cand-subcard caf-subcard-loc">
                     <div class="caf-subcard-hdr">
-                        <span class="caf-subcard-label">Location &amp; Edu</span>
+                        <span class="caf-subcard-label">Location &amp; Degree</span>
                     </div>
                     <div class="caf-subcard-body">
-                        <div class="caf-loc-city" title="{{ e($locFull) }}">
-                            <i class="fas fa-map-marker-alt me-1"></i><span>{{ $locShort }}</span>
-                        </div>
-                        <div class="caf-loc-edu" title="{{ e(strtoupper($displayQualification)) }}">
-                            <i class="fas fa-graduation-cap me-1"></i><span class="caf-edu-uppercase">{{ $displayQualification }}</span>
-                        </div>
+                        @if ($locShort !== '')
+                            <div class="caf-loc-city" title="{{ e($locFull) }}">
+                                <i class="fas fa-map-marker-alt me-1"></i><span>{{ $locShort }}</span>
+                            </div>
+                        @endif
+                        @if ($cardMeta['work_mode_label'] !== '')
+                            <div class="caf-loc-mode" title="{{ e($cardMeta['work_mode_label']) }}">
+                                <i class="{{ $cardMeta['work_mode_icon'] }} me-1"></i><span>{{ $cardMeta['work_mode_label'] }}</span>
+                            </div>
+                        @endif
+                        @if ($displayQualification !== '')
+                            <div class="caf-loc-edu" title="{{ e(strtoupper($displayQualification)) }}">
+                                <i class="fas fa-graduation-cap me-1"></i><span class="caf-edu-uppercase">{{ $displayQualification }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -461,55 +459,68 @@
                     </div>
                 </div>
 
-                <!-- SUB-CARD 5: OWNERSHIP -->
+                <!-- SUB-CARD 5: RECRUITER & SOURCING -->
                 <div class="caf-cand-subcard caf-subcard-owner">
                     <div class="caf-subcard-hdr">
-                        <span class="caf-subcard-label">Ownership</span>
+                        <span class="caf-subcard-label"><i class="fas fa-user-tie me-1"></i>Recruiter &amp; Sourcing</span>
                     </div>
                     <div class="caf-subcard-body">
-                        <div class="caf-owner-name" title="{{ e($rowpostedby) }}">
-                            <i class="fas fa-user-circle text-primary me-1"></i><span>{{ $rowpostedby }}</span>
-                        </div>
-                        <div class="caf-owner-company" title="{{ e($post_company_name) }}">
-                            <i class="fas fa-building me-1"></i><span>{{ $post_company_name }}</span>
-                        </div>
+                        @if ($rowpostedby !== '')
+                            <div class="caf-owner-name" title="{{ e($rowpostedby) }}">
+                                <i class="fas fa-user-circle text-primary me-1"></i><span>{{ $rowpostedby }}</span>
+                            </div>
+                        @endif
+                        @if ($post_company_name !== '')
+                            <div class="caf-owner-company" title="{{ e($post_company_name) }}">
+                                <i class="fas fa-building me-1"></i><span>{{ $post_company_name }}</span>
+                            </div>
+                        @endif
+                        @if ($cardMeta['submitted_ago'] !== '')
+                            <div class="caf-owner-submitted" title="{{ e('Submitted: ' . $cardMeta['submitted_ago']) }}">
+                                <i class="far fa-calendar-alt me-1"></i><span>Submitted: {{ $cardMeta['submitted_ago'] }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
-                <!-- SUB-CARD 6: PIPELINE & STAGE -->
-                <div class="caf-cand-subcard caf-subcard-stage">
+                <!-- SUB-CARD 6: PIPELINE & STAGE (Entire Card Clickable) -->
+                <div class="caf-cand-subcard caf-subcard-stage {{ $isStageEditable ? 'client_stage_sub_stage' : 'client_stage_locked_notice' }}"
+                     data-row-id="{{ $wiseId }}"
+                     @if ($isStageEditable)
+                         data-toggle="modal"
+                         data-target="#client_stage_sub_stage"
+                     @endif
+                     role="button"
+                     tabindex="0"
+                     title="{{ $isStageEditable ? 'Click anywhere on this stage card to submit or update stage' : 'Managed directly by the client' }}">
                     <div class="caf-subcard-hdr">
                         <span class="caf-subcard-label">Pipeline &amp; Stage</span>
                     </div>
                     <div class="caf-subcard-body">
                         @if ($isStageEditable)
-                            <a href="javascript:void(0);"
-                               data-row-id="{{ $wiseId }}"
-                               class="caf-stage-trigger client_stage_sub_stage"
-                               data-toggle="modal"
-                               data-target="#client_stage_sub_stage"
-                               title="Click to submit or update stage">
+                            <div class="caf-stage-trigger">
                                 <span class="caf-stage-pill {{ @$row->css_style }}" style="{{ $stagePillTheme }}">
                                     {{ ucwords(mb_substr($masterStageLabel, 0, 20)) }}
                                 </span>
-                                <span class="caf-substage-txt" title="{{ e($subStageName) }}">
-                                    Sub: <strong>{{ $subStageName }}</strong>
-                                </span>
+                                @if ($subStageName !== '' && $subStageName !== '—')
+                                    <span class="caf-substage-txt" title="{{ e($subStageName) }}">
+                                        Sub: <strong>{{ $subStageName }}</strong>
+                                    </span>
+                                @endif
                                 <span class="caf-stage-cue">Update Stage <i class="fas fa-chevron-right ms-1"></i></span>
-                            </a>
+                            </div>
                         @else
-                            <a href="javascript:void(0);"
-                               data-row-id="{{ $wiseId }}"
-                               class="caf-stage-trigger client_stage_locked_notice"
-                               title="Managed directly by the client">
+                            <div class="caf-stage-trigger">
                                 <span class="caf-stage-pill {{ @$row->css_style }}" style="{{ $stagePillTheme }}">
                                     {{ ucwords(mb_substr($masterStageLabel, 0, 20)) }}
                                 </span>
-                                <span class="caf-substage-txt" title="{{ e($subStageName) }}">
-                                    Sub: <strong>{{ $subStageName }}</strong>
-                                </span>
+                                @if ($subStageName !== '' && $subStageName !== '—')
+                                    <span class="caf-substage-txt" title="{{ e($subStageName) }}">
+                                        Sub: <strong>{{ $subStageName }}</strong>
+                                    </span>
+                                @endif
                                 <span class="caf-stage-cue is-locked"><i class="fas fa-lock me-1"></i>Client Managed</span>
-                            </a>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -534,19 +545,27 @@
                             @foreach ($unmatchedSkillsArr as $sval)
                                 <span class="caf-skill-pill">{{ ucfirst($sval) }}</span>
                             @endforeach
-                        @else
-                            <span class="caf-skills-empty">No skills listed</span>
                         @endif
                     </div>
                 </div>
-                <div class="caf-bottom-right">
-                    <a href="javascript:void(0);"
-                       data-row-id="{{ $wiseId }}"
-                       data-wise-id="{{ $candAppId }}"
-                       class="caf-view-profile-btn show-application-detail">
-                        <i class="far fa-user me-1"></i>View Profile <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
-                </div>
+                @if ($cardMeta['linkedin_url'] !== '' || $cardMeta['visa_display'] !== '')
+                    <div class="caf-bottom-right">
+                        @if ($cardMeta['linkedin_url'] !== '')
+                            <a href="{{ e($cardMeta['linkedin_url']) }}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="caf-linkedin-pill"
+                               title="LinkedIn Profile Verified">
+                                <i class="fab fa-linkedin"></i><span>LinkedIn Verified</span>
+                            </a>
+                        @endif
+                        @if ($cardMeta['visa_display'] !== '')
+                            <span class="caf-visa-pill" title="{{ e('Visa Status: ' . $cardMeta['visa_raw']) }}">
+                                <i class="fas fa-passport"></i><span>{{ $cardMeta['visa_display'] }}</span>
+                            </span>
+                        @endif
+                    </div>
+                @endif
             </div>
 
         </div>
