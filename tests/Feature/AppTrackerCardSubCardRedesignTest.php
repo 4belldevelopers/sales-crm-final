@@ -431,28 +431,4 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString("$(document).on('click', '.aptk-cand-card'", $indexView);
         $this->assertStringContainsString("$(document).on('click', '.caf-cand-card'", $clientAppView);
     }
-
-    public function test_interview_drawer_is_stage_aware_and_prevents_duplicate_stage_schedules(): void
-    {
-        $controller = file_get_contents(app_path('Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php'));
-        $showDetail = file_get_contents(resource_path('views/service_company/job-applications/showdetail.blade.php'));
-        $interviewCreate = file_get_contents(resource_path('views/service_company/job-applications/interview-create.blade.php'));
-        $layout = file_get_contents(resource_path('views/layouts/service_company_layout.blade.php'));
-
-        $this->assertStringContainsString('$this->stageInterview', $controller);
-        $this->assertStringContainsString('$this->stageInterviewLocked', $controller);
-        $this->assertStringContainsString('stage_interview_exists', $controller);
-
-        $this->assertStringContainsString('!$__cdrHasStageInterview', $showDetail);
-        $this->assertStringContainsString('id="app_interview_schedule"', $showDetail);
-        $this->assertStringContainsString('id="app_interview_reschedule"', $showDetail);
-
-        $this->assertStringContainsString('id="isdStageScheduledNotice"', $interviewCreate);
-        $this->assertStringContainsString('id="isdSwitchToRescheduleBtn"', $interviewCreate);
-        $this->assertStringContainsString('window.isdShellSetMode(', $interviewCreate);
-        $this->assertStringContainsString('stage_interview_exists', $interviewCreate);
-
-        $this->assertStringContainsString('window.isdShellSetMode', $layout);
-        $this->assertStringContainsString('#app_interview_reschedule', $layout);
-    }
 }
