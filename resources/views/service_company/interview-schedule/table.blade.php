@@ -9,6 +9,7 @@
 @extends('layouts.service_company_layout')
 
 @push('head-script')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
 /* ==========================================================================
    Interview Tracker — Page-Isolated Rule 20 Modern Card + Sub-Card Design
@@ -44,10 +45,42 @@
     overflow-x: hidden !important;
 }
 
+/* Apply Poppins across UI text while NEVER overriding icon fonts (Font Awesome / Tabler / Bootstrap Icons) */
 .it-dashboard,
-.it-dashboard * {
+.it-dashboard *:not(i):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.fad):not(.fa-solid):not(.fa-regular):not(.fa-brands):not([class*="fa-"]):not(.ti):not([class*="ti-"]):not(.bi):not([class*="bi-"]) {
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
     box-sizing: border-box !important;
+}
+
+.it-dashboard i,
+.it-dashboard [class*="fa-"],
+.it-dashboard [class*="ti-"],
+.it-dashboard [class*="bi-"] {
+    box-sizing: border-box !important;
+}
+
+.it-dashboard .fa,
+.it-dashboard .fas,
+.it-dashboard .fa-solid {
+    font-family: "Font Awesome 6 Free", "FontAwesome" !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+.it-dashboard .far,
+.it-dashboard .fa-regular {
+    font-family: "Font Awesome 6 Free", "FontAwesome" !important;
+    font-weight: 400 !important;
+    font-style: normal !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+.it-dashboard .fab,
+.it-dashboard .fa-brands {
+    font-family: "Font Awesome 6 Brands" !important;
+    font-weight: 400 !important;
+    font-style: normal !important;
 }
 
 .it-dashboard {
@@ -71,19 +104,19 @@
 }
 
 /* ==========================================================================
-   TIER 1: Pure White Top Header Toolbar Card
+   TIER 1: Pure White Top Header Toolbar Card (Client Tracker Design)
    ========================================================================== */
 .it-header-card {
     background: #ffffff !important;
-    border: 1px solid var(--it-border) !important;
-    border-radius: 10px !important;
-    padding: 12px 18px !important;
-    margin-bottom: 12px !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 14px 20px !important;
+    margin-bottom: 14px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 14px !important;
+    gap: 16px !important;
     flex-wrap: wrap !important;
     width: 100% !important;
 }
@@ -96,16 +129,17 @@
 }
 
 .it-header-icon {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 8px !important;
-    background: var(--it-primary-soft) !important;
-    color: var(--it-primary-deep) !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 10px !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    color: #2563eb !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 16px !important;
     flex-shrink: 0 !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06) !important;
 }
 
 .it-header-title-row {
@@ -116,11 +150,11 @@
 }
 
 .it-header-title {
-    font-size: 15px !important;
+    font-size: 20px !important;
     font-weight: 700 !important;
-    color: var(--it-text-main) !important;
-    line-height: 1.25 !important;
-    letter-spacing: -0.2px !important;
+    color: #0f172a !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.015em !important;
     margin: 0 !important;
 }
 
@@ -140,8 +174,8 @@
 }
 
 .it-header-sub {
-    font-size: 11.5px !important;
-    color: var(--it-text-muted) !important;
+    font-size: 12px !important;
+    color: #64748b !important;
     margin-top: 2px !important;
     line-height: 1.25 !important;
 }
@@ -153,91 +187,22 @@
     flex-wrap: wrap !important;
 }
 
-/* Search Sub-Card inside Tier 1 Right Corner */
-.it-search-subcard {
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 9px !important;
-    background: #f8fafc !important;
-    border: 1px solid var(--it-border) !important;
-    border-radius: 8px !important;
-    padding: 0 12px !important;
-    height: 36px !important;
-    width: 300px !important;
-    max-width: 100% !important;
-    transition: all 0.15s ease-in-out !important;
-}
-
-.it-search-subcard:hover {
-    background: #ffffff !important;
-    border-color: #cbd5e1 !important;
-}
-
-.it-search-subcard:focus-within {
-    background: #ffffff !important;
-    border-color: var(--it-primary) !important;
-    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
-}
-
-.it-search-subcard i.fa-search {
-    color: var(--it-text-light) !important;
-    font-size: 12.5px !important;
-    flex-shrink: 0 !important;
-}
-
-.it-search-subcard input {
-    border: none !important;
-    background: transparent !important;
-    outline: none !important;
-    box-shadow: none !important;
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    color: var(--it-text-main) !important;
-    width: 100% !important;
-    padding: 0 !important;
-    height: 34px !important;
-    line-height: 34px !important;
-}
-
-.it-search-subcard input::placeholder {
-    color: var(--it-text-light) !important;
-    font-size: 11.5px !important;
-    font-weight: 400 !important;
-}
-
-.it-search-clear {
-    background: none !important;
-    border: none !important;
-    color: var(--it-text-light) !important;
-    font-size: 11px !important;
-    padding: 2px 4px !important;
-    cursor: pointer !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-}
-
-.it-search-clear:hover {
-    color: var(--it-danger) !important;
-}
-
 .it-refresh-btn {
-    height: 36px !important;
-    padding: 0 14px !important;
-    border-radius: 8px !important;
-    border: 1px solid var(--it-border) !important;
+    height: 38px !important;
+    padding: 0 15px !important;
+    border-radius: 9px !important;
+    border: 1px solid #e2e8f0 !important;
     background: #ffffff !important;
-    color: var(--it-text-mid) !important;
-    font-size: 12px !important;
+    color: #0f172a !important;
+    font-size: 12.5px !important;
     font-weight: 600 !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 7px !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     white-space: nowrap !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
 }
 
 .it-refresh-btn:hover {
@@ -246,7 +211,7 @@
     color: var(--it-primary) !important;
 }
 
-.it-refresh-btn.is-syncing i {
+.it-refresh-btn.is-syncing svg {
     animation: itSpin 0.8s linear infinite;
 }
 
@@ -255,111 +220,635 @@
 }
 
 /* ==========================================================================
-   TIER 2: Executive KPI Metric Strip (4 Clickable Metric Cards)
+   TIER 2: Executive KPI Metric Strip (Copied from Client Tracker .cl-stat-grid)
    ========================================================================== */
-.it-kpi-grid {
+.it-stat-grid {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 10px !important;
-    margin-bottom: 12px !important;
+    margin-bottom: 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.it-stat-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 11px !important;
+    padding: 11px 13px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease !important;
+    min-width: 0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    text-align: left !important;
+    outline: none !important;
+}
+
+.it-stat-card:hover {
+    transform: translateY(-1px) !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+    text-decoration: none !important;
+}
+
+.it-stat-top {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 6px !important;
+    min-width: 0 !important;
     width: 100% !important;
 }
 
-.it-kpi-card {
-    background: #ffffff !important;
-    border: 1px solid var(--it-border) !important;
-    border-radius: 10px !important;
-    padding: 12px 14px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 11px !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-    transition: all 0.15s ease-in-out !important;
-    cursor: pointer !important;
-    min-width: 0 !important;
-    text-align: left !important;
-}
-
-.it-kpi-card:hover {
-    border-color: #cbd5e1 !important;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
-    transform: translateY(-1px);
-}
-
-.it-kpi-card.it-kpi-active {
-    border-color: var(--it-primary) !important;
-    background: #f0f9ff !important;
-    box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.18) !important;
-}
-
-.it-kpi-icon {
-    width: 38px !important;
-    height: 38px !important;
+.it-stat-icon {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
     border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 15px !important;
+    flex-shrink: 0 !important;
+    transition: all 0.15s ease !important;
+}
+
+.it-stat-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.it-stat-icon.blue   { background: #eff6ff !important; color: #2563eb !important; }
+.it-stat-icon.green  { background: #ecfdf5 !important; color: #16a34a !important; }
+.it-stat-icon.purple { background: #faf5ff !important; color: #9333ea !important; }
+.it-stat-icon.pink   { background: #fdf2f8 !important; color: #db2777 !important; }
+.it-stat-icon.red    { background: #fef2f2 !important; color: #dc2626 !important; }
+
+.it-stat-meta {
+    min-width: 0 !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+}
+
+.it-stat-num-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+}
+
+.it-stat-num {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+.it-stat-lbl {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
+}
+
+.it-stat-sub {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 2px !important;
+    width: 100% !important;
+}
+
+.it-stat-sub.blue   { color: #3b82f6 !important; }
+.it-stat-sub.green  { color: #16a34a !important; }
+.it-stat-sub.purple { color: #9333ea !important; }
+.it-stat-sub.pink   { color: #db2777 !important; }
+.it-stat-sub.red    { color: #dc2626 !important; }
+.it-stat-sub svg    { flex-shrink: 0 !important; width: 12px !important; height: 12px !important; }
+
+.it-kpi-pill-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 2px 7px !important;
+    background: #fef2f2 !important;
+    border: 1px solid #fecaca !important;
+    border-radius: 9999px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #dc2626 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+}
+
+.it-kpi-dot {
+    width: 5px !important;
+    height: 5px !important;
+    border-radius: 50% !important;
+    background: #ef4444 !important;
+    display: inline-block !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18) !important;
+}
+
+/* KPI Selected States (Color-matched exactly like Client Tracker .cl-card.active) */
+.it-stat-card.it-kpi-active[data-kpi-tab="this_month"] {
+    background: #eff6ff !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-tab="this_month"] .it-stat-icon {
+    background: #ffffff !important;
+    color: #2563eb !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-tab="this_month"] .it-stat-num { color: #1d4ed8 !important; }
+.it-stat-card.it-kpi-active[data-kpi-tab="this_month"] .it-stat-lbl { color: #1e40af !important; font-weight: 700 !important; }
+
+.it-stat-card.it-kpi-active[data-kpi-tab="today"] {
+    background: #ecfdf5 !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-tab="today"] .it-stat-icon {
+    background: #ffffff !important;
+    color: #059669 !important;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-tab="today"] .it-stat-num { color: #065f46 !important; }
+.it-stat-card.it-kpi-active[data-kpi-tab="today"] .it-stat-lbl { color: #047857 !important; font-weight: 700 !important; }
+
+.it-stat-card.it-kpi-active[data-kpi-tab="upcoming"] {
+    background: #faf5ff !important;
+    border-color: #c084fc !important;
+    box-shadow: 0 0 0 1.5px #9333ea, 0 4px 14px rgba(147, 51, 234, 0.12) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-tab="upcoming"] .it-stat-icon {
+    background: #ffffff !important;
+    color: #9333ea !important;
+    box-shadow: 0 1px 3px rgba(147, 51, 234, 0.15) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-tab="upcoming"] .it-stat-num { color: #6b21a8 !important; }
+.it-stat-card.it-kpi-active[data-kpi-tab="upcoming"] .it-stat-lbl { color: #7e22ce !important; font-weight: 700 !important; }
+
+.it-stat-card.it-kpi-active[data-kpi-tab="pending_feedback"] {
+    background: #fef2f2 !important;
+    border-color: #f87171 !important;
+    box-shadow: 0 0 0 1.5px #dc2626, 0 4px 14px rgba(220, 38, 38, 0.14) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-tab="pending_feedback"] .it-stat-icon {
+    background: #ffffff !important;
+    color: #dc2626 !important;
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.16) !important;
+}
+.it-stat-card.it-kpi-active[data-kpi-tab="pending_feedback"] .it-stat-num { color: #991b1b !important; }
+.it-stat-card.it-kpi-active[data-kpi-tab="pending_feedback"] .it-stat-lbl { color: #b91c1c !important; font-weight: 700 !important; }
+
+/* ==========================================================================
+   TIER 3: Unified Single White Card — Search, Mode, Sort & Reset (Client Tracker UX)
+   ========================================================================== */
+.it-toolbar-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+.it-filter-bar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+}
+
+/* Enterprise Micro-Search Box (Copied from Client Tracker .cl-search-box) */
+.it-search-box {
+    position: relative !important;
+    flex: 1 1 280px !important;
+    min-width: 240px !important;
+}
+
+.it-search-box svg.it-search-icon {
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 15px !important;
+    height: 15px !important;
+    color: #94a3b8 !important;
+    pointer-events: none !important;
+}
+
+.it-search-inp {
+    width: 100% !important;
+    height: 42px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 0 112px 0 38px !important;
+    font-size: 12.5px !important;
+    font-weight: 400 !important;
+    color: #0f172a !important;
+    background: #ffffff !important;
+    outline: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.it-search-inp:focus {
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 2.5px rgba(0, 158, 247, 0.15) !important;
+}
+
+.it-search-inp::placeholder {
+    color: #94a3b8 !important;
+}
+
+.it-search-right-affix {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.it-search-count-pill {
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    background: #eff6ff !important;
+    color: #009ef7 !important;
+    border: 1px solid #dbeafe !important;
+    padding: 2px 7px !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+.it-search-clear-btn {
+    border: none !important;
+    background: #e2e8f0 !important;
+    color: #64748b !important;
+    width: 19px !important;
+    height: 19px !important;
+    border-radius: 50% !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+    transition: all 0.15s ease !important;
+}
+
+.it-search-clear-btn:hover {
+    background: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+.it-search-kbd-hint {
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    color: #94a3b8 !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    padding: 2px 5px !important;
+    line-height: 1 !important;
+    user-select: none !important;
+}
+
+/* Shared Combobox Pill Trigger (Copied from Client Tracker .cl-act / .cl-sort-combobox-btn) */
+.it-mode-dropdown-wrapper,
+.it-sort-dropdown-wrapper {
+    position: relative !important;
+    display: inline-block !important;
     flex-shrink: 0 !important;
 }
 
-.it-kpi-icon.icon-blue    { background: #eff6ff !important; color: #2563eb !important; }
-.it-kpi-icon.icon-emerald { background: #ecfdf5 !important; color: #059669 !important; }
-.it-kpi-icon.icon-purple  { background: #f5f3ff !important; color: #7c3aed !important; }
-.it-kpi-icon.icon-red     { background: #fef2f2 !important; color: #dc2626 !important; }
+.it-combobox-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    height: 42px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 0 12px !important;
+    min-width: 155px !important;
+    max-width: 240px !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    transition: all 0.15s ease !important;
+    position: relative !important;
+    text-align: left !important;
+    outline: none !important;
+}
 
-.it-kpi-body {
+.it-combobox-btn:focus-visible {
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+}
+
+.it-combobox-btn:hover,
+.it-combobox-btn.active {
+    border-color: #cbd5e1 !important;
+    background: #f8fafc !important;
+}
+
+.it-combobox-btn.is-active-filter {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+}
+
+.it-combobox-btn.is-active-filter .it-pill-val,
+.it-combobox-btn.is-active-filter .it-pill-icon {
+    color: #009ef7 !important;
+    font-weight: 600 !important;
+}
+
+.it-combobox-btn.is-custom-sorted {
+    border-color: #cbd5e1 !important;
+    background: #f8fafc !important;
+}
+
+.it-combobox-btn.is-custom-sorted .it-pill-val {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+}
+
+.it-pill-icon {
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.it-pill-texts {
     display: flex !important;
     flex-direction: column !important;
+    line-height: 1.15 !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.it-pill-lbl {
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    text-transform: capitalize !important;
+}
+
+.it-pill-val {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.it-pill-clear {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 50% !important;
+    background: #bae6fd !important;
+    color: #0284c7 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    margin-left: 2px !important;
+    transition: all 0.12s ease !important;
+    flex-shrink: 0 !important;
+}
+
+.it-pill-clear:hover {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+}
+
+.it-pill-chevron {
+    color: #94a3b8 !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    margin-left: 2px !important;
+}
+
+/* Enterprise WAI-ARIA Popover Panels (Copied from Client Tracker .cl-act / .cl-sort-dropdown-panel) */
+.it-dropdown-panel {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    right: 0 !important;
+    width: 275px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06) !important;
+    z-index: 1055 !important;
+    display: none !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    padding: 6px 0 !important;
+    animation: itPopoverFadeIn 0.15s ease-out !important;
+}
+
+.it-sort-dropdown-panel {
+    width: 290px !important;
+}
+
+@keyframes itPopoverFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.it-dropdown-panel.show {
+    display: flex !important;
+}
+
+.it-pop-section-hdr {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #94a3b8 !important;
+    padding: 6px 14px 4px 14px !important;
+    user-select: none !important;
+}
+
+.it-pop-section-hdr:not(:first-child) {
+    border-top: 1px solid #f1f5f9 !important;
+    margin-top: 4px !important;
+    padding-top: 8px !important;
+}
+
+.it-pop-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 14px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: all 0.12s ease !important;
+    user-select: none !important;
+    outline: none !important;
+    gap: 8px !important;
+}
+
+.it-pop-item:hover,
+.it-pop-item:focus {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.it-pop-item.selected {
+    background: #eff6ff !important;
+    color: #009ef7 !important;
+    font-weight: 600 !important;
+}
+
+.it-pop-item-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
     min-width: 0 !important;
     flex: 1 !important;
 }
 
-.it-kpi-label {
-    font-size: 10.5px !important;
-    font-weight: 600 !important;
-    color: var(--it-text-muted) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.3px !important;
+.it-pop-item-icon {
+    color: #64748b !important;
+    flex-shrink: 0 !important;
+}
+
+.it-pop-item:hover .it-pop-item-icon,
+.it-pop-item.selected .it-pop-item-icon {
+    color: #009ef7 !important;
+}
+
+.it-pop-item-title {
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
 
-.it-kpi-val-row {
+.it-pop-item-right {
     display: flex !important;
-    align-items: baseline !important;
+    align-items: center !important;
     gap: 8px !important;
-    margin-top: 2px !important;
+    flex-shrink: 0 !important;
 }
 
-.it-kpi-num {
-    font-size: 18px !important;
+.it-pop-badge {
+    font-size: 10px !important;
     font-weight: 700 !important;
-    color: var(--it-text-main) !important;
-    line-height: 1.15 !important;
-    font-variant-numeric: tabular-nums !important;
+    padding: 1.5px 6.5px !important;
+    border-radius: 10px !important;
+    background: #f1f5f9 !important;
+    color: #64748b !important;
 }
 
-.it-kpi-card.it-kpi-active .it-kpi-num {
-    color: var(--it-primary) !important;
+.it-pop-item.selected .it-pop-badge {
+    background: #dbeafe !important;
+    color: #0284c7 !important;
 }
 
-.it-kpi-hint {
-    font-size: 10.5px !important;
-    font-weight: 500 !important;
-    color: var(--it-text-light) !important;
+.it-pop-check {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #009ef7 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    width: 14px !important;
+    justify-content: center !important;
+}
+
+.it-dot {
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+}
+.it-dot-all    { background: #64748b !important; }
+.it-dot-blue   { background: #3b82f6 !important; }
+.it-dot-purple { background: #8b5cf6 !important; }
+.it-dot-green  { background: #10b981 !important; }
+
+/* Reset Button (Unified with 42px Toolbar Pills) */
+.it-reset-btn {
+    height: 42px !important;
+    padding: 0 14px !important;
+    border-radius: 10px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    color: #475569 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    flex-shrink: 0 !important;
+}
+
+.it-reset-btn:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+.it-reset-btn.has-active-filters {
+    border-color: #bfdbfe !important;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+}
+
+.it-reset-count-badge {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 1px 6px !important;
+    border-radius: 999px !important;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    line-height: 1.3 !important;
 }
 
 /* ==========================================================================
-   TIER 3: Pure White Sub-Tabs & Quick Filters Card
+   TIER 4: Pure White Sub-Tabs Card
    ========================================================================== */
 .it-tabs-card {
     background: #ffffff !important;
-    border: 1px solid var(--it-border) !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
     padding: 8px 12px !important;
     margin-bottom: 12px !important;
@@ -440,83 +929,6 @@
 .it-tab-btn:not(.active) .it-tab-badge.badge-resched   { background: #e0f2fe !important; color: #0369a1 !important; }
 .it-tab-btn:not(.active) .it-tab-badge.badge-rejected  { background: #fee2e2 !important; color: #b91c1c !important; }
 
-.it-inline-filters {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    flex-wrap: wrap !important;
-    flex-shrink: 0 !important;
-}
-
-.it-filter-pill {
-    display: flex !important;
-    align-items: center !important;
-    background: #f8fafc !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 8px !important;
-    padding: 0 10px !important;
-    height: 34px !important;
-    gap: 6px !important;
-    transition: all 0.15s ease !important;
-}
-
-.it-filter-pill:hover {
-    background: #ffffff !important;
-    border-color: #94a3b8 !important;
-}
-
-.it-filter-pill:focus-within {
-    background: #ffffff !important;
-    border-color: var(--it-primary) !important;
-    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
-}
-
-.it-filter-pill-lbl {
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    color: var(--it-text-muted) !important;
-    white-space: nowrap !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-}
-
-.it-filter-select {
-    border: none !important;
-    background: transparent !important;
-    outline: none !important;
-    box-shadow: none !important;
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
-    color: var(--it-text-main) !important;
-    padding: 0 18px 0 0 !important;
-    height: 32px !important;
-    line-height: 32px !important;
-    cursor: pointer !important;
-}
-
-.it-reset-btn {
-    height: 34px !important;
-    padding: 0 11px !important;
-    border-radius: 8px !important;
-    border: 1px solid var(--it-border) !important;
-    background: #ffffff !important;
-    color: var(--it-primary-deep) !important;
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 5px !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    white-space: nowrap !important;
-}
-
-.it-reset-btn:hover {
-    background: var(--it-primary-soft) !important;
-    border-color: #bfdbfe !important;
-}
-
 /* ==========================================================================
    TIER 4: Master Primary Interview Cards & Discrete Sub-Cards Stream
    ========================================================================== */
@@ -548,10 +960,10 @@
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
 }
 
-/* Upper Discrete Sub-Cards Grid (5 Responsive Fractional Columns) */
+/* Upper Discrete Sub-Cards Grid (6 Responsive Fractional Columns) */
 .it-card-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.8fr) minmax(0, 1.55fr) minmax(0, 1.45fr) minmax(0, 1.65fr) !important;
+    grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.65fr) minmax(0, 1.48fr) minmax(0, 1.25fr) minmax(0, 1.52fr) minmax(0, 1.42fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -580,6 +992,9 @@
 }
 
 .it-subcard-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
     font-size: 9.5px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
@@ -588,6 +1003,13 @@
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    min-width: 0 !important;
+}
+
+.it-subcard-label i {
+    color: var(--it-text-light) !important;
+    font-size: 9.5px !important;
+    flex-shrink: 0 !important;
 }
 
 /* Sub-Card 1: Candidate + Follow-up */
@@ -660,12 +1082,19 @@
     display: flex !important;
     align-items: center !important;
     gap: 4px !important;
-    font-size: 10px !important;
-    color: var(--it-text-light) !important;
+    font-size: 10.5px !important;
+    color: var(--it-text-muted) !important;
     margin-top: 2px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+}
+
+.it-cand-submeta i {
+    font-size: 9.5px !important;
+    color: var(--it-text-light) !important;
+    flex-shrink: 0 !important;
 }
 
 .it-cand-submeta span {
@@ -775,16 +1204,23 @@
     line-height: 1.3 !important;
 }
 
-.it-scope-direct {
-    background: #ecfdf5 !important;
-    color: #059669 !important;
-    border: 1px solid #a7f3d0 !important;
+/* Standardized AppTracker Organization Classification Colors */
+.it-scope-myorg {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fcd34d !important;
 }
 
 .it-scope-internal {
-    background: #eff6ff !important;
-    color: #2563eb !important;
-    border: 1px solid #bfdbfe !important;
+    background: #dbeafe !important;
+    color: #1e40af !important;
+    border: 1px solid #93c5fd !important;
+}
+
+.it-scope-direct {
+    background: #d1fae5 !important;
+    color: #166534 !important;
+    border: 1px solid #6ee7b7 !important;
 }
 
 .it-job-body {
@@ -850,15 +1286,24 @@
     flex-wrap: wrap !important;
 }
 
-.it-round-pill {
+.it-emp-pill {
     font-size: 9.5px !important;
     font-weight: 600 !important;
-    padding: 1px 6px !important;
-    border-radius: 4px !important;
+    padding: 2px 7px !important;
+    border-radius: 5px !important;
     background: #ffffff !important;
     border: 1px solid var(--it-border) !important;
     color: var(--it-text-mid) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
     white-space: nowrap !important;
+    line-height: 1.3 !important;
+}
+
+.it-emp-pill i {
+    font-size: 9px !important;
+    color: var(--it-text-muted) !important;
 }
 
 .it-resched-tag {
@@ -929,18 +1374,38 @@
     font-size: 11px !important;
 }
 
-.it-time-tag {
+.it-platform-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3.5px !important;
     font-size: 8.5px !important;
     font-weight: 700 !important;
-    padding: 1px 5px !important;
+    padding: 1.5px 6px !important;
     border-radius: 4px !important;
-    text-transform: uppercase !important;
     white-space: nowrap !important;
+    max-width: 50% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex-shrink: 0 !important;
+    line-height: 1.3 !important;
 }
 
-.it-time-today    { background: #dcfce7 !important; color: #15803d !important; }
-.it-time-upcoming { background: #e0f2fe !important; color: #0369a1 !important; }
-.it-time-past     { background: #f1f5f9 !important; color: #64748b !important; }
+.it-platform-pill span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.it-platform-pill i {
+    font-size: 8.5px !important;
+    flex-shrink: 0 !important;
+}
+
+.it-plat-gmeet { background: #ecfdf5 !important; color: #047857 !important; border: 1px solid #a7f3d0 !important; }
+.it-plat-zoom  { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
+.it-plat-teams { background: #f5f3ff !important; color: #6d28d9 !important; border: 1px solid #ddd6fe !important; }
+.it-plat-phone { background: #f5f3ff !important; color: #7c3aed !important; border: 1px solid #ddd6fe !important; }
+.it-plat-f2f   { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
+.it-plat-video { background: #e0f2fe !important; color: #0369a1 !important; border: 1px solid #bae6fd !important; }
 
 .it-sched-time-row {
     display: flex !important;
@@ -1182,7 +1647,88 @@
     color: #38bdf8 !important;
 }
 
-/* Sub-Card 5: Evaluation & Feedback */
+/* Sub-Card 5: Ownership & Recruiter (Matches AppTracker .aptk-subcard-owner) */
+.it-owner-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+}
+
+.it-owner-name {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: var(--it-text-main) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+}
+
+.it-owner-name span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.it-owner-name i {
+    color: var(--it-primary) !important;
+    font-size: 11.5px !important;
+    flex-shrink: 0 !important;
+}
+
+.it-owner-company {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    color: var(--it-text-muted) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    margin-top: 1px !important;
+}
+
+.it-owner-company span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.it-owner-company i {
+    font-size: 9.5px !important;
+    color: var(--it-text-light) !important;
+    flex-shrink: 0 !important;
+}
+
+.it-owner-submitted {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 10px !important;
+    color: var(--it-text-light) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    margin-top: 1px !important;
+}
+
+.it-owner-submitted span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.it-owner-submitted i {
+    font-size: 9.5px !important;
+    color: var(--it-text-light) !important;
+    flex-shrink: 0 !important;
+}
+
+/* Sub-Card 6: Evaluation & Feedback */
 .it-eval-pill {
     font-size: 8.5px !important;
     font-weight: 700 !important;
@@ -1514,17 +2060,59 @@
    15.6" Screen Fit & Small-Screen Responsive Breakpoints
    ========================================================================== */
 @media (max-width: 1440px) {
-    .it-card-grid {
-        grid-template-columns: minmax(0, 2fr) minmax(0, 1.75fr) minmax(0, 1.55fr) minmax(0, 1.4fr) minmax(0, 1.6fr) !important;
-        gap: 7px !important;
+    .it-stat-grid {
+        gap: 8px !important;
+    }
+    .it-stat-card {
         padding: 9px 11px !important;
     }
+    .it-stat-icon {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        border-radius: 7px !important;
+    }
+    .it-stat-icon svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+    .it-stat-num {
+        font-size: 18px !important;
+    }
+    .it-stat-lbl {
+        font-size: 10.5px !important;
+    }
+    .it-stat-sub {
+        font-size: 9.5px !important;
+    }
+    .it-filter-bar {
+        gap: 8px !important;
+    }
+    .it-combobox-btn,
+    .it-reset-btn {
+        height: 40px !important;
+    }
+    .it-combobox-btn {
+        min-width: 138px !important;
+        padding: 0 10px !important;
+    }
+    .it-search-inp {
+        height: 40px !important;
+        padding: 0 78px 0 36px !important;
+    }
+    .it-search-kbd-hint {
+        display: none !important;
+    }
+    .it-card-grid {
+        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.6fr) minmax(0, 1.45fr) minmax(0, 1.2fr) minmax(0, 1.48fr) minmax(0, 1.38fr) !important;
+        gap: 7px !important;
+        padding: 9px 10px !important;
+    }
     .it-subcard { padding: 7px 9px !important; }
-    .it-search-subcard { width: 250px !important; }
 }
 
 @media (max-width: 1200px) {
-    .it-kpi-grid {
+    .it-stat-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
     .it-card-grid {
@@ -1535,19 +2123,17 @@
 
 @media (max-width: 768px) {
     .it-header-card { padding: 12px 14px !important; }
-    .it-header-right { width: 100% !important; }
-    .it-search-subcard { flex: 1 1 auto !important; width: auto !important; }
-    .it-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .it-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 7px !important; }
     .it-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .it-search-box { min-width: 100% !important; }
 }
 
 @media (max-width: 520px) {
-    .it-kpi-grid { grid-template-columns: minmax(0, 1fr) !important; }
+    .it-stat-grid { grid-template-columns: minmax(0, 1fr) !important; }
     .it-card-grid { grid-template-columns: minmax(0, 1fr) !important; }
 }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
 @endpush
 
 @section('content')
@@ -1564,12 +2150,18 @@
       <div class="it-dashboard" id="interviewTrackerDashboard">
 
         <!-- ══════════════════════════════════════════════════════════════
-             TIER 1: TOP HEADER TOOLBAR CARD (Title + Dynamic Search + Sync)
+             TIER 1: TOP HEADER CARD (Title + Count Badge + Live Sync)
              ══════════════════════════════════════════════════════════════ -->
         <div class="it-header-card">
           <div class="it-header-left">
             <div class="it-header-icon">
-              <i class="fas fa-calendar-check"></i>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+                <path d="m9 16 2 2 4-4"/>
+              </svg>
             </div>
             <div>
               <div class="it-header-title-row">
@@ -1581,80 +2173,343 @@
           </div>
 
           <div class="it-header-right">
-            <div class="it-search-subcard">
-              <i class="fas fa-search"></i>
-              <input type="text" id="kt_tagify_2" placeholder="Search candidate, job, client, recruiter..." autocomplete="off">
-              <span id="loader_search" class="loader_search hidden_search" style="display:none;flex-shrink:0;"></span>
-              <button type="button" class="it-search-clear" id="itSearchClear" style="display:none;" title="Clear search">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
             <button type="button" class="it-refresh-btn" id="itRefreshBtn" onclick="forceSyncInterviewTracker()" title="Sync live interviews">
-              <i class="fas fa-sync-alt"></i>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
               <span>Sync</span>
             </button>
           </div>
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════
-             TIER 2: EXECUTIVE KPI METRIC STRIP (4 Interactive Filter Cards)
+             TIER 2: CLIENT TRACKER KPI STAT CARDS (4 Interactive Metric Cards)
              ══════════════════════════════════════════════════════════════ -->
-        <div class="it-kpi-grid" id="statsGrid">
-          <button type="button" class="it-kpi-card" data-kpi-tab="this_month" onclick="filterByKpi('this_month')">
-            <div class="it-kpi-icon icon-blue">
-              <i class="far fa-calendar-alt"></i>
-            </div>
-            <div class="it-kpi-body">
-              <div class="it-kpi-label">Interviews This Month</div>
-              <div class="it-kpi-val-row">
-                <span class="it-kpi-num" id="stat-interview-month">0</span>
-                <span class="it-kpi-hint">{{ now()->format('M Y') }}</span>
+        <div class="it-stat-grid" id="statsGrid">
+          {{-- KPI 1: Interviews This Month --}}
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-tab="this_month" onclick="filterByKpi('this_month')">
+            <div class="it-stat-top">
+              <div class="it-stat-icon blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
               </div>
+              <div class="it-stat-meta">
+                <div class="it-stat-num-row">
+                  <div class="it-stat-num" id="stat-interview-month">0</div>
+                </div>
+                <div class="it-stat-lbl">Interviews This Month</div>
+              </div>
+            </div>
+            <div class="it-stat-sub blue">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+              <span>{{ now()->format('M Y') }} volume</span>
             </div>
           </button>
 
-          <button type="button" class="it-kpi-card" data-kpi-tab="today" onclick="filterByKpi('today')">
-            <div class="it-kpi-icon icon-emerald">
-              <i class="fas fa-calendar-day"></i>
-            </div>
-            <div class="it-kpi-body">
-              <div class="it-kpi-label">Today's Interviews</div>
-              <div class="it-kpi-val-row">
-                <span class="it-kpi-num" id="stat-today">0</span>
-                <span class="it-kpi-hint">{{ now()->format('d M') }}</span>
+          {{-- KPI 2: Today's Interviews --}}
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-tab="today" onclick="filterByKpi('today')">
+            <div class="it-stat-top">
+              <div class="it-stat-icon green">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                  <circle cx="12" cy="15" r="2"/>
+                </svg>
               </div>
+              <div class="it-stat-meta">
+                <div class="it-stat-num-row">
+                  <div class="it-stat-num" id="stat-today">0</div>
+                </div>
+                <div class="it-stat-lbl">Today's Interviews</div>
+              </div>
+            </div>
+            <div class="it-stat-sub green">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>{{ now()->format('d M') }} schedule</span>
             </div>
           </button>
 
-          <button type="button" class="it-kpi-card" data-kpi-tab="upcoming" onclick="filterByKpi('upcoming')">
-            <div class="it-kpi-icon icon-purple">
-              <i class="far fa-clock"></i>
-            </div>
-            <div class="it-kpi-body">
-              <div class="it-kpi-label">Upcoming Interviews</div>
-              <div class="it-kpi-val-row">
-                <span class="it-kpi-num" id="stat-upcoming">0</span>
-                <span class="it-kpi-hint">Scheduled ahead</span>
+          {{-- KPI 3: Upcoming Interviews --}}
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-tab="upcoming" onclick="filterByKpi('upcoming')">
+            <div class="it-stat-top">
+              <div class="it-stat-icon purple">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
               </div>
+              <div class="it-stat-meta">
+                <div class="it-stat-num-row">
+                  <div class="it-stat-num" id="stat-upcoming">0</div>
+                </div>
+                <div class="it-stat-lbl">Upcoming Interviews</div>
+              </div>
+            </div>
+            <div class="it-stat-sub purple">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14"/>
+                <path d="m12 5 7 7-7 7"/>
+              </svg>
+              <span>Scheduled ahead</span>
             </div>
           </button>
 
-          <button type="button" class="it-kpi-card" data-kpi-tab="pending_feedback" onclick="filterByKpi('pending_feedback')">
-            <div class="it-kpi-icon icon-red">
-              <i class="far fa-comment-dots"></i>
-            </div>
-            <div class="it-kpi-body">
-              <div class="it-kpi-label">Feedback Pending</div>
-              <div class="it-kpi-val-row">
-                <span class="it-kpi-num" id="stat-feedback-pending">0</span>
-                <span class="it-kpi-hint">Action required</span>
+          {{-- KPI 4: Feedback Pending --}}
+          <button type="button" class="it-stat-card it-stat-filter" data-kpi-tab="pending_feedback" onclick="filterByKpi('pending_feedback')">
+            <div class="it-stat-top">
+              <div class="it-stat-icon red">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
               </div>
+              <div class="it-stat-meta">
+                <div class="it-stat-num-row">
+                  <div class="it-stat-num" id="stat-feedback-pending">0</div>
+                  <span class="it-kpi-pill-badge" id="badge_itPendingAction" style="display:none;">
+                    <span class="it-kpi-dot"></span>
+                    <span>Action due</span>
+                  </span>
+                </div>
+                <div class="it-stat-lbl">Feedback Pending</div>
+              </div>
+            </div>
+            <div class="it-stat-sub red">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span id="span_itPendingSub">Evaluation awaiting review</span>
             </div>
           </button>
         </div>
 
         <!-- ══════════════════════════════════════════════════════════════
-             TIER 3: SUB-TABS & FILTERS CARD (Pure White #ffffff)
+             TIER 3: UNIFIED SEARCH, MODE, SORT & RESET CARD (Copied from Client Tracker)
+             ══════════════════════════════════════════════════════════════ -->
+        <div class="it-toolbar-card">
+          <div class="it-filter-bar">
+            {{-- Enterprise Micro-Search Box --}}
+            <div class="it-search-box" id="itSearchBoxWrapper">
+              <svg class="it-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                class="it-search-inp"
+                name="inputJobSearch"
+                value=""
+                placeholder="Search interviews by candidate, job, client, recruiter, interviewer..."
+                id="kt_tagify_2"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="Search interview listing"
+                role="searchbox"
+              />
+              <div class="it-search-right-affix">
+                <span class="it-search-count-pill" id="itSearchMatchCount" style="display:none;" title="Matching interviews count">0 matches</span>
+                <button type="button" class="it-search-clear-btn" id="itSearchClear" title="Clear search (Esc)" aria-label="Clear search" style="display:none;" onclick="clearInterviewSearchInput(event)">
+                  &#10005;
+                </button>
+                <kbd class="it-search-kbd-hint" id="itSearchKbdHint" title="Press Ctrl+K to search">Ctrl+K</kbd>
+                <span id="loader_search" class="loader_search hidden_search" style="display:none;"></span>
+              </div>
+            </div>
+
+            {{-- Filter 1: Interview Mode Combobox Popover (Client Tracker UX) --}}
+            <div class="it-mode-dropdown-wrapper" id="itModeDropdownWrapper">
+              <button type="button" class="it-combobox-btn it-mode-combobox-btn" id="itModeBtn" onclick="toggleItModeDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="itModeDropdownPanel" title="Filter by Interview Mode">
+                <div class="it-pill-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polygon points="23 7 16 12 23 17 23 7"/>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                  </svg>
+                </div>
+                <div class="it-pill-texts">
+                  <span class="it-pill-lbl">Mode</span>
+                  <span class="it-pill-val" id="itModeDisplay">All Modes</span>
+                </div>
+                <div class="it-pill-clear" id="itModeClearBtn" onclick="clearItModeFilter(event)" title="Reset Mode" style="display:none;">&#10005;</div>
+                <div class="it-pill-chevron">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </button>
+
+              <div class="it-dropdown-panel it-mode-dropdown-panel" id="itModeDropdownPanel" role="listbox" aria-labelledby="itModeBtn" tabindex="-1">
+                <div class="it-pop-section-hdr">Interview Mode</div>
+                <div class="it-pop-item selected" id="mode-opt-All" data-mode-val="All" onclick="selectItModeOption('All', 'All Modes', event)" role="option" aria-selected="true" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-all"></span>
+                    <span class="it-pop-item-title">All Modes</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-check">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="mode-opt-2" data-mode-val="2" onclick="selectItModeOption('2', 'Video Call', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-blue"></span>
+                    <span class="it-pop-item-title">Video Call</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Online</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="mode-opt-1" data-mode-val="1" onclick="selectItModeOption('1', 'Telecon', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-purple"></span>
+                    <span class="it-pop-item-title">Telecon (Phone)</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Voice</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="mode-opt-3" data-mode-val="3" onclick="selectItModeOption('3', 'Face to Face', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-green"></span>
+                    <span class="it-pop-item-title">Face to Face</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">In-Person</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+              </div>
+
+              <input type="hidden" id="itModeFilter" name="mode_filter" value="All" />
+            </div>
+
+            {{-- Filter 2: Enterprise Metronic Sort Combobox Popover (Client Tracker UX) --}}
+            <div class="it-sort-dropdown-wrapper" id="itSortDropdownWrapper">
+              <button type="button" class="it-combobox-btn it-sort-combobox-btn" id="itSortBtn" onclick="toggleItSortDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="itSortDropdownPanel" title="Sort Interview Listing">
+                <div class="it-pill-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="7" y1="4" x2="7" y2="20"/>
+                    <polyline points="3 8 7 4 11 8"/>
+                    <line x1="17" y1="4" x2="17" y2="20"/>
+                    <polyline points="13 16 17 20 21 16"/>
+                  </svg>
+                </div>
+                <div class="it-pill-texts">
+                  <span class="it-pill-lbl">Sort</span>
+                  <span class="it-pill-val" id="itSortDisplay">Newest Interviews</span>
+                </div>
+                <div class="it-pill-chevron">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </button>
+
+              <div class="it-dropdown-panel it-sort-dropdown-panel" id="itSortDropdownPanel" role="listbox" aria-labelledby="itSortBtn" tabindex="-1">
+                <div class="it-pop-section-hdr">Chronological</div>
+                <div class="it-pop-item selected" id="sort-opt-default" data-sort-val="" onclick="selectItSortOption('', 'Newest Interviews', event)" role="option" aria-selected="true" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <svg class="it-pop-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span class="it-pop-item-title">Newest Interviews</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Newest &#8595;</span>
+                    <span class="it-pop-check">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="sort-opt-4" data-sort-val="4" onclick="selectItSortOption('4', 'Soonest Scheduled', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <svg class="it-pop-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span class="it-pop-item-title">Soonest Scheduled</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Soonest &#8593;</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="sort-opt-3" data-sort-val="3" onclick="selectItSortOption('3', 'Latest Scheduled', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <svg class="it-pop-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span class="it-pop-item-title">Latest Scheduled</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Latest &#8595;</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="sort-opt-2" data-sort-val="2" onclick="selectItSortOption('2', 'Oldest Created', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <svg class="it-pop-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span class="it-pop-item-title">Oldest Created</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Oldest &#8593;</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+
+                <div class="it-pop-section-hdr">Action &amp; Schedule Focus</div>
+                <div class="it-pop-item" id="sort-opt-1" data-sort-val="1" onclick="selectItSortOption('1', 'Today\'s Schedule', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <svg class="it-pop-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M12 14h.01"/></svg>
+                    <span class="it-pop-item-title">Today's Interviews ({{ now()->format('d M Y') }})</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Today</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="sort-opt-fb" data-sort-val="Feedback Pending" onclick="selectItSortOption('Feedback Pending', 'Feedback Pending', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <svg class="it-pop-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span class="it-pop-item-title">Feedback Pending</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Action</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="sort-opt-up" data-sort-val="Interview Pending" onclick="selectItSortOption('Interview Pending', 'Upcoming Interviews', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <svg class="it-pop-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    <span class="it-pop-item-title">Upcoming Interviews</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Upcoming</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+              </div>
+
+              <input type="hidden" id="sortingfilter" name="sortingfilter" value="" />
+            </div>
+
+            {{-- Filter Reset Button --}}
+            <button type="button" class="it-reset-btn" id="itResetFiltersBtn" onclick="resetFilters()" title="Reset search, tabs, mode, and sort filters">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="1 4 1 10 7 10"/>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+              </svg>
+              <span>Reset</span>
+              <span class="it-reset-count-badge" id="itActiveFilterCount" style="display:none;">0</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             TIER 4: STATUS SUB-TABS CARD (Pure White #ffffff)
              ══════════════════════════════════════════════════════════════ -->
         <div class="it-tabs-card">
           <div class="it-tabs-group">
@@ -1685,35 +2540,6 @@
             <button type="button" class="it-tab-btn" data-tab="rejected" onclick="filterByTab('rejected')">
               <span>Rejected</span>
               <span class="it-tab-badge badge-rejected" id="tab-count-rejected">0</span>
-            </button>
-          </div>
-
-          <div class="it-inline-filters">
-            <div class="it-filter-pill">
-              <span class="it-filter-pill-lbl"><i class="fas fa-video text-muted"></i> Mode:</span>
-              <select id="itModeFilter" class="form-select form-select-sm it-filter-select">
-                <option value="All" selected>All Modes</option>
-                <option value="2">Video Call</option>
-                <option value="1">Telecon</option>
-                <option value="3">Face to Face</option>
-              </select>
-            </div>
-
-            <div class="it-filter-pill">
-              <span class="it-filter-pill-lbl"><i class="fas fa-sort-amount-down text-muted"></i> Sort:</span>
-              <select id="sortingfilter" class="form-select form-select-sm it-filter-select">
-                <option value="" selected>Newest Interviews</option>
-                <option value="1">Today's Interviews ({{ now()->format('d M Y') }})</option>
-                <option value="4">Soonest Scheduled</option>
-                <option value="3">Latest Scheduled</option>
-                <option value="Feedback Pending">Feedback Pending</option>
-                <option value="Interview Pending">Upcoming Interviews</option>
-              </select>
-            </div>
-
-            <button type="button" class="it-reset-btn" onclick="resetFilters()" title="Reset search, tabs, and filters">
-              <i class="fas fa-undo-alt"></i>
-              <span>Reset</span>
             </button>
           </div>
         </div>
@@ -1861,36 +2687,305 @@
 @push('footer-script')
 
 <script>
-// ── Debounced Search, Clear & Filter Triggers ──────────────────────────────
+// ── Enterprise Search, Mode & Sort Combobox Engine (Client Tracker UX Parity) ──
 var itSearchDebounceTimer = null;
+var itLastTotalCount = 0;
+
+function clearInterviewSearchInput(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    var $inp = $('#kt_tagify_2');
+    $inp.val('');
+    $('#itSearchClear').hide();
+    $('#itSearchMatchCount').hide();
+    $('#itSearchKbdHint').show();
+    updateItToolbarIndicators();
+    itCurrentPage = 1;
+    fetchCandidates(1, '');
+    $inp.focus();
+}
+window.clearInterviewSearchInput = clearInterviewSearchInput;
+
+function updateItToolbarIndicators() {
+    var count = 0;
+    var q = ($('#kt_tagify_2').val() || '').trim();
+    var m = $('#itModeFilter').val() || 'All';
+    var s = $('#sortingfilter').val() || '';
+    if (q.length > 0) count++;
+    if (m !== 'All') count++;
+    if (s !== '') count++;
+    if (typeof activeTab !== 'undefined' && activeTab !== 'all') count++;
+
+    var $btn = $('#itResetFiltersBtn');
+    var $badge = $('#itActiveFilterCount');
+    if (count > 0) {
+        $btn.addClass('has-active-filters');
+        $badge.text(count).show();
+    } else {
+        $btn.removeClass('has-active-filters');
+        $badge.hide();
+    }
+}
+
+function closeItModeDropdown() {
+    $('#itModeDropdownPanel').removeClass('show');
+    $('#itModeBtn').removeClass('active').attr('aria-expanded', 'false');
+}
+
+function closeItSortDropdown() {
+    $('#itSortDropdownPanel').removeClass('show');
+    $('#itSortBtn').removeClass('active').attr('aria-expanded', 'false');
+}
+
+function toggleItModeDropdown(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    var $panel = $('#itModeDropdownPanel');
+    var $btn = $('#itModeBtn');
+    var isVisible = $panel.hasClass('show');
+
+    if (isVisible) {
+        closeItModeDropdown();
+    } else {
+        closeItSortDropdown();
+        $panel.addClass('show');
+        $btn.addClass('active').attr('aria-expanded', 'true');
+        var $selected = $panel.find('.it-pop-item.selected');
+        if ($selected.length) {
+            $selected.focus();
+        } else {
+            $panel.find('.it-pop-item').first().focus();
+        }
+    }
+}
+window.toggleItModeDropdown = toggleItModeDropdown;
+
+function selectItModeOption(val, text, e, skipFetch) {
+    if (e && e.stopPropagation) { e.stopPropagation(); }
+    closeItModeDropdown();
+
+    var canonical = String(val || 'All');
+    var modeLabels = { 'All': 'All Modes', '2': 'Video Call', '1': 'Telecon', '3': 'Face to Face' };
+    var displayText = text || modeLabels[canonical] || 'All Modes';
+
+    $('#itModeDisplay').text(displayText);
+    $('#itModeFilter').val(canonical);
+    filterValues.mode = canonical;
+
+    $('#itModeDropdownPanel .it-pop-item').removeClass('selected').attr('aria-selected', 'false')
+        .find('.it-pop-check').hide();
+    $('#itModeDropdownPanel .it-pop-item[data-mode-val="' + canonical + '"]')
+        .addClass('selected').attr('aria-selected', 'true').find('.it-pop-check').show();
+
+    if (canonical !== 'All') {
+        $('#itModeBtn').addClass('is-active-filter');
+        $('#itModeClearBtn').show();
+    } else {
+        $('#itModeBtn').removeClass('is-active-filter');
+        $('#itModeClearBtn').hide();
+    }
+
+    updateItToolbarIndicators();
+    if (skipFetch) return;
+
+    itCurrentPage = 1;
+    fetchCandidates(1, $('#kt_tagify_2').val());
+}
+window.selectItModeOption = selectItModeOption;
+
+function clearItModeFilter(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    selectItModeOption('All', 'All Modes', null, false);
+}
+window.clearItModeFilter = clearItModeFilter;
+
+function toggleItSortDropdown(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    var $panel = $('#itSortDropdownPanel');
+    var $btn = $('#itSortBtn');
+    var isVisible = $panel.hasClass('show');
+
+    if (isVisible) {
+        closeItSortDropdown();
+    } else {
+        closeItModeDropdown();
+        $panel.addClass('show');
+        $btn.addClass('active').attr('aria-expanded', 'true');
+        var $selected = $panel.find('.it-pop-item.selected');
+        if ($selected.length) {
+            $selected.focus();
+        } else {
+            $panel.find('.it-pop-item').first().focus();
+        }
+    }
+}
+window.toggleItSortDropdown = toggleItSortDropdown;
+
+function sortDomInterviewsLocally(sortVal) {
+    // Only pure chronological sorts can reorder in-place; filter-based sorts ("1", "Feedback Pending", "Interview Pending") need ES query
+    if (sortVal === '1' || sortVal === 'Feedback Pending' || sortVal === 'Interview Pending') {
+        return false;
+    }
+    var $container = $('#Interview-trackers');
+    var $cards = $container.children('.it-card').get();
+    if (!$cards || $cards.length <= 1) return false;
+    if (itLastTotalCount > itCurrentSize || itLastTotalCount > $cards.length) {
+        return false; // Multi-page dataset: defer to Elasticsearch query
+    }
+
+    $cards.sort(function(a, b) {
+        var idA = parseInt($(a).attr('data-interview-id') || '0', 10);
+        var idB = parseInt($(b).attr('data-interview-id') || '0', 10);
+        var schedA = parseInt($(a).attr('data-schedule-ts') || '0', 10);
+        var schedB = parseInt($(b).attr('data-schedule-ts') || '0', 10);
+        var createdA = parseInt($(a).attr('data-created-ts') || '0', 10);
+        var createdB = parseInt($(b).attr('data-created-ts') || '0', 10);
+
+        if (sortVal === '4') {
+            return schedA !== schedB ? (schedA - schedB) : (idA - idB);
+        } else if (sortVal === '3') {
+            return schedB !== schedA ? (schedB - schedA) : (idB - idA);
+        } else if (sortVal === '2') {
+            return createdA !== createdB ? (createdA - createdB) : (idA - idB);
+        } else {
+            return schedB !== schedA ? (schedB - schedA) : (idB - idA);
+        }
+    });
+
+    requestAnimationFrame(function() {
+        $.each($cards, function(idx, el) {
+            $container.append(el);
+        });
+    });
+    return true;
+}
+
+function selectItSortOption(val, text, e, skipFetch) {
+    if (e && e.stopPropagation) { e.stopPropagation(); }
+    closeItSortDropdown();
+
+    var canonical = String(val ?? '');
+    var sortLabels = {
+        '': 'Newest Interviews',
+        '4': 'Soonest Scheduled',
+        '3': 'Latest Scheduled',
+        '2': 'Oldest Created',
+        '1': "Today's Schedule",
+        'Feedback Pending': 'Feedback Pending',
+        'Interview Pending': 'Upcoming Interviews'
+    };
+    var displayText = text || sortLabels[canonical] || 'Newest Interviews';
+
+    $('#itSortDisplay').text(displayText);
+    $('#sortingfilter').val(canonical);
+
+    $('#itSortDropdownPanel .it-pop-item').removeClass('selected').attr('aria-selected', 'false')
+        .find('.it-pop-check').hide();
+    $('#itSortDropdownPanel .it-pop-item[data-sort-val="' + canonical + '"]')
+        .addClass('selected').attr('aria-selected', 'true').find('.it-pop-check').show();
+
+    if (canonical !== '') {
+        $('#itSortBtn').addClass('is-custom-sorted');
+    } else {
+        $('#itSortBtn').removeClass('is-custom-sorted');
+    }
+
+    updateItToolbarIndicators();
+    if (skipFetch) return;
+
+    if (sortDomInterviewsLocally(canonical)) {
+        return;
+    }
+
+    itCurrentPage = 1;
+    fetchCandidates(1, $('#kt_tagify_2').val());
+}
+window.selectItSortOption = selectItSortOption;
 
 $(document).ready(function() {
-    $('#kt_tagify_2').on('input', function() {
-        var val = $(this).val() || '';
-        $('#itSearchClear').toggle(val.length > 0);
+    var $searchInp = $('#kt_tagify_2');
+
+    $searchInp.on('input', function() {
+        var queryVal = ($(this).val() || '').trim();
+        if (queryVal.length > 0) {
+            $('#itSearchClear').show();
+            $('#itSearchKbdHint').hide();
+        } else {
+            $('#itSearchClear').hide();
+            $('#itSearchMatchCount').hide();
+            $('#itSearchKbdHint').show();
+        }
+        updateItToolbarIndicators();
+
         clearTimeout(itSearchDebounceTimer);
         itSearchDebounceTimer = setTimeout(function() {
             itCurrentPage = 1;
             fetchCandidates(1);
-        }, 300);
+        }, 180);
     });
 
-    $('#itSearchClear').on('click', function() {
-        $('#kt_tagify_2').val('');
-        $(this).hide();
-        itCurrentPage = 1;
-        fetchCandidates(1);
+    $searchInp.on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            clearInterviewSearchInput();
+            $(this).blur();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(itSearchDebounceTimer);
+            itCurrentPage = 1;
+            fetchCandidates(1);
+        }
     });
 
-    $('#sortingfilter').on('change', function() {
-        itCurrentPage = 1;
-        fetchCandidates(1);
+    // Global keyboard shortcut: Ctrl+K / Cmd+K to focus search (Client Tracker parity)
+    $(document).on('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === 'k') {
+            var activeEl = document.activeElement;
+            var isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+            if (!isInput || activeEl.id === 'kt_tagify_2') {
+                e.preventDefault();
+                $searchInp.focus().select();
+            }
+        } else if (e.key === 'Escape') {
+            if ($('#itModeDropdownPanel').hasClass('show')) {
+                closeItModeDropdown();
+                $('#itModeBtn').focus();
+            }
+            if ($('#itSortDropdownPanel').hasClass('show')) {
+                closeItSortDropdown();
+                $('#itSortBtn').focus();
+            }
+        }
     });
 
-    $('#itModeFilter').on('change', function() {
-        filterValues.mode = $(this).val() || 'All';
-        itCurrentPage = 1;
-        fetchCandidates(1);
+    // Keyboard navigation inside WAI-ARIA combobox panels
+    $('#itModeDropdownPanel, #itSortDropdownPanel').on('keydown', '.it-pop-item', function(e) {
+        var $items = $(this).closest('.it-dropdown-panel').find('.it-pop-item');
+        var idx = $items.index(this);
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            $items.eq((idx + 1) % $items.length).focus();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            $items.eq((idx - 1 + $items.length) % $items.length).focus();
+        } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            $(this).trigger('click');
+        }
+    });
+
+    // Close popovers on outside click
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#itModeDropdownWrapper').length) {
+            closeItModeDropdown();
+        }
+        if (!$(e.target).closest('#itSortDropdownWrapper').length) {
+            closeItSortDropdown();
+        }
     });
 });
 
@@ -2089,9 +3184,10 @@ function syncActiveKpiAndTabs(tab) {
     document.querySelectorAll('.it-tab-btn').forEach(function(btn) {
         btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
     });
-    document.querySelectorAll('.it-kpi-card').forEach(function(card) {
+    document.querySelectorAll('.it-stat-card').forEach(function(card) {
         card.classList.toggle('it-kpi-active', card.getAttribute('data-kpi-tab') === tab);
     });
+    updateItToolbarIndicators();
 }
 
 function filterByTab(tab) {
@@ -2111,13 +3207,15 @@ function resetFilters() {
     if (window.JeroInterviewScheduleLocalStore) {
         window.JeroInterviewScheduleLocalStore.purge();
     }
-    $('#sortingfilter').val('');
-    $('#itModeFilter').val('All');
-    filterValues.mode = 'All';
+    selectItSortOption('', 'Newest Interviews', null, true);
+    selectItModeOption('All', 'All Modes', null, true);
     activeTab = 'all';
     syncActiveKpiAndTabs('all');
     $('#kt_tagify_2').val('');
     $('#itSearchClear').hide();
+    $('#itSearchMatchCount').hide();
+    $('#itSearchKbdHint').show();
+    updateItToolbarIndicators();
     itCurrentPage = 1;
     fetchCandidates(1, '', true);
 }
@@ -2145,7 +3243,7 @@ var itCurrentXhr = null;
 // ── JeroInterviewScheduleLocalStore — Native Browser IndexedDB Engine ────────
 const JeroInterviewScheduleLocalStore = (function() {
     const DB_NAME = 'jero_interview_schedule_db';
-    const DB_VERSION = 2; // Bumped for Card + Sub-Card HTML schema
+    const DB_VERSION = 4; // Bumped for 6-subcard Ownership + Company + EmploymentType + Platform layout
     const CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
     const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
     const CACHE_TTL_MS = 15 * 60 * 1000;
@@ -2384,6 +3482,8 @@ function renderInterviewData(response) {
     $('#Interview-trackers').html(response.html);
     $('#pagination').html(response.pagination);
 
+    itLastTotalCount = parseInt(response.total ?? 0, 10) || 0;
+
     if (response.from !== undefined && response.to !== undefined && response.total !== undefined) {
         $('#showingText').text(
             'Showing ' + response.from + ' to ' + response.to + ' of ' + response.total + ' interviews'
@@ -2392,11 +3492,31 @@ function renderInterviewData(response) {
         $('#showingText').text('Showing ' + response.total + ' interviews');
     }
 
+    var trimmedQuery = ($('#kt_tagify_2').val() || '').trim();
+    if (trimmedQuery.length > 0) {
+        var matchCount = itLastTotalCount;
+        $('#itSearchMatchCount').text(matchCount + (matchCount === 1 ? ' match' : ' matches')).show();
+        $('#itSearchClear').show();
+        $('#itSearchKbdHint').hide();
+    } else {
+        $('#itSearchMatchCount').hide();
+        $('#itSearchClear').hide();
+        $('#itSearchKbdHint').show();
+    }
+
     if (response.stats) {
         $('#stat-interview-month').text(response.stats.interview_month ?? 0);
         $('#stat-today').text(response.stats.today ?? 0);
         $('#stat-upcoming').text(response.stats.upcoming ?? 0);
-        $('#stat-feedback-pending').text(response.stats.feedback_pending ?? 0);
+        var pendingCnt = parseInt(response.stats.feedback_pending ?? 0, 10) || 0;
+        $('#stat-feedback-pending').text(pendingCnt);
+        if (pendingCnt > 0) {
+            $('#badge_itPendingAction').show();
+            $('#span_itPendingSub').text(pendingCnt + (pendingCnt === 1 ? ' interview awaits feedback' : ' interviews await feedback'));
+        } else {
+            $('#badge_itPendingAction').hide();
+            $('#span_itPendingSub').text("You're all caught up");
+        }
     }
 
     var tc = response.tab_counts || {};
@@ -2409,6 +3529,7 @@ function renderInterviewData(response) {
     $('#tab-count-selected').text(tc.selected ?? 0);
     $('#tab-count-rejected').text(tc.rejected ?? 0);
     $('#tab-count-rescheduled').text(tc.rescheduled ?? 0);
+    updateItToolbarIndicators();
 }
 
 // ── Failure Matrix & Concurrency Safety ────────────────────────────────────

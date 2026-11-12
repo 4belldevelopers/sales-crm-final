@@ -1,19 +1,22 @@
 {{--
   JERO ATS — Service Company Interview Tracker Card Stream Partial
   Intent: Renders Elasticsearch interview projections as Rule 20 Modern Primary Cards
-          with 5 discrete upper sub-cards and a bottom activity/stage strip.
+          with 6 discrete upper sub-cards and a bottom activity/stage strip.
   Tenancy & Security: Strictly scoped by company_id in controller; all outputs Blade-escaped.
   Screen Fit: Fractional minmax(0, ...fr) grid prevents horizontal overflow on 15.6" screens.
 --}}
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\AppTrackerCardPresenter;
     use Carbon\Carbon;
 
-    $feedback_status = $feedback_status ?? GeneralMethod::feedback_status();
-    $followupMap     = $followupMap ?? collect();
-    $feedbackMap     = $feedbackMap ?? collect();
-    $spokpersonMap   = $spokpersonMap ?? collect();
-    $clientCompanyMap = $clientCompanyMap ?? [];
+    $feedback_status   = $feedback_status ?? GeneralMethod::feedback_status();
+    $followupMap       = $followupMap ?? collect();
+    $feedbackMap       = $feedbackMap ?? collect();
+    $spokpersonMap     = $spokpersonMap ?? collect();
+    $clientCompanyMap  = $clientCompanyMap ?? [];
+    $jobMetaMap        = $jobMetaMap ?? [];
+    $candidateMetaMap  = $candidateMetaMap ?? [];
     $userCaptainJobIds = $userCaptainJobIds ?? [];
 
     $panelPalette = [
@@ -52,9 +55,15 @@
             }
 
             $designation = ucwords(trim((string) (@$row->current_designation ?? '')));
-            $candCity    = ucwords(trim((string) (@$row->city_name ?? '')));
-            $candCountry = ucwords(trim((string) (@$row->country_name ?? '')));
-            $candLocation = implode(', ', array_filter([$candCity, $candCountry]));
+            $wiseId      = (int) (@$row->wiseID ?? 0);
+            $jobAppId    = (int) (@$row->job_application_id ?? 0);
+            $candMeta    = ($wiseId > 0 && isset($candidateMetaMap['by_wise'][$wiseId]))
+                ? $candidateMetaMap['by_wise'][$wiseId]
+                : (($jobAppId > 0 && isset($candidateMetaMap['by_app'][$jobAppId])) ? $candidateMetaMap['by_app'][$jobAppId] : []);
+            $candCurrentCompany = AppTrackerCardPresenter::cleanText(
+                $candMeta['current_company'] ?? (@$row->current_company ?? (@$row->cur_companyname ?? ''))
+            );
+            $candCurrentCompany = $candCurrentCompany !== '' ? ucwords($candCurrentCompany) : '';
             $candEmail   = trim((string) (@$row->email ?? ''));
             $profile_detail = 'show-application-detail';
 
@@ -66,40 +75,46 @@
             $fuLabel  = $fuLabels[$fuStatus] ?? 'Follow Up';
             $fuClass  = $fuStatus ? ('is-' . $fuStatus) : '';
 
-            // ── 3. Requisition & Client Classification ─────────────────────
+            // ── 3. Requisition & Standardized Org Classification ──────────
             $jobId = (int) (@$row->job_id ?? @$row->jobId ?? 0);
-            $client_title_name = $clientCompanyMap[$jobId] ?? (@$row->client_name ?? '');
-            $isDirectClient = ((int) (@$row->recommendation_id ?? 0) > 0 && (int) (@$row->to_company_id ?? 0) === (int) $company_id);
+            $jobMeta = $jobMetaMap[$jobId] ?? [];
+            $client_title_name = ($jobMeta['client_name'] ?? '') ?: ($clientCompanyMap[$jobId] ?? (@$row->client_name ?? ''));
+            $jobCompanyId = (int) (@$row->job_company_id ?? 0);
+            $isDirectClient = ((int) (@$row->recommendation_id ?? 0) > 0 && (int) (@$row->to_company_id ?? 0) === (int) $company_id)
+                || ($jobCompanyId > 0 && (int) $company_id > 0 && $jobCompanyId !== (int) $company_id);
+            $selfCompVal = (int) ($jobMeta['self_company'] ?? (@$row->self_company ?? 0));
 
-            $jobTypeLabel = $isDirectClient ? 'Direct Client' : 'Internal';
-            $jobTypeClass = $isDirectClient ? 'it-scope-direct' : 'it-scope-internal';
+            if ($isDirectClient) {
+                $jobTypeLabel = 'Direct Client';
+                $jobTypeClass = 'it-scope-direct';
+                $jobTypeIcon  = 'fa-handshake';
+            } elseif ($selfCompVal === 1) {
+                $jobTypeLabel = 'My Organization';
+                $jobTypeClass = 'it-scope-myorg';
+                $jobTypeIcon  = 'fa-building';
+            } else {
+                $jobTypeLabel = 'Internal Client';
+                $jobTypeClass = 'it-scope-internal';
+                $jobTypeIcon  = 'fa-sitemap';
+            }
+
             $displayCompName = $isDirectClient
                 ? (!empty($row->company_name) ? $row->company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : $client_title_name))
-                : $client_title_name;
+                : ($client_title_name ?: (@$row->company_name ?? ''));
             $displayCompName = ucwords(trim((string) $displayCompName));
             $jobTitle = ucwords(trim((string) (@$row->job_title ?: 'Untitled Role')));
-            $roundLevel = ucwords(trim((string) (@$row->mode_lavel_name ?? '')));
+            $empTypeCode = (int) ($jobMeta['employment_type'] ?? (@$row->employment_type ?? 0));
+            $employmentTypeLabel = $empTypeCode === 1 ? 'Contract' : ($empTypeCode === 3 ? 'Part Time' : 'Full-time');
+            $roundLevelClean = trim((string) (@$row->mode_lavel_name ?? ''));
             $isRescheduledType = ((int) (@$row->interview_type ?? 1) === 2);
 
-            // ── 4. Schedule Date, Time, Mode & Meeting Link ────────────────
+            // ── 4. Schedule Date, Time, Mode, Platform & Meeting Link ─────
             $scheduleCarbon = null;
             $dateFormatted = '—';
-            $timeBadgeText = '';
-            $timeBadgeClass = 'it-time-upcoming';
             try {
                 if (!empty($row->schedule_date)) {
                     $scheduleCarbon = Carbon::parse($row->schedule_date);
                     $dateFormatted  = $scheduleCarbon->format('d M, Y');
-                    if ($scheduleCarbon->isToday()) {
-                        $timeBadgeText  = 'Today';
-                        $timeBadgeClass = 'it-time-today';
-                    } elseif ($scheduleCarbon->isFuture()) {
-                        $timeBadgeText  = 'Upcoming';
-                        $timeBadgeClass = 'it-time-upcoming';
-                    } else {
-                        $timeBadgeText  = 'Completed';
-                        $timeBadgeClass = 'it-time-past';
-                    }
                 }
             } catch (\Throwable $e) {
                 $dateFormatted = (string) (@$row->schedule_date ?? '—');
@@ -136,6 +151,64 @@
             } elseif ($isUrl) {
                 $ilType = 'link';
                 $ilLabel = 'Interview Link';
+            }
+
+            // Interview Platform / Sub-Mode Badge (replaces Completed/Today status on Schedule sub-card)
+            $mLinkLower = strtolower($mLink);
+            if (str_contains($mLinkLower, 'meet.google.com')) {
+                $platformLabel = 'Google Meet';
+                $platformClass = 'it-plat-gmeet';
+                $platformIcon  = 'fas fa-video';
+            } elseif (str_contains($mLinkLower, 'zoom.us') || str_contains($mLinkLower, 'zoom.com')) {
+                $platformLabel = 'Zoom';
+                $platformClass = 'it-plat-zoom';
+                $platformIcon  = 'fas fa-video';
+            } elseif (str_contains($mLinkLower, 'teams.microsoft.com') || str_contains($mLinkLower, 'teams.live.com')) {
+                $platformLabel = 'MS Teams';
+                $platformClass = 'it-plat-teams';
+                $platformIcon  = 'fas fa-video';
+            } elseif (str_contains($mLinkLower, 'webex.com')) {
+                $platformLabel = 'Webex';
+                $platformClass = 'it-plat-video';
+                $platformIcon  = 'fas fa-video';
+            } elseif (str_contains($mLinkLower, 'skype.com')) {
+                $platformLabel = 'Skype';
+                $platformClass = 'it-plat-video';
+                $platformIcon  = 'fas fa-video';
+            } elseif ($roundLevelClean !== '') {
+                $platformLabel = ucwords($roundLevelClean);
+                $rlLower = strtolower($roundLevelClean);
+                if (str_contains($rlLower, 'meet') || str_contains($rlLower, 'google')) {
+                    $platformClass = 'it-plat-gmeet';
+                    $platformIcon  = 'fas fa-video';
+                } elseif (str_contains($rlLower, 'zoom')) {
+                    $platformClass = 'it-plat-zoom';
+                    $platformIcon  = 'fas fa-video';
+                } elseif (str_contains($rlLower, 'team')) {
+                    $platformClass = 'it-plat-teams';
+                    $platformIcon  = 'fas fa-video';
+                } elseif ($modeId === 1) {
+                    $platformClass = 'it-plat-phone';
+                    $platformIcon  = 'fas fa-phone-alt';
+                } elseif ($modeId === 3) {
+                    $platformClass = 'it-plat-f2f';
+                    $platformIcon  = 'fas fa-map-marker-alt';
+                } else {
+                    $platformClass = 'it-plat-video';
+                    $platformIcon  = 'fas fa-video';
+                }
+            } elseif ($modeId === 1) {
+                $platformLabel = 'Phone Call';
+                $platformClass = 'it-plat-phone';
+                $platformIcon  = 'fas fa-phone-alt';
+            } elseif ($modeId === 3) {
+                $platformLabel = 'In-Person';
+                $platformClass = 'it-plat-f2f';
+                $platformIcon  = 'fas fa-map-marker-alt';
+            } else {
+                $platformLabel = $modeId === 2 ? 'Video Call' : $modeLabel;
+                $platformClass = 'it-plat-video';
+                $platformIcon  = 'fas fa-video';
             }
 
             // ── 5. Interviewers / Panel ────────────────────────────────────
@@ -178,6 +251,11 @@
                     : (!empty($row->from_company_name)
                         ? $row->from_company_name
                         : (!empty($row->uc_company_name) ? $row->uc_company_name : (@$row->company_name ?? ''))));
+
+            $ownerRecruiterName = AppTrackerCardPresenter::cleanText(ucwords((string) $rowpostedby));
+            $ownerCompanyName   = AppTrackerCardPresenter::cleanText(ucwords((string) $post_company_name));
+            $submittedRaw       = AppTrackerCardPresenter::cleanText($candMeta['submitted_at'] ?? (@$row->submitted_at ?? (@$row->created_at ?? '')));
+            $submittedAgo       = AppTrackerCardPresenter::resolveSubmittedAgo((object) ['created_at' => $submittedRaw]);
 
             // ── 7. Stage & Substage ────────────────────────────────────────
             $childStageName = '';
@@ -322,9 +400,9 @@
         @endphp
 
         <!-- Master Primary Interview Card (Rule 20 Card + Sub-Card System) -->
-        <div class="it-card" data-interview-id="{{ $row->id }}" data-wise-id="{{ @$row->wiseID }}" data-job-id="{{ $jobId }}" style="border-left: 3.5px solid {{ $cardAccentColor }} !important;">
+        <div class="it-card" data-interview-id="{{ $row->id }}" data-wise-id="{{ @$row->wiseID }}" data-job-id="{{ $jobId }}" data-schedule-ts="{{ $scheduleCarbon ? $scheduleCarbon->timestamp : 0 }}" data-created-ts="{{ !empty($row->created_at) ? (int) strtotime((string) $row->created_at) : 0 }}" data-mode-id="{{ (int) $modeId }}" style="border-left: 3.5px solid {{ $cardAccentColor }} !important;">
 
-            <!-- Upper Discrete Sub-Cards Grid (5 Responsive Enterprise Sub-Cards) -->
+            <!-- Upper Discrete Sub-Cards Grid (6 Responsive Enterprise Sub-Cards) -->
             <div class="it-card-grid">
 
                 <!-- Sub-Card 1: CANDIDATE -->
@@ -366,17 +444,18 @@
                             <div class="it-cand-role {{ $profile_detail }}" data-row-id="{{ @$row->wiseID }}" title="{{ $designation ?: '—' }}">
                                 {{ $designation ?: '—' }}
                             </div>
-                            @if($candLocation !== '' || $candEmail !== '')
-                                <div class="it-cand-submeta" title="{{ $candLocation !== '' ? $candLocation : $candEmail }}">
-                                    @if($candLocation !== '')
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <span>{{ $candLocation }}</span>
-                                    @else
-                                        <i class="far fa-envelope"></i>
-                                        <span>{{ $candEmail }}</span>
-                                    @endif
-                                </div>
-                            @endif
+                            <div class="it-cand-submeta it-cand-company" title="{{ $candCurrentCompany !== '' ? $candCurrentCompany : ($candEmail !== '' ? $candEmail : 'Company: –') }}">
+                                @if($candCurrentCompany !== '')
+                                    <i class="fas fa-building"></i>
+                                    <span>{{ $candCurrentCompany }}</span>
+                                @elseif($candEmail !== '')
+                                    <i class="far fa-envelope"></i>
+                                    <span>{{ $candEmail }}</span>
+                                @else
+                                    <i class="fas fa-building"></i>
+                                    <span>–</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -386,7 +465,7 @@
                     <div class="it-subcard-header">
                         <span class="it-subcard-label">Requisition</span>
                         <span class="it-scope-badge {{ $jobTypeClass }}">
-                            <i class="fas {{ $isDirectClient ? 'fa-handshake' : 'fa-building' }}"></i>
+                            <i class="fas {{ $jobTypeIcon }}"></i>
                             {{ $jobTypeLabel }}
                         </span>
                     </div>
@@ -406,16 +485,15 @@
                             <span class="it-dot-sep">&bull;</span>
                             <span class="it-job-client" title="{{ $displayCompName }}">{{ $displayCompName ?: '—' }}</span>
                         </div>
-                        @if($roundLevel !== '' || $isRescheduledType)
-                            <div class="it-job-pills">
-                                @if($roundLevel !== '')
-                                    <span class="it-round-pill" title="Interview Round">{{ $roundLevel }}</span>
-                                @endif
-                                @if($isRescheduledType)
-                                    <span class="it-resched-tag"><i class="fas fa-history"></i> Rescheduled</span>
-                                @endif
-                            </div>
-                        @endif
+                        <div class="it-job-pills">
+                            <span class="it-emp-pill" title="Employment Type">
+                                <i class="fas fa-briefcase"></i>
+                                <span>{{ $employmentTypeLabel }}</span>
+                            </span>
+                            @if($isRescheduledType)
+                                <span class="it-resched-tag"><i class="fas fa-history"></i> Rescheduled</span>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -434,9 +512,10 @@
                                 <i class="far fa-calendar-alt"></i>
                                 <span>{{ $dateFormatted }}</span>
                             </span>
-                            @if($timeBadgeText !== '')
-                                <span class="it-time-tag {{ $timeBadgeClass }}">{{ $timeBadgeText }}</span>
-                            @endif
+                            <span class="it-platform-pill {{ $platformClass }}" title="Interview Mode / Platform">
+                                <i class="{{ $platformIcon }}"></i>
+                                <span>{{ $platformLabel }}</span>
+                            </span>
                         </div>
                         <div class="it-sched-time-row">
                             <i class="far fa-clock"></i>
@@ -526,7 +605,28 @@
                     @endif
                 </div>
 
-                <!-- Sub-Card 5: EVALUATION & FEEDBACK -->
+                <!-- Sub-Card 5: OWNERSHIP & RECRUITER -->
+                <div class="it-subcard it-subcard-owner">
+                    <div class="it-subcard-header">
+                        <span class="it-subcard-label"><i class="fas fa-user-tie"></i> Ownership &amp; Recruiter</span>
+                    </div>
+                    <div class="it-owner-body">
+                        <div class="it-owner-name" title="{{ $ownerRecruiterName !== '' ? $ownerRecruiterName : 'Recruiter: –' }}">
+                            <i class="fas fa-user-circle"></i>
+                            <span>{{ $ownerRecruiterName !== '' ? $ownerRecruiterName : '–' }}</span>
+                        </div>
+                        <div class="it-owner-company" title="{{ $ownerCompanyName !== '' ? $ownerCompanyName : 'Company: –' }}">
+                            <i class="fas fa-building"></i>
+                            <span>{{ $ownerCompanyName !== '' ? $ownerCompanyName : '–' }}</span>
+                        </div>
+                        <div class="it-owner-submitted" title="{{ $submittedAgo !== '' ? 'Submitted: ' . $submittedAgo : 'Submitted: –' }}">
+                            <i class="far fa-calendar-alt"></i>
+                            <span>Submitted: {{ $submittedAgo !== '' ? $submittedAgo : '–' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-Card 6: EVALUATION & FEEDBACK -->
                 <div class="it-subcard it-subcard-feedback">
                     <div class="it-subcard-header">
                         <span class="it-subcard-label">Evaluation</span>
@@ -576,7 +676,7 @@
             </div>
             <!-- End Upper Sub-Cards Grid -->
 
-            <!-- Sub-Card 6: Bottom Activity & Pipeline Strip -->
+            <!-- Bottom Activity & Pipeline Strip -->
             <div class="it-card-bottom">
                 <div class="it-bottom-left">
                     <div class="it-bottom-item it-stage-cell">
@@ -584,14 +684,6 @@
                         <span class="it-stage-badge {{ $stageBadgeClass }}">{{ $masterStatusName }}</span>
                         @if($childStageName)
                             <span class="it-substage-pill">{{ $childStageName }}</span>
-                        @endif
-                    </div>
-                    <span class="it-dot-sep">&bull;</span>
-                    <div class="it-bottom-item" title="{{ ucwords((string) $rowpostedby) }}{{ $post_company_name ? ' (' . ucwords((string) $post_company_name) . ')' : '' }}">
-                        <span class="it-bottom-lbl">Source:</span>
-                        <strong class="it-bottom-strong">{{ ucwords((string) ($rowpostedby ?: '—')) }}</strong>
-                        @if($post_company_name)
-                            <span class="it-bottom-muted">({{ ucwords((string) $post_company_name) }})</span>
                         @endif
                     </div>
                     @if($fuStatus && $fuAt)

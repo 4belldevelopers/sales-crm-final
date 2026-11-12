@@ -6,7 +6,7 @@
 > decision, finish a phase, or learn something non-obvious, append it here (newest on top
 > in each section) and, if it's an architecture decision, also add an ADR.
 
-Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read Architecture, Browser Execution, Real-Time Synchronization & Transactional Outbox Phases 0–7 100% COMPLETED and VERIFIED).
+Last updated: 2026-11-12 (Service Company Interview Tracker Rule 20 6-Subcard Enterprise Redesign + Application-Wide AppTracker Org Naming/Color Standards COMPLETED).
 
 ---
 
@@ -16,7 +16,14 @@ Last updated: 2026-10-22 (Super Admin Companies Page UI Redesign, 100% CQRS Read
   Redis/Horizon · Octane/FrankenPHP · Reverb · S3 · Stripe/Razorpay/PhonePe/PayPal/Paddle · AI (OpenAI).
 - **Scale goal:** 10,000 companies, 100M+ records/year. See [docs/SCALABILITY.md](../docs/SCALABILITY.md).
 - **Active code folder:** `testing.jero.works` (NOT `hire.jero.works`).
-- **Current focus:** Forward Resume Drawer — Mandatory Copy-to-Self Outbox Closure Scope & SES Delivery Fix (100% COMPLETED and VERIFIED).
+- **Current focus:** Interview Tracker Modern Card + 6 Sub-Card Redesign & Standardized Org Palette (`My Organization`, `Internal Client`, `Direct Client`).
+
+- *2026-11-12* — **Interview Tracker Rule 20 Redesign & Permanent Org Naming/Color Design System Standards (COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Service Company Interview Tracker (`resources/views/service_company/interview-schedule/table.blade.php`, `resources/views/service_company/ajax_pages/interview-tracker-ajax.blade.php`, `app/Http/Controllers/ServiceCompany/InterviewScheduleController.php`, `app/Helper/GeneralMethod.php`), Design Standard (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`), Audit Document ([`docs/audit documents/interview_schedule/2026-11-12-interview-tracker-modern-card-subcard-redesign.md`](../docs/audit%20documents/interview_schedule/2026-11-12-interview-tracker-modern-card-subcard-redesign.md)), and `tests/Feature/ServiceCompanyInterviewTrackerTest.php`.
+  - **Permanent Naming & Color Standards Added (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` §6)**:
+    - `My Organization` (`#fef3c7` bg / `#fcd34d` border / `#92400e` text / `#d97706` accent, `fa-building`), `Internal Client` (replaces `"Internal"`, `#dbeafe` bg / `#93c5fd` border / `#1e40af` text / `#2563eb` accent, `fa-sitemap`), and `Direct Client` (`#d1fae5` bg / `#6ee7b7` border / `#166534` text / `#16a34a` accent, `fa-handshake`).
+  - **Interview Tracker 6-Subcard Architecture**: Added dedicated `Ownership & Recruiter` sub-card matching AppTracker, Candidate sub-card displays `current_company` instead of location, Requisition displays Employment Type (`Full-time` / `Contract`) + org badge (without `Google Meet`), Schedule displays platform/interview mode (`Google Meet` / `Zoom` / `MS Teams` / `Phone Call` / `In-Person`) instead of `Completed` status.
+
 - **Test coverage:** `TenantIsolationTest`, `BenchToJobAppTrackerPipelineContractTest`, `BenchTalentRequestPipelineContractTest`, `SuperAdminCompanyLoadTest`, `AgencyPartnershipGodAuditTest`, `ForwardResumeSendCopyToSelfTest` (7/7 green, 32 assertions), `ForwardResumeOption5PrivacyAnonymizationTest` (6/6 green, 76 assertions). Total: 13 tests, 108 assertions passing 100% green.
 
 - *2026-11-10* — **Forward Resume Drawer — Transaction Outbox Closure Scope Fix ($copyToSelf) (100% COMPLETED & VERIFIED)**:
