@@ -1,0 +1,145 @@
+{
+    "timestamp": "2026-11-13T10:34:56+05:30",
+    "module": "SuperAdminCompany",
+    "status": "COMPLETED_SUCCESSFULLY",
+    "infrastructure": {
+        "redis_ping": true,
+        "redis_latency_ms": 1.27,
+        "es_status": "green",
+        "es_latency_ms": 80.43,
+        "mysql_threads_connected": 1
+    },
+    "cqrs_read_verification": {
+        "total_mysql_queries": 0,
+        "domain_mysql_queries": 0,
+        "verdict": "PASS_ZERO_MYSQL_READS",
+        "kpi_total": 0,
+        "list_total": 0
+    },
+    "circuit_breaker_test": {
+        "initial_state": "CLOSED",
+        "tripped_state": "OPEN",
+        "is_available_when_tripped": false,
+        "storm_guard_fallback_invocations": 1,
+        "recovered_state": "CLOSED",
+        "verdict": "PASS"
+    },
+    "outbox_recovery_test": {
+        "zombie_guard_passed": true,
+        "dead_letter_recovery_passed": true,
+        "verdict": "PASS"
+    },
+    "idempotency_test": {
+        "first_status": "success",
+        "replay_status": "success",
+        "is_replayed": true,
+        "verdict": "PASS"
+    },
+    "cache_versioning_test": {
+        "company_version_before": 13,
+        "company_version_after": 14,
+        "subscription_version_before": 13,
+        "subscription_version_after": 14,
+        "verdict": "PASS"
+    },
+    "resident_concurrency": {
+        "tier_1k": {
+            "total_requests": 1000,
+            "duration_sec": 1.256,
+            "rps": 796.17,
+            "min_ms": 0.31,
+            "p50_ms": 0.41,
+            "p95_ms": 0.82,
+            "p99_ms": 1.72,
+            "max_ms": 215.53,
+            "mem_delta_mb": 0,
+            "domain_mysql_queries": 0
+        },
+        "tier_5k": {
+            "total_requests": 5000,
+            "duration_sec": 2.327,
+            "rps": 2148.56,
+            "min_ms": 0.31,
+            "p50_ms": 0.41,
+            "p95_ms": 0.84,
+            "p99_ms": 1.55,
+            "max_ms": 2.53,
+            "mem_delta_mb": 0,
+            "domain_mysql_queries": 0
+        },
+        "tier_10k": {
+            "total_requests": 10000,
+            "duration_sec": 4.941,
+            "rps": 2023.7,
+            "min_ms": 0.31,
+            "p50_ms": 0.41,
+            "p95_ms": 0.9,
+            "p99_ms": 1.55,
+            "max_ms": 2.45,
+            "mem_delta_mb": 0,
+            "domain_mysql_queries": 0
+        },
+        "tier_10k_sustained": {
+            "total_requests": 10000,
+            "duration_sec": 5.556,
+            "rps": 1799.95,
+            "min_ms": 0.31,
+            "p50_ms": 0.47,
+            "p95_ms": 1.02,
+            "p99_ms": 1.62,
+            "max_ms": 10.11,
+            "mem_delta_mb": 0,
+            "domain_mysql_queries": 0
+        }
+    },
+    "http_socket_concurrency": {
+        "batch_25_sockets": {
+            "total_requests": 50,
+            "simultaneous_sockets": 25,
+            "duration_sec": 15.877,
+            "rps": 3.15,
+            "min_ms": 5397.48,
+            "p50_ms": 7049.94,
+            "p95_ms": 9485.83,
+            "p99_ms": 10479.26,
+            "max_ms": 10479.26,
+            "status_codes": {
+                "200": 50
+            },
+            "mysql_query_delta": 601
+        },
+        "batch_50_sockets": {
+            "total_requests": 100,
+            "simultaneous_sockets": 50,
+            "duration_sec": 34.078,
+            "rps": 2.93,
+            "min_ms": 6325.51,
+            "p50_ms": 11372.46,
+            "p95_ms": 20260.18,
+            "p99_ms": 20260.18,
+            "max_ms": 20260.18,
+            "status_codes": {
+                "200": 84,
+                "500": 1,
+                "0": 15
+            },
+            "mysql_query_delta": 1189
+        }
+    },
+    "telemetry": {
+        "module": "SuperAdminCompany",
+        "status": "HEALTHY",
+        "version": 14,
+        "cache_telemetry": {
+            "version": 14,
+            "hits": 52134,
+            "misses": 30,
+            "contention_events": 0,
+            "total_requests": 52164,
+            "hit_ratio_percent": 99.94
+        },
+        "stale_kpi_snapshots_count": 1,
+        "stale_list_snapshots_count": 5,
+        "timestamp": "2026-11-13T10:36:01+05:30"
+    }
+}
