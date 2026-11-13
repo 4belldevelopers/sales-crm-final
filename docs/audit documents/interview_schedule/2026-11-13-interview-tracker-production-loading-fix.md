@@ -91,6 +91,7 @@ flowchart TD
 | :--- | :--- |
 | `app/Http/Controllers/ServiceCompany/InterviewScheduleController.php` | 1. Unified authorization gate check across `data_ajax`, `benchinterviewdata_ajax`, `benchinterviewdata_v2`, and `benchinterviewdata`.<br>2. Wrapped ES search in try-catch resilience.<br>3. Bumped cache key payload from `card_v5` to `card_v6`. |
 | `resources/views/service_company/interview-schedule/table.blade.php` | 1. Declared global `itLastAppliedSort = ''` to prevent strict-mode `ReferenceError`.<br>2. Upgraded `JeroInterviewScheduleLocalStore` to `v7` with `onblocked`, safety timeouts (500ms/350ms), and `onversionchange` close handlers.<br>3. Fortified `renderInterviewData` against missing/empty responses.<br>4. Replaced silent AJAX error handler with comprehensive failure matrix (403 Access Denied, offline, 500 error card with retry button). |
+| `resources/views/service_company/ajax_pages/interview-tracker-ajax.blade.php` | 1. Decoupled from `AppTrackerCardPresenter` by removing the external service import.<br>2. Implemented self-contained `$itClean` and `$itSubmittedAgo` closures (Rule 17 Blade Isolation).<br>3. Eliminates any `Class not found` exceptions on production environments running pre-cached classmaps. |
 
 ---
 
