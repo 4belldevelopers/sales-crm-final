@@ -8260,7 +8260,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $messages['email.disposable_email'] = 'Temporary emails are not allowed';
         }
 
-        $validator = Validator::make($request->all(), array_merge($rules, CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'), false)), array_merge($messages, CandidateNoticePeriodState::validationMessages()));
+        if ($isSourcingOrAbove) {
+            $validationRules = array_merge($rules, CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'), false));
+            $validationMessages = array_merge($messages, CandidateNoticePeriodState::validationMessages());
+            $validator = Validator::make($request->all(), $validationRules, $validationMessages);
+        } else {
+            // InReview stage: Notice Period validation dependency is completely removed
+            $validator = Validator::make($request->all(), $rules, $messages);
+        }
 
         if ($validator->fails()) {
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);

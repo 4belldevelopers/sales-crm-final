@@ -122,4 +122,21 @@ class CandidateStagePreservationAndNoticePeriodValidationTest extends TestCase
             $this->assertLessThan($snpCheckPos, $inReviewExitPos, "InReview stage must exit before notice period validation in {$bladePath}");
         }
     }
+
+    public function test_controller_update_bypasses_notice_period_validation_for_in_review_stage(): void
+    {
+        $controllerSource = file_get_contents(base_path('app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php'));
+        $startPos = strpos($controllerSource, 'public function update(Request $request, $id)');
+        $endPos = strpos($controllerSource, 'public function formatInterviewDateTime', $startPos);
+        $updateBody = substr($controllerSource, $startPos, $endPos - $startPos);
+
+        // For InReview stage: Notice Period validation dependency is completely bypassed
+        $this->assertStringContainsString('// InReview stage: Notice Period validation dependency is completely removed', $updateBody);
+        $this->assertStringContainsString('$validator = Validator::make($request->all(), $rules, $messages);', $updateBody);
+
+        // For Sourcing and higher stages: Notice Period validation is strictly enforced
+        $this->assertStringContainsString('$rules[\'np_id\'] = [\'required\'];', $updateBody);
+        $this->assertStringContainsString('$messages[\'np_id.required\'] = \'Notice Period is required\';', $updateBody);
+        $this->assertStringContainsString('CandidateNoticePeriodState::validationRules($request->input(\'serving_notice_period\'), false)', $updateBody);
+    }
 }

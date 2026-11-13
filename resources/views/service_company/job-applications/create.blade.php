@@ -2673,7 +2673,9 @@
       if (isset($application) && !empty($application->id)) {
         if (isset($application->serving_notice_period_mode) && $application->serving_notice_period_mode !== null && $application->serving_notice_period_mode !== '') {
           $stored_snp_mode = (int) $application->serving_notice_period_mode;
-          if (in_array($stored_snp_mode, [0, 1, 2], true)) {
+          if ($stored_snp_mode === 0 && empty($application->np_id)) {
+            $snp_mode = null;
+          } elseif (in_array($stored_snp_mode, [0, 1, 2], true)) {
             $snp_mode = $stored_snp_mode;
           }
         } elseif (!empty($application->np_id)) {
@@ -10191,11 +10193,14 @@ $(document).ready(function() {
             option.setAttribute('aria-checked', selected ? 'true' : 'false');
         });
 
+        var targetStageEl = document.getElementById('master_status_id') || document.getElementById('current_master_status_id');
+        var isStageInReview = targetStageEl ? (parseInt(targetStageEl.value, 10) === 8) : ((window.__candidateMasterStatusId || 8) === 8);
+
         if (noticeDateField) noticeDateField.hidden = !usesDate;
         if (noticeDaysField) noticeDaysField.hidden = mode !== '0';
         if (noticeDateInput) {
             noticeDateInput.disabled = !usesDate;
-            noticeDateInput.required = usesDate;
+            noticeDateInput.required = usesDate && !isStageInReview;
             noticeDateInput.min = mode === '1' ? today : '';
             noticeDateInput.max = mode === '2' ? today : '';
         }
@@ -10207,10 +10212,10 @@ $(document).ready(function() {
         }
         if (noticeDaysSelect) {
             noticeDaysSelect.disabled = mode !== '0';
-            noticeDaysSelect.required = mode === '0';
+            noticeDaysSelect.required = (mode === '0') && !isStageInReview;
         }
         if (noticeDateLabel) {
-            noticeDateLabel.innerHTML = (mode === '1' ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)') + ' <span class="rq">*</span>';
+            noticeDateLabel.innerHTML = (mode === '1' ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)') + (isStageInReview ? '' : ' <span class="rq">*</span>');
         }
 
         if (mode) {
@@ -10226,7 +10231,12 @@ $(document).ready(function() {
                 return;
             }
 
-            noticePeriodSelect.value = option.getAttribute('data-notice-period-value');
+            var optVal = option.getAttribute('data-notice-period-value');
+            if (noticePeriodSelect.value === optVal) {
+                noticePeriodSelect.value = '';
+            } else {
+                noticePeriodSelect.value = optVal;
+            }
             noticePeriodSelect.dispatchEvent(new Event('change', { bubbles: true }));
         });
     });
