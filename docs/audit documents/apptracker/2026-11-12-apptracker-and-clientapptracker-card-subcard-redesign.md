@@ -180,3 +180,48 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
       * Bumped cache version across all 9 AppTracker controller endpoints to `card_v10`.
       * Updated feature tests in `AppTrackerCardSubCardRedesignTest.php` asserting `card_v10`, department rendering, organization classification classes (`--my-org`, `--internal`, `--direct`), icons, and footer strip resume/no-cv positioning.
       * All 13 feature tests pass with 372 assertions.
+
+14. **Direct Resume Pill Click-to-Drawer `#resume_cv` Tab Loading Across All Candidate Lists:**
+    - **1. User Story & Core Requirement:**
+      * When a recruiter clicks the green `Resume` pill located on the candidate listing card (in the bottom activity strip), the system must immediately open the candidate sliding drawer and automatically switch to and load the **`Resume / CV`** tab (`#resume_cv`) instead of the default `Profile Overview` tab.
+      * Displays the resume viewer, keyword highlights, match analytics, and download controls without requiring a second manual click inside the drawer.
+      * Regular candidate card, name, and avatar clicks continue to open the default `Profile Overview` (`#personal_details`) tab with zero behavioral mutation.
+      * Missing resumes (`No CV` pill) are not clickable and do not switch tabs.
+    - **2. Global Drawer Tab Lifecycle & Viewer Synchronization (`service_company_layout.blade.php`):**
+      * Implemented `activateCandidateDrawerTab(targetTab)` helper function exported to `window.activateCandidateDrawerTab`:
+        - Searches all 4 candidate drawer containers in the ATS:
+          * `#application_show_right_bar` (AppTracker applications, career website applications, similar candidates)
+          * `#client_application_show_right_bar` (Client AppTracker applications)
+          * `#bench_application_show_right_bar` (In-house bench candidates)
+          * `#public_bench_application_show_right_bar` (Agency bench candidates)
+        - Targets tab triggers via standard selectors (`a[href="#resume_cv"]`, `button[data-target="resume_cv"]`, `[data-rcv-tab]`).
+        - Uses Bootstrap `.tab('show')` combined with native `click` dispatch so Metronic tab switch handlers and OpenDoc / V2 Resume viewer initialization listeners (`rcvTabBtn`, `click.v2resume`) execute seamlessly.
+        - Synchronizes `.active .tab-active` classes, manages `aria-selected="true"`, ensures `.tab-pane.show.active`, and fires `window.dispatchEvent(new Event('resize'))` so canvas/WASM resume viewers recalculate page layout dimensions immediately.
+      * Connected tab activation hook into all candidate drawer AJAX loader callbacks:
+        - `renderCandidateDrawerView`
+        - `show-application-detail`
+        - `website-show-application-detail`
+        - `client-show-application-detail`
+        - `bench_show_application_detail`
+        - `pbench_show_application_detail`
+      * Implemented unified click delegator for `.jw-open-resume-tab` and all channel resume pills (`.aptk-resume-pill`, `.caf-resume-pill`, `.simf-resume-pill`, `.dsf-resume-pill`, `.ibf-resume-pill`, `.dib-resume-pill`, `.abf-resume-pill`, `.brf-resume-pill`, `.wcf-resume-pill`):
+        - Prevents event bubbling (`e.preventDefault()`, `e.stopPropagation()`).
+        - Sets `window.__pendingCandidateDrawerTab = 'resume_cv'`.
+        - Resolves candidate drawer trigger element from the card and triggers drawer open immediately.
+    - **3. Universal Candidate Card Parity (All 10 Candidate Lists):**
+      * **App Tracker Total Candidates:** `.aptk-resume-pill.jw-open-resume-tab` (`all_apptracker.blade.php`).
+      * **Client App Tracker Total Candidates:** `.caf-resume-pill.jw-open-resume-tab` (`clientappdata_ajax.blade.php`).
+      * **Similar Candidates:** `.simf-resume-pill.jw-open-resume-tab` (`similar_existing_ajax.blade.php`).
+      * **Client Similar Candidates:** `.dsf-resume-pill.jw-open-resume-tab` (`dsimilar_existing_ajax.blade.php`).
+      * **In-house Bench Talents:** `.ibf-resume-pill.jw-open-resume-tab` (`internal_bench_ajax.blade.php`).
+      * **Client In-house Bench Talents:** `.dib-resume-pill.jw-open-resume-tab` (`dinternal_bench_ajax.blade.php`).
+      * **Agency Bench Talents:** `.abf-resume-pill.jw-open-resume-tab` (`public_bench_ajax.blade.php`).
+      * **Bench Talent Requests:** `.brf-resume-pill.jw-open-resume-tab` (`candidates_request_ajax.blade.php`).
+      * **Career Website Applications:** `.wcf-resume-pill.jw-open-resume-tab` (`career_apply_ajax.blade.php`).
+      * **CV Tracker:** `.simf-resume-pill.aptk-resume-pill.jw-open-resume-tab` (`all_candidates.blade.php`).
+    - **4. Verification Evidence:**
+      * Added `test_resume_pill_click_triggers_candidate_drawer_resume_tab_across_all_candidate_lists()` to `tests/Feature/AppTrackerCardSubCardRedesignTest.php`.
+      * Verified `php -l` clean across all modified blades and layout.
+      * `php artisan test tests/Feature/AppTrackerCardSubCardRedesignTest.php` — **14 passed (391 assertions)**.
+      * `php artisan view:clear` completed cleanly.
+

@@ -557,7 +557,7 @@
                 </div>
                 <div class="simf-bottom-right">
                     @if ($hasResume)
-                        <span class="simf-resume-pill jw-open-resume-tab cursor-pointer"
+                        <span class="simf-resume-pill aptk-resume-pill jw-open-resume-tab cursor-pointer"
                               data-row-id="{{ $candAppId }}"
                               data-wise-id="{{ $wiseId }}"
                               data-open-tab="resume_cv"
@@ -565,7 +565,7 @@
                             <i class="fas fa-check-circle me-1"></i><span>Resume</span>
                         </span>
                     @else
-                        <span class="simf-nocv-pill" title="Resume missing">
+                        <span class="simf-nocv-pill aptk-nocv-pill" title="Resume missing">
                             <i class="fas fa-exclamation-circle me-1"></i><span>No CV</span>
                         </span>
                     @endif

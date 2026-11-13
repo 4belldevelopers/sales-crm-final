@@ -71,6 +71,14 @@ class ForwardResumeAuthorizationService
                                     'should' => [
                                         ['term' => ['company_id' => $companyId]],
                                         ['term' => ['thirdparty_company_id' => $companyId]],
+                                        [
+                                            'nested' => [
+                                                'path' => 'recommendation_relation',
+                                                'query' => [
+                                                    'term' => ['recommendation_relation.to_company_id' => $companyId],
+                                                ],
+                                            ],
+                                        ],
                                     ],
                                     'minimum_should_match' => 1,
                                 ]],
@@ -98,7 +106,20 @@ class ForwardResumeAuthorizationService
                 ->whereIn('id', $candidateIds)
                 ->where(function ($q) use ($companyId) {
                     $q->where('company_id', $companyId)
-                        ->orWhere('thirdparty_company_id', $companyId);
+                        ->orWhere('thirdparty_company_id', $companyId)
+                        ->orWhereExists(function ($sub) use ($companyId) {
+                            $sub->select(DB::raw(1))
+                                ->from('add_job_wise_condidates')
+                                ->whereColumn('add_job_wise_condidates.candidate_id', 'job_applications.id')
+                                ->where('add_job_wise_condidates.company_id', $companyId);
+                        })
+                        ->orWhereExists(function ($sub) use ($companyId) {
+                            $sub->select(DB::raw(1))
+                                ->from('recommendation_relation')
+                                ->join('add_job_wise_condidates as ajwc', 'ajwc.job_id', '=', 'recommendation_relation.job_id')
+                                ->whereColumn('ajwc.candidate_id', 'job_applications.id')
+                                ->where('recommendation_relation.to_company_id', $companyId);
+                        });
                 })
                 ->pluck('id')
                 ->map(fn ($id) => (int) $id)
@@ -196,7 +217,20 @@ class ForwardResumeAuthorizationService
                     ->whereIn('id', $intCandIds)
                     ->where(function ($q) use ($companyId) {
                         $q->where('company_id', $companyId)
-                            ->orWhere('thirdparty_company_id', $companyId);
+                            ->orWhere('thirdparty_company_id', $companyId)
+                            ->orWhereExists(function ($sub) use ($companyId) {
+                                $sub->select(DB::raw(1))
+                                    ->from('add_job_wise_condidates')
+                                    ->whereColumn('add_job_wise_condidates.candidate_id', 'job_applications.id')
+                                    ->where('add_job_wise_condidates.company_id', $companyId);
+                            })
+                            ->orWhereExists(function ($sub) use ($companyId) {
+                                $sub->select(DB::raw(1))
+                                    ->from('recommendation_relation')
+                                    ->join('add_job_wise_condidates as ajwc', 'ajwc.job_id', '=', 'recommendation_relation.job_id')
+                                    ->whereColumn('ajwc.candidate_id', 'job_applications.id')
+                                    ->where('recommendation_relation.to_company_id', $companyId);
+                            });
                     })
                     ->first();
                 if ($firstCand && ! empty($firstCand->job_id)) {
