@@ -405,10 +405,10 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         $this->accountSettingsService->flushAccountCache($company_id);
 
-        $stageHtml = '<li id="'.@$lastInsertId.'" class="ips-subcard-item kanban-item root_child int_block '.@$ltb_class.' ui-sortable-handle" data-name="'.htmlspecialchars($name).'" data-id="'.@$lastInsertId.'">
+        $stageHtml = '<li id="'.@$lastInsertId.'" class="ips-subcard-item kanban-item root_child int_block '.@$ltb_class.' ui-sortable-handle" draggable="true" data-name="'.htmlspecialchars($name).'" data-id="'.@$lastInsertId.'">
 					<div class="ips-subcard-left">
 						<span class="ips-drag-handle" title="Drag to reorder priority"><i class="fas fa-grip-vertical"></i></span>
-						<span class="ips-subcard-seq">Step '.($priority + 1).'</span>
+						<span class="ips-subcard-seq">Stage '.($priority + 1).'</span>
 						<span class="ips-subcard-name">'.htmlspecialchars($name).'</span>
 						<span class="ips-subcard-tag">Custom Sub-Stage</span>
 					</div>
@@ -450,16 +450,21 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
     {
         $company_id = auth()->user()->company_id;
         $data = (array) $request->data;
+        $parentId = (int) $request->parent_id;
 
         if (! empty($data)) {
             $i = 0;
             foreach ($data as $val) {
                 if ($val > 0) {
+                    $updatePayload = ['priority' => $i];
+                    if ($parentId > 0) {
+                        $updatePayload['parent'] = $parentId;
+                    }
                     DB::table('candidate_status')
                         ->where('company_id', $company_id)
                         ->where('id', $val)
                         ->limit(1)
-                        ->update(['priority' => $i]);
+                        ->update($updatePayload);
                     $i++;
                 }
             }
@@ -467,6 +472,186 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         }
 
         return Reply::dataOnly(['status' => 'success']);
+    }
+
+    /**
+     * Reset Interview Pipeline Stages to System Defaults
+     * Permanently deletes all manually created sub-stages and ensures
+     * only default system-created sub-stages remain under their pristine parents and priorities.
+     *
+     * Tenancy Note: Tenant-scoped by auth()->user()->company_id.
+     */
+    public function resetIntStages(Request $request)
+    {
+        $company_id = auth()->user()->company_id;
+
+        // 1. Identify all manually created sub-stages (delete_status != 0 or null)
+        $customStages = DB::table('candidate_status')
+            ->where('company_id', $company_id)
+            ->where(function ($query) {
+                $query->where('delete_status', '!=', 0)
+                    ->orWhereNull('delete_status');
+            })
+            ->pluck('id')
+            ->toArray();
+
+        if (! empty($customStages)) {
+            // Nullify/reset any job applications linked to custom sub-stages to prevent dangling pointers
+            DB::table('job_applications')
+                ->where('company_id', $company_id)
+                ->whereIn('child_status_id', $customStages)
+                ->update(['child_status_id' => 0]);
+
+            // Delete manually created sub-stages
+            DB::table('candidate_status')
+                ->where('company_id', $company_id)
+                ->whereIn('id', $customStages)
+                ->delete();
+        }
+
+        // 2. Ensure system-created sub-stages exist with pristine parents & priorities
+        // Default Joined Sub-Stages (parent = 6)
+        $defaultJoined = ['Onboarded', 'Backed Out'];
+        foreach ($defaultJoined as $priority => $name) {
+            $existing = DB::table('candidate_status')
+                ->where('company_id', $company_id)
+                ->where('name', $name)
+                ->where('delete_status', 0)
+                ->first();
+
+            if ($existing) {
+                DB::table('candidate_status')
+                    ->where('id', $existing->id)
+                    ->update(['parent' => 6, 'priority' => $priority]);
+            } else {
+                DB::table('candidate_status')->insert([
+                    'company_id' => $company_id,
+                    'parent' => 6,
+                    'name' => $name,
+                    'priority' => $priority,
+                    'delete_status' => 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // Default Rejected Sub-Stages (parent = 7)
+        $defaultRejected = [
+            'Duplicate',
+            'Not Interested',
+            'Not Relevant',
+            'Profile Mismatch',
+            'Stability Issues',
+            'High Notice Period',
+            'High Salary Expectations',
+            'Interview Rejected',
+            'HR Rejected',
+            'Proxy/Fake',
+            'Other Reasons',
+        ];
+        foreach ($defaultRejected as $priority => $name) {
+            $existing = DB::table('candidate_status')
+                ->where('company_id', $company_id)
+                ->where('name', $name)
+                ->where('delete_status', 0)
+                ->first();
+
+            if ($existing) {
+                DB::table('candidate_status')
+                    ->where('id', $existing->id)
+                    ->update(['parent' => 7, 'priority' => $priority]);
+            } else {
+                DB::table('candidate_status')->insert([
+                    'company_id' => $company_id,
+                    'parent' => 7,
+                    'name' => $name,
+                    'priority' => $priority,
+                    'delete_status' => 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // 3. Flush tenant account cache
+        $this->accountSettingsService->flushAccountCache($company_id);
+
+        // 4. Fetch updated grouped statuses for re-rendering the component
+        $candidateStatusesGrouped = DB::table('candidate_status')
+            ->select('*')
+            ->where('candidate_status.company_id', '=', $company_id)
+            ->whereIn('candidate_status.parent', [1, 2, 3, 4, 5, 6, 7])
+            ->orderBy('candidate_status.parent', 'ASC')
+            ->orderBy('candidate_status.priority', 'ASC')
+            ->get()
+            ->groupBy('parent');
+
+        $viewData = [
+            'interviewStage_sourcing' => isset($candidateStatusesGrouped[1]) ? $candidateStatusesGrouped[1]->toArray() : [],
+            'interviewStage_screening' => isset($candidateStatusesGrouped[2]) ? $candidateStatusesGrouped[2]->toArray() : [],
+            'interviewStage_evaluation' => isset($candidateStatusesGrouped[3]) ? $candidateStatusesGrouped[3]->toArray() : [],
+            'interviewStage_negotiation' => isset($candidateStatusesGrouped[4]) ? $candidateStatusesGrouped[4]->toArray() : [],
+            'interviewStage_offered' => isset($candidateStatusesGrouped[5]) ? $candidateStatusesGrouped[5]->toArray() : [],
+            'interviewStage_joined' => isset($candidateStatusesGrouped[6]) ? $candidateStatusesGrouped[6]->toArray() : [],
+            'interviewStage_reject' => isset($candidateStatusesGrouped[7]) ? $candidateStatusesGrouped[7]->toArray() : [],
+            'userPermissions' => (array) ($this->userPermissions ?? ['view_settings', 'add_settings', 'edit_settings']),
+        ];
+
+        $html = view('service_company.account.components.tab-interview-stages', $viewData)->render();
+
+        return Reply::dataOnly([
+            'status' => 'success',
+            'message' => 'Interview pipeline reset to system defaults. All manually created sub-stages have been deleted.',
+            'html' => $html,
+        ]);
+    }
+
+    /**
+     * Reset General Settings to System Defaults
+     * Restores default organization settings (English, Asia/Kolkata IST, INR, 12-Hour format, Global Deduplication 60 Days).
+     *
+     * Tenancy Note: Tenant-scoped by auth()->user()->company_id.
+     */
+    public function resetGeneralSettings(Request $request)
+    {
+        $company_id = (int) auth()->user()->company_id;
+        $company = Company::find($company_id);
+
+        if (! $company) {
+            return Reply::error('Organization account not found.');
+        }
+
+        // Restore default values
+        $company->language = 1; // English
+        $company->timezone = 'Asia/Kolkata';
+        $company->currency = 53; // INR
+        $company->time_format = 1; // 12-hour format
+        $company->date_format = 1; // Default date format
+        $company->app_duplicate = 2; // Global Duplicate Detection
+        $company->app_duplicate_days = '60';
+        $company->save();
+
+        // Synchronize currency across database and caches
+        \App\Services\CurrencyService::setTenantCurrency($company_id, 'INR');
+
+        // Flush tenant account cache
+        $this->accountSettingsService->flushAccountCache($company_id);
+
+        return Reply::dataOnly([
+            'status' => 'success',
+            'message' => 'General settings have been reset to system defaults. All custom modifications have been discarded.',
+            'defaults' => [
+                'language' => 1,
+                'timezone' => 'Asia/Kolkata',
+                'currency' => 53,
+                'currency_code' => 'INR',
+                'time_format' => 1,
+                'date_format' => 1,
+                'app_duplicate' => 2,
+                'app_duplicate_days' => '60',
+            ],
+        ]);
     }
 
     /**
@@ -2086,6 +2271,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         if ($existing || $standard) {
             $matched = $existing ?: $standard;
+            $this->accountSettingsService->flushAccountCache($company_id);
             $departmentArr = DB::table('job_categories')->select('*')->where('company_id', $company_id)->orderBy('job_categories.name', 'ASC')->get();
             $html = view('service_company.account.components.departments-list', ['departmentArr' => $departmentArr])->render();
 
@@ -2114,26 +2300,33 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             'name' => $dept_name,
         ]);
         $insertGetId = $category->id;
-        $response = $this->elasticService->getClient()->update([
-            'index' => ELASTIC_JOB_CATEGORIES,
-            'id' => $insertGetId,
-            'retry_on_conflict' => 5,
-            'body' => [
-                'doc' => [
-                    'id' => $insertGetId,
-                    'company_id' => (int) auth()->user()->company_id,
-                    'name' => $request->dept_name,
-                    'created_at' => now()->toIso8601String(),
-                    'updated_at' => now()->toIso8601String(),
+
+        try {
+            $this->elasticService->getClient()->update([
+                'index' => ELASTIC_JOB_CATEGORIES,
+                'id' => $insertGetId,
+                'retry_on_conflict' => 5,
+                'body' => [
+                    'doc' => [
+                        'id' => $insertGetId,
+                        'company_id' => $company_id,
+                        'name' => $dept_name,
+                        'created_at' => now()->toIso8601String(),
+                        'updated_at' => now()->toIso8601String(),
+                    ],
+                    'doc_as_upsert' => true,
+                    'detect_noop' => false,
                 ],
-                'doc_as_upsert' => true,
-                'detect_noop' => false,
-            ],
-        ]);
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Elasticsearch job_categories index update deferred: '.$e->getMessage());
+        }
+
+        $this->accountSettingsService->flushAccountCache($company_id);
 
         $message = '<div class="alert alert-success" id="success-alert">
 					  <button type="button" class="close bg-transparent border-0 fw-bold" data-dismiss="alert">x</button>
-					  <strong>Success! </strong> New Process have added successfully.
+					  <strong>Success! </strong> Department added successfully.
 					</div>';
 
         $departmentArr = DB::table('job_categories')->select('*')->where('company_id', $company_id)->orderBy('job_categories.name', 'ASC')->get();
