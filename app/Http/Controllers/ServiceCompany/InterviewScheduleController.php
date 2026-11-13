@@ -60,7 +60,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
      */
     public function data_ajax(Request $request)
     {
-        $hasPermission = in_array('view_schedule', $this->userPermissions) ||
+        $hasPermission = in_array('view_schedule', $this->userPermissions ?? []) ||
                          ($this->user && $this->user->hasRole('admin')) ||
                          Gate::allows('view_schedule');
         abort_if(! $hasPermission, 403);
@@ -73,7 +73,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
 
         $startOfDay = Carbon::now()->startOfDay()->toDateTimeString();
         $endOfDay = Carbon::now()->endOfDay()->toDateTimeString();
-        $valCheck_date = $request->input('custom_hiringtype') ?? request('custom_hiringtype');
+        $valCheck_date = $request->input('custom_hiringtype') ?? ($request->input('sort') ?? ($request->input('sortingfilter') ?? ''));
         $chkAdminRole = $this->user->hasRole('admin');
 
         $searchTerm = trim((string) ($request->input('custom_search') ?: ($request->input('search') ?: ($request->input('q') ?: request('custom_search', '')))));
@@ -83,12 +83,16 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $kpiFilter = (string) ($request->input('kpi_filter') ?: $request->input('tab', 'all'));
         $tab = $kpiFilter;
         $company_type = trim((string) ($request->input('company_type', 'All')));
+        $job_type = trim((string) ($request->input('job_type') ?? ($request->input('employment_type') ?? 'All')));
+        $date_range = strtolower(trim((string) ($request->input('date_range', 'all'))));
+        $start_date = trim((string) ($request->input('start_date', '')));
+        $end_date = trim((string) ($request->input('end_date', '')));
 
         $stage_filter = $request->input('stage_filter', 'All');
         $status_filter = $request->input('status_filter', 'All');
         $owner_filter = $request->input('owner_filter', 'All');
         $vendor_filter = $request->input('vendor_filter', 'All');
-        $mode_filter = $request->input('mode_filter', 'All');
+        $mode_filter = trim((string) ($request->input('mode_filter') ?? ($request->input('mode') ?? 'All')));
 
         $must = [];
         $filter = [];
@@ -105,6 +109,10 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'tab' => $tab,
             'kpi_filter' => $kpiFilter,
             'company_type' => $company_type,
+            'job_type' => $job_type,
+            'date_range' => $date_range,
+            'start_date' => $start_date,
+            'end_date' => $end_date,
             'stage_filter' => $stage_filter,
             'status_filter' => $status_filter,
             'owner_filter' => $owner_filter,
@@ -158,9 +166,10 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             return response()->json($responseData);
         }
 
-        $valCheck = (string) ($request->input('custom_hiringtype') ?? request('custom_hiringtype', ''));
+        $valCheck = (string) ($request->input('custom_hiringtype') ?? ($request->input('sort') ?? ($request->input('sortingfilter') ?? '')));
         switch ($valCheck) {
             case '1':
+            case 'today':
                 $sort = [
                     ['schedule_date' => ['order' => 'asc']],
                     ['id' => ['order' => 'desc']],
@@ -176,24 +185,30 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 ];
                 break;
             case '2':
+            case 'oldest':
                 $sort = [
                     ['created_at' => ['order' => 'asc']],
                     ['id' => ['order' => 'asc']],
                 ];
                 break;
             case '3':
+            case 'latest':
+            case 'latest_scheduled':
                 $sort = [
                     ['schedule_date' => ['order' => 'desc']],
                     ['id' => ['order' => 'desc']],
                 ];
                 break;
             case '4':
+            case 'soonest':
+            case 'soonest_scheduled':
                 $sort = [
                     ['schedule_date' => ['order' => 'asc']],
                     ['id' => ['order' => 'asc']],
                 ];
                 break;
             case 'Feedback Pending':
+            case 'feedback_pending':
                 $sort = [
                     ['schedule_date' => ['order' => 'desc']],
                     [
@@ -225,6 +240,8 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 ];
                 break;
             case 'Interview Pending':
+            case 'upcoming':
+            case 'upcoming_interviews':
                 $sort = [
                     ['schedule_date' => ['order' => 'asc']],
                     [
@@ -255,6 +272,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 ];
                 $filter[] = ['bool' => ['must_not' => ['term' => ['available_status' => 2]]]];
                 break;
+            case 'newest':
             default:
                 $sort = [
                     ['schedule_date' => ['order' => 'desc']],
@@ -267,7 +285,42 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $myOrgClientIds = $this->resolveMyOrgClientIds((int) $company_id);
         $orgFilters = $this->buildOrgClassificationFilters((int) $company_id, $myOrgClientIds);
 
-        // Dedicated Company Type Filter Dropdown
+        // Dedicated Job Type / Employment Type Filter (0=Full-time, 1=Contract, 2=Freelance, 3=Part-time, 4=Internship)
+        $empTypeCodes = [
+            '0' => 0, 'full-time' => 0, 'full_time' => 0, 'full time' => 0,
+            '1' => 1, 'contract' => 1,
+            '2' => 2, 'freelance' => 2,
+            '3' => 3, 'part-time' => 3, 'part_time' => 3, 'part time' => 3,
+            '4' => 4, 'internship' => 4,
+        ];
+
+        $effectiveJobType = null;
+        if ($job_type !== '' && strtolower($job_type) !== 'all') {
+            $effectiveJobType = $job_type;
+        } elseif (isset($empTypeCodes[strtolower($company_type)])) {
+            $effectiveJobType = $company_type;
+        }
+
+        if ($effectiveJobType !== null) {
+            $code = $empTypeCodes[strtolower($effectiveJobType)] ?? (is_numeric($effectiveJobType) ? (int) $effectiveJobType : null);
+            if ($code !== null) {
+                if ($code === 0) {
+                    $filter[] = [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['employment_type' => 0]],
+                                ['bool' => ['must_not' => ['exists' => ['field' => 'employment_type']]]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                } else {
+                    $filter[] = ['term' => ['employment_type' => (int) $code]];
+                }
+            }
+        }
+
+        // Dedicated Company Type Filter Dropdown (if passed and matches org classification)
         $companyTypeLower = strtolower($company_type);
         if ($companyTypeLower === 'direct_client') {
             $filter[] = $orgFilters['direct_client'];
@@ -336,43 +389,237 @@ class InterviewScheduleController extends ServiceCompanyBaseController
 
         // Interview Mode Dropdown Filter (supports both int and string mapping)
         if ($mode_filter !== 'All' && $mode_filter !== '' && ! empty($mode_filter)) {
-            $filter[] = [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['interview_mode' => (int) $mode_filter]],
-                        ['term' => ['interview_mode' => (string) $mode_filter]],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
+            $modeMap = [
+                '1' => 1, 'telecon' => 1, 'telephone' => 1, 'phone' => 1,
+                '2' => 2, 'video' => 2, 'video call' => 2, 'online' => 2,
+                '3' => 3, 'face to face' => 3, 'f2f' => 3, 'in-person' => 3,
+                '4' => 4, 'other' => 4,
             ];
+            $mId = $modeMap[strtolower($mode_filter)] ?? (is_numeric($mode_filter) ? (int) $mode_filter : null);
+            if ($mId !== null) {
+                $filter[] = [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['interview_mode' => (int) $mId]],
+                            ['term' => ['interview_mode' => (string) $mId]],
+                            ['match_phrase' => ['mode_name' => (string) $mode_filter]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+            } else {
+                $filter[] = [
+                    'bool' => [
+                        'should' => [
+                            ['match_phrase' => ['mode_name' => (string) $mode_filter]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+            }
         }
 
-        // Dynamic Multi-field Search
-        if (! empty($searchTerm)) {
-            $numTerm = ltrim($searchTerm, '#');
-            $searchShould = [
-                ['term' => ['phone' => $searchTerm]],
-                ['term' => ['email' => $searchTerm]],
-                ['match_phrase_prefix' => ['job_title' => $searchTerm]],
-                ['match_phrase_prefix' => ['client_name' => $searchTerm]],
-                ['match_phrase_prefix' => ['full_name' => $searchTerm]],
-                ['match_phrase_prefix' => ['company_name' => $searchTerm]],
-                ['match_phrase_prefix' => ['uc_company_name' => $searchTerm]],
-                ['match_phrase_prefix' => ['interviewers' => $searchTerm]],
-                ['match_phrase_prefix' => ['current_designation' => $searchTerm]],
-                ['match_phrase_prefix' => ['current_company' => $searchTerm]],
-                ['match_phrase_prefix' => ['posted_by' => $searchTerm]],
-                ['match_phrase_prefix' => ['master_status_name' => $searchTerm]],
-                ['wildcard' => ['city_name' => '*'.strtolower($searchTerm).'*']],
-                ['wildcard' => ['country_name' => '*'.strtolower($searchTerm).'*']],
-                ['wildcard' => ['state_name' => '*'.strtolower($searchTerm).'*']],
-                ['wildcard' => ['posted_by' => '*'.strtolower($searchTerm).'*']],
-            ];
-            if (is_numeric($numTerm)) {
-                $searchShould[] = ['term' => ['job_id' => (int) $numTerm]];
-                $searchShould[] = ['term' => ['jobId' => (int) $numTerm]];
-                $searchShould[] = ['term' => ['id' => (int) $numTerm]];
+        // Explicit Schedule Date Range Filter (Rule 24 Tenant Timezone Aware)
+        $userTimezone = GeneralMethod::defaultTimeZone($company_id);
+        if ($start_date !== '' || $end_date !== '') {
+            $rangeCond = [];
+            if ($start_date !== '') {
+                try {
+                    $rangeCond['gte'] = Carbon::parse($start_date, $userTimezone)->startOfDay()->toIso8601String();
+                } catch (\Throwable $e) {}
             }
+            if ($end_date !== '') {
+                try {
+                    $rangeCond['lte'] = Carbon::parse($end_date, $userTimezone)->endOfDay()->toIso8601String();
+                } catch (\Throwable $e) {}
+            }
+            if (! empty($rangeCond)) {
+                $rangeCond['format'] = 'strict_date_optional_time';
+                $filter[] = ['range' => ['schedule_date' => $rangeCond]];
+            }
+        } elseif ($date_range !== 'all' && $date_range !== '') {
+            $nowTz = Carbon::now($userTimezone);
+            switch ($date_range) {
+                case 'today':
+                    $filter[] = [
+                        'range' => [
+                            'schedule_date' => [
+                                'gte' => $nowTz->copy()->startOfDay()->toIso8601String(),
+                                'lte' => $nowTz->copy()->endOfDay()->toIso8601String(),
+                                'format' => 'strict_date_optional_time',
+                            ],
+                        ],
+                    ];
+                    break;
+                case 'tomorrow':
+                    $tom = $nowTz->copy()->addDay();
+                    $filter[] = [
+                        'range' => [
+                            'schedule_date' => [
+                                'gte' => $tom->copy()->startOfDay()->toIso8601String(),
+                                'lte' => $tom->copy()->endOfDay()->toIso8601String(),
+                                'format' => 'strict_date_optional_time',
+                            ],
+                        ],
+                    ];
+                    break;
+                case 'this_week':
+                    $filter[] = [
+                        'range' => [
+                            'schedule_date' => [
+                                'gte' => $nowTz->copy()->startOfWeek()->startOfDay()->toIso8601String(),
+                                'lte' => $nowTz->copy()->endOfWeek()->endOfDay()->toIso8601String(),
+                                'format' => 'strict_date_optional_time',
+                            ],
+                        ],
+                    ];
+                    break;
+                case 'next_week':
+                    $nextW = $nowTz->copy()->addWeek();
+                    $filter[] = [
+                        'range' => [
+                            'schedule_date' => [
+                                'gte' => $nextW->copy()->startOfWeek()->startOfDay()->toIso8601String(),
+                                'lte' => $nextW->copy()->endOfWeek()->endOfDay()->toIso8601String(),
+                                'format' => 'strict_date_optional_time',
+                            ],
+                        ],
+                    ];
+                    break;
+                case 'this_month':
+                    $filter[] = [
+                        'range' => [
+                            'schedule_date' => [
+                                'gte' => $nowTz->copy()->startOfMonth()->startOfDay()->toIso8601String(),
+                                'lte' => $nowTz->copy()->endOfMonth()->endOfDay()->toIso8601String(),
+                                'format' => 'strict_date_optional_time',
+                            ],
+                        ],
+                    ];
+                    break;
+                case 'next_month':
+                    $nextM = $nowTz->copy()->addMonth();
+                    $filter[] = [
+                        'range' => [
+                            'schedule_date' => [
+                                'gte' => $nextM->copy()->startOfMonth()->startOfDay()->toIso8601String(),
+                                'lte' => $nextM->copy()->endOfMonth()->endOfDay()->toIso8601String(),
+                                'format' => 'strict_date_optional_time',
+                            ],
+                        ],
+                    ];
+                    break;
+                case 'past_30_days':
+                    $filter[] = [
+                        'range' => [
+                            'schedule_date' => [
+                                'gte' => $nowTz->copy()->subDays(30)->startOfDay()->toIso8601String(),
+                                'lte' => $nowTz->copy()->endOfDay()->toIso8601String(),
+                                'format' => 'strict_date_optional_time',
+                            ],
+                        ],
+                    ];
+                    break;
+            }
+        }
+
+        // Dynamic Multi-field Global Search
+        if ($searchTerm !== '') {
+            $numTerm = ltrim($searchTerm, '#');
+            $cleanNum = ltrim(preg_replace('/^r-/i', '', $numTerm), '#');
+            $lowerTerm = strtolower($searchTerm);
+            $escapedWildcard = addcslashes($lowerTerm, '+-=&|><!(){}[]^"~*?:\\/');
+
+            $searchShould = [
+                // Candidate full name
+                ['match' => ['full_name' => ['query' => $searchTerm, 'operator' => 'and']]],
+                ['match_phrase_prefix' => ['full_name' => $searchTerm]],
+                ['wildcard' => ['full_name' => '*' . $escapedWildcard . '*']],
+
+                // Candidate email
+                ['term' => ['email' => $lowerTerm]],
+                ['wildcard' => ['email' => '*' . $escapedWildcard . '*']],
+
+                // Job title / requisition
+                ['match' => ['job_title' => ['query' => $searchTerm, 'operator' => 'and']]],
+                ['match_phrase_prefix' => ['job_title' => $searchTerm]],
+                ['wildcard' => ['job_title' => '*' . $escapedWildcard . '*']],
+
+                // Client & company names
+                ['match' => ['client_name' => ['query' => $searchTerm, 'operator' => 'and']]],
+                ['match_phrase_prefix' => ['client_name' => $searchTerm]],
+                ['wildcard' => ['client_name' => '*' . $escapedWildcard . '*']],
+
+                ['match' => ['company_name' => ['query' => $searchTerm, 'operator' => 'and']]],
+                ['match_phrase_prefix' => ['company_name' => $searchTerm]],
+                ['wildcard' => ['company_name' => '*' . $escapedWildcard . '*']],
+
+                ['match' => ['uc_company_name' => ['query' => $searchTerm, 'operator' => 'and']]],
+                ['match_phrase_prefix' => ['uc_company_name' => $searchTerm]],
+                ['wildcard' => ['uc_company_name' => '*' . $escapedWildcard . '*']],
+
+                ['match' => ['client_title_name' => ['query' => $searchTerm, 'operator' => 'and']]],
+                ['match_phrase_prefix' => ['client_title_name' => $searchTerm]],
+                ['wildcard' => ['client_title_name' => '*' . $escapedWildcard . '*']],
+
+                // Recruiter Name (posted_by, source, or nested job_assign.user_name)
+                ['match' => ['source' => ['query' => $searchTerm, 'operator' => 'and']]],
+                ['match_phrase_prefix' => ['source' => $searchTerm]],
+                ['wildcard' => ['source' => '*' . $escapedWildcard . '*']],
+
+                ['term' => ['posted_by' => $lowerTerm]],
+                ['wildcard' => ['posted_by' => '*' . $escapedWildcard . '*']],
+
+                // Recruiter / team member assigned to job (nested job_assign)
+                [
+                    'nested' => [
+                        'path' => 'job_assign',
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    ['match' => ['job_assign.user_name' => ['query' => $searchTerm, 'operator' => 'and']]],
+                                    ['match_phrase_prefix' => ['job_assign.user_name' => $searchTerm]],
+                                    ['wildcard' => ['job_assign.user_name' => '*' . $escapedWildcard . '*']],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                    ],
+                ],
+
+                // Interviewer Name & Panelist Name
+                ['match' => ['interviewers' => ['query' => $searchTerm, 'operator' => 'and']]],
+                ['match_phrase_prefix' => ['interviewers' => $searchTerm]],
+                ['wildcard' => ['interviewers' => '*' . $escapedWildcard . '*']],
+                ['wildcard' => ['other_email' => '*' . $escapedWildcard . '*']],
+
+                // Current designation & current company
+                ['match_phrase_prefix' => ['current_designation' => $searchTerm]],
+                ['wildcard' => ['current_designation' => '*' . $escapedWildcard . '*']],
+                ['match_phrase_prefix' => ['current_company' => $searchTerm]],
+                ['wildcard' => ['current_company' => '*' . $escapedWildcard . '*']],
+
+                // Location & status
+                ['wildcard' => ['city_name' => '*' . $escapedWildcard . '*']],
+                ['wildcard' => ['country_name' => '*' . $escapedWildcard . '*']],
+                ['wildcard' => ['state_name' => '*' . $escapedWildcard . '*']],
+                ['match_phrase_prefix' => ['master_status_name' => $searchTerm]],
+            ];
+
+            // Candidate Mobile Number (only when query contains digits)
+            $digitsOnly = preg_replace('/[^0-9]/', '', $searchTerm);
+            if ($digitsOnly !== '') {
+                $searchShould[] = ['term' => ['phone' => $searchTerm]];
+                $searchShould[] = ['wildcard' => ['phone' => '*' . $digitsOnly . '*']];
+            }
+
+            // Numeric Job ID / Schedule ID
+            if (is_numeric($cleanNum)) {
+                $searchShould[] = ['term' => ['job_id' => (int) $cleanNum]];
+                $searchShould[] = ['term' => ['jobId' => (int) $cleanNum]];
+                $searchShould[] = ['term' => ['id' => (int) $cleanNum]];
+            }
+
             $must[] = [
                 'bool' => [
                     'should' => $searchShould,
@@ -415,18 +662,6 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             $must[] = ['bool' => ['should' => $accessShould, 'minimum_should_match' => 1]];
         }
 
-        if ($valCheck_date == 1) {
-            $filter[] = [
-                'range' => [
-                    'schedule_date' => [
-                        'gte' => Carbon::parse($startOfDay)->startOfDay()->toIso8601String(),
-                        'lte' => Carbon::parse($endOfDay)->endOfDay()->toIso8601String(),
-                        'format' => 'strict_date_optional_time',
-                    ],
-                ],
-            ];
-        }
-
         $params = [
             'index' => ELASTIC_INERTVIEW_TRACKER,
             'request_cache' => true,
@@ -434,6 +669,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 'from' => $from,
                 'size' => $size,
                 'sort' => $sort,
+                'track_total_hits' => true,
                 'query' => [
                     'bool' => [
                         'must' => $must,
@@ -463,7 +699,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'current_page' => $page,
             'per_page' => $size,
             'last_page' => $total > 0 ? (int) ceil($total / $size) : 1,
-            'listType' => 'allcandidate',
+            'listType' => 'interviews',
         ];
         $fromEntry = $total > 0 ? ($page - 1) * $size + 1 : 0;
         $toEntry = $total > 0 ? min($page * $size, $total) : 0;

@@ -595,7 +595,8 @@
 /* Shared Combobox Pill Trigger (Copied from Client Tracker .cl-act / .cl-sort-combobox-btn) */
 .it-company-type-wrapper,
 .it-mode-dropdown-wrapper,
-.it-sort-dropdown-wrapper {
+.it-sort-dropdown-wrapper,
+.it-date-range-wrapper {
     position: relative !important;
     display: inline-block !important;
     flex-shrink: 0 !important;
@@ -716,6 +717,10 @@
 
 .it-sort-dropdown-panel {
     width: 290px !important;
+}
+
+.it-date-range-dropdown-panel {
+    width: 305px !important;
 }
 
 @keyframes itPopoverFadeIn {
@@ -2316,6 +2321,122 @@
               </div>
             </div>
 
+            {{-- Filter 0: Date Range Combobox Popover --}}
+            <div class="it-date-range-wrapper" id="itDateRangeDropdownWrapper">
+              <button type="button" class="it-combobox-btn it-date-range-combobox-btn" id="itDateRangeBtn" onclick="toggleItDateRangeDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="itDateRangeDropdownPanel" title="Filter by Interview Schedule Date">
+                <div class="it-pill-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </div>
+                <div class="it-pill-texts">
+                  <span class="it-pill-lbl">Schedule Date</span>
+                  <span class="it-pill-val" id="itDateRangeDisplay">All Dates</span>
+                </div>
+                <div class="it-pill-chevron">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </button>
+
+              <div class="it-dropdown-panel it-date-range-dropdown-panel" id="itDateRangeDropdownPanel" role="listbox" aria-labelledby="itDateRangeBtn" tabindex="-1">
+                <div class="it-pop-section-hdr">Quick Date Ranges</div>
+                <div class="it-pop-item selected" id="date-opt-all" data-range-val="all" onclick="selectItDateRangeOption('all', 'All Dates', event)" role="option" aria-selected="true" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-all"></span>
+                    <span class="it-pop-item-title">All Dates</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-check">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="date-opt-today" data-range-val="today" onclick="selectItDateRangeOption('today', 'Today', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-blue"></span>
+                    <span class="it-pop-item-title">Today</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Today</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="date-opt-tomorrow" data-range-val="tomorrow" onclick="selectItDateRangeOption('tomorrow', 'Tomorrow', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-green"></span>
+                    <span class="it-pop-item-title">Tomorrow</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Next 24h</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="date-opt-this_week" data-range-val="this_week" onclick="selectItDateRangeOption('this_week', 'This Week', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-purple"></span>
+                    <span class="it-pop-item-title">This Week</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">7 Days</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="date-opt-next_week" data-range-val="next_week" onclick="selectItDateRangeOption('next_week', 'Next Week', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot" style="background:#06b6d4;"></span>
+                    <span class="it-pop-item-title">Next Week</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Upcoming</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="date-opt-this_month" data-range-val="this_month" onclick="selectItDateRangeOption('this_month', 'This Month', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot" style="background:#f59e0b;"></span>
+                    <span class="it-pop-item-title">This Month</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">{{ now()->format('M Y') }}</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="date-opt-past_30" data-range-val="past_30_days" onclick="selectItDateRangeOption('past_30_days', 'Past 30 Days', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot" style="background:#64748b;"></span>
+                    <span class="it-pop-item-title">Past 30 Days</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Recent</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+
+                <div class="it-pop-section-hdr">Custom Date Range</div>
+                <div class="it-custom-daterange-box" style="padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="flex: 1;">
+                      <label style="display: block; font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 2px;">FROM</label>
+                      <input type="date" id="itCustomStartDate" class="form-control form-control-sm" style="font-size: 11.5px; height: 32px; border-radius: 6px; padding: 2px 8px; border: 1px solid #e2e8f0;" />
+                    </div>
+                    <div style="flex: 1;">
+                      <label style="display: block; font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 2px;">TO</label>
+                      <input type="date" id="itCustomEndDate" class="form-control form-control-sm" style="font-size: 11.5px; height: 32px; border-radius: 6px; padding: 2px 8px; border: 1px solid #e2e8f0;" />
+                    </div>
+                  </div>
+                  <div style="display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px;">
+                    <button type="button" class="btn btn-sm btn-light" style="font-size: 11px; padding: 4px 10px; font-weight: 500;" onclick="clearItCustomDateRange(event)">Clear</button>
+                    <button type="button" class="btn btn-sm btn-primary" style="font-size: 11px; padding: 4px 12px; font-weight: 600;" onclick="applyItCustomDateRange(event)">Apply Range</button>
+                  </div>
+                </div>
+              </div>
+
+              <input type="hidden" id="itDateRangeFilter" name="date_range" value="all" />
+              <input type="hidden" id="itStartDateFilter" name="start_date" value="" />
+              <input type="hidden" id="itEndDateFilter" name="end_date" value="" />
+            </div>
+
             {{-- Filter 1: Job Type Combobox Popover (Direct Client, Internal Client, My Organization) --}}
             <div class="it-company-type-wrapper" id="itCompanyTypeDropdownWrapper">
               <button type="button" class="it-combobox-btn it-company-type-combobox-btn" id="itCompanyTypeBtn" onclick="toggleItCompanyTypeDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="itCompanyTypeDropdownPanel" title="Filter by Job Type">
@@ -2349,39 +2470,60 @@
                     <span class="it-pop-check">&#10003;</span>
                   </div>
                 </div>
-                <div class="it-pop-item" id="type-opt-direct_client" data-type-val="direct_client" onclick="selectItCompanyTypeOption('direct_client', 'Direct Client', event)" role="option" aria-selected="false" tabindex="0">
+                <div class="it-pop-item" id="type-opt-0" data-type-val="0" onclick="selectItCompanyTypeOption('0', 'Full-time', event)" role="option" aria-selected="false" tabindex="0">
                   <div class="it-pop-item-left">
-                    <span class="it-dot it-dot-direct"></span>
-                    <span class="it-pop-item-title">Direct Client</span>
+                    <span class="it-dot it-dot-blue"></span>
+                    <span class="it-pop-item-title">Full-time</span>
                   </div>
                   <div class="it-pop-item-right">
-                    <span class="it-pop-badge direct-badge">Marketplace</span>
+                    <span class="it-pop-badge">Full-time</span>
                     <span class="it-pop-check" style="display:none;">&#10003;</span>
                   </div>
                 </div>
-                <div class="it-pop-item" id="type-opt-internal_client" data-type-val="internal_client" onclick="selectItCompanyTypeOption('internal_client', 'Internal Client', event)" role="option" aria-selected="false" tabindex="0">
+                <div class="it-pop-item" id="type-opt-3" data-type-val="3" onclick="selectItCompanyTypeOption('3', 'Part-time', event)" role="option" aria-selected="false" tabindex="0">
                   <div class="it-pop-item-left">
-                    <span class="it-dot it-dot-internal"></span>
-                    <span class="it-pop-item-title">Internal Client</span>
+                    <span class="it-dot it-dot-purple"></span>
+                    <span class="it-pop-item-title">Part-time</span>
                   </div>
                   <div class="it-pop-item-right">
-                    <span class="it-pop-badge internal-badge">Managed</span>
+                    <span class="it-pop-badge">Part-time</span>
                     <span class="it-pop-check" style="display:none;">&#10003;</span>
                   </div>
                 </div>
-                <div class="it-pop-item" id="type-opt-my_organization" data-type-val="my_organization" onclick="selectItCompanyTypeOption('my_organization', 'My Organization', event)" role="option" aria-selected="false" tabindex="0">
+                <div class="it-pop-item" id="type-opt-1" data-type-val="1" onclick="selectItCompanyTypeOption('1', 'Contract', event)" role="option" aria-selected="false" tabindex="0">
                   <div class="it-pop-item-left">
-                    <span class="it-dot it-dot-myorg"></span>
-                    <span class="it-pop-item-title">My Organization</span>
+                    <span class="it-dot" style="background:#f59e0b;"></span>
+                    <span class="it-pop-item-title">Contract</span>
                   </div>
                   <div class="it-pop-item-right">
-                    <span class="it-pop-badge myorg-badge">Own Company</span>
+                    <span class="it-pop-badge">Contract</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="type-opt-4" data-type-val="4" onclick="selectItCompanyTypeOption('4', 'Internship', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot it-dot-green"></span>
+                    <span class="it-pop-item-title">Internship</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Internship</span>
+                    <span class="it-pop-check" style="display:none;">&#10003;</span>
+                  </div>
+                </div>
+                <div class="it-pop-item" id="type-opt-2" data-type-val="2" onclick="selectItCompanyTypeOption('2', 'Freelance', event)" role="option" aria-selected="false" tabindex="0">
+                  <div class="it-pop-item-left">
+                    <span class="it-dot" style="background:#06b6d4;"></span>
+                    <span class="it-pop-item-title">Freelance</span>
+                  </div>
+                  <div class="it-pop-item-right">
+                    <span class="it-pop-badge">Freelance</span>
                     <span class="it-pop-check" style="display:none;">&#10003;</span>
                   </div>
                 </div>
               </div>
 
               <input type="hidden" id="itCompanyTypeFilter" name="company_type" value="All" />
+              <input type="hidden" id="itJobTypeFilter" name="job_type" value="All" />
             </div>
 
             {{-- Filter 2: Interview Mode Combobox Popover (Client Tracker UX) --}}
@@ -2712,10 +2854,14 @@ var itLastAppliedSort = '';
 function updateItToolbarIndicators() {
     var count = 0;
     var q = ($('#kt_tagify_2').val() || '').trim();
-    var c = $('#itCompanyTypeFilter').val() || 'All';
+    var d = $('#itDateRangeFilter').val() || 'all';
+    var sd = $('#itStartDateFilter').val() || '';
+    var ed = $('#itEndDateFilter').val() || '';
+    var c = $('#itJobTypeFilter').val() || $('#itCompanyTypeFilter').val() || 'All';
     var m = $('#itModeFilter').val() || 'All';
     var s = $('#sortingfilter').val() || '';
     if (q.length > 0) count++;
+    if (d !== 'all' || sd !== '' || ed !== '') count++;
     if (c !== 'All') count++;
     if (m !== 'All') count++;
     if (s !== '') count++;
@@ -2732,6 +2878,133 @@ function updateItToolbarIndicators() {
     }
 }
 
+function closeItDateRangeDropdown() {
+    $('#itDateRangeDropdownPanel').removeClass('show');
+    $('#itDateRangeBtn').removeClass('active').attr('aria-expanded', 'false');
+}
+
+function toggleItDateRangeDropdown(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    var $panel = $('#itDateRangeDropdownPanel');
+    var $btn = $('#itDateRangeBtn');
+    var isVisible = $panel.hasClass('show');
+
+    if (isVisible) {
+        closeItDateRangeDropdown();
+    } else {
+        closeItCompanyTypeDropdown();
+        closeItModeDropdown();
+        closeItSortDropdown();
+        $panel.addClass('show');
+        $btn.addClass('active').attr('aria-expanded', 'true');
+        var $selected = $panel.find('.it-pop-item.selected');
+        if ($selected.length) {
+            $selected.focus();
+        } else {
+            $panel.find('.it-pop-item').first().focus();
+        }
+    }
+}
+window.toggleItDateRangeDropdown = toggleItDateRangeDropdown;
+
+function selectItDateRangeOption(rangeVal, label, e, skipFetch) {
+    if (e && e.stopPropagation) { e.stopPropagation(); }
+    closeItDateRangeDropdown();
+
+    var canonical = String(rangeVal || 'all').toLowerCase();
+    var rangeLabels = {
+        'all': 'All Dates',
+        'today': 'Today',
+        'tomorrow': 'Tomorrow',
+        'this_week': 'This Week',
+        'next_week': 'Next Week',
+        'this_month': 'This Month',
+        'past_30_days': 'Past 30 Days'
+    };
+    var displayText = label || rangeLabels[canonical] || 'All Dates';
+
+    $('#itDateRangeDisplay').text(displayText);
+    $('#itDateRangeFilter').val(canonical);
+    $('#itStartDateFilter').val('');
+    $('#itEndDateFilter').val('');
+    $('#itCustomStartDate').val('');
+    $('#itCustomEndDate').val('');
+
+    if (typeof filterValues !== 'undefined') {
+        filterValues.date_range = canonical;
+        filterValues.start_date = '';
+        filterValues.end_date = '';
+    }
+
+    $('#itDateRangeDropdownPanel .it-pop-item').removeClass('selected').attr('aria-selected', 'false')
+        .find('.it-pop-check').hide();
+    $('#itDateRangeDropdownPanel .it-pop-item[data-range-val="' + canonical + '"]')
+        .addClass('selected').attr('aria-selected', 'true').find('.it-pop-check').show();
+
+    if (canonical !== 'all') {
+        $('#itDateRangeBtn').addClass('is-active-filter');
+    } else {
+        $('#itDateRangeBtn').removeClass('is-active-filter');
+    }
+
+    updateItToolbarIndicators();
+    if (skipFetch) return;
+
+    itCurrentPage = 1;
+    fetchCandidates(1, $('#kt_tagify_2').val());
+}
+window.selectItDateRangeOption = selectItDateRangeOption;
+
+function applyItCustomDateRange(e) {
+    if (e && e.stopPropagation) { e.stopPropagation(); }
+    var sVal = $('#itCustomStartDate').val();
+    var eVal = $('#itCustomEndDate').val();
+
+    if (!sVal && !eVal) {
+        Swal.fire({ text: 'Please select at least a From or To date.', icon: 'info', confirmButtonText: 'Ok' });
+        return;
+    }
+
+    closeItDateRangeDropdown();
+
+    var displayText = '';
+    if (sVal && eVal) {
+        displayText = sVal + ' to ' + eVal;
+    } else if (sVal) {
+        displayText = 'From ' + sVal;
+    } else {
+        displayText = 'Up to ' + eVal;
+    }
+
+    $('#itDateRangeDisplay').text(displayText);
+    $('#itDateRangeFilter').val('custom');
+    $('#itStartDateFilter').val(sVal || '');
+    $('#itEndDateFilter').val(eVal || '');
+
+    if (typeof filterValues !== 'undefined') {
+        filterValues.date_range = 'custom';
+        filterValues.start_date = sVal || '';
+        filterValues.end_date = eVal || '';
+    }
+
+    $('#itDateRangeDropdownPanel .it-pop-item').removeClass('selected').attr('aria-selected', 'false')
+        .find('.it-pop-check').hide();
+    $('#itDateRangeBtn').addClass('is-active-filter');
+
+    updateItToolbarIndicators();
+    itCurrentPage = 1;
+    fetchCandidates(1, $('#kt_tagify_2').val());
+}
+window.applyItCustomDateRange = applyItCustomDateRange;
+
+function clearItCustomDateRange(e) {
+    if (e && e.stopPropagation) { e.stopPropagation(); }
+    $('#itCustomStartDate').val('');
+    $('#itCustomEndDate').val('');
+    selectItDateRangeOption('all', 'All Dates', e, false);
+}
+window.clearItCustomDateRange = clearItCustomDateRange;
+
 function closeItCompanyTypeDropdown() {
     $('#itCompanyTypeDropdownPanel').removeClass('show');
     $('#itCompanyTypeBtn').removeClass('active').attr('aria-expanded', 'false');
@@ -2746,6 +3019,7 @@ function toggleItCompanyTypeDropdown(e) {
     if (isVisible) {
         closeItCompanyTypeDropdown();
     } else {
+        closeItDateRangeDropdown();
         closeItModeDropdown();
         closeItSortDropdown();
         $panel.addClass('show');
@@ -2787,6 +3061,11 @@ function selectItCompanyTypeOption(val, text, e, skipFetch) {
     var canonical = String(val || 'All');
     var typeLabels = {
         'All': 'All Job Types',
+        '0': 'Full-time',
+        '3': 'Part-time',
+        '1': 'Contract',
+        '4': 'Internship',
+        '2': 'Freelance',
         'direct_client': 'Direct Client',
         'internal_client': 'Internal Client',
         'my_organization': 'My Organization'
@@ -2798,8 +3077,10 @@ function selectItCompanyTypeOption(val, text, e, skipFetch) {
 
     $('#itCompanyTypeDisplay').text(displayText);
     $('#itCompanyTypeFilter').val(canonical);
+    $('#itJobTypeFilter').val(canonical);
     if (typeof filterValues !== 'undefined') {
         filterValues.company_type = canonical;
+        filterValues.job_type = canonical;
     }
 
     $('#itCompanyTypeDropdownPanel .it-pop-item').removeClass('selected').attr('aria-selected', 'false')
@@ -2850,6 +3131,7 @@ function toggleItModeDropdown(e) {
     if (isVisible) {
         closeItModeDropdown();
     } else {
+        closeItDateRangeDropdown();
         closeItCompanyTypeDropdown();
         closeItSortDropdown();
         $panel.addClass('show');
@@ -2913,6 +3195,7 @@ function toggleItSortDropdown(e) {
     if (isVisible) {
         closeItSortDropdown();
     } else {
+        closeItDateRangeDropdown();
         closeItCompanyTypeDropdown();
         closeItModeDropdown();
         $panel.addClass('show');
@@ -2984,6 +3267,9 @@ function selectItSortOption(val, text, e, skipFetch) {
 
     $('#itSortDisplay').text(displayText);
     $('#sortingfilter').val(canonical);
+    if (typeof filterValues !== 'undefined') {
+        filterValues.sort = canonical;
+    }
 
     $('#itSortDropdownPanel .it-pop-item').removeClass('selected').attr('aria-selected', 'false')
         .find('.it-pop-check').hide();
@@ -3001,13 +3287,6 @@ function selectItSortOption(val, text, e, skipFetch) {
 
     updateItToolbarIndicators();
     if (skipFetch) return;
-
-    var wasFilterSort = (prevSort === '1' || prevSort === 'Feedback Pending' || prevSort === 'Interview Pending');
-    var isFilterSort = (canonical === '1' || canonical === 'Feedback Pending' || canonical === 'Interview Pending');
-
-    if (!wasFilterSort && !isFilterSort && sortDomInterviewsLocally(canonical)) {
-        return;
-    }
 
     itCurrentPage = 1;
     fetchCandidates(1, $('#kt_tagify_2').val());
@@ -3060,6 +3339,10 @@ $(document).ready(function() {
                 closeItCompanyTypeDropdown();
                 $('#itCompanyTypeBtn').focus();
             }
+            if ($('#itDateRangeDropdownPanel').hasClass('show')) {
+                closeItDateRangeDropdown();
+                $('#itDateRangeBtn').focus();
+            }
             if ($('#itModeDropdownPanel').hasClass('show')) {
                 closeItModeDropdown();
                 $('#itModeBtn').focus();
@@ -3072,7 +3355,7 @@ $(document).ready(function() {
     });
 
     // Keyboard navigation inside WAI-ARIA combobox panels
-    $('#itCompanyTypeDropdownPanel, #itModeDropdownPanel, #itSortDropdownPanel').on('keydown', '.it-pop-item', function(e) {
+    $('#itDateRangeDropdownPanel, #itCompanyTypeDropdownPanel, #itModeDropdownPanel, #itSortDropdownPanel').on('keydown', '.it-pop-item', function(e) {
         var $items = $(this).closest('.it-dropdown-panel').find('.it-pop-item');
         var idx = $items.index(this);
         if (e.key === 'ArrowDown') {
@@ -3089,6 +3372,9 @@ $(document).ready(function() {
 
     // Close popovers on outside click
     $(document).on('click', function(e) {
+        if (!$(e.target).closest('#itDateRangeDropdownWrapper').length) {
+            closeItDateRangeDropdown();
+        }
         if (!$(e.target).closest('#itCompanyTypeDropdownWrapper').length) {
             closeItCompanyTypeDropdown();
         }
@@ -3290,7 +3576,7 @@ async function isInternetAvailablecheck() {
 
 // ── KPI & Filter Controllers (Client Tracker Parity — Zero Subtabs) ─────────
 let activeKpiFilter = 'all';
-let filterValues = { company_type: 'All', mode: 'All', sort: '', search: '', kpi_filter: 'all' };
+let filterValues = { company_type: 'All', job_type: 'All', mode: 'All', sort: '', search: '', kpi_filter: 'all', date_range: 'all', start_date: '', end_date: '' };
 
 function syncActiveKpiCards(filterName) {
     document.querySelectorAll('.it-stat-card').forEach(function(card) {
@@ -3315,15 +3601,29 @@ function resetFilters() {
         window.JeroInterviewScheduleLocalStore.purge();
     }
     itLastAppliedSort = '';
+    selectItDateRangeOption('all', 'All Dates', null, true);
     selectItSortOption('', 'Newest Interviews', null, true);
     selectItCompanyTypeOption('All', 'All Job Types', null, true);
     selectItModeOption('All', 'All Modes', null, true);
     activeKpiFilter = 'all';
     filterValues.kpi_filter = 'all';
     filterValues.company_type = 'All';
+    filterValues.job_type = 'All';
     filterValues.mode = 'All';
     filterValues.sort = '';
     filterValues.search = '';
+    filterValues.date_range = 'all';
+    filterValues.start_date = '';
+    filterValues.end_date = '';
+    $('#itCompanyTypeFilter').val('All');
+    $('#itJobTypeFilter').val('All');
+    $('#itModeFilter').val('All');
+    $('#itDateRangeFilter').val('all');
+    $('#itStartDateFilter').val('');
+    $('#itEndDateFilter').val('');
+    $('#itCustomStartDate').val('');
+    $('#itCustomEndDate').val('');
+    $('#sortingfilter').val('');
     syncActiveKpiCards('all');
     $('#kt_tagify_2').val('');
     $('#inputSearch').val('');
@@ -3815,11 +4115,18 @@ async function fetchCandidates(page, search, forceRefresh) {
         custom_status:      $('#status').val() || '',
         search:             currentSearch,
         custom_hiringtype:  $('#sortingfilter').val() || '',
+        sort:               $('#sortingfilter').val() || '',
         custom_search:      currentSearch,
         tab:                activeKpiFilter,
         kpi_filter:         activeKpiFilter,
+        date_range:         (filterValues.date_range || $('#itDateRangeFilter').val() || 'all'),
+        start_date:         (filterValues.start_date || $('#itStartDateFilter').val() || ''),
+        end_date:           (filterValues.end_date || $('#itEndDateFilter').val() || ''),
+        job_type:           (filterValues.job_type || $('#itJobTypeFilter').val() || 'All'),
+        employment_type:    (filterValues.job_type || $('#itJobTypeFilter').val() || 'All'),
         company_type:       (filterValues.company_type || $('#itCompanyTypeFilter').val() || 'All'),
-        mode_filter:        filterValues.mode || 'All'
+        mode:               (filterValues.mode || $('#itModeFilter').val() || 'All'),
+        mode_filter:        (filterValues.mode || $('#itModeFilter').val() || 'All')
     };
 
     var cacheKey = JSON.stringify(payload);
