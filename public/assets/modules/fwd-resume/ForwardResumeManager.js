@@ -11,6 +11,10 @@
 (function (window, document, $) {
     'use strict';
 
+    if (window.ForwardResumeManager && window.ForwardResumeManager._initialized) {
+        return;
+    }
+
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str)
@@ -532,6 +536,7 @@
         _companyId: '0',
 
         initRoutes: function (routes) {
+            this._initialized = true;
             if (routes && typeof routes === 'object') {
                 $.extend(this._routes, routes);
             }
@@ -540,6 +545,11 @@
                 this._csrfToken = tokenEl.getAttribute('content');
             }
             this._initBroadcastChannel();
+            var existingShell = document.getElementById('test_form1');
+            if (existingShell) {
+                this._shellHtml = $('#application_test_fwd_resume_body_content').html();
+                this._afterShellInjected();
+            }
             this.prewarm();
         },
 
