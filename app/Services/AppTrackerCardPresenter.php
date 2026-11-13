@@ -57,6 +57,11 @@ class AppTrackerCardPresenter
         ];
     }
 
+    public static function extractCardMeta(object $row, ?string $resolvedCountryName = null, bool $dashedSnpDate = false): array
+    {
+        return self::present($row, $resolvedCountryName, $dashedSnpDate);
+    }
+
     /**
      * Strip placeholder tokens and return a clean string or empty string.
      */

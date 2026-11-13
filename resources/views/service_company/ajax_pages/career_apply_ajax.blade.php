@@ -170,6 +170,9 @@
                     $isAdded = false;
                 }
             }
+
+            $hasResume = !empty($row->resume) || !empty($row->candidate_resume) || !empty($rowMaps['resume_map'][$candId] ?? null);
+            $cardMeta = AppTrackerCardPresenter::extractCardMeta($row);
         @endphp
 
         <article class="wcf-cand-card" data-candidate-id="{{ @$row->id }}">
@@ -322,6 +325,34 @@
                             <span class="wcf-skills-empty">No skills listed</span>
                         @endif
                     </div>
+                </div>
+                <div class="wcf-bottom-right">
+                    @if ($hasResume)
+                        <span class="wcf-resume-pill jw-open-resume-tab cursor-pointer"
+                              data-row-id="{{ $candId }}"
+                              data-open-tab="resume_cv"
+                              title="Click to view Resume / CV">
+                            <i class="fas fa-check-circle"></i><span>Resume</span>
+                        </span>
+                    @else
+                        <span class="wcf-nocv-pill" title="Resume missing">
+                            <i class="fas fa-exclamation-circle"></i><span>No CV</span>
+                        </span>
+                    @endif
+                    @if ($cardMeta['visa_display'] !== '')
+                        <span class="wcf-visa-pill" title="{{ e('Visa Status: ' . $cardMeta['visa_raw']) }}">
+                            <i class="fas fa-passport"></i><span>{{ $cardMeta['visa_display'] }}</span>
+                        </span>
+                    @endif
+                    @if ($cardMeta['linkedin_url'] !== '')
+                        <a href="{{ e($cardMeta['linkedin_url']) }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="wcf-linkedin-pill"
+                           title="LinkedIn Profile Verified">
+                            <i class="fab fa-linkedin"></i><span>LinkedIn Verified</span>
+                        </a>
+                    @endif
                 </div>
             </div>
         </article>

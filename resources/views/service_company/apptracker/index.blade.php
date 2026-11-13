@@ -2590,29 +2590,7 @@
         </div>
     </div>
 
-    <!--begin::Test Fwd Resume Drawer - Apptracker-->
-    <div id="kt_test_fwd_resume_drawer_aptk" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume-aptk"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-        data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
-        data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_aptk" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close_aptk">
-        <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
-            <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">
-                <h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3>
-                <div class="card-toolbar">
-                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_test_fwd_resume_drawer_close_aptk">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
-                            </svg>
-                        </span>
-                    </button>
-                </div>
-            </div>
-            <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>
-        </div>
-    </div>
-    <!--end::Test Fwd Resume Drawer - Apptracker-->
+
 
 
     <div id="kt_activitiesBA_toggle"></div>
@@ -3528,76 +3506,18 @@
 
             @if(config('feature.fwd_resume_v4_enabled', true))
             if (window.ForwardResumeManager) {
-                window.ForwardResumeManager.initRoutes({
-                    shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/shell.v4.html')) ?: '4.1' }}",
-                    engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/engine.v4.js')) ?: '4.1' }}",
-                    ckeditorJs: "{{ asset('demo/ckeditor/ckeditor.js') }}",
-                    data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
-                    recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
-                    intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
-                    send: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
-                    quickUpload: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
-                    emailTemplate: "{{ url('service_company/cvtracker/email_template') }}",
-                    legacyFallback: "{{ url('service_company/cvtracker/test_fwd_resume') }}"
-                });
                 window.ForwardResumeManager.open(arr, jobIdArr, {});
-                return;
+            } else if (typeof window.openCandidateForwardResume === 'function') {
+                window.openCandidateForwardResume(arr, jobIdArr);
             }
-            @endif
-
-            var drawerEl = document.getElementById('kt_test_fwd_resume_drawer_aptk');
-            if (drawerEl && typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (drawer) { drawer.show(); }
-            }
-            $('#application_test_fwd_resume_body_content').html(
-                '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
-                '<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading Forward Resume Engine...</div>'
-            );
-
-            $.ajax({
-                type: 'POST',
-                url: url,
-                data: {
-                    '_token': token,
-                    '_method': 'POST',
-                    'arr': arr,
-                    'jobIdArr': jobIdArr
-                },
-                success: function(response) {
-                    if (response.status == "success") {
-                        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                            try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
-                        }
-                        $('#application_test_fwd_resume_body_content').html(response.view);
-                    } else {
-                        toastr.error(response.message || 'Failed to initialize Forward Resume');
-                    }
-                },
-                error: function() {
-                    toastr.error('Server error initializing Forward Resume');
-                }
-            });
         });
 
-        $(document).on('click', '#kt_test_fwd_resume_drawer_close_aptk', function() {
+        $(document).on('click', '#kt_test_fwd_resume_drawer_close_aptk', function(e) {
+            e.preventDefault();
             if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
                 window.ForwardResumeManager.close();
-            } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
-                window.closeTestFwdResumeDrawer();
-            } else {
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                    try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
-                }
-                var drawerEl = document.getElementById('kt_test_fwd_resume_drawer_aptk');
-                if (drawerEl) {
-                    if (typeof KTDrawer !== 'undefined') {
-                        var drawer = KTDrawer.getInstance(drawerEl);
-                        if (drawer) { drawer.hide(); } else { drawerEl.classList.remove('drawer-on'); }
-                    } else {
-                        drawerEl.classList.remove('drawer-on');
-                    }
-                }
+            } else if (typeof window.closeCandidateForwardResume === 'function') {
+                window.closeCandidateForwardResume();
             }
         });
 

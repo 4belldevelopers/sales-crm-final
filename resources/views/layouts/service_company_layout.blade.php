@@ -1762,6 +1762,36 @@ $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('cont
     window.JERO_AUTH_COMPANY_ID = {{ auth()->check() ? (int) auth()->user()->company_id : 0 }};
 </script>
 <script src="{{ asset('js/jero-tenant-defaults.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}"></script>
+<script>
+window.__JERO_AUTH_USER__ = {
+    id: {{ auth()->check() ? (int) auth()->id() : 0 }},
+    name: {!! json_encode(auth()->check() ? (auth()->user()->name ?? 'Recruiter') : 'Recruiter') !!},
+    email: {!! json_encode(auth()->check() ? (auth()->user()->email ?? '') : '') !!},
+    company_id: {{ auth()->check() ? (int) auth()->user()->company_id : 0 }}
+};
+window.__JERO_COMPANY__ = {
+    id: {{ auth()->check() ? (int) auth()->user()->company_id : 0 }},
+    name: {!! json_encode(auth()->check() && auth()->user()->company ? (auth()->user()->company->company_name ?? 'Hiring Partner') : 'Hiring Partner') !!},
+    logo: {!! json_encode(auth()->check() && auth()->user()->company ? (auth()->user()->company->logo ?? '') : '') !!}
+};
+$(function() {
+    if (window.ForwardResumeManager) {
+        window.ForwardResumeManager.initRoutes({
+            shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/shell.v4.html')) ?: '4.1' }}",
+            engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/engine.v4.js')) ?: '4.1' }}",
+            ckeditorJs: "{{ asset('demo/ckeditor/ckeditor.js') }}",
+            data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
+            recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
+            intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
+            send: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
+            quickUpload: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
+            emailTemplate: "{{ url('service_company/cvtracker/email_template') }}"
+        });
+        window.ForwardResumeManager.prewarm();
+    }
+});
+</script>
  
 <script>
     const checkboxAgree = document.getElementById('agreeCheck');
@@ -3080,6 +3110,11 @@ $( document ).ready(function() {
 											},
 											success 	:	function (response) {
 																$('#public_bench_application_show_right_bar').html(response.view);
+																if (window.__pendingCandidateDrawerTab) {
+																	var pendingTab = window.__pendingCandidateDrawerTab;
+																	window.__pendingCandidateDrawerTab = null;
+																	activateCandidateDrawerTab(pendingTab);
+																}
 											}
 									});
 			 });  
@@ -3119,6 +3154,11 @@ $( document ).ready(function() {
         if (thisSeq === currentBenchDrawerSeq) {
           if (response && response.view) {
             $('#bench_application_show_right_bar').html(response.view);
+            if (window.__pendingCandidateDrawerTab) {
+              var pendingTab = window.__pendingCandidateDrawerTab;
+              window.__pendingCandidateDrawerTab = null;
+              activateCandidateDrawerTab(pendingTab);
+            }
           } else if (response && response.message) {
             $('#bench_application_show_right_bar').html('<div class="p-8 text-center text-danger">' + response.message + '</div>');
           }
@@ -3397,6 +3437,9 @@ $( document ).ready(function() {
   window.hideCandidateSendMailDrawer = window.closeCandidateSendMailDrawer;
 
   window.closeCandidateForwardResume = function() {
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
+      try { window.ForwardResumeManager.close(); } catch (e) {}
+    }
     var drawerIds = ['kt_test_fwd_resume_drawer', 'kt_test_fwd_resume_drawer_aptk', 'kt_test_fwd_resume_drawer_clientapp'];
     drawerIds.forEach(function(id) {
       var el = document.getElementById(id);
@@ -3428,9 +3471,6 @@ $( document ).ready(function() {
     if (typeof window.closeTestFwdFormatDropdown === 'function') {
       try { window.closeTestFwdFormatDropdown(); } catch (e) {}
     }
-    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
-      try { window.ForwardResumeManager.closeFormatDropdown(); } catch (e) {}
-    }
   };
 
   window.openCandidateForwardResume = function(candidateId, jobId) {
@@ -3438,13 +3478,16 @@ $( document ).ready(function() {
 
     var candArr = Array.isArray(candidateId) ? candidateId : [candidateId];
     if (candArr.length === 0) return;
-    var primaryCandId = candArr[0];
     var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
 
-    // 1. Immediately ensure drawer element and open synchronously (0ms perceived latency)
-    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
-                   document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
-                   document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+    // Client-First 1-Click Open via ForwardResumeManager
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.open === 'function') {
+      window.ForwardResumeManager.open(candArr, jobArr, {});
+      return;
+    }
+
+    // Defensive fallback: open drawer element synchronously
+    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
     if (drawerEl) {
       drawerEl.style.removeProperty('display');
       drawerEl.style.setProperty('z-index', '1000050', 'important');
@@ -3456,11 +3499,8 @@ $( document ).ready(function() {
 
       if (typeof KTDrawer !== 'undefined') {
         var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) {
-          drawer.shown = true;
-        }
+        if (drawer) drawer.shown = true;
       }
-
       showCandidateFwdResumeOverlay();
     }
 
@@ -4207,7 +4247,81 @@ $( document ).ready(function() {
           $('#application_show_right_bar').html(response);
           replenishDrawerCsrfTokens();
       }
+
+      if (window.__pendingCandidateDrawerTab) {
+          var pendingTab = window.__pendingCandidateDrawerTab;
+          window.__pendingCandidateDrawerTab = null;
+          activateCandidateDrawerTab(pendingTab);
+      }
   }
+
+  function activateCandidateDrawerTab(targetTab) {
+      if (!targetTab) return;
+      targetTab = String(targetTab).replace(/^#/, '');
+
+      var maxAttempts = 20;
+      var attempt = 0;
+
+      function trySwitch() {
+          attempt++;
+          var drawerSelectors = [
+              '#application_show_right_bar',
+              '#client_application_show_right_bar',
+              '#bench_application_show_right_bar',
+              '#public_bench_application_show_right_bar'
+          ];
+
+          var tabFound = null;
+          var paneFound = null;
+
+          for (var i = 0; i < drawerSelectors.length; i++) {
+              var $drawer = $(drawerSelectors[i]);
+              if ($drawer.length && $drawer.children().length > 0) {
+                  var $tab = $drawer.find('a[href="#' + targetTab + '"], button[data-target="' + targetTab + '"], button[data-bs-target="#' + targetTab + '"], [data-tab="' + targetTab + '"]');
+                  if ($tab.length) {
+                      tabFound = $tab[0];
+                      var $pane = $drawer.find('#' + targetTab);
+                      if ($pane.length) {
+                          paneFound = $pane[0];
+                      }
+                      break;
+                  }
+              }
+          }
+
+          if (tabFound) {
+              if (typeof $(tabFound).tab === 'function') {
+                  try { $(tabFound).tab('show'); } catch(e) {}
+              }
+              try {
+                  tabFound.click();
+              } catch(e) {
+                  $(tabFound).trigger('click');
+              }
+              var $nav = $(tabFound).closest('ul, .tabs, .nav');
+              if ($nav.length) {
+                  $nav.find('.tab, .nav-link, button').removeClass('active tab-active').attr('aria-selected', 'false');
+                  $(tabFound).addClass('active tab-active').attr('aria-selected', 'true');
+              }
+              if (paneFound) {
+                  var $p = $(paneFound);
+                  $p.closest('.tab-content').children('.tab-pane').removeClass('show active');
+                  $p.addClass('show active');
+              }
+              setTimeout(function() {
+                  window.dispatchEvent(new Event('resize'));
+              }, 120);
+              return;
+          }
+
+          if (attempt < maxAttempts) {
+              setTimeout(trySwitch, 120);
+          }
+      }
+
+      setTimeout(trySwitch, 40);
+  }
+  window.activateCandidateDrawerTab = activateCandidateDrawerTab;
 
   function fetchCandidateDrawerPayload(id, currentSlug, callback) {
       var sid = String(id);
@@ -4656,6 +4770,11 @@ $( document ).ready(function() {
       // If this exact candidate is already displayed in the drawer and drawer is open, keep it open
       if (window.__activeCandidateDrawerId === id && $('#kt_activitiesApplication').hasClass('drawer-on')) {
           openMetronicDrawer('kt_activitiesApplication');
+          if (window.__pendingCandidateDrawerTab) {
+              var pendingTab = window.__pendingCandidateDrawerTab;
+              window.__pendingCandidateDrawerTab = null;
+              activateCandidateDrawerTab(pendingTab);
+          }
           return;
       }
 
@@ -4738,6 +4857,11 @@ $( document ).ready(function() {
                   $('#application_show_right_bar').html(response.view);
                   replenishDrawerCsrfTokens();
                   if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+                  if (window.__pendingCandidateDrawerTab) {
+                      var pendingTab = window.__pendingCandidateDrawerTab;
+                      window.__pendingCandidateDrawerTab = null;
+                      activateCandidateDrawerTab(pendingTab);
+                  }
               } else if (response && response.status === 'error') {
                   $('#application_show_right_bar').html(
                       '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
@@ -4797,6 +4921,11 @@ $( document ).ready(function() {
               if (response && response.view) {
                   $('#client_application_show_right_bar').html(response.view);
                   if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+                  if (window.__pendingCandidateDrawerTab) {
+                      var pendingTab = window.__pendingCandidateDrawerTab;
+                      window.__pendingCandidateDrawerTab = null;
+                      activateCandidateDrawerTab(pendingTab);
+                  }
               } else if (response && response.status === 'error') {
                   $('#client_application_show_right_bar').html(
                       '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
@@ -4816,6 +4945,34 @@ $( document ).ready(function() {
               );
           }
       });
+  });
+
+  // Global handler: clicking Resume pill across any candidate list opens drawer and activates Resume / CV tab (#resume_cv)
+  $(document).on('click', '.jw-open-resume-tab, .aptk-resume-pill, .caf-resume-pill, .simf-resume-pill, .dsf-resume-pill, .ibf-resume-pill, .dib-resume-pill, .abf-resume-pill, .brf-resume-pill, .wcf-resume-pill', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+      var $pill = $(this);
+      var targetTab = $pill.attr('data-open-tab') || 'resume_cv';
+      window.__pendingCandidateDrawerTab = targetTab;
+
+      var rowId = $pill.attr('data-row-id') || $pill.data('row-id') ||
+                  $pill.attr('data-wise-id') || $pill.data('wise-id') ||
+                  $pill.closest('[data-row-id]').attr('data-row-id') ||
+                  $pill.closest('[data-candidate-id]').attr('data-candidate-id');
+
+      var $card = $pill.closest('article, .cand-row, .aptk-cand-card, .caf-cand-card, .simf-cand-card, .dsf-cand-card, .ibf-cand-card, .dib-cand-card, .abf-cand-card, .brf-cand-card, .wcf-cand-card');
+
+      var $trigger = $card.find('.show-application-detail, .client-show-application-detail, .bench_show_application_detail, .pbench_show_application_detail, .website-show-application-detail, .custom-show-application-detail').first();
+
+      if ($trigger.length) {
+          $trigger.trigger('click');
+      } else if (rowId) {
+          var $temp = $('<a class="show-application-detail" style="display:none;" data-row-id="' + rowId + '"></a>').appendTo('body');
+          $temp.trigger('click');
+          $temp.remove();
+      }
   });   
         $(document).on('click', '#app_interview_schedule, .cdr-btn-interview, .app_interview_schedule', function(e){
             e.preventDefault();

@@ -52,6 +52,154 @@ class InterviewScheduleController extends ServiceCompanyBaseController
     }
 
     /**
+     * Intent: Builds Elasticsearch boolean 'should' query clauses for multi-entity search
+     * across recruiters, hiring managers (HM), interview panel representatives, candidates,
+     * companies, clients, job titles, locations, contact info, and numeric IDs.
+     * Tenancy: Pre-filter helper lookups strictly scoped by company_id (Rule 9).
+     */
+    protected function buildInterviewSearchShould(string $searchTerm, int $company_id): array
+    {
+        $searchTerm = trim($searchTerm);
+        if (empty($searchTerm)) {
+            return [];
+        }
+
+        $numTerm = ltrim($searchTerm, '#');
+        $lowerTerm = strtolower($searchTerm);
+
+        // 1. Tenant-scoped User ID lookup (Recruiters, SPOCs, Hiring Managers, Representatives)
+        $matchingUserIds = DB::table('users')
+            ->where('company_id', $company_id)
+            ->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                    ->orWhere('email', 'like', "%{$searchTerm}%");
+            })
+            ->pluck('id')
+            ->toArray();
+
+        // 2. Tenant-scoped Client ID lookup (Clients, Contact Persons, Representatives)
+        $matchingClientIds = DB::table('clients')
+            ->where('company_id', $company_id)
+            ->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                    ->orWhere('contact_person_name', 'like', "%{$searchTerm}%")
+                    ->orWhere('email', 'like', "%{$searchTerm}%");
+            })
+            ->pluck('id')
+            ->toArray();
+
+        $searchShould = [
+            // Contact information: exact term + case-insensitive substring wildcard
+            ['term' => ['email' => $searchTerm]],
+            ['term' => ['phone' => $searchTerm]],
+            ['term' => ['other_email' => $searchTerm]],
+            ['wildcard' => ['email' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['phone' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['other_email' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+
+            // High-relevance multi_match across analyzed text fields
+            [
+                'multi_match' => [
+                    'query' => $searchTerm,
+                    'fields' => [
+                        'full_name^4',
+                        'job_title^3',
+                        'interviewers^3',
+                        'source^2',
+                        'client_name^2',
+                        'client_title_name^2',
+                        'company_name',
+                        'uc_company_name',
+                        'current_company',
+                        'current_designation',
+                        'mode_name',
+                        'mode_lavel_name',
+                        'master_status_name',
+                        'child_status_name',
+                    ],
+                    'type' => 'best_fields',
+                    'lenient' => true,
+                ],
+            ],
+
+            // Prefix matching for analyzed text fields (instant phrase completion)
+            ['match_phrase_prefix' => ['full_name' => $searchTerm]],
+            ['match_phrase_prefix' => ['interviewers' => $searchTerm]],
+            ['match_phrase_prefix' => ['source' => $searchTerm]],
+            ['match_phrase_prefix' => ['job_title' => $searchTerm]],
+            ['match_phrase_prefix' => ['client_name' => $searchTerm]],
+            ['match_phrase_prefix' => ['client_title_name' => $searchTerm]],
+            ['match_phrase_prefix' => ['company_name' => $searchTerm]],
+            ['match_phrase_prefix' => ['uc_company_name' => $searchTerm]],
+            ['match_phrase_prefix' => ['current_company' => $searchTerm]],
+            ['match_phrase_prefix' => ['current_designation' => $searchTerm]],
+
+            // Recruiter / Submitter name: posted_by (strictly keyword field -> prefix / wildcard / term)
+            ['term' => ['posted_by' => $searchTerm]],
+            ['prefix' => ['posted_by' => ['value' => $searchTerm, 'case_insensitive' => true]]],
+            ['wildcard' => ['posted_by' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+
+            // Case-insensitive substring wildcard matching across entities
+            ['wildcard' => ['full_name' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['interviewers' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['source' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['client_name' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['client_title_name' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['job_title' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['company_name' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['uc_company_name' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['current_company' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['current_designation' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['city_name' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['country_name' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['state_name' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+            ['wildcard' => ['master_status_name' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+
+            // Assigned Recruiter / SPOC / Representative in nested job_assign
+            [
+                'nested' => [
+                    'path' => 'job_assign',
+                    'query' => [
+                        'bool' => [
+                            'should' => array_values(array_filter([
+                                ['match' => ['job_assign.user_name' => $searchTerm]],
+                                ['match_phrase_prefix' => ['job_assign.user_name' => $searchTerm]],
+                                ['wildcard' => ['job_assign.user_name' => ['value' => "*{$lowerTerm}*", 'case_insensitive' => true]]],
+                                ! empty($matchingUserIds) ? ['terms' => ['job_assign.user_id' => $matchingUserIds]] : null,
+                                ! empty($matchingUserIds) ? ['terms' => ['job_assign.spok_user_id' => $matchingUserIds]] : null,
+                            ])),
+                            'minimum_should_match' => 1,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        // Submitter / Creator by tenant user IDs
+        if (! empty($matchingUserIds)) {
+            $searchShould[] = ['terms' => ['submitted_by' => $matchingUserIds]];
+            $searchShould[] = ['terms' => ['interview_created_by' => $matchingUserIds]];
+        }
+
+        // Client lookup by tenant client IDs
+        if (! empty($matchingClientIds)) {
+            $searchShould[] = ['terms' => ['client_id' => $matchingClientIds]];
+        }
+
+        // Exact numeric ID lookup
+        if (is_numeric($numTerm)) {
+            $idVal = (int) $numTerm;
+            $searchShould[] = ['term' => ['job_id' => $idVal]];
+            $searchShould[] = ['term' => ['jobId' => $idVal]];
+            $searchShould[] = ['term' => ['id' => $idVal]];
+            $searchShould[] = ['term' => ['job_application_id' => $idVal]];
+            $searchShould[] = ['term' => ['wiseID' => $idVal]];
+        }
+
+        return $searchShould;
+    }
+
+    /**
      * Intent: Fetch paginated interview schedule list via Elasticsearch with batch pre-fetched lookup maps.
      * Tenancy: Restricted by company_id, job assignment, or interviewer listing.
      * Optimization: Deduplicated ES search execution, batch pre-fetching to prevent view N+1 queries.
@@ -60,7 +208,11 @@ class InterviewScheduleController extends ServiceCompanyBaseController
      */
     public function data_ajax(Request $request)
     {
+<<<<<<< HEAD
         $hasPermission = in_array('view_schedule', $this->userPermissions ?? []) ||
+=======
+        $hasPermission = in_array('view_schedule', (array) ($this->userPermissions ?? [])) ||
+>>>>>>> c4aef4819e1f707dcd755dfba971bb3be37c649c
                          ($this->user && $this->user->hasRole('admin')) ||
                          Gate::allows('view_schedule');
         abort_if(! $hasPermission, 403);
@@ -76,7 +228,19 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $valCheck_date = $request->input('custom_hiringtype') ?? ($request->input('sort') ?? ($request->input('sortingfilter') ?? ''));
         $chkAdminRole = $this->user->hasRole('admin');
 
-        $searchTerm = trim((string) ($request->input('custom_search') ?: ($request->input('search') ?: ($request->input('q') ?: request('custom_search', '')))));
+        $searchTermRaw = trim((string) ($request->input('custom_search') ?: ($request->input('search') ?: ($request->input('q') ?: request('custom_search', '')))));
+        $searchTerm = $searchTermRaw;
+        // Normalize Tagify JSON blobs if search term is JSON
+        if (! empty($searchTermRaw) && (str_starts_with($searchTermRaw, '[') || str_starts_with($searchTermRaw, '{'))) {
+            $decoded = json_decode($searchTermRaw, true);
+            if (is_array($decoded)) {
+                $values = array_filter(array_map(function ($item) {
+                    return is_array($item) ? ($item['value'] ?? $item['name'] ?? '') : (string) $item;
+                }, $decoded));
+                sort($values);
+                $searchTerm = implode(' ', $values);
+            }
+        }
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
@@ -419,6 +583,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             }
         }
 
+<<<<<<< HEAD
         // Explicit Schedule Date Range Filter (Rule 24 Tenant Timezone Aware)
         $userTimezone = GeneralMethod::defaultTimeZone($company_id);
         if ($start_date !== '' || $end_date !== '') {
@@ -626,6 +791,19 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     'minimum_should_match' => 1,
                 ],
             ];
+=======
+        // Dynamic Multi-field Search (Recruiter, HM, Representative, Candidate, Company, Client, Job, Location, Contact, ID)
+        if (! empty($searchTerm)) {
+            $searchShould = $this->buildInterviewSearchShould($searchTerm, $company_id);
+            if (! empty($searchShould)) {
+                $must[] = [
+                    'bool' => [
+                        'should' => $searchShould,
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+            }
+>>>>>>> c4aef4819e1f707dcd755dfba971bb3be37c649c
         }
 
         $must[] = [
@@ -947,7 +1125,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
     public function benchinterviewdata_ajax(Request $request)
     {
         // dd("hidid");
-        $hasPermission = in_array('view_schedule', $this->userPermissions) ||
+        $hasPermission = in_array('view_schedule', (array) ($this->userPermissions ?? [])) ||
                          ($this->user && $this->user->hasRole('admin')) ||
                          Gate::allows('view_schedule');
         abort_if(! $hasPermission, 403);
@@ -1043,31 +1221,17 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             ];
         }
 
-        // Custom search logic (using bounded match_phrase_prefix with max_expansions: 20 to eliminate wildcard O(n) overhead)
+        // Dynamic Multi-field Search (Recruiter, HM, Representative, Candidate, Company, Client, Job, Location, Contact, ID)
         if (! empty($searchTerm)) {
-            $must[] = [
-                'bool' => [
-                    'must' => [
-                        [
-                            'bool' => [
-                                'should' => [
-                                    ['term' => ['phone' => $searchTerm]],
-                                    ['term' => ['email' => $searchTerm]],
-                                    ['match_phrase_prefix' => ['job_title' => ['query' => $searchTerm, 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['client_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['full_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['city_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['country_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['state_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['posted_by' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['company_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
-                                ],
-                                'minimum_should_match' => 1,
-                            ],
-                        ],
+            $searchShould = $this->buildInterviewSearchShould($searchTerm, $company_id);
+            if (! empty($searchShould)) {
+                $must[] = [
+                    'bool' => [
+                        'should' => $searchShould,
+                        'minimum_should_match' => 1,
                     ],
-                ],
-            ];
+                ];
+            }
         }
 
         $must[] = [
@@ -1258,7 +1422,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
      */
     public function benchinterviewdata_v2(Request $request)
     {
-        $hasPermission = in_array('view_schedule', $this->userPermissions) ||
+        $hasPermission = in_array('view_schedule', (array) ($this->userPermissions ?? [])) ||
                          ($this->user && $this->user->hasRole('admin')) ||
                          Gate::allows('view_schedule');
         abort_if(! $hasPermission, 403);
@@ -1339,30 +1503,17 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             ];
         }
 
+        // Dynamic Multi-field Search (Recruiter, HM, Representative, Candidate, Company, Client, Job, Location, Contact, ID)
         if (! empty($searchTerm)) {
-            $must[] = [
-                'bool' => [
-                    'must' => [
-                        [
-                            'bool' => [
-                                'should' => [
-                                    ['term' => ['phone' => $searchTerm]],
-                                    ['term' => ['email' => $searchTerm]],
-                                    ['match_phrase_prefix' => ['job_title' => ['query' => $searchTerm, 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['client_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['full_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['city_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['country_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['state_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['posted_by' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
-                                    ['match_phrase_prefix' => ['company_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
-                                ],
-                                'minimum_should_match' => 1,
-                            ],
-                        ],
+            $searchShould = $this->buildInterviewSearchShould($searchTerm, $company_id);
+            if (! empty($searchShould)) {
+                $must[] = [
+                    'bool' => [
+                        'should' => $searchShould,
+                        'minimum_should_match' => 1,
                     ],
-                ],
-            ];
+                ];
+            }
         }
 
         $must[] = [
@@ -1527,7 +1678,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
     public function benchinterviewdata(Request $request)
     {
         // dd("hidid");
-        $hasPermission = in_array('view_schedule', $this->userPermissions) ||
+        $hasPermission = in_array('view_schedule', (array) ($this->userPermissions ?? [])) ||
                          ($this->user && $this->user->hasRole('admin')) ||
                          Gate::allows('view_schedule');
         abort_if(! $hasPermission, 403);

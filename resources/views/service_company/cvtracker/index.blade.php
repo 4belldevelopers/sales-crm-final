@@ -512,15 +512,16 @@
 
         /* ============================================================
            Candidate Stream & Master Card + Sub-Card Architecture
-           App Tracker Design Pattern (Rule 20 Modern Card + Sub-Card)
+           App Tracker / Similar Candidates Format (Rule 20 Modern Card + Sub-Card)
         ============================================================ */
-        .cv-cards-stream {
+        .cv-cards-stream, .simf-cand-stream {
             font-family: 'Poppins', sans-serif;
             width: 100%;
         }
-        .aptk-cand-card {
+        .simf-cand-card, .aptk-cand-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
+            border-left: 3.5px solid #cbd5e1;
             border-radius: 10px;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
             display: flex;
@@ -530,27 +531,30 @@
             transition: all 0.2s ease;
             width: 100%;
         }
-        .aptk-cand-card:hover {
+        .simf-cand-card:hover, .aptk-cand-card:hover {
             border-color: #cbd5e1;
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
         }
-        .aptk-cand-card.is-selected {
+        .simf-cand-card.is-selected, .aptk-cand-card.is-selected {
             background-color: #f8fbff !important;
             border-color: #009ef7 !important;
             box-shadow: 0 2px 10px rgba(0, 158, 247, 0.12) !important;
         }
+        .simf-cand-card.is-duplicate, .aptk-cand-card.is-duplicate {
+            border-left-color: #ef4444;
+        }
 
-        /* 6 Upper Discrete Sub-Cards Grid */
-        .aptk-cand-grid {
+        /* 6 Upper Discrete Sub-Cards Grid (15.6" screen optimized) */
+        .simf-cand-grid, .aptk-cand-grid {
             display: grid;
-            grid-template-columns: minmax(0, 2.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.3fr);
+            grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.15fr);
             gap: 8px;
             padding: 10px 12px;
             width: 100%;
             max-width: 100%;
             align-items: stretch;
         }
-        .aptk-cand-subcard {
+        .simf-cand-subcard, .aptk-cand-subcard {
             background: #f8fafc;
             border: 1px solid #edf2f7;
             border-radius: 8px;
@@ -562,36 +566,82 @@
             overflow: hidden;
             transition: border-color 0.15s ease, background-color 0.15s ease;
         }
+        .simf-cand-card:hover .simf-cand-subcard,
         .aptk-cand-card:hover .aptk-cand-subcard {
             border-color: #e2e8f0;
         }
-        .aptk-subcard-hdr {
+
+        /* Sub-Card 4: Document Color Standard Subcard Backgrounds */
+        .simf-cand-subcard--my-org {
+            background: #fffbeb !important;
+            border-color: #fde68a !important;
+        }
+        .simf-cand-subcard--internal {
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+        }
+        .simf-cand-subcard--direct {
+            background: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+        }
+        .simf-cand-card:hover .simf-cand-subcard--my-org {
+            border-color: #fcd34d !important;
+        }
+        .simf-cand-card:hover .simf-cand-subcard--internal {
+            border-color: #93c5fd !important;
+        }
+        .simf-cand-card:hover .simf-cand-subcard--direct {
+            border-color: #6ee7b7 !important;
+        }
+
+        /* Sub-Card 4: Rule 25 Canonical Badges (Applied to badge pill only, not full subcard) */
+        .type-my-org { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d !important; }
+        .type-internal { background: #dbeafe !important; color: #1e40af !important; border: 1px solid #93c5fd !important; }
+        .type-direct { background: #d1fae5 !important; color: #166534 !important; border: 1px solid #6ee7b7 !important; }
+        .simf-target-type-badge {
+            font-size: 9.5px;
+            font-weight: 700;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            white-space: nowrap !important;
+            flex-shrink: 0;
+        }
+
+        /* Subcard Header & Label */
+        .simf-subcard-head, .aptk-subcard-hdr {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 4px;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             line-height: 1;
+            min-height: 18px;
         }
-        .aptk-subcard-label {
+        .simf-subcard-label, .aptk-subcard-label {
             font-size: 9.5px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.35px;
             color: #64748b;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-        .aptk-chk-wrap {
+            line-height: 1.1;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            margin: 0;
-            cursor: pointer;
-            min-width: 0;
+            gap: 4px;
         }
-        .aptk-chk-wrap .form-check-input {
+        .aptk-chk-wrap,
+        .simf-subcard-head .form-check {
+            display: inline-flex;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            min-height: auto;
+        }
+        .aptk-chk-wrap .form-check-input,
+        .simf-subcard-head .form-check-input {
             width: 15px;
             height: 15px;
             margin: 0;
@@ -614,7 +664,7 @@
             border: 1px solid #bfdbfe;
             text-transform: uppercase;
         }
-        .aptk-pill-dup {
+        .simf-dup-pill, .aptk-pill-dup {
             font-size: 8.5px;
             font-weight: 700;
             padding: 1.5px 6px;
@@ -623,6 +673,9 @@
             color: #dc2626;
             border: 1px solid #fecaca;
             text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
         }
         .aptk-subcard-body {
             display: flex;
@@ -634,54 +687,66 @@
             overflow: hidden;
         }
 
-        /* Sub-Card 1: Identity */
-        .aptk-identity-row {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            min-width: 0;
+        /* Sub-Card 1: Identity & Candidate Info */
+        .simf-cand-subcard--info {
+            cursor: pointer;
         }
-        .aptk-avatar-box {
-            width: 38px;
-            height: 38px;
-            min-width: 38px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            text-decoration: none;
-            overflow: hidden;
-            position: relative;
-            flex-shrink: 0;
-            border: 1px solid rgba(15, 23, 42, 0.06);
+        .simf-cand-subcard--info:hover {
+            background: #f0f9ff;
+            border-color: #bae6fd !important;
         }
-        .aptk-avatar-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .simf-cand-info-row, .aptk-identity-row {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 9px !important;
+            min-width: 0 !important;
         }
-        .aptk-identity-meta {
-            flex: 1 1 auto;
-            min-width: 0;
-            overflow: hidden;
+        .simf-avatar, .aptk-avatar-box {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            border-radius: 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: 700 !important;
+            font-size: 13.5px !important;
+            text-decoration: none !important;
+            overflow: hidden !important;
+            position: relative !important;
+            flex-shrink: 0 !important;
+            border: 1px solid rgba(15, 23, 42, 0.08) !important;
+            text-transform: uppercase !important;
         }
-        .aptk-cand-name {
+        .simf-avatar img, .aptk-avatar-box img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+        .simf-cand-info-meta, .aptk-identity-meta {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1.5px !important;
+        }
+        .simf-cand-name, .aptk-cand-name {
             display: block;
             font-size: 12.5px;
-            font-weight: 600;
+            font-weight: 700;
             color: #0f172a;
-            line-height: 1.3;
+            line-height: 1.25;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             text-decoration: none;
         }
-        .aptk-cand-name:hover {
+        .simf-cand-name:hover, .aptk-cand-name:hover,
+        .simf-cand-subcard--info:hover .simf-cand-name {
             color: #009ef7;
         }
-        .aptk-cand-desig {
+        .simf-cand-role, .aptk-cand-desig {
             font-size: 11px;
             font-weight: 500;
             color: #475569;
@@ -691,7 +756,7 @@
             text-overflow: ellipsis;
             margin-top: 1px;
         }
-        .aptk-cand-company {
+        .simf-cand-company, .aptk-cand-company {
             font-size: 10.5px;
             color: #64748b;
             line-height: 1.25;
@@ -700,17 +765,17 @@
             text-overflow: ellipsis;
             margin-top: 2px;
         }
-        .aptk-cand-company i { font-size: 9.5px; color: #94a3b8; }
+        .simf-cand-company i, .aptk-cand-company i { font-size: 9.5px; color: #94a3b8; }
 
         /* Sub-Card 2: Compensation & Exp */
-        .aptk-val-salary {
+        .simf-val-salary, .aptk-val-salary {
             display: flex;
             flex-direction: column;
             gap: 1px;
             min-width: 0;
             font-variant-numeric: tabular-nums;
         }
-        .aptk-sal-main {
+        .simf-sal-main, .aptk-sal-main {
             font-size: 12px;
             font-weight: 700;
             color: #0f172a;
@@ -719,12 +784,12 @@
             text-overflow: ellipsis;
             line-height: 1.25;
         }
-        .aptk-sal-mode {
+        .simf-sal-mode, .aptk-sal-mode {
             font-size: 10px;
             font-weight: 500;
             color: #64748b;
         }
-        .aptk-sal-sub {
+        .simf-sal-sub, .aptk-sal-sub {
             font-size: 10px;
             font-weight: 500;
             color: #64748b;
@@ -732,8 +797,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .aptk-val-exp,
-        .aptk-val-notice {
+        .simf-val-exp, .aptk-val-exp,
+        .simf-val-notice, .aptk-val-notice {
             font-size: 10.5px;
             font-weight: 500;
             color: #475569;
@@ -746,17 +811,17 @@
             font-variant-numeric: tabular-nums;
             line-height: 1.3;
         }
-        .aptk-val-exp i,
-        .aptk-val-notice i { font-size: 10px; color: #94a3b8; flex-shrink: 0; }
+        .simf-val-exp i, .aptk-val-exp i,
+        .simf-val-notice i, .aptk-val-notice i { font-size: 10px; color: #94a3b8; flex-shrink: 0; }
         .aptk-dot { color: #cbd5e1; font-size: 8px; }
-        .aptk-notice-txt { font-weight: 600; }
-        .aptk-notice-immediate { color: #16a34a; }
-        .aptk-notice-days { color: #d97706; }
-        .aptk-notice-snp { color: #7c3aed; }
-        .aptk-notice-default { color: #64748b; }
+        .simf-notice-txt, .aptk-notice-txt { font-weight: 600; }
+        .simf-notice-immediate, .aptk-notice-immediate { color: #16a34a; }
+        .simf-notice-days, .aptk-notice-days { color: #d97706; }
+        .simf-notice-snp, .aptk-notice-snp { color: #7c3aed; }
+        .simf-notice-default, .aptk-notice-default { color: #64748b; }
 
         /* Sub-Card 3: Location & Degree */
-        .aptk-loc-city {
+        .simf-loc-city, .aptk-loc-city {
             font-size: 11.5px;
             font-weight: 600;
             color: #0f172a;
@@ -765,8 +830,8 @@
             text-overflow: ellipsis;
             line-height: 1.3;
         }
-        .aptk-loc-city i { font-size: 10px; color: #94a3b8; }
-        .aptk-loc-mode {
+        .simf-loc-city i, .aptk-loc-city i { font-size: 10px; color: #94a3b8; }
+        .simf-loc-mode, .aptk-loc-mode {
             font-size: 10.5px;
             font-weight: 500;
             color: #64748b;
@@ -776,8 +841,8 @@
             line-height: 1.3;
             margin-top: 2px;
         }
-        .aptk-loc-mode i { font-size: 9.5px; color: #94a3b8; }
-        .aptk-loc-edu {
+        .simf-loc-mode i, .aptk-loc-mode i { font-size: 9.5px; color: #94a3b8; }
+        .simf-loc-edu, .aptk-loc-edu {
             font-size: 10.5px;
             font-weight: 500;
             color: #475569;
@@ -787,207 +852,287 @@
             line-height: 1.3;
             margin-top: 2px;
         }
-        .aptk-loc-edu i { font-size: 10px; color: #94a3b8; }
-        .aptk-edu-uppercase { text-transform: uppercase; }
+        .simf-loc-edu i, .aptk-loc-edu i { font-size: 10px; color: #94a3b8; }
+        .simf-edu-uppercase, .aptk-edu-uppercase { text-transform: uppercase; }
 
-        /* Sub-Card 4: Job & Mandate */
-        .aptk-job-title {
-            font-size: 11.5px;
-            font-weight: 600;
+        /* Sub-Card 4: Job Details */
+        .simf-req-title, .aptk-job-title {
+            font-size: 12.5px;
+            font-weight: 700;
             color: #0f172a;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            line-height: 1.3;
+            line-height: 1.35;
             text-decoration: none;
             display: block;
         }
-        .aptk-job-title:hover { color: #009ef7; }
-        .aptk-job-client {
-            font-size: 10.5px;
-            color: #64748b;
+        .simf-req-title:hover, .aptk-job-title:hover { color: #009ef7; }
+        .simf-req-meta-line {
+            font-size: 11px;
+            line-height: 1.35;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            line-height: 1.3;
+        }
+        .simf-req-sub-line, .aptk-job-client {
+            font-size: 11px;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.35;
             margin-top: 2px;
         }
         .aptk-job-client i { font-size: 9.5px; color: #94a3b8; }
 
-        /* Sub-Card 5: Stage */
-        .aptk-subcard-stage { cursor: pointer; }
-        .aptk-subcard-stage:hover, .aptk-subcard-stage:focus-visible {
-            border-color: #93c5fd !important;
-            background: #f0f9ff;
-            outline: none;
+        /* Sub-Card 5: Ownership */
+        .simf-owner-name {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
         }
-        .aptk-subcard-stage:hover .aptk-stage-cue { text-decoration: underline; }
-        .aptk-stage-trigger {
+        .simf-owner-company {
+            font-size: 11px;
+            font-weight: 500;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.35;
+        }
+        .simf-owner-submitted {
+            font-size: 11px;
+            font-weight: 500;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.35;
+        }
+
+        /* Sub-Card 6: Stage & Action (Restored Update Stage Cue) */
+        .simf-stage-action-wrap {
             display: flex;
             flex-direction: column;
-            gap: 3px;
-            text-decoration: none;
+            gap: 4px;
             min-width: 0;
         }
-        .aptk-stage-pill {
+        .simf-stage-trigger, .aptk-stage-trigger {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            text-decoration: none !important;
+            min-width: 0 !important;
+            cursor: pointer !important;
+        }
+        .simf-stage-pill, .aptk-stage-pill {
             display: inline-flex;
             align-items: center;
             width: fit-content;
             max-width: 100%;
-            padding: 2.5px 8px;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            font-size: 11px;
-            font-weight: 600;
-            line-height: 1.3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .aptk-substage-txt {
-            font-size: 10.5px;
-            color: #64748b;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .aptk-substage-txt strong { color: #334155; font-weight: 600; }
-        .aptk-stage-cue {
-            font-size: 10.5px;
-            font-weight: 600;
-            color: #009ef7;
-            line-height: 1.2;
-        }
-
-        /* Sub-Card 6: Quick Actions */
-        .aptk-quick-actions {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-        .aptk-action-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            color: #64748b;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            text-decoration: none;
-            transition: all 0.15s ease;
-        }
-        .aptk-action-btn:hover {
-            background: #eff6ff;
-            border-color: #93c5fd;
-            color: #2563eb;
-        }
-
-        /* Bottom Intelligence & Skills Strip */
-        .aptk-cand-bottom {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 6px 12px;
-            background: #ffffff;
-            border-top: 1px solid #f1f5f9;
-            width: 100%;
-            overflow: hidden;
-        }
-        .aptk-bottom-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1 1 auto;
-            min-width: 0;
-            overflow: hidden;
-        }
-        .aptk-match-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 5px;
+            border: 1px solid transparent;
             font-size: 10.5px;
-            font-weight: 700;
+            font-weight: 600;
             line-height: 1.3;
             white-space: nowrap;
-            flex-shrink: 0;
-            font-variant-numeric: tabular-nums;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .aptk-skills-scroll {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            overflow-x: auto;
-            overflow-y: hidden;
-            scrollbar-width: none;
-            white-space: nowrap;
-            min-width: 0;
-        }
-        .aptk-skills-scroll::-webkit-scrollbar { display: none; }
-        .aptk-skill-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 1.5px 7px;
-            border-radius: 4px;
-            background: #f8fafc;
-            color: #334155;
-            border: 1px solid #e2e8f0;
+        .simf-substage-txt, .aptk-substage-txt {
             font-size: 10px;
-            font-weight: 500;
-            line-height: 1.4;
-            flex-shrink: 0;
-        }
-        .aptk-skill-pill.is-matched {
-            background: #dcfce7;
-            color: #15803d;
-            border-color: #bbf7d0;
-            font-weight: 600;
-        }
-        .aptk-bottom-right {
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .aptk-linkedin-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            background: #ecfdf5;
-            color: #15803d;
-            border: 1px solid #86efac;
-            font-size: 10px;
-            font-weight: 600;
-            text-decoration: none;
-            line-height: 1.4;
+            color: #64748b;
             white-space: nowrap;
-            flex-shrink: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .aptk-substage-txt strong, .simf-substage-txt strong { color: #334155; font-weight: 600; }
+        .simf-stage-cue, .aptk-stage-cue {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            color: #009ef7 !important;
+            line-height: 1.2 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            margin-top: 1px !important;
+            text-decoration: none !important;
+        }
+        .simf-stage-cue:hover, .aptk-stage-cue:hover,
+        .simf-stage-trigger:hover .simf-stage-cue {
+            text-decoration: underline !important;
+        }
+
+        /* "Add to Other Job" Button */
+        .cv-add-to-other-job {
             transition: all 0.15s ease;
         }
-        .aptk-linkedin-pill:hover { background: #dcfce7; color: #166534; border-color: #4ade80; }
-        .aptk-visa-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            background: #f8fafc;
-            color: #334155;
-            border: 1px solid #e2e8f0;
-            font-size: 10px;
-            font-weight: 600;
-            line-height: 1.4;
-            white-space: nowrap;
-            flex-shrink: 0;
+        .cv-add-to-other-job:hover {
+            box-shadow: 0 2px 8px rgba(0, 158, 247, 0.35);
         }
-        .aptk-empty-card {
+
+        /* Sub-Card 7: Bottom Intelligence & Skills Strip */
+        .simf-cand-bottom, .aptk-cand-bottom {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            padding: 6px 12px !important;
+            background: #ffffff !important;
+            border-top: 1px solid #f1f5f9 !important;
+            width: 100% !important;
+            min-height: 38px !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+        }
+        .simf-bottom-left, .aptk-bottom-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+        }
+        .simf-match-pill, .aptk-match-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            padding: 2.5px 8px !important;
+            border-radius: 5px !important;
+            font-size: 10.5px !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            font-variant-numeric: tabular-nums !important;
+        }
+        .simf-skills-scroll, .aptk-skills-scroll {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+            white-space: nowrap !important;
+            flex-wrap: nowrap !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+        }
+        .simf-skills-scroll::-webkit-scrollbar, .aptk-skills-scroll::-webkit-scrollbar { display: none !important; }
+        .simf-skill-pill, .aptk-skill-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+            padding: 2px 7px !important;
+            border-radius: 4px !important;
+            background: #f8fafc !important;
+            color: #334155 !important;
+            border: 1px solid #e2e8f0 !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
+            line-height: 1.35 !important;
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
+        }
+        .simf-skill-pill.is-matched, .aptk-skill-pill.is-matched {
+            background: #dcfce7 !important;
+            color: #15803d !important;
+            border-color: #bbf7d0 !important;
+            font-weight: 600 !important;
+        }
+        .simf-skill-pill.is-mandatory, .aptk-skill-pill.is-mandatory {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+            border-color: #93c5fd !important;
+            font-weight: 600 !important;
+        }
+        .simf-skills-empty { font-size: 10.5px; color: #94a3b8; }
+        .simf-bottom-right, .aptk-bottom-right {
+            flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+        }
+        .simf-resume-pill, .aptk-resume-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 2px 8px !important;
+            border-radius: 4px !important;
+            background: #f0fdf4 !important;
+            color: #15803d !important;
+            border: 1px solid #bbf7d0 !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            line-height: 1.4 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+        .simf-resume-pill.cursor-pointer, .aptk-resume-pill.cursor-pointer, .jw-open-resume-tab {
+            cursor: pointer !important;
+            transition: all 0.15s ease-in-out !important;
+        }
+        .simf-resume-pill.cursor-pointer:hover, .aptk-resume-pill.cursor-pointer:hover, .jw-open-resume-tab:hover {
+            background: #dcfce7 !important;
+            border-color: #86efac !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 1px 2px rgba(22, 163, 74, 0.15) !important;
+        }
+        .simf-nocv-pill, .aptk-nocv-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 2px 8px !important;
+            border-radius: 4px !important;
+            background: #fef2f2 !important;
+            color: #b91c1c !important;
+            border: 1px solid #fecaca !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            line-height: 1.4 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+        .simf-linkedin-pill, .aptk-linkedin-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 2px 8px !important;
+            border-radius: 4px !important;
+            background: #ecfdf5 !important;
+            color: #15803d !important;
+            border: 1px solid #86efac !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+            line-height: 1.4 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            transition: all 0.15s ease !important;
+        }
+        .simf-linkedin-pill:hover, .aptk-linkedin-pill:hover { background: #dcfce7 !important; color: #166534 !important; border-color: #4ade80 !important; }
+        .simf-visa-pill, .aptk-visa-pill {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 2px 8px !important;
+            border-radius: 4px !important;
+            background: #f8fafc !important;
+            color: #334155 !important;
+            border: 1px solid #e2e8f0 !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            line-height: 1.4 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+        .simf-empty-card, .aptk-empty-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
@@ -996,21 +1141,21 @@
             font-family: 'Poppins', sans-serif;
         }
 
-        /* 15.6" screen responsive grid adjustments */
+        /* 15.6" screen responsive grid adjustments (1366x768 & 1920x1080) */
         @media (max-width: 1440px) {
-            .aptk-cand-grid {
-                grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.25fr);
+            .simf-cand-grid, .aptk-cand-grid {
+                grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.15fr);
                 gap: 6px;
                 padding: 8px 10px;
             }
-            .aptk-cand-subcard { padding: 6px 8px; }
+            .simf-cand-subcard, .aptk-cand-subcard { padding: 6px 8px; }
         }
         @media (max-width: 1180px) {
-            .aptk-cand-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+            .simf-cand-grid, .aptk-cand-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
         }
         @media (max-width: 640px) {
-            .aptk-cand-grid { grid-template-columns: 1fr; gap: 8px; }
-            .aptk-cand-bottom { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .simf-cand-grid, .aptk-cand-grid { grid-template-columns: 1fr; gap: 8px; }
+            .simf-cand-bottom, .aptk-cand-bottom { flex-direction: column; align-items: flex-start; gap: 6px; }
         }
 
         /* Selected-rows action bar */
@@ -2583,88 +2728,19 @@
                     return;
                 }
 
-                @if(config('feature.fwd_resume_v4_enabled', true))
                 if (window.ForwardResumeManager) {
-                    window.ForwardResumeManager.initRoutes({
-                        shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/shell.v4.html')) ?: '4.1' }}",
-                        engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/engine.v4.js')) ?: '4.1' }}",
-                        ckeditorJs: "{{ asset('demo/ckeditor/ckeditor.js') }}",
-                        data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
-                        recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
-                        intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
-                        send: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
-                        quickUpload: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
-                        emailTemplate: "{{ url('service_company/cvtracker/email_template') }}",
-                        legacyFallback: "{{ url('service_company/cvtracker/test_fwd_resume') }}"
-                    });
                     window.ForwardResumeManager.open(arr, jobIdArr, matchMap);
-                    return;
+                } else if (typeof window.openCandidateForwardResume === 'function') {
+                    window.openCandidateForwardResume(arr, jobIdArr);
                 }
-                @endif
-
-                // Open the Forward Resume drawer
-                var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
-                if (drawerEl && typeof KTDrawer !== 'undefined') {
-                    var drawer = KTDrawer.getInstance(drawerEl);
-                    if (drawer) { drawer.show(); }
-                }
-
-                $('#application_test_fwd_resume_body_content').html(
-                    '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
-                    '<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading Forward Resume Engine...</div>'
-                );
-
-                var id = jobIdArr[0];
-                var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}";
-                url = url.replace(':id', id);
-                var token = "{{ csrf_token() }}";
-
-                $.ajax({
-                    type: 'POST',
-                    url: url,
-                    data: {
-                        '_token': token,
-                        '_method': 'POST',
-                        'arr': arr,
-                        'jobIdArr': jobIdArr,
-                        'matchMap': matchMap
-                    },
-                    cache: false,
-                    success: function(response) {
-                        if (response.status == "success") {
-                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                                try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
-                            }
-                            $('#application_test_fwd_resume_body_content').html(response.view);
-                        } else {
-                            toastr.error(response.message || 'Failed to initialize Forward Resume');
-                        }
-                    },
-                    error: function() {
-                        toastr.error('Server error initializing Forward Resume');
-                    }
-                });
             });
 
-            $(document).on('click', '#kt_test_fwd_resume_drawer_close', function() {
+            $(document).on('click', '#kt_test_fwd_resume_drawer_close', function(e) {
+                e.preventDefault();
                 if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
                     window.ForwardResumeManager.close();
-                } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
-                    window.closeTestFwdResumeDrawer();
-                } else {
-                    var el = document.getElementById('kt_test_fwd_resume_drawer');
-                    if (el) {
-                        if (typeof KTDrawer !== 'undefined') {
-                            var drawer = KTDrawer.getInstance(el);
-                            if (drawer) {
-                                try { drawer.hide(); } catch(e) {}
-                            } else {
-                                el.classList.remove('drawer-on');
-                            }
-                        } else {
-                            el.classList.remove('drawer-on');
-                        }
-                    }
+                } else if (typeof window.closeCandidateForwardResume === 'function') {
+                    window.closeCandidateForwardResume();
                 }
             });
 
@@ -2930,6 +3006,69 @@
                             function() {
                                 $("#kt_activitiesCopy_close").click();
                             });
+                        return false;
+                    }
+                    if (response.status == "success") {
+                        $('#application_copy_body_content').html(response.view);
+                    }
+                }
+            });
+        });
+
+        // "Add to Other Job" Button Handler (CV Tracker Candidate Card Action -> Copy Candidate Drawer)
+        $(document).on('click', '.cv-add-to-other-job', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var candId = $(this).attr('data-candidate-id') || $(this).data('candidate-id');
+            var wiseId = $(this).attr('data-wise-id') || $(this).data('wise-id');
+            var cname = $(this).attr('data-cname') || $(this).data('cname') || '';
+            var skills = $(this).attr('data-skills') || $(this).data('skills') || '';
+
+            // Uncheck other cards, select this candidate's checkbox
+            $('.chk_list_item').prop('checked', false);
+            var $card = $(this).closest('.simf-cand-card, .aptk-cand-card');
+            $card.find('.chk_list_item').prop('checked', true);
+
+            $('.simf-cand-card, .aptk-cand-card').removeClass('is-selected');
+            $card.addClass('is-selected');
+
+            // Trigger copy drawer workflow for this specific candidate
+            window._currentCandidateName = cname;
+            var candSkills = [];
+            if (skills) {
+                var sArr = String(skills).split(',');
+                sArr.forEach(function(s) {
+                    var cleaned = $.trim(s).toLowerCase();
+                    if (cleaned && candSkills.indexOf(cleaned) === -1) {
+                        candSkills.push(cleaned);
+                    }
+                });
+            }
+            window._candidateSkills = candSkills;
+
+            $('#application_copy_body_content').html('');
+            $('#kt_activitiesCopy_toggle').trigger('click');
+
+            var id = 1;
+            var url = "{{ route('service_company.cvtracker.application_copy', ':id') }}";
+            url = url.replace(':id', id);
+            var token = "{{ csrf_token() }}";
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    '_token': token,
+                    '_method': 'POST',
+                    'arr': [candId],
+                    'wiseId': [wiseId]
+                },
+                success: function(response) {
+                    if (response.status == "block") {
+                        Swal.fire("Warning", 'Bench candidate cannot be copied', "warning").then(function() {
+                            $("#kt_activitiesCopy_close").click();
+                        });
                         return false;
                     }
                     if (response.status == "success") {

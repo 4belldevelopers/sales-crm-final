@@ -3478,23 +3478,27 @@ END:VCALENDAR";
 
         /* Intent: Tenant-scoped 24h caching for job client/company display name, eliminating 4-table join on candidate listings */
         return $companyDetailsCache[$cacheKey] = Cache::remember("ref_job_client_comp:{$cacheKey}", 86400, function () use ($jobid, $company_id) {
-            $row = DB::table('jobs')
-                ->select(
-                    'jobs.id',
-                    'jobs.company_id',
-                    'clients.name as clients_name',
-                    'clients.self_company',
-                    'companies.company_name',
-                    'recommendation_relation.id as recommendation_id',
-                    'recommendation_relation.from_company_id',
-                    'recommendation_relation.final_status',
-                    'recommendation_relation.to_company_id'
-                )
-                ->leftJoin('clients', 'clients.id', 'jobs.client_id')
-                ->leftJoin('companies', 'companies.id', 'jobs.company_id')
-                ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-                ->where('jobs.id', $jobid)
-                ->first();
+            try {
+                $row = DB::table('jobs')
+                    ->select(
+                        'jobs.id',
+                        'jobs.company_id',
+                        'clients.name as clients_name',
+                        'clients.self_company',
+                        'companies.company_name',
+                        'recommendation_relation.id as recommendation_id',
+                        'recommendation_relation.from_company_id',
+                        'recommendation_relation.final_status',
+                        'recommendation_relation.to_company_id'
+                    )
+                    ->leftJoin('clients', 'clients.id', 'jobs.client_id')
+                    ->leftJoin('companies', 'companies.id', 'jobs.company_id')
+                    ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
+                    ->where('jobs.id', $jobid)
+                    ->first();
+            } catch (\Throwable $e) {
+                return '';
+            }
 
             if (! $row) {
                 return '';
