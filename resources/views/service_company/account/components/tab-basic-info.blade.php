@@ -39,6 +39,8 @@
   $isProfileLocked = (bool) ($profileRestriction['is_locked'] ?? false);
   $lockMessage = (string) ($profileRestriction['lock_message'] ?? '');
   $lockReason = (string) ($profileRestriction['lock_reason'] ?? '');
+  $warningTitle = (string) ($profileRestriction['warning_title'] ?? 'Editing Restricted');
+  $warningMessage = (string) ($profileRestriction['warning_message'] ?? "You can't edit these company details. Please contact your Administrator for assistance.");
 ?>
 
 <div class="pb-5 client-info-step" data-wizard-type="step-content" data-wizard-state="current">
@@ -105,7 +107,7 @@
           <!-- ROW 1 (Full Width): Company Website with Fetch Details Button -->
           <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
             <div class="god-field-header">
-              <label class="god-field-label" for="website">
+              <label class="god-field-label @if($isProfileLocked) is-locked-company-field @endif" for="website" @if($isProfileLocked) data-company-field-locked="true" @endif>
                 Company Website (Optional)
                 @if($isProfileLocked)
                   <span class="badge badge-light-secondary ms-2" style="font-size: 11px; padding: 2px 7px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-weight:500;">
@@ -116,7 +118,8 @@
             </div>
 
             <div class="god-website-control-row">
-              <div class="god-input-box god-website-input-box" @if($isProfileLocked) style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
+              <div class="god-input-box god-website-input-box @if($isProfileLocked) is-locked-company-field @endif"
+                   @if($isProfileLocked) data-company-field-locked="true" style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
                 <span class="god-input-left-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
@@ -124,7 +127,7 @@
                   </svg>
                 </span>
                 <input type="text"
-                       class="god-native-input"
+                       class="god-native-input @if($isProfileLocked) is-locked-company-field @endif"
                        name="website"
                        id="website"
                        value="{{ $website ?? '' }}"
@@ -133,8 +136,9 @@
                        spellcheck="false"
                        @if($isProfileLocked)
                          readonly="readonly"
-                         tabindex="-1"
-                         style="background-color: #f8fafc !important; cursor: not-allowed; color: #64748b;"
+                         tabindex="0"
+                         data-company-field-locked="true"
+                         style="background-color: #f8fafc !important; cursor: not-allowed; color: #475569;"
                        @else
                          onkeydown="if(event.key==='Enter'||event.keyCode===13){event.preventDefault();if(window.fetchGodLevelCompanyIntelligence)window.fetchGodLevelCompanyIntelligence(this.value);return false;}"
                          onblur="if(this.value && this.value.length > 3 && this.value !== window._lastFetchedWebsite && window.fetchGodLevelCompanyIntelligence) window.fetchGodLevelCompanyIntelligence(this.value);"
@@ -156,12 +160,13 @@
 
               <!-- Bright Yellow Fetch Details Button -->
               <button type="button"
-                      class="btn god-fetch-btn"
+                      class="btn god-fetch-btn @if($isProfileLocked) is-locked-company-field @endif"
                       id="client_auto_fetch"
                       title="{{ $isProfileLocked ? 'Company details are locked' : 'Fetch and auto-fill company intelligence' }}"
                       @if($isProfileLocked)
-                        disabled="disabled"
-                        style="opacity: 0.5; pointer-events: none; cursor: not-allowed;"
+                        data-company-field-locked="true"
+                        style="opacity: 0.5; cursor: not-allowed;"
+                        onclick="if(window.showLockedCompanyFieldWarning){window.showLockedCompanyFieldWarning();} return false;"
                       @else
                         onclick="if(window.fetchGodLevelCompanyIntelligence)window.fetchGodLevelCompanyIntelligence(document.getElementById('website').value); return false;"
                       @endif>
@@ -190,7 +195,7 @@
           <!-- ROW 2 (Full Width): Company Name -->
           <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
             <div class="god-field-header">
-              <label class="god-field-label" for="client_id">
+              <label class="god-field-label @if($isProfileLocked) is-locked-company-field @endif" for="client_id" @if($isProfileLocked) data-company-field-locked="true" @endif>
                 Company Name
                 @if($isProfileLocked)
                   <span class="badge badge-light-secondary ms-2" style="font-size: 11px; padding: 2px 7px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-weight:500;">
@@ -199,7 +204,8 @@
                 @endif
               </label>
             </div>
-            <div class="god-input-box" @if($isProfileLocked) style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
+            <div class="god-input-box @if($isProfileLocked) is-locked-company-field @endif"
+                 @if($isProfileLocked) data-company-field-locked="true" style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
               <span class="god-input-left-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
@@ -213,15 +219,16 @@
                 </svg>
               </span>
               <input type="text"
-                     class="god-native-input"
+                     class="god-native-input @if($isProfileLocked) is-locked-company-field @endif"
                      name="name"
                      id="client_id"
                      value="{{ $name ?? ($company_name ?? '') }}"
                      placeholder="e.g. Stripe"
                      @if($isProfileLocked)
                        readonly="readonly"
-                       tabindex="-1"
-                       style="background-color: #f8fafc !important; cursor: not-allowed; color: #64748b;"
+                       tabindex="0"
+                       data-company-field-locked="true"
+                       style="background-color: #f8fafc !important; cursor: not-allowed; color: #475569;"
                      @else
                        oninput="var h = document.getElementById('hidden_company_name'); if (h) h.value = this.value;"
                      @endif>
@@ -241,7 +248,7 @@
           <!-- ROW 3, COL 1: Industry (Combobox with JeroIndustryIntelligenceEngine) -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="industry_display">
+              <label class="god-field-label @if($isProfileLocked) is-locked-company-field @endif" for="industry_display" @if($isProfileLocked) data-company-field-locked="true" @endif>
                 Industry
                 @if($isProfileLocked)
                   <span class="badge badge-light-secondary ms-2" style="font-size: 11px; padding: 2px 7px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-weight:500;">
@@ -276,8 +283,12 @@
             <input type="hidden" name="industries" id="hidden_industries" value="{{ $industry ?? '' }}">
 
             <!-- God-Level Enterprise Industry Combobox Component -->
-            <div class="jero-ind-select-wrap god-ind-wrap" id="jero_ind_select_wrap" @if($isProfileLocked) style="pointer-events: none;" @endif>
-              <div class="god-input-box jero-ind-input-box {{ $selectedIndName ? 'has-value' : '' }}" id="jero_ind_input_box" @if($isProfileLocked) style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
+            <div class="jero-ind-select-wrap god-ind-wrap @if($isProfileLocked) is-locked-company-field @endif"
+                 id="jero_ind_select_wrap"
+                 @if($isProfileLocked) data-company-field-locked="true" style="cursor: not-allowed;" @endif>
+              <div class="god-input-box jero-ind-input-box {{ $selectedIndName ? 'has-value' : '' }} @if($isProfileLocked) is-locked-company-field @endif"
+                   id="jero_ind_input_box"
+                   @if($isProfileLocked) data-company-field-locked="true" style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
                 <span class="god-input-left-icon jero-ind-search-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 21h18"/>
@@ -289,7 +300,7 @@
                   </svg>
                 </span>
                 <input type="text"
-                       class="god-native-input jero-ind-input"
+                       class="god-native-input jero-ind-input @if($isProfileLocked) is-locked-company-field @endif"
                        id="industry_display"
                        placeholder="Select industry"
                        autocomplete="off"
@@ -301,8 +312,9 @@
                        value="{{ $selectedIndName }}"
                        @if($isProfileLocked)
                          readonly="readonly"
-                         tabindex="-1"
-                         style="background-color: #f8fafc !important; cursor: not-allowed; color: #64748b;"
+                         tabindex="0"
+                         data-company-field-locked="true"
+                         style="background-color: #f8fafc !important; cursor: not-allowed; color: #475569;"
                        @endif>
                 @if(!$isProfileLocked)
                 <button type="button" class="god-input-clear-btn jero-ind-clear-btn" id="jero_ind_clear_btn" aria-label="Clear industry" title="Clear selection" style="{{ $selectedIndName ? 'display:inline-flex;' : 'display:none;' }}">
@@ -439,7 +451,7 @@
           @endphp
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="company_type_display">
+              <label class="god-field-label @if($isProfileLocked) is-locked-company-field @endif" for="company_type_display" @if($isProfileLocked) data-company-field-locked="true" @endif>
                 Company Type
                 @if($isProfileLocked)
                   <span class="badge badge-light-secondary ms-2" style="font-size: 11px; padding: 2px 7px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-weight:500;">
@@ -461,8 +473,12 @@
             <input type="hidden" name="industries_type" id="hidden_industries_type" value="{{ $company_type ?? '' }}">
 
             <!-- God-Level Enterprise Company Type Combobox -->
-            <div class="jero-ctype-select-wrap god-ctype-wrap" id="jero_ctype_select_wrap" @if($isProfileLocked) style="pointer-events: none;" @endif>
-              <div class="god-input-box jero-ctype-input-box {{ $selectedCompTypeName ? 'has-value' : '' }}" id="jero_ctype_input_box" @if($isProfileLocked) style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
+            <div class="jero-ctype-select-wrap god-ctype-wrap @if($isProfileLocked) is-locked-company-field @endif"
+                 id="jero_ctype_select_wrap"
+                 @if($isProfileLocked) data-company-field-locked="true" style="cursor: not-allowed;" @endif>
+              <div class="god-input-box jero-ctype-input-box {{ $selectedCompTypeName ? 'has-value' : '' }} @if($isProfileLocked) is-locked-company-field @endif"
+                   id="jero_ctype_input_box"
+                   @if($isProfileLocked) data-company-field-locked="true" style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
                 <span class="god-input-left-icon jero-ctype-search-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
@@ -475,7 +491,7 @@
                   </svg>
                 </span>
                 <input type="text"
-                       class="god-native-input jero-ctype-input"
+                       class="god-native-input jero-ctype-input @if($isProfileLocked) is-locked-company-field @endif"
                        id="company_type_display"
                        placeholder="Select company type (e.g. LLC, GmbH, Pvt Ltd, Inc)"
                        autocomplete="off"
@@ -488,8 +504,9 @@
                        value="{{ htmlspecialchars($selectedCompTypeName) }}"
                        @if($isProfileLocked)
                          readonly="readonly"
-                         tabindex="-1"
-                         style="background-color: #f8fafc !important; cursor: not-allowed; color: #64748b;"
+                         tabindex="0"
+                         data-company-field-locked="true"
+                         style="background-color: #f8fafc !important; cursor: not-allowed; color: #475569;"
                        @endif>
                 @if(!$isProfileLocked)
                 <button type="button" class="god-input-clear-btn jero-ctype-clear-btn" id="jero_ctype_clear_btn" aria-label="Clear company type" title="Clear selection" style="{{ $selectedCompTypeName ? 'display:inline-flex;' : 'display:none;' }}">
@@ -733,3 +750,145 @@
 
   </div>
 </div>
+
+@if($isProfileLocked)
+<script>
+(function() {
+    var isWarningOpen = false;
+
+    function showLockedCompanyFieldWarning() {
+        if (isWarningOpen) return;
+        if (typeof Swal !== 'undefined' && typeof Swal.isVisible === 'function' && Swal.isVisible()) {
+            return;
+        }
+
+        isWarningOpen = true;
+
+        var title = @json($warningTitle);
+        var message = @json($warningMessage);
+
+        if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+            Swal.fire({
+                title: title,
+                text: message,
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn btn-primary font-weight-bold px-6'
+                },
+                buttonsStyling: false
+            }).then(function() {
+                setTimeout(function() {
+                    isWarningOpen = false;
+                }, 250);
+            });
+        } else {
+            alert(title + "\n\n" + message);
+            setTimeout(function() {
+                isWarningOpen = false;
+            }, 250);
+        }
+    }
+
+    window.showLockedCompanyFieldWarning = showLockedCompanyFieldWarning;
+
+    function interceptLockedInteraction(e) {
+        if (e) {
+            if (e.preventDefault) e.preventDefault();
+            if (e.stopPropagation) e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        }
+        var target = e ? (e.target || e.currentTarget) : null;
+        if (target && typeof target.blur === 'function') {
+            try { target.blur(); } catch (err) {}
+        }
+        showLockedCompanyFieldWarning();
+        return false;
+    }
+
+    function initLockedInterceptors() {
+        var lockedSelectors = [
+            '#website',
+            '#client_id',
+            '#industry_display',
+            '#company_type_display',
+            '#client_auto_fetch',
+            '#jero_ind_select_wrap',
+            '#jero_ctype_select_wrap',
+            '.is-locked-company-field',
+            '[data-company-field-locked="true"]'
+        ];
+
+        var elements = document.querySelectorAll(lockedSelectors.join(','));
+        elements.forEach(function(el) {
+            // Mouse interactions
+            ['click', 'mousedown', 'mouseup', 'dblclick'].forEach(function(evt) {
+                el.addEventListener(evt, interceptLockedInteraction, true);
+            });
+
+            // Focus interactions (e.g. keyboard Tab navigation)
+            ['focus', 'focusin'].forEach(function(evt) {
+                el.addEventListener(evt, function(e) {
+                    if (el && typeof el.blur === 'function') {
+                        try { el.blur(); } catch (err) {}
+                    }
+                    interceptLockedInteraction(e);
+                }, true);
+            });
+
+            // Keyboard interactions
+            ['keydown', 'keypress', 'keyup'].forEach(function(evt) {
+                el.addEventListener(evt, interceptLockedInteraction, true);
+            });
+
+            // Input, paste, cut and change interactions
+            ['input', 'beforeinput', 'paste', 'cut', 'change'].forEach(function(evt) {
+                el.addEventListener(evt, interceptLockedInteraction, true);
+            });
+        });
+
+        // Also intercept clicks on label tags
+        var labelSelectors = [
+            'label[for="website"]',
+            'label[for="client_id"]',
+            'label[for="industry_display"]',
+            'label[for="company_type_display"]'
+        ];
+        var labels = document.querySelectorAll(labelSelectors.join(','));
+        labels.forEach(function(lbl) {
+            ['click', 'mousedown'].forEach(function(evt) {
+                lbl.addEventListener(evt, interceptLockedInteraction, true);
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLockedInterceptors);
+    } else {
+        initLockedInterceptors();
+    }
+
+    // Capture-phase document delegation for dynamically rendered or tab-switched DOM nodes
+    document.addEventListener('click', function(e) {
+        var locked = e.target && e.target.closest && e.target.closest('.is-locked-company-field, [data-company-field-locked="true"]');
+        if (locked) {
+            interceptLockedInteraction(e);
+        }
+    }, true);
+
+    document.addEventListener('keydown', function(e) {
+        var locked = e.target && e.target.closest && e.target.closest('.is-locked-company-field, [data-company-field-locked="true"]');
+        if (locked) {
+            interceptLockedInteraction(e);
+        }
+    }, true);
+
+    document.addEventListener('paste', function(e) {
+        var locked = e.target && e.target.closest && e.target.closest('.is-locked-company-field, [data-company-field-locked="true"]');
+        if (locked) {
+            interceptLockedInteraction(e);
+        }
+    }, true);
+})();
+</script>
+@endif

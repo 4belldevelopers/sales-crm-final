@@ -60,14 +60,18 @@ class CompanyProfileRestrictionService
      * Canonical user-facing lock messages.
      */
     public const MSG_VERIFIED_LOCKED = 'Your company profile has been verified. These details are permanently locked.';
+
     public const MSG_EXPIRED_LOCKED = 'The 7-day company profile editing period has expired. These fields can no longer be modified.';
+
+    public const MSG_EDITING_RESTRICTED = "You can't edit these company details. Please contact your Administrator for assistance.";
+
+    public const WARNING_TITLE = 'Editing Restricted';
 
     /**
      * Determine if a company can edit the four restricted profile fields.
      *
-     * @param Company|int|object|null $company
-     * @param Carbon|null $currentTime Optional Carbon instance for deterministic boundary testing
-     * @return bool
+     * @param  Company|int|object|null  $company
+     * @param  Carbon|null  $currentTime  Optional Carbon instance for deterministic boundary testing
      */
     public function canEditRestrictedFields(object|int|null $company, ?Carbon $currentTime = null): bool
     {
@@ -77,8 +81,7 @@ class CompanyProfileRestrictionService
     /**
      * Get authoritative restriction status, lock reason, messages, and UI metadata.
      *
-     * @param object|int|null $company
-     * @param Carbon|null $currentTime Optional Carbon instance for deterministic boundary testing
+     * @param  Carbon|null  $currentTime  Optional Carbon instance for deterministic boundary testing
      * @return array<string, mixed>
      */
     public function getRestrictionStatus(object|int|null $company, ?Carbon $currentTime = null): array
@@ -160,6 +163,8 @@ class CompanyProfileRestrictionService
             'is_age_less_than_7_days' => $isAgeLessThan7Days,
             'lock_reason' => $lockReason,
             'lock_message' => $lockMessage,
+            'warning_title' => self::WARNING_TITLE,
+            'warning_message' => self::MSG_EDITING_RESTRICTED,
             'registration_date' => $createdAt ? $createdAt->format('d M y, h:i A T') : null,
             'deadline_date' => $deadline ? $deadline->format('d M y, h:i A T') : null,
             'days_remaining' => $daysRemaining,
@@ -173,10 +178,7 @@ class CompanyProfileRestrictionService
      *
      * Returns error message string if a modification is attempted while locked, or null if allowed.
      *
-     * @param object|int|null $company
-     * @param array<string, mixed> $submittedData
-     * @param Carbon|null $currentTime
-     * @return string|null
+     * @param  array<string, mixed>  $submittedData
      */
     public function validateModificationAttempt(object|int|null $company, array $submittedData, ?Carbon $currentTime = null): ?string
     {
@@ -205,8 +207,7 @@ class CompanyProfileRestrictionService
     /**
      * Detect if submitted data differs from the existing company record for the four restricted fields.
      *
-     * @param object $company
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      * @return array<string, array<string, mixed>>
      */
     public function detectFieldModifications(object $company, array $data): array
@@ -285,9 +286,6 @@ class CompanyProfileRestrictionService
 
     /**
      * Normalize website URL for reliable comparison (strips protocol, www, trailing slashes).
-     *
-     * @param string $url
-     * @return string
      */
     public function normalizeWebsite(string $url): string
     {
@@ -306,8 +304,7 @@ class CompanyProfileRestrictionService
     /**
      * Resolve Company object from Model, DB object, or company ID.
      *
-     * @param Company|int|object|null $company
-     * @return object|null
+     * @param  Company|int|object|null  $company
      */
     private function resolveCompany(object|int|null $company): ?object
     {

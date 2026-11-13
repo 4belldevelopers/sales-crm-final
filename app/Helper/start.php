@@ -1,19 +1,51 @@
 <?php
+
 use App\Models\Company;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 
-if (!function_exists('superAdmin')) {
+// Universal fallback autoloader for App\ namespace:
+// Guarantees newly created classes (Services, Presenters, Actions, Models) resolve
+// seamlessly on servers running authoritative/optimized Composer classmaps before 'composer dump-autoload'.
+spl_autoload_register(function ($class) {
+    if (str_starts_with($class, 'App\\')) {
+        $file = dirname(__DIR__).'/'.str_replace('\\', '/', substr($class, 4)).'.php';
+        if (file_exists($file)) {
+            require_once $file;
+
+            return true;
+        }
+    }
+
+    return false;
+});
+
+if (! class_exists(\App\Services\AppTrackerCardPresenter::class, false)) {
+    $presenterPath = dirname(__DIR__).'/Services/AppTrackerCardPresenter.php';
+    if (file_exists($presenterPath)) {
+        require_once $presenterPath;
+    }
+}
+
+if (! class_exists(\App\Services\CompanyProfileRestrictionService::class, false)) {
+    $restrictionServicePath = dirname(__DIR__).'/Services/CompanyProfileRestrictionService.php';
+    if (file_exists($restrictionServicePath)) {
+        require_once $restrictionServicePath;
+    }
+}
+
+if (! function_exists('superAdmin')) {
     function superAdmin()
     {
         return auth()->user();
     }
 }
-if (!function_exists('company')) {
+if (! function_exists('company')) {
     function company()
     {
-        if(auth()->user()) {
+        if (auth()->user()) {
             $company = Company::find(auth()->user()->company_id);
+
             return $company;
         }
 
@@ -21,25 +53,25 @@ if (!function_exists('company')) {
     }
 }
 
-if (!function_exists('user')) {
+if (! function_exists('user')) {
     function user()
     {
-        if(auth()->check()) {
+        if (auth()->check()) {
             return auth()->user();
         }
         // return null;
     }
 }
 
-if (!function_exists('asset_url')) {
+if (! function_exists('asset_url')) {
 
     // @codingStandardsIgnoreLine
     function asset_url($path)
     {
-        $path = 'user-uploads/' . $path;
+        $path = 'user-uploads/'.$path;
         $storageUrl = $path;
 
-        if (!Str::startsWith($storageUrl, 'http')) {
+        if (! Str::startsWith($storageUrl, 'http')) {
             return url($storageUrl);
         }
 
@@ -48,16 +80,16 @@ if (!function_exists('asset_url')) {
     }
 
 }
-if (!function_exists('check_migrate_status')) {
+if (! function_exists('check_migrate_status')) {
 
     function check_migrate_status()
     {
-        if (!session()->has('check_migrate_status')) {
+        if (! session()->has('check_migrate_status')) {
 
             $status = Artisan::call('migrate:check');
 
-            if ($status && !request()->ajax()) {
-                Artisan::call('migrate', array('--force' => true)); //migrate database
+            if ($status && ! request()->ajax()) {
+                Artisan::call('migrate', ['--force' => true]); // migrate database
                 Artisan::call('optimize:clear');
             }
             session(['check_migrate_status' => true]);
@@ -67,14 +99,14 @@ if (!function_exists('check_migrate_status')) {
     }
 }
 
-if (!function_exists('module_enabled')) {
+if (! function_exists('module_enabled')) {
     function module_enabled($moduleName)
     {
         return \Nwidart\Modules\Facades\Module::collections()->has($moduleName);
     }
 }
 
-if (!function_exists('getDomainSpecificUrl')) {
+if (! function_exists('getDomainSpecificUrl')) {
     function getDomainSpecificUrl($url, $company = false)
     {
         if (module_enabled('Subdomain')) {
@@ -88,6 +120,7 @@ if (!function_exists('getDomainSpecificUrl')) {
                 if (! app()->isProduction()) {
                     return $url = str_replace('https', 'http', $url);
                 }
+
                 return $url;
             }
 
@@ -100,30 +133,33 @@ if (!function_exists('getDomainSpecificUrl')) {
     }
 }
 
-if (!function_exists('get_domain')) {
+if (! function_exists('get_domain')) {
 
-    function get_domain($host=false)
+    function get_domain($host = false)
     {
-        if(!$host){
-            $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';//$_SERVER['HTTP_HOST'];
+        if (! $host) {
+            $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost'; // $_SERVER['HTTP_HOST'];
         }
         $myhost = strtolower(trim($host));
         $count = substr_count($myhost, '.');
         if ($count === 2) {
-            if (strlen(explode('.', $myhost)[1]) >= 3) $myhost = explode('.', $myhost, 2)[1];
-        } else if ($count > 2) {
+            if (strlen(explode('.', $myhost)[1]) >= 3) {
+                $myhost = explode('.', $myhost, 2)[1];
+            }
+        } elseif ($count > 2) {
             $myhost = get_domain(explode('.', $myhost, 2)[1]);
         }
+
         return $myhost;
     }
 }
 
-if (!function_exists('recruit_plugins')) {
+if (! function_exists('recruit_plugins')) {
 
     function recruit_plugins()
     {
 
-        if (!session()->has('recruit_plugins')) {
+        if (! session()->has('recruit_plugins')) {
             $plugins = \Nwidart\Modules\Facades\Module::allEnabled();
             // dd(array_keys($plugins));
 
@@ -133,6 +169,7 @@ if (!function_exists('recruit_plugins')) {
 
             session(['recruit_plugins' => array_keys($plugins)]);
         }
+
         return session('recruit_plugins');
     }
 }

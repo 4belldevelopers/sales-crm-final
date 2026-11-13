@@ -1,4 +1,11 @@
 @php
+    if (!class_exists(\App\Services\AppTrackerCardPresenter::class, false)) {
+        $presenterFile = app_path('Services/AppTrackerCardPresenter.php');
+        if (file_exists($presenterFile)) {
+            require_once $presenterFile;
+        }
+    }
+
     use App\Helper\GeneralMethod;
     use App\Services\AppTrackerCardPresenter;
     use App\Services\CurrencyService;
