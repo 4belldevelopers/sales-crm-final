@@ -147,4 +147,12 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
     - **5. Tenancy, Cache Invalidation & Verification:**
       * Bumped cache version across all 9 AppTracker controller endpoints to `card_v9`.
       * Updated feature tests in `AppTrackerCardSubCardRedesignTest.php` asserting `card_v9`, `TARGET REQ`, `No CV`/`Resume`, `(Rel `, and absence of `simf-req-icon-box` and `simf-status-pill`.
-      * All 13 feature tests pass with 339 assertions.
+      * All 13 feature tests pass with 344 assertions.
+
+12. **Footer Card Intelligence Strip LinkedIn Verified & Visa Status (Total Candidates in Job & CV Tracker):**
+    - **Total Candidates in Job Parity (`all_apptracker.blade.php` & `clientappdata_ajax.blade.php`):**
+      * Verified that both AppTracker and ClientAppTracker render the green `LinkedIn Verified` pill (`.aptk-linkedin-pill` / `.caf-linkedin-pill`) with target `_blank` whenever `linkedin` URL is present on the candidate profile.
+      * Verified that Visa status (`.aptk-visa-pill` / `.caf-visa-pill`) renders conditionally as `(Country, Visa Type)` with passport icon when visa details are provided.
+      * Standardized label text to `LinkedIn Verified` across all candidate views including `all_candidates.blade.php`.
+      * Confirmed that `LinkedIn Verified` and `Visa Status` pills are strictly scoped to the footer intelligence strip of the **Total Candidates in Job** tab and CV Tracker, without polluting channel bench/similar candidate subcards.
+      * Verified with 13 feature tests in `AppTrackerCardSubCardRedesignTest.php` with 344 assertions passing.

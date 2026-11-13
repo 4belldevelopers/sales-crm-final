@@ -553,7 +553,7 @@
                                rel="noopener noreferrer"
                                class="aptk-linkedin-pill"
                                title="LinkedIn Profile Verified">
-                                <i class="fab fa-linkedin"></i><span>LinkedIn</span>
+                                <i class="fab fa-linkedin"></i><span>LinkedIn Verified</span>
                             </a>
                         @endif
                         @if ($cardMeta['visa_display'] !== '')
