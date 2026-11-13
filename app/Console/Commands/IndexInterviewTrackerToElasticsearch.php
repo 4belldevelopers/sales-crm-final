@@ -14,7 +14,8 @@ use App\Services\ElasticService;
 class IndexInterviewTrackerToElasticsearch extends Command
 {
     protected $signature = 'elasticsearch:index-interview-tracker
-                            {--fresh : Delete and recreate the index}';
+                            {--fresh : Delete and recreate the index}
+                            {--reindex : Re-index all interview schedules from MySQL into Elasticsearch}';
 
     protected $description = 'Create and index ELASTIC_INERTVIEW_TRACKER with explicit date and tenant mappings';
 
@@ -33,6 +34,19 @@ class IndexInterviewTrackerToElasticsearch extends Command
             $this->info("Created index {$indexName}.");
         } else {
             $this->info("Index {$indexName} already exists.");
+        }
+
+        if ($this->option('reindex')) {
+            $this->info("Starting reindexing of all interview schedules...");
+            $count = 0;
+            \App\Models\InterviewSchedule::chunk(100, function ($schedules) use (&$count) {
+                foreach ($schedules as $schedule) {
+                    \App\Helpers\GeneralMethod::interviewTrackerAddEditUpload($schedule->id);
+                    $count++;
+                }
+                $this->info("Indexed {$count} interview schedules so far...");
+            });
+            $this->info("Completed reindexing {$count} interview schedules into {$indexName}.");
         }
     }
 
