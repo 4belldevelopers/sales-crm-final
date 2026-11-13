@@ -24,6 +24,22 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        if (! class_exists(\App\Services\AppTrackerCardPresenter::class, false)) {
+            $presenterPath = app_path('Services/AppTrackerCardPresenter.php');
+            if (file_exists($presenterPath)) {
+                require_once $presenterPath;
+            }
+        }
+
+        if (! class_exists(\App\Services\CompanyProfileRestrictionService::class, false)) {
+            $restrictionPath = app_path('Services/CompanyProfileRestrictionService.php');
+            if (file_exists($restrictionPath)) {
+                require_once $restrictionPath;
+            }
+        }
+
+        $this->app->singleton(\App\Services\CompanyProfileRestrictionService::class);
+
         $this->registerActions();
         $this->app->bind(
             \App\Services\ForwardResume\Providers\ForwardResumeProvider::class,
