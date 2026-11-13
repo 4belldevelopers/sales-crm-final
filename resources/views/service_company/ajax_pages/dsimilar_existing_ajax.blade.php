@@ -547,7 +547,11 @@
                 </div>
                 <div class="dsf-bottom-right">
                     @if ($hasResume)
-                        <span class="dsf-resume-pill" title="Resume uploaded">
+                        <span class="dsf-resume-pill jw-open-resume-tab cursor-pointer"
+                              data-row-id="{{ $candId }}"
+                              data-wise-id="{{ $rawWiseId }}"
+                              data-open-tab="resume_cv"
+                              title="Click to view Resume / CV">
                             <i class="fas fa-check-circle"></i><span>Resume</span>
                         </span>
                     @else

@@ -966,6 +966,14 @@
         .ibf-skill-pill.is-matched { background: #dcfce7; color: #15803d; border-color: #bbf7d0; font-weight: 600; }
         .ibf-skill-pill.is-mandatory { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; font-weight: 600; }
         .ibf-skills-empty { font-size: 10.5px; color: #94a3b8; }
+        .ibf-bottom-right { flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+        .ibf-resume-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 10px; font-weight: 600; line-height: 1.4; white-space: nowrap; flex-shrink: 0; }
+        .ibf-resume-pill.cursor-pointer, .jw-open-resume-tab { cursor: pointer; transition: all 0.15s ease-in-out; }
+        .ibf-resume-pill.cursor-pointer:hover, .jw-open-resume-tab:hover { background: #dcfce7; border-color: #86efac; transform: translateY(-1px); box-shadow: 0 1px 2px rgba(22, 163, 74, 0.15); }
+        .ibf-nocv-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; font-size: 10px; font-weight: 600; line-height: 1.4; white-space: nowrap; flex-shrink: 0; }
+        .ibf-visa-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; font-size: 10px; font-weight: 600; line-height: 1.4; white-space: nowrap; flex-shrink: 0; }
+        .ibf-linkedin-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 10px; font-weight: 600; line-height: 1.4; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: all 0.15s ease-in-out; }
+        .ibf-linkedin-pill:hover { background: #dcfce7; border-color: #86efac; color: #166534; transform: translateY(-1px); box-shadow: 0 1px 2px rgba(22, 163, 74, 0.15); }
         .ibf-empty-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 42px 20px; text-align: center; }
         .ibf-empty-icon { width: 48px; height: 48px; border-radius: 12px; background: #f1f5f9; color: #94a3b8; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
         .ibf-empty-title { font-size: 14px; font-weight: 600; color: #1e293b; }

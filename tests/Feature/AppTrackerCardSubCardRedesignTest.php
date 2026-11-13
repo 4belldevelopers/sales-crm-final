@@ -931,4 +931,145 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $wcHtml = View::make('service_company.ajax_pages.career_apply_ajax', $baseParams)->render();
         $this->assertStringContainsString('wcf-loc-mode', $wcHtml);
     }
+
+    public function test_resume_pill_click_triggers_candidate_drawer_resume_tab_across_all_candidate_lists(): void
+    {
+        // 1. Verify global layout lifecycle function and click handler
+        $layoutContent = file_get_contents(resource_path('views/layouts/service_company_layout.blade.php'));
+        $this->assertStringContainsString('function activateCandidateDrawerTab(targetTab)', $layoutContent);
+        $this->assertStringContainsString('window.activateCandidateDrawerTab = activateCandidateDrawerTab;', $layoutContent);
+        $this->assertStringContainsString("window.__pendingCandidateDrawerTab = targetTab;", $layoutContent);
+        $this->assertStringContainsString("jw-open-resume-tab", $layoutContent);
+
+        // 2. Mock candidate with resume
+        $candWithResume = (object) [
+            'id' => 999,
+            'candidate_id' => 999,
+            'job_application_id' => 999,
+            'full_name' => 'Resume Candidate',
+            'designation' => 'Full Stack Developer',
+            'city_name' => 'Noida',
+            'country_name' => 'India',
+            'qualification_name' => 'B.Tech',
+            'total_exp' => '5.0',
+            'rel_exp' => '4.5',
+            'status' => 1,
+            'master_status_id' => 1,
+            'childStatusId' => 0,
+            'rec_candidate_assign_id' => 0,
+            'skills' => 'PHP, Laravel, Vue.js',
+            'salary' => 1299,
+            'salary_mode' => 2,
+            'current_salary' => 1039,
+            'current_salary_mode' => 2,
+            'ectc_yearly' => 15588,
+            'ctc_yearly' => 12468,
+            'rate' => 15,
+            'notice' => 15,
+            'np_id' => '15',
+            'serving_notice_period_mode' => 0,
+            'current_company' => '4Bell Tech',
+            'resume' => 'uploads/resumes/sample_candidate_resume.pdf',
+            'wm' => 'Remote',
+            'linkedin_url' => 'https://linkedin.com/in/test-verified',
+            'visa' => 'H1B',
+            'job_id' => 117,
+            'jobId' => 117,
+            'company_id' => 1,
+            'ClientComID' => 0,
+            'created_at' => '2026-11-12 10:00:00',
+            'updated_at' => '2026-11-12 12:00:00',
+        ];
+
+        $params = [
+            'data' => [$candWithResume],
+            'userPermissions' => ['view_jobs', 'add_job_applications'],
+            'app_int_status' => null,
+            'app_int_activity' => null,
+            'app_int_notice' => null,
+            'sal_mode' => 0,
+            'min_salary_currency' => 0,
+            'app_int_outsource' => null,
+            'jobid' => 117,
+            'requiredSkills' => ['php'],
+            'modeFilter' => 0,
+            'currencyFilter' => 0,
+            'symbolsFilter' => 'EUR',
+            'hasActiveFilters' => false,
+            'search' => '',
+            'salary_hide' => 0,
+            'rowMaps' => array_merge($this->baseRowMaps(117), [
+                'skills' => [117 => [(object) ['job_id' => 117, 'skill_name' => 'PHP']]],
+                'resume_map' => [999 => 'uploads/resumes/sample_candidate_resume.pdf'],
+                'work_mode_map' => [999 => 'Remote'],
+                'interviews' => [999 => null],
+                'jobs' => [117 => (object) [
+                    'id' => 117,
+                    'title' => 'Lead Full Stack PHP Engineer (V7)',
+                    'max_sal_mode' => 0,
+                    'max_salary_currency' => 0,
+                ]],
+                'wise_job_info' => [
+                    999 => (object) [
+                        'wise_id' => 999,
+                        'company_name' => '4Bell Technology',
+                        'client_name' => '4Bell Technology',
+                        'self_company' => 0,
+                        'matched_job_id' => 81,
+                        'title' => 'PHP / Laravel Developer',
+                        'jobStatus' => 'active',
+                        'companyIdCheck' => 999,
+                        'employment_type' => 1,
+                        'category_name' => 'Technology',
+                    ],
+                ],
+            ]),
+            'boostbenchApplications' => [],
+        ];
+
+        // 1. App Tracker Total Candidates
+        $aptkHtml = View::make('service_company.ajax_pages.all_apptracker', $params)->render();
+        $this->assertStringContainsString('aptk-resume-pill jw-open-resume-tab cursor-pointer', $aptkHtml);
+        $this->assertStringContainsString('data-open-tab="resume_cv"', $aptkHtml);
+        $this->assertStringContainsString('data-row-id="999"', $aptkHtml);
+
+        // 2. Client App Tracker Total Candidates
+        $cafHtml = View::make('service_company.ajax_pages.clientappdata_ajax', $params)->render();
+        $this->assertStringContainsString('caf-resume-pill jw-open-resume-tab cursor-pointer', $cafHtml);
+        $this->assertStringContainsString('data-open-tab="resume_cv"', $cafHtml);
+        $this->assertStringContainsString('data-row-id="999"', $cafHtml);
+
+        // 3. Similar Candidates
+        $simHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $params)->render();
+        $this->assertStringContainsString('simf-resume-pill jw-open-resume-tab cursor-pointer', $simHtml);
+        $this->assertStringContainsString('data-open-tab="resume_cv"', $simHtml);
+        $this->assertStringContainsString('data-row-id="999"', $simHtml);
+
+        // 4. Client Similar Candidates
+        $dsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $params)->render();
+        $this->assertStringContainsString('dsf-resume-pill jw-open-resume-tab cursor-pointer', $dsimHtml);
+        $this->assertStringContainsString('data-open-tab="resume_cv"', $dsimHtml);
+        $this->assertStringContainsString('data-row-id="999"', $dsimHtml);
+
+        // 5. CV Tracker
+        $cvParams = array_merge($params, [
+            'cardMeta' => [
+                'visa_display' => 'H1B',
+                'visa_raw' => 'H1B',
+                'linkedin_url' => 'https://linkedin.com/in/test-verified',
+            ],
+            'percentage' => '100%',
+            'matchScore' => 100,
+            'matchBg' => '#dcfce7',
+            'matchColor' => '#15803d',
+            'matchedSkillsArr' => ['php'],
+            'unmatchedSkillsArr' => [],
+            'wiseId' => 999,
+            'candAppId' => 999,
+        ]);
+        $cvHtml = View::make('service_company.ajax_pages.all_candidates', $cvParams)->render();
+        $this->assertStringContainsString('jw-open-resume-tab cursor-pointer', $cvHtml);
+        $this->assertStringContainsString('data-open-tab="resume_cv"', $cvHtml);
+        $this->assertStringContainsString('data-row-id="999"', $cvHtml);
+    }
 }

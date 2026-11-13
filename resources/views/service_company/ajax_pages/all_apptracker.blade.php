@@ -187,29 +187,35 @@
                     $stageIntRow = $intRow;
                 }
             } else {
-                $intRow = DB::table('interview_schedules')
-                    ->select('*')
-                    ->where(function ($q) use ($candAppId, $wiseId) {
-                        if ($candAppId > 0) $q->where('job_application_id', $candAppId);
-                        if ($wiseId > 0) $q->orWhere('interview_job_wise_con_id', $wiseId);
-                    })
-                    ->where('interview_job_id', $rowJobId)
-                    ->orderBy('interview_schedules.id', 'DESC')
-                    ->first();
-                $intRowCount = $intRow ? 1 : 0;
-                $stageIntRow = DB::table('interview_schedules')
-                    ->select('*')
-                    ->where(function ($q) use ($candAppId, $wiseId) {
-                        if ($candAppId > 0) $q->where('job_application_id', $candAppId);
-                        if ($wiseId > 0) $q->orWhere('interview_job_wise_con_id', $wiseId);
-                    })
-                    ->where('interview_job_id', $rowJobId)
-                    ->where('stage', (string) $masterStatusId)
-                    ->where(function ($q) {
-                        $q->whereNull('status')->orWhere('status', '!=', 'canceled');
-                    })
-                    ->orderBy('interview_schedules.id', 'DESC')
-                    ->first();
+                try {
+                    $intRow = DB::table('interview_schedules')
+                        ->select('*')
+                        ->where(function ($q) use ($candAppId, $wiseId) {
+                            if ($candAppId > 0) $q->where('job_application_id', $candAppId);
+                            if ($wiseId > 0) $q->orWhere('interview_job_wise_con_id', $wiseId);
+                        })
+                        ->where('interview_job_id', $rowJobId)
+                        ->orderBy('interview_schedules.id', 'DESC')
+                        ->first();
+                    $intRowCount = $intRow ? 1 : 0;
+                    $stageIntRow = DB::table('interview_schedules')
+                        ->select('*')
+                        ->where(function ($q) use ($candAppId, $wiseId) {
+                            if ($candAppId > 0) $q->where('job_application_id', $candAppId);
+                            if ($wiseId > 0) $q->orWhere('interview_job_wise_con_id', $wiseId);
+                        })
+                        ->where('interview_job_id', $rowJobId)
+                        ->where('stage', (string) $masterStatusId)
+                        ->where(function ($q) {
+                            $q->whereNull('status')->orWhere('status', '!=', 'canceled');
+                        })
+                        ->orderBy('interview_schedules.id', 'DESC')
+                        ->first();
+                } catch (\Throwable $e) {
+                    $intRow = null;
+                    $stageIntRow = null;
+                    $intRowCount = 0;
+                }
             }
             $hasStageInterview = ($stageIntRow !== null);
             $displayIntRow = $stageIntRow ?? $intRow;

@@ -1420,6 +1420,16 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
+        .simf-resume-pill.cursor-pointer, .jw-open-resume-tab {
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+        .simf-resume-pill.cursor-pointer:hover, .jw-open-resume-tab:hover {
+            background: #dcfce7;
+            border-color: #86efac;
+            transform: translateY(-1px);
+            box-shadow: 0 1px 2px rgba(22, 163, 74, 0.15);
+        }
         .simf-nocv-pill {
             display: inline-flex;
             align-items: center;
