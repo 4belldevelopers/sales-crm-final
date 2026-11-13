@@ -3,6 +3,13 @@ use App\Models\Company;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 
+if (! class_exists(\App\Services\AppTrackerCardPresenter::class, false)) {
+    $presenterPath = __DIR__ . '/../Services/AppTrackerCardPresenter.php';
+    if (file_exists($presenterPath)) {
+        require_once $presenterPath;
+    }
+}
+
 if (!function_exists('superAdmin')) {
     function superAdmin()
     {

@@ -24,6 +24,13 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        if (! class_exists(\App\Services\AppTrackerCardPresenter::class, false)) {
+            $presenterPath = app_path('Services/AppTrackerCardPresenter.php');
+            if (file_exists($presenterPath)) {
+                require_once $presenterPath;
+            }
+        }
+
         $this->registerActions();
         $this->app->bind(
             \App\Services\ForwardResume\Providers\ForwardResumeProvider::class,
