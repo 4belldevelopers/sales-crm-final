@@ -1022,7 +1022,7 @@
         }
         .simf-cand-grid {
             display: grid;
-            grid-template-columns: minmax(0, 2.0fr) minmax(0, 1.3fr) minmax(0, 1.15fr) minmax(0, 1.4fr) minmax(0, 1.15fr) minmax(0, 1.35fr);
+            grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.15fr);
             gap: 8px;
             padding: 10px 12px;
             align-items: stretch;
@@ -1037,6 +1037,22 @@
             flex-direction: column;
             justify-content: space-between;
             transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .simf-cand-subcard--my-org {
+            background: #f0fdfa !important;
+            border-color: #a5f3fc !important;
+        }
+        .simf-cand-subcard--internal {
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+        }
+        .simf-cand-subcard--direct {
+            background: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+        }
+        .simf-target-type-badge {
+            white-space: nowrap !important;
+            flex-shrink: 0;
         }
         .simf-cand-card:hover .simf-cand-subcard {
             border-color: #e2e8f0;
@@ -1383,6 +1399,83 @@
             font-weight: 600;
         }
         .simf-skills-empty { font-size: 10.5px; color: #94a3b8; }
+        .simf-bottom-right {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .simf-resume-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .simf-nocv-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .simf-visa-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .simf-visa-pill i {
+            font-size: 10px;
+            color: #64748b;
+        }
+        .simf-linkedin-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #ecfdf5;
+            color: #15803d;
+            border: 1px solid #86efac;
+            font-size: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .simf-linkedin-pill:hover {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #4ade80;
+        }
 
         /* Empty & Skeleton States */
         .simf-empty-card {
@@ -1438,7 +1531,7 @@
         /* Responsive Breakpoints (15.6" 1366x768 & Smaller) */
         @media (max-width: 1440px) {
             .simf-cand-grid {
-                grid-template-columns: minmax(0, 1.95fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.35fr) minmax(0, 1.1fr) minmax(0, 1.3fr);
+                grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr) minmax(0, 1.05fr) minmax(0, 1.7fr) minmax(0, 1.05fr) minmax(0, 1.1fr);
                 gap: 6px;
                 padding: 8px 10px;
             }
