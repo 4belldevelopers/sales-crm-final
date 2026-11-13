@@ -230,20 +230,23 @@
                 $targetTypeLabel = 'My Organization';
                 $targetTypeClass = 'type-my-org';
                 $targetTypeIcon  = 'fa-solid fa-id-badge';
-                $targetTypeStyle = 'background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc;';
+                $targetTypeStyle = 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;';
                 $targetSubcardClass = 'simf-cand-subcard--my-org';
+                $targetSubcardStyle = 'background:#fffbeb !important; border:1px solid #fde68a !important;';
             } elseif ($isDirect) {
                 $targetTypeLabel = 'Direct Client';
                 $targetTypeClass = 'type-direct';
                 $targetTypeIcon  = 'fa-solid fa-shield-alt';
-                $targetTypeStyle = 'background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;';
+                $targetTypeStyle = 'background:#d1fae5; color:#166534; border:1px solid #6ee7b7;';
                 $targetSubcardClass = 'simf-cand-subcard--direct';
+                $targetSubcardStyle = 'background:#ecfdf5 !important; border:1px solid #a7f3d0 !important;';
             } else {
                 $targetTypeLabel = 'Internal Client';
                 $targetTypeClass = 'type-internal';
                 $targetTypeIcon  = 'fa-solid fa-building';
-                $targetTypeStyle = 'background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;';
+                $targetTypeStyle = 'background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;';
                 $targetSubcardClass = 'simf-cand-subcard--internal';
+                $targetSubcardStyle = 'background:#eff6ff !important; border:1px solid #bfdbfe !important;';
             }
 
             // Recruiter / Ownership
@@ -318,42 +321,47 @@
                  style="border-left: 3.5px solid {{ $stageAccentColor }} !important;">
 
             <!-- Upper Discrete 6 Sub-Cards Grid -->
-            <div class="simf-cand-grid">
+            <div class="simf-cand-grid aptk-cand-grid">
 
                 <!-- SUB-CARD 1: CANDIDATE INFO & IDENTITY -->
-                <div class="simf-cand-subcard simf-cand-subcard--info">
-                    <div class="simf-subcard-head">
-                        <label class="simf-subcard-label m-0 cursor-pointer" title="Select candidate">
-                            <span class="form-check form-check-sm form-check-custom form-check-solid me-1">
-                                <input class="form-check-input chk_list_item"
-                                       name="chk_list_item[]"
-                                       type="checkbox"
-                                       value="{{ $candAppId }}"
-                                       data-wiseId="{{ $wiseId }}"
-                                       data-Wiid="{{ $wiseId }}"
-                                       data-candidate-id="{{ $candAppId }}"
-                                       data-jobId="{{ $rowJobId }}"
-                                       data-match="{{ $matchScore }}"
-                                       data-has-resume="{{ $hasResume ? '1' : '0' }}"
-                                       data-skills="{{ e($rawSkillsStr) }}"
-                                       data-cname="{{ e($displayFullName) }}" />
-                            </span>
-                            Candidate Info
+                <div class="simf-cand-subcard aptk-cand-subcard simf-cand-subcard--info aptk-subcard-identity">
+                    <div class="simf-subcard-head aptk-subcard-hdr">
+                        <label class="aptk-chk-wrap simf-chk-wrap" title="Select candidate" style="display:inline-flex; align-items:center; gap:6px; margin:0; cursor:pointer; min-width:0;">
+                            <input class="form-check-input chk_list_item cursor-pointer"
+                                   name="chk_list_item[]"
+                                   type="checkbox"
+                                   value="{{ $candAppId }}"
+                                   data-wiseId="{{ $wiseId }}"
+                                   data-Wiid="{{ $wiseId }}"
+                                   data-candidate-id="{{ $candAppId }}"
+                                   data-jobId="{{ $rowJobId }}"
+                                   data-match="{{ $matchScore }}"
+                                   data-has-resume="{{ $hasResume ? '1' : '0' }}"
+                                   data-skills="{{ e($rawSkillsStr) }}"
+                                   data-cname="{{ e($displayFullName) }}"
+                                   style="width:15px; height:15px; margin:0; flex-shrink:0;" />
+                            <span class="simf-subcard-label aptk-subcard-label">Candidate Info</span>
                         </label>
-                        @if ($flag === 1)
-                            <span class="simf-dup-pill" title="Duplicate candidate detected">
-                                <i class="fa-solid fa-clone me-1"></i>Duplicate
-                            </span>
-                        @endif
+                        <div class="d-inline-flex align-items-center gap-1">
+                            @if ($isBench)
+                                <span class="aptk-pill-bench" style="font-size:8.5px; font-weight:700; padding:1.5px 5px; border-radius:4px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; text-transform:uppercase;">Bench</span>
+                            @endif
+                            @if ($flag === 1)
+                                <span class="simf-dup-pill aptk-pill-dup" title="Duplicate candidate detected" style="font-size:8.5px; font-weight:700; padding:1.5px 6px; border-radius:4px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; text-transform:uppercase; display:inline-flex; align-items:center; gap:3px;">
+                                    <i class="fa-solid fa-clone me-1"></i>Duplicate
+                                </span>
+                            @endif
+                        </div>
                     </div>
-                    <div class="simf-cand-info-row">
+                    <div class="simf-cand-info-row aptk-identity-row" style="display:flex !important; align-items:flex-start !important; gap:9px !important; min-width:0 !important; padding-top:2px !important;">
                         <a href="javascript:void(0);"
                            data-row-id="{{ $wiseId }}"
                            data-wise-id="{{ $candAppId }}"
-                           class="show-application-detail simf-avatar {{ $flag === 1 ? 'is-dup btn-light-danger pulse pulse-danger' : $bgTextDecore }}"
-                           title="{{ $flag === 1 ? 'Duplicate — View Profile' : 'View Candidate Profile' }}">
+                           class="show-application-detail simf-avatar aptk-avatar-box {{ $flag === 1 ? 'is-dup btn-light-danger pulse pulse-danger' : $bgTextDecore }}"
+                           title="{{ $flag === 1 ? 'Duplicate — View Profile' : 'View Candidate Profile' }}"
+                           style="width:36px !important; height:36px !important; min-width:36px !important; border-radius:8px !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; font-weight:700 !important; font-size:13.5px !important; text-decoration:none !important; overflow:hidden !important; flex-shrink:0 !important;">
                             @if (!empty($photo))
-                                <img src="{{ $photo }}" alt="{{ e($displayFullName) }}" style="width:100%; height:100%; border-radius:8px; object-fit:cover;" />
+                                <img src="{{ $photo }}" alt="{{ e($displayFullName) }}" style="width:100% !important; height:100% !important; border-radius:8px !important; object-fit:cover !important;" />
                             @else
                                 <span>{{ strtoupper($firstChar) }}</span>
                             @endif
@@ -361,19 +369,24 @@
                                 <span class="pulse-ring"></span>
                             @endif
                         </a>
-                        <div class="simf-cand-info-meta">
+                        <div class="simf-cand-info-meta aptk-identity-meta" style="flex:1 1 auto !important; min-width:0 !important; overflow:hidden !important;">
                             <a href="javascript:void(0);"
                                data-row-id="{{ $wiseId }}"
                                data-wise-id="{{ $candAppId }}"
-                               class="show-application-detail simf-cand-name {{ $flag === 1 ? 'text-danger' : '' }}"
-                               title="{{ e($displayFullName) }}">
+                               class="show-application-detail simf-cand-name aptk-cand-name {{ $flag === 1 ? 'text-danger' : '' }}"
+                               title="{{ e($displayFullName) }}"
+                               style="font-size:12.5px !important; font-weight:700 !important; color:#0f172a !important; text-decoration:none !important; display:block !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; line-height:1.25 !important;">
                                 {{ $displayFullName }}
                             </a>
-                            <div class="simf-cand-role {{ $flag === 1 ? 'text-danger' : '' }}" title="{{ $displayDesignation !== '' ? e($displayDesignation) : 'Designation: –' }}">
+                            <div class="simf-cand-role aptk-cand-desig {{ $flag === 1 ? 'text-danger' : '' }}"
+                                 title="{{ $displayDesignation !== '' ? e($displayDesignation) : 'Designation: –' }}"
+                                 style="font-size:11px !important; font-weight:500 !important; color:#475569 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; line-height:1.3 !important; margin-top:2px !important;">
                                 {{ $displayDesignation !== '' ? $displayDesignation : '—' }}
                             </div>
-                            <div class="simf-cand-company" title="{{ $displayCurrentCompany !== '' ? e($displayCurrentCompany) : 'Current Company: –' }}">
-                                <i class="fa-regular fa-building me-1 text-muted"></i><span>{{ $displayCurrentCompany !== '' ? $displayCurrentCompany : '—' }}</span>
+                            <div class="simf-cand-company aptk-cand-company"
+                                 title="{{ $displayCurrentCompany !== '' ? e($displayCurrentCompany) : 'Current Company: –' }}"
+                                 style="font-size:11px !important; font-weight:500 !important; color:#64748b !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; line-height:1.3 !important; margin-top:2px !important;">
+                                <i class="fa-regular fa-building me-1 text-muted" style="width:12px; text-align:center;"></i><span>{{ $displayCurrentCompany !== '' ? $displayCurrentCompany : '—' }}</span>
                             </div>
                         </div>
                     </div>
@@ -443,11 +456,11 @@
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: TARGET REQ (Rule 25 Enterprise Color Tokens) -->
-                <div class="simf-cand-subcard simf-cand-subcard--target {{ $targetSubcardClass }}">
-                    <div class="simf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
-                        <span class="simf-subcard-label text-uppercase text-truncate" title="TARGET REQ">TARGET REQ</span>
-                        <span class="simf-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:4px; text-transform:uppercase; white-space:nowrap !important; flex-shrink:0; {{ $targetTypeStyle }}">
+                <!-- SUB-CARD 4: JOB DETAILS (Rule 25 Enterprise Color Tokens on Badge Only, Neutral Subcard) -->
+                <div class="simf-cand-subcard aptk-cand-subcard simf-cand-subcard--target">
+                    <div class="simf-subcard-head aptk-subcard-hdr d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="simf-subcard-label aptk-subcard-label text-uppercase text-truncate" title="Job Details">Job Details</span>
+                        <span class="simf-target-type-badge aptk-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:4px; text-transform:uppercase; white-space:nowrap !important; flex-shrink:0; {{ $targetTypeStyle }}">
                             <i class="{{ $targetTypeIcon }} me-1"></i>{{ $targetTypeLabel }}
                         </span>
                     </div>
@@ -474,9 +487,9 @@
                 </div>
 
                 <!-- SUB-CARD 5: OWNERSHIP & ADDED -->
-                <div class="simf-cand-subcard">
-                    <div class="simf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
-                        <span class="simf-subcard-label text-uppercase text-truncate">Ownership &amp; Added</span>
+                <div class="simf-cand-subcard aptk-cand-subcard">
+                    <div class="simf-subcard-head aptk-subcard-hdr d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="simf-subcard-label aptk-subcard-label text-uppercase text-truncate">Ownership &amp; Added</span>
                     </div>
                     <div class="pt-1">
                         <div class="simf-owner-name text-truncate d-flex align-items-center" style="font-size:11.5px; font-weight:600; line-height:1.35; min-height:18px;" title="{{ e($rowpostedby) }}">
@@ -497,27 +510,35 @@
                 </div>
 
                 <!-- SUB-CARD 6: STAGE & ACTION ("Add to Other Job" Drawer Integration) -->
-                <div class="simf-cand-subcard">
-                    <div class="simf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
-                        <span class="simf-subcard-label text-uppercase text-truncate" title="STAGE &amp; ACTION">Stage &amp; Action</span>
+                <div class="simf-cand-subcard aptk-cand-subcard">
+                    <div class="simf-subcard-head aptk-subcard-hdr d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="simf-subcard-label aptk-subcard-label text-uppercase text-truncate" title="Stage &amp; Action">Stage &amp; Action</span>
                     </div>
                     <div class="simf-stage-action-wrap pt-1">
                         <a href="javascript:void(0);"
                            data-row-id="{{ $wiseId }}"
-                           class="simf-stage-trigger {{ $stage_default_css }}"
+                           class="simf-stage-trigger aptk-stage-trigger {{ $stage_default_css }}"
                            {!! $stageModalAttrs !!}
-                           title="Click to update candidate stage">
-                            <span class="simf-stage-pill {{ @$row->css_style }}" style="{{ $stagePillTheme }}">
+                           role="button"
+                           tabindex="0"
+                           title="Click to update candidate stage"
+                           style="display:flex; flex-direction:column; gap:2px; text-decoration:none; cursor:pointer;">
+                            <span class="simf-stage-pill aptk-stage-pill {{ @$row->css_style }}" style="{{ $stagePillTheme }} font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; display:inline-flex; align-items:center; width:fit-content; line-height:1.3;">
                                 {{ ucwords((string) $masterStageLabel) ?: '—' }}
                             </span>
                             @if (!empty($subStageName) && $subStageName !== '—')
-                                <span class="simf-substage-txt" title="{{ e($subStageName) }}">{{ ucwords((string) $subStageName) }}</span>
+                                <span class="simf-substage-txt aptk-substage-txt text-truncate" title="{{ e($subStageName) }}" style="font-size:10px; color:#64748b; margin-top:1px; line-height:1.2;">
+                                    Sub: <strong style="color:#334155;">{{ ucwords((string) $subStageName) }}</strong>
+                                </span>
                             @endif
+                            <span class="simf-stage-cue aptk-stage-cue" style="font-size:10px; font-weight:600; color:#009ef7; display:inline-flex; align-items:center; margin-top:1px;">
+                                Update Stage <i class="fas fa-chevron-right ms-1" style="font-size:9px;"></i>
+                            </span>
                         </a>
                         <div class="d-flex flex-column mt-1">
                             <button type="button"
                                     class="btn btn-sm btn-primary cv-add-to-other-job"
-                                    style="font-size:12px; font-weight:600; padding:6px 14px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%; white-space:nowrap;"
+                                    style="font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%; white-space:nowrap; height:28px;"
                                     data-candidate-id="{{ $candAppId }}"
                                     data-wise-id="{{ $wiseId }}"
                                     data-job-id="{{ $rowJobId }}"
@@ -533,39 +554,40 @@
             </div>
 
             <!-- SUB-CARD 7: FULL-WIDTH INTELLIGENCE & SKILLS STRIP -->
-            <div class="simf-cand-bottom">
-                <div class="simf-bottom-left">
-                    <span class="simf-match-pill"
+            <div class="simf-cand-bottom aptk-cand-bottom" style="display:flex !important; align-items:center !important; justify-content:space-between !important; min-height:38px !important; width:100% !important; overflow:hidden !important; gap:12px !important; padding:6px 12px !important; background:#fafcff !important; border-top:1px solid #edf2f7 !important;">
+                <div class="simf-bottom-left aptk-bottom-left" style="display:flex !important; align-items:center !important; gap:8px !important; min-width:0 !important; flex:1 1 auto !important; overflow:hidden !important;">
+                    <span class="simf-match-pill aptk-match-pill jw-row-match-badge"
                           data-candidate-id="{{ $candAppId }}"
                           data-wise-id="{{ $wiseId }}"
                           data-match-pct="{{ $matchScore }}"
-                          style="background:{{ $matchBg }};color:{{ $matchColor }};">
+                          style="background:{{ $matchBg }} !important; color:{{ $matchColor }} !important; font-size:10.5px !important; font-weight:700 !important; padding:2.5px 8px !important; border-radius:4px !important; line-height:1.3 !important; white-space:nowrap !important; flex-shrink:0 !important; display:inline-flex !important; align-items:center !important;">
                         Match {{ $percentage ?: '0%' }}
                     </span>
-                    <div class="simf-skills-scroll">
+                    <div class="simf-skills-scroll aptk-skills-scroll" style="display:flex !important; align-items:center !important; gap:4px !important; overflow-x:auto !important; overflow-y:hidden !important; white-space:nowrap !important; flex-wrap:nowrap !important; min-width:0 !important; flex:1 1 auto !important; scrollbar-width:none !important; -ms-overflow-style:none !important;">
                         @if (count($matchedSkillsArr) > 0 || count($unmatchedSkillsArr) > 0)
                             @foreach ($matchedSkillsArr as $sval)
-                                <span class="simf-skill-pill is-matched" title="Matches a required skill">{{ ucfirst($sval) }}</span>
+                                <span class="simf-skill-pill aptk-skill-pill is-matched" title="Matches a required skill" style="font-size:10px !important; font-weight:600 !important; padding:2px 7px !important; border-radius:4px !important; background:#ecfdf5 !important; color:#059669 !important; border:1px solid #a7f3d0 !important; line-height:1.35 !important; white-space:nowrap !important; flex-shrink:0 !important; display:inline-block !important;">{{ ucfirst($sval) }}</span>
                             @endforeach
                             @foreach ($unmatchedSkillsArr as $sval)
-                                <span class="simf-skill-pill">{{ ucfirst($sval) }}</span>
+                                <span class="simf-skill-pill aptk-skill-pill" style="font-size:10px !important; font-weight:500 !important; padding:2px 7px !important; border-radius:4px !important; background:#f1f5f9 !important; color:#475569 !important; border:1px solid #e2e8f0 !important; line-height:1.35 !important; white-space:nowrap !important; flex-shrink:0 !important; display:inline-block !important;">{{ ucfirst($sval) }}</span>
                             @endforeach
                         @else
-                            <span class="simf-skills-empty">No skills listed</span>
+                            <span class="simf-skills-empty aptk-skills-empty" style="font-size:10.5px !important; color:#94a3b8 !important; font-style:italic !important; white-space:nowrap !important;">No skills listed</span>
                         @endif
                     </div>
                 </div>
-                <div class="simf-bottom-right">
+                <div class="simf-bottom-right aptk-bottom-right" style="display:flex !important; align-items:center !important; gap:6px !important; flex-shrink:0 !important; white-space:nowrap !important;">
                     @if ($hasResume)
                         <span class="simf-resume-pill aptk-resume-pill jw-open-resume-tab cursor-pointer"
                               data-row-id="{{ $candAppId }}"
                               data-wise-id="{{ $wiseId }}"
                               data-open-tab="resume_cv"
-                              title="Click to view Resume / CV">
+                              title="Click to view Resume / CV"
+                              style="display:inline-flex !important; align-items:center !important; gap:4px !important; padding:2px 8px !important; border-radius:4px !important; background:#f0fdf4 !important; color:#15803d !important; border:1px solid #bbf7d0 !important; font-size:10px !important; font-weight:600 !important; line-height:1.4 !important; white-space:nowrap !important; flex-shrink:0 !important; cursor:pointer !important;">
                             <i class="fas fa-check-circle me-1"></i><span>Resume</span>
                         </span>
                     @else
-                        <span class="simf-nocv-pill aptk-nocv-pill" title="Resume missing">
+                        <span class="simf-nocv-pill aptk-nocv-pill" title="Resume missing" style="display:inline-flex !important; align-items:center !important; gap:4px !important; padding:2px 8px !important; border-radius:4px !important; background:#fef2f2 !important; color:#b91c1c !important; border:1px solid #fecaca !important; font-size:10px !important; font-weight:600 !important; line-height:1.4 !important; white-space:nowrap !important; flex-shrink:0 !important;">
                             <i class="fas fa-exclamation-circle me-1"></i><span>No CV</span>
                         </span>
                     @endif
@@ -573,13 +595,14 @@
                         <a href="{{ e($cardMeta['linkedin_url']) }}"
                            target="_blank"
                            rel="noopener noreferrer"
-                           class="simf-linkedin-pill"
-                           title="LinkedIn Profile Verified">
+                           class="simf-linkedin-pill aptk-linkedin-pill"
+                           title="LinkedIn Profile Verified"
+                           style="display:inline-flex !important; align-items:center !important; gap:4px !important; padding:2px 8px !important; border-radius:4px !important; background:#ecfdf5 !important; color:#15803d !important; border:1px solid #86efac !important; font-size:10px !important; font-weight:600 !important; text-decoration:none !important; line-height:1.4 !important; white-space:nowrap !important; flex-shrink:0 !important;">
                             <i class="fab fa-linkedin me-1"></i><span>LinkedIn Verified</span>
                         </a>
                     @endif
                     @if (!empty($cardMeta['visa_display']))
-                        <span class="simf-visa-pill" title="{{ e('Visa Status: ' . $cardMeta['visa_raw']) }}">
+                        <span class="simf-visa-pill aptk-visa-pill" title="{{ e('Visa Status: ' . $cardMeta['visa_raw']) }}" style="display:inline-flex !important; align-items:center !important; gap:4px !important; padding:2px 8px !important; border-radius:4px !important; background:#f8fafc !important; color:#334155 !important; border:1px solid #e2e8f0 !important; font-size:10px !important; font-weight:600 !important; line-height:1.4 !important; white-space:nowrap !important; flex-shrink:0 !important;">
                             <i class="fas fa-passport me-1"></i><span>{{ $cardMeta['visa_display'] }}</span>
                         </span>
                     @endif
