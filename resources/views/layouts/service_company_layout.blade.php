@@ -2420,9 +2420,7 @@ $(document).on('click', '.hm-listing', function ()
                 closeTeamMemberDrawer();
             });
 
-            $(document).on('click', '.show-detail-team', function handler(e) {
-                e.preventDefault();
-                var id = $(this).data('row-id');
+            window.loadTeamMemberProfile = function(id) {
                 if (!id) return;
 
                 var drawerEl = document.getElementById('kt_activitiesClientTeam');
@@ -2435,16 +2433,23 @@ $(document).on('click', '.hm-listing', function ()
                     }
                 }
 
-                var url = "{{ route('service_company.team.viewmore', ':id') }}";
-                url = url.replace(':id', id);
+                if (window.teamProfileActiveXHR && typeof window.teamProfileActiveXHR.abort === 'function') {
+                    try { window.teamProfileActiveXHR.abort(); } catch(e) {}
+                }
+
+                var urlTemplate = "{{ route('service_company.team.viewmore', ':id') }}";
+                var url = urlTemplate.replace(':id', id);
                 var currentPageTeam = $('.custom-pagination .page-link.active').data('page');
                 if (currentPageTeam) {
                     localStorage.setItem('currentPageTeam', currentPageTeam);
                 }
-                
-                $.ajax({
+
+                window.teamProfileActiveXHR = $.ajax({
                     type: 'GET',
                     url: url,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
                     beforeSend: function() {
                         $('#kt_activitiesClientTeam_body').html(
                             '<div class="d-flex flex-column align-items-center justify-content-center py-20" style="min-height:360px;">' +
@@ -2462,26 +2467,63 @@ $(document).on('click', '.hm-listing', function ()
                                 drawerEl.classList.add('drawer-on');
                             }
                         } else {
+                            var errMsg = (response && response.message) ? response.message : 'Unable to load member profile data.';
                             $('#kt_activitiesClientTeam_body').html(
-                                '<div class="text-center py-15">' +
-                                '  <i class="fa-solid fa-triangle-exclamation text-danger fs-1 mb-3"></i>' +
+                                '<div class="text-center py-15 px-4">' +
+                                '  <i class="fa-solid fa-triangle-exclamation text-warning fs-1 mb-3"></i>' +
                                 '  <h5 class="fw-bold text-gray-800">Failed to load member profile</h5>' +
-                                '  <button type="button" class="btn btn-sm btn-light-primary mt-3" onclick="closeTeamMemberDrawer()">Close</button>' +
+                                '  <p class="text-muted fs-7 mt-2">' + $('<div>').text(errMsg).html() + '</p>' +
+                                '  <div class="d-flex justify-content-center gap-2 mt-4">' +
+                                '    <button type="button" class="btn btn-sm btn-primary" onclick="loadTeamMemberProfile(' + parseInt(id, 10) + ')"><i class="fa-solid fa-rotate-right me-1"></i>Retry</button>' +
+                                '    <button type="button" class="btn btn-sm btn-light" onclick="closeTeamMemberDrawer()">Close</button>' +
+                                '  </div>' +
                                 '</div>'
                             );
                         }
                     },
                     error: function(xhr, status, error) {
+                        if (status === 'abort') return;
+
+                        var errMsg = 'Please check your connection and try again.';
+                        var errIcon = 'fa-triangle-exclamation text-danger';
+
+                        if (xhr.status === 401) {
+                            errMsg = 'Your session has expired. Please refresh the page and log in again.';
+                            errIcon = 'fa-lock text-warning';
+                        } else if (xhr.status === 403) {
+                            errMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'You do not have permission to view this member profile.';
+                            errIcon = 'fa-shield-halved text-warning';
+                        } else if (xhr.status === 404) {
+                            errMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'The requested team member profile was not found or is no longer available.';
+                            errIcon = 'fa-user-slash text-muted';
+                        } else if (xhr.status >= 500) {
+                            errMsg = 'An internal server error occurred while retrieving this profile. Please try again.';
+                            errIcon = 'fa-triangle-exclamation text-danger';
+                        } else if (xhr.status === 0 || status === 'timeout') {
+                            errMsg = 'Network connection lost. Please check your internet connection.';
+                            errIcon = 'fa-wifi text-danger';
+                        }
+
                         $('#kt_activitiesClientTeam_body').html(
-                            '<div class="text-center py-15">' +
-                            '  <i class="fa-solid fa-triangle-exclamation text-danger fs-1 mb-3"></i>' +
+                            '<div class="text-center py-15 px-4">' +
+                            '  <i class="fa-solid ' + errIcon + ' fs-1 mb-3"></i>' +
                             '  <h5 class="fw-bold text-gray-800">Failed to load member profile</h5>' +
-                            '  <p class="text-muted fs-7 mt-2">Please check your connection and try again.</p>' +
-                            '  <button type="button" class="btn btn-sm btn-light-primary mt-3" onclick="closeTeamMemberDrawer()">Close</button>' +
+                            '  <p class="text-muted fs-7 mt-2">' + $('<div>').text(errMsg).html() + '</p>' +
+                            '  <div class="d-flex justify-content-center gap-2 mt-4">' +
+                            '    <button type="button" class="btn btn-sm btn-primary" onclick="loadTeamMemberProfile(' + parseInt(id, 10) + ')"><i class="fa-solid fa-rotate-right me-1"></i>Retry</button>' +
+                            '    <button type="button" class="btn btn-sm btn-light" onclick="closeTeamMemberDrawer()">Close</button>' +
+                            '  </div>' +
                             '</div>'
                         );
                     }
                 });
+            };
+
+            $(document).on('click', '.show-detail-team', function handler(e) {
+                e.preventDefault();
+                var id = $(this).data('row-id');
+                if (!id) return;
+                loadTeamMemberProfile(id);
             });
 
 $(document).on("click", "#shareJobBtn", function () {
