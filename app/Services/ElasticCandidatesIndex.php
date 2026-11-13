@@ -193,9 +193,25 @@ class ElasticCandidatesIndex
                     ->leftjoin('documents', 'documents.documentable_id', 'job_applications.id')
                     ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
                     // ->leftJoin('master_status', 'master_status.id', '=', 'job_applications.master_status_id')
-                    ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
-                    ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
                     ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+                    ->leftJoin('state_list', function ($join) {
+                        $join->on('state_list.id', '=', 'city_list.state_id')
+                            ->orWhere(function ($q) {
+                                $q->where(function ($sub) {
+                                    $sub->whereNull('job_applications.city_id')
+                                        ->orWhere('job_applications.city_id', 0);
+                                })->whereColumn('state_list.id', 'job_applications.state');
+                            });
+                    })
+                    ->leftJoin('countries', function ($join) {
+                        $join->on('countries.id', '=', 'state_list.country_id')
+                            ->orWhere(function ($q) {
+                                $q->where(function ($sub) {
+                                    $sub->whereNull('state_list.country_id')
+                                        ->orWhere('state_list.country_id', 0);
+                                })->whereColumn('countries.id', 'job_applications.country');
+                            });
+                    })
                     ->where('add_job_wise_condidates.id', $id)
                     ->orderByDesc('documents.id')->get();
 

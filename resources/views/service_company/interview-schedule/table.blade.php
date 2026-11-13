@@ -1890,6 +1890,71 @@
     white-space: nowrap !important;
 }
 
+/* Dynamic Attribution Pill (HM / Shared by in Footer Card - Rule 20 & Rule 25 Canonical Tokens) */
+.it-attribution-cell {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 2px 8px !important;
+    border-radius: 6px !important;
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+    max-width: 260px !important;
+    min-width: 0 !important;
+    transition: all 0.15s ease !important;
+}
+
+.it-attr-direct {
+    background: #ecfdf5 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+.it-attr-direct:hover {
+    background: #d1fae5 !important;
+    border-color: #6ee7b7 !important;
+}
+
+.it-attr-hm {
+    background: #ecfeff !important;
+    border: 1px solid #a5f3fc !important;
+}
+
+.it-attr-hm:hover {
+    background: #cffafe !important;
+    border-color: #67e8f9 !important;
+}
+
+.it-attr-icon-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 4px !important;
+    font-size: 9px !important;
+    flex-shrink: 0 !important;
+}
+
+.it-attr-icon-direct {
+    color: #059669 !important;
+    background: #d1fae5 !important;
+}
+
+.it-attr-icon-hm {
+    color: #0891b2 !important;
+    background: #cffafe !important;
+}
+
+.it-attr-val {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 170px !important;
+}
+
 .it-bottom-right {
     display: flex !important;
     align-items: center !important;

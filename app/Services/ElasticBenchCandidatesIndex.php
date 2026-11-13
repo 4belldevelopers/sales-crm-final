@@ -106,9 +106,25 @@ class ElasticBenchCandidatesIndex
                 ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
                 ->leftjoin('companies', 'companies.id', 'job_applications.company_id')
                 ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-                ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
-                ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
                 ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+                ->leftJoin('state_list', function ($join) {
+                    $join->on('state_list.id', '=', 'city_list.state_id')
+                        ->orWhere(function ($q) {
+                            $q->where(function ($sub) {
+                                $sub->whereNull('job_applications.city_id')
+                                    ->orWhere('job_applications.city_id', 0);
+                            })->whereColumn('state_list.id', 'job_applications.state');
+                        });
+                })
+                ->leftJoin('countries', function ($join) {
+                    $join->on('countries.id', '=', 'state_list.country_id')
+                        ->orWhere(function ($q) {
+                            $q->where(function ($sub) {
+                                $sub->whereNull('state_list.country_id')
+                                    ->orWhere('state_list.country_id', 0);
+                            })->whereColumn('countries.id', 'job_applications.country');
+                        });
+                })
                 ->leftJoin('bench_candidate_rm_comments', function ($join) {
                     $join->on('bench_candidate_rm_comments.candidate_id', '=', 'job_applications.id')
                         ->on('bench_candidate_rm_comments.company_id', '=', 'job_applications.company_id');

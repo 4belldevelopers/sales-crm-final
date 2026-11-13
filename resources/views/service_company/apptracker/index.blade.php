@@ -2747,7 +2747,6 @@
         {{-- CandidateSnapshotResolver: canonical zero-fabrication candidate data resolver for Pre-Screen PDF (engine.v4.js depends on this) --}}
         <script src="{{ asset('js/opendoc/CandidateSnapshotResolver.js') }}"></script>
         <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
-        <script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}"></script>
     @endif
     {{-- AppTracker resilience layer: connection monitor, visibility handler, resilient fetch --}}
     <script src="{{ asset('js/apptracker/_conn.js') }}{{ TM_VERSION }}"></script>
@@ -3419,7 +3418,6 @@
             var isChecked = $(this).prop('checked') === true;
             $('.chk_list_item').prop('checked', isChecked);
             $('.aptk-cand-card').toggleClass('is-selected', isChecked);
-            $('#application_test_fwd_resume_body_content').html('');
             if (isChecked && $('.chk_list_item').length > 0) {
                 $('.test_fwd_resume, .mass_mail, .downloadexcell, .send_email, .app_copy, .application_copy').removeClass("d-none");
                 $('.custom_hide').addClass("d-none");
@@ -3430,7 +3428,6 @@
             updateAptkSelectionBar();
         });
         $(document).on('click', '.chk_list_item', function() {
-            $('#application_test_fwd_resume_body_content').html('');
             $(this).closest('.aptk-cand-card').toggleClass('is-selected', $(this).is(':checked'));
             var totalItems = $('.chk_list_item').length;
             var checkedItems = $('.chk_list_item:checked').length;
@@ -3504,7 +3501,6 @@
                 return;
             }
 
-            @if(config('feature.fwd_resume_v4_enabled', true))
             if (window.ForwardResumeManager) {
                 window.ForwardResumeManager.open(arr, jobIdArr, {});
             } else if (typeof window.openCandidateForwardResume === 'function') {

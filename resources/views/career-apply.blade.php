@@ -3602,47 +3602,37 @@ textarea.has-validation-error:focus,
               </div>
             </div>
 
-            <!-- Primary Skills -->
-            @php
-              $candidateRequiredSkills = collect($jobSkill ?? [])->filter(function ($skill) {
-                  return is_object($skill) && trim((string) ($skill->skill_name ?? '')) !== '';
-              })->map(function ($skill) {
-                  return [
-                      'id' => (string) ($skill->id ?? ''),
-                      'name' => trim((string) $skill->skill_name),
-                  ];
-              })->unique(function ($skill) {
-                  return mb_strtolower(preg_replace('/\s+/', ' ', $skill['name']));
-              })->values();
-            @endphp
-            <div class="fs fv-row se-card primary-skills-card candidate-card">
-              <div class="fsh candidate-card-header se-hero">
-                <div class="candidate-card-title se-title">
-                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
-                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
+            <!-- Professional Profile -->
+            <div class="fs pd-card candidate-card professional-profile-card" id="candidateProfessionalProfile">
+              <div class="fsh candidate-card-header pd-hero">
+                <div class="candidate-card-title pd-hero-title">
+                  <span class="candidate-card-icon pd-hero-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span><strong>Professional Profile</strong><small>Define the candidate's current professional role and employment type.</small></span>
                 </div>
               </div>
-              <div class="fsc candidate-card-body candidate-primary-skills-body">
-                <div class="candidate-primary-skill-combobox">
-                  <div class="candidate-primary-skill-entry">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <input type="text" id="candidatePrimarySkillInput" autocomplete="off" placeholder="Type a skill and press Enter..." aria-label="Add a primary skill" role="combobox" aria-autocomplete="list" aria-controls="candidatePrimarySkillSuggestions" aria-expanded="false" />
-                    <span class="candidate-primary-skill-divider" aria-hidden="true"></span>
-                    <button type="button" id="candidatePrimarySkillAdd"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add</span></button>
+              <div class="fsc candidate-card-body pd-body">
+                <div class="professional-profile-grid">
+                  <div class="fg fv-row">
+                    <label>Current Company <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-building" aria-hidden="true"></i><input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" /></div>
+                    <small class="candidate-professional-help">e.g. TCS, Infosys, Amazon</small>
                   </div>
-                  <div id="candidatePrimarySkillSuggestions" class="candidate-primary-skill-suggestions" role="listbox" aria-label="Skill suggestions" hidden></div>
-                </div>
-                <div id="candidatePrimarySkillChips" class="candidate-primary-skill-chips" aria-live="polite"></div>
-                <div id="candidatePrimarySkillEmpty" class="candidate-primary-skill-empty">No primary skills added yet.</div>
-                <div class="candidate-suggested-skills" id="candidateSuggestedSkills" hidden>
-                  <div class="candidate-suggested-skills-head">
-                    <span class="candidate-suggested-skills-title"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span><strong>Suggested Skills</strong><small>Based on skills from the job requirement. Click to add the missing skills.</small></span></span>
-                    <span class="candidate-suggested-skills-count" id="candidateRemainingSkills"></span>
+                  <div class="fg fv-row">
+                    <label>Current Designation <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><input type="text" name="current_designation" id="current_designation" data-job-title="{{ @$jobDetail->title }}" value="{{ (@$application->current_designation) ? @$application->current_designation : ((!is_null($selected_exp_year) && (string)$selected_exp_year === '0') ? '' : @$jobDetail->title) }}" placeholder="Enter current designation" /></div>
+                    <small class="candidate-professional-help">e.g. Software Engineer, Product Manager</small>
                   </div>
-                  <div class="candidate-suggested-skills-list" id="candidateSuggestedSkillsList"></div>
+                  <div class="fg fv-row">
+                    <label>Employment Type <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-rectangle-list" aria-hidden="true"></i><select name="employmentType" id="EmploymentType">
+                      <option value="">Select employment type</option>
+                      <option value="Full Time" {{ (@$application->employmentType === 'Full Time' || empty(@$application->employmentType)) ? 'selected' : '' }}>Full Time</option>
+                      <option value="Contract" {{ (@$application->employmentType === 'Contract') ? 'selected' : '' }}>Contract</option>
+                      <option value="Part Time" {{ (@$application->employmentType === 'Part Time') ? 'selected' : '' }}>Part Time</option>
+                      <option value="Freelance" {{ (@$application->employmentType === 'Freelance') ? 'selected' : '' }}>Freelance</option>
+                    </select></div>
+                  </div>
                 </div>
-                <div id="skillTags" class="skill-tags" hidden></div>
-                <input type="text" class="candidate-primary-skills-source" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
               </div>
             </div>
 
@@ -3784,36 +3774,239 @@ textarea.has-validation-error:focus,
               </div>
             </div>
 
-            <!-- Professional Profile -->
-            <div class="fs pd-card candidate-card professional-profile-card" id="candidateProfessionalProfile">
-              <div class="fsh candidate-card-header pd-hero">
-                <div class="candidate-card-title pd-hero-title">
-                  <span class="candidate-card-icon pd-hero-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span><strong>Professional Profile</strong><small>Define the candidate's current professional role and employment type.</small></span>
+            <!-- Primary Skills -->
+            @php
+              $candidateRequiredSkills = collect($jobSkill ?? [])->filter(function ($skill) {
+                  return is_object($skill) && trim((string) ($skill->skill_name ?? '')) !== '';
+              })->map(function ($skill) {
+                  return [
+                      'id' => (string) ($skill->id ?? ''),
+                      'name' => trim((string) $skill->skill_name),
+                  ];
+              })->unique(function ($skill) {
+                  return mb_strtolower(preg_replace('/\s+/', ' ', $skill['name']));
+              })->values();
+            @endphp
+            <div class="fs fv-row se-card primary-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
                 </div>
               </div>
-              <div class="fsc candidate-card-body pd-body">
-                <div class="professional-profile-grid">
-                  <div class="fg fv-row">
-                    <label>Current Company <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
-                    <div class="candidate-field-control"><i class="fa-regular fa-building" aria-hidden="true"></i><input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" /></div>
-                    <small class="candidate-professional-help">e.g. TCS, Infosys, Amazon</small>
+              <div class="fsc candidate-card-body candidate-primary-skills-body">
+                <div class="candidate-primary-skill-combobox">
+                  <div class="candidate-primary-skill-entry">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="text" id="candidatePrimarySkillInput" autocomplete="off" placeholder="Type a skill and press Enter..." aria-label="Add a primary skill" role="combobox" aria-autocomplete="list" aria-controls="candidatePrimarySkillSuggestions" aria-expanded="false" />
+                    <span class="candidate-primary-skill-divider" aria-hidden="true"></span>
+                    <button type="button" id="candidatePrimarySkillAdd"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add</span></button>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Current Designation <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
-                    <div class="candidate-field-control"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><input type="text" name="current_designation" id="current_designation" data-job-title="{{ @$jobDetail->title }}" value="{{ (@$application->current_designation) ? @$application->current_designation : ((!is_null($selected_exp_year) && (string)$selected_exp_year === '0') ? '' : @$jobDetail->title) }}" placeholder="Enter current designation" /></div>
-                    <small class="candidate-professional-help">e.g. Software Engineer, Product Manager</small>
+                  <div id="candidatePrimarySkillSuggestions" class="candidate-primary-skill-suggestions" role="listbox" aria-label="Skill suggestions" hidden></div>
+                </div>
+                <div id="candidatePrimarySkillChips" class="candidate-primary-skill-chips" aria-live="polite"></div>
+                <div id="candidatePrimarySkillEmpty" class="candidate-primary-skill-empty">No primary skills added yet.</div>
+                <div class="candidate-suggested-skills" id="candidateSuggestedSkills" hidden>
+                  <div class="candidate-suggested-skills-head">
+                    <span class="candidate-suggested-skills-title"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span><strong>Suggested Skills</strong><small>Based on skills from the job requirement. Click to add the missing skills.</small></span></span>
+                    <span class="candidate-suggested-skills-count" id="candidateRemainingSkills"></span>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Employment Type <span class="rq">*</span></label>
-                    <div class="candidate-field-control"><i class="fa-solid fa-rectangle-list" aria-hidden="true"></i><select name="employmentType" id="EmploymentType">
-                      <option value="">Select employment type</option>
-                      <option value="Full Time" {{ (@$application->employmentType === 'Full Time' || empty(@$application->employmentType)) ? 'selected' : '' }}>Full Time</option>
-                      <option value="Contract" {{ (@$application->employmentType === 'Contract') ? 'selected' : '' }}>Contract</option>
-                      <option value="Part Time" {{ (@$application->employmentType === 'Part Time') ? 'selected' : '' }}>Part Time</option>
-                      <option value="Freelance" {{ (@$application->employmentType === 'Freelance') ? 'selected' : '' }}>Freelance</option>
-                    </select></div>
+                  <div class="candidate-suggested-skills-list" id="candidateSuggestedSkillsList"></div>
+                </div>
+                <div id="skillTags" class="skill-tags" hidden></div>
+                <input type="text" class="candidate-primary-skills-source" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
+              </div>
+            </div>
+
+            <!-- Skills Details -->
+            <div class="fs se-card job-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span>
+                  <span><strong>Job Skills Details</strong><small>Record experience and proficiency against the job's required skills.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body candidate-table-wrap">
+                <div class="candidate-job-skills-scroll">
+                <table class="sk">
+                  <thead>
+                    <tr>
+                      <th>Skill <span class="rq">*</span></th>
+                      <th>Experience (Years) <span class="rq">*</span></th>
+                      <th>Experience (Months)</th>
+                      <th>Proficiency Rating <span class="rq">*</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @foreach($jobSkill as $skill_val)
+                        @if(!empty($skill_val->skill_name))
+
+                            @php
+                                  $selected_skill_exp_year = null;
+                                  $selected_skill_exp_month = null;
+                                  $selected_skill_rating = null;
+                                  $skill_val_id = $skill_val->id ?? $skill_val->job_skill_id ?? $skill_val->skill_id ?? null;
+
+                                  /* Intent: Only pre-select skill experience if explicitly in EDIT mode with a valid application ID; fresh applications start completely clean */
+                                  if (($page_event ?? 'ADD') === 'EDIT' && !empty($appId) && !empty($skill_val->skill_value)) {
+                                    $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
+                                    if ($skillValue !== '') {
+                                      $total_skill_exp = GeneralMethod::separateNumberParts($skillValue);
+                                      $skill_exp_years = $total_skill_exp[0] ?? null;
+                                      $skill_exp_months = $total_skill_exp[1] ?? null; 
+
+                                      $selected_skill_exp_year = $skill_exp_years;
+                                      $selected_skill_exp_month = $skill_exp_months;
+                                      $selected_skill_rating = $skill_val->rating ?? null;
+                                    }
+                                  }
+                            @endphp
+
+                            <tr>
+                              <td><label class="candidate-job-skill-name"><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></label></td>
+                              <td>
+                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience year" id="job_skill_year_{{ $skill_val_id }}" name="YearskillId[{{ $skill_val_id }}]">
+                                      <option value="0">Select Year</option>
+                                      @php 
+                                          for ($i = 1; $i <= 60; $i++) {
+                                                $selected = '';
+                                                $s = 'Year';
+                                                if($i > 1){
+                                                    $s = 'Years';
+                                                }
+                                                if(!is_null($selected_skill_exp_year) && (string)$i === (string)$selected_skill_exp_year){
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                                      @endphp
+                                    </select>
+                              </td>
+                              <td>
+                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience month" id="job_skill_month_{{ $skill_val_id }}" name="MonthskillId[{{ $skill_val_id }}]">
+                                      <option value="">Select Month</option>
+                                      @php 
+                                          for ($i = 0; $i <= 11; $i++) {
+                                                $selected = '';
+                                                $s = 'Month';
+                                                if($i > 1){
+                                                    $s = 'Months';
+                                                }
+                                                if(!is_null($selected_skill_exp_month) && (string)$i === (string)$selected_skill_exp_month){
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                                      @endphp
+                                </select>
+                              </td>
+                              <td>
+                                 <select class="form-select form-select-solid candidate-rating-select" aria-label="Select proficiency rating" id="job_skill_rating_{{ $skill_val_id }}" name="rating[{{ $skill_val_id }}]">
+                                      <option value="0">Select rating</option>
+                                      @php 
+                                          for ($i = 1; $i <= 5; $i++) {
+                                                $selected = '';
+                                                $s = 'Star';
+                                                if($i > 1){
+                                                    $s = 'Stars';
+                                                }
+                                                if(!is_null($selected_skill_rating) && (string)$i === (string)$selected_skill_rating){
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                                      @endphp
+                                    </select>
+                              </td>
+                            </tr>
+                        @endif
+                    @endforeach
+                  </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notice Period and Joining Details -->
+            <div class="fs aw-card candidate-card candidate-availability-card notice-joining-card">
+              <div class="fsh candidate-card-header aw-hero">
+                <div class="candidate-card-title aw-hero-title">
+                  <span class="candidate-card-icon aw-hero-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+                  <span><strong>Notice Period &amp; Joining Details</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body aw-body">
+                <div class="candidate-notice-status-block fv-row">
+                  <label>Notice Period <span class="rq">*</span></label>
+                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--immediate"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Immediate Joiner</strong><small>Can join within 0-15 days</small></span>
+                    </button>
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 1 ? 'is-selected' : '' }}" data-notice-period-value="1" role="radio" aria-checked="{{ $snp_mode === 1 ? 'true' : 'false' }}">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period (SNP)</strong><small>Currently working, serving notice</small></span>
+                    </button>
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 0 ? 'is-selected' : '' }}" data-notice-period-value="0" role="radio" aria-checked="{{ $snp_mode === 0 ? 'true' : 'false' }}">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--select"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Select Notice Period</strong><small>Choose a specific notice period</small></span>
+                    </button>
                   </div>
+                  <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
+                    <option value="" {{ $snp_mode === null ? 'selected' : '' }}>Choose Notice Period</option>
+                    <option value="0" {{ $snp_mode === 0 ? 'selected' : '' }}>Select Notice Period</option>
+                    <option value="1" {{ $snp_mode === 1 ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
+                    <option value="2" {{ $snp_mode === 2 ? 'selected' : '' }}>Immediate Joiner</option>
+                  </select>
+                </div>
+
+                <div class="candidate-notice-details-grid">
+                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ !in_array($snp_mode, [1, 2], true) ? 'hidden' : '' }}>
+                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)' }} <span class="rq">*</span></label>
+                    <div class="candidate-notice-input-shell">
+                      <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                      <div class="candidate-date-picker">
+                        <input type="text" id="np_id_display" class="form-control form-control-solid" name="np_id_display" value="{{ $snp_last_working ? date('d/M/Y', strtotime($snp_last_working)) : '' }}" placeholder="{{ $snp_mode === 1 ? 'Select expected last working date (LWD)' : 'Select last working date (LWD)' }}" readonly {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
+                        <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ $snp_last_working ? date('Y-m-d', strtotime($snp_last_working)) : '' }}" style="opacity:0;position:absolute;z-index:-1;top:0;" {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDaysField" {{ $snp_mode !== 0 ? 'hidden' : '' }}>
+                    <label>Notice Period <span class="rq">*</span></label>
+                    <div class="candidate-notice-input-shell">
+                      <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                      <select class="form-select form-select-solid" aria-label="Select Notice Period" id="ddl_np_id" name="ddl_np_id" {{ $snp_mode !== 0 ? 'disabled' : '' }}>
+                        <option value="">Select Notice Period</option>
+                        @php
+                            for ($i = 1; $i <= 200; $i++) {
+                                $suffix = $i === 1 ? 'Day' : 'Days';
+                                $selected = ($snp_mode === 0 && $i == @$application->np_id) ? 'selected' : '';
+                                echo '<option value="' . $i . '" ' . $selected . '>' . $i . ' ' . $suffix . '</option>';
+                            }
+                        @endphp
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <input type="text" id="calender" name="calender" hidden>              </div>
+            </div>
+
+            <!-- Preferred Work Mode -->
+            <div class="fs candidate-card preferred-work-mode-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span><strong>Preferred Work Mode <span class="rq">*</span></strong><small>Select the candidate's preferred way of working.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div class="candidate-work-mode-grid">
+                  <label class="candidate-work-mode-option {{ @$application->wm == 'remote' ? 'is-selected is-active' : '' }}" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small></span></label>
+                  <label class="candidate-work-mode-option {{ @$application->wm == 'hybrid' ? 'is-selected is-active' : '' }}" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
+                  <label class="candidate-work-mode-option {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'is-selected is-active' : '' }}" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span></label>
                 </div>
               </div>
             </div>
@@ -4050,86 +4243,335 @@ textarea.has-validation-error:focus,
               </div>
             </div>
 
-            <!-- Notice Period and Joining Details -->
-            <div class="fs aw-card candidate-card candidate-availability-card notice-joining-card">
-              <div class="fsh candidate-card-header aw-hero">
-                <div class="candidate-card-title aw-hero-title">
-                  <span class="candidate-card-icon aw-hero-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
-                  <span><strong>Notice Period &amp; Joining Details</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body aw-body">
-                <div class="candidate-notice-status-block fv-row">
-                  <label>Notice Period <span class="rq">*</span></label>
-                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
-                    <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
-                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
-                      <span class="candidate-notice-option-icon candidate-notice-option-icon--immediate"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Immediate Joiner</strong><small>Can join within 0-15 days</small></span>
-                    </button>
-                    <button type="button" class="candidate-notice-option {{ $snp_mode === 1 ? 'is-selected' : '' }}" data-notice-period-value="1" role="radio" aria-checked="{{ $snp_mode === 1 ? 'true' : 'false' }}">
-                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
-                      <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period (SNP)</strong><small>Currently working, serving notice</small></span>
-                    </button>
-                    <button type="button" class="candidate-notice-option {{ $snp_mode === 0 ? 'is-selected' : '' }}" data-notice-period-value="0" role="radio" aria-checked="{{ $snp_mode === 0 ? 'true' : 'false' }}">
-                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
-                      <span class="candidate-notice-option-icon candidate-notice-option-icon--select"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Select Notice Period</strong><small>Choose a specific notice period</small></span>
-                    </button>
-                  </div>
-                  <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
-                    <option value="" {{ $snp_mode === null ? 'selected' : '' }}>Choose Notice Period</option>
-                    <option value="0" {{ $snp_mode === 0 ? 'selected' : '' }}>Select Notice Period</option>
-                    <option value="1" {{ $snp_mode === 1 ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
-                    <option value="2" {{ $snp_mode === 2 ? 'selected' : '' }}>Immediate Joiner</option>
-                  </select>
-                </div>
-
-                <div class="candidate-notice-details-grid">
-                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ !in_array($snp_mode, [1, 2], true) ? 'hidden' : '' }}>
-                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)' }} <span class="rq">*</span></label>
-                    <div class="candidate-notice-input-shell">
-                      <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-                      <div class="candidate-date-picker">
-                        <input type="text" id="np_id_display" class="form-control form-control-solid" name="np_id_display" value="{{ $snp_last_working ? date('d/M/Y', strtotime($snp_last_working)) : '' }}" placeholder="{{ $snp_mode === 1 ? 'Select expected last working date (LWD)' : 'Select last working date (LWD)' }}" readonly {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
-                        <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ $snp_last_working ? date('Y-m-d', strtotime($snp_last_working)) : '' }}" style="opacity:0;position:absolute;z-index:-1;top:0;" {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDaysField" {{ $snp_mode !== 0 ? 'hidden' : '' }}>
-                    <label>Notice Period <span class="rq">*</span></label>
-                    <div class="candidate-notice-input-shell">
-                      <i class="fa-regular fa-clock" aria-hidden="true"></i>
-                      <select class="form-select form-select-solid" aria-label="Select Notice Period" id="ddl_np_id" name="ddl_np_id" {{ $snp_mode !== 0 ? 'disabled' : '' }}>
-                        <option value="">Select Notice Period</option>
-                        @php
-                            for ($i = 1; $i <= 200; $i++) {
-                                $suffix = $i === 1 ? 'Day' : 'Days';
-                                $selected = ($snp_mode === 0 && $i == @$application->np_id) ? 'selected' : '';
-                                echo '<option value="' . $i . '" ' . $selected . '>' . $i . ' ' . $suffix . '</option>';
-                            }
-                        @endphp
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <input type="text" id="calender" name="calender" hidden>              </div>
-            </div>
-
-            <!-- Preferred Work Mode -->
-            <div class="fs candidate-card preferred-work-mode-card">
+            <!-- Screening Questions -->
+            @php
+                $screeningQuestions = collect($job_additional_detail ?? [])->filter(function ($question) {
+                    return is_object($question) && trim((string) ($question->detail_value ?? '')) !== '';
+                });
+            @endphp
+          @if($screeningQuestions->isNotEmpty())
+            <div class="fs candidate-card questions-card">
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
-                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span><strong>Preferred Work Mode <span class="rq">*</span></strong><small>Select the candidate's preferred way of working.</small></span>
+                  <span class="candidate-card-icon candidate-card-icon--questions"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></span>
+                  <span><strong>Screening Questions</strong><small>Complete the job-specific information required for this submission.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body">
-                <div class="candidate-work-mode-grid">
-                  <label class="candidate-work-mode-option {{ @$application->wm == 'remote' ? 'is-selected is-active' : '' }}" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small></span></label>
-                  <label class="candidate-work-mode-option {{ @$application->wm == 'hybrid' ? 'is-selected is-active' : '' }}" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
-                  <label class="candidate-work-mode-option {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'is-selected is-active' : '' }}" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span></label>
+
+                <!--begin::Custom Details-->
+                <div class="" id="job_additional_detail">
+                  @php 
+                    if(!empty($job_additional_detail)){
+                    
+                    $customTitleId	=	1;
+                    $html			=	'';
+                   
+                    $inc_first		=	0;
+                    $inc_last		=	1;
+                     $html	.=	'<div class="form-group row mb-10">';	
+                    foreach($screeningQuestions as $aDetailArr){
+                      if(!empty($aDetailArr->detail_value)){
+                      
+                      $ans_value	=	'';
+                      if(!empty($application_additional_detail)){
+                        foreach($application_additional_detail as $aval){
+                            if($aDetailArr->id == $aval->question_id){
+                              $ans_value	=	@$aval->application_detail_value;	
+                            }
+                        }
+                      }
+						
+                            // if($inc_first %3 == 0) {
+                             
+                            // }	
+                            $html		.=	'<div class="col-md-4">
+                                      <label class="form-label">'.strtoupper($aDetailArr->detail_value).' <span class="rq">*</span>:</label>
+                                      <input type="hidden" name="job_question[]" value="'.$aDetailArr->id.'">
+                                      <input type="text" class="form-control form-control-solid" name="additional_detail[]" placeholder="Enter detail" value="'.@$ans_value.'">
+                                      <span class="text-muted form-text">Please enter your details</span>
+                                    </div>';
+                                    
+                            // if(($inc_last %3 == 0)&& $inc_last > 0){
+                              
+                            // }
+                          }
+                            $inc_first++;
+                            $inc_last++;
+                            $customTitleId++;				
+                          }
+                          $html		.='</div>';
+                          echo $html;	
+                          }	
+                                                    
+                  @endphp
+                </div>
+                <!--end::Custom Details-->
+              </div>
+            </div>
+            @endif
+
+
+
+
+            <!-- Professional Links -->
+            <div class="fs addl-card candidate-card professional-links-card">
+              <div class="fsh candidate-card-header addl-hero">
+                <div class="candidate-card-title addl-hero-title">
+                  <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
+                  <span><strong>Professional Links</strong><small>Add online profiles that help the hiring team evaluate your application.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body addl-body">
+                <div class="candidate-professional-links">
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--linkedin" aria-hidden="true">in</span>
+                    <span class="candidate-link-copy"><label for="linkedin">LinkedIn <span>(Optional)</span></label><small>Your professional profile</small></span>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" id="linkedin" name="linkedin" value="{{ @$application->linkedin }}" placeholder="Enter LinkedIn profile URL" /></div>
+                    <small class="candidate-link-example">e.g. https://www.linkedin.com/in/yourname</small>
+                  </div>
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--github" aria-hidden="true">GH</span>
+                    <span class="candidate-link-copy"><label for="github">GitHub <span>(Optional)</span></label><small>Your code repositories</small></span>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" value="{{ @$application->github }}" id="github" name="github" placeholder="Enter GitHub profile URL" /></div>
+                    <small class="candidate-link-example">e.g. https://github.com/yourusername</small>
+                  </div>
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--behance" aria-hidden="true">Be</span>
+                    <span class="candidate-link-copy"><label for="behance">Behance <span>(Optional)</span></label><small>Your design portfolio</small></span>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" id="behance" name="behance" value="{{ @$application->behance }}" placeholder="Enter Behance profile URL" /></div>
+                    <small class="candidate-link-example">e.g. https://www.behance.net/yourname</small>
+                  </div>
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--website" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>
+                    <span class="candidate-link-copy"><label for="otherLink">Portfolio / Website <span>(Optional)</span></label><small>Your personal website</small></span>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" value="{{ @$application->otherLink }}" id="otherLink" name="otherLink" placeholder="Enter website or portfolio URL" /></div>
+                    <small class="candidate-link-example">e.g. https://yourportfolio.com</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visa Status & Work Authorization (Optional) -->
+            <div class="fs candidate-card additional-details-card addl-card addl-card--details">
+              <div class="fsh candidate-card-header addl-hero">
+                <div class="candidate-card-title addl-hero-title">
+                  <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-passport" aria-hidden="true"></i></span>
+                  <span><strong>Visa Status & Work Authorization (Optional)</strong><small>Specify legal right-to-work status and visa category for your application.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body addl-body">
+                <div class="addl-wide-field fv-row" style="width: 100%;">
+                  {{-- Quick Select Hub Chips --}}
+                  <div class="wa-popular-chips-wrap">
+                    <span class="wa-chips-label"><i class="fa-solid fa-bolt-lightning text-warning me-1"></i> Popular Hubs:</span>
+                    <div class="wa-popular-chips" role="group" aria-label="Quick Select Work Authorization Hubs">
+                      <button type="button" class="wa-chip-btn" data-region="United States" data-filter="United States" title="Filter United States Visas">🇺🇸 US</button>
+                      <button type="button" class="wa-chip-btn" data-region="Canada" data-filter="Canada" title="Filter Canada Visas">🇨🇦 Canada</button>
+                      <button type="button" class="wa-chip-btn" data-region="India" data-filter="India" title="Filter India Work Status">🇮🇳 India</button>
+                      <button type="button" class="wa-chip-btn" data-region="United Kingdom" data-filter="United Kingdom" title="Filter UK Visas">🇬🇧 UK</button>
+                      <button type="button" class="wa-chip-btn" data-region="Dubai" data-filter="UAE" title="Filter Dubai & UAE Visas">🇦🇪 Dubai / UAE</button>
+                      <button type="button" class="wa-chip-btn" data-region="Singapore" data-filter="Singapore" title="Filter Singapore Visas">🇸🇬 Singapore</button>
+                      <button type="button" class="wa-chip-btn" data-region="Australia" data-filter="Australia" title="Filter Australia & NZ Visas">🇦🇺 Australia</button>
+                      <button type="button" class="wa-chip-btn" data-region="Germany" data-filter="Germany" title="Filter Germany Visas">🇩🇪 Germany</button>
+                      <button type="button" class="wa-chip-btn" data-region="Global" data-filter="Global" title="Filter EU & Global Visas">🌐 Global</button>
+                    </div>
+                  </div>
+
+                  {{-- Select Wrapper --}}
+                  <div class="addl-select-wrap">
+                    @php
+                      $currentVisa  = trim((string) @$application->visastatu);
+                      $isUsCitizen  = in_array($currentVisa, ['Citizen', 'US Citizen', 'US Citizen (USC)']);
+                      $isGreenCard  = in_array($currentVisa, ['Green Card', 'Permanent Resident (Green Card)']);
+                      $isGcEad      = in_array($currentVisa, ['GC-EAD', 'GC EAD', 'Green Card EAD']);
+                      $isH1b        = in_array($currentVisa, ['H1B', 'H-1B', 'H1-B']);
+                      $isH4Ead      = in_array($currentVisa, ['H4-EAD', 'H4 EAD', 'H-4 EAD']);
+                      $isL2Ead      = in_array($currentVisa, ['L2-EAD', 'L2 EAD', 'L-2 EAD']);
+                      $isTn         = in_array($currentVisa, ['TN Permit', 'TN Visa', 'TN-1', 'TN-2']);
+                      $isOpt        = in_array($currentVisa, ['F1', 'OPT', 'OPT-EAD', 'STEM-OPT', 'OPT / STEM-OPT']);
+                      $isCpt        = in_array($currentVisa, ['CPT']);
+                      $isE3         = in_array($currentVisa, ['E-3', 'E3']);
+                      $isO1         = in_array($currentVisa, ['O-1', 'O1']);
+                      $isL1         = in_array($currentVisa, ['L1', 'L-1']);
+                      $isOtherUsEad = in_array($currentVisa, ['Other US EAD', 'TPS EAD', 'Asylee EAD']);
+
+                      $isCaCitizen  = in_array($currentVisa, ['Canadian Citizen']);
+                      $isCaPr       = in_array($currentVisa, ['Canada PR', 'Canadian Permanent Resident']);
+                      $isCaOpenWp   = in_array($currentVisa, ['Canada Open Work Permit', 'PGWP']);
+                      $isCaClosedWp = in_array($currentVisa, ['Canada Closed Work Permit', 'LMIA Work Permit']);
+
+                      $isInCitizen  = in_array($currentVisa, ['Indian Citizen']);
+                      $isInOci      = in_array($currentVisa, ['OCI / PIO', 'OCI', 'PIO']);
+                      $isInVisa     = in_array($currentVisa, ['India Work Visa', 'Employment Visa (India)']);
+
+                      $isUkCitizen  = in_array($currentVisa, ['UK Citizen', 'British Citizen']);
+                      $isUkIlr      = in_array($currentVisa, ['UK ILR', 'Indefinite Leave to Remain']);
+                      $isUkSkilled  = in_array($currentVisa, ['UK Skilled Worker', 'Tier 2']);
+                      $isUkGrad     = in_array($currentVisa, ['UK Graduate Visa']);
+
+                      $isUaeGolden    = in_array($currentVisa, ['UAE Golden Visa', 'UAE Golden / Green Visa', 'Golden Visa']);
+                      $isUaeGreen     = in_array($currentVisa, ['UAE Green Visa', 'Green Visa']);
+                      $isUaeEmpVisa   = in_array($currentVisa, ['UAE Employment Visa', 'UAE Work Visa', 'Dubai Employment Visa']);
+                      $isUaeFreelance = in_array($currentVisa, ['UAE Freelance Visa', 'Dubai Freelance Visa', 'Remote Work Visa (UAE)']);
+                      $isUaeNational  = in_array($currentVisa, ['UAE National', 'UAE Citizen', 'Emirati Citizen']);
+                      $isGccIqama     = in_array($currentVisa, ['GCC Iqama', 'Saudi Iqama', 'GCC Work Permit']);
+
+                      $isSgCitizen    = in_array($currentVisa, ['Singapore Citizen']);
+                      $isSgPr         = in_array($currentVisa, ['Singapore PR', 'Singapore Permanent Resident']);
+                      $isSgEp         = in_array($currentVisa, ['Singapore EP', 'Employment Pass', 'Singapore Employment Pass']);
+                      $isSgSpass      = in_array($currentVisa, ['Singapore S Pass', 'S Pass', 'S-Pass']);
+                      $isSgOnePass    = in_array($currentVisa, ['Singapore ONE Pass', 'ONE Pass', 'Tech.Pass', 'PEP']);
+                      $isSgLocDp      = in_array($currentVisa, ['Singapore LOC / DP', 'LOC', 'Dependant Pass']);
+
+                      $isAuCitizenPr  = in_array($currentVisa, ['Australia Citizen / PR', 'Australian Citizen', 'Australian PR']);
+                      $isAuTss482     = in_array($currentVisa, ['Australia TSS 482', 'TSS 482', 'Subclass 482']);
+                      $isAuSkilled    = in_array($currentVisa, ['Australia Skilled 189/190', 'Subclass 189', 'Subclass 190']);
+                      $isAuGrad485    = in_array($currentVisa, ['Australia Graduate 485', 'Subclass 485']);
+                      $isNzCitizen    = in_array($currentVisa, ['New Zealand Citizen / PR', 'NZ Citizen', 'NZ PR']);
+
+                      $isEuCitizen    = in_array($currentVisa, ['EU Citizen', 'EU / EEA Citizen']);
+                      $isEuBlue       = in_array($currentVisa, ['EU Blue Card']);
+                      $isAuthWp       = in_array($currentVisa, ['Authorized Work Permit']);
+                      $isReqSpons     = in_array($currentVisa, ['Requires Sponsorship', 'Requires International Visa Sponsorship']);
+
+                      $hasMatchedOption = $isUsCitizen || $isGreenCard || $isGcEad || $isH1b || $isH4Ead || $isL2Ead || $isTn || $isOpt || $isCpt || $isE3 || $isO1 || $isL1 || $isOtherUsEad
+                                       || $isCaCitizen || $isCaPr || $isCaOpenWp || $isCaClosedWp
+                                       || $isInCitizen || $isInOci || $isInVisa
+                                       || $isUkCitizen || $isUkIlr || $isUkSkilled || $isUkGrad
+                                       || $isUaeGolden || $isUaeGreen || $isUaeEmpVisa || $isUaeFreelance || $isUaeNational || $isGccIqama
+                                       || $isSgCitizen || $isSgPr || $isSgEp || $isSgSpass || $isSgOnePass || $isSgLocDp
+                                       || $isAuCitizenPr || $isAuTss482 || $isAuSkilled || $isAuGrad485 || $isNzCitizen
+                                       || $isEuCitizen || $isEuBlue || $isAuthWp || $isReqSpons;
+
+                      // Load comprehensive 240+ countries taxonomy
+                      $allGlobalCountries = !empty($countries) ? (is_array($countries) ? $countries : $countries->toArray()) : [];
+                      if (empty($allGlobalCountries) && file_exists(base_path('country-state-city/countries.json'))) {
+                          $allGlobalCountries = json_decode(file_get_contents(base_path('country-state-city/countries.json')), true)['countries'] ?? [];
+                      }
+                      if (!empty($allGlobalCountries)) {
+                          usort($allGlobalCountries, function($a, $b) {
+                              return strcmp($a['name'] ?? '', $b['name'] ?? '');
+                          });
+                      }
+                    @endphp
+                    {{-- CRITICAL: Use class="wa-select" ONLY. NEVER include class="form-select" --}}
+                    <select name="visastatu" id="visastatu" class="wa-select" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
+                      <option value="">Select work authorization or visa status</option>
+
+                      {{-- POPULAR HUBS (TIER 1 RECRUITING DESTINATIONS) --}}
+                      <optgroup label="United States (US)">
+                        <option value="US Citizen" {{ $isUsCitizen ? 'selected' : '' }}>US Citizen (USC)</option>
+                        <option value="Green Card" {{ $isGreenCard ? 'selected' : '' }}>Permanent Resident (Green Card)</option>
+                        <option value="GC-EAD" {{ $isGcEad ? 'selected' : '' }}>GC-EAD (Adjustment of Status)</option>
+                        <option value="H1B" {{ $isH1b ? 'selected' : '' }}>H-1B (Specialty Occupation)</option>
+                        <option value="H-4 EAD" {{ $isH4Ead ? 'selected' : '' }}>H-4 EAD (Spouse Dependent)</option>
+                        <option value="L-2 EAD" {{ $isL2Ead ? 'selected' : '' }}>L-2 EAD (Intracompany Dependent)</option>
+                        <option value="TN Permit" {{ $isTn ? 'selected' : '' }}>TN Visa (USMCA - Canada / Mexico)</option>
+                        <option value="OPT-EAD" {{ $isOpt ? 'selected' : '' }}>OPT / STEM-OPT EAD</option>
+                        <option value="CPT" {{ $isCpt ? 'selected' : '' }}>CPT (Curricular Practical Training)</option>
+                        <option value="E-3" {{ $isE3 ? 'selected' : '' }}>E-3 (Australian Specialty Occupation)</option>
+                        <option value="O-1" {{ $isO1 ? 'selected' : '' }}>O-1 (Extraordinary Ability)</option>
+                        <option value="L1" {{ $isL1 ? 'selected' : '' }}>L-1 (Intracompany Transferee)</option>
+                        <option value="Other US EAD" {{ $isOtherUsEad ? 'selected' : '' }}>Other US EAD (TPS / Asylee / DACA)</option>
+                      </optgroup>
+
+                      <optgroup label="Canada (CA)">
+                        <option value="Canadian Citizen" {{ $isCaCitizen ? 'selected' : '' }}>Canadian Citizen</option>
+                        <option value="Canada PR" {{ $isCaPr ? 'selected' : '' }}>Canada Permanent Resident (PR)</option>
+                        <option value="Canada Open Work Permit" {{ $isCaOpenWp ? 'selected' : '' }}>Canada Open Work Permit / PGWP</option>
+                        <option value="Canada Closed Work Permit" {{ $isCaClosedWp ? 'selected' : '' }}>Canada LMIA / Closed Work Permit</option>
+                      </optgroup>
+
+                      <optgroup label="India (IN)">
+                        <option value="Indian Citizen" {{ $isInCitizen ? 'selected' : '' }}>Indian Citizen / Domestic Right to Work</option>
+                        <option value="OCI / PIO" {{ $isInOci ? 'selected' : '' }}>OCI / PIO Cardholder</option>
+                        <option value="India Work Visa" {{ $isInVisa ? 'selected' : '' }}>India Employment Visa</option>
+                      </optgroup>
+
+                      <optgroup label="United Kingdom (UK)">
+                        <option value="UK Citizen" {{ $isUkCitizen ? 'selected' : '' }}>British Citizen</option>
+                        <option value="UK ILR" {{ $isUkIlr ? 'selected' : '' }}>UK Indefinite Leave to Remain (ILR)</option>
+                        <option value="UK Skilled Worker" {{ $isUkSkilled ? 'selected' : '' }}>UK Skilled Worker / Tier 2</option>
+                        <option value="UK Graduate Visa" {{ $isUkGrad ? 'selected' : '' }}>UK Graduate / Youth Mobility</option>
+                      </optgroup>
+
+                      <optgroup label="United Arab Emirates & GCC (Dubai / UAE)">
+                        <option value="UAE Golden Visa" {{ $isUaeGolden ? 'selected' : '' }}>UAE Golden Visa (10-Year Self-Sponsored)</option>
+                        <option value="UAE Green Visa" {{ $isUaeGreen ? 'selected' : '' }}>UAE Green Visa (5-Year Skilled / Freelance)</option>
+                        <option value="UAE Employment Visa" {{ $isUaeEmpVisa ? 'selected' : '' }}>UAE Employment Residence Visa (Company / Freezone)</option>
+                        <option value="UAE Freelance Visa" {{ $isUaeFreelance ? 'selected' : '' }}>UAE Freelance / Remote Work Visa</option>
+                        <option value="UAE National" {{ $isUaeNational ? 'selected' : '' }}>UAE / GCC National</option>
+                        <option value="GCC Iqama" {{ $isGccIqama ? 'selected' : '' }}>GCC Resident Work Permit / Iqama</option>
+                      </optgroup>
+
+                      <optgroup label="Singapore (SG)">
+                        <option value="Singapore Citizen" {{ $isSgCitizen ? 'selected' : '' }}>Singapore Citizen (SC)</option>
+                        <option value="Singapore PR" {{ $isSgPr ? 'selected' : '' }}>Singapore Permanent Resident (PR)</option>
+                        <option value="Singapore EP" {{ $isSgEp ? 'selected' : '' }}>Singapore Employment Pass (EP)</option>
+                        <option value="Singapore S Pass" {{ $isSgSpass ? 'selected' : '' }}>Singapore S Pass (Skilled Staff)</option>
+                        <option value="Singapore ONE Pass" {{ $isSgOnePass ? 'selected' : '' }}>Singapore ONE Pass / Tech.Pass / PEP</option>
+                        <option value="Singapore LOC / DP" {{ $isSgLocDp ? 'selected' : '' }}>Singapore Letter of Consent (LOC / Dependant Pass)</option>
+                      </optgroup>
+
+                      <optgroup label="Australia & New Zealand (AU / NZ)">
+                        <option value="Australia Citizen / PR" {{ $isAuCitizenPr ? 'selected' : '' }}>Australian Citizen / Permanent Resident</option>
+                        <option value="Australia TSS 482" {{ $isAuTss482 ? 'selected' : '' }}>Australia TSS Visa (Subclass 482 - Temporary Skill)</option>
+                        <option value="Australia Skilled 189/190" {{ $isAuSkilled ? 'selected' : '' }}>Australia Skilled Work Visa (Subclass 189 / 190)</option>
+                        <option value="Australia Graduate 485" {{ $isAuGrad485 ? 'selected' : '' }}>Australia Temporary Graduate Visa (Subclass 485)</option>
+                        <option value="New Zealand Citizen / PR" {{ $isNzCitizen ? 'selected' : '' }}>New Zealand Citizen / Resident</option>
+                      </optgroup>
+
+                      <optgroup label="European Union (EU)">
+                        <option value="EU Citizen" {{ $isEuCitizen ? 'selected' : '' }}>EU / EEA Citizen</option>
+                        <option value="EU Blue Card" {{ $isEuBlue ? 'selected' : '' }}>EU Blue Card</option>
+                        <option value="Germany - Opportunity Card / Work Visa" {{ ($currentVisa === 'Germany - Opportunity Card / Work Visa') ? 'selected' : '' }}>Germany - Opportunity Card / Work Visa</option>
+                        <option value="Netherlands - Highly Skilled Migrant" {{ ($currentVisa === 'Netherlands - Highly Skilled Migrant') ? 'selected' : '' }}>Netherlands - Highly Skilled Migrant</option>
+                        <option value="Ireland - Critical Skills Employment Permit" {{ ($currentVisa === 'Ireland - Critical Skills Employment Permit') ? 'selected' : '' }}>Ireland - Critical Skills Employment Permit</option>
+                        <option value="Authorized Work Permit" {{ $isAuthWp ? 'selected' : '' }}>Authorized Work Permit (Country Specific)</option>
+                        <option value="Requires Sponsorship" {{ $isReqSpons ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                      </optgroup>
+
+                      {{-- 240+ COUNTRIES & TERRITORIES WORLDWIDE --}}
+                      @if(!empty($allGlobalCountries))
+                        @foreach($allGlobalCountries as $countryItem)
+                          @php
+                            $cName = trim($countryItem['name'] ?? '');
+                            $cCode = trim($countryItem['sortname'] ?? '');
+                            if (empty($cName)) continue;
+                            if (in_array($cCode, ['US', 'CA', 'IN', 'GB', 'AE', 'SG', 'AU', 'NZ'])) continue;
+
+                            $optCitizen = $cName . ' - Citizen / Domestic Right to Work';
+                            $optPr      = $cName . ' - Permanent Resident (PR)';
+                            $optVisa    = $cName . ' - Work Visa / Employment Permit';
+
+                            $isOptCitizenSelected = ($currentVisa === $optCitizen);
+                            $isOptPrSelected      = ($currentVisa === $optPr);
+                            $isOptVisaSelected    = ($currentVisa === $optVisa);
+
+                            if ($isOptCitizenSelected || $isOptPrSelected || $isOptVisaSelected) {
+                                $hasMatchedOption = true;
+                            }
+                          @endphp
+                          <optgroup label="{{ $cName }} ({{ $cCode }})">
+                            <option value="{{ $optCitizen }}" {{ $isOptCitizenSelected ? 'selected' : '' }}>{{ $optCitizen }}</option>
+                            <option value="{{ $optPr }}" {{ $isOptPrSelected ? 'selected' : '' }}>{{ $optPr }}</option>
+                            <option value="{{ $optVisa }}" {{ $isOptVisaSelected ? 'selected' : '' }}>{{ $optVisa }}</option>
+                          </optgroup>
+                        @endforeach
+                      @endif
+
+                      <optgroup label="Global & International">
+                        <option value="Requires International Visa Sponsorship" {{ ($currentVisa === 'Requires International Visa Sponsorship') ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                        <option value="Global Remote / Freelance Contract" {{ ($currentVisa === 'Global Remote / Freelance Contract') ? 'selected' : '' }}>Global Remote / Freelance Contract Authorization</option>
+                      </optgroup>
+
+                      @if(!empty($currentVisa) && !$hasMatchedOption)
+                        <option value="{{ $currentVisa }}" selected>{{ $currentVisa }} (Current Status)</option>
+                      @endif
+                    </select>
+                  </div>
+                  <small class="text-muted mt-1 d-block" style="font-size:11px;color:#65708e;">Search by country name (e.g. Mexico, Japan, Germany), visa code (H1B, TN, EAD, Golden Visa, EP, TSS 482) or right-to-work status.</small>
                 </div>
               </div>
             </div>
@@ -4820,448 +5262,6 @@ textarea.has-validation-error:focus,
                 });
             })();
             </script>
-
-            <!-- Skills Details -->
-            <div class="fs se-card job-skills-card candidate-card">
-              <div class="fsh candidate-card-header se-hero">
-                <div class="candidate-card-title se-title">
-                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span>
-                  <span><strong>Job Skills Details</strong><small>Record experience and proficiency against the job's required skills.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body candidate-table-wrap">
-                <div class="candidate-job-skills-scroll">
-                <table class="sk">
-                  <thead>
-                    <tr>
-                      <th>Skill <span class="rq">*</span></th>
-                      <th>Experience (Years) <span class="rq">*</span></th>
-                      <th>Experience (Months)</th>
-                      <th>Proficiency Rating <span class="rq">*</span></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @foreach($jobSkill as $skill_val)
-                        @if(!empty($skill_val->skill_name))
-
-                            @php
-                                  $selected_skill_exp_year = null;
-                                  $selected_skill_exp_month = null;
-                                  $selected_skill_rating = null;
-                                  $skill_val_id = $skill_val->id ?? $skill_val->job_skill_id ?? $skill_val->skill_id ?? null;
-
-                                  /* Intent: Only pre-select skill experience if explicitly in EDIT mode with a valid application ID; fresh applications start completely clean */
-                                  if (($page_event ?? 'ADD') === 'EDIT' && !empty($appId) && !empty($skill_val->skill_value)) {
-                                    $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
-                                    if ($skillValue !== '') {
-                                      $total_skill_exp = GeneralMethod::separateNumberParts($skillValue);
-                                      $skill_exp_years = $total_skill_exp[0] ?? null;
-                                      $skill_exp_months = $total_skill_exp[1] ?? null; 
-
-                                      $selected_skill_exp_year = $skill_exp_years;
-                                      $selected_skill_exp_month = $skill_exp_months;
-                                      $selected_skill_rating = $skill_val->rating ?? null;
-                                    }
-                                  }
-                            @endphp
-
-                            <tr>
-                              <td><label class="candidate-job-skill-name"><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></label></td>
-                              <td>
-                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience year" id="job_skill_year_{{ $skill_val_id }}" name="YearskillId[{{ $skill_val_id }}]">
-                                      <option value="0">Select Year</option>
-                                      @php 
-                                          for ($i = 1; $i <= 60; $i++) {
-                                                $selected = '';
-                                                $s = 'Year';
-                                                if($i > 1){
-                                                    $s = 'Years';
-                                                }
-                                                if(!is_null($selected_skill_exp_year) && (string)$i === (string)$selected_skill_exp_year){
-                                                    $selected = 'selected';
-                                                }
-                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                          }
-                                      @endphp
-                                    </select>
-                              </td>
-                              <td>
-                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience month" id="job_skill_month_{{ $skill_val_id }}" name="MonthskillId[{{ $skill_val_id }}]">
-                                      <option value="">Select Month</option>
-                                      @php 
-                                          for ($i = 0; $i <= 11; $i++) {
-                                                $selected = '';
-                                                $s = 'Month';
-                                                if($i > 1){
-                                                    $s = 'Months';
-                                                }
-                                                if(!is_null($selected_skill_exp_month) && (string)$i === (string)$selected_skill_exp_month){
-                                                    $selected = 'selected';
-                                                }
-                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                          }
-                                      @endphp
-                                </select>
-                              </td>
-                              <td>
-                                 <select class="form-select form-select-solid candidate-rating-select" aria-label="Select proficiency rating" id="job_skill_rating_{{ $skill_val_id }}" name="rating[{{ $skill_val_id }}]">
-                                      <option value="0">Select rating</option>
-                                      @php 
-                                          for ($i = 1; $i <= 5; $i++) {
-                                                $selected = '';
-                                                $s = 'Star';
-                                                if($i > 1){
-                                                    $s = 'Stars';
-                                                }
-                                                if(!is_null($selected_skill_rating) && (string)$i === (string)$selected_skill_rating){
-                                                    $selected = 'selected';
-                                                }
-                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                          }
-                                      @endphp
-                                    </select>
-                              </td>
-                            </tr>
-                        @endif
-                    @endforeach
-                  </tbody>
-                </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- Screening Questions -->
-            @php
-                $screeningQuestions = collect($job_additional_detail ?? [])->filter(function ($question) {
-                    return is_object($question) && trim((string) ($question->detail_value ?? '')) !== '';
-                });
-            @endphp
-          @if($screeningQuestions->isNotEmpty())
-            <div class="fs candidate-card questions-card">
-              <div class="fsh candidate-card-header">
-                <div class="candidate-card-title">
-                  <span class="candidate-card-icon candidate-card-icon--questions"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></span>
-                  <span><strong>Screening Questions</strong><small>Complete the job-specific information required for this submission.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body">
-
-                <!--begin::Custom Details-->
-                <div class="" id="job_additional_detail">
-                  @php 
-                    if(!empty($job_additional_detail)){
-                    
-                    $customTitleId	=	1;
-                    $html			=	'';
-                   
-                    $inc_first		=	0;
-                    $inc_last		=	1;
-                     $html	.=	'<div class="form-group row mb-10">';	
-                    foreach($screeningQuestions as $aDetailArr){
-                      if(!empty($aDetailArr->detail_value)){
-                      
-                      $ans_value	=	'';
-                      if(!empty($application_additional_detail)){
-                        foreach($application_additional_detail as $aval){
-                            if($aDetailArr->id == $aval->question_id){
-                              $ans_value	=	@$aval->application_detail_value;	
-                            }
-                        }
-                      }
-						
-                            // if($inc_first %3 == 0) {
-                             
-                            // }	
-                            $html		.=	'<div class="col-md-4">
-                                      <label class="form-label">'.strtoupper($aDetailArr->detail_value).' <span class="rq">*</span>:</label>
-                                      <input type="hidden" name="job_question[]" value="'.$aDetailArr->id.'">
-                                      <input type="text" class="form-control form-control-solid" name="additional_detail[]" placeholder="Enter detail" value="'.@$ans_value.'">
-                                      <span class="text-muted form-text">Please enter your details</span>
-                                    </div>';
-                                    
-                            // if(($inc_last %3 == 0)&& $inc_last > 0){
-                              
-                            // }
-                          }
-                            $inc_first++;
-                            $inc_last++;
-                            $customTitleId++;				
-                          }
-                          $html		.='</div>';
-                          echo $html;	
-                          }	
-                                                    
-                  @endphp
-                </div>
-                <!--end::Custom Details-->
-              </div>
-            </div>
-            @endif
-
-
-
-
-            <!-- Professional Links -->
-            <div class="fs addl-card candidate-card professional-links-card">
-              <div class="fsh candidate-card-header addl-hero">
-                <div class="candidate-card-title addl-hero-title">
-                  <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
-                  <span><strong>Professional Links</strong><small>Add online profiles that help the hiring team evaluate your application.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body addl-body">
-                <div class="candidate-professional-links">
-                  <div class="candidate-link-row fv-row">
-                    <span class="candidate-link-brand candidate-link-brand--linkedin" aria-hidden="true">in</span>
-                    <span class="candidate-link-copy"><label for="linkedin">LinkedIn <span>(Optional)</span></label><small>Your professional profile</small></span>
-                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" id="linkedin" name="linkedin" value="{{ @$application->linkedin }}" placeholder="Enter LinkedIn profile URL" /></div>
-                    <small class="candidate-link-example">e.g. https://www.linkedin.com/in/yourname</small>
-                  </div>
-                  <div class="candidate-link-row fv-row">
-                    <span class="candidate-link-brand candidate-link-brand--github" aria-hidden="true">GH</span>
-                    <span class="candidate-link-copy"><label for="github">GitHub <span>(Optional)</span></label><small>Your code repositories</small></span>
-                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" value="{{ @$application->github }}" id="github" name="github" placeholder="Enter GitHub profile URL" /></div>
-                    <small class="candidate-link-example">e.g. https://github.com/yourusername</small>
-                  </div>
-                  <div class="candidate-link-row fv-row">
-                    <span class="candidate-link-brand candidate-link-brand--behance" aria-hidden="true">Be</span>
-                    <span class="candidate-link-copy"><label for="behance">Behance <span>(Optional)</span></label><small>Your design portfolio</small></span>
-                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" id="behance" name="behance" value="{{ @$application->behance }}" placeholder="Enter Behance profile URL" /></div>
-                    <small class="candidate-link-example">e.g. https://www.behance.net/yourname</small>
-                  </div>
-                  <div class="candidate-link-row fv-row">
-                    <span class="candidate-link-brand candidate-link-brand--website" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>
-                    <span class="candidate-link-copy"><label for="otherLink">Portfolio / Website <span>(Optional)</span></label><small>Your personal website</small></span>
-                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" value="{{ @$application->otherLink }}" id="otherLink" name="otherLink" placeholder="Enter website or portfolio URL" /></div>
-                    <small class="candidate-link-example">e.g. https://yourportfolio.com</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Visa Status & Work Authorization (Optional) -->
-            <div class="fs candidate-card additional-details-card addl-card addl-card--details">
-              <div class="fsh candidate-card-header addl-hero">
-                <div class="candidate-card-title addl-hero-title">
-                  <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-passport" aria-hidden="true"></i></span>
-                  <span><strong>Visa Status & Work Authorization (Optional)</strong><small>Specify legal right-to-work status and visa category for your application.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body addl-body">
-                <div class="addl-wide-field fv-row" style="width: 100%;">
-                  {{-- Quick Select Hub Chips --}}
-                  <div class="wa-popular-chips-wrap">
-                    <span class="wa-chips-label"><i class="fa-solid fa-bolt-lightning text-warning me-1"></i> Popular Hubs:</span>
-                    <div class="wa-popular-chips" role="group" aria-label="Quick Select Work Authorization Hubs">
-                      <button type="button" class="wa-chip-btn" data-region="United States" data-filter="United States" title="Filter United States Visas">🇺🇸 US</button>
-                      <button type="button" class="wa-chip-btn" data-region="Canada" data-filter="Canada" title="Filter Canada Visas">🇨🇦 Canada</button>
-                      <button type="button" class="wa-chip-btn" data-region="India" data-filter="India" title="Filter India Work Status">🇮🇳 India</button>
-                      <button type="button" class="wa-chip-btn" data-region="United Kingdom" data-filter="United Kingdom" title="Filter UK Visas">🇬🇧 UK</button>
-                      <button type="button" class="wa-chip-btn" data-region="Dubai" data-filter="UAE" title="Filter Dubai & UAE Visas">🇦🇪 Dubai / UAE</button>
-                      <button type="button" class="wa-chip-btn" data-region="Singapore" data-filter="Singapore" title="Filter Singapore Visas">🇸🇬 Singapore</button>
-                      <button type="button" class="wa-chip-btn" data-region="Australia" data-filter="Australia" title="Filter Australia & NZ Visas">🇦🇺 Australia</button>
-                      <button type="button" class="wa-chip-btn" data-region="Germany" data-filter="Germany" title="Filter Germany Visas">🇩🇪 Germany</button>
-                      <button type="button" class="wa-chip-btn" data-region="Global" data-filter="Global" title="Filter EU & Global Visas">🌐 Global</button>
-                    </div>
-                  </div>
-
-                  {{-- Select Wrapper --}}
-                  <div class="addl-select-wrap">
-                    @php
-                      $currentVisa  = trim((string) @$application->visastatu);
-                      $isUsCitizen  = in_array($currentVisa, ['Citizen', 'US Citizen', 'US Citizen (USC)']);
-                      $isGreenCard  = in_array($currentVisa, ['Green Card', 'Permanent Resident (Green Card)']);
-                      $isGcEad      = in_array($currentVisa, ['GC-EAD', 'GC EAD', 'Green Card EAD']);
-                      $isH1b        = in_array($currentVisa, ['H1B', 'H-1B', 'H1-B']);
-                      $isH4Ead      = in_array($currentVisa, ['H4-EAD', 'H4 EAD', 'H-4 EAD']);
-                      $isL2Ead      = in_array($currentVisa, ['L2-EAD', 'L2 EAD', 'L-2 EAD']);
-                      $isTn         = in_array($currentVisa, ['TN Permit', 'TN Visa', 'TN-1', 'TN-2']);
-                      $isOpt        = in_array($currentVisa, ['F1', 'OPT', 'OPT-EAD', 'STEM-OPT', 'OPT / STEM-OPT']);
-                      $isCpt        = in_array($currentVisa, ['CPT']);
-                      $isE3         = in_array($currentVisa, ['E-3', 'E3']);
-                      $isO1         = in_array($currentVisa, ['O-1', 'O1']);
-                      $isL1         = in_array($currentVisa, ['L1', 'L-1']);
-                      $isOtherUsEad = in_array($currentVisa, ['Other US EAD', 'TPS EAD', 'Asylee EAD']);
-
-                      $isCaCitizen  = in_array($currentVisa, ['Canadian Citizen']);
-                      $isCaPr       = in_array($currentVisa, ['Canada PR', 'Canadian Permanent Resident']);
-                      $isCaOpenWp   = in_array($currentVisa, ['Canada Open Work Permit', 'PGWP']);
-                      $isCaClosedWp = in_array($currentVisa, ['Canada Closed Work Permit', 'LMIA Work Permit']);
-
-                      $isInCitizen  = in_array($currentVisa, ['Indian Citizen']);
-                      $isInOci      = in_array($currentVisa, ['OCI / PIO', 'OCI', 'PIO']);
-                      $isInVisa     = in_array($currentVisa, ['India Work Visa', 'Employment Visa (India)']);
-
-                      $isUkCitizen  = in_array($currentVisa, ['UK Citizen', 'British Citizen']);
-                      $isUkIlr      = in_array($currentVisa, ['UK ILR', 'Indefinite Leave to Remain']);
-                      $isUkSkilled  = in_array($currentVisa, ['UK Skilled Worker', 'Tier 2']);
-                      $isUkGrad     = in_array($currentVisa, ['UK Graduate Visa']);
-
-                      $isUaeGolden    = in_array($currentVisa, ['UAE Golden Visa', 'UAE Golden / Green Visa', 'Golden Visa']);
-                      $isUaeGreen     = in_array($currentVisa, ['UAE Green Visa', 'Green Visa']);
-                      $isUaeEmpVisa   = in_array($currentVisa, ['UAE Employment Visa', 'UAE Work Visa', 'Dubai Employment Visa']);
-                      $isUaeFreelance = in_array($currentVisa, ['UAE Freelance Visa', 'Dubai Freelance Visa', 'Remote Work Visa (UAE)']);
-                      $isUaeNational  = in_array($currentVisa, ['UAE National', 'UAE Citizen', 'Emirati Citizen']);
-                      $isGccIqama     = in_array($currentVisa, ['GCC Iqama', 'Saudi Iqama', 'GCC Work Permit']);
-
-                      $isSgCitizen    = in_array($currentVisa, ['Singapore Citizen']);
-                      $isSgPr         = in_array($currentVisa, ['Singapore PR', 'Singapore Permanent Resident']);
-                      $isSgEp         = in_array($currentVisa, ['Singapore EP', 'Employment Pass', 'Singapore Employment Pass']);
-                      $isSgSpass      = in_array($currentVisa, ['Singapore S Pass', 'S Pass', 'S-Pass']);
-                      $isSgOnePass    = in_array($currentVisa, ['Singapore ONE Pass', 'ONE Pass', 'Tech.Pass', 'PEP']);
-                      $isSgLocDp      = in_array($currentVisa, ['Singapore LOC / DP', 'LOC', 'Dependant Pass']);
-
-                      $isAuCitizenPr  = in_array($currentVisa, ['Australia Citizen / PR', 'Australian Citizen', 'Australian PR']);
-                      $isAuTss482     = in_array($currentVisa, ['Australia TSS 482', 'TSS 482', 'Subclass 482']);
-                      $isAuSkilled    = in_array($currentVisa, ['Australia Skilled 189/190', 'Subclass 189', 'Subclass 190']);
-                      $isAuGrad485    = in_array($currentVisa, ['Australia Graduate 485', 'Subclass 485']);
-                      $isNzCitizen    = in_array($currentVisa, ['New Zealand Citizen / PR', 'NZ Citizen', 'NZ PR']);
-
-                      $isEuCitizen    = in_array($currentVisa, ['EU Citizen', 'EU / EEA Citizen']);
-                      $isEuBlue       = in_array($currentVisa, ['EU Blue Card']);
-                      $isAuthWp       = in_array($currentVisa, ['Authorized Work Permit']);
-                      $isReqSpons     = in_array($currentVisa, ['Requires Sponsorship', 'Requires International Visa Sponsorship']);
-
-                      $hasMatchedOption = $isUsCitizen || $isGreenCard || $isGcEad || $isH1b || $isH4Ead || $isL2Ead || $isTn || $isOpt || $isCpt || $isE3 || $isO1 || $isL1 || $isOtherUsEad
-                                       || $isCaCitizen || $isCaPr || $isCaOpenWp || $isCaClosedWp
-                                       || $isInCitizen || $isInOci || $isInVisa
-                                       || $isUkCitizen || $isUkIlr || $isUkSkilled || $isUkGrad
-                                       || $isUaeGolden || $isUaeGreen || $isUaeEmpVisa || $isUaeFreelance || $isUaeNational || $isGccIqama
-                                       || $isSgCitizen || $isSgPr || $isSgEp || $isSgSpass || $isSgOnePass || $isSgLocDp
-                                       || $isAuCitizenPr || $isAuTss482 || $isAuSkilled || $isAuGrad485 || $isNzCitizen
-                                       || $isEuCitizen || $isEuBlue || $isAuthWp || $isReqSpons;
-
-                      // Load comprehensive 240+ countries taxonomy
-                      $allGlobalCountries = !empty($countries) ? (is_array($countries) ? $countries : $countries->toArray()) : [];
-                      if (empty($allGlobalCountries) && file_exists(base_path('country-state-city/countries.json'))) {
-                          $allGlobalCountries = json_decode(file_get_contents(base_path('country-state-city/countries.json')), true)['countries'] ?? [];
-                      }
-                      if (!empty($allGlobalCountries)) {
-                          usort($allGlobalCountries, function($a, $b) {
-                              return strcmp($a['name'] ?? '', $b['name'] ?? '');
-                          });
-                      }
-                    @endphp
-                    {{-- CRITICAL: Use class="wa-select" ONLY. NEVER include class="form-select" --}}
-                    <select name="visastatu" id="visastatu" class="wa-select" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
-                      <option value="">Select work authorization or visa status</option>
-
-                      {{-- POPULAR HUBS (TIER 1 RECRUITING DESTINATIONS) --}}
-                      <optgroup label="United States (US)">
-                        <option value="US Citizen" {{ $isUsCitizen ? 'selected' : '' }}>US Citizen (USC)</option>
-                        <option value="Green Card" {{ $isGreenCard ? 'selected' : '' }}>Permanent Resident (Green Card)</option>
-                        <option value="GC-EAD" {{ $isGcEad ? 'selected' : '' }}>GC-EAD (Adjustment of Status)</option>
-                        <option value="H1B" {{ $isH1b ? 'selected' : '' }}>H-1B (Specialty Occupation)</option>
-                        <option value="H-4 EAD" {{ $isH4Ead ? 'selected' : '' }}>H-4 EAD (Spouse Dependent)</option>
-                        <option value="L-2 EAD" {{ $isL2Ead ? 'selected' : '' }}>L-2 EAD (Intracompany Dependent)</option>
-                        <option value="TN Permit" {{ $isTn ? 'selected' : '' }}>TN Visa (USMCA - Canada / Mexico)</option>
-                        <option value="OPT-EAD" {{ $isOpt ? 'selected' : '' }}>OPT / STEM-OPT EAD</option>
-                        <option value="CPT" {{ $isCpt ? 'selected' : '' }}>CPT (Curricular Practical Training)</option>
-                        <option value="E-3" {{ $isE3 ? 'selected' : '' }}>E-3 (Australian Specialty Occupation)</option>
-                        <option value="O-1" {{ $isO1 ? 'selected' : '' }}>O-1 (Extraordinary Ability)</option>
-                        <option value="L1" {{ $isL1 ? 'selected' : '' }}>L-1 (Intracompany Transferee)</option>
-                        <option value="Other US EAD" {{ $isOtherUsEad ? 'selected' : '' }}>Other US EAD (TPS / Asylee / DACA)</option>
-                      </optgroup>
-
-                      <optgroup label="Canada (CA)">
-                        <option value="Canadian Citizen" {{ $isCaCitizen ? 'selected' : '' }}>Canadian Citizen</option>
-                        <option value="Canada PR" {{ $isCaPr ? 'selected' : '' }}>Canada Permanent Resident (PR)</option>
-                        <option value="Canada Open Work Permit" {{ $isCaOpenWp ? 'selected' : '' }}>Canada Open Work Permit / PGWP</option>
-                        <option value="Canada Closed Work Permit" {{ $isCaClosedWp ? 'selected' : '' }}>Canada LMIA / Closed Work Permit</option>
-                      </optgroup>
-
-                      <optgroup label="India (IN)">
-                        <option value="Indian Citizen" {{ $isInCitizen ? 'selected' : '' }}>Indian Citizen / Domestic Right to Work</option>
-                        <option value="OCI / PIO" {{ $isInOci ? 'selected' : '' }}>OCI / PIO Cardholder</option>
-                        <option value="India Work Visa" {{ $isInVisa ? 'selected' : '' }}>India Employment Visa</option>
-                      </optgroup>
-
-                      <optgroup label="United Kingdom (UK)">
-                        <option value="UK Citizen" {{ $isUkCitizen ? 'selected' : '' }}>British Citizen</option>
-                        <option value="UK ILR" {{ $isUkIlr ? 'selected' : '' }}>UK Indefinite Leave to Remain (ILR)</option>
-                        <option value="UK Skilled Worker" {{ $isUkSkilled ? 'selected' : '' }}>UK Skilled Worker / Tier 2</option>
-                        <option value="UK Graduate Visa" {{ $isUkGrad ? 'selected' : '' }}>UK Graduate / Youth Mobility</option>
-                      </optgroup>
-
-                      <optgroup label="United Arab Emirates & GCC (Dubai / UAE)">
-                        <option value="UAE Golden Visa" {{ $isUaeGolden ? 'selected' : '' }}>UAE Golden Visa (10-Year Self-Sponsored)</option>
-                        <option value="UAE Green Visa" {{ $isUaeGreen ? 'selected' : '' }}>UAE Green Visa (5-Year Skilled / Freelance)</option>
-                        <option value="UAE Employment Visa" {{ $isUaeEmpVisa ? 'selected' : '' }}>UAE Employment Residence Visa (Company / Freezone)</option>
-                        <option value="UAE Freelance Visa" {{ $isUaeFreelance ? 'selected' : '' }}>UAE Freelance / Remote Work Visa</option>
-                        <option value="UAE National" {{ $isUaeNational ? 'selected' : '' }}>UAE / GCC National</option>
-                        <option value="GCC Iqama" {{ $isGccIqama ? 'selected' : '' }}>GCC Resident Work Permit / Iqama</option>
-                      </optgroup>
-
-                      <optgroup label="Singapore (SG)">
-                        <option value="Singapore Citizen" {{ $isSgCitizen ? 'selected' : '' }}>Singapore Citizen (SC)</option>
-                        <option value="Singapore PR" {{ $isSgPr ? 'selected' : '' }}>Singapore Permanent Resident (PR)</option>
-                        <option value="Singapore EP" {{ $isSgEp ? 'selected' : '' }}>Singapore Employment Pass (EP)</option>
-                        <option value="Singapore S Pass" {{ $isSgSpass ? 'selected' : '' }}>Singapore S Pass (Skilled Staff)</option>
-                        <option value="Singapore ONE Pass" {{ $isSgOnePass ? 'selected' : '' }}>Singapore ONE Pass / Tech.Pass / PEP</option>
-                        <option value="Singapore LOC / DP" {{ $isSgLocDp ? 'selected' : '' }}>Singapore Letter of Consent (LOC / Dependant Pass)</option>
-                      </optgroup>
-
-                      <optgroup label="Australia & New Zealand (AU / NZ)">
-                        <option value="Australia Citizen / PR" {{ $isAuCitizenPr ? 'selected' : '' }}>Australian Citizen / Permanent Resident</option>
-                        <option value="Australia TSS 482" {{ $isAuTss482 ? 'selected' : '' }}>Australia TSS Visa (Subclass 482 - Temporary Skill)</option>
-                        <option value="Australia Skilled 189/190" {{ $isAuSkilled ? 'selected' : '' }}>Australia Skilled Work Visa (Subclass 189 / 190)</option>
-                        <option value="Australia Graduate 485" {{ $isAuGrad485 ? 'selected' : '' }}>Australia Temporary Graduate Visa (Subclass 485)</option>
-                        <option value="New Zealand Citizen / PR" {{ $isNzCitizen ? 'selected' : '' }}>New Zealand Citizen / Resident</option>
-                      </optgroup>
-
-                      <optgroup label="European Union (EU)">
-                        <option value="EU Citizen" {{ $isEuCitizen ? 'selected' : '' }}>EU / EEA Citizen</option>
-                        <option value="EU Blue Card" {{ $isEuBlue ? 'selected' : '' }}>EU Blue Card</option>
-                        <option value="Germany - Opportunity Card / Work Visa" {{ ($currentVisa === 'Germany - Opportunity Card / Work Visa') ? 'selected' : '' }}>Germany - Opportunity Card / Work Visa</option>
-                        <option value="Netherlands - Highly Skilled Migrant" {{ ($currentVisa === 'Netherlands - Highly Skilled Migrant') ? 'selected' : '' }}>Netherlands - Highly Skilled Migrant</option>
-                        <option value="Ireland - Critical Skills Employment Permit" {{ ($currentVisa === 'Ireland - Critical Skills Employment Permit') ? 'selected' : '' }}>Ireland - Critical Skills Employment Permit</option>
-                        <option value="Authorized Work Permit" {{ $isAuthWp ? 'selected' : '' }}>Authorized Work Permit (Country Specific)</option>
-                        <option value="Requires Sponsorship" {{ $isReqSpons ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
-                      </optgroup>
-
-                      {{-- 240+ COUNTRIES & TERRITORIES WORLDWIDE --}}
-                      @if(!empty($allGlobalCountries))
-                        @foreach($allGlobalCountries as $countryItem)
-                          @php
-                            $cName = trim($countryItem['name'] ?? '');
-                            $cCode = trim($countryItem['sortname'] ?? '');
-                            if (empty($cName)) continue;
-                            if (in_array($cCode, ['US', 'CA', 'IN', 'GB', 'AE', 'SG', 'AU', 'NZ'])) continue;
-
-                            $optCitizen = $cName . ' - Citizen / Domestic Right to Work';
-                            $optPr      = $cName . ' - Permanent Resident (PR)';
-                            $optVisa    = $cName . ' - Work Visa / Employment Permit';
-
-                            $isOptCitizenSelected = ($currentVisa === $optCitizen);
-                            $isOptPrSelected      = ($currentVisa === $optPr);
-                            $isOptVisaSelected    = ($currentVisa === $optVisa);
-
-                            if ($isOptCitizenSelected || $isOptPrSelected || $isOptVisaSelected) {
-                                $hasMatchedOption = true;
-                            }
-                          @endphp
-                          <optgroup label="{{ $cName }} ({{ $cCode }})">
-                            <option value="{{ $optCitizen }}" {{ $isOptCitizenSelected ? 'selected' : '' }}>{{ $optCitizen }}</option>
-                            <option value="{{ $optPr }}" {{ $isOptPrSelected ? 'selected' : '' }}>{{ $optPr }}</option>
-                            <option value="{{ $optVisa }}" {{ $isOptVisaSelected ? 'selected' : '' }}>{{ $optVisa }}</option>
-                          </optgroup>
-                        @endforeach
-                      @endif
-
-                      <optgroup label="Global & International">
-                        <option value="Requires International Visa Sponsorship" {{ ($currentVisa === 'Requires International Visa Sponsorship') ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
-                        <option value="Global Remote / Freelance Contract" {{ ($currentVisa === 'Global Remote / Freelance Contract') ? 'selected' : '' }}>Global Remote / Freelance Contract Authorization</option>
-                      </optgroup>
-
-                      @if(!empty($currentVisa) && !$hasMatchedOption)
-                        <option value="{{ $currentVisa }}" selected>{{ $currentVisa }} (Current Status)</option>
-                      @endif
-                    </select>
-                  </div>
-                  <small class="text-muted mt-1 d-block" style="font-size:11px;color:#65708e;">Search by country name (e.g. Mexico, Japan, Germany), visa code (H1B, TN, EAD, Golden Visa, EP, TSS 482) or right-to-work status.</small>
-                </div>
-              </div>
-            </div>
 
           </div><!-- end .fc -->
 

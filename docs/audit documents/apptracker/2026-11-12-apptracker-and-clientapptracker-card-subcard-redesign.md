@@ -222,6 +222,35 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
     - **4. Verification Evidence:**
       * Added `test_resume_pill_click_triggers_candidate_drawer_resume_tab_across_all_candidate_lists()` to `tests/Feature/AppTrackerCardSubCardRedesignTest.php`.
       * Verified `php -l` clean across all modified blades and layout.
-      * `php artisan test tests/Feature/AppTrackerCardSubCardRedesignTest.php` — **14 passed (391 assertions)**.
+      * `php artisan test tests/Feature/AppTrackerCardSubCardRedesignTest.php` — **14 passed (393 assertions)**.
       * `php artisan view:clear` completed cleanly.
+
+15. **Job Details Label Standardization & Document Color Standard Subcard Backgrounds:**
+    - **1. Subcard 4 Label Standardized to `Job Details`:**
+      * Replaced legacy `TARGET REQ` / `TARGET REQUISITION` labels with **`Job Details`** (`JOB DETAILS`) across all candidate card streams:
+        - Similar Candidates (`similar_existing_ajax.blade.php`)
+        - Client Similar Candidates (`dsimilar_existing_ajax.blade.php`)
+        - CV Tracker (`all_candidates.blade.php`)
+        - Interview Tracker (`custom_client_candidates_interview_tracker.blade.php`)
+        - Client Details Drawers (`client/dviewMore.blade.php`, `client/show.blade.php`, `consultancy/dviewMore.blade.php`)
+    - **2. Document Color Standard (UI/UX Standard 6A) Subcard Backgrounds & Badges:**
+      * Strictly aligned the Subcard 4 container background highlight colors, borders, and badge pills with `docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` (Section 6 A):
+        - **My Organization (`self_company == 1`):**
+          * Subcard Background: Warm canary/amber tint **`#fffbeb`** (`!important`).
+          * Subcard Border: Amber border **`#fde68a`** (`!important`), hover border `#fcd34d`.
+          * Badge Pill: `background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;` with `fa-id-badge`.
+        - **Internal Client (`self_company == 0` / managed client):**
+          * Subcard Background: Soft blue tint **`#eff6ff`** (`!important`).
+          * Subcard Border: Blue border **`#bfdbfe`** (`!important`), hover border `#93c5fd`.
+          * Badge Pill: `background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd;` with `fa-building`.
+        - **Direct Client (marketplace mandate):**
+          * Subcard Background: Soft mint emerald tint **`#ecfdf5`** (`!important`).
+          * Subcard Border: Emerald border **`#a7f3d0`** (`!important`), hover border `#6ee7b7`.
+          * Badge Pill: `background: #d1fae5; color: #166534; border: 1px solid #6ee7b7;` with `fa-shield-alt`.
+      * Applied both inline styles (`style="{{ $targetSubcardStyle }}"`) and CSS classes (`simf-cand-subcard--my-org`, `dsf-cand-subcard--my-org`, etc.) across `similar_existing_ajax.blade.php`, `dsimilar_existing_ajax.blade.php`, `all_candidates.blade.php`, `similar_candidates.blade.php`, `dsimilar_candidates.blade.php`, and `cvtracker/index.blade.php`.
+    - **3. Tenancy, Cache Invalidation & Verification:**
+      * Bumped cache version across all 9 AppTracker controller endpoints to `card_v11`.
+      * Updated feature tests in `AppTrackerCardSubCardRedesignTest.php` asserting `Job Details`, `card_v11`, `#fffbeb`, and `#fde68a`.
+      * All 14 feature tests pass with 393 assertions.
+
 

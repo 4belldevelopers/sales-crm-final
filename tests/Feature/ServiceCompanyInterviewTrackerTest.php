@@ -368,9 +368,9 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         $this->assertStringContainsString('id="itCompanyTypeDropdownWrapper"', $content);
         $this->assertStringContainsString('id="itCompanyTypeBtn"', $content);
         $this->assertStringContainsString('id="itCompanyTypeDropdownPanel"', $content);
-        $this->assertStringContainsString('data-type-val="direct_client"', $content);
-        $this->assertStringContainsString('data-type-val="internal_client"', $content);
-        $this->assertStringContainsString('data-type-val="my_organization"', $content);
+        $this->assertStringContainsString('data-type-val="All"', $content);
+        $this->assertStringContainsString('data-type-val="0"', $content);
+        $this->assertStringContainsString('data-type-val="1"', $content);
         $this->assertStringContainsString('id="itModeDropdownWrapper"', $content);
         $this->assertStringContainsString('id="itSortDropdownWrapper"', $content);
         $this->assertStringContainsString('id="itResetFiltersBtn"', $content);
@@ -412,5 +412,185 @@ class ServiceCompanyInterviewTrackerTest extends TestCase
         // White plus icon on Add Feedback button via CSS
         $this->assertStringContainsString('.it-fb-btn-add i,', $content);
         $this->assertStringContainsString('color: #ffffff !important;', $content);
+    }
+
+    public function test_interview_tracker_footer_card_renders_dynamic_hm_for_internal_and_my_org(): void
+    {
+        $html = View::make('service_company.ajax_pages.interview-tracker-ajax', [
+            'data' => [
+                [
+                    'id' => 301,
+                    'wiseID' => 701,
+                    'jobId' => 110,
+                    'job_id' => 110,
+                    'job_company_id' => 2,
+                    'full_name' => 'Siddharth Roy',
+                    'current_designation' => 'Fullstack Developer',
+                    'current_company' => 'Wipro',
+                    'job_title' => 'Senior Fullstack Engineer',
+                    'employment_type' => 0,
+                    'self_company' => 0,
+                    'client_name' => 'Tata Consultancy Services',
+                    'company_name' => '4Bell Technology',
+                    'recommendation_id' => 0,
+                    'to_company_id' => 0,
+                    'ClientComID' => 2,
+                    'schedule_date' => '2026-11-20 14:00:00',
+                    'schedule_to_time' => '14:00',
+                    'timezone_abbreviation' => 'IST',
+                    'interview_mode' => 2,
+                    'mode_name' => 'Video',
+                    'master_status_id' => 4,
+                    'master_status_name' => 'Evaluation',
+                    'feedback' => 0,
+                    'available_status' => 0,
+                ],
+                [
+                    'id' => 302,
+                    'wiseID' => 702,
+                    'jobId' => 111,
+                    'job_id' => 111,
+                    'job_company_id' => 2,
+                    'full_name' => 'Neha Sharma',
+                    'current_designation' => 'DevOps Engineer',
+                    'current_company' => 'HCLTech',
+                    'job_title' => 'Lead DevOps Engineer',
+                    'employment_type' => 0,
+                    'self_company' => 1,
+                    'company_name' => '4Bell Technology',
+                    'recommendation_id' => 0,
+                    'to_company_id' => 0,
+                    'ClientComID' => 2,
+                    'schedule_date' => '2026-11-21 16:30:00',
+                    'schedule_to_time' => '16:30',
+                    'timezone_abbreviation' => 'IST',
+                    'interview_mode' => 1,
+                    'mode_name' => 'Telecon',
+                    'master_status_id' => 3,
+                    'master_status_name' => 'Screening',
+                    'feedback' => 0,
+                    'available_status' => 0,
+                ],
+            ],
+            'userPermissions' => ['view_schedule'],
+            'feedback_status' => [],
+            'available_status' => [],
+            'company_id' => 2,
+            'chkAdminRole' => 1,
+            'followupMap' => collect(),
+            'feedbackMap' => collect(),
+            'spokpersonMap' => collect(),
+            'clientCompanyMap' => [110 => 'Tata Consultancy Services', 111 => '4Bell Technology'],
+            'jobMetaMap' => [
+                110 => [
+                    'client_name' => 'Tata Consultancy Services',
+                    'self_company' => 0,
+                    'employment_type' => 0,
+                    'hm_name' => 'Dr. Rajesh Sharma',
+                    'hm_designation' => 'Engineering VP',
+                ],
+                111 => [
+                    'client_name' => '4Bell Technology',
+                    'self_company' => 1,
+                    'employment_type' => 0,
+                    'hm_name' => 'Priya Patel',
+                    'hm_designation' => 'Lead Architect',
+                ],
+            ],
+            'candidateMetaMap' => [],
+            'userCaptainJobIds' => [],
+            'sharedByMap' => [],
+            'fromCompanyNames' => [],
+        ])->render();
+
+        // Footer card contains HM cell for Internal Client & My Organization
+        $this->assertStringContainsString('it-attribution-cell', $html);
+        $this->assertStringContainsString('it-attr-hm', $html);
+        $this->assertStringContainsString('fa-user-tie', $html);
+        $this->assertStringContainsString('HM:', $html);
+        $this->assertStringContainsString('Dr. Rajesh Sharma', $html);
+        $this->assertStringContainsString('Priya Patel', $html);
+        $this->assertStringContainsString('Hiring Manager: Dr. Rajesh Sharma', $html);
+        $this->assertStringContainsString('Hiring Manager: Priya Patel', $html);
+    }
+
+    public function test_interview_tracker_footer_card_renders_dynamic_shared_by_for_direct_client(): void
+    {
+        $html = View::make('service_company.ajax_pages.interview-tracker-ajax', [
+            'data' => [
+                [
+                    'id' => 401,
+                    'wiseID' => 801,
+                    'jobId' => 220,
+                    'job_id' => 220,
+                    'job_company_id' => 999,
+                    'full_name' => 'Kavita Iyer',
+                    'current_designation' => 'UI/UX Designer',
+                    'current_company' => 'Flipkart',
+                    'job_title' => 'Principal Product Designer',
+                    'employment_type' => 1,
+                    'self_company' => 0,
+                    'client_name' => 'Stripe Inc',
+                    'company_name' => 'Stripe Partner Org',
+                    'recommendation_id' => 55,
+                    'to_company_id' => 2,
+                    'from_company_id' => 88,
+                    'ClientComID' => 2,
+                    'schedule_date' => '2026-11-22 15:00:00',
+                    'schedule_to_time' => '15:00',
+                    'timezone_abbreviation' => 'IST',
+                    'interview_mode' => 2,
+                    'mode_name' => 'Video',
+                    'master_status_id' => 5,
+                    'master_status_name' => 'Interviewing',
+                    'feedback' => 0,
+                    'available_status' => 0,
+                ],
+            ],
+            'userPermissions' => ['view_schedule'],
+            'feedback_status' => [],
+            'available_status' => [],
+            'company_id' => 2,
+            'chkAdminRole' => 1,
+            'followupMap' => collect(),
+            'feedbackMap' => collect(),
+            'spokpersonMap' => collect(),
+            'clientCompanyMap' => [220 => 'Stripe Inc'],
+            'jobMetaMap' => [
+                220 => [
+                    'client_name' => 'Stripe Inc',
+                    'self_company' => 0,
+                    'employment_type' => 1,
+                    'shared_by' => [
+                        'user_name' => 'Vikram Malhotra',
+                        'company_name' => 'Apex Staffing',
+                    ],
+                ],
+            ],
+            'candidateMetaMap' => [],
+            'userCaptainJobIds' => [],
+            'sharedByMap' => [
+                220 => [
+                    'user_name' => 'Vikram Malhotra',
+                    'company_name' => 'Apex Staffing',
+                ],
+            ],
+            'fromCompanyNames' => [88 => 'Apex Staffing'],
+        ])->render();
+
+        // Footer card contains Shared by cell for Direct Client
+        $this->assertStringContainsString('it-attribution-cell', $html);
+        $this->assertStringContainsString('it-attr-direct', $html);
+        $this->assertStringContainsString('fa-share-nodes', $html);
+        $this->assertStringContainsString('Shared by:', $html);
+        $this->assertStringContainsString('Vikram Malhotra · Apex Staffing', $html);
+        $this->assertStringContainsString('Shared by: Vikram Malhotra (Apex Staffing)', $html);
+
+        // Shell CSS has the new attribution classes
+        $shellCss = file_get_contents(resource_path('views/service_company/interview-schedule/table.blade.php'));
+        $this->assertStringContainsString('.it-attribution-cell', $shellCss);
+        $this->assertStringContainsString('.it-attr-direct', $shellCss);
+        $this->assertStringContainsString('.it-attr-hm', $shellCss);
+        $this->assertStringContainsString('.it-attr-val', $shellCss);
     }
 }

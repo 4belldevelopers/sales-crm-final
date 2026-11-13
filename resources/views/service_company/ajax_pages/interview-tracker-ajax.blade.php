@@ -40,6 +40,8 @@
     $jobMetaMap        = $jobMetaMap ?? [];
     $candidateMetaMap  = $candidateMetaMap ?? [];
     $userCaptainJobIds = $userCaptainJobIds ?? [];
+    $sharedByMap       = $sharedByMap ?? [];
+    $fromCompanyNames  = $fromCompanyNames ?? [];
 
     $panelPalette = [
         ['bg' => '#eff6ff', 'color' => '#2563eb'],
@@ -361,6 +363,81 @@
             }
 
             $starRating = (float) (@$row->average_star_rating ?? 0);
+
+            // ── 9. Attribution: Hiring Manager (Internal/My Org) OR Shared by (Direct Client) ──
+            if ($isDirectClient) {
+                // Direct Client: Resolve "Shared by"
+                $sbData = $sharedByMap[$jobId] ?? ($jobMeta['shared_by'] ?? []);
+                $sbUser = trim((string) ($sbData['user_name'] ?? ''));
+                $sbComp = trim((string) ($sbData['company_name'] ?? ''));
+
+                // Fallback 1: from_company_id lookup
+                if ($sbComp === '' && !empty($row->from_company_id) && isset($fromCompanyNames[(int) $row->from_company_id])) {
+                    $sbComp = ucwords(strtolower(trim((string) $fromCompanyNames[(int) $row->from_company_id])));
+                }
+                // Fallback 2: row attributes (from_company_name, post_company_name, uc_company_name, company_name)
+                if ($sbComp === '') {
+                    $rawCompVal = !empty($row->from_company_name)
+                        ? $row->from_company_name
+                        : (!empty($row->post_company_name)
+                            ? $row->post_company_name
+                            : (!empty($row->company_name)
+                                ? $row->company_name
+                                : (!empty($row->uc_company_name) ? $row->uc_company_name : '')));
+                    $sbComp = $itClean($rawCompVal);
+                    if ($sbComp !== '') {
+                        $sbComp = ucwords(strtolower($sbComp));
+                    }
+                }
+                // Fallback 3: user name from owner recruiter / source / posted_by
+                if ($sbUser === '') {
+                    $sbUser = ($ownerRecruiterName !== '' && $ownerRecruiterName !== '–') ? $ownerRecruiterName : '';
+                }
+
+                // Format display and tooltip strings
+                if ($sbUser !== '' && $sbComp !== '' && strtolower($sbUser) !== strtolower($sbComp)) {
+                    $sharedByDisplayName = $sbUser . ' · ' . $sbComp;
+                    $sharedByFullTitle   = 'Shared by: ' . $sbUser . ' (' . $sbComp . ')';
+                } elseif ($sbComp !== '') {
+                    $sharedByDisplayName = $sbComp;
+                    $sharedByFullTitle   = 'Shared by: ' . $sbComp;
+                } elseif ($sbUser !== '') {
+                    $sharedByDisplayName = $sbUser;
+                    $sharedByFullTitle   = 'Shared by: ' . $sbUser;
+                } else {
+                    $sharedByDisplayName = 'Direct Client';
+                    $sharedByFullTitle   = 'Shared by Direct Client Partner';
+                }
+            } else {
+                // Internal Client or My Organization: Resolve "HM" (Hiring Manager)
+                $hmName  = trim((string) ($jobMeta['hm_name'] ?? ''));
+                $hmDesig = trim((string) ($jobMeta['hm_designation'] ?? ''));
+
+                // Fallback 1: Lead panelist if interview panel exists
+                if ($hmName === '' && !empty($panelists) && !empty($panelists[0]['name'])) {
+                    $hmName = $panelists[0]['name'];
+                }
+                // Fallback 2: Assigned SPOC / Coordinator from spokpersonMap
+                if ($hmName === '') {
+                    $spokKey = $jobId . '_' . $company_id;
+                    $spokName = is_object($spokpersonMap) ? $spokpersonMap->get($spokKey) : null;
+                    if (!empty($spokName)) {
+                        $hmName = ucwords(strtolower(trim((string) $spokName)));
+                    }
+                }
+                // Fallback 3: Check row attributes
+                if ($hmName === '' && !empty($row->hiring_manager) && $row->hiring_manager !== '--------') {
+                    $hmName = ucwords(strtolower(trim((string) $row->hiring_manager)));
+                }
+
+                if ($hmName !== '') {
+                    $hmDisplayName = $hmName . ($hmDesig !== '' ? ' (' . $hmDesig . ')' : '');
+                    $hmFullTitle   = 'Hiring Manager: ' . $hmName . ($hmDesig !== '' ? ' • ' . $hmDesig : '');
+                } else {
+                    $hmDisplayName = '—';
+                    $hmFullTitle   = 'Hiring Manager not assigned';
+                }
+            }
         @endphp
 
         <!-- Master Primary Interview Card (Rule 20 Card + Sub-Card System) -->
@@ -651,6 +728,28 @@
                         <div class="it-bottom-item">
                             <span class="it-bottom-lbl">Follow-up:</span>
                             <span class="it-bottom-muted">{{ Carbon::parse($fuAt)->format('d M, h:i A') }}</span>
+                        </div>
+                    @endif
+
+                    <span class="it-dot-sep">&bull;</span>
+
+                    @if($isDirectClient)
+                        <!-- Dynamic Direct Client Attribution: Shared by -->
+                        <div class="it-bottom-item it-attribution-cell it-attr-direct" title="{{ $sharedByFullTitle }}">
+                            <span class="it-attr-icon-wrap it-attr-icon-direct">
+                                <i class="fas fa-share-nodes"></i>
+                            </span>
+                            <span class="it-bottom-lbl">Shared by:</span>
+                            <span class="it-bottom-strong it-attr-val">{{ $sharedByDisplayName }}</span>
+                        </div>
+                    @else
+                        <!-- Dynamic Internal / My Organization Attribution: HM (Hiring Manager) -->
+                        <div class="it-bottom-item it-attribution-cell it-attr-hm" title="{{ $hmFullTitle }}">
+                            <span class="it-attr-icon-wrap it-attr-icon-hm">
+                                <i class="fas fa-user-tie"></i>
+                            </span>
+                            <span class="it-bottom-lbl">HM:</span>
+                            <span class="it-bottom-strong it-attr-val">{{ $hmDisplayName }}</span>
                         </div>
                     @endif
                 </div>

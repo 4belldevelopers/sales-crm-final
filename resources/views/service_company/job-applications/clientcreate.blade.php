@@ -3462,59 +3462,37 @@
               </div>
             </div>
 
-            <!-- Primary Skills -->
-            @php
-              $candidateRequiredSkills = collect($jobSkill ?? [])->filter(function ($skill) {
-                  $name = is_object($skill) ? ($skill->skill_name ?? '') : (is_array($skill) ? ($skill['skill_name'] ?? '') : '');
-                  return trim((string) $name) !== '';
-              })->map(function ($skill) {
-                  $name = is_object($skill) ? ($skill->skill_name ?? '') : (is_array($skill) ? ($skill['skill_name'] ?? '') : '');
-                  $id = is_object($skill) ? ($skill->id ?? '') : (is_array($skill) ? ($skill['id'] ?? '') : '');
-                  return [
-                      'id' => (string) $id,
-                      'name' => trim((string) $name),
-                  ];
-              })->unique(function ($skill) {
-                  return mb_strtolower(preg_replace('/\s+/', ' ', $skill['name']));
-              })->values();
-            @endphp
-            <div class="fs fv-row se-card primary-skills-card candidate-card">
-              <div class="fsh candidate-card-header se-hero">
-                <div class="candidate-card-title se-title">
-                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
-                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
-                </div>
-                <div class="candidate-skill-match is-empty" id="candidateSkillMatch" aria-live="polite">
-                  <span class="candidate-skill-match-ring" id="candidateSkillMatchRing" style="--candidate-skill-match: 0%">
-                    <strong id="candidateSkillMatchPercentage">--</strong>
-                  </span>
-                  <span class="candidate-skill-match-copy">
-                    <strong>Job Skills Match</strong>
-                    <small id="candidateSkillMatchDetail">No job skills defined</small>
-                  </span>
+            <!-- Professional Profile -->
+            <div class="fs pd-card candidate-card professional-profile-card" id="candidateProfessionalProfile">
+              <div class="fsh candidate-card-header pd-hero">
+                <div class="candidate-card-title pd-hero-title">
+                  <span class="candidate-card-icon pd-hero-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span><strong>Professional Profile</strong><small>Define the candidate's current professional role and employment type.</small></span>
                 </div>
               </div>
-              <div class="fsc candidate-card-body candidate-primary-skills-body">
-                <div class="candidate-primary-skill-combobox">
-                  <div class="candidate-primary-skill-entry">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <input type="text" id="candidatePrimarySkillInput" autocomplete="off" placeholder="Type a skill and press Enter..." aria-label="Add a primary skill" role="combobox" aria-autocomplete="list" aria-controls="candidatePrimarySkillSuggestions" aria-expanded="false" />
-                    <span class="candidate-primary-skill-divider" aria-hidden="true"></span>
-                    <button type="button" id="candidatePrimarySkillAdd"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add</span></button>
+              <div class="fsc candidate-card-body pd-body">
+                <div class="professional-profile-grid">
+                  <div class="fg fv-row">
+                    <label>Current Company <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-building" aria-hidden="true"></i><input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" /></div>
+                    <small class="candidate-professional-help">e.g. TCS, Infosys, Amazon</small>
                   </div>
-                  <div id="candidatePrimarySkillSuggestions" class="candidate-primary-skill-suggestions" role="listbox" aria-label="Skill suggestions" hidden></div>
-                </div>
-                <div id="candidatePrimarySkillChips" class="candidate-primary-skill-chips" aria-live="polite"></div>
-                <div id="candidatePrimarySkillEmpty" class="candidate-primary-skill-empty">No primary skills added yet.</div>
-                <div class="candidate-suggested-skills" id="candidateSuggestedSkills" hidden>
-                  <div class="candidate-suggested-skills-head">
-                    <span class="candidate-suggested-skills-title"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span><strong>Suggested Skills</strong><small>Based on skills from the job requirement. Click to add the missing skills.</small></span></span>
-                    <span class="candidate-suggested-skills-count" id="candidateRemainingSkills"></span>
+                  <div class="fg fv-row">
+                    <label>Current Designation <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" /></div>
+                    <small class="candidate-professional-help">e.g. Software Engineer, Product Manager</small>
                   </div>
-                  <div class="candidate-suggested-skills-list" id="candidateSuggestedSkillsList"></div>
+                  <div class="fg fv-row">
+                    <label>Employment Type <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-rectangle-list" aria-hidden="true"></i><select name="employmentType" id="EmploymentType">
+                      <option value="">Select employment type</option>
+                      <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
+                      <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
+                      <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
+                      <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
+                    </select></div>
+                  </div>
                 </div>
-                <div id="skillTags" class="skill-tags" hidden></div>
-                <input type="text" class="candidate-primary-skills-source" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
               </div>
             </div>
 
@@ -3656,36 +3634,250 @@
               </div>
             </div>
 
-            <!-- Professional Profile -->
-            <div class="fs pd-card candidate-card professional-profile-card" id="candidateProfessionalProfile">
-              <div class="fsh candidate-card-header pd-hero">
-                <div class="candidate-card-title pd-hero-title">
-                  <span class="candidate-card-icon pd-hero-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span><strong>Professional Profile</strong><small>Define the candidate's current professional role and employment type.</small></span>
+            <!-- Primary Skills -->
+            @php
+              $candidateRequiredSkills = collect($jobSkill ?? [])->filter(function ($skill) {
+                  $name = is_object($skill) ? ($skill->skill_name ?? '') : (is_array($skill) ? ($skill['skill_name'] ?? '') : '');
+                  return trim((string) $name) !== '';
+              })->map(function ($skill) {
+                  $name = is_object($skill) ? ($skill->skill_name ?? '') : (is_array($skill) ? ($skill['skill_name'] ?? '') : '');
+                  $id = is_object($skill) ? ($skill->id ?? '') : (is_array($skill) ? ($skill['id'] ?? '') : '');
+                  return [
+                      'id' => (string) $id,
+                      'name' => trim((string) $name),
+                  ];
+              })->unique(function ($skill) {
+                  return mb_strtolower(preg_replace('/\s+/', ' ', $skill['name']));
+              })->values();
+            @endphp
+            <div class="fs fv-row se-card primary-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
+                </div>
+                <div class="candidate-skill-match is-empty" id="candidateSkillMatch" aria-live="polite">
+                  <span class="candidate-skill-match-ring" id="candidateSkillMatchRing" style="--candidate-skill-match: 0%">
+                    <strong id="candidateSkillMatchPercentage">--</strong>
+                  </span>
+                  <span class="candidate-skill-match-copy">
+                    <strong>Job Skills Match</strong>
+                    <small id="candidateSkillMatchDetail">No job skills defined</small>
+                  </span>
                 </div>
               </div>
-              <div class="fsc candidate-card-body pd-body">
-                <div class="professional-profile-grid">
-                  <div class="fg fv-row">
-                    <label>Current Company <span class="rq">*</span></label>
-                    <div class="candidate-field-control"><i class="fa-regular fa-building" aria-hidden="true"></i><input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" /></div>
-                    <small class="candidate-professional-help">e.g. TCS, Infosys, Amazon</small>
+              <div class="fsc candidate-card-body candidate-primary-skills-body">
+                <div class="candidate-primary-skill-combobox">
+                  <div class="candidate-primary-skill-entry">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="text" id="candidatePrimarySkillInput" autocomplete="off" placeholder="Type a skill and press Enter..." aria-label="Add a primary skill" role="combobox" aria-autocomplete="list" aria-controls="candidatePrimarySkillSuggestions" aria-expanded="false" />
+                    <span class="candidate-primary-skill-divider" aria-hidden="true"></span>
+                    <button type="button" id="candidatePrimarySkillAdd"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add</span></button>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Current Designation <span class="rq">*</span></label>
-                    <div class="candidate-field-control"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" /></div>
-                    <small class="candidate-professional-help">e.g. Software Engineer, Product Manager</small>
+                  <div id="candidatePrimarySkillSuggestions" class="candidate-primary-skill-suggestions" role="listbox" aria-label="Skill suggestions" hidden></div>
+                </div>
+                <div id="candidatePrimarySkillChips" class="candidate-primary-skill-chips" aria-live="polite"></div>
+                <div id="candidatePrimarySkillEmpty" class="candidate-primary-skill-empty">No primary skills added yet.</div>
+                <div class="candidate-suggested-skills" id="candidateSuggestedSkills" hidden>
+                  <div class="candidate-suggested-skills-head">
+                    <span class="candidate-suggested-skills-title"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span><strong>Suggested Skills</strong><small>Based on skills from the job requirement. Click to add the missing skills.</small></span></span>
+                    <span class="candidate-suggested-skills-count" id="candidateRemainingSkills"></span>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Employment Type <span class="rq">*</span></label>
-                    <div class="candidate-field-control"><i class="fa-solid fa-rectangle-list" aria-hidden="true"></i><select name="employmentType" id="EmploymentType">
-                      <option value="">Select employment type</option>
-                      <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
-                      <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
-                      <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
-                      <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
-                    </select></div>
+                  <div class="candidate-suggested-skills-list" id="candidateSuggestedSkillsList"></div>
+                </div>
+                <div id="skillTags" class="skill-tags" hidden></div>
+                <input type="text" class="candidate-primary-skills-source" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
+              </div>
+            </div>
+
+            <!-- Skills Details -->
+            <div class="fs se-card job-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span>
+                  <span><strong>Job Skills Details</strong><small>Record experience and proficiency against the job's required skills.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body candidate-table-wrap">
+                <div class="candidate-job-skills-scroll">
+                <table class="sk">
+                  <thead>
+                    <tr>
+                      <th>Skill <span class="rq">*</span></th>
+                      <th>Experience (Years) <span class="rq">*</span></th>
+                      <th>Experience (Months)</th>
+                      <th>Proficiency Rating <span class="rq">*</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @foreach($jobSkill as $skill_val)
+                        @if(!empty($skill_val->skill_name))
+
+                            @php
+                                  $selected_skill_exp_year = null;
+                                  $selected_skill_exp_month = null;
+                                  $selected_skill_rating = null;
+                                  $skill_val_id = $skill_val->id ?? $skill_val->job_skill_id ?? $skill_val->skill_id ?? null;
+
+                                  if(!empty($skill_val->skill_value)){
+                                    $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
+                                    if($skillValue !== ''){
+                                      $total_skill_exp = GeneralMethod::separateNumberParts($skillValue);
+                                      $skill_exp_years = $total_skill_exp[0] ?? null;
+                                      $skill_exp_months = $total_skill_exp[1] ?? null; 
+
+                                      $selected_skill_exp_year = $skill_exp_years;
+                                      $selected_skill_exp_month = $skill_exp_months;
+                                      $selected_skill_rating = $skill_val->rating ?? null;
+                                     }
+                                  }
+                            @endphp
+
+                            <tr>
+                              <td><label class="candidate-job-skill-name"><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></label></td>
+                              <td>
+                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience year" id="job_skill_year_{{ $skill_val_id }}" name="YearskillId[{{ $skill_val_id }}]">
+                                      <option value="0">Select Year</option>
+                                      @php 
+                                          for ($i = 1; $i <= 60; $i++) {
+                                                $selected = '';
+                                                $s = 'Year';
+                                                if($i > 1){
+                                                    $s = 'Years';
+                                                }
+                                                if(!is_null($selected_skill_exp_year) && (string)$i === (string)$selected_skill_exp_year){
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                                      @endphp
+                                    </select>
+                              </td>
+                              <td>
+                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience month" id="job_skill_month_{{ $skill_val_id }}" name="MonthskillId[{{ $skill_val_id }}]">
+                                      <option value="">Select Month</option>
+                                      @php 
+                                          for ($i = 0; $i <= 11; $i++) {
+                                                $selected = '';
+                                                $s = 'Month';
+                                                if($i > 1){
+                                                    $s = 'Months';
+                                                }
+                                                if(!is_null($selected_skill_exp_month) && (string)$i === (string)$selected_skill_exp_month){
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                                      @endphp
+                                </select>
+                              </td>
+                              <td>
+                                 <select class="form-select form-select-solid candidate-rating-select" aria-label="Select proficiency rating" id="job_skill_rating_{{ $skill_val_id }}" name="rating[{{ $skill_val_id }}]">
+                                      <option value="0">Select rating</option>
+                                      @php 
+                                          for ($i = 1; $i <= 5; $i++) {
+                                                $selected = '';
+                                                $s = 'Star';
+                                                if($i > 1){
+                                                    $s = 'Stars';
+                                                }
+                                                if(!is_null($selected_skill_rating) && (string)$i === (string)$selected_skill_rating){
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                                      @endphp
+                                    </select>
+                              </td>
+                            </tr>
+                        @endif
+                    @endforeach
+                  </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notice Period and Joining Details -->
+            <div class="fs aw-card candidate-card candidate-availability-card notice-joining-card">
+              <div class="fsh candidate-card-header aw-hero">
+                <div class="candidate-card-title aw-hero-title">
+                  <span class="candidate-card-icon aw-hero-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+                  <span><strong>Notice Period &amp; Joining Details</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body aw-body">
+                <div class="candidate-notice-status-block fv-row">
+                  <label>Notice Period <span class="candidate-optional-label">(Optional)</span></label>
+                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--immediate"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Immediate Joiner</strong><small>Can join within 0-15 days</small></span>
+                    </button>
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 1 ? 'is-selected' : '' }}" data-notice-period-value="1" role="radio" aria-checked="{{ $snp_mode === 1 ? 'true' : 'false' }}">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period (SNP)</strong><small>Currently working, serving notice</small></span>
+                    </button>
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 0 ? 'is-selected' : '' }}" data-notice-period-value="0" role="radio" aria-checked="{{ $snp_mode === 0 ? 'true' : 'false' }}">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--select"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Select Notice Period</strong><small>Choose a specific notice period</small></span>
+                    </button>
                   </div>
+                  <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
+                    <option value="" {{ $snp_mode === null ? 'selected' : '' }}>Choose Notice Period</option>
+                    <option value="0" {{ $snp_mode === 0 ? 'selected' : '' }}>Select Notice Period</option>
+                    <option value="1" {{ $snp_mode === 1 ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
+                    <option value="2" {{ $snp_mode === 2 ? 'selected' : '' }}>Immediate Joiner</option>
+                  </select>
+                </div>
+
+                <div class="candidate-notice-details-grid">
+                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ !in_array($snp_mode, [1, 2], true) ? 'hidden' : '' }}>
+                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)' }} <span class="rq">*</span></label>
+                    <div class="candidate-notice-input-shell">
+                      <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                      <div class="candidate-date-picker">
+                        <input type="text" id="np_id_display" class="form-control form-control-solid" name="np_id_display" value="{{ $snp_last_working ? date('d/M/Y', strtotime($snp_last_working)) : '' }}" placeholder="{{ $snp_mode === 1 ? 'Select expected last working date (LWD)' : 'Select last working date (LWD)' }}" readonly {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
+                        <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ $snp_last_working ? date('Y-m-d', strtotime($snp_last_working)) : '' }}" style="opacity:0;position:absolute;z-index:-1;top:0;" {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDaysField" {{ $snp_mode !== 0 ? 'hidden' : '' }}>
+                    <label>Notice Period <span class="rq">*</span></label>
+                    <div class="candidate-notice-input-shell">
+                      <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                      <select class="form-select form-select-solid" aria-label="Select Notice Period" id="ddl_np_id" name="ddl_np_id" {{ $snp_mode !== 0 ? 'disabled' : '' }}>
+                        <option value="">Select Notice Period</option>
+                        @php
+                            for ($i = 1; $i <= 200; $i++) {
+                                $suffix = $i === 1 ? 'Day' : 'Days';
+                                $selected = ($snp_mode === 0 && $i == @$application->np_id) ? 'selected' : '';
+                                echo '<option value="' . $i . '" ' . $selected . '>' . $i . ' ' . $suffix . '</option>';
+                            }
+                        @endphp
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <input type="text" id="calender" name="calender" hidden>              </div>
+            </div>
+
+            <!-- Preferred Work Mode -->
+            <div class="fs candidate-card preferred-work-mode-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span><strong>Preferred Work Mode</strong><small>Select the candidate's preferred way of working.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div class="candidate-work-mode-grid">
+                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span></label>
                 </div>
               </div>
             </div>
@@ -3916,198 +4108,6 @@
                   <div class="candidate-salary-comments-head"><span><i class="fa-regular fa-comment-dots" aria-hidden="true"></i></span><div><strong>Comments <small>(Optional)</small></strong><small>Add salary expectations or internal compensation notes.</small></div></div>
                   <textarea name="comment" id="comment" placeholder="Enter comments about salary expectations or any other details..." rows="4">{{ @$application->comment }}</textarea>
                   <div class="cc" id="salaryCommentCounter">0 / 500</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Notice Period and Joining Details -->
-            <div class="fs aw-card candidate-card candidate-availability-card notice-joining-card">
-              <div class="fsh candidate-card-header aw-hero">
-                <div class="candidate-card-title aw-hero-title">
-                  <span class="candidate-card-icon aw-hero-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
-                  <span><strong>Notice Period &amp; Joining Details</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body aw-body">
-                <div class="candidate-notice-status-block fv-row">
-                  <label>Notice Period <span class="candidate-optional-label">(Optional)</span></label>
-                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
-                    <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
-                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
-                      <span class="candidate-notice-option-icon candidate-notice-option-icon--immediate"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Immediate Joiner</strong><small>Can join within 0-15 days</small></span>
-                    </button>
-                    <button type="button" class="candidate-notice-option {{ $snp_mode === 1 ? 'is-selected' : '' }}" data-notice-period-value="1" role="radio" aria-checked="{{ $snp_mode === 1 ? 'true' : 'false' }}">
-                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
-                      <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period (SNP)</strong><small>Currently working, serving notice</small></span>
-                    </button>
-                    <button type="button" class="candidate-notice-option {{ $snp_mode === 0 ? 'is-selected' : '' }}" data-notice-period-value="0" role="radio" aria-checked="{{ $snp_mode === 0 ? 'true' : 'false' }}">
-                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
-                      <span class="candidate-notice-option-icon candidate-notice-option-icon--select"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Select Notice Period</strong><small>Choose a specific notice period</small></span>
-                    </button>
-                  </div>
-                  <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
-                    <option value="" {{ $snp_mode === null ? 'selected' : '' }}>Choose Notice Period</option>
-                    <option value="0" {{ $snp_mode === 0 ? 'selected' : '' }}>Select Notice Period</option>
-                    <option value="1" {{ $snp_mode === 1 ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
-                    <option value="2" {{ $snp_mode === 2 ? 'selected' : '' }}>Immediate Joiner</option>
-                  </select>
-                </div>
-
-                <div class="candidate-notice-details-grid">
-                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ !in_array($snp_mode, [1, 2], true) ? 'hidden' : '' }}>
-                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)' }} <span class="rq">*</span></label>
-                    <div class="candidate-notice-input-shell">
-                      <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-                      <div class="candidate-date-picker">
-                        <input type="text" id="np_id_display" class="form-control form-control-solid" name="np_id_display" value="{{ $snp_last_working ? date('d/M/Y', strtotime($snp_last_working)) : '' }}" placeholder="{{ $snp_mode === 1 ? 'Select expected last working date (LWD)' : 'Select last working date (LWD)' }}" readonly {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
-                        <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ $snp_last_working ? date('Y-m-d', strtotime($snp_last_working)) : '' }}" style="opacity:0;position:absolute;z-index:-1;top:0;" {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDaysField" {{ $snp_mode !== 0 ? 'hidden' : '' }}>
-                    <label>Notice Period <span class="rq">*</span></label>
-                    <div class="candidate-notice-input-shell">
-                      <i class="fa-regular fa-clock" aria-hidden="true"></i>
-                      <select class="form-select form-select-solid" aria-label="Select Notice Period" id="ddl_np_id" name="ddl_np_id" {{ $snp_mode !== 0 ? 'disabled' : '' }}>
-                        <option value="">Select Notice Period</option>
-                        @php
-                            for ($i = 1; $i <= 200; $i++) {
-                                $suffix = $i === 1 ? 'Day' : 'Days';
-                                $selected = ($snp_mode === 0 && $i == @$application->np_id) ? 'selected' : '';
-                                echo '<option value="' . $i . '" ' . $selected . '>' . $i . ' ' . $suffix . '</option>';
-                            }
-                        @endphp
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <input type="text" id="calender" name="calender" hidden>              </div>
-            </div>
-
-            <!-- Preferred Work Mode -->
-            <div class="fs candidate-card preferred-work-mode-card">
-              <div class="fsh candidate-card-header">
-                <div class="candidate-card-title">
-                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span><strong>Preferred Work Mode</strong><small>Select the candidate's preferred way of working.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body">
-                <div class="candidate-work-mode-grid">
-                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small></span></label>
-                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
-                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span></label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Skills Details -->
-            <div class="fs se-card job-skills-card candidate-card">
-              <div class="fsh candidate-card-header se-hero">
-                <div class="candidate-card-title se-title">
-                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span>
-                  <span><strong>Job Skills Details</strong><small>Record experience and proficiency against the job's required skills.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body candidate-table-wrap">
-                <div class="candidate-job-skills-scroll">
-                <table class="sk">
-                  <thead>
-                    <tr>
-                      <th>Skill <span class="rq">*</span></th>
-                      <th>Experience (Years) <span class="rq">*</span></th>
-                      <th>Experience (Months)</th>
-                      <th>Proficiency Rating <span class="rq">*</span></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @foreach($jobSkill as $skill_val)
-                        @if(!empty($skill_val->skill_name))
-
-                            @php
-                                  $selected_skill_exp_year = null;
-                                  $selected_skill_exp_month = null;
-                                  $selected_skill_rating = null;
-                                  $skill_val_id = $skill_val->id ?? $skill_val->job_skill_id ?? $skill_val->skill_id ?? null;
-
-                                  if(!empty($skill_val->skill_value)){
-                                    $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
-                                    if($skillValue !== ''){
-                                      $total_skill_exp = GeneralMethod::separateNumberParts($skillValue);
-                                      $skill_exp_years = $total_skill_exp[0] ?? null;
-                                      $skill_exp_months = $total_skill_exp[1] ?? null; 
-
-                                      $selected_skill_exp_year = $skill_exp_years;
-                                      $selected_skill_exp_month = $skill_exp_months;
-                                      $selected_skill_rating = $skill_val->rating ?? null;
-                                     }
-                                  }
-                            @endphp
-
-                            <tr>
-                              <td><label class="candidate-job-skill-name"><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></label></td>
-                              <td>
-                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience year" id="job_skill_year_{{ $skill_val_id }}" name="YearskillId[{{ $skill_val_id }}]">
-                                      <option value="0">Select Year</option>
-                                      @php 
-                                          for ($i = 1; $i <= 60; $i++) {
-                                                $selected = '';
-                                                $s = 'Year';
-                                                if($i > 1){
-                                                    $s = 'Years';
-                                                }
-                                                if(!is_null($selected_skill_exp_year) && (string)$i === (string)$selected_skill_exp_year){
-                                                    $selected = 'selected';
-                                                }
-                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                          }
-                                      @endphp
-                                    </select>
-                              </td>
-                              <td>
-                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience month" id="job_skill_month_{{ $skill_val_id }}" name="MonthskillId[{{ $skill_val_id }}]">
-                                      <option value="">Select Month</option>
-                                      @php 
-                                          for ($i = 0; $i <= 11; $i++) {
-                                                $selected = '';
-                                                $s = 'Month';
-                                                if($i > 1){
-                                                    $s = 'Months';
-                                                }
-                                                if(!is_null($selected_skill_exp_month) && (string)$i === (string)$selected_skill_exp_month){
-                                                    $selected = 'selected';
-                                                }
-                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                          }
-                                      @endphp
-                                </select>
-                              </td>
-                              <td>
-                                 <select class="form-select form-select-solid candidate-rating-select" aria-label="Select proficiency rating" id="job_skill_rating_{{ $skill_val_id }}" name="rating[{{ $skill_val_id }}]">
-                                      <option value="0">Select rating</option>
-                                      @php 
-                                          for ($i = 1; $i <= 5; $i++) {
-                                                $selected = '';
-                                                $s = 'Star';
-                                                if($i > 1){
-                                                    $s = 'Stars';
-                                                }
-                                                if(!is_null($selected_skill_rating) && (string)$i === (string)$selected_skill_rating){
-                                                    $selected = 'selected';
-                                                }
-                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                          }
-                                      @endphp
-                                    </select>
-                              </td>
-                            </tr>
-                        @endif
-                    @endforeach
-                  </tbody>
-                </table>
                 </div>
               </div>
             </div>
