@@ -5763,6 +5763,94 @@ END:VCALENDAR";
     }
 
     /**
+     * Resolves candidate location hierarchy (city, state, country) from candidate model or object.
+     *
+     * @param  object|array  $candidate
+     * @return array
+     */
+    public static function resolveCandidateLocationHierarchy($candidate): array
+    {
+        $cand = is_array($candidate) ? (object) $candidate : $candidate;
+        if (! is_object($cand)) {
+            return [
+                'city' => '',
+                'state' => '',
+                'country' => '',
+                'location_text' => '--',
+            ];
+        }
+
+        $clean = function ($val) {
+            $t = trim((string) ($val ?? ''));
+            $empty = ['', '-', '--', '---', 'null', 'none', 'n/a', 'na'];
+
+            return in_array(strtolower($t), $empty, true) ? '' : $t;
+        };
+
+        $city = $clean($cand->city_name ?? ($cand->city ?? ''));
+        $state = $clean($cand->state_name ?? ($cand->state ?? ''));
+        $country = $clean($cand->country_name ?? ($cand->country ?? ''));
+
+        // If city_id is available and city/state are missing or numeric, look up city_list
+        $cityId = (int) ($cand->city_id ?? 0);
+        if ($cityId > 0 && ($city === '' || is_numeric($city) || $state === '')) {
+            try {
+                $cityRow = DB::table('city_list')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+                    ->leftJoin('countries', 'countries.id', '=', 'city_list.country_id')
+                    ->where('city_list.city_id', $cityId)
+                    ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                    ->first();
+
+                if ($cityRow) {
+                    if ($city === '' || is_numeric($city)) {
+                        $city = $clean($cityRow->city_name);
+                    }
+                    if ($state === '' || is_numeric($state)) {
+                        $state = $clean($cityRow->state_name);
+                    }
+                    if ($country === '' || is_numeric($country)) {
+                        $country = $clean($cityRow->country_name);
+                    }
+                }
+            } catch (\Throwable) {
+            }
+        }
+
+        // If state is numeric, resolve from state_list
+        if (is_numeric($state) && (int) $state > 0) {
+            try {
+                $stateVal = DB::table('state_list')->where('id', (int) $state)->value('state');
+                $state = $clean($stateVal);
+            } catch (\Throwable) {
+            }
+        }
+
+        // If country is numeric, resolve from countries
+        if (is_numeric($country) && (int) $country > 0) {
+            try {
+                $countryVal = DB::table('countries')->where('id', (int) $country)->value('country_name');
+                $country = $clean($countryVal);
+            } catch (\Throwable) {
+            }
+        }
+
+        $city = $city !== '' ? ucwords(strtolower($city)) : '';
+        $state = $state !== '' ? ucwords(strtolower($state)) : '';
+        $country = $country !== '' ? ucwords(strtolower($country)) : '';
+
+        $parts = array_filter([$city, $state, $country]);
+        $locationText = ! empty($parts) ? implode(', ', $parts) : '--';
+
+        return [
+            'city' => $city,
+            'state' => $state,
+            'country' => $country,
+            'location_text' => $locationText,
+        ];
+    }
+
+    /**
      * Retrieve comma-separated list of selected qualification names for a job.
      * Fallback order:
      * 1. job_qualifications table (by qualification_name or resolved qualification_id)

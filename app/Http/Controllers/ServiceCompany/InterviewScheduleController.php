@@ -259,7 +259,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $sort = [];
 
         $cachePayload = [
-            'ui_v' => 'card_v6',
+            'ui_v' => 'card_v7',
             'page' => $page,
             'size' => $size,
             'company' => $company_id,
@@ -306,6 +306,8 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     'jobMetaMap' => [],
                     'candidateMetaMap' => [],
                     'userCaptainJobIds' => [],
+                    'sharedByMap' => [],
+                    'fromCompanyNames' => [],
                 ])->render(),
                 'total' => 0,
                 'from' => 0,
@@ -838,6 +840,8 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 'jobMetaMap' => [],
                 'candidateMetaMap' => [],
                 'userCaptainJobIds' => [],
+                'sharedByMap' => [],
+                'fromCompanyNames' => [],
             ];
         }
 
@@ -887,7 +891,104 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             }
         }
 
-        // Query 4: Job & Client Meta (name, self_company classification, employment_type — single batch query)
+        // Query 4.1: Batch Hiring Managers for Internal Client / My Organization mandates
+        $hmMap = [];
+        if (! empty($jobIds)) {
+            $hmRows = DB::table('client_contact_info_jobs')
+                ->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')
+                ->whereIn('client_contact_info_jobs.job_id', $jobIds)
+                ->orderBy('client_contact_info_jobs.id', 'asc')
+                ->select(
+                    'client_contact_info_jobs.job_id',
+                    'client_contact_info.contact_person_name',
+                    'client_contact_info.contact_person_designation'
+                )
+                ->get();
+
+            foreach ($hmRows as $hm) {
+                $jid = (int) $hm->job_id;
+                $rawName = trim((string) ($hm->contact_person_name ?? ''));
+                if ($rawName !== '' && $rawName !== '--------' && ! isset($hmMap[$jid])) {
+                    $hmMap[$jid] = [
+                        'name' => ucwords(strtolower($rawName)),
+                        'designation' => ucwords(strtolower(trim((string) ($hm->contact_person_designation ?? '')))),
+                    ];
+                }
+            }
+
+            // Fallback for jobs without explicit client_contact_info_jobs link: check primary client contact
+            $missingJobIds = array_values(array_diff($jobIds, array_keys($hmMap)));
+            if (! empty($missingJobIds)) {
+                $fallbackHmRows = DB::table('jobs')
+                    ->join('client_contact_info', 'client_contact_info.client_id', '=', 'jobs.client_id')
+                    ->whereIn('jobs.id', $missingJobIds)
+                    ->orderBy('client_contact_info.id', 'asc')
+                    ->select(
+                        'jobs.id as job_id',
+                        'client_contact_info.contact_person_name',
+                        'client_contact_info.contact_person_designation'
+                    )
+                    ->get();
+
+                foreach ($fallbackHmRows as $fhm) {
+                    $jid = (int) $fhm->job_id;
+                    $rawName = trim((string) ($fhm->contact_person_name ?? ''));
+                    if ($rawName !== '' && $rawName !== '--------' && ! isset($hmMap[$jid])) {
+                        $hmMap[$jid] = [
+                            'name' => ucwords(strtolower($rawName)),
+                            'designation' => ucwords(strtolower(trim((string) ($fhm->contact_person_designation ?? '')))),
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Query 4.2: Batch Shared-by attribution for Direct Client mandates
+        $sharedByMap = [];
+        if (! empty($jobIds)) {
+            $recRows = DB::table('recommendation_relation')
+                ->leftJoin('companies', 'companies.id', '=', 'recommendation_relation.from_company_id')
+                ->leftJoin('users', 'users.id', '=', 'recommendation_relation.from_user_id')
+                ->whereIn('recommendation_relation.job_id', $jobIds)
+                ->where(function ($q) use ($companyId) {
+                    $q->where('recommendation_relation.to_company_id', $companyId)
+                        ->orWhere('recommendation_relation.to_company_id', 0)
+                        ->orWhereNull('recommendation_relation.to_company_id');
+                })
+                ->orderBy('recommendation_relation.id', 'desc')
+                ->select(
+                    'recommendation_relation.job_id',
+                    'recommendation_relation.from_company_id',
+                    'recommendation_relation.from_user_id',
+                    'companies.company_name as from_company_name',
+                    'users.name as from_user_name'
+                )
+                ->get();
+
+            foreach ($recRows as $rr) {
+                $jid = (int) $rr->job_id;
+                if (! isset($sharedByMap[$jid])) {
+                    $uName = trim((string) ($rr->from_user_name ?? ''));
+                    $cName = trim((string) ($rr->from_company_name ?? ''));
+                    $sharedByMap[$jid] = [
+                        'user_name' => $uName ? ucwords(strtolower($uName)) : '',
+                        'company_name' => $cName ? ucwords(strtolower($cName)) : '',
+                    ];
+                }
+            }
+        }
+
+        // Query 4.3: Batch lookup for from_company_id on hit documents
+        $fromCompanyIds = array_values(array_unique(array_filter(array_map('intval', array_column($data, 'from_company_id')))));
+        $fromCompanyNames = [];
+        if (! empty($fromCompanyIds)) {
+            $fromCompanyNames = DB::table('companies')
+                ->whereIn('id', $fromCompanyIds)
+                ->pluck('company_name', 'id')
+                ->toArray();
+        }
+
+        // Query 4.4: Job & Client Meta (name, self_company classification, employment_type — single batch query)
         $clientCompanyMap = [];
         $jobMetaMap = [];
         if (! empty($jobIds)) {
@@ -906,6 +1007,9 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     'client_name' => $cName,
                     'self_company' => (int) ($jr->self_company ?? 0),
                     'employment_type' => $jr->employment_type !== null ? (int) $jr->employment_type : 0,
+                    'hm_name' => $hmMap[$jid]['name'] ?? '',
+                    'hm_designation' => $hmMap[$jid]['designation'] ?? '',
+                    'shared_by' => $sharedByMap[$jid] ?? [],
                 ];
             }
         }
@@ -995,6 +1099,8 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'jobMetaMap' => $jobMetaMap,
             'candidateMetaMap' => $candidateMetaMap,
             'userCaptainJobIds' => $userCaptainJobIds,
+            'sharedByMap' => $sharedByMap,
+            'fromCompanyNames' => $fromCompanyNames,
         ];
     }
 

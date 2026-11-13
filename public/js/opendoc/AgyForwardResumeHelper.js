@@ -129,7 +129,7 @@
     });
     var rawLoc = candidate.location ? String(candidate.location).trim() : '';
     if (/^\d+$/.test(rawLoc)) rawLoc = '';
-    var formattedLocation = rawLoc || (locParts.length ? locParts.join(', ') : '--');
+    var formattedLocation = (locParts.length >= 2 ? locParts.join(', ') : (rawLoc || (locParts.length ? locParts.join(', ') : '--')));
 
     // Experience string
     var exp = candidate.experience;

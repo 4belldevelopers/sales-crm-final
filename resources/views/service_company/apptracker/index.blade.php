@@ -3504,7 +3504,6 @@
                 return;
             }
 
-            @if(config('feature.fwd_resume_v4_enabled', true))
             if (window.ForwardResumeManager) {
                 window.ForwardResumeManager.open(arr, jobIdArr, {});
             } else if (typeof window.openCandidateForwardResume === 'function') {

@@ -1234,20 +1234,10 @@
   //  if(@$country_id > 0)
   //  {
   
-      $candRawCity = (!empty(@$application->city_name) && !preg_match('/^\d+$/', trim((string) @$application->city_name)))
-          ? @$application->city_name
-          : ((!empty(@$application->city) && !preg_match('/^\d+$/', trim((string) @$application->city))) ? @$application->city : '');
-      $city_name	= $candRawCity ? ucwords($candRawCity).',' : '';
-
-      $candRawState = (!empty(@$application->state_name) && !preg_match('/^\d+$/', trim((string) @$application->state_name)))
-          ? @$application->state_name
-          : ((!empty(@$application->state) && !preg_match('/^\d+$/', trim((string) @$application->state))) ? @$application->state : '');
-      $state_name	= $candRawState ? ucwords($candRawState).',' : '';
-
-      $candRawCountry = (!empty(@$application->country_name) && !preg_match('/^\d+$/', trim((string) @$application->country_name)))
-          ? @$application->country_name
-          : ((!empty(@$application->country) && !preg_match('/^\d+$/', trim((string) @$application->country))) ? @$application->country : '');
-      $country_name	= ucwords($candRawCountry);	
+      $locHierarchy = \App\Helper\GeneralMethod::resolveCandidateLocationHierarchy($application);
+      $city_name	= $locHierarchy['city'] !== '' ? ucwords($locHierarchy['city']).',' : '';
+      $state_name	= $locHierarchy['state'] !== '' ? ucwords($locHierarchy['state']).',' : '';
+      $country_name	= $locHierarchy['country'] !== '' ? ucwords($locHierarchy['country']) : '';	
    		$currencySymbole 	=	GeneralMethod::currencySymbole(); 
       // dd($currencySymbole);
    		$current_ctc_cur	=	$current_ectc_cur	=	"";
