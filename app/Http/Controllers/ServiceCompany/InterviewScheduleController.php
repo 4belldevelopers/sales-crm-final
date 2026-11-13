@@ -208,11 +208,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
      */
     public function data_ajax(Request $request)
     {
-<<<<<<< HEAD
-        $hasPermission = in_array('view_schedule', $this->userPermissions ?? []) ||
-=======
         $hasPermission = in_array('view_schedule', (array) ($this->userPermissions ?? [])) ||
->>>>>>> c4aef4819e1f707dcd755dfba971bb3be37c649c
                          ($this->user && $this->user->hasRole('admin')) ||
                          Gate::allows('view_schedule');
         abort_if(! $hasPermission, 403);
@@ -583,7 +579,6 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             }
         }
 
-<<<<<<< HEAD
         // Explicit Schedule Date Range Filter (Rule 24 Tenant Timezone Aware)
         $userTimezone = GeneralMethod::defaultTimeZone($company_id);
         if ($start_date !== '' || $end_date !== '') {
@@ -688,110 +683,6 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             }
         }
 
-        // Dynamic Multi-field Global Search
-        if ($searchTerm !== '') {
-            $numTerm = ltrim($searchTerm, '#');
-            $cleanNum = ltrim(preg_replace('/^r-/i', '', $numTerm), '#');
-            $lowerTerm = strtolower($searchTerm);
-            $escapedWildcard = addcslashes($lowerTerm, '+-=&|><!(){}[]^"~*?:\\/');
-
-            $searchShould = [
-                // Candidate full name
-                ['match' => ['full_name' => ['query' => $searchTerm, 'operator' => 'and']]],
-                ['match_phrase_prefix' => ['full_name' => $searchTerm]],
-                ['wildcard' => ['full_name' => '*' . $escapedWildcard . '*']],
-
-                // Candidate email
-                ['term' => ['email' => $lowerTerm]],
-                ['wildcard' => ['email' => '*' . $escapedWildcard . '*']],
-
-                // Job title / requisition
-                ['match' => ['job_title' => ['query' => $searchTerm, 'operator' => 'and']]],
-                ['match_phrase_prefix' => ['job_title' => $searchTerm]],
-                ['wildcard' => ['job_title' => '*' . $escapedWildcard . '*']],
-
-                // Client & company names
-                ['match' => ['client_name' => ['query' => $searchTerm, 'operator' => 'and']]],
-                ['match_phrase_prefix' => ['client_name' => $searchTerm]],
-                ['wildcard' => ['client_name' => '*' . $escapedWildcard . '*']],
-
-                ['match' => ['company_name' => ['query' => $searchTerm, 'operator' => 'and']]],
-                ['match_phrase_prefix' => ['company_name' => $searchTerm]],
-                ['wildcard' => ['company_name' => '*' . $escapedWildcard . '*']],
-
-                ['match' => ['uc_company_name' => ['query' => $searchTerm, 'operator' => 'and']]],
-                ['match_phrase_prefix' => ['uc_company_name' => $searchTerm]],
-                ['wildcard' => ['uc_company_name' => '*' . $escapedWildcard . '*']],
-
-                ['match' => ['client_title_name' => ['query' => $searchTerm, 'operator' => 'and']]],
-                ['match_phrase_prefix' => ['client_title_name' => $searchTerm]],
-                ['wildcard' => ['client_title_name' => '*' . $escapedWildcard . '*']],
-
-                // Recruiter Name (posted_by, source, or nested job_assign.user_name)
-                ['match' => ['source' => ['query' => $searchTerm, 'operator' => 'and']]],
-                ['match_phrase_prefix' => ['source' => $searchTerm]],
-                ['wildcard' => ['source' => '*' . $escapedWildcard . '*']],
-
-                ['term' => ['posted_by' => $lowerTerm]],
-                ['wildcard' => ['posted_by' => '*' . $escapedWildcard . '*']],
-
-                // Recruiter / team member assigned to job (nested job_assign)
-                [
-                    'nested' => [
-                        'path' => 'job_assign',
-                        'query' => [
-                            'bool' => [
-                                'should' => [
-                                    ['match' => ['job_assign.user_name' => ['query' => $searchTerm, 'operator' => 'and']]],
-                                    ['match_phrase_prefix' => ['job_assign.user_name' => $searchTerm]],
-                                    ['wildcard' => ['job_assign.user_name' => '*' . $escapedWildcard . '*']],
-                                ],
-                                'minimum_should_match' => 1,
-                            ],
-                        ],
-                    ],
-                ],
-
-                // Interviewer Name & Panelist Name
-                ['match' => ['interviewers' => ['query' => $searchTerm, 'operator' => 'and']]],
-                ['match_phrase_prefix' => ['interviewers' => $searchTerm]],
-                ['wildcard' => ['interviewers' => '*' . $escapedWildcard . '*']],
-                ['wildcard' => ['other_email' => '*' . $escapedWildcard . '*']],
-
-                // Current designation & current company
-                ['match_phrase_prefix' => ['current_designation' => $searchTerm]],
-                ['wildcard' => ['current_designation' => '*' . $escapedWildcard . '*']],
-                ['match_phrase_prefix' => ['current_company' => $searchTerm]],
-                ['wildcard' => ['current_company' => '*' . $escapedWildcard . '*']],
-
-                // Location & status
-                ['wildcard' => ['city_name' => '*' . $escapedWildcard . '*']],
-                ['wildcard' => ['country_name' => '*' . $escapedWildcard . '*']],
-                ['wildcard' => ['state_name' => '*' . $escapedWildcard . '*']],
-                ['match_phrase_prefix' => ['master_status_name' => $searchTerm]],
-            ];
-
-            // Candidate Mobile Number (only when query contains digits)
-            $digitsOnly = preg_replace('/[^0-9]/', '', $searchTerm);
-            if ($digitsOnly !== '') {
-                $searchShould[] = ['term' => ['phone' => $searchTerm]];
-                $searchShould[] = ['wildcard' => ['phone' => '*' . $digitsOnly . '*']];
-            }
-
-            // Numeric Job ID / Schedule ID
-            if (is_numeric($cleanNum)) {
-                $searchShould[] = ['term' => ['job_id' => (int) $cleanNum]];
-                $searchShould[] = ['term' => ['jobId' => (int) $cleanNum]];
-                $searchShould[] = ['term' => ['id' => (int) $cleanNum]];
-            }
-
-            $must[] = [
-                'bool' => [
-                    'should' => $searchShould,
-                    'minimum_should_match' => 1,
-                ],
-            ];
-=======
         // Dynamic Multi-field Search (Recruiter, HM, Representative, Candidate, Company, Client, Job, Location, Contact, ID)
         if (! empty($searchTerm)) {
             $searchShould = $this->buildInterviewSearchShould($searchTerm, $company_id);
@@ -803,7 +694,6 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     ],
                 ];
             }
->>>>>>> c4aef4819e1f707dcd755dfba971bb3be37c649c
         }
 
         $must[] = [

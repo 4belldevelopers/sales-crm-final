@@ -160,3 +160,23 @@ Authenticated User: Vibhanshu Jaiswal (User ID: 2, Company ID: 2)
 | 20 | Concurrency & Performance | ES engine took: 1 ms, Redis cache: 9.86 ms | - | 1 ms / 9.86 ms | **PASSED [OK]** |
 
 **Final Suite Result:** **100% PASSED (20/20 Test Cases Passed)**
+
+---
+
+## 5. Schedule Date Range Filter & Git Conflict Resolution
+
+### A. Date Range Filter Implementation
+- **Location:** Added directly between the Global Search Bar (`Ctrl+K`) and the `Job Type` filter combobox.
+- **Controls:**
+  - Quick Ranges: `All Dates`, `Today`, `Tomorrow`, `This Week`, `Next Week`, `This Month`, `Past 30 Days`.
+  - Custom Date Range: `From Date` and `To Date` inputs with `Apply` and `Clear` buttons.
+- **Tenancy & Timezone (Rule 24):** Resolved user's configured default timezone via `GeneralMethod::defaultTimeZone($company_id)` (e.g. `Asia/Kolkata`) to construct boundary timestamps (`startOfDay()`, `endOfDay()`) formatted as `strict_date_optional_time` ISO8601 strings for Elasticsearch range filtering.
+- **Verification Evidence:** Tested across 8 scenarios (`scratch/test_daterange_filter.php`), achieving 100% pass rate.
+
+### B. Git Conflict Marker Cleanup
+- **Issue:** Merge commit `dfdbf51b` ("Add filter date range Interview Tracker pull") contained unresolved merge conflict markers (`<<<<<<< HEAD`, `=======`, `>>>>>>> c4aef481...`) at lines 211 and 582 in `app/Http/Controllers/ServiceCompany/InterviewScheduleController.php`, causing `ParseError: syntax error, unexpected token "<<"`.
+- **Resolution:**
+  - Resolved permission check at line 211 to: `$hasPermission = in_array('view_schedule', (array) ($this->userPermissions ?? [])) || ($this->user && $this->user->hasRole('admin')) || Gate::allows('view_schedule');`.
+  - Cleaned up line 582/802: retained the complete Schedule Date Range Filter and unified search invocation via `$this->buildInterviewSearchShould($searchTerm, $company_id)`.
+  - Verified with `php -l app/Http/Controllers/ServiceCompany/InterviewScheduleController.php` (0 errors) and re-ran both test suites (100% passed).
+
