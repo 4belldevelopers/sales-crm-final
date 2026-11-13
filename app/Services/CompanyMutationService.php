@@ -212,7 +212,7 @@ class CompanyMutationService
             payload: $options,
             idempotencyKey: $idempotencyKey,
             domainLogic: function () use ($companyId) {
-                $company = Company::findOrFail($companyId);
+                $company = Company::withoutGlobalScopes()->findOrFail($companyId);
                 $company->accountVerify = $company->accountVerify == 1 ? 0 : 1;
                 $company->save();
 
