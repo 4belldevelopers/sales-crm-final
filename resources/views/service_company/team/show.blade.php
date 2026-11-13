@@ -169,7 +169,7 @@ use Carbon\Carbon;
     <!--begin::User Details-->
     @php
       $scp_pc = [
-        'Basic Information'   => (!empty(@$users->name) && !empty(@$users->designation)),
+        'Basic Information'   => (!empty(@$users->name) && (!empty(@$users->designation) || !empty(@$users->roles->first()->display_name) || !empty(@$users->roles->first()->name))),
         'Company Details'     => !empty(@$users->company_name),
         'Contact Information'  => (!empty(@$users->email) && !empty(@$users->mobile)),
         'Profile Image'       => (!empty(@$users->image) && strlen(@$users->image)>10),
@@ -197,7 +197,10 @@ use Carbon\Carbon;
           <div class="scp-name">{{ ucwords(@$users->name) }}
             <svg class="scp-verif" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 1.8 3 .1 1 2.8 2.4 1.7-.9 2.9.9 2.9-2.4 1.7-1 2.8-3 .1L12 22l-2.4-1.8-3-.1-1-2.8L3.2 15.6l.9-2.9-.9-2.9 2.4-1.7 1-2.8 3-.1L12 2z"/><path d="M10.6 14.6l-2.2-2.2-1.1 1.1 3.3 3.3 5.6-5.6-1.1-1.1z" fill="#fff"/></svg>
           </div>
-          <div class="scp-role">{{ ucwords(@$users->designation) }}@if(!empty(@$users->company_name)) · {{ ucwords(@$users->company_name) }}@endif</div>
+          @php
+            $scpRoleName = !empty($users->designation) ? $users->designation : (@$users->roles->first()->display_name ?? @$users->roles->first()->name ?? '');
+          @endphp
+          <div class="scp-role">@if(!empty($scpRoleName)){{ ucwords($scpRoleName) }}@if(!empty(@$users->company_name)) · @endif @endif{{ ucwords(@$users->company_name) }}</div>
           <span class="scp-emp-badge {{ $scp_isActive ? 'on' : 'off' }}">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/></svg>
             {{ $scp_isActive ? 'Active' : 'Inactive' }}

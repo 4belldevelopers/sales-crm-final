@@ -1146,14 +1146,30 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         // Phase 0/2 Performance Telemetry: Baseline timing start for Team View More Shell
         $startTime = microtime(true);
 
+        abort_if(Gate::denies('view_team'), 403, 'Unauthorized. You do not have permission to view team profiles.');
+
+        $currentUser = $this->user ?? auth()->user();
+        if (! $currentUser) {
+            abort(401, 'Unauthenticated');
+        }
+
+        $currentUserId = (int) $currentUser->id;
+        $companyId = (int) ($currentUser->company_id ?? 0);
+        $targetMemberId = (int) $id;
+
+        if ($targetMemberId <= 0) {
+            abort(404, 'Invalid team member ID.');
+        }
+
         $cachePayload = [
-            'team_id' => $id,
-            'user_id' => $currentUser ? $currentUser->id : 0,
+            'team_id' => $targetMemberId,
+            'user_id' => $currentUserId,
+            'company_id' => $companyId,
         ];
 
-        $versionKey = 'teamviewmore_version_user_'.$this->user->id;
+        $versionKey = 'teamviewmore_version_user_'.$currentUserId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:teamviewmore:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:teamviewmore:'.$currentUserId.':'.$version.':'.md5(json_encode($cachePayload));
 
         /* ----------------------------
         ⚡ Check DragonflyDB / Cache first
@@ -1164,13 +1180,17 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         $this->countryName = '';
         $this->stateName = '';
-        $this->userId = $id;
+        $this->userId = $targetMemberId;
         $this->users = User::join('companies', 'companies.id', '=', 'users.company_id')
             ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'users_profile.city_id')
-            ->select('users.id', 'users.company_id', 'users.name', 'users.calling_code', 'users.email', 'users.mobile', 'users.created_at', 'users.image', 'users.status', 'companies.company_name', 'companies.website', 'companies.zoom_status', 'companies.google_status', 'companies.microsoft_status', 'users_profile.country', 'users_profile.state', 'city_list.city', 'users_profile.city_id', 'users_profile.designation', 'users_profile.skills')
-            ->with('company')
-            ->where('users.id', '=', $id)
+            ->select(
+                'users.id', 'users.company_id', 'users.name', 'users.calling_code', 'users.email', 'users.mobile', 'users.created_at', 'users.image', 'users.status',
+                'companies.company_name', 'companies.website', 'companies.zoom_status', 'companies.google_status', 'companies.microsoft_status',
+                'users_profile.country', 'users_profile.state', 'city_list.city', 'users_profile.city_id', 'users_profile.designation', 'users_profile.skills'
+            )
+            ->with(['company', 'roles'])
+            ->where('users.id', '=', $targetMemberId)
             ->company()
             ->first();
 
@@ -1178,17 +1198,21 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             abort(404, 'Team member not found.');
         }
 
-        if ($this->users->country > 0) {
+        if (! empty($this->users->country) && (int) $this->users->country > 0) {
             $countryArr = GeneralMethod::getCountryName($this->users->country);
-            foreach ($countryArr as $key => $val) {
-                $this->countryName = $val['name'];
+            if (is_iterable($countryArr)) {
+                foreach ($countryArr as $val) {
+                    $this->countryName = $val['name'] ?? '';
+                }
             }
         }
 
-        if ($this->users->state > 0) {
+        if (! empty($this->users->state) && (int) $this->users->state > 0 && ! empty($this->users->country) && (int) $this->users->country > 0) {
             $stateArr = GeneralMethod::getStateName($this->users->country, $this->users->state);
-            foreach ($stateArr as $key => $val) {
-                $this->stateName = $val['state'];
+            if (is_iterable($stateArr)) {
+                foreach ($stateArr as $val) {
+                    $this->stateName = $val['state'] ?? '';
+                }
             }
         }
 
@@ -1212,25 +1236,49 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         // Intent: Fetch exact team member header stat card counts (Active Jobs, Candidates Added, Interviews, Joinings, Rank) with 5-minute Redis cache.
         // Tenancy: Filtered by company_id and target team member user ID.
-        $companyId = $this->user->company_id;
-        $headerStats = Cache::remember("ats:team_header_stats:comp_{$companyId}:user_{$id}", 300, function () use ($id, $companyId) {
-            $profileService = app(\App\Services\ServiceCompanyProfileService::class);
-            $kpis = $profileService->getKpiMetrics($id, $companyId);
-            $ranks = $profileService->getMonthlyRanks($id, $companyId);
+        $companyId = $companyId ?: (int) ($this->user ? $this->user->company_id : (auth()->user() ? auth()->user()->company_id : 0));
+        $headerStats = Cache::remember("ats:team_header_stats:comp_{$companyId}:user_{$targetMemberId}", 300, function () use ($targetMemberId, $companyId) {
+            try {
+                $profileService = app(\App\Services\ServiceCompanyProfileService::class);
+                $kpis = $profileService->getKpiMetrics($targetMemberId, $companyId);
+                $ranks = $profileService->getMonthlyRanks($targetMemberId, $companyId);
 
-            $curM = Carbon::now()->format('Y-m');
-            $rankVal = $ranks['internalRanks'][$curM]['rank'] ?? '-';
-            $scoreVal = $ranks['internalRanks'][$curM]['score'] ?? 0;
+                $curM = Carbon::now()->format('Y-m');
+                $rankVal = $ranks['internalRanks'][$curM]['rank'] ?? '-';
+                $scoreVal = $ranks['internalRanks'][$curM]['score'] ?? 0;
 
-            return [
-                'active_count' => (int) ($kpis['counts']->get('active', 0)),
-                'total_candidates' => (int) ($kpis['scpCandidatesTotal'] ?? 0),
-                'interviewsTrackerTotal' => (int) ($kpis['scpInterviewsTotal'] ?? 0),
-                'total_candidates_join' => (int) ($kpis['scpJoiningsTotal'] ?? 0),
-                'curMonthStr' => $curM,
-                'rankVal' => $rankVal,
-                'scoreVal' => $scoreVal,
-            ];
+                $activeCount = 0;
+                if (isset($kpis['counts']) && is_object($kpis['counts']) && method_exists($kpis['counts'], 'get')) {
+                    $activeCount = (int) $kpis['counts']->get('active', 0);
+                } elseif (isset($kpis['counts']['active'])) {
+                    $activeCount = (int) $kpis['counts']['active'];
+                }
+
+                return [
+                    'active_count' => $activeCount,
+                    'total_candidates' => (int) ($kpis['scpCandidatesTotal'] ?? 0),
+                    'interviewsTrackerTotal' => (int) ($kpis['scpInterviewsTotal'] ?? 0),
+                    'total_candidates_join' => (int) ($kpis['scpJoiningsTotal'] ?? 0),
+                    'curMonthStr' => $curM,
+                    'rankVal' => $rankVal,
+                    'scoreVal' => $scoreVal,
+                ];
+            } catch (\Throwable $e) {
+                \Log::warning('Team viewMore header stats fallback: '.$e->getMessage(), [
+                    'target_user_id' => $targetMemberId,
+                    'company_id' => $companyId,
+                ]);
+
+                return [
+                    'active_count' => 0,
+                    'total_candidates' => 0,
+                    'interviewsTrackerTotal' => 0,
+                    'total_candidates_join' => 0,
+                    'curMonthStr' => Carbon::now()->format('Y-m'),
+                    'rankVal' => '-',
+                    'scoreVal' => 0,
+                ];
+            }
         });
 
         $curM = $headerStats['curMonthStr'] ?? Carbon::now()->format('Y-m');
@@ -1281,15 +1329,16 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         $durMs = round((microtime(true) - $startTime) * 1000, 2);
         \Log::info('TEAM_VIEWMORE_SHELL_APM: viewMore lightweight shell load completed', [
-            'team_id' => $id,
-            'user_id' => $currentUser ? $currentUser->id : 0,
+            'team_id' => $targetMemberId,
+            'user_id' => $currentUserId,
             'dur_ms' => $durMs,
         ]);
 
         $view = view('service_company.team.show', $this->data)->render();
         $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view, '_telemetry' => ['dur_ms' => $durMs, 'endpoint' => 'team.viewmore']]);
 
-        cache()->put($cacheKeySet, $responseData, now()->addMinutes(ELASTIC_COMPANIES_INDEX));
+        $cacheMinutes = defined('TEAM_VIEWMORE_TIME') ? (int) TEAM_VIEWMORE_TIME : 50;
+        cache()->put($cacheKeySet, $responseData, now()->addMinutes($cacheMinutes));
 
         return $responseData;
     }
