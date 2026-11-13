@@ -710,14 +710,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ->values()
             ->all();
 
-        $wiseJobInfo = ! empty($wiseIds)
-            ? DB::table('add_job_wise_condidates')
+        $wiseJobInfoMap = [];
+        if (! empty($wiseIds)) {
+            $wiseRows = DB::table('add_job_wise_condidates')
                 ->join('jobs', 'add_job_wise_condidates.job_id', '=', 'jobs.id')
                 ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                 ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
                 ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
                 ->select(
                     'add_job_wise_condidates.id as wise_id',
+                    'add_job_wise_condidates.job_application_id',
                     'companies.company_name',
                     'clients.name as client_name',
                     'clients.self_company',
@@ -729,10 +731,85 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'job_categories.name as category_name'
                 )
                 ->whereIn('add_job_wise_condidates.id', $wiseIds)
-                ->get()
-                ->keyBy('wise_id')
-                ->toArray()
-            : [];
+                ->get();
+
+            foreach ($wiseRows as $wj) {
+                $wiseJobInfoMap[$wj->wise_id] = $wj;
+                if (! empty($wj->job_application_id)) {
+                    $wiseJobInfoMap[$wj->job_application_id] = $wj;
+                    $wiseJobInfoMap['cand_'.$wj->job_application_id] = $wj;
+                }
+            }
+        }
+
+        // Also check if any candidate IDs are in add_job_wise_condidates by job_application_id if not matched
+        $unmatchedCandidateIds = array_diff($candidateIds, array_keys($wiseJobInfoMap));
+        if (! empty($unmatchedCandidateIds)) {
+            $extraWiseRows = DB::table('add_job_wise_condidates')
+                ->join('jobs', 'add_job_wise_condidates.job_id', '=', 'jobs.id')
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
+                ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
+                ->select(
+                    'add_job_wise_condidates.id as wise_id',
+                    'add_job_wise_condidates.job_application_id',
+                    'companies.company_name',
+                    'clients.name as client_name',
+                    'clients.self_company',
+                    'jobs.id as matched_job_id',
+                    'jobs.title',
+                    'jobs.status as jobStatus',
+                    'jobs.company_id as companyIdCheck',
+                    'jobs.employment_type',
+                    'job_categories.name as category_name'
+                )
+                ->whereIn('add_job_wise_condidates.job_application_id', $unmatchedCandidateIds)
+                ->get();
+
+            foreach ($extraWiseRows as $ew) {
+                $wiseJobInfoMap[$ew->wise_id] = $ew;
+                if (! empty($ew->job_application_id)) {
+                    $wiseJobInfoMap[$ew->job_application_id] = $ew;
+                    $wiseJobInfoMap['cand_'.$ew->job_application_id] = $ew;
+                }
+            }
+        }
+
+        // 8b. Direct job lookup map for candidate jobId / job_id
+        $directJobIds = collect($data)
+            ->map(fn ($r) => (int) (is_object($r) ? ($r->jobId ?? $r->job_id ?? 0) : ($r['jobId'] ?? $r['job_id'] ?? 0)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $jobCategoryMap = [];
+        if (! empty($directJobIds)) {
+            $directJobRows = DB::table('jobs')
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
+                ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
+                ->whereIn('jobs.id', $directJobIds)
+                ->select(
+                    'companies.company_name',
+                    'clients.name as client_name',
+                    'clients.self_company',
+                    'jobs.id as matched_job_id',
+                    'jobs.title',
+                    'jobs.status as jobStatus',
+                    'jobs.company_id as companyIdCheck',
+                    'jobs.employment_type',
+                    'job_categories.name as category_name'
+                )
+                ->get();
+
+            foreach ($directJobRows as $dj) {
+                $wiseJobInfoMap['job_'.$dj->matched_job_id] = $dj;
+                if (! empty($dj->category_name)) {
+                    $jobCategoryMap[$dj->matched_job_id] = $dj->category_name;
+                }
+            }
+        }
 
         // 9. Child status map (candidate_status)
         $childStatusIds = collect($data)
@@ -813,7 +890,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $baseMaps['job_skills'] = $jobRequiredSkills;
         $baseMaps['city_map'] = $cityMap;
         $baseMaps['country_map'] = $countryMap;
-        $baseMaps['wise_job_info'] = $wiseJobInfo;
+        $baseMaps['wise_job_info'] = $wiseJobInfoMap;
+        $baseMaps['job_category_map'] = $jobCategoryMap;
         $baseMaps['child_status_map'] = $childStatusMap;
         $baseMaps['spokperson_map'] = $spokpersonMap;
         $baseMaps['work_mode_map'] = $workModeMap;
@@ -867,7 +945,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             // V3 Phase 3.1: HTML and JSON responses are cached under separate keys.
             'format' => $request->input('format', 'html'),
-            'ui_v' => 'card_v9',
+            'ui_v' => 'card_v10',
         ];
 
         $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
@@ -1724,7 +1802,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_notice' => $app_int_notice,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v9',
+            'ui_v' => 'card_v10',
         ];
 
         // dd($cachePayload );
@@ -2977,7 +3055,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'valCheck' => $valCheck,
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
-            'ui_v' => 'card_v9',
+            'ui_v' => 'card_v10',
         ];
 
         $versionKey = 'allclientapp_version_user_'.$this->user->id;
@@ -5005,7 +5083,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
             'country' => $country ?? [],
             'cus_search' => $cus_search,
-            'ui_v' => 'card_v9',
+            'ui_v' => 'card_v10',
         ];
 
         $versionKey = 'allcandidatesrequest_version_user_'.$this->user->id;
@@ -5897,7 +5975,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v9',
+            'ui_v' => 'card_v10',
         ];
 
         // dd($cachePayload );
@@ -6927,7 +7005,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v9',
+            'ui_v' => 'card_v10',
         ];
 
         // dd($cachePayload );
@@ -7866,7 +7944,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v9',
+            'ui_v' => 'card_v10',
         ];
 
         $versionKey = 'allpublicbench_version_user_'.$this->user->id;
@@ -8922,7 +9000,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_notice' => $app_int_notice,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v9',
+            'ui_v' => 'card_v10',
         ];
 
         // dd($cachePayload );
@@ -10090,7 +10168,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v9',
+            'ui_v' => 'card_v10',
         ];
 
         // dd($cachePayload );

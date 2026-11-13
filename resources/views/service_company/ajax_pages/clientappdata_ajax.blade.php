@@ -580,24 +580,34 @@
                         @endif
                     </div>
                 </div>
-                @if ($cardMeta['linkedin_url'] !== '' || $cardMeta['visa_display'] !== '')
-                    <div class="caf-bottom-right">
-                        @if ($cardMeta['linkedin_url'] !== '')
-                            <a href="{{ e($cardMeta['linkedin_url']) }}"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="caf-linkedin-pill"
-                               title="LinkedIn Profile Verified">
-                                <i class="fab fa-linkedin"></i><span>LinkedIn Verified</span>
-                            </a>
-                        @endif
-                        @if ($cardMeta['visa_display'] !== '')
-                            <span class="caf-visa-pill" title="{{ e('Visa Status: ' . $cardMeta['visa_raw']) }}">
-                                <i class="fas fa-passport"></i><span>{{ $cardMeta['visa_display'] }}</span>
-                            </span>
-                        @endif
-                    </div>
-                @endif
+                <div class="caf-bottom-right">
+                    @php
+                        $hasResume = !empty($row->resume) || !empty($rowMaps['resume_map'][$candAppId] ?? null);
+                    @endphp
+                    @if ($hasResume)
+                        <span class="caf-resume-pill" title="Resume uploaded">
+                            <i class="fas fa-check-circle"></i><span>Resume</span>
+                        </span>
+                    @else
+                        <span class="caf-nocv-pill" title="Resume missing">
+                            <i class="fas fa-exclamation-circle"></i><span>No CV</span>
+                        </span>
+                    @endif
+                    @if ($cardMeta['visa_display'] !== '')
+                        <span class="caf-visa-pill" title="{{ e('Visa Status: ' . $cardMeta['visa_raw']) }}">
+                            <i class="fas fa-passport"></i><span>{{ $cardMeta['visa_display'] }}</span>
+                        </span>
+                    @endif
+                    @if ($cardMeta['linkedin_url'] !== '')
+                        <a href="{{ e($cardMeta['linkedin_url']) }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="caf-linkedin-pill"
+                           title="LinkedIn Profile Verified">
+                            <i class="fab fa-linkedin"></i><span>LinkedIn Verified</span>
+                        </a>
+                    @endif
+                </div>
             </div>
 
         </div>

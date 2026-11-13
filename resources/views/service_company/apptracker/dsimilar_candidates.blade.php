@@ -849,7 +849,7 @@
         .dsf-cand-card.is-duplicate { border-left-color: #ef4444; }
         .dsf-cand-grid {
             display: grid;
-            grid-template-columns: minmax(0, 2.0fr) minmax(0, 1.3fr) minmax(0, 1.15fr) minmax(0, 1.4fr) minmax(0, 1.15fr) minmax(0, 1.35fr);
+            grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.15fr);
             gap: 8px;
             padding: 10px 12px;
             align-items: stretch;
@@ -864,6 +864,22 @@
             flex-direction: column;
             justify-content: space-between;
             transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .dsf-cand-subcard--my-org {
+            background: #f0fdfa !important;
+            border-color: #a5f3fc !important;
+        }
+        .dsf-cand-subcard--internal {
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+        }
+        .dsf-cand-subcard--direct {
+            background: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+        }
+        .dsf-target-type-badge {
+            white-space: nowrap !important;
+            flex-shrink: 0;
         }
         .dsf-cand-card:hover .dsf-cand-subcard { border-color: #e2e8f0; }
         .dsf-subcard-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
@@ -919,6 +935,84 @@
         .dsf-skill-pill.is-matched { background: #dcfce7; color: #15803d; border-color: #bbf7d0; font-weight: 600; }
         .dsf-skill-pill.is-mandatory { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; font-weight: 600; }
         .dsf-skills-empty { font-size: 10.5px; color: #94a3b8; }
+        .dsf-bottom-right {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dsf-resume-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .dsf-nocv-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .dsf-visa-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .dsf-visa-pill i {
+            font-size: 10px;
+            color: #64748b;
+        }
+        .dsf-linkedin-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #ecfdf5;
+            color: #15803d;
+            border: 1px solid #86efac;
+            font-size: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .dsf-linkedin-pill:hover {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #4ade80;
+        }
+
         .dsf-empty-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 42px 20px; text-align: center; }
         .dsf-empty-icon { width: 48px; height: 48px; border-radius: 12px; background: #f1f5f9; color: #94a3b8; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
         .dsf-empty-title { font-size: 14px; font-weight: 600; color: #1e293b; }
@@ -928,7 +1022,7 @@
         @keyframes dsfShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .dsf-pagination-card { margin-top: 12px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; background: #ffffff; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); }
         @media (max-width: 1440px) {
-            .dsf-cand-grid { grid-template-columns: minmax(0, 1.95fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.35fr) minmax(0, 1.1fr) minmax(0, 1.3fr); gap: 6px; padding: 8px 10px; }
+            .dsf-cand-grid { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr) minmax(0, 1.05fr) minmax(0, 1.7fr) minmax(0, 1.05fr) minmax(0, 1.1fr); gap: 6px; padding: 8px 10px; }
             .dsf-cand-subcard { padding: 6px 8px; }
         }
         @media (max-width: 1180px) { .dsf-cand-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }

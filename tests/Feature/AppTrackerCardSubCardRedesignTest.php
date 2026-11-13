@@ -775,9 +775,9 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);', $controllerFile);
         $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, '$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);'));
 
-        // All AJAX actions pass card_v9 in $cachePayload
-        $this->assertStringContainsString("'ui_v' => 'card_v9'", $controllerFile);
-        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v9'"));
+        // All AJAX actions pass card_v10 in $cachePayload
+        $this->assertStringContainsString("'ui_v' => 'card_v10'", $controllerFile);
+        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v10'"));
     }
 
     public function test_matched_job_subcard_and_restored_work_mode_and_add_candidate_button(): void
@@ -820,10 +820,13 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
             'assignedCandidateIds' => [],
         ];
 
-        // 1. Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode, bracketed Rel exp, resume badge, and NO icon box or HIRING tag
+        // 1. Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode, bracketed Rel exp, resume badge in footer, and NO icon box or HIRING tag
         $simHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $baseParams)->render();
         $this->assertStringContainsString('TARGET REQ', $simHtml);
         $this->assertStringContainsString('Internal Client', $simHtml);
+        $this->assertStringContainsString('simf-cand-subcard--internal', $simHtml);
+        $this->assertStringContainsString('fa-building', $simHtml);
+        $this->assertStringContainsString('simf-bottom-right', $simHtml);
         $this->assertStringNotContainsString('simf-req-icon-box', $simHtml);
         $this->assertStringNotContainsString('simf-status-pill', $simHtml);
         $this->assertStringContainsString('(Rel 4.0 Y)', $simHtml);
@@ -833,16 +836,82 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('simf-loc-mode', $simHtml);
         $this->assertStringNotContainsString('<i class="fa fa-inr"', $simHtml);
 
-        // 2. Client Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode, bracketed Rel exp, resume badge, and NO icon box or HIRING tag
+        // 2. Client Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode, bracketed Rel exp, resume badge in footer, and NO icon box or HIRING tag
         $dsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $baseParams)->render();
         $this->assertStringContainsString('TARGET REQ', $dsimHtml);
         $this->assertStringContainsString('Internal Client', $dsimHtml);
+        $this->assertStringContainsString('dsf-cand-subcard--internal', $dsimHtml);
+        $this->assertStringContainsString('fa-building', $dsimHtml);
+        $this->assertStringContainsString('dsf-bottom-right', $dsimHtml);
         $this->assertStringNotContainsString('dsf-req-icon-box', $dsimHtml);
         $this->assertStringNotContainsString('dsf-status-pill', $dsimHtml);
         $this->assertStringContainsString('(Rel 4.0 Y)', $dsimHtml);
         $this->assertStringContainsString('No CV', $dsimHtml);
+        $this->assertStringContainsString('#81', $dsimHtml);
+        $this->assertStringContainsString('Technology', $dsimHtml);
         $this->assertStringContainsString('dsf-loc-mode', $dsimHtml);
         $this->assertStringNotContainsString('<i class="fa fa-inr"', $dsimHtml);
+
+        // 2b. Test My Organization classification highlight and icon
+        $myOrgParams = $baseParams;
+        $myOrgParams['rowMaps']['wise_job_info'][101] = (object) [
+            'wise_id' => 101,
+            'company_name' => '4Bell Technology',
+            'client_name' => '',
+            'self_company' => 1,
+            'matched_job_id' => 54,
+            'title' => 'Senior Java Developer',
+            'jobStatus' => 'active',
+            'companyIdCheck' => 1,
+            'employment_type' => 0,
+            'category_name' => 'IT (Information Technology)',
+        ];
+        $myOrgSimHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $myOrgParams)->render();
+        $this->assertStringContainsString('My Organization', $myOrgSimHtml);
+        $this->assertStringContainsString('simf-cand-subcard--my-org', $myOrgSimHtml);
+        $this->assertStringContainsString('fa-id-badge', $myOrgSimHtml);
+        $this->assertStringContainsString('#54', $myOrgSimHtml);
+        $this->assertStringContainsString('IT (Information Technology)', $myOrgSimHtml);
+
+        $myOrgDsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $myOrgParams)->render();
+        $this->assertStringContainsString('My Organization', $myOrgDsimHtml);
+        $this->assertStringContainsString('dsf-cand-subcard--my-org', $myOrgDsimHtml);
+        $this->assertStringContainsString('fa-id-badge', $myOrgDsimHtml);
+        $this->assertStringContainsString('#54', $myOrgDsimHtml);
+        $this->assertStringContainsString('IT (Information Technology)', $myOrgDsimHtml);
+
+        // 2c. Test Direct Client classification highlight and icon
+        $directParams = $baseParams;
+        $directParams['rowMaps']['wise_job_info'][101] = (object) [
+            'wise_id' => 101,
+            'company_name' => 'TechNova Solutions',
+            'client_name' => 'TechNova Solutions',
+            'self_company' => 0,
+            'matched_job_id' => 2,
+            'title' => 'Chief Java Architect',
+            'jobStatus' => 'active',
+            'companyIdCheck' => 999, // foreign company => direct client
+            'employment_type' => 0,
+            'category_name' => 'Architecture',
+        ];
+        $directSimHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $directParams)->render();
+        $this->assertStringContainsString('Direct Client', $directSimHtml);
+        $this->assertStringContainsString('simf-cand-subcard--direct', $directSimHtml);
+        $this->assertStringContainsString('fa-shield-alt', $directSimHtml);
+
+        $directDsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $directParams)->render();
+        $this->assertStringContainsString('Direct Client', $directDsimHtml);
+        $this->assertStringContainsString('dsf-cand-subcard--direct', $directDsimHtml);
+        $this->assertStringContainsString('fa-shield-alt', $directDsimHtml);
+
+        // 2d. Test All AppTracker and Client App Tracker footer strip has resume/no cv
+        $aptkHtml = View::make('service_company.ajax_pages.all_apptracker', $baseParams)->render();
+        $this->assertStringContainsString('aptk-bottom-right', $aptkHtml);
+        $this->assertStringContainsString('aptk-nocv-pill', $aptkHtml);
+
+        $cafHtml = View::make('service_company.ajax_pages.clientappdata_ajax', $baseParams)->render();
+        $this->assertStringContainsString('caf-bottom-right', $cafHtml);
+        $this->assertStringContainsString('caf-nocv-pill', $cafHtml);
 
         // 3. Location & Degree in channel views restores Work Mode
         $ibHtml = View::make('service_company.ajax_pages.internal_bench_ajax', $baseParams)->render();
