@@ -775,9 +775,9 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);', $controllerFile);
         $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, '$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);'));
 
-        // All AJAX actions pass card_v10 in $cachePayload
-        $this->assertStringContainsString("'ui_v' => 'card_v10'", $controllerFile);
-        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v10'"));
+        // All AJAX actions pass card_v11 in $cachePayload
+        $this->assertStringContainsString("'ui_v' => 'card_v11'", $controllerFile);
+        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v11'"));
     }
 
     public function test_matched_job_subcard_and_restored_work_mode_and_add_candidate_button(): void
@@ -820,9 +820,9 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
             'assignedCandidateIds' => [],
         ];
 
-        // 1. Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode, bracketed Rel exp, resume badge in footer, and NO icon box or HIRING tag
+        // 1. Similar candidates renders Job Details, INTERNAL CLIENT, Work Mode, bracketed Rel exp, resume badge in footer, and NO icon box or HIRING tag
         $simHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $baseParams)->render();
-        $this->assertStringContainsString('TARGET REQ', $simHtml);
+        $this->assertStringContainsString('Job Details', $simHtml);
         $this->assertStringContainsString('Internal Client', $simHtml);
         $this->assertStringContainsString('simf-cand-subcard--internal', $simHtml);
         $this->assertStringContainsString('fa-building', $simHtml);
@@ -836,9 +836,9 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('simf-loc-mode', $simHtml);
         $this->assertStringNotContainsString('<i class="fa fa-inr"', $simHtml);
 
-        // 2. Client Similar candidates renders TARGET REQ, INTERNAL CLIENT, Work Mode, bracketed Rel exp, resume badge in footer, and NO icon box or HIRING tag
+        // 2. Client Similar candidates renders Job Details, INTERNAL CLIENT, Work Mode, bracketed Rel exp, resume badge in footer, and NO icon box or HIRING tag
         $dsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $baseParams)->render();
-        $this->assertStringContainsString('TARGET REQ', $dsimHtml);
+        $this->assertStringContainsString('Job Details', $dsimHtml);
         $this->assertStringContainsString('Internal Client', $dsimHtml);
         $this->assertStringContainsString('dsf-cand-subcard--internal', $dsimHtml);
         $this->assertStringContainsString('fa-building', $dsimHtml);
@@ -852,7 +852,7 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('dsf-loc-mode', $dsimHtml);
         $this->assertStringNotContainsString('<i class="fa fa-inr"', $dsimHtml);
 
-        // 2b. Test My Organization classification highlight and icon
+        // 2b. Test My Organization classification highlight and icon per Document Color Standard
         $myOrgParams = $baseParams;
         $myOrgParams['rowMaps']['wise_job_info'][101] = (object) [
             'wise_id' => 101,
@@ -869,6 +869,8 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $myOrgSimHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $myOrgParams)->render();
         $this->assertStringContainsString('My Organization', $myOrgSimHtml);
         $this->assertStringContainsString('simf-cand-subcard--my-org', $myOrgSimHtml);
+        $this->assertStringContainsString('background:#fffbeb', $myOrgSimHtml);
+        $this->assertStringContainsString('border:1px solid #fde68a', $myOrgSimHtml);
         $this->assertStringContainsString('fa-id-badge', $myOrgSimHtml);
         $this->assertStringContainsString('#54', $myOrgSimHtml);
         $this->assertStringContainsString('IT (Information Technology)', $myOrgSimHtml);

@@ -3194,7 +3194,7 @@
     });
     var rawLoc = candidate.current_location || candidate.location ? String(candidate.current_location || candidate.location).trim() : '';
     if (/^\d+$/.test(rawLoc)) rawLoc = '';
-    var formattedLocation = rawLoc || (locParts.length ? locParts.join(', ') : 'Not Specified');
+    var formattedLocation = (locParts.length >= 2 ? locParts.join(', ') : (rawLoc || (locParts.length ? locParts.join(', ') : 'Not Specified')));
 
     var exp = candidate.experience;
     if (!exp && candidate.total_exp) {

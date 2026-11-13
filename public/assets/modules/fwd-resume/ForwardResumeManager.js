@@ -677,6 +677,9 @@
                     salary = $card.attr('data-print-salary') || $card.find('.cand-salary').text().trim();
                     notice = $card.attr('data-print-notice') || $card.find('.cand-notice').text().trim();
                     location = $card.attr('data-print-location') || $card.find('.cand-loc').text().trim();
+                    var candCity = $card.attr('data-print-city') || '';
+                    var candState = $card.attr('data-print-state') || '';
+                    var candCountry = $card.attr('data-print-country') || '';
                     edu = $card.attr('data-print-edu') || '';
                     jobId = parseInt($card.attr('data-job-id') || 0, 10);
 
@@ -725,6 +728,13 @@
                     current_ctc: salary || '',
                     notice_period: notice || '',
                     current_location: location || '',
+                    location: location || '',
+                    city: candCity || '',
+                    city_name: candCity || '',
+                    state: candState || '',
+                    state_name: candState || '',
+                    country: candCountry || '',
+                    country_name: candCountry || '',
                     qualification: edu || '',
                     match_percentage: matchScore,
                     skills: skillsArr,
@@ -1840,7 +1850,14 @@
                 var desig = escapeHtml(cand.current_designation || cand.designation || cand.job_title || 'Technical Specialist');
                 var exp = escapeHtml(cand.experience || cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
                 if (typeof exp === 'number') exp = exp + ' Yrs';
-                var loc = escapeHtml(cand.location || cand.current_location || '--');
+                var locStr = cand.location || cand.current_location || '';
+                if (!locStr || locStr === '--' || /^\d+$/.test(locStr)) {
+                    var lp = [cand.city_name || cand.city, cand.state_name || cand.state, cand.country_name || cand.country].filter(function(p) {
+                        return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
+                    });
+                    locStr = lp.join(', ');
+                }
+                var loc = escapeHtml(locStr || '--');
                 var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
                 var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
                 
@@ -1896,7 +1913,14 @@
                 if (typeof exp === 'number') exp = exp + ' Yrs';
                 var rawRelExp = cand.rel_exp || cand.relevant_experience || '';
                 var relExp = rawRelExp ? escapeHtml(isNaN(rawRelExp) ? String(rawRelExp) : (rawRelExp + ' Yrs')) : '--';
-                var loc = escapeHtml(cand.location || cand.current_location || '--');
+                var locStr = cand.location || cand.current_location || '';
+                if (!locStr || locStr === '--' || /^\d+$/.test(locStr)) {
+                    var lp = [cand.city_name || cand.city, cand.state_name || cand.state, cand.country_name || cand.country].filter(function(p) {
+                        return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
+                    });
+                    locStr = lp.join(', ');
+                }
+                var loc = escapeHtml(locStr || '--');
                 var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
                 var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
                 var ctc = escapeHtml((cand.ctc || '--') + ' / ' + (cand.ectc || '--'));
@@ -1984,7 +2008,14 @@
                 if (typeof exp === 'number') exp = exp + ' Yrs';
                 var rawRelExp = cand.rel_exp || cand.relevant_experience || '';
                 var relExp = rawRelExp ? escapeHtml(isNaN(rawRelExp) ? String(rawRelExp) : (rawRelExp + ' Yrs')) : '--';
-                var loc = escapeHtml(cand.location || cand.current_location || '--');
+                var locStr = cand.location || cand.current_location || '';
+                if (!locStr || locStr === '--' || /^\d+$/.test(locStr)) {
+                    var lp = [cand.city_name || cand.city, cand.state_name || cand.state, cand.country_name || cand.country].filter(function(p) {
+                        return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
+                    });
+                    locStr = lp.join(', ');
+                }
+                var loc = escapeHtml(locStr || '--');
                 var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
                 var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
                 var ctc = escapeHtml((cand.ctc || '--') + ' / ' + (cand.ectc || '--'));
