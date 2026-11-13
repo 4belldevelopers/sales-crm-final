@@ -1,0 +1,204 @@
+{
+    "benchmark_metadata": {
+        "module": "SuperAdminCompany",
+        "benchmark_target": "Elasticsearch Realistic Scale Ingestion & Query Performance",
+        "timestamp": "2026-11-13T11:02:22+05:30"
+    },
+    "scale_tiers": {
+        "tier_10000": {
+            "document_count": 10000,
+            "query_benchmarks": {
+                "default_listing": {
+                    "samples": 50,
+                    "min_ms": 33.91,
+                    "avg_ms": 37.41,
+                    "p50_ms": 36.72,
+                    "p95_ms": 42.33,
+                    "p99_ms": 50.69,
+                    "max_ms": 50.69,
+                    "hits": 10000
+                },
+                "exact_filter_status_verify": {
+                    "samples": 50,
+                    "min_ms": 32.11,
+                    "avg_ms": 35.7,
+                    "p50_ms": 35.27,
+                    "p95_ms": 39.5,
+                    "p99_ms": 42.28,
+                    "max_ms": 42.28,
+                    "hits": 2667
+                },
+                "fulltext_search_prefix": {
+                    "samples": 50,
+                    "min_ms": 33.21,
+                    "avg_ms": 35.82,
+                    "p50_ms": 35.79,
+                    "p95_ms": 38.6,
+                    "p99_ms": 38.92,
+                    "max_ms": 38.92,
+                    "hits": 71
+                },
+                "kpi_aggregations": {
+                    "samples": 50,
+                    "min_ms": 32.1,
+                    "avg_ms": 33.47,
+                    "p50_ms": 33.21,
+                    "p95_ms": 35.11,
+                    "p99_ms": 37.06,
+                    "max_ms": 37.06,
+                    "hits": 10000
+                },
+                "deep_pagination_page_50": {
+                    "samples": 50,
+                    "min_ms": 32.22,
+                    "avg_ms": 35.33,
+                    "p50_ms": 34.62,
+                    "p95_ms": 40.15,
+                    "p99_ms": 51.24,
+                    "max_ms": 51.24,
+                    "hits": 8000
+                },
+                "deep_pagination_page_500": {
+                    "samples": 50,
+                    "min_ms": 33.81,
+                    "avg_ms": 35.53,
+                    "p50_ms": 35.43,
+                    "p95_ms": 37.68,
+                    "p99_ms": 37.93,
+                    "max_ms": 37.93,
+                    "hits": 8000
+                }
+            }
+        },
+        "tier_50000": {
+            "document_count": 50000,
+            "query_benchmarks": {
+                "default_listing": {
+                    "samples": 50,
+                    "min_ms": 38.39,
+                    "avg_ms": 49.05,
+                    "p50_ms": 40.94,
+                    "p95_ms": 130.09,
+                    "p99_ms": 193.17,
+                    "max_ms": 193.17,
+                    "hits": 10000
+                },
+                "exact_filter_status_verify": {
+                    "samples": 50,
+                    "min_ms": 31.66,
+                    "avg_ms": 36.34,
+                    "p50_ms": 33.63,
+                    "p95_ms": 37.61,
+                    "p99_ms": 151.87,
+                    "max_ms": 151.87,
+                    "hits": 10000
+                },
+                "fulltext_search_prefix": {
+                    "samples": 50,
+                    "min_ms": 31.9,
+                    "avg_ms": 40.04,
+                    "p50_ms": 33.88,
+                    "p95_ms": 42.74,
+                    "p99_ms": 177.51,
+                    "max_ms": 177.51,
+                    "hits": 331
+                },
+                "kpi_aggregations": {
+                    "samples": 50,
+                    "min_ms": 31.89,
+                    "avg_ms": 43.43,
+                    "p50_ms": 33.94,
+                    "p95_ms": 38.15,
+                    "p99_ms": 273.82,
+                    "max_ms": 273.82,
+                    "hits": 10000
+                },
+                "deep_pagination_page_50": {
+                    "samples": 50,
+                    "min_ms": 32.97,
+                    "avg_ms": 35.41,
+                    "p50_ms": 34.97,
+                    "p95_ms": 38.84,
+                    "p99_ms": 42.6,
+                    "max_ms": 42.6,
+                    "hits": 10000
+                },
+                "deep_pagination_page_500": {
+                    "samples": 50,
+                    "min_ms": 33.08,
+                    "avg_ms": 42.19,
+                    "p50_ms": 37.05,
+                    "p95_ms": 47.74,
+                    "p99_ms": 182.59,
+                    "max_ms": 182.59,
+                    "hits": 10000
+                }
+            }
+        },
+        "tier_100000": {
+            "document_count": 100000,
+            "query_benchmarks": {
+                "default_listing": {
+                    "samples": 50,
+                    "min_ms": 44.66,
+                    "avg_ms": 50.9,
+                    "p50_ms": 49.49,
+                    "p95_ms": 57.14,
+                    "p99_ms": 71.05,
+                    "max_ms": 71.05,
+                    "hits": 10000
+                },
+                "exact_filter_status_verify": {
+                    "samples": 50,
+                    "min_ms": 32.39,
+                    "avg_ms": 35.73,
+                    "p50_ms": 35.71,
+                    "p95_ms": 38.96,
+                    "p99_ms": 40.15,
+                    "max_ms": 40.15,
+                    "hits": 10000
+                },
+                "fulltext_search_prefix": {
+                    "samples": 50,
+                    "min_ms": 33.2,
+                    "avg_ms": 36.77,
+                    "p50_ms": 36.56,
+                    "p95_ms": 40.51,
+                    "p99_ms": 41.23,
+                    "max_ms": 41.23,
+                    "hits": 669
+                },
+                "kpi_aggregations": {
+                    "samples": 50,
+                    "min_ms": 31.68,
+                    "avg_ms": 33.74,
+                    "p50_ms": 33.55,
+                    "p95_ms": 37.3,
+                    "p99_ms": 39,
+                    "max_ms": 39,
+                    "hits": 10000
+                },
+                "deep_pagination_page_50": {
+                    "samples": 50,
+                    "min_ms": 32.85,
+                    "avg_ms": 35.08,
+                    "p50_ms": 34.36,
+                    "p95_ms": 39.23,
+                    "p99_ms": 47.8,
+                    "max_ms": 47.8,
+                    "hits": 10000
+                },
+                "deep_pagination_page_500": {
+                    "samples": 50,
+                    "min_ms": 33.71,
+                    "avg_ms": 36.73,
+                    "p50_ms": 36.78,
+                    "p95_ms": 39.39,
+                    "p99_ms": 40.55,
+                    "max_ms": 40.55,
+                    "hits": 10000
+                }
+            }
+        }
+    }
+}

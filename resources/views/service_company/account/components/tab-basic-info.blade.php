@@ -34,6 +34,11 @@
   if ($background_image && !preg_match('/^https?:\/\//i', $background_image) && !str_starts_with($background_image, 'data:')) {
       $background_image = asset('user-uploads/company-logo/' . $background_image);
   }
+
+  $profileRestriction = $profileRestriction ?? app(\App\Services\CompanyProfileRestrictionService::class)->getRestrictionStatus($account ?? ($company ?? ($company_id ?? (auth()->check() ? auth()->user()->company_id : 1))));
+  $isProfileLocked = (bool) ($profileRestriction['is_locked'] ?? false);
+  $lockMessage = (string) ($profileRestriction['lock_message'] ?? '');
+  $lockReason = (string) ($profileRestriction['lock_reason'] ?? '');
 ?>
 
 <div class="pb-5 client-info-step" data-wizard-type="step-content" data-wizard-state="current">
@@ -60,10 +65,39 @@
             </svg>
           </div>
           <div class="god-card-header-titles">
-            <h3 class="god-card-title" id="god_company_profile_title">Company Profile</h3>
+            <div class="d-flex align-items-center gap-2">
+              <h3 class="god-card-title mb-0" id="god_company_profile_title">Company Profile</h3>
+              @if($isProfileLocked)
+                <span class="badge" style="background:#fee2e2; color:#991b1b; font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px; border:1px solid #fecaca;">
+                  <i class="fa fa-lock me-1" style="font-size:10px;"></i>Editing Locked
+                </span>
+              @endif
+            </div>
             <p class="god-card-subtitle">Review and update the information extracted from the company website.</p>
           </div>
         </div>
+
+        @if($isProfileLocked)
+          <!-- Authoritative Profile Lock Notification Banner -->
+          <div class="god-profile-lock-alert p-4 rounded-3 d-flex align-items-center gap-3" 
+               style="background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; color: #92400e; margin: 0 24px 20px 24px;">
+            <div class="d-flex align-items-center justify-content-center flex-shrink-0" 
+                 style="width: 36px; height: 36px; border-radius: 50%; background: #fef3c7; color: #d97706;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-bold fs-6 text-gray-800 mb-0" id="profile_lock_notice_text">
+                {{ $lockMessage }}
+              </div>
+              <div class="text-muted fs-7 mt-1">
+                Company Website, Company Name, Industry, and Company Type are permanently read-only. Unrelated company profile details can still be updated.
+              </div>
+            </div>
+          </div>
+        @endif
 
         <!-- 2-Column Fields Grid (Company Website & Name on separate rows) -->
         <div class="god-fields-grid">
@@ -71,11 +105,18 @@
           <!-- ROW 1 (Full Width): Company Website with Fetch Details Button -->
           <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
             <div class="god-field-header">
-              <label class="god-field-label" for="website">Company Website (Optional)</label>
+              <label class="god-field-label" for="website">
+                Company Website (Optional)
+                @if($isProfileLocked)
+                  <span class="badge badge-light-secondary ms-2" style="font-size: 11px; padding: 2px 7px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-weight:500;">
+                    <i class="fa fa-lock me-1" style="font-size:10px;"></i>Locked
+                  </span>
+                @endif
+              </label>
             </div>
 
             <div class="god-website-control-row">
-              <div class="god-input-box god-website-input-box">
+              <div class="god-input-box god-website-input-box" @if($isProfileLocked) style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
                 <span class="god-input-left-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
@@ -90,8 +131,15 @@
                        placeholder="https://stripe.com"
                        autocomplete="off"
                        spellcheck="false"
-                       onkeydown="if(event.key==='Enter'||event.keyCode===13){event.preventDefault();if(window.fetchGodLevelCompanyIntelligence)window.fetchGodLevelCompanyIntelligence(this.value);return false;}"
-                       onblur="if(this.value && this.value.length > 3 && this.value !== window._lastFetchedWebsite && window.fetchGodLevelCompanyIntelligence) window.fetchGodLevelCompanyIntelligence(this.value);">
+                       @if($isProfileLocked)
+                         readonly="readonly"
+                         tabindex="-1"
+                         style="background-color: #f8fafc !important; cursor: not-allowed; color: #64748b;"
+                       @else
+                         onkeydown="if(event.key==='Enter'||event.keyCode===13){event.preventDefault();if(window.fetchGodLevelCompanyIntelligence)window.fetchGodLevelCompanyIntelligence(this.value);return false;}"
+                         onblur="if(this.value && this.value.length > 3 && this.value !== window._lastFetchedWebsite && window.fetchGodLevelCompanyIntelligence) window.fetchGodLevelCompanyIntelligence(this.value);"
+                       @endif>
+                @if(!$isProfileLocked)
                 <button type="button"
                         class="god-input-clear-btn"
                         id="website_clear_btn"
@@ -103,20 +151,27 @@
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
                 </button>
+                @endif
               </div>
 
               <!-- Bright Yellow Fetch Details Button -->
               <button type="button"
                       class="btn god-fetch-btn"
                       id="client_auto_fetch"
-                      title="Fetch and auto-fill company intelligence"
-                      onclick="if(window.fetchGodLevelCompanyIntelligence)window.fetchGodLevelCompanyIntelligence(document.getElementById('website').value); return false;">
+                      title="{{ $isProfileLocked ? 'Company details are locked' : 'Fetch and auto-fill company intelligence' }}"
+                      @if($isProfileLocked)
+                        disabled="disabled"
+                        style="opacity: 0.5; pointer-events: none; cursor: not-allowed;"
+                      @else
+                        onclick="if(window.fetchGodLevelCompanyIntelligence)window.fetchGodLevelCompanyIntelligence(document.getElementById('website').value); return false;"
+                      @endif>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                   <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/>
                 </svg>
                 <span>Fetch Details</span>
               </button>
             </div>
+            @if(!$isProfileLocked)
             <!-- Checking indicator for Website -->
             <div id="website_checking_indicator" style="display:none; font-size:11.5px; color:#2563eb; margin-top:5px; font-weight:500;">
               <span class="spinner-border spinner-border-sm me-1" style="width:12px;height:12px;border-width:1.5px;" role="status"></span>
@@ -129,14 +184,22 @@
                 <span id="website_duplicate_error_text">This website domain is already registered to another organization.</span>
               </span>
             </div>
+            @endif
           </div>
 
           <!-- ROW 2 (Full Width): Company Name -->
           <div class="client-field fv-plugins-icon-container god-field-wrap god-field-full">
             <div class="god-field-header">
-              <label class="god-field-label" for="client_id">Company Name</label>
+              <label class="god-field-label" for="client_id">
+                Company Name
+                @if($isProfileLocked)
+                  <span class="badge badge-light-secondary ms-2" style="font-size: 11px; padding: 2px 7px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-weight:500;">
+                    <i class="fa fa-lock me-1" style="font-size:10px;"></i>Locked
+                  </span>
+                @endif
+              </label>
             </div>
-            <div class="god-input-box">
+            <div class="god-input-box" @if($isProfileLocked) style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
               <span class="god-input-left-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
@@ -155,9 +218,16 @@
                      id="client_id"
                      value="{{ $name ?? ($company_name ?? '') }}"
                      placeholder="e.g. Stripe"
-                     oninput="var h = document.getElementById('hidden_company_name'); if (h) h.value = this.value;">
+                     @if($isProfileLocked)
+                       readonly="readonly"
+                       tabindex="-1"
+                       style="background-color: #f8fafc !important; cursor: not-allowed; color: #64748b;"
+                     @else
+                       oninput="var h = document.getElementById('hidden_company_name'); if (h) h.value = this.value;"
+                     @endif>
             </div>
             <input type="hidden" name="company_name" id="hidden_company_name" value="{{ $name ?? ($company_name ?? '') }}">
+            @if(!$isProfileLocked)
             <!-- Company Name Duplicate Warning Container -->
             <div class="god-field-inline-error text-danger" id="company_duplicate_error" style="display:none; font-size:12px; margin-top:6px; font-weight:500;">
               <span class="d-inline-flex align-items-center gap-1">
@@ -165,12 +235,20 @@
                 <span id="company_duplicate_error_text">A company with this name already exists in the system.</span>
               </span>
             </div>
+            @endif
           </div>
 
           <!-- ROW 3, COL 1: Industry (Combobox with JeroIndustryIntelligenceEngine) -->
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="industry_display">Industry</label>
+              <label class="god-field-label" for="industry_display">
+                Industry
+                @if($isProfileLocked)
+                  <span class="badge badge-light-secondary ms-2" style="font-size: 11px; padding: 2px 7px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-weight:500;">
+                    <i class="fa fa-lock me-1" style="font-size:10px;"></i>Locked
+                  </span>
+                @endif
+              </label>
             </div>
 
             <!-- Native select kept synchronized for form POST & validation -->
@@ -198,8 +276,8 @@
             <input type="hidden" name="industries" id="hidden_industries" value="{{ $industry ?? '' }}">
 
             <!-- God-Level Enterprise Industry Combobox Component -->
-            <div class="jero-ind-select-wrap god-ind-wrap" id="jero_ind_select_wrap">
-              <div class="god-input-box jero-ind-input-box {{ $selectedIndName ? 'has-value' : '' }}" id="jero_ind_input_box">
+            <div class="jero-ind-select-wrap god-ind-wrap" id="jero_ind_select_wrap" @if($isProfileLocked) style="pointer-events: none;" @endif>
+              <div class="god-input-box jero-ind-input-box {{ $selectedIndName ? 'has-value' : '' }}" id="jero_ind_input_box" @if($isProfileLocked) style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
                 <span class="god-input-left-icon jero-ind-search-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 21h18"/>
@@ -220,19 +298,28 @@
                        aria-expanded="false"
                        aria-haspopup="listbox"
                        aria-autocomplete="list"
-                       value="{{ $selectedIndName }}">
+                       value="{{ $selectedIndName }}"
+                       @if($isProfileLocked)
+                         readonly="readonly"
+                         tabindex="-1"
+                         style="background-color: #f8fafc !important; cursor: not-allowed; color: #64748b;"
+                       @endif>
+                @if(!$isProfileLocked)
                 <button type="button" class="god-input-clear-btn jero-ind-clear-btn" id="jero_ind_clear_btn" aria-label="Clear industry" title="Clear selection" style="{{ $selectedIndName ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
                 <div class="jero-dropdown-chevron jero-ind-chevron" id="jero_ind_chevron" title="Toggle industry list" role="button" aria-label="Toggle industry list" tabindex="-1">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                 </div>
+                @endif
               </div>
 
+              @if(!$isProfileLocked)
               <!-- God-Level Enterprise Industry Dropdown Menu -->
               <div class="jero-ind-dropdown" id="jero_ind_dropdown" style="display:none;" role="listbox" aria-label="Company Industries">
                 <div class="jero-ind-list-container" id="jero_ind_list_container"></div>
               </div>
+              @endif
             </div>
           </div>
 
@@ -352,7 +439,14 @@
           @endphp
           <div class="client-field fv-plugins-icon-container god-field-wrap">
             <div class="god-field-header">
-              <label class="god-field-label" for="company_type_display">Company Type</label>
+              <label class="god-field-label" for="company_type_display">
+                Company Type
+                @if($isProfileLocked)
+                  <span class="badge badge-light-secondary ms-2" style="font-size: 11px; padding: 2px 7px; background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-weight:500;">
+                    <i class="fa fa-lock me-1" style="font-size:10px;"></i>Locked
+                  </span>
+                @endif
+              </label>
             </div>
 
             <!-- Native select kept synchronized for 100% Form POST & Validation compatibility -->
@@ -367,8 +461,8 @@
             <input type="hidden" name="industries_type" id="hidden_industries_type" value="{{ $company_type ?? '' }}">
 
             <!-- God-Level Enterprise Company Type Combobox -->
-            <div class="jero-ctype-select-wrap god-ctype-wrap" id="jero_ctype_select_wrap">
-              <div class="god-input-box jero-ctype-input-box {{ $selectedCompTypeName ? 'has-value' : '' }}" id="jero_ctype_input_box">
+            <div class="jero-ctype-select-wrap god-ctype-wrap" id="jero_ctype_select_wrap" @if($isProfileLocked) style="pointer-events: none;" @endif>
+              <div class="god-input-box jero-ctype-input-box {{ $selectedCompTypeName ? 'has-value' : '' }}" id="jero_ctype_input_box" @if($isProfileLocked) style="background-color: #f8fafc !important; cursor: not-allowed;" @endif>
                 <span class="god-input-left-icon jero-ctype-search-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
@@ -391,19 +485,28 @@
                        aria-haspopup="listbox"
                        aria-autocomplete="list"
                        aria-controls="jero_ctype_dropdown"
-                       value="{{ htmlspecialchars($selectedCompTypeName) }}">
+                       value="{{ htmlspecialchars($selectedCompTypeName) }}"
+                       @if($isProfileLocked)
+                         readonly="readonly"
+                         tabindex="-1"
+                         style="background-color: #f8fafc !important; cursor: not-allowed; color: #64748b;"
+                       @endif>
+                @if(!$isProfileLocked)
                 <button type="button" class="god-input-clear-btn jero-ctype-clear-btn" id="jero_ctype_clear_btn" aria-label="Clear company type" title="Clear selection" style="{{ $selectedCompTypeName ? 'display:inline-flex;' : 'display:none;' }}">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
                 <div class="jero-dropdown-chevron jero-ctype-chevron" id="jero_ctype_chevron" title="Toggle company type list" role="button" aria-label="Toggle company type list" tabindex="-1">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                 </div>
+                @endif
               </div>
 
+              @if(!$isProfileLocked)
               <!-- Dropdown Menu Container (Search-First) -->
               <div class="jero-ctype-dropdown" id="jero_ctype_dropdown" style="display:none;" role="listbox" aria-label="Company Types">
                 <div class="jero-ctype-list-container" id="jero_ctype_list_container"></div>
               </div>
+              @endif
             </div>
           </div>
 

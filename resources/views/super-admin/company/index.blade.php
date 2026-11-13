@@ -262,8 +262,16 @@ body.superadmin-offline-active .sa-companies-page {
     background: #ffffff;
     border: 1px solid var(--sa-border);
     border-radius: 12px;
-    overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    overflow: visible !important;
+}
+
+.sa-companies-page .table-responsive {
+    min-height: 420px;
+    overflow-x: auto;
+    overflow-y: visible !important;
+    padding-bottom: 70px;
+    margin-bottom: -70px;
 }
 
 .sa-companies-page table.sa-companies-table {
@@ -847,6 +855,15 @@ body:has(#kt_activitiesApplication.drawer-on) {
     </div>
 </div>
 
+{{-- Change Company Package Modal Shell --}}
+<div class="modal fade" id="companyChangePackageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" id="companyChangePackageModalContent">
+            {{-- Dynamically loaded via AJAX --}}
+        </div>
+    </div>
+</div>
+
 
 
 
@@ -1057,79 +1074,190 @@ body:has(#kt_activitiesApplication.drawer-on) {
             });
         }
 
-        $(document).on('click', '.show-detail', function ()
+        // Dynamic Dropup Flip on Bottom Viewport
+        $(document).on('show.bs.dropdown', '.sa-companies-table .dropdown', function () {
+            var $dropdown = $(this);
+            var $btn = $dropdown.find('.action-menu-btn');
+            if ($btn.length > 0) {
+                var rect = $btn[0].getBoundingClientRect();
+                var spaceBelow = window.innerHeight - rect.bottom;
+                // If less than 240px below and sufficient room above, flip upward
+                if (spaceBelow < 240 && rect.top > 250) {
+                    $dropdown.addClass('dropup');
+                } else {
+                    $dropdown.removeClass('dropup');
+                }
+            }
+        });
+
+        $(document).on('click', '.show-detail', function (e)
         {
+            e.preventDefault();
             var id = $(this).data('row-id');
-            $('#kt_activitiesClient_toggle').trigger('click');
+            if (!id) return;
+
+            // 1. Open Metronic KTDrawer directly
+            var drawerEl = document.getElementById('kt_activitiesClient');
+            if (typeof KTDrawer !== 'undefined' && drawerEl) {
+                var drawer = KTDrawer.getInstance(drawerEl);
+                if (!drawer) {
+                    drawer = new KTDrawer(drawerEl);
+                }
+                if (drawer) {
+                    drawer.show();
+                }
+            }
+            // 2. Native click fallback
+            var toggleEl = document.getElementById('kt_activitiesClient_toggle');
+            if (toggleEl) {
+                toggleEl.click();
+            }
+
+            // 3. Load drawer content via SWR
             openCompanyDrawerSWR(id, '#kt_activitiesClient_body');
         });
 
-        $(document).on('click', '.show-detail-direct', function ()
+        $(document).on('click', '.show-detail-direct', function (e)
         {
+            e.preventDefault();
             var id = $(this).data('row-id');
-            $('#kt_activitiesDirectClient_toggle').trigger('click');
+            if (!id) return;
+
+            var drawerEl = document.getElementById('kt_activitiesDirectClient');
+            if (typeof KTDrawer !== 'undefined' && drawerEl) {
+                var drawer = KTDrawer.getInstance(drawerEl);
+                if (!drawer) {
+                    drawer = new KTDrawer(drawerEl);
+                }
+                if (drawer) {
+                    drawer.show();
+                }
+            }
+            var toggleEl = document.getElementById('kt_activitiesDirectClient_toggle');
+            if (toggleEl) {
+                toggleEl.click();
+            }
+
             openCompanyDrawerSWR(id, '#kt_activitiesDirectClient_body');
         }); 
 
-		$('body').on('click', '.sa-params', function(){
+        // Change Company Package Modal Handler
+        $(document).on('click', '.btn-change-package', function(e) {
+            e.preventDefault();
+            var companyId = $(this).data('company-id');
+            if (!companyId) return;
+
+            var url = "{{ route('superadmin.company.changePackage', ':id') }}".replace(':id', companyId);
+            $('#companyChangePackageModalContent').html('<div class="d-flex justify-content-center align-items-center py-20"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+            
+            var modalEl = document.getElementById('companyChangePackageModal');
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.show();
+            } else {
+                $('#companyChangePackageModal').modal('show');
+            }
+
+            $.get(url, function(response) {
+                $('#companyChangePackageModalContent').html(response);
+            }).fail(function() {
+                $('#companyChangePackageModalContent').html('<div class="alert alert-danger m-5">Failed to load package configuration. Please try again.</div>');
+            });
+        });
+
+        var deleteMutationInFlight = false;
+		$(document).on('click', '.sa-params', function(e){
+            e.preventDefault();
+            if (deleteMutationInFlight) return;
             var id = $(this).data('row-id');
-            swal({
-                title: "@lang('errors.areYouSure')",
-                text: "@lang('errors.deleteWarning')",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "@lang('app.delete')",
-                cancelButtonText: "@lang('app.cancel')",
-                closeOnConfirm: true,
-                closeOnCancel: true
-            }, function(isConfirm){
-                if (isConfirm) {
+            if (!id) return;
 
-                    var url = "{{ route('superadmin.company.destroy',':id') }}";
-                    url = url.replace(':id', id);
+            function executeCompanyDelete() {
+                if (deleteMutationInFlight) return;
+                deleteMutationInFlight = true;
 
-                    var token = "{{ csrf_token() }}";
-                    var idempotencyKey = 'comp_del_' + id + '_' + Date.now();
+                var url = "{{ route('superadmin.company.destroy',':id') }}".replace(':id', id);
+                var token = "{{ csrf_token() }}";
+                var idempotencyKey = 'comp_del_' + id + '_' + Date.now();
 
-                    $.ajax({
-                        type: 'POST',
-                        url: url,
-                        headers: { 'X-Idempotency-Key': idempotencyKey },
-                        data: {'_token': token, '_method': 'DELETE', 'idempotency_key': idempotencyKey},
-                        success: function (response) {
-                            if (response.status == "success") {
-                                $.unblockUI();
-                                if (typeof SessionRAMCache !== 'undefined') {
-                                    SessionRAMCache.invalidate();
-                                    SessionRAMCache.invalidateDrawer(id);
-                                }
-                                if (typeof JeroSuperAdminDB !== 'undefined') {
-                                    JeroSuperAdminDB.delete('drawer_dossiers', id);
-                                    JeroSuperAdminDB.clear('companies_list');
-                                }
-                                if (typeof broadcastLocalCompanyMutation === 'function') {
-                                    broadcastLocalCompanyMutation({
-                                        type: 'COMPANY_DELTA',
-                                        company_id: id,
-                                        action: 'deleted',
-                                        delta: { id: id }
-                                    });
-                                }
-                                if (typeof applyCompanyDeltaPatch === 'function') {
-                                    applyCompanyDeltaPatch({
-                                        company_id: id,
-                                        action: 'deleted',
-                                        delta: { id: id }
-                                    });
-                                } else if (typeof fetchCompanyAjax === 'function') {
-                                    fetchCompanyAjax(typeof currentPage !== 'undefined' ? currentPage : 1, { bypassCache: true });
-                                }
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    headers: { 'X-Idempotency-Key': idempotencyKey },
+                    data: {'_token': token, '_method': 'DELETE', 'idempotency_key': idempotencyKey},
+                    success: function (response) {
+                        deleteMutationInFlight = false;
+                        if (response.status == "success") {
+                            $.unblockUI();
+                            if (typeof SessionRAMCache !== 'undefined') {
+                                SessionRAMCache.invalidate();
+                                SessionRAMCache.invalidateDrawer(id);
+                            }
+                            if (typeof JeroSuperAdminDB !== 'undefined') {
+                                JeroSuperAdminDB.delete('drawer_dossiers', id);
+                                JeroSuperAdminDB.clear('companies_list');
+                            }
+                            var deltaPayload = {
+                                type: 'COMPANY_DELTA',
+                                company_id: id,
+                                action: 'deleted',
+                                delta: { id: id }
+                            };
+                            if (typeof broadcastLocalCompanyMutation === 'function') {
+                                broadcastLocalCompanyMutation(deltaPayload);
+                            }
+                            if (typeof applyCompanyDeltaPatch === 'function') {
+                                applyCompanyDeltaPatch(deltaPayload);
+                            } else if (typeof fetchCompanyAjax === 'function') {
+                                fetchCompanyAjax(typeof currentPage !== 'undefined' ? currentPage : 1, { bypassCache: true });
+                            }
+                            if (typeof Swal !== 'undefined' && Swal.fire) {
+                                Swal.fire({ icon: 'success', title: 'Deleted!', text: response.message || 'Record deleted successfully.', timer: 2000, showConfirmButton: false });
                             }
                         }
-                    });
-                }
-            });
+                    },
+                    error: function() {
+                        deleteMutationInFlight = false;
+                        if (typeof Swal !== 'undefined' && Swal.fire) {
+                            Swal.fire('Error', 'Failed to delete company.', 'error');
+                        }
+                    }
+                });
+            }
+
+            if (typeof Swal !== 'undefined' && Swal.fire) {
+                Swal.fire({
+                    title: "@lang('errors.areYouSure')",
+                    text: "@lang('errors.deleteWarning')",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "@lang('app.delete')",
+                    cancelButtonText: "@lang('app.cancel')"
+                }).then(function(result) {
+                    if (result.isConfirmed || result.value) {
+                        executeCompanyDelete();
+                    }
+                });
+            } else if (typeof swal !== 'undefined') {
+                swal({
+                    title: "@lang('errors.areYouSure')",
+                    text: "@lang('errors.deleteWarning')",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "@lang('app.delete')",
+                    cancelButtonText: "@lang('app.cancel')",
+                    closeOnConfirm: true,
+                    closeOnCancel: true
+                }, function(isConfirm){
+                    if (isConfirm) {
+                        executeCompanyDelete();
+                    }
+                });
+            } else if (confirm("@lang('errors.deleteWarning')")) {
+                executeCompanyDelete();
+            }
         });
 
         $(document).on('click','.code_generator',function(){
@@ -2739,11 +2867,27 @@ body:has(#kt_activitiesApplication.drawer-on) {
             }
         }
 
+        let lastSeenCompanyVersion = 0;
         // 4. Central Incoming Delta Handler
         function handleCompanyDeltaSync(data) {
             if (!data || !data.company_id) return;
 
             const companyId = parseInt(data.company_id, 10);
+
+            // Sequence-gap self-healing: if intermediate deltas were dropped (e.g. background tab suspended)
+            if (data.version) {
+                const incomingVer = parseInt(data.version, 10);
+                if (lastSeenCompanyVersion > 0 && incomingVer > lastSeenCompanyVersion + 1) {
+                    lastSeenCompanyVersion = incomingVer;
+                    SessionRAMCache.invalidate();
+                    if (typeof JeroSuperAdminDB !== 'undefined') {
+                        JeroSuperAdminDB.clear('companies_list');
+                    }
+                    fetchCompanyAjax(typeof currentPage !== 'undefined' ? currentPage : 1, { bypassCache: true });
+                    return;
+                }
+                lastSeenCompanyVersion = Math.max(lastSeenCompanyVersion, incomingVer);
+            }
 
             // Invalidate local RAM cache & IndexedDB
             SessionRAMCache.invalidate();
@@ -2843,10 +2987,14 @@ body:has(#kt_activitiesApplication.drawer-on) {
             }
         }
 
+        const verifyMutationInFlight = {};
         // Toggle Account Verification
         $(document).on('click', '.toggle-account-verify', function(e) {
             e.preventDefault();
             const id = $(this).data('row-id');
+            if (!id || verifyMutationInFlight[id]) return;
+            verifyMutationInFlight[id] = true;
+
             const url = "{{ route('superadmin.company.toggleAccountVerify', ':id') }}".replace(':id', id);
             const token = "{{ csrf_token() }}";
             const idempotencyKey = 'comp_ver_' + id + '_' + Date.now();
@@ -2873,17 +3021,35 @@ body:has(#kt_activitiesApplication.drawer-on) {
                         };
                         broadcastLocalCompanyMutation(deltaPayload);
                         applyCompanyDeltaPatch(deltaPayload);
+
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success(response.message || "Company verification status updated.");
+                        } else if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: response.message || "Company verification status updated.",
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        }
                     }
                 },
-                error: function() {
-                    Swal.fire("Error", "Failed to update company verification status.", "error");
+                error: function(xhr) {
+                    var errorMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : "Failed to update company verification status.";
+                    Swal.fire("Error", errorMsg, "error");
+                },
+                complete: function() {
+                    delete verifyMutationInFlight[id];
                 }
             });
         });
 
+        let loginInFlight = false;
         // Login As Company
         $(document).on('click', '.btn-login-company', function(e) {
             e.preventDefault();
+            if (loginInFlight) return;
             const id = $(this).data('id');
             const url = "{{ route('superadmin.company.loginAsCompany', ':id') }}".replace(':id', id);
             const token = "{{ csrf_token() }}";
@@ -2898,6 +3064,7 @@ body:has(#kt_activitiesApplication.drawer-on) {
                 confirmButtonText: "Yes, login"
             }).then((result) => {
                 if (result.isConfirmed || result.value) {
+                    loginInFlight = true;
                     $.ajax({
                         type: 'POST',
                         url: url,
@@ -2906,6 +3073,7 @@ body:has(#kt_activitiesApplication.drawer-on) {
                             window.location.href = "{{ route('admin.dashboard') }}";
                         },
                         error: function() {
+                            loginInFlight = false;
                             Swal.fire("Error", "Unable to log in as company admin.", "error");
                         }
                     });

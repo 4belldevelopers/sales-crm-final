@@ -205,14 +205,15 @@
             {{-- Actions Menu --}}
             <td class="col-actions text-end pe-4">
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-icon btn-light btn-active-light-primary rounded-circle" 
+                    <button class="btn btn-sm btn-icon btn-light btn-active-light-primary rounded-circle action-menu-btn" 
                             type="button" 
                             data-bs-toggle="dropdown" 
+                            data-bs-display="static"
                             aria-expanded="false"
                             title="Actions">
                         <i class="bi bi-three-dots-vertical fs-5"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" style="min-width: 190px;">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" style="min-width: 195px; z-index: 1050;">
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2 py-2 show-detail" 
                                href="javascript:void(0);" 
@@ -227,8 +228,9 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
-                               href="{{ route('superadmin.company.changePackage', $rowId) }}">
+                            <a class="dropdown-item d-flex align-items-center gap-2 py-2 btn-change-package" 
+                               href="javascript:void(0);" 
+                               data-company-id="{{ $rowId }}">
                                 <i class="bi bi-box text-warning fs-6"></i> Change Package
                             </a>
                         </li>
