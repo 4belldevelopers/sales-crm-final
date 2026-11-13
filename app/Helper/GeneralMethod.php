@@ -4221,6 +4221,9 @@ END:VCALENDAR";
             'HIGHEST_QUALIFICATION' => $highestQualification,
             'QUALIFICATION' => $highestQualification,
             'CURRENT_LOCATION' => $currentLocation,
+            'CITY' => (string) ($context['city'] ?? ($currentLocation ?: '')),
+            'STATE' => (string) ($context['state'] ?? ''),
+            'COUNTRY' => (string) ($context['country'] ?? ''),
             'PRIMARY_SKILLS' => $primarySkills,
             'NOTICE_PERIOD' => $noticePeriod,
             'CURRENT_CTC' => $currentCtc,
@@ -5793,14 +5796,27 @@ END:VCALENDAR";
 
         // If city_id is available and city/state are missing or numeric, look up city_list
         $cityId = (int) ($cand->city_id ?? 0);
+        if ($cityId <= 0 && is_numeric($cand->city ?? null)) {
+            $cityId = (int) $cand->city;
+        }
+
         if ($cityId > 0 && ($city === '' || is_numeric($city) || $state === '')) {
             try {
-                $cityRow = DB::table('city_list')
-                    ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                    ->leftJoin('countries', 'countries.id', '=', 'city_list.country_id')
-                    ->where('city_list.city_id', $cityId)
-                    ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
-                    ->first();
+                $cacheKey = "ref_city_state_country:{$cityId}";
+                $cached = \Illuminate\Support\Facades\Redis::get($cacheKey);
+                if ($cached) {
+                    $cityRow = json_decode($cached);
+                } else {
+                    $cityRow = DB::table('city_list')
+                        ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+                        ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
+                        ->where('city_list.city_id', $cityId)
+                        ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                        ->first();
+                    if ($cityRow) {
+                        \Illuminate\Support\Facades\Redis::setex($cacheKey, 86400, json_encode($cityRow));
+                    }
+                }
 
                 if ($cityRow) {
                     if ($city === '' || is_numeric($city)) {

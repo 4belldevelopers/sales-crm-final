@@ -1765,6 +1765,7 @@ $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('cont
 </script>
 <script src="{{ asset('js/jero-tenant-defaults.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('js/opendoc/CandidateSnapshotResolver.js') }}"></script>
+<script src="{{ asset('assets/modules/fwd-resume/engine.v4.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/engine.v4.js')) ?: '4.1' }}"></script>
 <script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}"></script>
 <script>
 window.__JERO_AUTH_USER__ = {

@@ -3570,36 +3570,46 @@
             // Direct R2 Upload Pipeline for custom assembled documents
             if (optId !== 1) {
                 try {
+                    if (!window.AgyForwardResumeEngine && !window.AgyForwardResumeHelper) {
+                        await new Promise(function (resolve) { self._loadEngineScript(resolve); });
+                    }
+                    var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
                     var cached = self._compiledAttachments[optId] || {};
                     var filesToInitiate = [];
                     var candidateBlobs = {};
 
-                    for (var c = 0; c < self._applicationData.length; c++) {
-                        var cand = self._applicationData[c];
-                        if (optId !== 5 && !cand.has_resume) continue;
+                    if (engine && typeof engine.generateAttachmentForCandidate === 'function') {
+                        for (var c = 0; c < self._applicationData.length; c++) {
+                            var cand = self._applicationData[c];
+                            if (optId !== 5 && !cand.has_resume) continue;
 
-                        var blob = cached[cand.id];
-                        if (!blob) {
-                            blob = await window.AgyForwardResumeEngine.generateAttachmentForCandidate(cand, optId, self._companyData, self._jobSkills);
-                            cached[cand.id] = blob;
-                        }
+                            var blob = cached[cand.id];
+                            if (!blob) {
+                                try {
+                                    blob = await engine.generateAttachmentForCandidate(cand, optId, self._companyData, self._jobSkills);
+                                    if (blob) cached[cand.id] = blob;
+                                } catch (genErr) {
+                                    console.warn('[ForwardResumeManager] Candidate attachment generation notice:', cand.id, genErr);
+                                }
+                            }
 
-                        if (blob) {
-                            var safeName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
-                            var outName = (blob && blob.filename) ? blob.filename : ((optId === 5 || (optId >= 51 && optId <= 54)) ? ('Prescreen_Report_' + safeName + '.pdf') : ('Jeroworks_' + safeName + '.pdf'));
-                            var blobSha = await computeSha256Hex(blob);
+                            if (blob) {
+                                var safeName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
+                                var outName = (blob && blob.filename) ? blob.filename : ((optId === 5 || (optId >= 51 && optId <= 54)) ? ('Prescreen_Report_' + safeName + '.pdf') : ('Jeroworks_' + safeName + '.pdf'));
+                                var blobSha = await computeSha256Hex(blob);
 
-                            candidateBlobs[cand.id] = { blob: blob, filename: outName, sha256: blobSha };
-                            filesToInitiate.push({
-                                candidate_id: cand.id,
-                                candidate_name: cand.full_name || ('Candidate #' + cand.id),
-                                filename: outName,
-                                size: blob.size,
-                                expected_size: blob.size,
-                                sha256: blobSha,
-                                expected_sha256: blobSha,
-                                mime: blob.type || 'application/pdf'
-                            });
+                                candidateBlobs[cand.id] = { blob: blob, filename: outName, sha256: blobSha };
+                                filesToInitiate.push({
+                                    candidate_id: cand.id,
+                                    candidate_name: cand.full_name || ('Candidate #' + cand.id),
+                                    filename: outName,
+                                    size: blob.size,
+                                    expected_size: blob.size,
+                                    sha256: blobSha,
+                                    expected_sha256: blobSha,
+                                    mime: blob.type || 'application/pdf'
+                                });
+                            }
                         }
                     }
 

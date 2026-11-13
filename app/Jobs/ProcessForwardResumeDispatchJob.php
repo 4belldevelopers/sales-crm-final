@@ -130,13 +130,22 @@ class ProcessForwardResumeDispatchJob implements ShouldQueue
 
                     if ($cand && ! empty($cand->resume)) {
                         $candResume = $cand->resume;
-                        if (filter_var($candResume, FILTER_VALIDATE_URL)) {
+                        $r2CandKey = '';
+                        if (str_starts_with($candResume, 'https://file.jero.works/')) {
+                            $r2CandKey = ltrim((string) parse_url($candResume, PHP_URL_PATH), '/');
+                        } elseif (! filter_var($candResume, FILTER_VALIDATE_URL)) {
+                            $r2CandKey = ltrim($candResume, '/');
+                        }
+
+                        if ($r2CandKey !== '' && \Illuminate\Support\Facades\Storage::disk('r2')->exists($r2CandKey)) {
+                            $bytes = \Illuminate\Support\Facades\Storage::disk('r2')->get($r2CandKey);
+                        } elseif (\Illuminate\Support\Facades\Storage::disk('r2')->exists($candResume)) {
+                            $bytes = \Illuminate\Support\Facades\Storage::disk('r2')->get($candResume);
+                        } elseif (filter_var($candResume, FILTER_VALIDATE_URL)) {
                             $httpRes = \Illuminate\Support\Facades\Http::timeout(15)->get($candResume);
                             if ($httpRes->successful() && strlen($httpRes->body()) > 50) {
                                 $bytes = $httpRes->body();
                             }
-                        } elseif (\Illuminate\Support\Facades\Storage::disk('r2')->exists($candResume)) {
-                            $bytes = \Illuminate\Support\Facades\Storage::disk('r2')->get($candResume);
                         } elseif (file_exists(public_path('user-uploads/resumes/'.$candResume))) {
                             $bytes = file_get_contents(public_path('user-uploads/resumes/'.$candResume));
                         } elseif (file_exists(public_path('user-uploads/resume/'.$candResume))) {
