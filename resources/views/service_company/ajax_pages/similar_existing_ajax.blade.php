@@ -1,4 +1,10 @@
 @php
+    if (!class_exists(\App\Services\AppTrackerCardPresenter::class, false)) {
+        $pPath = app_path('Services/AppTrackerCardPresenter.php');
+        if (file_exists($pPath)) {
+            require_once $pPath;
+        }
+    }
     use App\Helper\GeneralMethod;
     use App\Services\AppTrackerCardPresenter;
     use App\Services\CurrencyService;
@@ -241,7 +247,8 @@
             $qualFull = mb_strtoupper((string) @$row->qualification_name);
 
             // Work mode resolution
-            $candId = (int) (@$row->candidate_id ?? @$row->id ?? 0);
+            $candId = (int) ($row->candidate_id ?? (is_array($rowArr) ? ($rowArr['candidate_id'] ?? 0) : ($row->candidate_id ?? 0)) ?? $row->id ?? 0);
+            $rawWiseId = (int) (is_array($rowArr) ? ($rowArr['id'] ?? 0) : ($row->id ?? $row->wiseId ?? $row->wise_id ?? 0));
             if (empty($row->wm) && isset($rowMaps['work_mode_map'][$candId])) {
                 $row->wm = $rowMaps['work_mode_map'][$candId];
             }
@@ -249,12 +256,21 @@
             $wmIcon = !empty($wmMeta['icon']) ? $wmMeta['icon'] : 'fa-solid fa-building';
             $wmLabel = !empty($wmMeta['label']) ? $wmMeta['label'] : '–';
             $hasResume = !empty($row->resume) || !empty($rowMaps['resume_map'][$candId] ?? null);
+            $linkedinUrl = AppTrackerCardPresenter::resolveLinkedinUrl($row);
+            $visaMeta = AppTrackerCardPresenter::resolveVisa($row, $row_country_name ?? null);
+            $visaDisplay = $visaMeta['display'];
+            $visaRaw = $visaMeta['raw'];
 
             // Matched Job & Status
-            $wiseInfo = $rowMaps['wise_job_info'][$row->id] ?? null;
+            $candJobId = (int) (@$row->jobId ?? @$row->job_id ?? 0);
+            $wiseInfo = $rowMaps['wise_job_info'][$rawWiseId] 
+                ?? ($rowMaps['wise_job_info'][$candId] 
+                ?? ($rowMaps['wise_job_info']['cand_' . $candId] 
+                ?? ($rowMaps['wise_job_info']['job_' . $candJobId] 
+                ?? null)));
             $matchedJobTitle = ucwords((string) ($wiseInfo->title ?? @$row->title ?? ''));
-            $matchedJobId = (int) ($wiseInfo->matched_job_id ?? @$row->jobId ?? @$row->job_id ?? 0);
-            $matchedCategory = ucwords((string) ($wiseInfo->category_name ?? ''));
+            $matchedJobId = (int) ($wiseInfo->matched_job_id ?? $candJobId);
+            $matchedCategory = ucwords((string) ($wiseInfo->category_name ?? $rowMaps['job_category_map'][$matchedJobId] ?? ''));
             $client_name = ucwords((string) ($wiseInfo->client_name ?? @$row->client_name ?? ''));
             $companyName = ucwords((string) ($wiseInfo->company_name ?? @$row->company_name ?? ''));
             if ($wiseInfo && ($wiseInfo->companyIdCheck ?? 0) != $company_id && !empty($wiseInfo->company_name)) {
@@ -267,15 +283,21 @@
             if ($isSelfCompany) {
                 $targetTypeLabel = 'My Organization';
                 $targetTypeClass = 'type-my-org';
+                $targetTypeIcon = 'fa-solid fa-id-badge';
                 $targetTypeStyle = 'background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc;';
+                $targetSubcardClass = 'simf-cand-subcard--my-org';
             } elseif ($isDirectClient) {
                 $targetTypeLabel = 'Direct Client';
                 $targetTypeClass = 'type-direct';
+                $targetTypeIcon = 'fa-solid fa-shield-alt';
                 $targetTypeStyle = 'background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;';
+                $targetSubcardClass = 'simf-cand-subcard--direct';
             } else {
                 $targetTypeLabel = 'Internal Client';
                 $targetTypeClass = 'type-internal';
+                $targetTypeIcon = 'fa-solid fa-building';
                 $targetTypeStyle = 'background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;';
+                $targetSubcardClass = 'simf-cand-subcard--internal';
             }
 
             // Job Status Pill
@@ -455,11 +477,11 @@
                 </div>
 
                 {{-- Sub-Card 4: Matched Job & Status (Target Req Redesign) --}}
-                <div class="simf-cand-subcard simf-cand-subcard--target">
+                <div class="simf-cand-subcard simf-cand-subcard--target {{ $targetSubcardClass }}">
                     <div class="simf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
                         <span class="simf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;" title="TARGET REQ">TARGET REQ</span>
-                        <span class="simf-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:4px; text-transform:uppercase; {{ $targetTypeStyle }}">
-                            {{ $targetTypeLabel }}
+                        <span class="simf-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:4px; text-transform:uppercase; white-space:nowrap !important; flex-shrink:0; {{ $targetTypeStyle }}">
+                            <i class="{{ $targetTypeIcon }} me-1"></i>{{ $targetTypeLabel }}
                         </span>
                     </div>
                     <div class="simf-req-body pt-1">
@@ -510,16 +532,7 @@
                 {{-- Sub-Card 6: Stage & Action --}}
                 <div class="simf-cand-subcard">
                     <div class="simf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
-                        <span class="simf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;">Stage &amp; Action</span>
-                        @if ($hasResume)
-                            <span class="badge badge-light-success fw-bold py-1 px-2 d-inline-flex align-items-center" style="font-size:9.5px; border-radius:4px;" title="Resume uploaded">
-                                <i class="fas fa-check-circle me-1 text-success" style="font-size:10px;"></i>Resume
-                            </span>
-                        @else
-                            <span class="badge badge-light-danger fw-bold py-1 px-2 d-inline-flex align-items-center" style="font-size:9.5px; border-radius:4px;" title="Resume missing">
-                                <i class="fas fa-exclamation-circle me-1 text-danger" style="font-size:10px;"></i>No CV
-                            </span>
-                        @endif
+                        <span class="simf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;" title="STAGE &amp; ACTION">Stage &amp; Action</span>
                     </div>
                     <div class="simf-stage-action-wrap pt-1">
                         <a href="javascript:void(0);" data-row-id="{{ @$row->candidate_id }}"
@@ -578,6 +591,27 @@
                             <span class="simf-skills-empty">No skills listed</span>
                         @endif
                     </div>
+                </div>
+                <div class="simf-bottom-right">
+                    @if ($hasResume)
+                        <span class="simf-resume-pill" title="Resume uploaded">
+                            <i class="fas fa-check-circle"></i><span>Resume</span>
+                        </span>
+                    @else
+                        <span class="simf-nocv-pill" title="Resume missing">
+                            <i class="fas fa-exclamation-circle"></i><span>No CV</span>
+                        </span>
+                    @endif
+                    @if (!empty($visaDisplay))
+                        <span class="simf-visa-pill" title="{{ e('Visa Status: ' . $visaRaw) }}">
+                            <i class="fas fa-passport"></i><span>{{ $visaDisplay }}</span>
+                        </span>
+                    @endif
+                    @if (!empty($linkedinUrl))
+                        <a href="{{ e($linkedinUrl) }}" target="_blank" rel="noopener noreferrer" class="simf-linkedin-pill" title="LinkedIn Profile Verified">
+                            <i class="fab fa-linkedin"></i><span>LinkedIn Verified</span>
+                        </a>
+                    @endif
                 </div>
             </div>
         </article>

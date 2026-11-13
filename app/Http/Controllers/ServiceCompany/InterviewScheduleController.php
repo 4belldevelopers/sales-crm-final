@@ -60,7 +60,10 @@ class InterviewScheduleController extends ServiceCompanyBaseController
      */
     public function data_ajax(Request $request)
     {
-        abort_if(Gate::denies('view_schedule'), 403);
+        $hasPermission = in_array('view_schedule', $this->userPermissions) ||
+                         ($this->user && $this->user->hasRole('admin')) ||
+                         Gate::allows('view_schedule');
+        abort_if(! $hasPermission, 403);
 
         $company_id = auth()->user()->company_id;
         $available_status = GeneralMethod::available_status();
@@ -92,7 +95,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $sort = [];
 
         $cachePayload = [
-            'ui_v' => 'card_v5',
+            'ui_v' => 'card_v6',
             'page' => $page,
             'size' => $size,
             'company' => $company_id,
@@ -440,12 +443,20 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             ],
         ];
 
-        // Single ES search execution (Deduplicated)
-        $response = $this->elasticService->getClient()->search($params);
-        $total = $response['hits']['total']['value'] ?? 0;
-        $data = array_map(function ($hit) {
-            return $hit['_source'];
-        }, $response['hits']['hits'] ?? []);
+        // Single ES search execution (Deduplicated with graceful failure resilience)
+        try {
+            $response = $this->elasticService->getClient()->search($params);
+            $total = (int) ($response['hits']['total']['value'] ?? 0);
+            $data = array_map(function ($hit) {
+                return $hit['_source'];
+            }, $response['hits']['hits'] ?? []);
+        } catch (\Throwable $e) {
+            \Log::error('InterviewScheduleController data_ajax ES search failed: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $total = 0;
+            $data = [];
+        }
 
         $pagination = [
             'total' => $total,
@@ -700,7 +711,10 @@ class InterviewScheduleController extends ServiceCompanyBaseController
     public function benchinterviewdata_ajax(Request $request)
     {
         // dd("hidid");
-        abort_if(Gate::denies('view_schedule'), 403);
+        $hasPermission = in_array('view_schedule', $this->userPermissions) ||
+                         ($this->user && $this->user->hasRole('admin')) ||
+                         Gate::allows('view_schedule');
+        abort_if(! $hasPermission, 403);
 
         $company_id = auth()->user()->company_id;
         $available_status = $feedback_status = $interview_mode_arr = '';
@@ -1008,7 +1022,10 @@ class InterviewScheduleController extends ServiceCompanyBaseController
      */
     public function benchinterviewdata_v2(Request $request)
     {
-        abort_if(Gate::denies('view_schedule'), 403);
+        $hasPermission = in_array('view_schedule', $this->userPermissions) ||
+                         ($this->user && $this->user->hasRole('admin')) ||
+                         Gate::allows('view_schedule');
+        abort_if(! $hasPermission, 403);
 
         $company_id = auth()->user()->company_id;
         $valCheck_date = request('sortingfilter');
@@ -1274,7 +1291,10 @@ class InterviewScheduleController extends ServiceCompanyBaseController
     public function benchinterviewdata(Request $request)
     {
         // dd("hidid");
-        abort_if(Gate::denies('view_schedule'), 403);
+        $hasPermission = in_array('view_schedule', $this->userPermissions) ||
+                         ($this->user && $this->user->hasRole('admin')) ||
+                         Gate::allows('view_schedule');
+        abort_if(! $hasPermission, 403);
 
         $company_id = auth()->user()->company_id;
         $available_status = $feedback_status = $interview_mode_arr = '';

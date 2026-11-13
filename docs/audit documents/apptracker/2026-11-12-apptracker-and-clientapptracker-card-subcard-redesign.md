@@ -156,3 +156,27 @@ Redesigned both **AppTracker** (`/service_company/apptracker/{id}/{mstatus_id}`)
       * Standardized label text to `LinkedIn Verified` across all candidate views including `all_candidates.blade.php`.
       * Confirmed that `LinkedIn Verified` and `Visa Status` pills are strictly scoped to the footer intelligence strip of the **Total Candidates in Job** tab and CV Tracker, without polluting channel bench/similar candidate subcards.
       * Verified with 13 feature tests in `AppTrackerCardSubCardRedesignTest.php` with 344 assertions passing.
+
+13. **Matched Job Subcard Department Resolution, Organization Tinting & Footer Strip Resume/No CV Alignment:**
+    - **1. Matched Job / Target Req Subcard Width & No-Wrap Standard (Subcard 4):**
+      * Expanded Subcard 4 in CSS grid `.simf-cand-grid` and `.dsf-cand-grid` from `1.4fr` to `1.75fr` (and `1.7fr` on responsive `1440px` screens) so that `MY ORGANIZATION` comfortably fits on a single line with `white-space: nowrap !important; flex-shrink: 0;`.
+      * Rescaled companion subcard fractions to preserve exact 100% card width without horizontal overflow:
+        `minmax(0, 1.85fr) minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.15fr);`
+    - **2. Resilient Multi-Key Job & Department Extraction:**
+      * Resolved issue where department name (`job_categories.name`) was missing for candidates whose `wise_id` did not match candidate ID directly.
+      * Enhanced `prepareSimilarCandidatesRowMaps()` in `ServiceCompanyAppTrackerController.php` to index `$wiseJobInfoMap` by `wise_id`, `job_application_id`, `cand_{job_application_id}`, and direct `job_{jobId}` joining `job_categories`.
+      * In `similar_existing_ajax.blade.php` and `dsimilar_existing_ajax.blade.php`, implemented multi-key resolution with fallback to `$rowMaps['job_category_map'][$matchedJobId]` ensuring department name is 100% reliably displayed in Row 2: `#{{ $matchedJobId }} • {{ $matchedCategory ?: 'General' }}`.
+    - **3. Organization Background Tinting & Canonical Rule 25 Color Tokens:**
+      * Applied subtle tinted background highlights and matching border tokens to Subcard 4 based on classification:
+        - **My Organization (`isSelfCompany`):** Tint `#f0fdfa`, border `#a5f3fc`, badge `background: #ecfeff; color: #0891b2; border: 1px solid #a5f3fc;` with `fa-id-badge`. Class: `.simf-cand-subcard--my-org` / `.dsf-cand-subcard--my-org`.
+        - **Internal Client (`!isDirectClient && !isSelfCompany`):** Tint `#eff6ff`, border `#bfdbfe`, badge `background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;` with `fa-building`. Class: `.simf-cand-subcard--internal` / `.dsf-cand-subcard--internal`.
+        - **Direct Client (`isDirectClient`):** Tint `#ecfdf5`, border `#a7f3d0`, badge `background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;` with `fa-shield-alt`. Class: `.simf-cand-subcard--direct` / `.dsf-cand-subcard--direct`.
+    - **4. Stage & Action Subcard Header De-cluttering & Footer Strip Resume Placement:**
+      * Removed the `Resume` / `No CV` badge from Subcard 6 header completely, resolving the header text clipping (`STAGE & ACTIO...` -> clean `STAGE & ACTION`).
+      * Moved `Resume` / `No CV` badge into the bottom intelligence strip (`.simf-bottom-right` / `.dsf-bottom-right` / `.aptk-bottom-right` / `.caf-bottom-right`).
+      * Positioned `Resume` / `No CV` strictly **BEFORE** `Visa Status` and `LinkedIn Verified` on the same row (`[Resume / No CV] [Visa Status] [LinkedIn Verified]`).
+      * Handled both array and stdClass candidate data structures safely without type errors.
+    - **5. Tenancy, Cache Invalidation & Verification:**
+      * Bumped cache version across all 9 AppTracker controller endpoints to `card_v10`.
+      * Updated feature tests in `AppTrackerCardSubCardRedesignTest.php` asserting `card_v10`, department rendering, organization classification classes (`--my-org`, `--internal`, `--direct`), icons, and footer strip resume/no-cv positioning.
+      * All 13 feature tests pass with 372 assertions.
