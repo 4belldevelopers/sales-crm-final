@@ -3213,7 +3213,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 		var isChecked = $(this).prop('checked') === true;
 		$('.chk_list_item').prop('checked', isChecked);
 		$('.caf-cand-card').toggleClass('is-selected', isChecked);
-		$('#application_test_fwd_resume_body_content').html('');
 		if (isChecked && $('.chk_list_item').length > 0) {
 			$('.test_fwd_resume, .send_email, .app_copy, .application_copy').removeClass("d-none");
 			$('.custom_hide').addClass("d-none");
@@ -3267,7 +3266,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 	});
 
 	$(document).on('click', '.chk_list_item', function() {
-		$('#application_test_fwd_resume_body_content').html('');
 		$(this).closest('.caf-cand-card').toggleClass('is-selected', $(this).is(':checked'));
 		var totalItems = $('.chk_list_item').length;
 		var checkedItems = $('.chk_list_item:checked').length;
@@ -3295,7 +3293,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 		$('.caf-cand-card').removeClass('is-selected');
 		$('.test_fwd_resume, .send_email, .app_copy, .application_copy').addClass('d-none');
 		$('.custom_hide').removeClass('d-none');
-		$('#application_test_fwd_resume_body_content').html('');
 		updateAptkSelectionBar();
 	}
 	$(document).on('click', '#aptk_selection_close', clearAptkSelection);
@@ -3352,7 +3349,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 	{{-- CandidateSnapshotResolver: canonical zero-fabrication candidate data resolver for Pre-Screen PDF (engine.v4.js depends on this) --}}
 	<script src="{{ asset('js/opendoc/CandidateSnapshotResolver.js') }}"></script>
 	<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
-	<script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}"></script>
 @endif
 
 <script> 

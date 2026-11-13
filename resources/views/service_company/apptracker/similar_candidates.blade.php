@@ -1039,8 +1039,8 @@
             transition: background-color 0.15s ease, border-color 0.15s ease;
         }
         .simf-cand-subcard--my-org {
-            background: #f0fdfa !important;
-            border-color: #a5f3fc !important;
+            background: #fffbeb !important;
+            border-color: #fde68a !important;
         }
         .simf-cand-subcard--internal {
             background: #eff6ff !important;
@@ -1056,6 +1056,15 @@
         }
         .simf-cand-card:hover .simf-cand-subcard {
             border-color: #e2e8f0;
+        }
+        .simf-cand-card:hover .simf-cand-subcard--my-org {
+            border-color: #fcd34d !important;
+        }
+        .simf-cand-card:hover .simf-cand-subcard--internal {
+            border-color: #93c5fd !important;
+        }
+        .simf-cand-card:hover .simf-cand-subcard--direct {
+            border-color: #6ee7b7 !important;
         }
         .simf-subcard-head {
             display: flex;

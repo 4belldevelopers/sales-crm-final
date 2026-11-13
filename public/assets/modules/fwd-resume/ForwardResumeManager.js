@@ -11,6 +11,10 @@
 (function (window, document, $) {
     'use strict';
 
+    if (window.ForwardResumeManager && window.ForwardResumeManager._initialized) {
+        return;
+    }
+
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str)
@@ -532,6 +536,7 @@
         _companyId: '0',
 
         initRoutes: function (routes) {
+            this._initialized = true;
             if (routes && typeof routes === 'object') {
                 $.extend(this._routes, routes);
             }
@@ -540,6 +545,11 @@
                 this._csrfToken = tokenEl.getAttribute('content');
             }
             this._initBroadcastChannel();
+            var existingShell = document.getElementById('test_form1');
+            if (existingShell) {
+                this._shellHtml = $('#application_test_fwd_resume_body_content').html();
+                this._afterShellInjected();
+            }
             this.prewarm();
         },
 
@@ -677,6 +687,9 @@
                     salary = $card.attr('data-print-salary') || $card.find('.cand-salary').text().trim();
                     notice = $card.attr('data-print-notice') || $card.find('.cand-notice').text().trim();
                     location = $card.attr('data-print-location') || $card.find('.cand-loc').text().trim();
+                    var candCity = $card.attr('data-print-city') || '';
+                    var candState = $card.attr('data-print-state') || '';
+                    var candCountry = $card.attr('data-print-country') || '';
                     edu = $card.attr('data-print-edu') || '';
                     jobId = parseInt($card.attr('data-job-id') || 0, 10);
 
@@ -725,6 +738,13 @@
                     current_ctc: salary || '',
                     notice_period: notice || '',
                     current_location: location || '',
+                    location: location || '',
+                    city: candCity || '',
+                    city_name: candCity || '',
+                    state: candState || '',
+                    state_name: candState || '',
+                    country: candCountry || '',
+                    country_name: candCountry || '',
                     qualification: edu || '',
                     match_percentage: matchScore,
                     skills: skillsArr,
@@ -801,27 +821,36 @@
                     container.html(self._shellHtml);
                     self._afterShellInjected();
                 } else {
-                    container.html(
-                        '<div class="d-flex align-items-center justify-content-center" style="min-height:240px;">' +
-                        '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading Forward Resume Engine...</div>'
-                    );
-                    fetch(self._routes.shell)
-                        .then(function (res) { return res.text(); })
-                        .then(function (html) {
-                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                                try { CKEDITOR.instances['test_editor1'].destroy(true); } catch (e) {}
-                            }
-                            self._shellHtml = html;
-                            self._editorInitialized = false;
-                            container.html(html);
-                            self._afterShellInjected();
-                        })
-                        .catch(function (err) {
-                            console.error('Failed to load shell:', err);
-                        });
+                    var existingShellEl = document.getElementById('test_form1');
+                    if (existingShellEl) {
+                        self._shellHtml = existingShellEl.outerHTML;
+                        container.html(self._shellHtml);
+                        self._afterShellInjected();
+                    } else if (self._routes && self._routes.shell) {
+                        fetch(self._routes.shell)
+                            .then(function (res) { return res.text(); })
+                            .then(function (html) {
+                                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                                    try { CKEDITOR.instances['test_editor1'].destroy(true); } catch (e) {}
+                                }
+                                self._shellHtml = html;
+                                self._editorInitialized = false;
+                                container.html(html);
+                                self._afterShellInjected();
+                                if (self._lastOpenPayload) {
+                                    self._hydrateData(self._lastOpenPayload);
+                                }
+                            })
+                            .catch(function (err) {
+                                console.error('Failed to load shell:', err);
+                            });
+                    }
                 }
             } else {
                 self._resetDrawerForm();
+                if (!self._editorInitialized) {
+                    self._initEditor();
+                }
             }
 
             // 3. Ensure WASM Engine is loaded in background
@@ -853,6 +882,7 @@
                     jobSkills: self._jobSkills || [],
                     templateData: self._canonicalTemplates || []
                 };
+                self._lastOpenPayload = instantPayload;
                 self._hydrateData(instantPayload);
                 console.info('V4.1 Forward Resume Drawer hydrated from DOM in < 2ms');
             } else {
@@ -1840,7 +1870,14 @@
                 var desig = escapeHtml(cand.current_designation || cand.designation || cand.job_title || 'Technical Specialist');
                 var exp = escapeHtml(cand.experience || cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
                 if (typeof exp === 'number') exp = exp + ' Yrs';
-                var loc = escapeHtml(cand.location || cand.current_location || '--');
+                var locStr = cand.location || cand.current_location || '';
+                if (!locStr || locStr === '--' || /^\d+$/.test(locStr)) {
+                    var lp = [cand.city_name || cand.city, cand.state_name || cand.state, cand.country_name || cand.country].filter(function(p) {
+                        return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
+                    });
+                    locStr = lp.join(', ');
+                }
+                var loc = escapeHtml(locStr || '--');
                 var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
                 var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
                 
@@ -1896,7 +1933,14 @@
                 if (typeof exp === 'number') exp = exp + ' Yrs';
                 var rawRelExp = cand.rel_exp || cand.relevant_experience || '';
                 var relExp = rawRelExp ? escapeHtml(isNaN(rawRelExp) ? String(rawRelExp) : (rawRelExp + ' Yrs')) : '--';
-                var loc = escapeHtml(cand.location || cand.current_location || '--');
+                var locStr = cand.location || cand.current_location || '';
+                if (!locStr || locStr === '--' || /^\d+$/.test(locStr)) {
+                    var lp = [cand.city_name || cand.city, cand.state_name || cand.state, cand.country_name || cand.country].filter(function(p) {
+                        return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
+                    });
+                    locStr = lp.join(', ');
+                }
+                var loc = escapeHtml(locStr || '--');
                 var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
                 var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
                 var ctc = escapeHtml((cand.ctc || '--') + ' / ' + (cand.ectc || '--'));
@@ -1984,7 +2028,14 @@
                 if (typeof exp === 'number') exp = exp + ' Yrs';
                 var rawRelExp = cand.rel_exp || cand.relevant_experience || '';
                 var relExp = rawRelExp ? escapeHtml(isNaN(rawRelExp) ? String(rawRelExp) : (rawRelExp + ' Yrs')) : '--';
-                var loc = escapeHtml(cand.location || cand.current_location || '--');
+                var locStr = cand.location || cand.current_location || '';
+                if (!locStr || locStr === '--' || /^\d+$/.test(locStr)) {
+                    var lp = [cand.city_name || cand.city, cand.state_name || cand.state, cand.country_name || cand.country].filter(function(p) {
+                        return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
+                    });
+                    locStr = lp.join(', ');
+                }
+                var loc = escapeHtml(locStr || '--');
                 var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
                 var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
                 var ctc = escapeHtml((cand.ctc || '--') + ' / ' + (cand.ectc || '--'));

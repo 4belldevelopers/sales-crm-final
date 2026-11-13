@@ -866,8 +866,8 @@
             transition: background-color 0.15s ease, border-color 0.15s ease;
         }
         .dsf-cand-subcard--my-org {
-            background: #f0fdfa !important;
-            border-color: #a5f3fc !important;
+            background: #fffbeb !important;
+            border-color: #fde68a !important;
         }
         .dsf-cand-subcard--internal {
             background: #eff6ff !important;
@@ -882,6 +882,9 @@
             flex-shrink: 0;
         }
         .dsf-cand-card:hover .dsf-cand-subcard { border-color: #e2e8f0; }
+        .dsf-cand-card:hover .dsf-cand-subcard--my-org { border-color: #fcd34d !important; }
+        .dsf-cand-card:hover .dsf-cand-subcard--internal { border-color: #93c5fd !important; }
+        .dsf-cand-card:hover .dsf-cand-subcard--direct { border-color: #6ee7b7 !important; }
         .dsf-subcard-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
         .dsf-subcard-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.45px; color: #94a3b8; line-height: 1.1; display: inline-flex; align-items: center; gap: 4px; }
         .dsf-cand-subcard--info { cursor: pointer; }

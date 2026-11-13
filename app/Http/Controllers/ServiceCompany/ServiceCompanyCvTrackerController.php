@@ -3363,24 +3363,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $cand->is_immediate = false;
             }
 
-            // Location: resolve human-readable city, state, country names — NEVER output numeric database IDs
-            $cityName = (! empty($cand->city_name) && ! preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
-            if (! $cityName && ! empty($cand->city) && ! preg_match('/^\d+$/', trim((string) $cand->city))) {
-                $cityName = trim((string) $cand->city);
-            }
-
-            $stateName = (! empty($cand->state_name) && ! preg_match('/^\d+$/', trim((string) $cand->state_name))) ? trim((string) $cand->state_name) : null;
-            if (! $stateName && ! empty($cand->state) && ! preg_match('/^\d+$/', trim((string) $cand->state))) {
-                $stateName = trim((string) $cand->state);
-            }
-
-            $countryName = (! empty($cand->country_name) && ! preg_match('/^\d+$/', trim((string) $cand->country_name))) ? trim((string) $cand->country_name) : null;
-            if (! $countryName && ! empty($cand->country) && ! preg_match('/^\d+$/', trim((string) $cand->country))) {
-                $countryName = trim((string) $cand->country);
-            }
-
-            $locParts = array_filter([$cityName, $stateName, $countryName]);
-            $cand->location = ! empty($locParts) ? implode(', ', $locParts) : '--';
+            // Location: Authoritative human-readable resolution via GeneralMethod (guarantees accurate state from city_list)
+            $locHierarchy = GeneralMethod::resolveCandidateLocationHierarchy($cand);
+            $cand->city_name = $locHierarchy['city'];
+            $cand->state_name = $locHierarchy['state'];
+            $cand->country_name = $locHierarchy['country'];
+            $cand->location = $locHierarchy['location_text'];
 
             // Work Mode
             $wmRaw = trim((string) @$cand->wm);
@@ -3775,24 +3763,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $cand->is_immediate = false;
             }
 
-            // Location: resolve human-readable city, state, country names — NEVER output numeric database IDs
-            $cityName = (! empty($cand->city_name) && ! preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
-            if (! $cityName && ! empty($cand->city) && ! preg_match('/^\d+$/', trim((string) $cand->city))) {
-                $cityName = trim((string) $cand->city);
-            }
-
-            $stateName = (! empty($cand->state_name) && ! preg_match('/^\d+$/', trim((string) $cand->state_name))) ? trim((string) $cand->state_name) : null;
-            if (! $stateName && ! empty($cand->state) && ! preg_match('/^\d+$/', trim((string) $cand->state))) {
-                $stateName = trim((string) $cand->state);
-            }
-
-            $countryName = (! empty($cand->country_name) && ! preg_match('/^\d+$/', trim((string) $cand->country_name))) ? trim((string) $cand->country_name) : null;
-            if (! $countryName && ! empty($cand->country) && ! preg_match('/^\d+$/', trim((string) $cand->country))) {
-                $countryName = trim((string) $cand->country);
-            }
-
-            $locParts = array_filter([$cityName, $stateName, $countryName]);
-            $cand->location = ! empty($locParts) ? implode(', ', $locParts) : '--';
+            // Location: Authoritative human-readable resolution via GeneralMethod (guarantees accurate state from city_list)
+            $locHierarchy = GeneralMethod::resolveCandidateLocationHierarchy($cand);
+            $cand->city_name = $locHierarchy['city'];
+            $cand->state_name = $locHierarchy['state'];
+            $cand->country_name = $locHierarchy['country'];
+            $cand->location = $locHierarchy['location_text'];
 
             // Work Mode
             $wmRaw = trim((string) @$cand->wm);
@@ -4164,17 +4140,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $noticeText = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : '--';
             }
 
-            // Location
-            $cityName = (! empty($cand->city_name) && ! preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
-            if (! $cityName && ! empty($cand->city) && ! preg_match('/^\d+$/', trim((string) $cand->city))) {
-                $cityName = trim((string) $cand->city);
-            }
-            $stateName = (! empty($cand->state_name) && ! preg_match('/^\d+$/', trim((string) $cand->state_name))) ? trim((string) $cand->state_name) : null;
-            if (! $stateName && ! empty($cand->state) && ! preg_match('/^\d+$/', trim((string) $cand->state))) {
-                $stateName = trim((string) $cand->state);
-            }
-            $locParts = array_filter([$cityName, $stateName]);
-            $locationText = ! empty($locParts) ? implode(', ', $locParts) : '--';
+            // Location: Authoritative human-readable resolution via GeneralMethod (guarantees accurate state from city_list)
+            $locHierarchy = GeneralMethod::resolveCandidateLocationHierarchy($cand);
+            $cityName = $locHierarchy['city'];
+            $stateName = $locHierarchy['state'];
+            $countryName = $locHierarchy['country'];
+            $locationText = $locHierarchy['location_text'];
 
             // Experience
             $expStr = $dossier['total_exp_display'] ?? \App\Services\PrescreenDossierService::formatExperienceDisplay(@$cand->total_exp, false);
@@ -4225,6 +4196,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'safe_name' => $candSafeName,
                 'designation' => $cand->current_designation ?: (@$cand->job_title ?: 'Profile'),
                 'company' => $cand->current_company ?: '--',
+                'city' => $cityName,
+                'city_name' => $cityName,
+                'state' => $stateName,
+                'state_name' => $stateName,
+                'country' => $countryName,
+                'country_name' => $countryName,
                 'has_resume' => $hasResume,
                 'resume' => $candResume,
                 'resume_url' => $resumeUrl,
@@ -6263,55 +6240,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $np = $appData->np_id;
                 }
 
-                $country = '';
-                $row_country_name = '';
-
-                if (empty($appData->country)) {
-                    $row_country_name = '----';
-                } else {
-                    if (! empty(@$appData->country)) {
-                        if (is_numeric(@$appData->country)) {
-                            $country_name_Arr = GeneralMethod::getCountryName(@$appData->country);
-                            foreach ($country_name_Arr as $cval) {
-                                $row_country_name = ucwords($cval['name']);
-                            }
-                        }
-                    }
-                }
-
-                $state = '';
-                $row_state_name = '';
-                if (empty($appData->state)) {
-                    $row_state_name = '----';
-                } else {
-                    // if (@$appData->country != 101) {
-                    // 	$row_state_name = @$appData->state_name;
-                    // } else {
-                    $state = @$appData->state;
-                    if (is_numeric(@$appData->country) && is_numeric($state)) {
-                        if ($state > 0) {
-                            // dd(@$appData->country, $state);
-                            $state_name_Arr = GeneralMethod::getStateName(@$appData->country, $state);
-                            // dd($state_name_Arr);
-                            foreach ($state_name_Arr as $sval) {
-                                $row_state_name = ucwords($sval['name']);
-                            }
-                        }
-                    }
-
-                    // }
-
-                }
-
-                $city = '';
-                $row_city_name = '';
-
-                if (@$appData->country == 101) {
-                    $row_city = DB::table('city_list')->select('*')->where('city_id', @$appData->city_id)->first();
-                    $row_city_name = @$row_city->city;
-                } else {
-                    $row_city_name = @$appData->city;
-                }
+                // Authoritative human-readable location hierarchy (geographically correct state from city_list)
+                $locHierarchy = GeneralMethod::resolveCandidateLocationHierarchy($appData);
+                $row_city_name = $locHierarchy['city'] !== '' ? $locHierarchy['city'] : '----';
+                $row_state_name = $locHierarchy['state'] !== '' ? $locHierarchy['state'] : '----';
+                $row_country_name = $locHierarchy['country'] !== '' ? $locHierarchy['country'] : '----';
                 $last_working_date = '';
                 if (! empty($appData->last_working_date)) {
                     $last_working_date = date('d M Y', strtotime($appData->last_working_date));

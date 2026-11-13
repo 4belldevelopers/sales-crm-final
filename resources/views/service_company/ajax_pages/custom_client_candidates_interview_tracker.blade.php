@@ -59,10 +59,10 @@
                     </div>
                 </div>
 
-                <!-- 2. TARGET REQUISITION -->
+                <!-- 2. JOB DETAILS -->
                 <div class="cd-it-subcard">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">TARGET REQUISITION</span>
+                        <span class="cd-subcard-label">JOB DETAILS</span>
                         <div class="d-flex align-items-center gap-1">
                             <span class="cd-badge-scope {{ $job['job_type_class'] ?? 'scope-direct' }}">
                                 {{ $job['job_type_label'] ?? 'Direct Client' }}

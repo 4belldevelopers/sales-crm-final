@@ -207,13 +207,14 @@
             // Location
             $row_city_name = AppTrackerCardPresenter::cleanText(@$row->city_name ?? '');
             $row_country_name = AppTrackerCardPresenter::cleanText(@$row->country_name ?? '');
-            if ($row_city_name === '' && !empty($row->city_id) && isset($cityDataMap[$row->city_id])) {
-                $row_city_name = $cityDataMap[$row->city_id];
-            }
-            $locShort = ($row_city_name !== '' || $row_country_name !== '')
-                ? trim(($row_city_name !== '' ? ucwords(mb_substr($row_city_name, 0, 18)) : '') . ($row_country_name !== '' ? ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) : ''), ', ')
+            $locHier = \App\Helper\GeneralMethod::resolveCandidateLocationHierarchy($row);
+            $row_city_name = $locHier['city'] !== '' ? $locHier['city'] : AppTrackerCardPresenter::cleanText(@$row->city_name ?? '');
+            $row_state_name = $locHier['state'];
+            $row_country_name = $locHier['country'] !== '' ? $locHier['country'] : AppTrackerCardPresenter::cleanText(@$row->country_name ?? '');
+            $locShort = ($row_city_name !== '' || $row_state_name !== '')
+                ? trim(($row_city_name !== '' ? ucwords(mb_substr($row_city_name, 0, 18)) : '') . ($row_state_name !== '' ? ', ' . ucwords(mb_substr($row_state_name, 0, 18)) : ($row_country_name !== '' ? ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) : '')), ', ')
                 : '';
-            $locFull = trim(($row_city_name !== '' ? ucwords($row_city_name) : '') . ($row_country_name !== '' ? ', ' . strtoupper($row_country_name) : ''), ', ');
+            $locFull = $locHier['location_text'] !== '--' ? $locHier['location_text'] : trim(($row_city_name !== '' ? ucwords($row_city_name) : '') . ($row_country_name !== '' ? ', ' . strtoupper($row_country_name) : ''), ', ');
             $displayQualification = $cardMeta['qualification'] !== '' ? $cardMeta['qualification'] : (trim((string)(@$row->qualification_name ?? '')) ?: '–');
 
             // Organization & Client Classification (Rule 25 canonical tokens)
@@ -314,6 +315,9 @@
                  data-print-notice="{{ e($np) }}"
                  data-print-company="{{ e($displayCurrentCompany) }}"
                  data-print-location="{{ e($locFull) }}"
+                 data-print-city="{{ e($row_city_name) }}"
+                 data-print-state="{{ e($row_state_name) }}"
+                 data-print-country="{{ e($row_country_name) }}"
                  data-print-edu="{{ e(strtoupper($displayQualification)) }}"
                  data-print-owner="{{ e($rowpostedby) }}"
                  data-print-job="{{ e($jobTitleDisplay) }}"
@@ -456,8 +460,8 @@
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: JOB DETAILS (Rule 25 Enterprise Color Tokens on Badge Only, Neutral Subcard) -->
-                <div class="simf-cand-subcard aptk-cand-subcard simf-cand-subcard--target">
+                <!-- SUB-CARD 4: JOB DETAILS (Document Color Standard) -->
+                <div class="simf-cand-subcard aptk-cand-subcard simf-cand-subcard--target {{ $targetSubcardClass }}" style="{{ $targetSubcardStyle }}">
                     <div class="simf-subcard-head aptk-subcard-hdr d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
                         <span class="simf-subcard-label aptk-subcard-label text-uppercase text-truncate" title="Job Details">Job Details</span>
                         <span class="simf-target-type-badge aptk-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:4px; text-transform:uppercase; white-space:nowrap !important; flex-shrink:0; {{ $targetTypeStyle }}">

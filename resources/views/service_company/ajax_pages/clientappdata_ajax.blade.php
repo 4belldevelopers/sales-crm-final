@@ -253,21 +253,14 @@
                 }
             }
 
-            $row_city_name = trim((string) (@$row->city_name ?? ''));
-            if ($row_city_name === '') {
-                if (@$row->country == 101 && !empty(@$row->city_id)) {
-                    $row_city_name = $citiesMap[$row->city_id] ?? (DB::table('city_list')->where('city_id', @$row->city_id)->value('city') ?? '');
-                } else {
-                    $row_city_name = trim((string) (@$row->city ?? ''));
-                }
-            }
-
-            $row_city_name = AppTrackerCardPresenter::cleanText($row_city_name);
-            $row_country_name = AppTrackerCardPresenter::cleanText($row_country_name);
-            $locShort = ($row_city_name !== '' || $row_country_name !== '')
-                ? trim(($row_city_name !== '' ? ucwords(mb_substr($row_city_name, 0, 18)) : '') . ($row_country_name !== '' ? ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) : ''), ', ')
+            $locHier = \App\Helper\GeneralMethod::resolveCandidateLocationHierarchy($row);
+            $row_city_name = $locHier['city'] !== '' ? $locHier['city'] : AppTrackerCardPresenter::cleanText(@$row->city_name ?? '');
+            $row_state_name = $locHier['state'];
+            $row_country_name = $locHier['country'] !== '' ? $locHier['country'] : AppTrackerCardPresenter::cleanText(@$row->country_name ?? '');
+            $locShort = ($row_city_name !== '' || $row_state_name !== '')
+                ? trim(($row_city_name !== '' ? ucwords(mb_substr($row_city_name, 0, 18)) : '') . ($row_state_name !== '' ? ', ' . ucwords(mb_substr($row_state_name, 0, 18)) : ($row_country_name !== '' ? ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) : '')), ', ')
                 : '';
-            $locFull = trim(($row_city_name !== '' ? ucwords($row_city_name) : '') . ($row_country_name !== '' ? ', ' . strtoupper($row_country_name) : ''), ', ');
+            $locFull = $locHier['location_text'] !== '--' ? $locHier['location_text'] : trim(($row_city_name !== '' ? ucwords($row_city_name) : '') . ($row_country_name !== '' ? ', ' . strtoupper($row_country_name) : ''), ', ');
 
             $cardMeta = AppTrackerCardPresenter::present($row, $row_country_name, true);
             $displayDesignation = $cardMeta['designation'];
@@ -327,6 +320,9 @@
              data-print-company="{{ e($displayCurrentCompany) }}"
              data-print-interview="{{ e($printInterviewStr) }}"
              data-print-location="{{ e($locFull) }}"
+             data-print-city="{{ e($row_city_name) }}"
+             data-print-state="{{ e($row_state_name) }}"
+             data-print-country="{{ e($row_country_name) }}"
              data-print-edu="{{ e(strtoupper($displayQualification)) }}"
              data-print-owner="{{ e($printOwnerStr) }}"
              data-print-stage="{{ e($printStageStr) }}"

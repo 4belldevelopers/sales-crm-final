@@ -2618,9 +2618,6 @@
 
     <script src="{{ asset('js/opendoc/CandidateSnapshotResolver.js') }}"></script>
     <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
-    @if(config('feature.fwd_resume_v4_enabled', true))
-        <script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}"></script>
-    @endif
 
     <script>
         $(document).ready(function() {
@@ -3378,7 +3375,6 @@
             });
 
             $(document).on('click', '.chk_list', function(e) {
-                $('#application_test_fwd_resume_body_content').html('');
 
                 if ($(".chk_list").prop('checked') == true) {
                     var chk_list = $('.chk_list').val();
@@ -3404,7 +3400,6 @@
 
             $(document).on('click', '.chk_list_item', function() {
                   
-                $('#application_test_fwd_resume_body_content').html('');
                 var i = 0;
                 var arr = [];
                 $('.chk_list_item:checked').each(function() {
@@ -3455,7 +3450,6 @@
                 $('#myTable tbody tr').removeClass('table-active selected');
                 $('.test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
                 $('.custom_hide').removeClass('d-none');
-                $('#application_test_fwd_resume_body_content').html('');
                 updateCvSelectionBar();
             }
             window.clearCvSelection = clearCvSelection;

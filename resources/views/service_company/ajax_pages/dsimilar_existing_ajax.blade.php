@@ -240,27 +240,30 @@
                 $client_name = $companyName;
             }
 
-            // Determine Target Req Classification per Rule 25
+            // Determine Target Req Classification per Document Color Standard (Rule 25 & UI/UX Standard 6A)
             $isSelfCompany = !empty($wiseInfo->self_company) || (($wiseInfo->companyIdCheck ?? $company_id) == $company_id && empty($wiseInfo->client_name));
             $isDirectClient = ($wiseInfo && ($wiseInfo->companyIdCheck ?? 0) != $company_id);
             if ($isSelfCompany) {
                 $targetTypeLabel = 'My Organization';
                 $targetTypeClass = 'type-my-org';
                 $targetTypeIcon = 'fa-solid fa-id-badge';
-                $targetTypeStyle = 'background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc;';
+                $targetTypeStyle = 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;';
                 $targetSubcardClass = 'dsf-cand-subcard--my-org';
+                $targetSubcardStyle = 'background:#fffbeb !important; border:1px solid #fde68a !important;';
             } elseif ($isDirectClient) {
                 $targetTypeLabel = 'Direct Client';
                 $targetTypeClass = 'type-direct';
                 $targetTypeIcon = 'fa-solid fa-shield-alt';
-                $targetTypeStyle = 'background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;';
+                $targetTypeStyle = 'background:#d1fae5; color:#166534; border:1px solid #6ee7b7;';
                 $targetSubcardClass = 'dsf-cand-subcard--direct';
+                $targetSubcardStyle = 'background:#ecfdf5 !important; border:1px solid #a7f3d0 !important;';
             } else {
                 $targetTypeLabel = 'Internal Client';
                 $targetTypeClass = 'type-internal';
                 $targetTypeIcon = 'fa-solid fa-building';
-                $targetTypeStyle = 'background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;';
+                $targetTypeStyle = 'background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;';
                 $targetSubcardClass = 'dsf-cand-subcard--internal';
+                $targetSubcardStyle = 'background:#eff6ff !important; border:1px solid #bfdbfe !important;';
             }
 
             // Job Status Pill
@@ -429,10 +432,10 @@
                     </div>
                 </div>
 
-                {{-- Sub-Card 4: Matched Job & Status (Target Req Redesign) --}}
-                <div class="dsf-cand-subcard dsf-cand-subcard--target {{ $targetSubcardClass }}">
+                {{-- Sub-Card 4: Matched Job & Status (Job Details) --}}
+                <div class="dsf-cand-subcard dsf-cand-subcard--target {{ $targetSubcardClass }}" style="{{ $targetSubcardStyle }}">
                     <div class="dsf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
-                        <span class="dsf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;" title="TARGET REQ">TARGET REQ</span>
+                        <span class="dsf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;" title="Job Details">Job Details</span>
                         <span class="dsf-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:4px; text-transform:uppercase; white-space:nowrap !important; flex-shrink:0; {{ $targetTypeStyle }}">
                             <i class="{{ $targetTypeIcon }} me-1"></i>{{ $targetTypeLabel }}
                         </span>
