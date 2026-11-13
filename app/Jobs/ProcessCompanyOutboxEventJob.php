@@ -121,26 +121,81 @@ class ProcessCompanyOutboxEventJob implements ShouldQueue
             $companyId = (int) ($event->aggregate_id ?: ($payload['company_id'] ?? 0));
             $eventType = $event->event_type;
 
+            // Guard against zombie resurrection: If company was deleted in MySQL or tombstoned in Cache, skip delayed updates/toggles
+            $aggregateVersion = (int) ($event->aggregate_version ?? 1);
+            $tombstoneVersion = Cache::get("company:tombstone:{$companyId}");
+
+            if ($eventType !== 'COMPANY_DELETED' && $eventType !== 'COMPANY_CREATED') {
+                if ($tombstoneVersion !== null && $aggregateVersion <= $tombstoneVersion) {
+                    Log::warning("ProcessCompanyOutboxEventJob: Obsolete event {$eventType} (v{$aggregateVersion}) blocked by tombstone fence (v{$tombstoneVersion}) for company {$companyId}");
+                    DB::table('sys_outbox_events')
+                        ->where('id', $eventId)
+                        ->update([
+                            'status' => 'COMPLETED',
+                            'processed_at' => now(),
+                        ]);
+
+                    return;
+                }
+
+                if (! DB::table('companies')->where('id', $companyId)->exists()) {
+                    Log::warning("ProcessCompanyOutboxEventJob: Skipping event {$eventType} for deleted/non-existent company {$companyId}");
+                    DB::table('sys_outbox_events')
+                        ->where('id', $eventId)
+                        ->update([
+                            'status' => 'COMPLETED',
+                            'processed_at' => now(),
+                        ]);
+
+                    return;
+                }
+            }
+
             // 1. Synchronize to Elasticsearch ELASTIC_COMPANIES_INDEX
             if ($eventType === 'COMPANY_VERIFICATION_TOGGLED') {
                 $accountVerify = (int) ($payload['accountVerify'] ?? 0);
+                $updateTime = now()->toIso8601String();
+
                 if ($elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
-                    $elasticService->getClient()->update([
-                        'index' => ELASTIC_COMPANIES_INDEX,
-                        'id' => (string) $companyId,
-                        'retry_on_conflict' => 5,
-                        'body' => [
-                            'doc' => [
-                                'id' => $companyId,
-                                'accountVerify' => $accountVerify,
-                                'curr_date' => now()->toIso8601String(),
+                    try {
+                        $elasticService->getClient()->update([
+                            'index' => ELASTIC_COMPANIES_INDEX,
+                            'id' => (string) $companyId,
+                            'refresh' => 'wait_for',
+                            'retry_on_conflict' => 5,
+                            'body' => [
+                                'script' => [
+                                    'source' => '
+                                        if (ctx._source.aggregate_version == null || ctx._source.aggregate_version <= params.aggregate_version) {
+                                            ctx._source.accountVerify = params.accountVerify;
+                                            ctx._source.aggregate_version = params.aggregate_version;
+                                            ctx._source.updated_at = params.updated_at;
+                                            ctx._source.curr_date = params.updated_at;
+                                        } else {
+                                            ctx.op = "none";
+                                        }
+                                    ',
+                                    'lang' => 'painless',
+                                    'params' => [
+                                        'accountVerify' => $accountVerify,
+                                        'aggregate_version' => $aggregateVersion,
+                                        'updated_at' => $updateTime,
+                                    ],
+                                ],
                             ],
-                            'doc_as_upsert' => true,
-                            'detect_noop' => false,
-                        ],
-                    ]);
+                        ]);
+                    } catch (\Throwable $esEx) {
+                        if (str_contains($esEx->getMessage(), 'document_missing_exception') || str_contains($esEx->getMessage(), '404')) {
+                            Log::info("ProcessCompanyOutboxEventJob: Document {$companyId} absent in ES, verification update safely ignored without resurrection.");
+                        } else {
+                            throw $esEx;
+                        }
+                    }
                 }
             } elseif ($eventType === 'COMPANY_DELETED') {
+                Cache::put("company:tombstone:{$companyId}", $aggregateVersion, now()->addDays(7));
+                Cache::forget('company:epoch:'.$companyId);
+
                 if ($elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
                     try {
                         $elasticService->getClient()->delete([
@@ -154,23 +209,54 @@ class ProcessCompanyOutboxEventJob implements ShouldQueue
                         }
                     }
                 }
-                Cache::forget('company:epoch:'.$companyId);
             } elseif ($eventType === 'COMPANY_PACKAGE_UPDATED') {
+                $updateTime = now()->toIso8601String();
+
                 if ($elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
-                    $elasticService->getClient()->update([
-                        'index' => ELASTIC_COMPANIES_INDEX,
-                        'id' => (string) $companyId,
-                        'retry_on_conflict' => 5,
-                        'body' => [
-                            'doc' => [
-                                'package_id' => $payload['package_id'] ?? null,
-                                'package_type' => $payload['package_type'] ?? null,
-                                'curr_date' => now()->toIso8601String(),
+                    try {
+                        $elasticService->getClient()->update([
+                            'index' => ELASTIC_COMPANIES_INDEX,
+                            'id' => (string) $companyId,
+                            'refresh' => 'wait_for',
+                            'retry_on_conflict' => 5,
+                            'body' => [
+                                'script' => [
+                                    'source' => '
+                                        if (ctx._source.aggregate_version == null || ctx._source.aggregate_version <= params.aggregate_version) {
+                                            ctx._source.package_id = params.package_id;
+                                            ctx._source.package_type = params.package_type;
+                                            ctx._source.aggregate_version = params.aggregate_version;
+                                            ctx._source.updated_at = params.updated_at;
+                                            ctx._source.curr_date = params.updated_at;
+                                        } else {
+                                            ctx.op = "none";
+                                        }
+                                    ',
+                                    'lang' => 'painless',
+                                    'params' => [
+                                        'package_id' => $payload['package_id'] ?? null,
+                                        'package_type' => $payload['package_type'] ?? null,
+                                        'aggregate_version' => $aggregateVersion,
+                                        'updated_at' => $updateTime,
+                                    ],
+                                ],
                             ],
-                            'doc_as_upsert' => true,
-                            'detect_noop' => false,
-                        ],
-                    ]);
+                        ]);
+                    } catch (\Throwable $esEx) {
+                        if (str_contains($esEx->getMessage(), 'document_missing_exception') || str_contains($esEx->getMessage(), '404')) {
+                            Log::info("ProcessCompanyOutboxEventJob: Document {$companyId} absent in ES, package update safely ignored without resurrection.");
+                        } else {
+                            throw $esEx;
+                        }
+                    }
+                }
+            } elseif ($eventType === 'COMPANY_CREATED') {
+                if ($elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
+                    try {
+                        app(\App\Services\ElasticCaompanyIndex::class)->companyIndexElastic($companyId);
+                    } catch (\Throwable $indexEx) {
+                        Log::error("ProcessCompanyOutboxEventJob: Elastic indexing failed on COMPANY_CREATED for company {$companyId}: ".$indexEx->getMessage());
+                    }
                 }
             } elseif ($eventType === 'COMPANY_UPDATED') {
                 if ($elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
@@ -209,16 +295,24 @@ class ProcessCompanyOutboxEventJob implements ShouldQueue
                         $doc['accountVerify'] = (int) $payload['accountVerify'];
                     }
 
-                    $elasticService->getClient()->update([
-                        'index' => ELASTIC_COMPANIES_INDEX,
-                        'id' => (string) $companyId,
-                        'retry_on_conflict' => 5,
-                        'body' => [
-                            'doc' => $doc,
-                            'doc_as_upsert' => true,
-                            'detect_noop' => false,
-                        ],
-                    ]);
+                    try {
+                        $elasticService->getClient()->update([
+                            'index' => ELASTIC_COMPANIES_INDEX,
+                            'id' => (string) $companyId,
+                            'retry_on_conflict' => 5,
+                            'body' => [
+                                'doc' => $doc,
+                                'doc_as_upsert' => false,
+                                'detect_noop' => true,
+                            ],
+                        ]);
+                    } catch (\Throwable $esUpEx) {
+                        if (str_contains($esUpEx->getMessage(), 'document_missing_exception') || str_contains($esUpEx->getMessage(), '404')) {
+                            Log::info("ProcessCompanyOutboxEventJob: Document {$companyId} absent in ES, update skipped safely.");
+                        } else {
+                            throw $esUpEx;
+                        }
+                    }
                 }
             } elseif ($eventType === 'COMPANY_STATUS_TOGGLED') {
                 $packStatus = $payload['pack_status'] ?? ($payload['status'] ?? 'active');
@@ -260,50 +354,75 @@ class ProcessCompanyOutboxEventJob implements ShouldQueue
 
                 // 2. Elastic Companies Sync
                 try {
+                    $aggregateVersion = (int) ($event->aggregate_version ?? 1);
                     if ($elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
                         $elasticService->getClient()->update([
                             'index' => ELASTIC_COMPANIES_INDEX,
                             'id' => (string) $companyId,
+                            'refresh' => 'wait_for',
                             'retry_on_conflict' => 5,
                             'body' => [
-                                'doc' => [
-                                    'status' => $packStatus,
-                                    'updated_at' => $updateTime,
-                                    'curr_date' => $updateTime,
+                                'script' => [
+                                    'source' => '
+                                        if (ctx._source.aggregate_version == null || ctx._source.aggregate_version <= params.aggregate_version) {
+                                            ctx._source.status = params.status;
+                                            ctx._source.aggregate_version = params.aggregate_version;
+                                            ctx._source.updated_at = params.updated_at;
+                                            ctx._source.curr_date = params.updated_at;
+                                        } else {
+                                            ctx.op = "none";
+                                        }
+                                    ',
+                                    'lang' => 'painless',
+                                    'params' => [
+                                        'status' => $packStatus,
+                                        'aggregate_version' => $aggregateVersion,
+                                        'updated_at' => $updateTime,
+                                    ],
                                 ],
-                                'doc_as_upsert' => true,
-                                'detect_noop' => false,
                             ],
                         ]);
                     }
                 } catch (\Throwable $e) {
-                    Log::error("ProcessCompanyOutboxEventJob: ELASTIC_COMPANIES_INDEX update failed for company {$companyId}: ".$e->getMessage());
+                    if (str_contains($e->getMessage(), 'document_missing_exception') || str_contains($e->getMessage(), '404')) {
+                        Log::info("ProcessCompanyOutboxEventJob: Document {$companyId} absent in ES, status update skipped safely.");
+                    } else {
+                        Log::error("ProcessCompanyOutboxEventJob: ELASTIC_COMPANIES_INDEX update failed for company {$companyId}: ".$e->getMessage());
+                    }
                 }
             } elseif ($eventType === 'COMPANY_COIN_STATUS_TOGGLED') {
                 $coinEventType = $payload['coin_event_type'] ?? 'operational';
                 $packStatus = $payload['pack_status'] ?? 'active';
+                $aggregateVersion = (int) ($event->aggregate_version ?? 1);
 
                 try {
                     if ($elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
                         $elasticService->getClient()->update([
                             'index' => ELASTIC_COMPANIES_INDEX,
                             'id' => (string) $companyId,
+                            'refresh' => 'wait_for',
                             'retry_on_conflict' => 5,
                             'body' => [
                                 'script' => [
                                     'source' => '
-                                        if (ctx._source.company_coins != null) {
-                                            for (int i = 0; i < ctx._source.company_coins.length; i++) {
-                                                if (ctx._source.company_coins[i].event_type == params.event_type) {
-                                                    ctx._source.company_coins[i].free_pack_status = params.status;
+                                        if (ctx._source.aggregate_version == null || ctx._source.aggregate_version <= params.aggregate_version) {
+                                            if (ctx._source.company_coins != null) {
+                                                for (int i = 0; i < ctx._source.company_coins.length; i++) {
+                                                    if (ctx._source.company_coins[i].event_type == params.event_type) {
+                                                        ctx._source.company_coins[i].free_pack_status = params.status;
+                                                    }
                                                 }
                                             }
+                                            ctx._source.aggregate_version = params.aggregate_version;
+                                        } else {
+                                            ctx.op = "none";
                                         }
                                     ',
                                     'lang' => 'painless',
                                     'params' => [
                                         'event_type' => $coinEventType,
                                         'status' => $packStatus,
+                                        'aggregate_version' => $aggregateVersion,
                                     ],
                                 ],
                             ],
@@ -332,6 +451,9 @@ class ProcessCompanyOutboxEventJob implements ShouldQueue
 
             // 3. Invalidate company caches & mark outbox record as COMPLETED
             Cache::forget('company:epoch:'.$companyId);
+            if (class_exists(\App\Services\SuperAdmin\SuperAdminCompanyCacheManager::class)) {
+                \App\Services\SuperAdmin\SuperAdminCompanyCacheManager::flushCaches($companyId);
+            }
             DB::table('sys_outbox_events')
                 ->where('id', $eventId)
                 ->update([
