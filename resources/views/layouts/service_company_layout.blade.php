@@ -952,7 +952,9 @@
     data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_hidden" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close"
     style="z-index: 1000050 !important; scrollbar-gutter: stable;">
   <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
-    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>
+    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content">
+      @include('service_company.cvtracker.shell_v4')
+    </div>
   </div>
 </div>
 <!-- Candidate Send Email Drawer -->
@@ -1762,6 +1764,7 @@ $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('cont
     window.JERO_AUTH_COMPANY_ID = {{ auth()->check() ? (int) auth()->user()->company_id : 0 }};
 </script>
 <script src="{{ asset('js/jero-tenant-defaults.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('js/opendoc/CandidateSnapshotResolver.js') }}"></script>
 <script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}"></script>
 <script>
 window.__JERO_AUTH_USER__ = {

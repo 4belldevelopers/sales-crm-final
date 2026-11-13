@@ -9129,75 +9129,41 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
  * Preserves complete lifecycle isolation between Candidate Drawer and Forward Resume Drawer.
  */
 (function() {
-  if (typeof window.openCandidateForwardResume !== 'function' || !window.CandidateForwardResumeRamStore) {
-    window.openCandidateForwardResume = function(candidateId, jobId) {
-      if (typeof parent !== 'undefined' && typeof parent.openCandidateForwardResume === 'function') {
-        parent.openCandidateForwardResume(candidateId, jobId);
-        return;
-      }
-      if (!candidateId) return;
-      var candArr = [parseInt(candidateId, 10)];
-      var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
+  window.openCandidateForwardResume = function(candidateId, jobId) {
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.open === 'function') {
+      var candArr = Array.isArray(candidateId) ? candidateId : [candidateId];
+      var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : (Array.isArray(jobId) ? jobId : []);
+      window.ForwardResumeManager.open(candArr, jobArr, {});
+      return;
+    }
+    if (typeof parent !== 'undefined' && typeof parent.openCandidateForwardResume === 'function' && parent !== window) {
+      parent.openCandidateForwardResume(candidateId, jobId);
+      return;
+    }
+    if (!candidateId) return;
+    var candArr = [parseInt(candidateId, 10)];
+    var jobArr = (jobId && parseInt(jobId, 10) > 0) ? [parseInt(jobId, 10)] : [];
 
-      var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
-                     document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
-                     document.getElementById('kt_test_fwd_resume_drawer_clientapp');
-      if (drawerEl) {
-        drawerEl.style.removeProperty('display');
-        drawerEl.style.setProperty('z-index', '1000050', 'important');
-        if (!drawerEl.classList.contains('drawer')) {
-          drawerEl.classList.add('drawer', 'drawer-end');
+    var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
+                   document.getElementById('kt_test_fwd_resume_drawer_aptk') ||
+                   document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+    if (drawerEl) {
+      drawerEl.style.removeProperty('display');
+      drawerEl.style.setProperty('z-index', '1000050', 'important');
+      if (!drawerEl.classList.contains('drawer')) {
+        drawerEl.classList.add('drawer', 'drawer-end');
+      }
+      drawerEl.classList.add('drawer-on');
+      drawerEl.style.transform = 'none';
+
+      if (typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) {
+          drawer.shown = true;
         }
-        drawerEl.classList.add('drawer-on');
-        drawerEl.style.transform = 'none';
-
-        if (typeof KTDrawer !== 'undefined') {
-          var drawer = KTDrawer.getInstance(drawerEl);
-          if (drawer) {
-            drawer.shown = true;
-          }
-        }
       }
-
-      var $body = $('#application_test_fwd_resume_body_content');
-      if ($body.length) {
-        $body.html(
-          '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px;">' +
-          '  <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;"><span class="visually-hidden">Loading...</span></div>' +
-          '  <span style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #64748b; font-weight: 500;">Loading Forward Resume Engine...</span>' +
-          '</div>'
-        );
-        var firstJobId = jobArr.length > 0 ? jobArr[0] : 0;
-        var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}".replace(':id', firstJobId);
-
-        $.ajax({
-          type: 'POST',
-          url: url,
-          cache: false,
-          data: {
-            _token: "{{ csrf_token() }}",
-            arr: candArr,
-            jobIdArr: jobArr,
-            matchMap: {}
-          },
-          success: function(response) {
-            if (response && response.status === 'success' && response.view) {
-              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
-              }
-              $body.html(response.view);
-            } else {
-              var errMsg = (response && response.message) ? response.message : 'Failed to initialize Forward Resume';
-              $body.html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
-            }
-          },
-          error: function() {
-            $body.html('<div class="p-8 text-center text-danger">Server error initializing Forward Resume.</div>');
-          }
-        });
-      }
-    };
-  }
+    }
+  };
 
   if (typeof window.closeCandidateForwardResume !== 'function') {
     window.closeCandidateForwardResume = function() {

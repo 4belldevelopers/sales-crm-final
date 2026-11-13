@@ -1,0 +1,1635 @@
+<style>
+/* mm-* form design — V4.1 Client-First Forward Resume Drawer */
+.mm-wrap { font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; display: flex; flex-direction: column; height: 100%; min-height: 100%; }
+#test_form1 { display: flex; flex-direction: column; height: 100%; flex: 1; min-height: 0; }
+.mm-form-body { flex: 1; overflow-y: auto; }
+.mm-row { display: flex; align-items: flex-start; padding: 16px 24px; border-bottom: 1px solid #F3F4F6; gap: 16px; }
+.mm-label-col { width: 150px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-top: 9px; font-size: 12.5px; font-weight: 600; color: #374151; }
+.mm-label-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mm-label-icon svg { width: 14px; height: 14px; }
+.mm-ic-blue   { background: #EFF6FF; color: #2563EB; }
+.mm-ic-green  { background: #DCFCE7; color: #16A34A; }
+.mm-ic-purple { background: #F5F3FF; color: #7C3AED; }
+.mm-ic-teal   { background: #F0FDF4; color: #0D9488; }
+.mm-ic-orange { background: #FFF7ED; color: #EA580C; }
+.mm-req { color: #EF4444; margin-left: 1px; }
+.mm-field-col { flex: 1; min-width: 0; position: relative; }
+.mm-input { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB; outline: none; transition: border-color 0.15s; }
+.mm-input:focus { border-color: #93C5FD; background: #fff; }
+.mm-input[readonly] { color: #6B7280; cursor: default; background: #F3F4F6; }
+.mm-hint { font-size: 11.5px; color: #9CA3AF; margin-top: 5px; line-height: 1.4; }
+.mm-select { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 36px 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; -webkit-appearance: none; outline: none; cursor: pointer; transition: border-color 0.15s; }
+.mm-select:focus { border-color: #93C5FD; background-color: #fff; }
+
+/* Custom Resume Format Dropdown - Categorized Card Dropdown */
+.mm-fwd-format-dropdown-wrap {
+  position: relative;
+  width: 100%;
+}
+.mm-fwd-format-trigger {
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #FFFFFF;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.mm-fwd-format-trigger:hover {
+  border-color: #2563EB;
+}
+.mm-fwd-format-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.16), 0 4px 12px rgba(0,0,0,0.08);
+  max-height: min(440px, calc(100vh - 220px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #94A3B8 #F1F5F9;
+}
+.mm-fwd-format-dropdown-menu::-webkit-scrollbar {
+  width: 8px;
+}
+.mm-fwd-format-dropdown-menu::-webkit-scrollbar-track {
+  background: #F1F5F9;
+  border-radius: 4px;
+}
+.mm-fwd-format-dropdown-menu::-webkit-scrollbar-thumb {
+  background: #94A3B8;
+  border-radius: 4px;
+}
+.mm-fwd-format-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #64748B;
+}
+
+.mm-fwd-sec-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 7px;
+  background: #FFFFFF;
+}
+.mm-fwd-sec-card:last-child {
+  margin-bottom: 0;
+}
+.mm-fwd-sec-header {
+  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid transparent;
+}
+.mm-fwd-sec-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+}
+.mm-fwd-sec-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1.5px 9px;
+  border-radius: 12px;
+}
+
+.mm-fwd-opt-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6.5px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #F1F5F9;
+  background: #FFFFFF;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.mm-fwd-opt-row:last-child {
+  border-bottom: none;
+}
+.mm-fwd-opt-row:hover {
+  background: #F8FAFC;
+}
+.mm-fwd-opt-row.is-selected {
+  background: #F0F7FF !important;
+}
+
+.mf-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.8px solid #CBD5E1;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.mf-radio.is-checked {
+  border-color: #2563EB;
+  background: #FFFFFF;
+}
+.mf-radio-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563EB;
+  display: none;
+}
+.mf-radio.is-checked .mf-radio-inner {
+  display: block;
+}
+
+.mf-opt-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mf-opt-meta {
+  min-width: 0;
+  flex: 1;
+}
+.mf-opt-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1E293B;
+  line-height: 1.3;
+}
+.mf-opt-desc {
+  font-size: 11px;
+  color: #64748B;
+  line-height: 1.3;
+  margin-top: 1px;
+}
+.mf-default-badge {
+  background: #2563EB;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+.mm-rcp-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.mm-editor-wrap { width: 100%; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; background: #FFFFFF; transition: border-color 0.15s, box-shadow 0.15s; }
+.mm-editor-wrap:focus-within { border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+.mm-editor-wrap .ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  background: #F8FAFC !important;
+  padding: 6px 10px !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+.mm-editor-wrap .ql-toolbar .ql-formats {
+  margin-right: 8px !important;
+}
+.mm-editor-wrap .ql-toolbar button {
+  width: 26px !important;
+  height: 26px !important;
+  padding: 3px !important;
+  border-radius: 4px !important;
+  transition: all 0.15s ease !important;
+}
+.mm-editor-wrap .ql-toolbar button:hover {
+  background: #E2E8F0 !important;
+  color: #1E293B !important;
+}
+.mm-editor-wrap .ql-toolbar button.ql-active {
+  background: #EFF6FF !important;
+  color: #2563EB !important;
+}
+.mm-editor-wrap .ql-container.ql-snow {
+  border: none !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 13px !important;
+  color: #1E293B !important;
+  min-height: 180px !important;
+  max-height: 280px !important;
+  overflow-y: auto !important;
+}
+.mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
+.mm-editor-wrap .cke { width: 100% !important; border: none !important; }
+#test_editor1 { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
+.mm-row-body { align-items: flex-start; }
+.mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; z-index: 10; }
+.mm-add-email-btn:hover { color: #1d4ed8; }
+.mm-input-with-btn { padding-right: 110px; }
+
+/* Tag / Chip input container for To and CC email addresses */
+.mm-tag-box {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 5px 105px 5px 8px;
+  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  background: #F9FAFB;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  cursor: text;
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.mm-tag-box.is-focused {
+  border-color: #93C5FD;
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.25);
+}
+.mm-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.mm-email-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  line-height: 1.35;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.mm-email-tag.is-invalid {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #DC2626;
+}
+.mm-email-tag-text {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mm-email-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  color: #6B7280;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  transition: all 0.15s;
+  margin-left: 2px;
+}
+.mm-email-tag-remove:hover {
+  background: #DBEAFE;
+  color: #1E3A8A;
+}
+.mm-email-tag.is-invalid .mm-email-tag-remove:hover {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+.mm-tag-input {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 4px 6px !important;
+  font-size: 13px !important;
+  font-family: 'Poppins', sans-serif !important;
+  color: #374151 !important;
+  min-width: 140px;
+  flex: 1;
+}
+
+/* Header & Top Bar */
+.mm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E5E7EB;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+  gap: 16px;
+}
+.mm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.mm-header-icon-box {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 9px;
+  background: #EEF2FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mm-header-text { min-width: 0; }
+.mm-header-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.2px;
+  line-height: 1.3;
+}
+.mm-header-subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #6B7280;
+  line-height: 1.3;
+}
+.mm-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mm-header-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 7px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mm-header-btn-cancel:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+.mm-header-btn-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 20px;
+  border-radius: 7px;
+  border: none;
+  background: #2563EB;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mm-header-btn-send:hover {
+  background: #1D4ED8;
+}
+.mm-header-btn-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Recipient Drawer Styles */
+.rcp-container { display: flex; flex-direction: column; height: 100%; font-family: 'Poppins', sans-serif; }
+.rcp-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0; }
+.rcp-header-title { font-size: 16px; font-weight: 700; color: #111827; margin: 0; }
+.rcp-header-subtitle { font-size: 12px; color: #6B7280; margin: 2px 0 0; }
+.rcp-close-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 4px; border-radius: 6px; }
+.rcp-close-btn:hover { color: #374151; background: #F3F4F6; }
+.rcp-tabs-wrap { display: flex; gap: 10px; padding: 12px 20px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; flex-shrink: 0; }
+.rcp-tab-card { flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+.rcp-tab-card.active { border-color: #2563EB; background: #EFF6FF; }
+.rcp-tab-icon { color: #6B7280; }
+.rcp-tab-card.active .rcp-tab-icon { color: #2563EB; }
+.rcp-tab-title { font-size: 13px; font-weight: 600; color: #111827; }
+.rcp-tab-card.active .rcp-tab-title { color: #1D4ED8; }
+.rcp-tab-sub { font-size: 11px; color: #6B7280; }
+.rcp-search-wrap { padding: 12px 20px; border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0; display: flex; gap: 8px; }
+.rcp-search-box { flex: 1; position: relative; }
+.rcp-search-box input { width: 100%; padding: 8px 30px 8px 34px; font-size: 12.5px; border: 1px solid #E5E7EB; border-radius: 7px; background: #F9FAFB; outline: none; }
+.rcp-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #9CA3AF; display: flex; align-items: center; }
+.rcp-body-list { flex: 1; overflow-y: auto; padding: 10px 20px; }
+.rcp-contact-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #F3F4F6; gap: 12px; transition: background 0.1s; border-radius: 8px; }
+.rcp-contact-item:hover { background: #F9FAFB; }
+.rcp-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.rcp-info { margin-left: 10px; min-width: 0; flex: 1; }
+.rcp-name { font-size: 13px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcp-email { font-size: 11.5px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcp-role { font-size: 11px; color: #9CA3AF; }
+.rcp-toggle-btn { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #DBEAFE; background: #EFF6FF; color: #2563EB; transition: all 0.15s; }
+.rcp-toggle-btn.is-added { border-color: #DCFCE7; background: #DCFCE7; color: #16A34A; }
+.rcp-toggle-btn:hover { opacity: 0.85; }
+.rcp-footer { padding: 14px 20px; border-top: 1px solid #E5E7EB; background: #fff; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.rcp-btn-cancel { padding: 8px 16px; border: 1px solid #E5E7EB; background: #fff; border-radius: 7px; font-size: 13px; font-weight: 600; color: #374151; cursor: pointer; }
+/* ══════════════════════════════════════════════════════════════════════════════
+   GOD-LEVEL ENTERPRISE TEMPLATE PICKER (FORWARD RESUME)
+   ══════════════════════════════════════════════════════════════════════════════ */
+.fwd-tpl-picker-wrapper {
+  position: relative;
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+}
+.fwd-tpl-trigger {
+  width: 100%;
+  min-height: 48px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 9px;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+.fwd-tpl-trigger:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+}
+.fwd-tpl-trigger.is-active,
+.fwd-tpl-trigger:focus {
+  border-color: #2563EB;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04);
+  outline: none;
+}
+.fwd-tpl-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+.fwd-tpl-trigger-icon {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 8px;
+  background: #EFF6FF;
+  color: #2563EB;
+  border: 1px solid #DBEAFE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.fwd-tpl-trigger-icon svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+.fwd-tpl-trigger-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: 1;
+}
+.fwd-tpl-trigger-placeholder {
+  font-size: 13px;
+  color: #94A3B8;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fwd-tpl-trigger-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E293B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+.fwd-tpl-trigger-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #64748B;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+.fwd-tpl-trigger-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.fwd-tpl-trigger-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+  white-space: nowrap;
+}
+.fwd-tpl-trigger-clear {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #F1F5F9;
+  color: #64748B;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.fwd-tpl-trigger-clear:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+.fwd-tpl-trigger-chevron {
+  width: 16px;
+  height: 16px;
+  color: #94A3B8;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+.fwd-tpl-trigger.is-active .fwd-tpl-trigger-chevron {
+  transform: rotate(180deg);
+  color: #2563EB;
+}
+
+/* Floating Popover Dropdown — Strictest Vertical Stacking Guarantee */
+.fwd-tpl-popover-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 12px;
+  box-shadow: 0 20px 45px -8px rgba(15, 23, 42, 0.18), 0 8px 18px -4px rgba(15, 23, 42, 0.08);
+  z-index: 1050;
+  display: none;
+  flex-direction: column !important;
+  overflow: hidden;
+  animation: fwdTplFadeIn 0.16s ease-out;
+}
+@keyframes fwdTplFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Popover Search Bar */
+.fwd-tpl-search-box {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid #F1F5F9;
+  background: #FAFAFA;
+  flex-shrink: 0;
+}
+.fwd-tpl-search-input-wrap {
+  position: relative;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex;
+  align-items: center;
+}
+.fwd-tpl-search-icon {
+  position: absolute;
+  left: 11px;
+  width: 15px;
+  height: 15px;
+  color: #94A3B8;
+  pointer-events: none;
+}
+.fwd-tpl-search-input {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 7px;
+  padding: 8px 30px 8px 34px !important;
+  font-size: 12.5px;
+  font-family: 'Poppins', sans-serif;
+  color: #1E293B;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.fwd-tpl-search-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.fwd-tpl-search-clear {
+  position: absolute;
+  right: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  color: #64748B;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.fwd-tpl-search-clear:hover {
+  background: #CBD5E1;
+  color: #1E293B;
+}
+
+/* Category Filter Tabs / Pills — 100% Visible Multi-Row Flex Layout (God-Level Responsive ATS Design) */
+.fwd-tpl-category-tabs {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center;
+  gap: 6px 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #F1F5F9;
+  background: #F8FAFC;
+  flex-shrink: 0;
+}
+.fwd-tpl-cat-btn {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3.5px 8.5px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5.5px;
+  line-height: 1.25;
+  transition: all 0.14s ease-in-out;
+  user-select: none;
+  font-family: 'Poppins', sans-serif;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+.fwd-tpl-cat-btn svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: inherit;
+}
+.fwd-tpl-cat-btn:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #0F172A;
+  transform: translateY(-0.5px);
+}
+.fwd-tpl-cat-btn.is-active {
+  background: #2563EB;
+  border-color: #2563EB;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.24);
+}
+.fwd-tpl-cat-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 8px;
+  background: #F1F5F9;
+  color: #64748B;
+  line-height: 1;
+  transition: all 0.14s ease-in-out;
+}
+.fwd-tpl-cat-btn:hover .fwd-tpl-cat-count {
+  background: #E2E8F0;
+  color: #1E293B;
+}
+.fwd-tpl-cat-btn.is-active .fwd-tpl-cat-count {
+  background: rgba(255, 255, 255, 0.28);
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+/* Templates List Container */
+.fwd-tpl-items-list {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  max-height: 290px;
+  overflow-y: auto;
+  padding: 8px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 #F8FAFC;
+}
+.fwd-tpl-items-list::-webkit-scrollbar { width: 6px; }
+.fwd-tpl-items-list::-webkit-scrollbar-track { background: #F8FAFC; border-radius: 4px; }
+.fwd-tpl-items-list::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+.fwd-tpl-items-list::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* Template Card Item */
+.fwd-tpl-item-card {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 12px;
+  border-radius: 9px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid #F1F5F9;
+  background: #FFFFFF;
+  margin-bottom: 6px;
+  user-select: none;
+}
+.fwd-tpl-item-card:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.fwd-tpl-item-card.is-selected {
+  background: #EFF6FF !important;
+  border-color: #93C5FD !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.14) !important;
+}
+
+/* Dedicated Enterprise Icon Avatar for Template Cards */
+.fwd-tpl-card-icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.15s ease;
+}
+.fwd-tpl-card-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.fwd-tpl-icon-matrix    { background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+.fwd-tpl-icon-fresh     { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.fwd-tpl-icon-screening { background: #F5F3FF; color: #7C3AED; border: 1px solid #DDD6FE; }
+.fwd-tpl-icon-urgency   { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+.fwd-tpl-icon-bench     { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
+.fwd-tpl-icon-executive { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+.fwd-tpl-icon-feedback  { background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }
+
+.fwd-tpl-item-card:hover .fwd-tpl-card-icon {
+  transform: scale(1.05);
+}
+
+.fwd-tpl-item-main {
+  flex: 1;
+  min-width: 0;
+}
+.fwd-tpl-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fwd-tpl-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E293B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+.fwd-tpl-item-card.is-selected .fwd-tpl-item-name {
+  color: #1D4ED8;
+}
+.fwd-tpl-item-desc {
+  font-size: 11.5px;
+  color: #64748B;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.fwd-tpl-item-preview-subj {
+  display: none !important;
+}
+.fwd-tpl-item-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.fwd-tpl-badge-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.fwd-badge-matrix    { background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+.fwd-badge-fresh     { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.fwd-badge-urgency   { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+.fwd-badge-bench     { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.fwd-badge-executive { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
+.fwd-badge-dossier   { background: #F0FDFA; color: #0F766E; border: 1px solid #99F6E4; }
+.fwd-badge-screening { background: #F5F3FF; color: #6D28D9; border: 1px solid #DDD6FE; }
+.fwd-badge-feedback  { background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }
+
+.fwd-tpl-item-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2563EB;
+  color: #FFFFFF;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+.fwd-tpl-item-card.is-selected .fwd-tpl-item-check {
+  display: inline-flex;
+}
+
+/* Popover Footer */
+.fwd-tpl-popover-footer {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+  font-size: 11.5px;
+  color: #64748B;
+  flex-shrink: 0;
+}
+</style>
+
+<div class="mm-wrap">
+<form id="test_form1">
+  {{-- Top Action Bar --}}
+  <div class="mm-header">
+    <div class="mm-header-left">
+      <div class="mm-header-icon-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+      </div>
+      <div class="mm-header-text">
+        <h3 class="mm-header-title">Forward Candidate Resumes</h3>
+        <p class="mm-header-subtitle">Send selected candidate profiles to a client or hiring stakeholder.</p>
+      </div>
+    </div>
+    <div class="mm-header-actions">
+      <button type="button" class="mm-header-btn-cancel" id="kt_test_fwd_resume_drawer_close" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.close();">Close</button>
+      <button type="button" class="mm-header-btn-send" name="btnTestSubmit" id="btnTestSubmit" value="btnTestSubmit" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.submit(event);">
+        <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send Email
+        </span>
+        <span class="indicator-progress" style="display:none;align-items:center;gap:7px;">
+          <span class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;display:inline-block;"></span>
+          <span id="test_fwd_btn_progress_text">Sending...</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mm-form-body">
+    {{-- From + Reply To --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+        </span>
+        From
+      </div>
+      <div class="mm-field-col" style="display:flex;gap:12px;align-items:center;">
+        <select class="mm-select" name="from_email" id="test_from_email" style="flex:1;min-width:0;">
+          <option value="notify@jeroworks.com">notify@jeroworks.com</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:12.5px;font-weight:600;color:#374151;">
+          <span class="mm-label-icon mm-ic-purple" style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+          </span>
+          Reply To
+        </div>
+        <select class="mm-select" name="reply_to_email" id="test_reply_to_email" style="flex:1;min-width:0;">
+          <option value="">Default Recruiter Email</option>
+        </select>
+      </div>
+    </div>
+
+    {{-- To Email --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </span>
+        To <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:11px;color:#64748B;">Primary recipients</span>
+          <span class="mm-rcp-badge" id="test_fwd_recipients_badge">0 / 5 Recipients (Max)</span>
+        </div>
+        <div class="mm-tag-box" id="test_to_email_tag_box" onclick="$('#test_to_email_input').focus();">
+          <div class="mm-tag-list" id="test_to_email_tag_list"></div>
+          <input type="text" id="test_to_email_input" class="mm-tag-input" placeholder="Type email and press Enter..." autocomplete="email" inputmode="email" maxlength="254" />
+          <button type="button" class="mm-add-email-btn" id="test_btn_add_to_email" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.openRecipientDrawer('to');">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Recipient
+          </button>
+        </div>
+        <div id="test_to_email_typo_hint" class="mm-typo-hint" style="display:none;margin-top:4px;"></div>
+        <input type="hidden" name="to_email" id="test_to_email" value="" />
+        <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Press Enter or comma to add multiple email addresses.</span>
+          <span style="color:#059669;font-weight:500;font-size:10.5px;">Deliverability Safeguard: Max 5 Total (To + CC)</span>
+        </div>
+      </div>
+    </div>
+
+    {{-- CC Email --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </span>
+        CC
+      </div>
+      <div class="mm-field-col">
+        <div class="mm-tag-box" id="test_cc_email_tag_box" onclick="$('#test_cc_email_input').focus();">
+          <div class="mm-tag-list" id="test_cc_email_tag_list"></div>
+          <input type="text" id="test_cc_email_input" class="mm-tag-input" placeholder="Type email and press Enter..." autocomplete="email" inputmode="email" maxlength="254" />
+          <button type="button" class="mm-add-email-btn" id="test_btn_add_cc_email" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.openRecipientDrawer('cc');">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Recipient
+          </button>
+        </div>
+        <div id="test_cc_email_typo_hint" class="mm-typo-hint" style="display:none;margin-top:4px;"></div>
+        <input type="hidden" name="cc_email" id="test_cc_email" value="" />
+        <div class="mm-hint" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          <span>Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</span>
+          <div class="mm-copy-self-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:3px 8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#009EF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Auto-copy sent to you <span id="test_copy_self_email_display" style="color:#009EF7;font-weight:600;"></span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Subject --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+        </span>
+        Subject <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <input type="text" class="mm-input" name="subject" id="test_subject" value="" placeholder="e.g., Shortlisted Candidate Profiles for Your Review" />
+      </div>
+    </div>
+
+    {{-- Resume Format Selection --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </span>
+        Resume Format <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <!-- Custom Resume Format Trigger Button -->
+        <div class="mm-fwd-format-dropdown-wrap" id="test_fwd_format_dropdown_wrap">
+          <div class="mm-fwd-format-trigger" id="test_fwd_format_trigger" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.toggleFormatDropdown(event);">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+              <span id="test_fwd_trigger_icon" style="width:28px;height:28px;border-radius:6px;background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="9" y1="12" x2="15" y2="12"/>
+                  <polygon points="12 10 13.2 12.5 15.8 12.8 13.9 14.5 14.5 17 12 15.6 9.5 17 10.1 14.5 8.2 12.8 10.8 12.5 12 10"/>
+                </svg>
+              </span>
+              <div style="min-width:0;flex:1;">
+                <div id="test_fwd_trigger_title" style="font-size:12.5px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding (Default)
+                </div>
+                <div id="test_fwd_trigger_desc" style="font-size:11px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px;">
+              <span id="test_fwd_trigger_badge" class="mf-default-badge" style="display:inline-block;">Default</span>
+              <svg id="test_fwd_trigger_caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s ease;">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Dropdown Menu Panel -->
+          <div class="mm-fwd-format-dropdown-menu" id="test_fwd_format_dropdown_menu" style="display:none;">
+            <!-- Section 1: Standard Resume Options -->
+            <div class="mm-fwd-sec-card" style="border-color:#DBEAFE;">
+              <div class="mm-fwd-sec-header" style="background:#EEF2FF; border-bottom:1px solid #E0E7FF;">
+                <span class="mm-fwd-sec-title" style="color:#1E3A8A;">1. Standard Resume Options</span>
+                <span class="mm-fwd-sec-badge" style="background:#DBEAFE; color:#1E40AF;">2 formats</span>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="1" data-title="1.a Original Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(1, this);">
+                <div class="mf-radio">
+                  <div class="mf-radio-inner"></div>
+                </div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <line x1="10" y1="9" x2="8" y2="9"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">1.a Original Resume</div>
+                  <div class="mf-opt-desc">Original candidate resume without any modifications.</div>
+                </div>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="41" data-title="1.b Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(41, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <rect x="8" y="11" width="8" height="6" rx="1"/>
+                    <line x1="10" y1="14" x2="14" y2="14"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">1.b Resume + Company Branding</div>
+                  <div class="mf-opt-desc">Add company branding banner while keeping candidate details intact.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: Pre-Screened Candidate Report -->
+            <div class="mm-fwd-sec-card" style="border-color:#D1FAE5;">
+              <div class="mm-fwd-sec-header" style="background:#ECFDF5; border-bottom:1px solid #A7F3D0;">
+                <span class="mm-fwd-sec-title" style="color:#065F46;">2. Pre-Screened Candidate Report</span>
+                <span class="mm-fwd-sec-badge" style="background:#D1FAE5; color:#065F46;">1 format</span>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="5" data-title="2.a Pre-Screened Candidate Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(5, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="13" x2="15" y2="13"/>
+                    <line x1="9" y1="17" x2="13" y2="17"/>
+                    <circle cx="15" cy="17" r="1" fill="#059669"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">2.a Pre-Screened Candidate Report</div>
+                  <div class="mf-opt-desc">Concise report with fit summary, key skills, and verification status.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 3: Recruiter Packages (Report + Resume) -->
+            <div class="mm-fwd-sec-card" style="border-color:#FED7AA;">
+              <div class="mm-fwd-sec-header" style="background:#FFF7ED; border-bottom:1px solid #FFEDD5;">
+                <span class="mm-fwd-sec-title" style="color:#C2410C;">3. Recruiter Packages (Report + Resume)</span>
+                <span class="mm-fwd-sec-badge" style="background:#FFEDD5; color:#C2410C;">2 formats</span>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="42" data-title="3.a Pre-Screened Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(42, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="17" x2="9" y2="14"/>
+                    <line x1="12" y1="17" x2="12" y2="11"/>
+                    <line x1="15" y1="17" x2="15" y2="8"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">3.a Pre-Screened Report + Resume + Company Branding</div>
+                  <div class="mf-opt-desc">Dossier report followed by branded resume.</div>
+                </div>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="43" data-title="3.b Pre-Screened Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(43, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="12" x2="15" y2="12"/>
+                    <line x1="9" y1="16" x2="15" y2="16"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">3.b Pre-Screened Report + Resume without Company Branding</div>
+                  <div class="mf-opt-desc">Report-and-resume package without company logo or branding.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 4: Highlighted Skills -->
+            <div class="mm-fwd-sec-card" style="border-color:#FEF08A;">
+              <div class="mm-fwd-sec-header" style="background:#FEF9C3; border-bottom:1px solid #FEF08A;">
+                <span class="mm-fwd-sec-title" style="color:#854D0E;">4. Highlighted Skills</span>
+                <span class="mm-fwd-sec-badge" style="background:#FEF08A; color:#854D0E;">4 formats</span>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="44" data-title="4.a Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(44, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <polygon points="12 10 13.2 12.5 15.8 12.8 13.9 14.5 14.5 17 12 15.6 9.5 17 10.1 14.5 8.2 12.8 10.8 12.5 12 10"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">4.a Resume + Highlighted Keywords</div>
+                  <div class="mf-opt-desc">Resume with relevant skills highlighted for fast screening.</div>
+                </div>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="45" data-title="4.b Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(45, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <polygon points="12.5 9.5 9 14 12 14 11.5 18.5 15 13 12 13 12.5 9.5"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">4.b Resume + Highlighted Keywords + Company Branding</div>
+                  <div class="mf-opt-desc">Resume with highlighted skills and company branding.</div>
+                </div>
+              </div>
+              <div class="mm-fwd-opt-row is-selected" data-opt-id="46" data-title="4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(46, this);">
+                <div class="mf-radio is-checked">
+                  <div class="mf-radio-inner"></div>
+                </div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="12" x2="15" y2="12"/>
+                    <polygon points="12 10 13.2 12.5 15.8 12.8 13.9 14.5 14.5 17 12 15.6 9.5 17 10.1 14.5 8.2 12.8 10.8 12.5 12 10"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</div>
+                  <div class="mf-opt-desc">Pre-screened report, branded resume, and highlighted job-matching skills.</div>
+                </div>
+                <span class="mf-default-badge">Default</span>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="47" data-title="4.d Pre-Screened Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(47, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="12" x2="15" y2="12"/>
+                    <line x1="9" y1="16" x2="13" y2="16"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">4.d Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</div>
+                  <div class="mf-opt-desc">Recruiter package with report, resume, and skills without branding.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 5: Privacy & Anonymization (Anti-Poaching Shield) -->
+            <div class="mm-fwd-sec-card" style="border-color:#D1FAE5;">
+              <div class="mm-fwd-sec-header" style="background:#ECFDF5; border-bottom:1px solid #A7F3D0;">
+                <span class="mm-fwd-sec-title" style="color:#065F46;">5. Privacy & Anonymization (Anti-Poaching Shield)</span>
+                <span class="mm-fwd-sec-badge" style="background:#D1FAE5; color:#065F46;">7 formats</span>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="48" data-title="5.a Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(48, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">5.a Hide Contact Details</div>
+                  <div class="mf-opt-desc">Hide candidate phone, email, mobile, and LinkedIn details.</div>
+                </div>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="49" data-title="5.b Hide Candidate Name & Contact Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(49, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">5.b Hide Candidate Name &amp; Contact Details</div>
+                  <div class="mf-opt-desc">Hide candidate name, email, and phone numbers completely.</div>
+                </div>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="50" data-title="5.c Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(50, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">5.c Hide Contact Details + Company Branding</div>
+                  <div class="mf-opt-desc">Hide contact details and apply your company header banner.</div>
+                </div>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="51" data-title="5.d Hide Contact Details + Pre-Screened Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(51, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">5.d Hide Contact Details + Pre-Screened Report (Branded)</div>
+                  <div class="mf-opt-desc">Anonymized contact details with branded pre-screened dossier.</div>
+                </div>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="52" data-title="5.e Hide Contact Details + Pre-Screened Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(52, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">5.e Hide Contact Details + Pre-Screened Report without Company Branding</div>
+                  <div class="mf-opt-desc">Anonymized contacts and report dossier without company branding.</div>
+                </div>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="53" data-title="5.f Hide Contact Details + Pre-Screened Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and pre-screened report dossier." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(53, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">5.f Hide Contact Details + Pre-Screened Report + Highlighted Keywords</div>
+                  <div class="mf-opt-desc">Full privacy package: masked contacts, highlighted skills, report with branding.</div>
+                </div>
+              </div>
+              <div class="mm-fwd-opt-row" data-opt-id="54" data-title="5.g Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding" data-desc="Full privacy package without company logo: masked contacts, highlighted skills, and pre-screened report dossier — no branding applied." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(54, this);">
+                <div class="mf-radio"><div class="mf-radio-inner"></div></div>
+                <div class="mf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="mf-opt-meta">
+                  <div class="mf-opt-title">5.g Hide Contact Details + Pre-Screened Report + Highlighted Keywords (No Branding)</div>
+                  <div class="mf-opt-desc">Full privacy package without company branding: masked contacts, highlighted skills, report.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <input type="hidden" name="attached_cv_format" id="test_fwd_resume_format" value="46" />
+        <input type="hidden" name="attached_cv" id="test_attached_cv" value="1" />
+
+        {{-- Dynamic Resume Preview Card & Candidate Roster Container --}}
+        <div id="test_fwd_format_preview_card" style="margin-top:12px;">
+          <!-- Multi-Candidate Attachment Header & Cumulative Size Meter -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 2px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:12px;font-weight:700;color:#1E293B;">
+                Attached Documents
+              </span>
+              <span style="font-size:11px;color:#64748B;">• Selected format applied universally</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span id="test_fwd_total_size_badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;display:inline-flex;align-items:center;gap:4px;">
+                Total: 0.0 MB / 6.0 MB
+              </span>
+              <span id="test_fwd_batch_count_badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;gap:4px;">
+                📎 0 / 5 Max Resumes
+              </span>
+            </div>
+          </div>
+
+          <!-- Deliverability Warning Banner (Hidden by default, triggered when cumulative size > 6MB) -->
+          <div id="test_fwd_size_warning" style="display:none;margin-bottom:8px;padding:8px 12px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:6px;font-size:11.5px;color:#991B1B;line-height:1.4;">
+            <strong>Attachment Limit Exceeded:</strong> Combined attachment size exceeds the 6.0 MB email delivery limit. Please select fewer candidates or choose <em>Option 2.a (Pre-Screened Report)</em> to ensure successful delivery.
+          </div>
+
+          <div id="test_fwd_missing_resume_banner" style="display:none;margin-top:10px;padding:9px 13px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;align-items:center;gap:10px;">
+            <span style="color:#D97706;font-size:16px;flex-shrink:0;">⚠</span>
+            <div id="test_fwd_missing_resume_text" style="font-size:12px;color:#92400E;line-height:1.4;"></div>
+          </div>
+
+          <!-- Multi-Profile Attached Resumes Roster -->
+          <div id="test_fwd_candidate_roster" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"></div>
+
+          <!-- Live Compilation Progress Bar Container -->
+          <div id="test_fwd_compile_progress_container" style="display:none;margin-top:10px;padding:10px 14px;background:#F0FDFA;border:1px solid #99F6E4;border-radius:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span id="test_fwd_compile_spinner" class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;color:#0D9488;"></span>
+                <span id="test_fwd_compile_status_text" style="font-size:12px;font-weight:600;color:#134E4A;">Preparing custom format in browser memory...</span>
+              </div>
+              <span id="test_fwd_compile_pct_badge" style="font-size:11px;font-weight:700;color:#0D9488;background:#CCFBF1;padding:2px 7px;border-radius:10px;border:1px solid #99F6E4;">
+                0%
+              </span>
+            </div>
+            <div style="height:7px;width:100%;background:#CCFBF1;border-radius:4px;overflow:hidden;">
+              <div id="test_fwd_compile_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #059669);border-radius:4px;transition:width 0.25s ease;"></div>
+            </div>
+            <div id="test_fwd_compile_hint" style="font-size:11px;color:#115E59;margin-top:5px;display:flex;align-items:center;justify-content:space-between;">
+              <span id="test_fwd_compile_step_detail">Client-side document engine compiling high-resolution vector PDF...</span>
+              <span id="test_fwd_compile_count">0 / 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Email Template Selector --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </span>
+        Template
+      </div>
+      <div class="mm-field-col">
+        <div class="fwd-tpl-picker-wrapper" id="fwdTplPickerWrapper">
+          <!-- Interactive Trigger Card -->
+          <div class="fwd-tpl-trigger" id="fwdTplTrigger" tabindex="0" role="combobox" aria-expanded="false" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.toggleTemplatePicker(event);">
+            <div class="fwd-tpl-trigger-left">
+              <div class="fwd-tpl-trigger-icon" id="fwdTplTriggerIcon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+              </div>
+              <div class="fwd-tpl-trigger-content">
+                <span class="fwd-tpl-trigger-placeholder" id="fwdTplTriggerPlaceholder">Choose an enterprise email template...</span>
+                <div class="fwd-tpl-trigger-title" id="fwdTplTriggerTitle" style="display:none;"></div>
+                <div class="fwd-tpl-trigger-meta" id="fwdTplTriggerMeta" style="display:none;">
+                  <span id="fwdTplTriggerCategory" class="fwd-tpl-badge-pill"></span>
+                  <span id="fwdTplTriggerSubjPreview" style="display:none;"></span>
+                </div>
+              </div>
+            </div>
+            <div class="fwd-tpl-trigger-right">
+              <span class="fwd-tpl-trigger-badge" id="fwdTplAvailableCountBadge">8 Available</span>
+              <span class="fwd-tpl-trigger-clear" id="fwdTplTriggerClear" title="Clear template selection" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.clearTemplate(event);">&times;</span>
+              <svg class="fwd-tpl-trigger-chevron" id="fwdTplChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Floating Popover Dropdown Panel -->
+          <div class="fwd-tpl-popover-dropdown" id="fwdTplPopoverDropdown" style="display:none;">
+            <!-- Real-time Search Box -->
+            <div class="fwd-tpl-search-box">
+              <div class="fwd-tpl-search-input-wrap">
+                <svg class="fwd-tpl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" class="fwd-tpl-search-input" id="fwdTplSearchInput" placeholder="Search templates by title, category, or scenario..." autocomplete="off">
+                <span class="fwd-tpl-search-clear" id="fwdTplSearchClear" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.clearTemplateSearch();">&times;</span>
+              </div>
+            </div>
+
+            <!-- Category Filter Tabs / Pills -->
+            <div class="fwd-tpl-category-tabs" id="fwdTplCategoryTabs">
+              <button type="button" class="fwd-tpl-cat-btn is-active" data-category="all" title="View all templates">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>All</span>
+                <span class="fwd-tpl-cat-count" id="fwdTplCatCount_all">10</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="matrix" title="Candidate Comparison Matrix">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+                <span>Matrix</span>
+                <span class="fwd-tpl-cat-count" id="fwdTplCatCount_matrix">1</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="fresh" title="Fresh Shortlisted Candidates">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                <span>Fresh Shortlist</span>
+                <span class="fwd-tpl-cat-count" id="fwdTplCatCount_fresh">2</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="screening" title="Q&A, Key Skills &amp; Reason for Change Trackers">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+                <span>Screening &amp; Q&amp;A</span>
+                <span class="fwd-tpl-cat-count" id="fwdTplCatCount_screening">2</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="urgency" title="High Urgency &amp; Priority Roles">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>High Urgency</span>
+                <span class="fwd-tpl-cat-count" id="fwdTplCatCount_urgency">1</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="bench" title="Immediate Bench / C2C Deployment">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                <span>Bench &amp; C2C</span>
+                <span class="fwd-tpl-cat-count" id="fwdTplCatCount_bench">1</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="executive" title="Executive &amp; Leadership Presentation">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span>Executive</span>
+                <span class="fwd-tpl-cat-count" id="fwdTplCatCount_executive">1</span>
+              </button>
+              <button type="button" class="fwd-tpl-cat-btn" data-category="feedback" title="Client Feedback &amp; Follow-up">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>Follow-up</span>
+                <span class="fwd-tpl-cat-count" id="fwdTplCatCount_feedback">2</span>
+              </button>
+            </div>
+
+            <!-- Template Items List -->
+            <div class="fwd-tpl-items-list" id="fwdTplItemsList"></div>
+
+            <div class="fwd-tpl-empty-search" id="fwdTplEmptySearch" style="display:none;padding:24px 16px;text-align:center;font-size:12px;color:#94A3B8;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" style="margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <div>No templates match your search filter</div>
+            </div>
+
+            <!-- Popover Footer -->
+            <div class="fwd-tpl-popover-footer">
+              <span id="fwdTplFilteredCountText" style="font-weight:600;color:#334155;">Showing 10 templates</span>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#94A3B8;">
+                <span style="display:inline-flex;align-items:center;padding:1px 5px;background:#FFFFFF;border:1px solid #CBD5E1;border-radius:3px;font-size:10px;font-family:monospace;color:#475569;">↑↓</span>
+                <span>Navigate</span>
+                <span style="display:inline-flex;align-items:center;padding:1px 5px;background:#FFFFFF;border:1px solid #CBD5E1;border-radius:3px;font-size:10px;font-family:monospace;color:#475569;">Enter</span>
+                <span>Apply</span>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" name="template" id="test_fwd_template_select" value="" />
+        </div>
+      </div>
+    </div>
+
+    {{-- Body --}}
+    <div class="mm-row mm-row-body">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </span>
+        Email Body <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:11.5px;color:#6B7280;font-weight:500;">Email Body &amp; Presentation</span>
+          <button type="button" class="btn btn-sm" id="btn_insert_matrix_table" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.insertMatrixTableIntoEditor();" style="background:#F0FDF4;color:#0F766E;border:1px solid #A7F3D0;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;transition:all .15s;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+            Insert Executive Matrix Table
+          </button>
+        </div>
+        <div class="mm-editor-wrap" id="test_editor_wrap">
+          <textarea id="test_editor1" name="editor1" rows="10"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</form>
+</div>
+
+{{-- Enterprise Add Email Recipient Drawer --}}
+<div id="kt_test_recipient_drawer_toggle" style="display:none;"></div>
+<div id="kt_test_recipient_drawer" class="bg-white shadow" data-kt-drawer="true" data-kt-drawer-name="recipient-drawer-test" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'sm': '480px', 'lg': '490px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_test_recipient_drawer_toggle" data-kt-drawer-close="#kt_test_recipient_drawer_close">
+  <div class="rcp-container">
+    <div class="rcp-header">
+      <div class="rcp-header-left">
+        <h3 class="rcp-header-title">Add Email Recipient</h3>
+        <p class="rcp-header-subtitle">Choose a contact from your internal team or client company.</p>
+      </div>
+      <button type="button" class="rcp-close-btn" id="kt_test_recipient_drawer_close" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.closeRecipientDrawer();" title="Close drawer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="rcp-tabs-wrap">
+      <div class="rcp-tab-card active" id="test_rcp_tab_internal" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.switchRecipientTab('internal');">
+        <div class="rcp-tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div class="rcp-tab-info">
+          <div class="rcp-tab-title">My Organization</div>
+          <div class="rcp-tab-sub" id="test_rcp_internal_count">Active members</div>
+        </div>
+      </div>
+      <div class="rcp-tab-card" id="test_rcp_tab_client" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.switchRecipientTab('client');">
+        <div class="rcp-tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M16 14h.01"></path></svg>
+        </div>
+        <div class="rcp-tab-info">
+          <div class="rcp-tab-title">Client Contacts</div>
+          <div class="rcp-tab-sub" id="test_rcp_client_count">Available contacts</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rcp-search-wrap">
+      <div class="rcp-search-box">
+        <span class="rcp-search-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input type="text" id="test_rcp_search_input" placeholder="Search by name, email, or role..." onkeyup="if(window.ForwardResumeManager) window.ForwardResumeManager.filterRecipients(this.value);" />
+      </div>
+    </div>
+
+    <div class="rcp-body-list">
+      <div id="test_rcp_section_internal">
+        <div style="text-align:center;padding:36px 20px;color:#9CA3AF;font-size:13px;">Loading internal team contacts...</div>
+      </div>
+      <div id="test_rcp_section_client" style="display:none;">
+        <div style="text-align:center;padding:36px 20px;color:#9CA3AF;font-size:13px;">Loading client contacts...</div>
+      </div>
+    </div>
+
+    <div class="rcp-footer">
+      <span id="test_rcp_footer_count_text" style="font-size:12px;color:#6B7280;">0 recipients selected</span>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="rcp-btn-cancel" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.closeRecipientDrawer();">Close</button>
+        <button type="button" class="rcp-btn-done" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.closeRecipientDrawer();">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
