@@ -10141,6 +10141,16 @@ END:VCALENDAR";
                 }
             }
 
+            $displayRecruiter = $row->posted_by;
+            if (! empty($row->ClientComID) && (int) $row->ClientComID !== (int) $row->real_company_id) {
+                foreach ($job_assign as $ja) {
+                    if ((int) ($ja['company_id'] ?? 0) === (int) $row->ClientComID && ! empty($ja['spok_user_id']) && (int) $ja['spok_user_id'] === (int) ($ja['user_id'] ?? 0)) {
+                        $displayRecruiter = $ja['user_name'];
+                        break;
+                    }
+                }
+            }
+
             $response = $elasticService->getClient()->update([
                 'index' => ELASTIC_INERTVIEW_TRACKER,
                 'id' => $row->id,
@@ -10152,7 +10162,7 @@ END:VCALENDAR";
                         'full_name' => strtolower($row->full_name),
                         'email' => $row->email,
                         'phone' => $row->phone,
-                        'posted_by' => strtolower($row->posted_by),
+                        'posted_by' => strtolower($displayRecruiter ?: ($row->posted_by ?? '')),
                         'submitted_by' => $row->submitted_by,
                         'state_name' => strtolower($row->state_name),
                         'job_company_id' => $row->job_company_id,
@@ -10174,7 +10184,7 @@ END:VCALENDAR";
                         'mailstatus' => $row->mailstatus,
                         'timezone_abbreviation' => $row->timezone_abbreviation,
                         'schedule_to_time' => $row->schedule_to_time,
-                        'source' => $row->source,
+                        'source' => $displayRecruiter ?: ($row->source ?? ''),
                         'posted_by_image' => $row->posted_by_image,
                         'job_application_id' => $row->job_application_id,
                         'master_status_name' => $row->master_status_name,

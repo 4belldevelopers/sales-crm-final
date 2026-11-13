@@ -579,6 +579,24 @@
     font-variant-numeric: tabular-nums !important;
 }
 
+.it-search-clear-btn {
+    border: none !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    padding: 2px 4px !important;
+    border-radius: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+}
+.it-search-clear-btn:hover {
+    color: #0f172a !important;
+    background: #e2e8f0 !important;
+}
 
 .it-search-kbd-hint {
     font-size: 9.5px !important;
@@ -2381,6 +2399,7 @@
               />
               <div class="it-search-right-affix">
                 <span class="it-search-count-pill" id="itSearchMatchCount" style="display:none;" title="Matching interviews count">0 matches</span>
+                <button type="button" class="it-search-clear-btn" id="itSearchClearBtn" title="Clear search (Esc)" aria-label="Clear search" style="display:none;" onclick="clearItSearchInput(event)">✕</button>
                 <kbd class="it-search-kbd-hint" id="itSearchKbdHint" title="Press Ctrl+K to search">Ctrl+K</kbd>
                 <span id="loader_search" class="loader_search hidden_search" style="display:none;"></span>
               </div>
@@ -3358,6 +3377,24 @@ function selectItSortOption(val, text, e, skipFetch) {
 }
 window.selectItSortOption = selectItSortOption;
 
+function clearItSearchInput(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    var $searchInp = $('#kt_tagify_2');
+    $searchInp.val('');
+    $('#itSearchMatchCount').hide();
+    $('#itSearchClearBtn').hide();
+    $('#itSearchKbdHint').show();
+    updateItToolbarIndicators();
+    clearTimeout(itSearchDebounceTimer);
+    itCurrentPage = 1;
+    fetchCandidates(1);
+    $searchInp.focus();
+}
+window.clearItSearchInput = clearItSearchInput;
+
 $(document).ready(function() {
     var $searchInp = $('#kt_tagify_2');
 
@@ -3365,8 +3402,10 @@ $(document).ready(function() {
         var queryVal = ($(this).val() || '').trim();
         if (queryVal.length > 0) {
             $('#itSearchKbdHint').hide();
+            $('#itSearchClearBtn').show();
         } else {
             $('#itSearchMatchCount').hide();
+            $('#itSearchClearBtn').hide();
             $('#itSearchKbdHint').show();
         }
         updateItToolbarIndicators();
@@ -3375,13 +3414,17 @@ $(document).ready(function() {
         itSearchDebounceTimer = setTimeout(function() {
             itCurrentPage = 1;
             fetchCandidates(1);
-        }, 180);
+        }, 250);
     });
 
     $searchInp.on('keydown', function(e) {
         if (e.key === 'Escape') {
             e.preventDefault();
-            $(this).blur();
+            if ($(this).val() !== '') {
+                clearItSearchInput();
+            } else {
+                $(this).blur();
+            }
         } else if (e.key === 'Enter') {
             e.preventDefault();
             clearTimeout(itSearchDebounceTimer);
@@ -3693,6 +3736,7 @@ function resetFilters() {
     $('#kt_tagify_2').val('');
     $('#inputSearch').val('');
     $('#itSearchMatchCount').hide();
+    $('#itSearchClearBtn').hide();
     $('#itSearchKbdHint').show();
     updateItToolbarIndicators();
     itCurrentPage = 1;
@@ -4056,9 +4100,11 @@ function renderInterviewData(response) {
     if (trimmedQuery.length > 0) {
         var matchCount = itLastTotalCount;
         $('#itSearchMatchCount').text(matchCount + (matchCount === 1 ? ' match' : ' matches')).show();
+        $('#itSearchClearBtn').show();
         $('#itSearchKbdHint').hide();
     } else {
         $('#itSearchMatchCount').hide();
+        $('#itSearchClearBtn').hide();
         $('#itSearchKbdHint').show();
     }
 
