@@ -591,7 +591,11 @@
                         $hasResume = !empty($row->resume) || !empty($rowMaps['resume_map'][$candAppId] ?? null);
                     @endphp
                     @if ($hasResume)
-                        <span class="caf-resume-pill" title="Resume uploaded">
+                        <span class="caf-resume-pill jw-open-resume-tab cursor-pointer"
+                              data-row-id="{{ $candAppId }}"
+                              data-wise-id="{{ $wiseId }}"
+                              data-open-tab="resume_cv"
+                              title="Click to view Resume / CV">
                             <i class="fas fa-check-circle"></i><span>Resume</span>
                         </span>
                     @else
