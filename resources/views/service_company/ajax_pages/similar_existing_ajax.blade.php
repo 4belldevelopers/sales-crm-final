@@ -173,16 +173,16 @@
             $current_ectc_mode = @$salaryMode[$jobMode] ?: 'Monthly';
 
             // Notice period
-            $np = $row->np_id;
+            $np = @$row->np_id ?? '';
             if (empty($np)) {
                 $np = 'N/A';
             } else {
-                if ($row->serving_notice_period_mode == 0) {
-                    $np = !empty($row->np_id) ? $row->np_id . ' Days' : 'N/A';
-                } elseif ($row->serving_notice_period_mode == 1) {
-                    if (!empty($row->np_id)) {
-                        $np = GeneralMethod::ymdTodmyNotTime($row->np_id);
-                        if (date('Y-m-d', strtotime($row->np_id)) < date('Y-m-d')) {
+                if ((int) (@$row->serving_notice_period_mode ?? 0) == 0) {
+                    $np = !empty($np) ? $np . ' Days' : 'N/A';
+                } elseif ((int) (@$row->serving_notice_period_mode ?? 0) == 1) {
+                    if (!empty($np)) {
+                        $np = GeneralMethod::ymdTodmyNotTime($np);
+                        if (date('Y-m-d', strtotime($np)) < date('Y-m-d')) {
                             $np = 'Immediate';
                         }
                     } else {
@@ -193,7 +193,7 @@
             $npClass = 'simf-notice-default';
             if ($np === 'Immediate') {
                 $npClass = 'simf-notice-immediate';
-            } elseif (($row->serving_notice_period_mode ?? null) == 0 && !empty($row->np_id)) {
+            } elseif (($row->serving_notice_period_mode ?? null) == 0 && !empty($row->np_id ?? null)) {
                 $npClass = 'simf-notice-days';
             } elseif (($row->serving_notice_period_mode ?? null) == 1) {
                 $np = 'SNP LWD ' . $np;
@@ -594,7 +594,11 @@
                 </div>
                 <div class="simf-bottom-right">
                     @if ($hasResume)
-                        <span class="simf-resume-pill" title="Resume uploaded">
+                        <span class="simf-resume-pill jw-open-resume-tab cursor-pointer"
+                              data-row-id="{{ $candId }}"
+                              data-wise-id="{{ $rawWiseId }}"
+                              data-open-tab="resume_cv"
+                              title="Click to view Resume / CV">
                             <i class="fas fa-check-circle"></i><span>Resume</span>
                         </span>
                     @else

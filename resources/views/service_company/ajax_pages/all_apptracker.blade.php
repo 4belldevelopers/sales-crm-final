@@ -187,29 +187,35 @@
                     $stageIntRow = $intRow;
                 }
             } else {
-                $intRow = DB::table('interview_schedules')
-                    ->select('*')
-                    ->where(function ($q) use ($candAppId, $wiseId) {
-                        if ($candAppId > 0) $q->where('job_application_id', $candAppId);
-                        if ($wiseId > 0) $q->orWhere('interview_job_wise_con_id', $wiseId);
-                    })
-                    ->where('interview_job_id', $rowJobId)
-                    ->orderBy('interview_schedules.id', 'DESC')
-                    ->first();
-                $intRowCount = $intRow ? 1 : 0;
-                $stageIntRow = DB::table('interview_schedules')
-                    ->select('*')
-                    ->where(function ($q) use ($candAppId, $wiseId) {
-                        if ($candAppId > 0) $q->where('job_application_id', $candAppId);
-                        if ($wiseId > 0) $q->orWhere('interview_job_wise_con_id', $wiseId);
-                    })
-                    ->where('interview_job_id', $rowJobId)
-                    ->where('stage', (string) $masterStatusId)
-                    ->where(function ($q) {
-                        $q->whereNull('status')->orWhere('status', '!=', 'canceled');
-                    })
-                    ->orderBy('interview_schedules.id', 'DESC')
-                    ->first();
+                try {
+                    $intRow = DB::table('interview_schedules')
+                        ->select('*')
+                        ->where(function ($q) use ($candAppId, $wiseId) {
+                            if ($candAppId > 0) $q->where('job_application_id', $candAppId);
+                            if ($wiseId > 0) $q->orWhere('interview_job_wise_con_id', $wiseId);
+                        })
+                        ->where('interview_job_id', $rowJobId)
+                        ->orderBy('interview_schedules.id', 'DESC')
+                        ->first();
+                    $intRowCount = $intRow ? 1 : 0;
+                    $stageIntRow = DB::table('interview_schedules')
+                        ->select('*')
+                        ->where(function ($q) use ($candAppId, $wiseId) {
+                            if ($candAppId > 0) $q->where('job_application_id', $candAppId);
+                            if ($wiseId > 0) $q->orWhere('interview_job_wise_con_id', $wiseId);
+                        })
+                        ->where('interview_job_id', $rowJobId)
+                        ->where('stage', (string) $masterStatusId)
+                        ->where(function ($q) {
+                            $q->whereNull('status')->orWhere('status', '!=', 'canceled');
+                        })
+                        ->orderBy('interview_schedules.id', 'DESC')
+                        ->first();
+                } catch (\Throwable $e) {
+                    $intRow = null;
+                    $stageIntRow = null;
+                    $intRowCount = 0;
+                }
             }
             $hasStageInterview = ($stageIntRow !== null);
             $displayIntRow = $stageIntRow ?? $intRow;
@@ -560,7 +566,11 @@
                         $hasResume = !empty($row->resume) || !empty($rowMaps['resume_map'][$candAppId] ?? null);
                     @endphp
                     @if ($hasResume)
-                        <span class="aptk-resume-pill" title="Resume uploaded">
+                        <span class="aptk-resume-pill jw-open-resume-tab cursor-pointer"
+                              data-row-id="{{ $candAppId }}"
+                              data-wise-id="{{ $wiseId }}"
+                              data-open-tab="resume_cv"
+                              title="Click to view Resume / CV">
                             <i class="fas fa-check-circle"></i><span>Resume</span>
                         </span>
                     @else

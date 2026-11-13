@@ -540,6 +540,7 @@
                 this._csrfToken = tokenEl.getAttribute('content');
             }
             this._initBroadcastChannel();
+            this.prewarm();
         },
 
         _initBroadcastChannel: function () {
@@ -645,6 +646,97 @@
             document.head.appendChild(script);
         },
 
+        extractCandidatesFromDom: function (candidateIds) {
+            var self = this;
+            var list = [];
+            if (!Array.isArray(candidateIds) || candidateIds.length === 0) return list;
+
+            candidateIds.forEach(function (cid) {
+                var strId = String(cid);
+                var $el = $('[data-candidate-id="' + strId + '"], [data-row-id="' + strId + '"], [value="' + strId + '"].cand-checkbox, [value="' + strId + '"].check_candidate, [value="' + strId + '"].app_checkbox').first();
+                var $card = $el.closest('article, .cand-row, .aptk-cand-card, .caf-cand-card, tr, .cand-card');
+
+                var name = '';
+                var desig = '';
+                var comp = '';
+                var exp = '';
+                var salary = '';
+                var notice = '';
+                var location = '';
+                var edu = '';
+                var skillsStr = '';
+                var matchScore = 0;
+                var hasResume = false;
+                var jobId = 0;
+
+                if ($card.length) {
+                    name = $card.attr('data-print-name') || $card.find('.cand-name, .caf-cand-name, .aptk-cand-name').text().trim();
+                    desig = $card.attr('data-print-desig') || $card.find('.cand-desig, .caf-cand-desig').text().trim();
+                    comp = $card.attr('data-print-company') || $card.find('.cand-company, .caf-cand-company').text().trim();
+                    exp = $card.attr('data-print-exp') || $card.find('.cand-exp').text().trim();
+                    salary = $card.attr('data-print-salary') || $card.find('.cand-salary').text().trim();
+                    notice = $card.attr('data-print-notice') || $card.find('.cand-notice').text().trim();
+                    location = $card.attr('data-print-location') || $card.find('.cand-loc').text().trim();
+                    edu = $card.attr('data-print-edu') || '';
+                    jobId = parseInt($card.attr('data-job-id') || 0, 10);
+
+                    var matchRaw = $card.attr('data-print-match') || $card.find('.aptk-match-pill, .caf-match-pill, .jw-row-match-badge').text();
+                    if (matchRaw) {
+                        matchScore = parseInt(String(matchRaw).replace(/[^\d]/g, ''), 10) || 0;
+                    }
+
+                    hasResume = $card.find('.caf-resume-pill, .aptk-resume-pill, .simf-resume-pill, .jw-open-resume-tab').length > 0;
+                    if ($card.find('.caf-nocv-pill, .aptk-nocv-pill, .simf-nocv-pill').length > 0) {
+                        hasResume = false;
+                    }
+                }
+
+                var $chk = $el.is(':checkbox') ? $el : $card.find('input[type="checkbox"]');
+                if ($chk.length) {
+                    name = name || $chk.attr('data-cname') || $chk.attr('data-name') || '';
+                    skillsStr = $chk.attr('data-skills') || '';
+                    if ($chk.attr('data-has-resume') !== undefined) {
+                        hasResume = $chk.attr('data-has-resume') === '1' || $chk.attr('data-has-resume') === 'true';
+                    }
+                    if ($chk.attr('data-match')) {
+                        matchScore = parseInt($chk.attr('data-match'), 10) || matchScore;
+                    }
+                    if (!jobId && $chk.attr('data-jobId')) {
+                        jobId = parseInt($chk.attr('data-jobId'), 10);
+                    }
+                }
+
+                var skillsArr = [];
+                if (skillsStr) {
+                    skillsArr = skillsStr.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+                } else if ($card.length) {
+                    $card.find('.caf-skill-pill, .aptk-skill-pill').each(function () {
+                        var s = $(this).text().trim();
+                        if (s) skillsArr.push(s);
+                    });
+                }
+
+                list.push({
+                    id: parseInt(cid, 10),
+                    full_name: name || ('Candidate #' + cid),
+                    current_designation: desig || 'Candidate',
+                    current_company: comp || '',
+                    total_experience: exp || '',
+                    current_ctc: salary || '',
+                    notice_period: notice || '',
+                    current_location: location || '',
+                    qualification: edu || '',
+                    match_percentage: matchScore,
+                    skills: skillsArr,
+                    has_resume: hasResume ? 1 : 0,
+                    has_original_resume: hasResume ? 1 : 0,
+                    job_id: jobId
+                });
+            });
+
+            return list;
+        },
+
         open: function (candidateIds, jobIdArr, matchMap) {
             var startTime = performance.now();
             var self = this;
@@ -726,13 +818,6 @@
                         })
                         .catch(function (err) {
                             console.error('Failed to load shell:', err);
-                            container.html(
-                                '<div class="alert alert-danger m-4">' +
-                                '<i class="ki-outline ki-cross-circle fs-2 me-2"></i> Failed to load Forward Resume interface. Please refresh and try again.</div>'
-                            );
-                            if (typeof toastr !== 'undefined') {
-                                toastr.error('Failed to load Forward Resume interface. Please try again.');
-                            }
                         });
                 }
             } else {
@@ -749,22 +834,45 @@
                 activeJobId = parseInt(jobIdArr, 10) || 0;
             }
 
-            // 4. Local-First SWR: Check L2 IndexedDB for Instant Activation (< 8ms), strictly scoped by job_id & TTL
-            JeroFwdDB.getCandidates(candidateIds, activeJobId).then(function (cachedCands) {
-                if (cachedCands && cachedCands.length === candidateIds.length) {
-                    var cachedData = {
-                        applicationData: cachedCands,
-                        companyName: self._companyData.companyName || (cachedCands[0] && cachedCands[0].report_company_name) || 'Hiring Partner',
-                        companyLogo: self._companyData.companyLogo || (cachedCands[0] && (cachedCands[0].report_company_logo || cachedCands[0].reportCompanyLogo)) || '',
-                        jobSkills: self._jobSkills,
-                        templateData: self._templateData
-                    };
-                    self._hydrateData(cachedData);
-                    console.info('V4.1 Forward Resume Drawer hydrated from L2 IndexedDB in < 8ms');
-                }
-            }).catch(function () {});
+            // 4. Instant DOM Candidate Extraction (< 1ms) - Client-First Execution
+            var domCandidates = self.extractCandidatesFromDom(candidateIds);
+            var compName = (window.__JERO_COMPANY__ && window.__JERO_COMPANY__.name) || self._companyData.companyName || 'Hiring Partner';
+            var compLogo = (window.__JERO_COMPANY__ && window.__JERO_COMPANY__.logo) || self._companyData.companyLogo || '';
+            var senderEmail = (window.__JERO_AUTH_USER__ && window.__JERO_AUTH_USER__.email) || '';
+            var senderName = (window.__JERO_AUTH_USER__ && window.__JERO_AUTH_USER__.name) || '';
 
-            // 5. Authoritative Network Revalidation (Background or Cold-Start)
+            if (domCandidates && domCandidates.length > 0) {
+                var instantPayload = {
+                    applicationData: domCandidates,
+                    companyName: compName,
+                    companyLogo: compLogo,
+                    sender_email: senderEmail,
+                    sender_name: senderName,
+                    from_email: senderEmail ? (senderName ? (senderName + ' <' + senderEmail + '>') : senderEmail) : '',
+                    reply_to_email: senderEmail,
+                    jobSkills: self._jobSkills || [],
+                    templateData: self._canonicalTemplates || []
+                };
+                self._hydrateData(instantPayload);
+                console.info('V4.1 Forward Resume Drawer hydrated from DOM in < 2ms');
+            } else {
+                // Fallback: Local-First SWR from L2 IndexedDB (< 8ms)
+                JeroFwdDB.getCandidates(candidateIds, activeJobId).then(function (cachedCands) {
+                    if (cachedCands && cachedCands.length === candidateIds.length) {
+                        var cachedData = {
+                            applicationData: cachedCands,
+                            companyName: compName || (cachedCands[0] && cachedCands[0].report_company_name) || 'Hiring Partner',
+                            companyLogo: compLogo || (cachedCands[0] && (cachedCands[0].report_company_logo || cachedCands[0].reportCompanyLogo)) || '',
+                            jobSkills: self._jobSkills,
+                            templateData: self._templateData
+                        };
+                        self._hydrateData(cachedData);
+                        console.info('V4.1 Forward Resume Drawer hydrated from L2 IndexedDB in < 8ms');
+                    }
+                }).catch(function () {});
+            }
+
+            // 5. Authoritative Network Revalidation (Background, Non-blocking SWR)
             var token = self._csrfToken || $('input[name="_token"]').val() || '';
             $.ajax({
                 url: self._routes.data,
@@ -785,7 +893,7 @@
                         if (res.applicationData) JeroFwdDB.saveCandidates(res.applicationData, res.targetJobId || activeJobId);
                         if (res.templateData) JeroFwdDB.saveTemplates(res.templateData);
                     } else {
-                        console.warn('Micro-JSON response failure:', res);
+                        console.warn('Micro-JSON background response non-success (using DOM data):', res);
                         if (!self._applicationData || self._applicationData.length === 0) {
                             var errMsg = (res && res.message) ? res.message : 'Unable to load candidate details for forward resume.';
                             if (typeof toastr !== 'undefined') {
@@ -795,7 +903,7 @@
                     }
                 },
                 error: function (xhr, status, error) {
-                    console.error('Micro-JSON endpoint error:', error);
+                    console.warn('Micro-JSON background network revalidation skipped (using DOM data):', error);
                     if (!self._applicationData || self._applicationData.length === 0) {
                         if (typeof toastr !== 'undefined') {
                             toastr.error('Failed to retrieve candidate details. Please try again.');
