@@ -1,0 +1,85 @@
+{
+    "timestamp": "2026-11-13T11:07:31+05:30",
+    "total_iterations": 6000,
+    "duration_sec": 2.591,
+    "throughput_qps": 2316.1,
+    "initial_cold_heap_bytes": 39605512,
+    "post_warmup_heap_bytes": 42668368,
+    "final_heap_bytes": 42671144,
+    "steady_state_heap_delta_bytes": 2776,
+    "steady_state_growth_slope_bytes_per_iteration": 0.5552,
+    "peak_heap_bytes": 46317712,
+    "verdict": "ZERO_LEAK_CONFIRMED",
+    "snapshots": [
+        {
+            "iteration": 0,
+            "elapsed_sec": 0,
+            "heap_bytes": 39605512,
+            "os_allocated_bytes": 41943040,
+            "peak_heap_bytes": 40234536,
+            "redis_used_bytes": 2302696,
+            "gc_runs": 1,
+            "gc_collected": 0
+        },
+        {
+            "iteration": 1000,
+            "elapsed_sec": 0.5,
+            "heap_bytes": 42668368,
+            "os_allocated_bytes": 48234496,
+            "peak_heap_bytes": 46317712,
+            "redis_used_bytes": 2364568,
+            "gc_runs": 1,
+            "gc_collected": 0
+        },
+        {
+            "iteration": 2000,
+            "elapsed_sec": 0.88,
+            "heap_bytes": 42669264,
+            "os_allocated_bytes": 48234496,
+            "peak_heap_bytes": 46317712,
+            "redis_used_bytes": 2364568,
+            "gc_runs": 1,
+            "gc_collected": 0
+        },
+        {
+            "iteration": 3000,
+            "elapsed_sec": 1.27,
+            "heap_bytes": 42669640,
+            "os_allocated_bytes": 48234496,
+            "peak_heap_bytes": 46317712,
+            "redis_used_bytes": 2364568,
+            "gc_runs": 1,
+            "gc_collected": 0
+        },
+        {
+            "iteration": 4000,
+            "elapsed_sec": 1.72,
+            "heap_bytes": 42670016,
+            "os_allocated_bytes": 48234496,
+            "peak_heap_bytes": 46317712,
+            "redis_used_bytes": 2364568,
+            "gc_runs": 1,
+            "gc_collected": 0
+        },
+        {
+            "iteration": 5000,
+            "elapsed_sec": 2.12,
+            "heap_bytes": 42670392,
+            "os_allocated_bytes": 48234496,
+            "peak_heap_bytes": 46317712,
+            "redis_used_bytes": 2364568,
+            "gc_runs": 1,
+            "gc_collected": 0
+        },
+        {
+            "iteration": 6000,
+            "elapsed_sec": 2.59,
+            "heap_bytes": 42670768,
+            "os_allocated_bytes": 48234496,
+            "peak_heap_bytes": 46317712,
+            "redis_used_bytes": 2364568,
+            "gc_runs": 1,
+            "gc_collected": 0
+        }
+    ]
+}

@@ -4500,7 +4500,10 @@ if (!empty($account->detail)) {
     clientId: {{ (int) ($client_id ?? 1) }},
     companyId: {{ (int) ($company_id ?? 1) }},
     originalName: {!! json_encode((string) ($name ?? '')) !!},
-    originalWebsite: {!! json_encode((string) ($website ?? '')) !!}
+    originalWebsite: {!! json_encode((string) ($website ?? '')) !!},
+    isProfileLocked: {!! json_encode((bool) ($profileRestriction['is_locked'] ?? false)) !!},
+    lockMessage: {!! json_encode((string) ($profileRestriction['lock_message'] ?? '')) !!},
+    lockReason: {!! json_encode((string) ($profileRestriction['lock_reason'] ?? '')) !!}
   };
 
   function normalizeClientName(str) {
@@ -7449,13 +7452,16 @@ $('.remove_address').click(function(){
 
   function applyCompanyIntelligenceData(data) {
     if (!data) return;
+    var isProfileLocked = (window.JERO_CLIENT_CONFIG && window.JERO_CLIENT_CONFIG.isProfileLocked);
 
     // 0. Normalize website URL if entered without scheme
-    var currentWeb = ($('#website').val() || '').trim();
-    if (data.website && (!currentWeb || currentWeb.indexOf('http') === -1)) {
-      $('#website').val(data.website).trigger('input').trigger('change');
+    if (!isProfileLocked) {
+      var currentWeb = ($('#website').val() || '').trim();
+      if (data.website && (!currentWeb || currentWeb.indexOf('http') === -1)) {
+        $('#website').val(data.website).trigger('input').trigger('change');
+      }
+      $('#website_clear_btn').show();
     }
-    $('#website_clear_btn').show();
 
     // Clear any previous validation errors on auto-filled attributes
     if (typeof clearFieldError === 'function') {
@@ -7470,8 +7476,8 @@ $('.remove_address').click(function(){
     $('#client_id, #website, #industry, #industry_display, #company_sizes, #company_type, #founded').removeClass('is-invalid');
     $('#jero_ind_input_box, #jero_ind_select_wrap').removeClass('has-validation-error');
 
-    // 1. Company Name (Unconditionally fill on auto-fetch)
-    if (data.name) {
+    // 1. Company Name (Unconditionally fill on auto-fetch unless profile is locked)
+    if (!isProfileLocked && data.name) {
       $('#client_id').val(data.name).trigger('input').trigger('change');
       if (typeof initials === 'function') {
         var initLetters = initials(data.name) || 'AC';
@@ -7485,36 +7491,38 @@ $('.remove_address').click(function(){
     }
 
     // 3. Industry Combobox selection (Taxonomy-driven mapping layer with 160+ master industries)
-    var indCandidates = [];
-    if (data.industry) indCandidates.push(data.industry);
-    if (Array.isArray(data.industries)) indCandidates = indCandidates.concat(data.industries);
-    if (Array.isArray(data.industry_candidates)) indCandidates = indCandidates.concat(data.industry_candidates);
-    if (Array.isArray(data.candidates)) indCandidates = indCandidates.concat(data.candidates);
-    if (data.sector) indCandidates.push(data.sector);
-    if (data.category) indCandidates.push(data.category);
-    if (Array.isArray(data.tags)) indCandidates = indCandidates.concat(data.tags);
+    if (!isProfileLocked) {
+      var indCandidates = [];
+      if (data.industry) indCandidates.push(data.industry);
+      if (Array.isArray(data.industries)) indCandidates = indCandidates.concat(data.industries);
+      if (Array.isArray(data.industry_candidates)) indCandidates = indCandidates.concat(data.industry_candidates);
+      if (Array.isArray(data.candidates)) indCandidates = indCandidates.concat(data.candidates);
+      if (data.sector) indCandidates.push(data.sector);
+      if (data.category) indCandidates.push(data.category);
+      if (Array.isArray(data.tags)) indCandidates = indCandidates.concat(data.tags);
 
-    if (indCandidates.length > 0) {
-      if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.mapAndSelectIndustry === 'function') {
-        try {
-          var mapped = window.JeroIndustryIntelligenceEngine.mapAndSelectIndustry(indCandidates);
-          if (mapped) {
-            $('#industry_display').removeClass('is-invalid');
-            $('#jero_ind_input_box, #jero_ind_select_wrap').removeClass('is-invalid has-validation-error');
-            if (typeof clearFieldError === 'function') {
-              clearFieldError($('#industry'));
-              clearFieldError($('#industry_display'));
+      if (indCandidates.length > 0) {
+        if (window.JeroIndustryIntelligenceEngine && typeof window.JeroIndustryIntelligenceEngine.mapAndSelectIndustry === 'function') {
+          try {
+            var mapped = window.JeroIndustryIntelligenceEngine.mapAndSelectIndustry(indCandidates);
+            if (mapped) {
+              $('#industry_display').removeClass('is-invalid');
+              $('#jero_ind_input_box, #jero_ind_select_wrap').removeClass('is-invalid has-validation-error');
+              if (typeof clearFieldError === 'function') {
+                clearFieldError($('#industry'));
+                clearFieldError($('#industry_display'));
+              }
             }
+          } catch (e) {
+            console.warn('[CompanyIntelligence] mapAndSelectIndustry error:', e);
           }
-        } catch (e) {
-          console.warn('[CompanyIntelligence] mapAndSelectIndustry error:', e);
+        } else {
+          var rawInd = String(indCandidates[0]).trim();
+          $('#industry_display').val(rawInd);
+          $('#jero_ind_input_box').addClass('has-value');
+          $('#jero_ind_clear_btn').css('display', 'inline-flex');
+          $('#jero_ind_kbd').hide();
         }
-      } else {
-        var rawInd = String(indCandidates[0]).trim();
-        $('#industry_display').val(rawInd);
-        $('#jero_ind_input_box').addClass('has-value');
-        $('#jero_ind_clear_btn').css('display', 'inline-flex');
-        $('#jero_ind_kbd').hide();
       }
     }
 
@@ -7535,7 +7543,7 @@ $('.remove_address').click(function(){
     }
 
     // 5. Company Type
-    if (data.company_type) {
+    if (!isProfileLocked && data.company_type) {
       var compTypeNorm = data.company_type.toLowerCase().trim();
       $('#company_type option').each(function () {
         var txt = $(this).text().toLowerCase().trim();

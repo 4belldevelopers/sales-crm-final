@@ -20,6 +20,7 @@ use App\Models\Country;
 use App\Models\JobCategory;
 use App\Services\AccountSettingsService;
 use App\Services\AgencyCommercialTermsService;
+use App\Services\CompanyProfileRestrictionService;
 use App\Services\ElasticService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -668,16 +669,38 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             return null;
         }
 
+        $company_id = auth()->user()->company_id;
+        $company = DB::table('companies')->where('id', $company_id)->first();
+        $restrictionService = app(CompanyProfileRestrictionService::class);
+        $restrictionStatus = $restrictionService->getRestrictionStatus($company);
+
+        // Authoritative Backend Enforcement: Reject modification attempts when restricted fields are locked
+        if ($restrictionStatus['is_locked']) {
+            $lockViolation = $restrictionService->validateModificationAttempt($company, $request->all());
+            if ($lockViolation !== null) {
+                return Reply::error($lockViolation, 'company_profile_locked');
+            }
+        }
+
         // 1. Company Information
         $compName = trim((string) ($request->name ?? ($request->company_name ?? '')));
         if (empty($compName)) {
-            return Reply::error('Company Name is required.', 'company_name');
+            if ($restrictionStatus['is_locked'] && ! empty($company?->company_name)) {
+                $compName = $company->company_name;
+            } else {
+                return Reply::error('Company Name is required.', 'company_name');
+            }
         }
 
         $industryId = $request->industry ?: ($request->industries ?: null);
         $hasIndustry = (! empty($industryId) && (int) $industryId > 0);
         if (! $hasIndustry) {
-            return Reply::error('Industry is required.', 'industry');
+            if ($restrictionStatus['is_locked'] && ! empty($company?->industries)) {
+                $industryId = $company->industries;
+                $hasIndustry = true;
+            } else {
+                return Reply::error('Industry is required.', 'industry');
+            }
         }
 
         $hasSize = (! empty($request->company_size) || ! empty($request->company_sizes));
@@ -687,7 +710,11 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         $hasType = (isset($request->company_type) && $request->company_type !== '') || (isset($request->industries_type) && $request->industries_type !== '');
         if (! $hasType) {
-            return Reply::error('Company Type is required.', 'company_type');
+            if ($restrictionStatus['is_locked'] && (! empty($company?->company_type) || ! empty($company?->industries_type))) {
+                $hasType = true;
+            } else {
+                return Reply::error('Company Type is required.', 'company_type');
+            }
         }
 
         if (empty($request->founded)) {
@@ -740,7 +767,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
     public function edit($id)
     {
         $id = GeneralMethod::value_decrypt($id);
-        // dd($id);
+        $company_id = auth()->user()->company_id;
+        abort_if(! empty($id) && (int) $id !== (int) $company_id, 403);
         $this->switchSection = 0;
         if (isset($_GET['switchSection'])) {
             $this->switchSection = $_GET['switchSection'];
@@ -765,10 +793,10 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 ->get();
         });
         $this->department = $this->industries;
-        $company_id = auth()->user()->company_id;
         $this->company_id = $company_id;
         $this->account = DB::table('companies')->select('*')->where('id', $company_id)->first();
         $this->company = $this->account;
+        $this->profileRestriction = app(CompanyProfileRestrictionService::class)->getRestrictionStatus($this->account);
         $this->company_tags = DB::table('company_tags')->select('*')->where('company_id', $company_id)->get();
 
         $this->industries_type_arr = GeneralMethod::industries_type_arr();
@@ -874,9 +902,12 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
     public function update(Request $request, $id)
     {
+        $targetCompanyId = ! empty($id) ? (is_numeric($id) ? (int) $id : (int) GeneralMethod::value_decrypt($id)) : auth()->user()->company_id;
+        abort_if(! empty($targetCompanyId) && (int) $targetCompanyId !== (int) auth()->user()->company_id, 403);
+
         // Authoritative Server-Side Validation for Company Profile Submission
         if ($validationError = $this->validateCompanySubmission($request)) {
-            if ($request->ajax() || $request->wantsJson()) {
+            if ($request->ajax() || $request->wantsJson() || ($validationError['error_name'] ?? '') === 'company_profile_locked') {
                 return response()->json([
                     'status' => 'error',
                     'message' => $validationError['message'] ?? 'Validation failed',
@@ -1124,27 +1155,41 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $company_logo_path = '';
         $company_id = auth()->user()->company_id;
         $company = Company::withoutGlobalScopes()->findOrFail($company_id);
+
+        $restrictionService = app(CompanyProfileRestrictionService::class);
+        $canEditRestricted = $restrictionService->canEditRestrictedFields($company);
+
         $compName = trim((string) ($request->name ?? ($request->company_name ?? '')));
-        if ($compName !== '') {
-            $company->company_name = $compName;
-        }
-        if (! empty(@$request->website)) {
-            $company->website = @$request->website;
-            if ($request->filled('domain_key')) {
-                $company->domain_key = strtolower(trim($request->domain_key));
-            } elseif (empty($company->domain_key)) {
-                $parsedHost = parse_url($request->website, PHP_URL_HOST) ?? $request->website;
-                $company->domain_key = preg_replace('/^www\./i', '', strtolower(trim($parsedHost)));
+        $industryId = $request->industry ?: ($request->industries ?: null);
+
+        if ($canEditRestricted) {
+            if ($compName !== '') {
+                $company->company_name = $compName;
             }
-        } elseif ($request->filled('domain_key')) {
-            $company->domain_key = strtolower(trim($request->domain_key));
+            if (! empty(@$request->website)) {
+                $company->website = @$request->website;
+                if ($request->filled('domain_key')) {
+                    $company->domain_key = strtolower(trim($request->domain_key));
+                } elseif (empty($company->domain_key)) {
+                    $parsedHost = parse_url($request->website, PHP_URL_HOST) ?? $request->website;
+                    $company->domain_key = preg_replace('/^www\./i', '', strtolower(trim($parsedHost)));
+                }
+            } elseif ($request->filled('domain_key')) {
+                $company->domain_key = strtolower(trim($request->domain_key));
+            }
+            if (! empty($industryId)) {
+                $company->industries = $industryId;
+            }
+            if (! empty(@$request->company_type)) {
+                $company->company_type = @$request->company_type;
+                $company->industries_type = @$request->company_type;
+            } elseif (! empty(@$request->industries_type)) {
+                $company->company_type = @$request->industries_type;
+                $company->industries_type = @$request->industries_type;
+            }
         }
         if ($request->filled('career_page_link') || $request->filled('career_page_url')) {
             $company->career_page_link = $request->career_page_link ?? $request->career_page_url;
-        }
-        $industryId = $request->industry ?: ($request->industries ?: null);
-        if (! empty($industryId)) {
-            $company->industries = $industryId;
         }
         if (! empty(@$request->company_size) || ! empty(@$request->company_sizes)) {
             $company_size = @$request->company_size ?: @$request->company_sizes;
@@ -1153,13 +1198,6 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 $company->company_size_from = $from_size;
                 $company->company_size = $to_size;
             }
-        }
-        if (! empty(@$request->company_type)) {
-            $company->company_type = @$request->company_type;
-            $company->industries_type = @$request->company_type;
-        } elseif (! empty(@$request->industries_type)) {
-            $company->company_type = @$request->industries_type;
-            $company->industries_type = @$request->industries_type;
         }
         if (! empty(@$request->founded)) {
             $company->founded = @$request->founded;
@@ -1325,14 +1363,21 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $clientId = $client_data?->client_id ?? DB::table('clients')->where('company_id', $company_id)->where('self_company', 1)->value('id');
         $client = $clientId ? Client::withoutGlobalScopes()->find($clientId) : null;
         if ($client) {
-            if ($compName !== '') {
-                $client->name = $compName;
-            }
-            if (! empty(@$request->website)) {
-                $client->website = @$request->website;
-            }
-            if (! empty($industryId)) {
-                $client->industry = $industryId;
+            if ($canEditRestricted) {
+                if ($compName !== '') {
+                    $client->name = $compName;
+                }
+                if (! empty(@$request->website)) {
+                    $client->website = @$request->website;
+                }
+                if (! empty($industryId)) {
+                    $client->industry = $industryId;
+                }
+                if (! empty(@$request->company_type)) {
+                    $client->company_type = @$request->company_type;
+                } elseif (! empty(@$request->industries_type)) {
+                    $client->company_type = @$request->industries_type;
+                }
             }
             if (! empty(@$request->company_size) || ! empty(@$request->company_sizes)) {
                 $company_size = @$request->company_size ?: @$request->company_sizes;
@@ -1341,11 +1386,6 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                     $client->company_size_from = $from_size;
                     $client->company_sizes = $to_size;
                 }
-            }
-            if (! empty(@$request->company_type)) {
-                $client->company_type = @$request->company_type;
-            } elseif (! empty(@$request->industries_type)) {
-                $client->company_type = @$request->industries_type;
             }
             if (! empty(@$request->founded)) {
                 $client->founded = @$request->founded;
@@ -2610,6 +2650,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $this->country_code = 'in';
 
         $this->page_mode = 'ONBOARDING';
+        $this->profileRestriction = app(CompanyProfileRestrictionService::class)->getRestrictionStatus($this->account);
 
         return view('service_company.account.onboarding', $this->data);
     }
