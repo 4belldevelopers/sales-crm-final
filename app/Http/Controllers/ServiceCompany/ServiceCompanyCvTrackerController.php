@@ -4586,83 +4586,104 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
         }
 
-        // Option 1 fallback: if attached_cv == 1 and no client uploaded UUIDs, attach candidate original resumes
-        if ($attachedCv === 1 && empty($attachmentUuids) && $formatId === 1 && ! empty($arr)) {
-            $uploadService = app(ForwardResumeUploadService::class);
-            $candidates = DB::table('job_applications')
-                ->whereIn('id', $arr)
-                ->where(function ($q) use ($companyId) {
-                    $q->where('company_id', $companyId)
-                        ->orWhere('thirdparty_company_id', $companyId)
-                        ->orWhereExists(function ($sub) use ($companyId) {
-                            $sub->select(DB::raw(1))
-                                ->from('add_job_wise_condidates')
-                                ->whereColumn('add_job_wise_condidates.candidate_id', 'job_applications.id')
-                                ->where('add_job_wise_condidates.company_id', $companyId);
-                        })
-                        ->orWhereExists(function ($sub) use ($companyId) {
-                            $sub->select(DB::raw(1))
-                                ->from('recommendation_relation')
-                                ->join('add_job_wise_condidates as ajwc', 'ajwc.job_id', '=', 'recommendation_relation.job_id')
-                                ->whereColumn('ajwc.candidate_id', 'job_applications.id')
-                                ->where('recommendation_relation.to_company_id', $companyId);
-                        });
-                })
-                ->get();
-            foreach ($candidates as $cand) {
-                $resumeFile = $cand->resume;
-                if (! empty($resumeFile)) {
-                    $attUuid = (string) Str::uuid();
-                    $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name ?: 'Candidate'));
-                    $r2Key = sprintf('temp-forward/%d/%s.pdf', $companyId, $attUuid);
+        // Resilient Fallback: if attached_cv == 1, ensure ALL selected candidates have attachments
+        if ($attachedCv === 1 && ! empty($arr)) {
+            $handledCandidateIds = [];
+            if (! empty($attachmentUuids)) {
+                $handledCandidateIds = ForwardAttachment::whereIn('uuid', $attachmentUuids)
+                    ->where('company_id', $companyId)
+                    ->pluck('candidate_id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+            }
 
-                    try {
-                        $fileBytes = null;
-                        $originalExt = strtolower(pathinfo(parse_url($resumeFile, PHP_URL_PATH) ?: $resumeFile, PATHINFO_EXTENSION));
-                        $mimeType = 'application/pdf';
-                        if ($originalExt === 'docx') {
-                            $mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-                        } elseif ($originalExt === 'doc') {
-                            $mimeType = 'application/msword';
-                        }
+            $missingCandidateIds = array_values(array_diff($arr, $handledCandidateIds));
+            if (! empty($missingCandidateIds)) {
+                $uploadService = app(ForwardResumeUploadService::class);
+                $candidates = DB::table('job_applications')
+                    ->whereIn('id', $missingCandidateIds)
+                    ->where(function ($q) use ($companyId) {
+                        $q->where('company_id', $companyId)
+                            ->orWhere('thirdparty_company_id', $companyId)
+                            ->orWhereExists(function ($sub) use ($companyId) {
+                                $sub->select(DB::raw(1))
+                                    ->from('add_job_wise_condidates')
+                                    ->whereColumn('add_job_wise_condidates.candidate_id', 'job_applications.id')
+                                    ->where('add_job_wise_condidates.company_id', $companyId);
+                            })
+                            ->orWhereExists(function ($sub) use ($companyId) {
+                                $sub->select(DB::raw(1))
+                                    ->from('recommendation_relation')
+                                    ->join('add_job_wise_condidates as ajwc', 'ajwc.job_id', '=', 'recommendation_relation.job_id')
+                                    ->whereColumn('ajwc.candidate_id', 'job_applications.id')
+                                    ->where('recommendation_relation.to_company_id', $companyId);
+                            });
+                    })
+                    ->get();
+                foreach ($candidates as $cand) {
+                    $resumeFile = $cand->resume;
+                    if (! empty($resumeFile)) {
+                        $attUuid = (string) Str::uuid();
+                        $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name ?: 'Candidate'));
+                        $r2Key = sprintf('temp-forward/%d/%s.pdf', $companyId, $attUuid);
 
-                        if (filter_var($resumeFile, FILTER_VALIDATE_URL)) {
-                            $httpRes = Http::timeout(15)->get($resumeFile);
-                            if ($httpRes->successful() && strlen($httpRes->body()) > 50) {
-                                $fileBytes = $httpRes->body();
-                            }
-                        } elseif (Storage::disk('r2')->exists($resumeFile)) {
-                            $fileBytes = Storage::disk('r2')->get($resumeFile);
-                        } elseif (file_exists(public_path('user-uploads/resumes/'.$resumeFile))) {
-                            $fileBytes = file_get_contents(public_path('user-uploads/resumes/'.$resumeFile));
-                        } elseif (file_exists(public_path('user-uploads/resume/'.$resumeFile))) {
-                            $fileBytes = file_get_contents(public_path('user-uploads/resume/'.$resumeFile));
-                        }
-
-                        if ($fileBytes !== null && strlen($fileBytes) > 50) {
-                            $putSuccess = $uploadService->putR2ObjectBytes($r2Key, $fileBytes, $mimeType);
-                            if (! $putSuccess) {
-                                Storage::disk('r2')->put($r2Key, $fileBytes);
+                        try {
+                            $fileBytes = null;
+                            $originalExt = strtolower(pathinfo(parse_url($resumeFile, PHP_URL_PATH) ?: $resumeFile, PATHINFO_EXTENSION));
+                            $mimeType = 'application/pdf';
+                            if ($originalExt === 'docx') {
+                                $mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                            } elseif ($originalExt === 'doc') {
+                                $mimeType = 'application/msword';
                             }
 
-                            $filenameExt = $originalExt ? ('.'.$originalExt) : '.pdf';
-                            ForwardAttachment::create([
-                                'uuid' => $attUuid,
-                                'company_id' => $companyId,
-                                'candidate_id' => $cand->id,
-                                'r2_object_key' => $r2Key,
-                                'filename' => 'Jeroworks_'.$candName.$filenameExt,
-                                'mime_type' => $mimeType,
-                                'file_size_bytes' => strlen($fileBytes),
-                                'expected_size' => strlen($fileBytes),
-                                'status' => 'VERIFIED',
-                                'verified_at' => now(),
-                                'expires_at' => now()->addMinutes(60),
-                            ]);
-                            $attachmentUuids[] = $attUuid;
+                            $r2CandKey = '';
+                            if (str_starts_with($resumeFile, 'https://file.jero.works/')) {
+                                $r2CandKey = ltrim((string) parse_url($resumeFile, PHP_URL_PATH), '/');
+                            } elseif (! filter_var($resumeFile, FILTER_VALIDATE_URL)) {
+                                $r2CandKey = ltrim($resumeFile, '/');
+                            }
+
+                            if ($r2CandKey !== '' && Storage::disk('r2')->exists($r2CandKey)) {
+                                $fileBytes = Storage::disk('r2')->get($r2CandKey);
+                            } elseif (Storage::disk('r2')->exists($resumeFile)) {
+                                $fileBytes = Storage::disk('r2')->get($resumeFile);
+                            } elseif (filter_var($resumeFile, FILTER_VALIDATE_URL)) {
+                                $httpRes = Http::timeout(15)->get($resumeFile);
+                                if ($httpRes->successful() && strlen($httpRes->body()) > 50) {
+                                    $fileBytes = $httpRes->body();
+                                }
+                            } elseif (file_exists(public_path('user-uploads/resumes/'.$resumeFile))) {
+                                $fileBytes = file_get_contents(public_path('user-uploads/resumes/'.$resumeFile));
+                            } elseif (file_exists(public_path('user-uploads/resume/'.$resumeFile))) {
+                                $fileBytes = file_get_contents(public_path('user-uploads/resume/'.$resumeFile));
+                            }
+
+                            if ($fileBytes !== null && strlen($fileBytes) > 50) {
+                                $putSuccess = $uploadService->putR2ObjectBytes($r2Key, $fileBytes, $mimeType);
+                                if (! $putSuccess) {
+                                    Storage::disk('r2')->put($r2Key, $fileBytes);
+                                }
+
+                                $filenameExt = $originalExt ? ('.'.$originalExt) : '.pdf';
+                                ForwardAttachment::create([
+                                    'uuid' => $attUuid,
+                                    'company_id' => $companyId,
+                                    'candidate_id' => $cand->id,
+                                    'r2_object_key' => $r2Key,
+                                    'filename' => 'Jeroworks_'.$candName.$filenameExt,
+                                    'mime_type' => $mimeType,
+                                    'file_size_bytes' => strlen($fileBytes),
+                                    'expected_size' => strlen($fileBytes),
+                                    'status' => 'VERIFIED',
+                                    'verified_at' => now(),
+                                    'expires_at' => now()->addMinutes(60),
+                                ]);
+                                $attachmentUuids[] = $attUuid;
+                            }
+                        } catch (\Throwable $e) {
+                            \Log::warning('[test_fwd_resume_send] Fallback attachment error: '.$e->getMessage());
                         }
-                    } catch (\Throwable $e) {
-                        \Log::warning('[test_fwd_resume_send] Option 1 fallback attachment error: '.$e->getMessage());
                     }
                 }
             }
@@ -6721,6 +6742,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 );
             }
 
+            $firstCandLoc = $applicationData->isNotEmpty() ? GeneralMethod::resolveCandidateLocationHierarchy($applicationData->first()) : ['city' => '', 'state' => '', 'country' => '', 'location_text' => ''];
             $context1 = [
                 'company_name' => $companyName,
                 'client_company_name' => $client_company_name ?? $companyName,
@@ -6730,6 +6752,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'hr_phone' => $userMobile,
                 'hr_name' => $userName,
                 'hr_email' => $userEmail,
+                'city' => $firstCandLoc['city'],
+                'state' => $firstCandLoc['state'],
+                'country' => $firstCandLoc['country'],
+                'current_location' => $firstCandLoc['location_text'],
                 'reason_for_job_change' => $firstReasonForChange,
                 'screening_qa_tracker' => $screening_qa_tracker_html,
                 'career_insights_tracker' => $career_insights_tracker_html,

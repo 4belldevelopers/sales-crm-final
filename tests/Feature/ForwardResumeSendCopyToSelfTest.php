@@ -327,4 +327,79 @@ class ForwardResumeSendCopyToSelfTest extends TestCase
             'DB::transaction closure must import $copyToSelf in use() statement'
         );
     }
+
+    /**
+     * Test 8: Verify test_fwd_resume_send attaches candidate resumes for ANY format (e.g. default format 46)
+     * when client attachment UUIDs are empty, guaranteeing no emails are dispatched without attachments.
+     */
+    public function test_fwd_resume_send_attaches_resumes_for_any_format_when_client_uuids_empty(): void
+    {
+        $reflection = new \ReflectionClass(\App\Http\Controllers\ServiceCompany\ServiceCompanyCvTrackerController::class);
+        $method = $reflection->getMethod('test_fwd_resume_send');
+        $fileName = $method->getFileName();
+        $startLine = $method->getStartLine();
+        $length = $method->getEndLine() - $startLine;
+
+        $source = implode('', array_slice(file($fileName), $startLine - 1, $length));
+
+        // Must NOT restrict fallback attachment to $formatId === 1
+        $this->assertDoesNotMatchRegularExpression(
+            '/\$attachedCv\s*===\s*1\s*&&\s*empty\(\$attachmentUuids\)\s*&&\s*\$formatId\s*===\s*1/',
+            $source,
+            'Fallback attachment must not be restricted strictly to format 1; all formats must have resume attached'
+        );
+        $this->assertMatchesRegularExpression(
+            '/if\s*\(\s*\$attachedCv\s*===\s*1\s*&&\s*!\s*empty\(\$arr\)\s*\)/',
+            $source,
+            'Fallback attachment must evaluate $attachedCv === 1 && ! empty($arr) to cover all selected candidates'
+        );
+    }
+
+    /**
+     * Test 9: Verify GeneralMethod::resolveCandidateLocationHierarchy resolves city accurately.
+     */
+    public function test_resolve_candidate_location_hierarchy_resolves_city_accurately(): void
+    {
+        if (! Schema::hasTable('countries')) {
+            Schema::create('countries', function (Blueprint $table) {
+                $table->id();
+                $table->string('country_name');
+            });
+        }
+        if (! Schema::hasTable('state_list')) {
+            Schema::create('state_list', function (Blueprint $table) {
+                $table->id();
+                $table->string('state');
+                $table->unsignedBigInteger('country_id');
+            });
+        }
+        if (! Schema::hasTable('city_list')) {
+            Schema::create('city_list', function (Blueprint $table) {
+                $table->unsignedBigInteger('city_id')->primary();
+                $table->string('city');
+                $table->unsignedBigInteger('state_id');
+            });
+        }
+
+        DB::table('countries')->insertOrIgnore(['id' => 101, 'country_name' => 'India']);
+        DB::table('state_list')->insertOrIgnore(['id' => 4022, 'state' => 'Uttar Pradesh', 'country_id' => 101]);
+        DB::table('city_list')->insertOrIgnore(['city_id' => 133230, 'city' => 'Noida', 'state_id' => 4022]);
+
+        $mockCand = (object) [
+            'id' => 99999,
+            'full_name' => 'Test Location Candidate',
+            'city_id' => 133230,
+            'city' => '',
+            'state' => '4022',
+            'country' => '101',
+        ];
+
+        $loc = \App\Helper\GeneralMethod::resolveCandidateLocationHierarchy($mockCand);
+
+        $this->assertEquals('Noida', $loc['city']);
+        $this->assertEquals('Uttar Pradesh', $loc['state']);
+        $this->assertEquals('India', $loc['country']);
+        $this->assertStringContainsString('Noida', $loc['location_text']);
+        $this->assertStringContainsString('Uttar Pradesh', $loc['location_text']);
+    }
 }
