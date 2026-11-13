@@ -4078,7 +4078,20 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 ->whereIn('id', $candidateIds)
                 ->where(function ($q) use ($companyId) {
                     $q->where('company_id', $companyId)
-                        ->orWhere('thirdparty_company_id', $companyId);
+                        ->orWhere('thirdparty_company_id', $companyId)
+                        ->orWhereExists(function ($sub) use ($companyId) {
+                            $sub->select(DB::raw(1))
+                                ->from('add_job_wise_condidates')
+                                ->whereColumn('add_job_wise_condidates.job_application_id', 'job_applications.id')
+                                ->where('add_job_wise_condidates.company_id', $companyId);
+                        })
+                        ->orWhereExists(function ($sub) use ($companyId) {
+                            $sub->select(DB::raw(1))
+                                ->from('recommendation_relation')
+                                ->join('add_job_wise_condidates as ajwc', 'ajwc.job_id', '=', 'recommendation_relation.job_id')
+                                ->whereColumn('ajwc.job_application_id', 'job_applications.id')
+                                ->where('recommendation_relation.to_company_id', $companyId);
+                        });
                 })
                 ->get();
             $candidates = $dbCandidates;
@@ -4608,14 +4621,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                             ->orWhereExists(function ($sub) use ($companyId) {
                                 $sub->select(DB::raw(1))
                                     ->from('add_job_wise_condidates')
-                                    ->whereColumn('add_job_wise_condidates.candidate_id', 'job_applications.id')
+                                    ->whereColumn('add_job_wise_condidates.job_application_id', 'job_applications.id')
                                     ->where('add_job_wise_condidates.company_id', $companyId);
                             })
                             ->orWhereExists(function ($sub) use ($companyId) {
                                 $sub->select(DB::raw(1))
                                     ->from('recommendation_relation')
                                     ->join('add_job_wise_condidates as ajwc', 'ajwc.job_id', '=', 'recommendation_relation.job_id')
-                                    ->whereColumn('ajwc.candidate_id', 'job_applications.id')
+                                    ->whereColumn('ajwc.job_application_id', 'job_applications.id')
                                     ->where('recommendation_relation.to_company_id', $companyId);
                             });
                     })
@@ -9295,7 +9308,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
      * Tenancy & Isolation: Scoped to candidates and job ID in authorized request context.
      *
      * @param  \Illuminate\Support\Collection|array  $applicationData
-     * @param  int|null  $targetJobId
      * @return string
      */
     protected function buildSkillsExperienceTrackerHtml($applicationData, ?int $targetJobId = null)
