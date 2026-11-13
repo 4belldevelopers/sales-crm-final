@@ -7,8 +7,30 @@
 --}}
 @php
     use App\Helper\GeneralMethod;
-    use App\Services\AppTrackerCardPresenter;
     use Carbon\Carbon;
+
+    $itClean = function($val) {
+        $trimmed = trim((string) ($val ?? ''));
+        $emptyTokens = ['', '-', '--', '---', '----', '—', 'null', 'none', 'n/a', 'na'];
+        return (in_array(mb_strtolower($trimmed), $emptyTokens, true)) ? '' : $trimmed;
+    };
+
+    $itSubmittedAgo = function($rawDate) use ($itClean) {
+        $raw = $itClean($rawDate);
+        if ($raw === '' || $raw === '0000-00-00 00:00:00') {
+            return '';
+        }
+        try {
+            $parsed = Carbon::parse($raw);
+            $days = (int) $parsed->diffInDays(now());
+            if ($days >= 1 && $days < 30) {
+                return $days . ' ' . ($days === 1 ? 'day' : 'days') . ' ago';
+            }
+            return $parsed->diffForHumans();
+        } catch (\Throwable $e) {
+            return '';
+        }
+    };
 
     $feedback_status   = $feedback_status ?? GeneralMethod::feedback_status();
     $followupMap       = $followupMap ?? collect();
@@ -60,7 +82,7 @@
             $candMeta    = ($wiseId > 0 && isset($candidateMetaMap['by_wise'][$wiseId]))
                 ? $candidateMetaMap['by_wise'][$wiseId]
                 : (($jobAppId > 0 && isset($candidateMetaMap['by_app'][$jobAppId])) ? $candidateMetaMap['by_app'][$jobAppId] : []);
-            $candCurrentCompany = AppTrackerCardPresenter::cleanText(
+            $candCurrentCompany = $itClean(
                 $candMeta['current_company'] ?? (@$row->current_company ?? (@$row->cur_companyname ?? ''))
             );
             $candCurrentCompany = $candCurrentCompany !== '' ? ucwords($candCurrentCompany) : '';
@@ -194,10 +216,10 @@
                         ? $row->from_company_name
                         : (!empty($row->uc_company_name) ? $row->uc_company_name : (@$row->company_name ?? ''))));
 
-            $ownerRecruiterName = AppTrackerCardPresenter::cleanText(ucwords((string) $rowpostedby));
-            $ownerCompanyName   = AppTrackerCardPresenter::cleanText(ucwords((string) $post_company_name));
-            $submittedRaw       = AppTrackerCardPresenter::cleanText($candMeta['submitted_at'] ?? (@$row->submitted_at ?? (@$row->created_at ?? '')));
-            $submittedAgo       = AppTrackerCardPresenter::resolveSubmittedAgo((object) ['created_at' => $submittedRaw]);
+            $ownerRecruiterName = $itClean(ucwords((string) $rowpostedby));
+            $ownerCompanyName   = $itClean(ucwords((string) $post_company_name));
+            $submittedRaw       = $itClean($candMeta['submitted_at'] ?? (@$row->submitted_at ?? (@$row->created_at ?? '')));
+            $submittedAgo       = $itSubmittedAgo($submittedRaw);
 
             // ── 7. Stage & Substage ────────────────────────────────────────
             $childStageName = '';

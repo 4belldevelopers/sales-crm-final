@@ -31,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
+<<<<<<< HEAD
         if (! class_exists(\App\Services\CompanyProfileRestrictionService::class, false)) {
             $restrictionPath = app_path('Services/CompanyProfileRestrictionService.php');
             if (file_exists($restrictionPath)) {
@@ -40,6 +41,8 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(\App\Services\CompanyProfileRestrictionService::class);
 
+=======
+>>>>>>> b668fffd0a7bcf8f6ee0aa21cf002288fc4a6910
         $this->registerActions();
         $this->app->bind(
             \App\Services\ForwardResume\Providers\ForwardResumeProvider::class,

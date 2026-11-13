@@ -4,6 +4,7 @@ use App\Models\Company;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 
+<<<<<<< HEAD
 // Universal fallback autoloader for App\ namespace:
 // Guarantees newly created classes (Services, Presenters, Actions, Models) resolve
 // seamlessly on servers running authoritative/optimized Composer classmaps before 'composer dump-autoload'.
@@ -22,11 +23,16 @@ spl_autoload_register(function ($class) {
 
 if (! class_exists(\App\Services\AppTrackerCardPresenter::class, false)) {
     $presenterPath = dirname(__DIR__).'/Services/AppTrackerCardPresenter.php';
+=======
+if (! class_exists(\App\Services\AppTrackerCardPresenter::class, false)) {
+    $presenterPath = __DIR__ . '/../Services/AppTrackerCardPresenter.php';
+>>>>>>> b668fffd0a7bcf8f6ee0aa21cf002288fc4a6910
     if (file_exists($presenterPath)) {
         require_once $presenterPath;
     }
 }
 
+<<<<<<< HEAD
 if (! class_exists(\App\Services\CompanyProfileRestrictionService::class, false)) {
     $restrictionServicePath = dirname(__DIR__).'/Services/CompanyProfileRestrictionService.php';
     if (file_exists($restrictionServicePath)) {
@@ -35,6 +41,9 @@ if (! class_exists(\App\Services\CompanyProfileRestrictionService::class, false)
 }
 
 if (! function_exists('superAdmin')) {
+=======
+if (!function_exists('superAdmin')) {
+>>>>>>> b668fffd0a7bcf8f6ee0aa21cf002288fc4a6910
     function superAdmin()
     {
         return auth()->user();

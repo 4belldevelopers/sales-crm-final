@@ -2707,6 +2707,7 @@
 var itSearchDebounceTimer = null;
 var itLastTotalCount = 0;
 var itStatsByType = {};
+var itLastAppliedSort = '';
 
 function updateItToolbarIndicators() {
     var count = 0;
@@ -3365,7 +3366,7 @@ var itCurrentXhr = null;
 // ── JeroInterviewScheduleLocalStore — Native Browser IndexedDB Engine ────────
 const JeroInterviewScheduleLocalStore = (function() {
     const DB_NAME = 'jero_interview_schedule_db';
-    const DB_VERSION = 6; // Bumped for 5 KPIs, Company Type filter, and unified toolbar reset
+    const DB_VERSION = 7; // Bumped to v7 with onblocked, auto-timeout, and connection close guards
     const CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
     const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
     const CACHE_TTL_MS = 15 * 60 * 1000;
@@ -3377,21 +3378,49 @@ const JeroInterviewScheduleLocalStore = (function() {
         if (dbPromise) return dbPromise;
 
         dbPromise = new Promise((resolve) => {
+            let settled = false;
+            const timer = setTimeout(function() {
+                if (!settled) {
+                    settled = true;
+                    console.warn('JeroInterviewScheduleLocalStore: DB open timed out, falling back to network');
+                    resolve(null);
+                }
+            }, 500);
+
             try {
                 const req = window.indexedDB.open(DB_NAME, DB_VERSION);
-                req.onupgradeneeded = function(e) {
-                    const db = e.target.result;
-                    if (!db.objectStoreNames.contains('schedule_cache')) {
-                        db.createObjectStore('schedule_cache', { keyPath: 'cache_key' });
-                    } else {
-                        try { e.target.transaction.objectStore('schedule_cache').clear(); } catch (err) {}
+                req.onblocked = function() {
+                    if (!settled) {
+                        settled = true;
+                        clearTimeout(timer);
+                        console.warn('JeroInterviewScheduleLocalStore: DB open blocked, falling back to network');
+                        resolve(null);
                     }
-                    if (!db.objectStoreNames.contains('meta')) {
-                        db.createObjectStore('meta', { keyPath: 'id' });
+                };
+                req.onupgradeneeded = function(e) {
+                    try {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('schedule_cache')) {
+                            db.createObjectStore('schedule_cache', { keyPath: 'cache_key' });
+                        } else {
+                            try { e.target.transaction.objectStore('schedule_cache').clear(); } catch (err) {}
+                        }
+                        if (!db.objectStoreNames.contains('meta')) {
+                            db.createObjectStore('meta', { keyPath: 'id' });
+                        }
+                    } catch (err) {
+                        console.warn('JeroInterviewScheduleLocalStore upgrade error:', err);
                     }
                 };
                 req.onsuccess = function(e) {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
                     const db = e.target.result;
+                    db.onversionchange = function() {
+                        try { db.close(); } catch (err) {}
+                        dbPromise = null;
+                    };
                     try {
                         const tx = db.transaction(['meta'], 'readonly');
                         const metaStore = tx.objectStore('meta');
@@ -3412,9 +3441,19 @@ const JeroInterviewScheduleLocalStore = (function() {
                     }
                     resolve(db);
                 };
-                req.onerror = function() { resolve(null); };
+                req.onerror = function() {
+                    if (!settled) {
+                        settled = true;
+                        clearTimeout(timer);
+                        resolve(null);
+                    }
+                };
             } catch (err) {
-                resolve(null);
+                if (!settled) {
+                    settled = true;
+                    clearTimeout(timer);
+                    resolve(null);
+                }
             }
         });
 
@@ -3423,32 +3462,42 @@ const JeroInterviewScheduleLocalStore = (function() {
 
     return {
         get: async function(key) {
-            const db = await getDB();
-            if (!db || !key) return null;
-            return new Promise((resolve) => {
-                try {
-                    const tx = db.transaction(['schedule_cache'], 'readonly');
-                    const store = tx.objectStore('schedule_cache');
-                    const req = store.get(key);
-                    req.onsuccess = function() {
-                        const res = req.result;
-                        const lastMut = parseInt(localStorage.getItem('jero_it_last_mutation') || '0', 10);
-                        if (res && (Date.now() - res.timestamp < CACHE_TTL_MS) && (!lastMut || res.timestamp > lastMut)) {
-                            resolve(res.payload);
-                        } else {
-                            resolve(null);
-                        }
-                    };
-                    req.onerror = function() { resolve(null); };
-                } catch (e) {
-                    resolve(null);
-                }
-            });
+            try {
+                const db = await getDB();
+                if (!db || !key) return null;
+                return new Promise((resolve) => {
+                    const timer = setTimeout(function() { resolve(null); }, 350);
+                    try {
+                        const tx = db.transaction(['schedule_cache'], 'readonly');
+                        tx.onerror = function() { clearTimeout(timer); resolve(null); };
+                        tx.onabort = function() { clearTimeout(timer); resolve(null); };
+                        const store = tx.objectStore('schedule_cache');
+                        const req = store.get(key);
+                        req.onsuccess = function() {
+                            clearTimeout(timer);
+                            const res = req.result;
+                            const lastMut = parseInt(localStorage.getItem('jero_it_last_mutation') || '0', 10);
+                            if (res && res.payload && typeof res.payload === 'object' && typeof res.payload.html === 'string' && (Date.now() - res.timestamp < CACHE_TTL_MS) && (!lastMut || res.timestamp > lastMut)) {
+                                resolve(res.payload);
+                            } else {
+                                resolve(null);
+                            }
+                        };
+                        req.onerror = function() { clearTimeout(timer); resolve(null); };
+                    } catch (e) {
+                        clearTimeout(timer);
+                        resolve(null);
+                    }
+                });
+            } catch (err) {
+                return null;
+            }
         },
         set: async function(key, payload) {
-            const db = await getDB();
-            if (!db || !key || !payload) return;
+            if (!key || !payload || typeof payload !== 'object' || typeof payload.html !== 'string') return;
             try {
+                const db = await getDB();
+                if (!db) return;
                 const tx = db.transaction(['schedule_cache'], 'readwrite');
                 const store = tx.objectStore('schedule_cache');
                 store.put({
@@ -3459,9 +3508,9 @@ const JeroInterviewScheduleLocalStore = (function() {
             } catch (e) {}
         },
         purge: async function() {
-            const db = await getDB();
-            if (!db) return;
             try {
+                const db = await getDB();
+                if (!db) return;
                 const tx = db.transaction(['schedule_cache'], 'readwrite');
                 tx.objectStore('schedule_cache').clear();
             } catch (e) {}
@@ -3601,17 +3650,41 @@ function renderInterviewData(response) {
     $('.loader_search').css({ display: 'none' });
     $('.page-loader').css('display', 'none');
 
-    $('#Interview-trackers').html(response.html);
-    $('#pagination').html(response.pagination);
+    if (!response || typeof response !== 'object') {
+        $('#showingText').text('0 interviews');
+        $('#Interview-trackers').html(
+            '<div class="it-empty-card">' +
+            '  <div class="it-empty-icon"><i class="fas fa-calendar-times"></i></div>' +
+            '  <div class="it-empty-title">No Interviews Scheduled</div>' +
+            '  <div class="it-empty-sub">No candidate interviews match your selected criteria.</div>' +
+            '</div>'
+        );
+        return;
+    }
+
+    var htmlContent = (typeof response.html === 'string' && response.html.trim() !== '')
+        ? response.html
+        : '<div class="it-empty-card">' +
+          '  <div class="it-empty-icon"><i class="fas fa-calendar-times"></i></div>' +
+          '  <div class="it-empty-title">No Interviews Scheduled</div>' +
+          '  <div class="it-empty-sub">No candidate interviews match your selected criteria.</div>' +
+          '</div>';
+
+    $('#Interview-trackers').html(htmlContent);
+    $('#pagination').html(response.pagination || '');
 
     itLastTotalCount = parseInt(response.total ?? 0, 10) || 0;
 
-    if (response.from !== undefined && response.to !== undefined && response.total !== undefined) {
+    if (itLastTotalCount === 0) {
+        $('#showingText').text('0 interviews');
+    } else if (response.from !== undefined && response.to !== undefined) {
         $('#showingText').text(
             'Showing ' + response.from + ' to ' + response.to + ' of ' + response.total + ' interviews'
         );
     } else if (response.total !== undefined) {
         $('#showingText').text('Showing ' + response.total + ' interviews');
+    } else {
+        $('#showingText').text('0 interviews');
     }
 
     var trimmedQuery = ($('#kt_tagify_2').val() || '').trim();
@@ -3766,15 +3839,24 @@ async function fetchCandidates(page, search, forceRefresh) {
         }
 
         if (itRamCache.has(cacheKey)) {
-            renderInterviewData(itRamCache.get(cacheKey));
-            return;
+            var rCached = itRamCache.get(cacheKey);
+            if (rCached && typeof rCached === 'object' && typeof rCached.html === 'string') {
+                renderInterviewData(rCached);
+                return;
+            } else {
+                itRamCache.delete(cacheKey);
+            }
         }
 
-        var idbCached = await JeroInterviewScheduleLocalStore.get(cacheKey);
-        if (idbCached) {
-            itRamCache.set(cacheKey, idbCached);
-            renderInterviewData(idbCached);
-            return;
+        try {
+            var idbCached = await JeroInterviewScheduleLocalStore.get(cacheKey);
+            if (idbCached && typeof idbCached === 'object' && typeof idbCached.html === 'string') {
+                itRamCache.set(cacheKey, idbCached);
+                renderInterviewData(idbCached);
+                return;
+            }
+        } catch (idbErr) {
+            console.warn('[JeroInterviewScheduleLocalStore] read error:', idbErr);
         }
     }
 
@@ -3793,15 +3875,17 @@ async function fetchCandidates(page, search, forceRefresh) {
         type: 'GET',
         data: payload,
         success: function(response) {
-            if (itRamCache.size >= IT_MAX_RAM_CACHE) {
-                var oldestKey = itRamCache.keys().next().value;
-                itRamCache.delete(oldestKey);
+            if (response && typeof response === 'object' && typeof response.html === 'string') {
+                if (itRamCache.size >= IT_MAX_RAM_CACHE) {
+                    var oldestKey = itRamCache.keys().next().value;
+                    itRamCache.delete(oldestKey);
+                }
+                itRamCache.set(cacheKey, response);
+                JeroInterviewScheduleLocalStore.set(cacheKey, response);
             }
-            itRamCache.set(cacheKey, response);
-            JeroInterviewScheduleLocalStore.set(cacheKey, response);
             renderInterviewData(response);
         },
-        error: function(xhr, status) {
+        error: function(xhr, status, errorThrown) {
             if (status === 'abort') {
                 return;
             }
@@ -3809,15 +3893,34 @@ async function fetchCandidates(page, search, forceRefresh) {
             $('.loadingMessage').css({ display: 'none' });
             $('.loader_search').css({ display: 'none' });
             $('.page-loader').css('display', 'none');
+            $('#showingText').text('0 interviews');
 
             if (xhr.status === 419) {
                 itHandleAjaxFailure(xhr);
+            } else if (xhr.status === 403) {
+                $('#Interview-trackers').html(
+                    '<div class="it-empty-card">' +
+                    '  <div class="it-empty-icon" style="background:#fee2e2!important;color:#dc2626!important;"><i class="fas fa-lock"></i></div>' +
+                    '  <div class="it-empty-title">Access Restricted</div>' +
+                    '  <div class="it-empty-sub">You do not have permission to view interview schedules. Please contact your administrator.</div>' +
+                    '</div>'
+                );
             } else if (!navigator.onLine || xhr.status === 0) {
                 $('#Interview-trackers').html(
                     '<div class="it-empty-card">' +
                     '  <div class="it-empty-icon" style="background:#fef2f2!important;color:#dc2626!important;"><i class="fas fa-wifi"></i></div>' +
                     '  <div class="it-empty-title">Network Connection Lost</div>' +
                     '  <div class="it-empty-sub">You are currently offline. Check your internet connection and click Sync.</div>' +
+                    '</div>'
+                );
+            } else {
+                var errDetail = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Please try syncing again or refreshing the page.';
+                $('#Interview-trackers').html(
+                    '<div class="it-empty-card">' +
+                    '  <div class="it-empty-icon" style="background:#fee2e2!important;color:#dc2626!important;"><i class="fas fa-exclamation-triangle"></i></div>' +
+                    '  <div class="it-empty-title">Unable to Load Interviews</div>' +
+                    '  <div class="it-empty-sub">' + $('<div>').text(errDetail).html() + '</div>' +
+                    '  <div style="margin-top:14px;"><button type="button" class="btn btn-sm btn-light-primary" onclick="fetchCandidates(1, \'\', true)"><i class="fas fa-sync-alt me-1"></i> Retry Sync</button></div>' +
                     '</div>'
                 );
             }
