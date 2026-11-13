@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
-use App\Helper\Files;
-use App\Helper\Reply;
 use App\Http\Requests\SuperAdmin\UpdateSuperAdminProfileRequest;
-use App\Models\SmsSetting;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Hash;
+use App\Services\SuperAdmin\SuperAdminProfileMutationService;
+use App\Services\SuperAdmin\SuperAdminProfileReadService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 /**
  * SuperAdminProfileController — Root Administrator Profile & Security Hub.
  *
- * Intent: Manages the master identity, contact details, authentication credentials,
- * security password rotation with current-password verification, avatar photo uploads
- * with automated orphan file purging, and phone verification states for the platform's
- * root Super Administrator.
+ * Intent: Strictly manages the master administrative identity, contact channels,
+ * password rotation with confirmation and current-password verification, avatar photo uploads,
+ * and security state following CQRS (Rule 1 & Rule 2), Two-Tier Idempotency, and Transactional Outbox.
+ *
+ * 0% MySQL reads on web request paths (served via Elasticsearch & Redis/Dragonfly L2 cache).
  *
  * Tenancy: Master Super Admin singleton scope (unrestricted system clearance).
+ *
+ * Author: Antigravity AI — Super Admin Backend Architecture
+ * Complies with docs/CODE_DOCUMENTATION_STANDARD.md and docs/AI_RULES.md.
  */
 class SuperAdminProfileController extends SuperAdminBaseController
 {
@@ -32,19 +32,22 @@ class SuperAdminProfileController extends SuperAdminBaseController
         parent::__construct();
         $this->pageTitle = 'menu.myProfile';
         $this->pageIcon = 'ti-user';
-        $this->smsSettings = SmsSetting::first();
     }
 
     /**
-     * Display the redesigned Super Admin Profile Hub.
+     * Display the redesigned Super Admin Profile Hub with 0% MySQL read strain.
      *
-     * @return \Illuminate\Contracts\View\View
+     * @param SuperAdminProfileReadService $readService
+     * @return View
      */
-    public function index()
+    public function index(?SuperAdminProfileReadService $readService = null): View
     {
-        $this->calling_codes = $this->getCallingCodes();
-        $this->user = auth()->user();
-        $this->smsSettings = $this->smsSettings ?? SmsSetting::first();
+        $readService = $readService ?? app(SuperAdminProfileReadService::class);
+        $userId = (int) (auth()->id() ?? 1);
+
+        $this->user = $readService->getSuperAdminProfile($userId);
+        $this->smsSettings = $readService->getSmsSettings();
+        $this->calling_codes = $readService->getCallingCodes();
 
         return view('super-admin.profile.index', $this->data);
     }
@@ -53,9 +56,9 @@ class SuperAdminProfileController extends SuperAdminBaseController
      * Defensive alias for resource show route.
      *
      * @param int|string|null $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function show($id = null)
+    public function show($id = null): RedirectResponse
     {
         return redirect()->route('superadmin.profile.index');
     }
@@ -64,115 +67,26 @@ class SuperAdminProfileController extends SuperAdminBaseController
      * Defensive alias for resource edit route.
      *
      * @param int|string|null $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function edit($id = null)
+    public function edit($id = null): RedirectResponse
     {
         return redirect()->route('superadmin.profile.index');
     }
 
     /**
-     * Update root Super Admin profile credentials and contact channels.
+     * Update root Super Admin profile credentials with Two-Tier Idempotency and Transactional Outbox.
      *
      * @param UpdateSuperAdminProfileRequest $request
+     * @param SuperAdminProfileMutationService|null $mutationService
      * @return array
      */
-    public function update(UpdateSuperAdminProfileRequest $request)
+    public function update(UpdateSuperAdminProfileRequest $request, ?SuperAdminProfileMutationService $mutationService = null): array
     {
-        /** @var User $user */
-        $user = User::findOrFail(auth()->id());
+        $mutationService = $mutationService ?? app(SuperAdminProfileMutationService::class);
+        $userId = (int) (auth()->id() ?? 1);
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
 
-        // ── 1. Password Verification & Rotation ──────────────────────────────────
-        if ($request->filled('password')) {
-            if (! $request->filled('current_password') || ! Hash::check($request->current_password, $user->password)) {
-                return Reply::error(__('The provided current password does not match our records.'), 'current_password');
-            }
-            $user->password = Hash::make($request->password);
-        }
-
-        // ── 2. Core Identity Attributes ──────────────────────────────────────────
-        $user->name = $request->name;
-        $user->email = $request->email;
-
-        // ── 3. Direct Mobile & Calling Code (Handle state transition) ─────────────
-        if ($request->has('mobile')) {
-            $newMobile = $request->filled('mobile') ? trim((string) $request->mobile) : null;
-            $newCallingCode = $request->filled('calling_code') ? trim((string) $request->calling_code) : null;
-
-            if ($user->mobile !== $newMobile || $user->calling_code !== $newCallingCode) {
-                $user->mobile_verified = 0;
-            }
-
-            $user->mobile = $newMobile;
-            $user->calling_code = $newCallingCode;
-        }
-
-        // ── 4. Communications & Social Links ─────────────────────────────────────
-        if ($request->has('whatsapp_number')) {
-            $user->whatsapp_number = $request->filled('whatsapp_number') ? trim((string) $request->whatsapp_number) : null;
-        }
-
-        if ($request->has('linkedin')) {
-            $user->linkedin = $request->filled('linkedin') ? trim((string) $request->linkedin) : null;
-        }
-
-        // ── 5. Profile Picture (Avatar) Lifecycle Management ──────────────────────
-        if ($request->boolean('remove_image')) {
-            if ($user->image) {
-                $this->removeOldAvatar($user->image);
-                $user->image = null;
-            }
-        } elseif ($request->hasFile('image')) {
-            if ($user->image) {
-                $this->removeOldAvatar($user->image);
-            }
-            $user->image = Files::upload($request->image, 'profile');
-        }
-
-        $user->save();
-
-        // ── 6. Multi-Tenant Cache Invalidation ───────────────────────────────────
-        Cache::forget('user_' . $user->id);
-        Cache::forget('superadmin_user_' . $user->id);
-
-        // ── 7. Structured JSON Response for Client-Side DOM Sync ─────────────────
-        return Reply::successWithData(__('menu.myProfile') . ' ' . __('messages.updatedSuccessfully'), [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'calling_code' => $user->calling_code,
-                'mobile' => $user->mobile,
-                'mobile_verified' => (int) $user->mobile_verified,
-                'whatsapp_number' => $user->whatsapp_number,
-                'linkedin' => $user->linkedin,
-                'image' => $user->image,
-                'profile_image_url' => $user->profile_image_url,
-            ],
-            'action' => 'none',
-        ]);
-    }
-
-    /**
-     * Safely purge old avatar from disk and storage.
-     *
-     * @param string|null $image
-     * @return void
-     */
-    protected function removeOldAvatar(?string $image): void
-    {
-        if (! $image) {
-            return;
-        }
-
-        try {
-            Files::deleteFile($image, 'profile');
-            $localPath = public_path('user-uploads/profile/' . $image);
-            if (File::exists($localPath)) {
-                File::delete($localPath);
-            }
-        } catch (\Throwable $e) {
-            // Gracefully ignore missing file exceptions
-        }
+        return $mutationService->updateProfile($request, $userId, $idempotencyKey);
     }
 }

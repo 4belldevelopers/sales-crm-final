@@ -10,66 +10,45 @@
            Error (Red), and Selected (Jero primary brand color).
            ========================================================================== */
 
-        /* 3. ROW HIGHLIGHT & 13. ZERO LAYOUT SHIFT:
-           Reserve 3px transparent left rail on all table rows so applying the
+        /* 3. CARD HIGHLIGHT & 13. ZERO LAYOUT SHIFT:
+           Reserve 3.5px left rail on all candidate cards so applying the
            accent border causes zero pixel movement or layout shift. */
-        .table-custom-class tbody tr > td:first-child {
-            border-left: 3px solid transparent;
-            transition: border-left-color 0.8s ease-out;
+        .aptk-cand-card {
+            transition: background-color 0.25s ease-out, border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        /* Row-level indicator:
-           - 3px solid #F4B400 left edge ONLY (no top, right, or bottom yellow borders)
-           - Extremely subtle warm-yellow tint: rgba(244, 180, 0, 0.025) (row still looks almost white)
-           - No glow, no pulse, no shimmer, no 3D, no gradients */
-        tr.aptk-enterprise-highlight {
+        /* Card-level indicator:
+           - 3.5px solid #F4B400 left edge ONLY
+           - Extremely subtle warm-yellow tint: rgba(244, 180, 0, 0.035)
+           - No glow, no pulse, no shimmer, no 3D */
+        .aptk-cand-card.aptk-enterprise-highlight {
             position: relative !important;
             z-index: 2 !important;
-        }
-
-        tr.aptk-enterprise-highlight > td {
-            background-color: rgba(244, 180, 0, 0.025) !important;
+            background-color: rgba(244, 180, 0, 0.035) !important;
+            border-left: 3.5px solid #F4B400 !important;
             transition: background-color 0.8s ease-out, border-left-color 0.8s ease-out !important;
         }
 
-        tr.aptk-enterprise-highlight > td:first-child {
-            border-left: 3px solid #F4B400 !important;
-        }
-
-        /* 10. HOVER STATE:
-           Keep hover separate from JUST ADDED.
-           Normal hover: subtle neutral Jero hover (#f5f8fa).
-           Just Added + Hover: normal hover background + retain 3px yellow left rail.
-           Never create a stronger yellow background on hover. */
-        tr.aptk-enterprise-highlight:hover > td {
-            background-color: #f5f8fa !important;
-        }
-
-        tr.aptk-enterprise-highlight:hover > td:first-child {
-            border-left: 3px solid #F4B400 !important;
+        /* 10. HOVER STATE */
+        .aptk-cand-card.aptk-enterprise-highlight:hover {
+            background-color: #f8fafc !important;
+            border-left: 3.5px solid #F4B400 !important;
         }
 
         /* 11. SELECTED STATE:
-           Selected candidate must NOT use yellow.
-           Selected state takes precedence with Jero primary brand color. */
-        tr:has(.chk_list_item:checked) > td,
-        tr.selected > td {
-            background-color: #f1faff !important;
-        }
-
-        tr:has(.chk_list_item:checked) > td:first-child,
-        tr.selected > td:first-child {
+           Selected candidate takes precedence with Jero primary brand color. */
+        .aptk-cand-card:has(.chk_list_item:checked),
+        .aptk-cand-card.is-selected {
+            background-color: #f8fbff !important;
+            border-color: #009ef7 !important;
             border-left-color: #009ef7 !important;
+            box-shadow: 0 2px 10px rgba(0, 158, 247, 0.1) !important;
         }
 
         /* 14. TEMPORARY STATE:
-           Smooth fade-out returning to normal candidate row. */
-        tr.aptk-enterprise-highlight.aptk-highlight-fadeout > td {
-            background-color: transparent !important;
-        }
-
-        tr.aptk-enterprise-highlight.aptk-highlight-fadeout > td:first-child {
-            border-left-color: transparent !important;
+           Smooth fade-out returning to normal candidate card. */
+        .aptk-cand-card.aptk-enterprise-highlight.aptk-highlight-fadeout {
+            background-color: #ffffff !important;
         }
 
         /* 5. JUST ADDED BADGE & 15. TYPOGRAPHY:
@@ -466,8 +445,114 @@
             gap: 2px;
             transition: background-color .15s;
         }
+        #bg_all.hp-total.bg-total-active,
         .hp-total.bg-total-active {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            background-color: #1d4ed8 !important;
+            background-image: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25) !important;
+        }
+        /* Organization-specific Total Candidates palettes: My Org = Sunlit Canary Yellow, Internal Client = Deep Royal Cobalt, Direct Client = Emerald */
+        #bg_all.hp-total.hp-org-my.bg-total-active,
+        .hp-total.hp-org-my.bg-total-active {
+            background-color: #eab308 !important;
+            background-image: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+            background: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+            border-color: #eab308 !important;
+            box-shadow: 0 6px 16px rgba(234, 179, 8, 0.28) !important;
+        }
+        #bg_all.hp-total.hp-org-my.bg-total-active .hp-total-icon,
+        #bg_all.hp-total.hp-org-my.bg-total-active .hp-total-count,
+        .hp-total.hp-org-my.bg-total-active .hp-total-icon,
+        .hp-total.hp-org-my.bg-total-active .hp-total-count {
+            color: #422006 !important;
+        }
+        #bg_all.hp-total.hp-org-my.bg-total-active .hp-total-label,
+        .hp-total.hp-org-my.bg-total-active .hp-total-label {
+            color: #713f12 !important;
+            font-weight: 600;
+        }
+        #bg_all.hp-total.hp-org-my.bg-gray,
+        .hp-total.hp-org-my.bg-gray {
+            background-color: #fefce8 !important;
+            background-image: none !important;
+            background: #fefce8 !important;
+            border: 1.5px solid #fde047 !important;
+        }
+        #bg_all.hp-total.hp-org-my.bg-gray .hp-total-icon,
+        #bg_all.hp-total.hp-org-my.bg-gray .hp-total-count,
+        #bg_all.hp-total.hp-org-my.bg-gray .hp-total-label,
+        .hp-total.hp-org-my.bg-gray .hp-total-icon,
+        .hp-total.hp-org-my.bg-gray .hp-total-count,
+        .hp-total.hp-org-my.bg-gray .hp-total-label {
+            color: #854d0e !important;
+        }
+        #bg_all.hp-total.hp-org-internal.bg-total-active,
+        .hp-total.hp-org-internal.bg-total-active {
+            background-color: #1d4ed8 !important;
+            background-image: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
+            border-color: #1d4ed8 !important;
+            box-shadow: 0 6px 16px rgba(29, 78, 216, 0.30) !important;
+        }
+        #bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-icon,
+        #bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-count,
+        .hp-total.hp-org-internal.bg-total-active .hp-total-icon,
+        .hp-total.hp-org-internal.bg-total-active .hp-total-count {
+            color: #ffffff !important;
+        }
+        #bg_all.hp-total.hp-org-internal.bg-total-active .hp-total-label,
+        .hp-total.hp-org-internal.bg-total-active .hp-total-label {
+            color: #dbeafe !important;
+        }
+        #bg_all.hp-total.hp-org-internal.bg-gray,
+        .hp-total.hp-org-internal.bg-gray {
+            background-color: #eff6ff !important;
+            background-image: none !important;
+            background: #eff6ff !important;
+            border: 1.5px solid #93c5fd !important;
+        }
+        #bg_all.hp-total.hp-org-internal.bg-gray .hp-total-icon,
+        #bg_all.hp-total.hp-org-internal.bg-gray .hp-total-count,
+        #bg_all.hp-total.hp-org-internal.bg-gray .hp-total-label,
+        .hp-total.hp-org-internal.bg-gray .hp-total-icon,
+        .hp-total.hp-org-internal.bg-gray .hp-total-count,
+        .hp-total.hp-org-internal.bg-gray .hp-total-label {
+            color: #1e3a8a !important;
+        }
+        #bg_all.hp-total.hp-org-direct.bg-total-active,
+        .hp-total.hp-org-direct.bg-total-active {
+            background-color: #a7f3d0 !important;
+            background-image: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%) !important;
+            background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%) !important;
+            border-color: #34d399 !important;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.22) !important;
+        }
+        #bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-icon,
+        #bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-count,
+        .hp-total.hp-org-direct.bg-total-active .hp-total-icon,
+        .hp-total.hp-org-direct.bg-total-active .hp-total-count {
+            color: #064e3b !important;
+        }
+        #bg_all.hp-total.hp-org-direct.bg-total-active .hp-total-label,
+        .hp-total.hp-org-direct.bg-total-active .hp-total-label {
+            color: #065f46 !important;
+            font-weight: 600;
+        }
+        #bg_all.hp-total.hp-org-direct.bg-gray,
+        .hp-total.hp-org-direct.bg-gray {
+            background-color: #ecfdf5 !important;
+            background-image: none !important;
+            background: #ecfdf5 !important;
+            border: 1.5px solid #a7f3d0 !important;
+        }
+        #bg_all.hp-total.hp-org-direct.bg-gray .hp-total-icon,
+        #bg_all.hp-total.hp-org-direct.bg-gray .hp-total-count,
+        #bg_all.hp-total.hp-org-direct.bg-gray .hp-total-label,
+        .hp-total.hp-org-direct.bg-gray .hp-total-icon,
+        .hp-total.hp-org-direct.bg-gray .hp-total-count,
+        .hp-total.hp-org-direct.bg-gray .hp-total-label {
+            color: #047857 !important;
         }
         .hp-total.bg-gray {
             background: #e4e6ef;
@@ -592,13 +677,1314 @@
             .hp-flow { justify-content: flex-start; }
         }
 
+        /* ==========================================================================
+           Rule 20: AppTracker Modern Enterprise Card + Sub-Card Design System
+           Page-Isolated (.aptk-*) | 15.6" Laptop Fit (1366x768 & 1920x1080)
+           ========================================================================== */
+        #kt_content.aptk-enterprise-bg {
+            background: #eef2f7 !important;
+            min-height: calc(100vh - 110px);
+        }
+        #kt_content_container {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+        }
+        .second_header {
+            padding: 0 !important;
+            margin-bottom: 12px !important;
+            width: 100% !important;
+        }
+
+        /* Toolbar & Pipeline Cards — Rule 20 Sharp White Card Surface */
+        .plf-toolbar-card,
+        .hp-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            margin-bottom: 12px !important;
+        }
+        .plf-toolbar-card .card-body {
+            padding: 10px 14px !important;
+        }
+        .plf-search-wrap,
+        .plf-sort-wrap {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            height: 38px !important;
+            transition: all 0.15s ease !important;
+        }
+        .plf-search-wrap:hover,
+        .plf-sort-wrap:hover {
+            background: #ffffff !important;
+            border-color: #94a3b8 !important;
+        }
+        .plf-search-wrap:focus-within,
+        .plf-sort-wrap:focus-within {
+            background: #ffffff !important;
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+        }
+        .plf-search-input.form-control {
+            font-size: 12.5px !important;
+            font-weight: 500 !important;
+            color: #0f172a !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            padding-right: 26px !important;
+        }
+        .aptk-search-clear {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1;
+            padding: 4px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .aptk-search-clear:hover {
+            color: #475569;
+        }
+        .aptk-refresh-btn {
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #475569;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .aptk-refresh-btn:hover {
+            background: #ffffff;
+            border-color: #009ef7;
+            color: #009ef7;
+        }
+        .hp-card .card-body {
+            padding: 12px 16px !important;
+        }
+        .hp-total-count,
+        .hp-circle .hp-count {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Stream Control Sub-Header Bar */
+        .aptk-stream-bar {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 9px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+            font-family: 'Poppins', sans-serif;
+        }
+        .aptk-stream-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .aptk-select-all-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            user-select: none;
+        }
+        .aptk-stream-divider {
+            width: 1px;
+            height: 16px;
+            background: #e2e8f0;
+        }
+        .aptk-stage-pill-summary {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        .aptk-stream-count-badge {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            font-variant-numeric: tabular-nums;
+        }
+        .aptk-stream-count-badge strong {
+            color: #0f172a;
+            font-weight: 700;
+        }
+        .aptk-stream-right {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Selection Bar Polish */
+        .aptk-selection-bar {
+            background: #f8fbff !important;
+            border: 1px solid #93c5fd !important;
+            border-radius: 10px !important;
+            padding: 9px 14px !important;
+            margin-bottom: 10px !important;
+            box-shadow: 0 2px 8px rgba(0, 158, 247, 0.08) !important;
+        }
+
+        /* Stream Wrapper & Cards Container */
+        .aptk-stream-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 180px;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .aptk-stream-wrapper,
+        .aptk-stream-wrapper * {
+            box-sizing: border-box;
+        }
+        .aptk-cand-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        /* Master Primary Card */
+        .aptk-cand-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+            cursor: pointer;
+        }
+        .aptk-cand-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+        }
+
+        /* Upper 6 Discrete Sub-Cards Grid */
+        .aptk-cand-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.3fr);
+            gap: 8px;
+            padding: 10px 12px;
+            width: 100%;
+            max-width: 100%;
+            align-items: stretch;
+        }
+        .aptk-cand-subcard {
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 8px;
+            padding: 7px 9px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+            overflow: hidden;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
+        }
+        .aptk-cand-card:hover .aptk-cand-subcard {
+            border-color: #e2e8f0;
+        }
+        .aptk-subcard-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            margin-bottom: 6px;
+            line-height: 1;
+        }
+        .aptk-subcard-label {
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .aptk-chk-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            cursor: pointer;
+            min-width: 0;
+        }
+        .aptk-chk-wrap .form-check-input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .aptk-hdr-badges {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .aptk-pill-bench {
+            font-size: 8.5px;
+            font-weight: 700;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+            text-transform: uppercase;
+        }
+        .aptk-pill-dup {
+            font-size: 8.5px;
+            font-weight: 700;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            text-transform: uppercase;
+        }
+        .aptk-subcard-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        /* Sub-Card 1: Candidate Identity */
+        .aptk-identity-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+        }
+        .aptk-avatar-box {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+        }
+        .aptk-avatar-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .aptk-identity-meta {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .aptk-cand-name {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #0f172a;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-decoration: none;
+        }
+        .aptk-cand-name:hover {
+            color: #009ef7;
+        }
+        .aptk-cand-desig {
+            font-size: 11px;
+            font-weight: 500;
+            color: #475569;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 1px;
+        }
+        .aptk-cand-company {
+            font-size: 10.5px;
+            color: #64748b;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        .aptk-cand-company i {
+            font-size: 9.5px;
+            color: #94a3b8;
+        }
+
+        /* Sub-Card 2: Compensation & Exp */
+        .aptk-val-salary {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .aptk-sal-main {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+        }
+        .aptk-sal-mode {
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748b;
+        }
+        .aptk-sal-sub {
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .aptk-val-exp,
+        .aptk-val-notice {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-variant-numeric: tabular-nums;
+            line-height: 1.3;
+        }
+        .aptk-val-exp i,
+        .aptk-val-notice i {
+            font-size: 10px;
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+        .aptk-dot {
+            color: #cbd5e1;
+            font-size: 8px;
+        }
+        .aptk-notice-txt {
+            font-weight: 600;
+        }
+        .aptk-notice-immediate { color: #16a34a; }
+        .aptk-notice-days { color: #d97706; }
+        .aptk-notice-snp { color: #7c3aed; }
+        .aptk-notice-default { color: #64748b; }
+
+        /* Sub-Card 3: Location & Degree */
+        .aptk-loc-city {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        .aptk-loc-city i {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        .aptk-loc-mode {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .aptk-loc-mode i {
+            font-size: 9.5px;
+            color: #94a3b8;
+        }
+        .aptk-loc-edu {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .aptk-loc-edu i {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        .aptk-edu-uppercase {
+            text-transform: uppercase;
+        }
+
+        /* Sub-Card 4: Interview */
+        .aptk-int-date {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        .aptk-int-time {
+            font-size: 10.5px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        .aptk-int-time i {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        .aptk-int-mode-pill {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            max-width: 100%;
+            padding: 1.5px 7px;
+            border-radius: 5px;
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .aptk-int-fb-badge {
+            font-size: 10px !important;
+            width: fit-content;
+            max-width: 100%;
+            margin-top: 2px;
+            padding: 2px 7px !important;
+        }
+        .aptk-int-empty {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        .aptk-int-empty-sub {
+            font-size: 10px;
+            color: #cbd5e1;
+        }
+        .aptk-int-schedule-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+            max-width: 100%;
+            margin-top: 4px;
+            padding: 3px 9px;
+            border-radius: 6px;
+            background: #eff6ff;
+            color: #009ef7;
+            border: 1px solid #bae6fd;
+            font-size: 10.5px;
+            font-weight: 600;
+            line-height: 1.25;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+        .aptk-int-schedule-btn:hover {
+            background: #009ef7;
+            border-color: #009ef7;
+            color: #ffffff;
+        }
+        .aptk-int-schedule-btn i {
+            font-size: 10px;
+        }
+
+        /* Sub-Card 5: Ownership */
+        .aptk-owner-name {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        .aptk-owner-company {
+            font-size: 10.5px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .aptk-owner-company i {
+            font-size: 9.5px;
+            color: #94a3b8;
+        }
+        .aptk-owner-submitted {
+            font-size: 10px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+        .aptk-owner-submitted i {
+            font-size: 9.5px;
+            color: #94a3b8;
+        }
+
+        /* Sub-Card 6: Pipeline & Stage (Entire Card Clickable) */
+        .aptk-subcard-stage {
+            cursor: pointer;
+        }
+        .aptk-subcard-stage:hover,
+        .aptk-subcard-stage:focus-visible {
+            border-color: #93c5fd !important;
+            background: #f0f9ff;
+            outline: none;
+        }
+        .aptk-subcard-stage:hover .aptk-stage-cue {
+            text-decoration: underline;
+        }
+        .aptk-stage-trigger {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            text-decoration: none;
+            min-width: 0;
+        }
+        .aptk-stage-pill {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            max-width: 100%;
+            padding: 2.5px 8px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .aptk-substage-txt {
+            font-size: 10.5px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .aptk-substage-txt strong {
+            color: #334155;
+            font-weight: 600;
+        }
+        .aptk-stage-cue {
+            font-size: 10.5px;
+            font-weight: 600;
+            color: #009ef7;
+            line-height: 1.2;
+        }
+        .aptk-stage-trigger:hover .aptk-stage-cue {
+            text-decoration: underline;
+        }
+
+        /* Sub-Card 7: Bottom Intelligence & Skills Strip */
+        .aptk-cand-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 12px;
+            background: #ffffff;
+            border-top: 1px solid #f1f5f9;
+            width: 100%;
+            overflow: hidden;
+        }
+        .aptk-bottom-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .aptk-match-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 10.5px;
+            font-weight: 700;
+            line-height: 1.3;
+            white-space: nowrap;
+            flex-shrink: 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .aptk-skills-scroll {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            white-space: nowrap;
+            min-width: 0;
+        }
+        .aptk-skills-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .aptk-skill-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 1.5px 7px;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            font-size: 10px;
+            font-weight: 500;
+            line-height: 1.4;
+            flex-shrink: 0;
+        }
+        .aptk-skill-pill.is-matched {
+            background: #dcfce7;
+            color: #15803d;
+            border-color: #bbf7d0;
+            font-weight: 600;
+        }
+        .aptk-skills-empty {
+            font-size: 10.5px;
+            color: #94a3b8;
+        }
+        .aptk-bottom-right {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .aptk-linkedin-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #ecfdf5;
+            color: #15803d;
+            border: 1px solid #86efac;
+            font-size: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .aptk-linkedin-pill:hover {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #4ade80;
+        }
+        .aptk-visa-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .aptk-visa-pill i {
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        /* Empty & Skeleton States */
+        .aptk-empty-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 42px 20px;
+            text-align: center;
+        }
+        .aptk-empty-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .aptk-empty-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .aptk-empty-sub {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 3px;
+        }
+        .aptk-skeleton-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px;
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .aptk-skeleton-box {
+            height: 62px;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: aptkShimmer 1.3s infinite;
+        }
+        @keyframes aptkShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Pagination Card Frame */
+        .aptk-pagination-card {
+            margin-top: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+        }
+
+        /* Responsive Breakpoints (15.6" 1366x768 & Smaller) */
+        @media (max-width: 1440px) {
+            .aptk-cand-grid {
+                grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.25fr);
+                gap: 6px;
+                padding: 8px 10px;
+            }
+            .aptk-cand-subcard {
+                padding: 6px 8px;
+            }
+        }
+        @media (max-width: 1180px) {
+            .aptk-cand-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+            }
+        }
+        @media (max-width: 640px) {
+            .aptk-cand-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .aptk-cand-bottom {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+        }
+
+        /* ==========================================================================
+           AppTracker Flat Light-Tinted Enterprise Header (.aptk-job-toolbar / .aptk-hdr-*)
+           V2 Audit-Refined: Open White Strip + Soft Org Tint Wash & Matching Buttons
+           ========================================================================== */
+        @media (min-width: 1181px) {
+            body#kt_body.toolbar-fixed {
+                --kt-toolbar-height: 62px !important;
+            }
+            body#kt_body.toolbar-fixed .wrapper {
+                padding-top: calc(var(--kt-header-height, 65px) + 62px) !important;
+            }
+        }
+        @media (max-width: 1180px) {
+            #kt_toolbar.aptk-job-toolbar {
+                position: relative !important;
+                top: auto !important;
+                left: auto !important;
+                right: auto !important;
+                height: auto !important;
+            }
+            body#kt_body.toolbar-fixed .wrapper {
+                padding-top: var(--kt-header-height, 65px) !important;
+            }
+        }
+        #kt_toolbar.aptk-job-toolbar {
+            background: #ffffff !important;
+            border-bottom: none !important;
+            box-shadow: none !important;
+            height: auto !important;
+            min-height: 60px;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        #kt_toolbar.aptk-job-toolbar #kt_toolbar_container {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            margin: 0 !important;
+            display: block !important;
+        }
+        .aptk-hdr-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            width: 100%;
+            min-height: 60px;
+            background: var(--hdr-bg, #ffffff);
+            border: none;
+            border-top: none;
+            border-right: none;
+            border-bottom: 1px solid var(--hdr-border, #dbeafe);
+            border-left: 4px solid var(--hdr-accent, #2563eb);
+            border-radius: 0 !important;
+            padding: 10px 20px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+        }
+        /* Org Theme Tokens — Whisper-Light Directional Tint on White + Org Actions */
+        .aptk-hdr-card.hp-org-my {
+            --hdr-bg: linear-gradient(90deg, #fffbeb 0%, #fffdf7 34%, #ffffff 64%, #ffffff 100%);
+            --hdr-border: #fde68a;
+            --hdr-accent: #d97706;
+            --hdr-logo-bg: #fffbeb;
+            --hdr-logo-border: #fde68a;
+            --hdr-icon-color: #d97706;
+            --hdr-pill-bg: #fef3c7;
+            --hdr-pill-border: #fcd34d;
+            --hdr-pill-color: #92400e;
+            --hdr-btn-outline-border: #f59e0b;
+            --hdr-btn-outline-color: #b45309;
+            --hdr-btn-outline-hover-bg: #fef3c7;
+            --hdr-btn-outline-hover-color: #78350f;
+            --hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%);
+            --hdr-btn-solid-border: #eab308;
+            --hdr-btn-solid-color: #422006;
+            --hdr-btn-solid-hover: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
+            --hdr-btn-solid-hover-border: #ca8a04;
+            --hdr-btn-shadow: rgba(234, 179, 8, 0.28);
+        }
+        .aptk-hdr-card.hp-org-internal {
+            --hdr-bg: linear-gradient(90deg, #eff6ff 0%, #f7faff 34%, #ffffff 64%, #ffffff 100%);
+            --hdr-border: #bfdbfe;
+            --hdr-accent: #2563eb;
+            --hdr-logo-bg: #eff6ff;
+            --hdr-logo-border: #bfdbfe;
+            --hdr-icon-color: #2563eb;
+            --hdr-pill-bg: #dbeafe;
+            --hdr-pill-border: #93c5fd;
+            --hdr-pill-color: #1e40af;
+            --hdr-btn-outline-border: #60a5fa;
+            --hdr-btn-outline-color: #1d4ed8;
+            --hdr-btn-outline-hover-bg: #dbeafe;
+            --hdr-btn-outline-hover-color: #1e3a8a;
+            --hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+            --hdr-btn-solid-border: #1d4ed8;
+            --hdr-btn-solid-color: #ffffff;
+            --hdr-btn-solid-hover: linear-gradient(135deg, #1e40af 0%, #172554 100%);
+            --hdr-btn-solid-hover-border: #1e3a8a;
+            --hdr-btn-shadow: rgba(29, 78, 216, 0.30);
+        }
+        .aptk-hdr-card.hp-org-direct {
+            --hdr-bg: linear-gradient(90deg, #ecfdf5 0%, #f5fdf9 34%, #ffffff 64%, #ffffff 100%);
+            --hdr-border: #a7f3d0;
+            --hdr-accent: #16a34a;
+            --hdr-logo-bg: #ecfdf5;
+            --hdr-logo-border: #a7f3d0;
+            --hdr-icon-color: #16a34a;
+            --hdr-pill-bg: #d1fae5;
+            --hdr-pill-border: #6ee7b7;
+            --hdr-pill-color: #166534;
+            --hdr-btn-outline-border: #34d399;
+            --hdr-btn-outline-color: #15803d;
+            --hdr-btn-outline-hover-bg: #d1fae5;
+            --hdr-btn-outline-hover-color: #14532d;
+            --hdr-btn-solid-bg: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
+            --hdr-btn-solid-border: #34d399;
+            --hdr-btn-solid-color: #064e3b;
+            --hdr-btn-solid-hover: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
+            --hdr-btn-solid-hover-border: #10b981;
+            --hdr-btn-shadow: rgba(16, 185, 129, 0.22);
+        }
+        .aptk-hdr-main {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .aptk-hdr-sep {
+            width: 1px;
+            height: 30px;
+            background: #e2e8f0;
+            flex-shrink: 0;
+        }
+        .aptk-hdr-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
+        .aptk-hdr-col--identity {
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+            flex: 0 1 320px;
+            min-width: 185px;
+            max-width: clamp(220px, 26vw, 350px);
+            cursor: pointer;
+        }
+        .aptk-hdr-col--status {
+            gap: 3px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .aptk-hdr-col--comp,
+        .aptk-hdr-col--loc,
+        .aptk-hdr-col--meta {
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .aptk-hdr-logo-wrap {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .aptk-hdr-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .aptk-hdr-logo-mono {
+            background: var(--hdr-logo-bg, #eff6ff) !important;
+            border-color: var(--hdr-logo-border, #bfdbfe) !important;
+            color: var(--hdr-icon-color, #2563eb) !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+        }
+        .aptk-hdr-identity-txt {
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .aptk-hdr-job-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+        .aptk-hdr-col--identity:hover .aptk-hdr-job-title {
+            color: var(--hdr-accent, #2563eb);
+        }
+        .aptk-hdr-company-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+            text-decoration: none;
+        }
+        .aptk-hdr-company-name i {
+            font-size: 10.5px;
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+        .aptk-hdr-sub-top {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .aptk-hdr-status-badge {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            padding: 2px 8px !important;
+            border-radius: 5px !important;
+            line-height: 1.25 !important;
+        }
+        .aptk-hdr-job-id {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        .aptk-hdr-sub-btm {
+            display: flex;
+            align-items: center;
+        }
+        .aptk-hdr-org-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 1.5px 7px;
+            border-radius: 5px;
+            background: var(--hdr-pill-bg, #dbeafe);
+            border: 1px solid var(--hdr-pill-border, #93c5fd);
+            color: var(--hdr-pill-color, #1e40af);
+            font-size: 10.5px;
+            font-weight: 600;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+        .aptk-hdr-org-pill i {
+            font-size: 9.5px;
+            flex-shrink: 0;
+        }
+        .aptk-hdr-sub-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+        }
+        .aptk-hdr-col-icon {
+            font-size: 11px;
+            color: var(--hdr-icon-color, #2563eb);
+            flex-shrink: 0;
+        }
+        .aptk-hdr-sub-val {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+            font-variant-numeric: tabular-nums;
+        }
+        .aptk-hdr-loc-plus {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--hdr-icon-color, #2563eb);
+            margin-left: 2px;
+        }
+        .aptk-hdr-sub-meta {
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+            font-variant-numeric: tabular-nums;
+        }
+        .aptk-hdr-actions-form {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            margin: 0 !important;
+        }
+        .aptk-hdr-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 16px;
+            border-left: 1px solid #e2e8f0;
+            min-height: 38px;
+            white-space: nowrap;
+        }
+        .aptk-hdr-btn-outline {
+            background: #ffffff !important;
+            border: 1.5px solid var(--hdr-btn-outline-border, #60a5fa) !important;
+            color: var(--hdr-btn-outline-color, #1d4ed8) !important;
+            border-radius: 8px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            padding: 0 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+            transition: all 0.15s ease !important;
+        }
+        .aptk-hdr-btn-outline:hover,
+        .aptk-hdr-btn-outline:focus {
+            background: var(--hdr-btn-outline-hover-bg, #dbeafe) !important;
+            border-color: var(--hdr-accent, #2563eb) !important;
+            color: var(--hdr-btn-outline-hover-color, #1e3a8a) !important;
+        }
+        .aptk-hdr-btn-solid {
+            background: var(--hdr-btn-solid-bg, linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%)) !important;
+            border: 1.5px solid var(--hdr-btn-solid-border, #1d4ed8) !important;
+            color: var(--hdr-btn-solid-color, #ffffff) !important;
+            border-radius: 8px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            padding: 0 16px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+            box-shadow: 0 2px 5px var(--hdr-btn-shadow, rgba(29, 78, 216, 0.25)) !important;
+            transition: all 0.15s ease !important;
+        }
+        .aptk-hdr-btn-solid:hover,
+        .aptk-hdr-btn-solid:focus {
+            background: var(--hdr-btn-solid-hover, linear-gradient(135deg, #1e40af 0%, #172554 100%)) !important;
+            border-color: var(--hdr-btn-solid-hover-border, #1e3a8a) !important;
+            color: var(--hdr-btn-solid-color, #ffffff) !important;
+            transform: translateY(-0.5px);
+        }
+        .aptk-hdr-btn-solid .svg-icon svg path {
+            fill: var(--hdr-btn-solid-color, #ffffff) !important;
+        }
+        @media (max-width: 1440px) {
+            .aptk-hdr-card {
+                gap: 12px;
+                padding: 9px 16px;
+            }
+            .aptk-hdr-main {
+                gap: 8px;
+            }
+            .aptk-hdr-col--identity {
+                flex: 0 1 285px;
+                max-width: 295px;
+            }
+            .aptk-hdr-actions {
+                padding-left: 12px;
+                min-height: 36px;
+            }
+            .aptk-hdr-btn-outline {
+                height: 36px !important;
+                min-height: 36px !important;
+                padding: 0 12px !important;
+                font-size: 12px !important;
+            }
+            .aptk-hdr-btn-solid {
+                height: 36px !important;
+                min-height: 36px !important;
+                padding: 0 14px !important;
+                font-size: 12px !important;
+            }
+        }
+        @media (max-width: 1180px) {
+            .aptk-hdr-card {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 10px 14px;
+            }
+            .aptk-hdr-main {
+                justify-content: flex-start;
+                flex-wrap: wrap;
+                gap: 10px 18px;
+            }
+            .aptk-hdr-sep {
+                display: none !important;
+            }
+            .aptk-hdr-col--identity {
+                max-width: 100%;
+                flex: 1 1 100%;
+            }
+            .aptk-hdr-actions {
+                width: 100%;
+                min-height: auto;
+                justify-content: flex-end;
+                border-left: none;
+                border-top: 1px solid #e2e8f0;
+                padding-left: 0;
+                padding-top: 8px;
+            }
+        }
+        @media (max-width: 640px) {
+            .aptk-hdr-actions > * {
+                flex: 1;
+            }
+        }
+
     </style>
 @endpush
 @section('content')
     <!--begin::Toolbar-->
-    <div class="toolbar" id="kt_toolbar">
+    <div class="toolbar aptk-job-toolbar {{ $hpOrgClass ?? 'hp-org-internal' }}" id="kt_toolbar">
         <!--begin::Container-->
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+        <div id="kt_toolbar_container" class="container-fluid">
              @php
                     use App\Helper\GeneralMethod;
                     $lock_unlock = GeneralMethod::checksubscription();
@@ -647,12 +2033,18 @@
 
             @endphp
 
+            <div class="aptk-hdr-card {{ $hpOrgClass ?? 'hp-org-internal' }}">
             <!--begin::Page title-->
-             @include('sections.service_company.toolbar',['id' => $job->id])
+             @include('sections.service_company.toolbar', [
+                 'id' => $job->id,
+                 'apptrackerHeaderCard' => true,
+                 'headerPrefix' => 'aptk-hdr',
+                 'hpOrgClass' => $hpOrgClass ?? null,
+             ])
 
            
             <!--end::Page title-->
-            <form action="" id="filter-form" style="">
+            <form action="" id="filter-form" class="aptk-hdr-actions-form" style="">
                 @csrf
                 <input type="hidden" name="jobid" id="jobid" value="{{ @$job->id }}" />
                 <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
@@ -661,23 +2053,24 @@
                 <input type="hidden" name="tenant_id" id="tenant_id" value="{{ (int) (auth()->user()->company_id ?? 0) }}" />
 
                 <!--begin::Actions-->
-                <div class="d-flex align-items-center py-1">
+                <div class="d-flex align-items-center">
+                    <div class="aptk-hdr-actions">
                     @if (in_array('view_jobs', $userPermissions))
                         {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
                              defined once in the shared layout) that the job title/logo already
                              uses elsewhere — .show-detail-open's click handler in
                              service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
                         <a href="javascript:void(0);" data-id="{{ $job->id }}"
-                            class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
-                            View Job
+                            class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder show-detail-open aptk-hdr-btn-outline">
+                            <i class="fa-regular fa-eye me-1" aria-hidden="true"></i>View Job
                         </a>
                     @endif
                     @if (in_array('add_job_applications', $userPermissions))
-                        <a href="javascript:void(0);">
+                        <a href="javascript:void(0);" class="d-inline-flex">
                             <button type="button"
-                                class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3"
+                                class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder aptk-hdr-btn-solid"
                                 id="addServiceCandidate">
-                                <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <span class="svg-icon svg-icon-primary svg-icon-1x me-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                                         width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                                         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -695,6 +2088,7 @@
                             </button>
                         </a>
                     @endif
+                    </div>
                     <!--begin::Forward CV-->
                     <a href="javascript:void(0);" type="button"
                         class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn aptk-action-btn aptk-legacy-hide d-none" data-toggle="modal"
@@ -870,6 +2264,7 @@
                 </div>
                 <!--end::Actions-->
             </form>
+            </div>
         </div>
         <!--end::Container-->
     </div>
@@ -890,7 +2285,7 @@
         // (resources/views/sections/service_company/pipeline.blade.php) rather than
         // inventing new ones, so this card matches every other pipeline-stage display.
         $hpStages = [
-            ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing', 'color' => '#7e8299', 'bg' => '#eef0f2',
+            ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing', 'color' => '#0891b2', 'bg' => '#ecfeff',
                 'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
             ['key' => 'Screening', 'rel' => '2', 'label' => 'Screening', 'color' => '#c000ff', 'bg' => '#f9e6ff',
                 'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
@@ -907,7 +2302,7 @@
             'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'];
     @endphp
 
-    <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+    <div class="content d-flex flex-column flex-column-fluid pt-4 aptk-enterprise-bg" id="kt_content">
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-3">
 
@@ -916,20 +2311,20 @@
             @include('sections.service_company.apptrackerHeader',['tabactive'=>$tabactive])
 
         </div>
-                
-                
-
 
                 <div class="card mb-4 plf-toolbar-card">
-                    <div class="card-body py-3">
-                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
                             <div class="plf-search-wrap" style="position: relative;">
                                 <span class="plf-search-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
                                 </span>
                                 <input type="text" class="form-control plf-search-input" name="inputJobSearch"
                                     value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" autocomplete="off" />
-                                <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 50%; right: 0; transform: translateY(-50%);"></div>
+                                <button type="button" class="aptk-search-clear" id="btnAptkSearchClear" title="Clear search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 50%; right: 28px; transform: translateY(-50%);"></div>
                             </div>
                             <div class="plf-sort-wrap" id="plf_sort_wrap">
                                 <span class="plf-sort-icon">
@@ -953,6 +2348,10 @@
                                 </select>
                                 <div class="plf-sort-panel d-none" id="plf_sort_panel"></div>
                             </div>
+                            <button type="button" class="aptk-refresh-btn" id="btnAptkRefreshList" title="Refresh candidate list">
+                                <i class="fas fa-sync-alt"></i>
+                                <span class="d-none d-sm-inline">Refresh</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -961,7 +2360,7 @@
                     <div class="card-body">
                         <div class="hp-flow">
                             <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
-                                <div class="{{ $hpTotalActive ? 'bg-total-active' : 'bg-gray' }} text-center hp-total" role="alert" id="bg_all">
+                                <div class="{{ $hpTotalActive ? 'bg-total-active' : 'bg-gray' }} {{ $hpOrgClass ?? 'hp-org-internal' }} text-center hp-total" role="alert" id="bg_all">
                                     <span class="hp-total-icon">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
@@ -1057,44 +2456,39 @@
                     </button>
                 </div>
 
-                <div class="card" id="sc_table_card" style="display:none;">
-                    <div class="card-body pt-3 px-5">
-                        @if (in_array('view_job_applications', $userPermissions))
-                           <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
-                               <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
-                           </div>
-                            <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class">
-                                <thead>
-                                    <tr class="fw-bolder text-muted">
-                                        <th class="w-10px pe-0">
-                                            <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                <input class="form-check-input chk_list" type="checkbox"
-                                                    data-kt-check="true"
-                                                    data-kt-check-target="#kt_table_users .form-check-input"
-                                                    value="1" />
-                                            </div>
-                                        </th>
-                                        <th class="">Candidate Name</th>
-                                        {{-- <th class="">Contacts</th> --}}
-                                        <th class="">Exp.</th>
-                                        <th class="">Salary</th>
-                                        <th class="">Notice</th>
-                                        <th class="">Interview</th>
-                                        <th class="">Location</th>
-                                        <th class="">Ownership</th>
-                                        <th class="">Stage</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-gray-600 fw-bold" id="candidatetList">
-                                </tbody>
-                            </table>
-                            <div id="paginationcandidate"></div>
-                            {{-- Print target — populated client-side from the checked rows already
-                                 on this page (see the .exportRecord click handler); no server
-                                 round-trip involved. --}}
-                            <div id="aptk_print_area"></div>
-                        @endif
-                    </div>
+                <div id="sc_table_card" class="aptk-stream-wrapper">
+                    @if (in_array('view_job_applications', $userPermissions))
+                        <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+                            <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                        </div>
+
+                        <!-- Stream Control Sub-Header (Select All, Active Stage & Live Count) -->
+                        <div class="aptk-stream-bar">
+                            <div class="aptk-stream-left">
+                                <label class="aptk-select-all-label">
+                                    <input class="form-check-input chk_list" type="checkbox" id="aptk_select_all_chk" value="1" />
+                                    <span>Select All</span>
+                                </label>
+                                <span class="aptk-stream-divider"></span>
+                                <span class="nav_status aptk-stage-pill-summary">All Candidate</span>
+                                <span class="aptk-stream-count-badge"><strong id="aptk_visible_count">0</strong> candidates</span>
+                            </div>
+                            <div class="aptk-stream-right d-none d-md-block">
+                                <i class="far fa-hand-pointer me-1 text-primary"></i>Click candidate for profile drawer &bull; Click stage pill to move stage
+                            </div>
+                        </div>
+
+                        <!-- Primary Candidate Card + Sub-Card Stream (Populated via AJAX) -->
+                        <div id="candidatetList" class="aptk-cand-stream">
+                            <div class="aptk-skeleton-card"><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div></div>
+                            <div class="aptk-skeleton-card"><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div></div>
+                            <div class="aptk-skeleton-card"><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div><div class="aptk-skeleton-box"></div></div>
+                        </div>
+
+                        <div id="paginationcandidate" class="aptk-pagination-card"></div>
+                        {{-- Print target — populated client-side from checked cards; no server round-trip. --}}
+                        <div id="aptk_print_area"></div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -1543,8 +2937,16 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             var inputJobSearch = document.querySelector("#kt_tagify_2");
+            var clearSearchBtn = document.querySelector("#btnAptkSearchClear");
             if (inputJobSearch) {
+                var syncClearBtn = function() {
+                    if (clearSearchBtn) {
+                        clearSearchBtn.style.display = inputJobSearch.value.length > 0 ? 'flex' : 'none';
+                    }
+                };
+                inputJobSearch.addEventListener("input", syncClearBtn);
                 inputJobSearch.addEventListener("keyup", function(e) {
+                    syncClearBtn();
                     if (_aptkSearchTimer) {
                         clearTimeout(_aptkSearchTimer);
                     }
@@ -1555,6 +2957,32 @@
                     _aptkSearchTimer = setTimeout(function() {
                         fetchCandidates(1);
                     }, 250);
+                });
+            }
+            if (clearSearchBtn && inputJobSearch) {
+                clearSearchBtn.addEventListener("click", function() {
+                    inputJobSearch.value = '';
+                    clearSearchBtn.style.display = 'none';
+                    inputJobSearch.focus();
+                    fetchCandidates(1);
+                });
+            }
+            var refreshBtn = document.querySelector("#btnAptkRefreshList");
+            if (refreshBtn) {
+                refreshBtn.addEventListener("click", function() {
+                    var icon = refreshBtn.querySelector('i');
+                    if (icon) icon.classList.add('fa-spin');
+                    if (typeof AppTrackerRamStore !== 'undefined') {
+                        AppTrackerRamStore.invalidate();
+                    }
+                    var req = fetchCandidates(page_no || 1, '', true);
+                    if (req && typeof req.always === 'function') {
+                        req.always(function() {
+                            if (icon) icon.classList.remove('fa-spin');
+                        });
+                    } else if (icon) {
+                        setTimeout(function() { icon.classList.remove('fa-spin'); }, 450);
+                    }
                 });
             }
         });
@@ -1634,6 +3062,7 @@
         $(document).on('click', '.stage_sub_stage', async function(e) {
 
             e.preventDefault();
+            e.stopPropagation();
             const connectedsub = await isInternetAvailable();
                 if (!connectedsub) {
                     Swal.fire({
@@ -1664,6 +3093,29 @@
                 }
             });
 
+        });
+
+        $(document).on('keydown', '.aptk-subcard-stage[role="button"]', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).trigger('click');
+            }
+        });
+
+        // Clicking anywhere on a candidate card opens the Candidate Drawer,
+        // except interactive controls (checkbox, Pipeline & Stage card, LinkedIn link, buttons/links).
+        $(document).on('click', '.aptk-cand-card', function(e) {
+            if ($(e.target).closest('.chk_list_item, .aptk-chk-wrap, .aptk-subcard-stage, .stage_sub_stage, .aptk-int-schedule-btn, .app_interview_schedule, .aptk-linkedin-pill, .show-application-detail, a[href^="http"], button, input, select, textarea').length) {
+                return;
+            }
+            if (window.getSelection && window.getSelection().toString().trim() !== '') {
+                return;
+            }
+            var $drawerTrigger = $(this).find('.show-application-detail').first();
+            if ($drawerTrigger.length) {
+                $drawerTrigger.trigger('click');
+            }
         });
 
         // Stage-pill click handling now lives in stage_body_content.blade.php
@@ -1706,9 +3158,9 @@
         $(document).ready(function() {
 
           // Replaces the old server-side Excel export — purely client-side:
-          // clones the checked rows' already-rendered markup (no new
-          // request, no server load) into #aptk_print_area and hands off to
-          // the browser's own print dialog. Same pattern as CV Tracker.
+          // builds a clean print summary table from the checked candidate
+          // cards (no new request, no server load) into #aptk_print_area and
+          // hands off to the browser's own print dialog.
           $(document).on('click', '.exportRecord', function() {
 
                 var $checked = $('.chk_list_item:checked');
@@ -1717,17 +3169,26 @@
                     return false;
                 }
 
-                var $sourceTable = $('#candidatetList').closest('table');
                 var $table = $('<table></table>');
-                var $thead = $sourceTable.find('thead tr').clone();
-                $thead.find('th').first().remove(); // drop the checkbox header column
-                $table.append($('<thead></thead>').append($thead));
+                var $thead = $('<thead><tr><th>Candidate</th><th>Match</th><th>Exp.</th><th>Salary</th><th>Notice &amp; Company</th><th>Interview</th><th>Location &amp; Edu</th><th>Ownership</th><th>Stage</th></tr></thead>');
+                $table.append($thead);
 
                 var $tbody = $('<tbody></tbody>');
                 $checked.each(function() {
-                    var $row = $(this).closest('tr').clone();
-                    $row.find('td').first().remove(); // drop the checkbox cell
-                    $tbody.append($row);
+                    var $card = $(this).closest('.aptk-cand-card');
+                    if ($card.length) {
+                        var $tr = $('<tr></tr>');
+                        $tr.append($('<td></td>').html('<strong>' + $('<div>').text($card.attr('data-print-name') || '').html() + '</strong><br><small>' + $('<div>').text($card.attr('data-print-desig') || '').html() + '</small>'));
+                        $tr.append($('<td></td>').text($card.attr('data-print-match') || '0%'));
+                        $tr.append($('<td></td>').text($card.attr('data-print-exp') || '—'));
+                        $tr.append($('<td></td>').text($card.attr('data-print-salary') || '—'));
+                        $tr.append($('<td></td>').html($('<div>').text($card.attr('data-print-notice') || '').html() + '<br><small>' + $('<div>').text($card.attr('data-print-company') || '').html() + '</small>'));
+                        $tr.append($('<td></td>').text($card.attr('data-print-interview') || '—'));
+                        $tr.append($('<td></td>').html($('<div>').text($card.attr('data-print-location') || '').html() + '<br><small>' + $('<div>').text($card.attr('data-print-edu') || '').html() + '</small>'));
+                        $tr.append($('<td></td>').text($card.attr('data-print-owner') || '—'));
+                        $tr.append($('<td></td>').text($card.attr('data-print-stage') || '—'));
+                        $tbody.append($tr);
+                    }
                 });
                 $table.append($tbody);
 
@@ -1947,58 +3408,31 @@
 
 
         $(document).on('click', '.chk_list', function() {
-            if ($(".chk_list").prop('checked') == true) {
-                var chk_list = $('.chk_list').val();
-                $('.chk_list_item').prop('checked', true);
-            } else {
-                $('.chk_list_item').prop('checked', false);	
-            }
-        });
-        $(document).on('click', '.chk_list', function() {
+            var isChecked = $(this).prop('checked') === true;
+            $('.chk_list_item').prop('checked', isChecked);
+            $('.aptk-cand-card').toggleClass('is-selected', isChecked);
             $('#application_test_fwd_resume_body_content').html('');
-            if ($(".chk_list").prop('checked') == true) {
-                var chk_list = $('.chk_list').val();
-                $('.test_fwd_resume').removeClass("d-none");
+            if (isChecked && $('.chk_list_item').length > 0) {
+                $('.test_fwd_resume, .mass_mail, .downloadexcell, .send_email, .app_copy, .application_copy').removeClass("d-none");
                 $('.custom_hide').addClass("d-none");
-                $('.mass_mail').removeClass("d-none");
-                $('.downloadexcell').removeClass("d-none");
-                $('.send_email').removeClass("d-none");
-                $('.app_copy').removeClass("d-none");
-                $('.application_copy').removeClass("d-none");
             } else {
-                $('.test_fwd_resume').addClass("d-none");
+                $('.test_fwd_resume, .mass_mail, .downloadexcell, .send_email, .app_copy, .application_copy').addClass("d-none");
                 $('.custom_hide').removeClass("d-none");
-                $('.mass_mail').addClass("d-none");
-                $('.downloadexcell').addClass("d-none");
-                $('.send_email').addClass("d-none");
-                $('.app_copy').addClass("d-none");
-                $('.application_copy').addClass("d-none");
             }
             updateAptkSelectionBar();
         });
         $(document).on('click', '.chk_list_item', function() {
             $('#application_test_fwd_resume_body_content').html('');
-            var i = 0;
-            var arr = [];
-            $('.chk_list_item:checked').each(function() {
-                arr.push($(this).val());
-            });
-            if (arr.length > 0) {
-                $('.test_fwd_resume').removeClass("d-none");
+            $(this).closest('.aptk-cand-card').toggleClass('is-selected', $(this).is(':checked'));
+            var totalItems = $('.chk_list_item').length;
+            var checkedItems = $('.chk_list_item:checked').length;
+            $('.chk_list').prop('checked', totalItems > 0 && checkedItems === totalItems);
+            if (checkedItems > 0) {
+                $('.test_fwd_resume, .mass_mail, .downloadexcell, .send_email, .app_copy, .application_copy').removeClass("d-none");
                 $('.custom_hide').addClass("d-none");
-                $('.mass_mail').removeClass("d-none");
-                $('.downloadexcell').removeClass("d-none");
-                $('.send_email').removeClass("d-none");
-                $('.app_copy').removeClass("d-none");
-                $('.application_copy').removeClass("d-none");
             } else {
-                $('.test_fwd_resume').addClass("d-none");
+                $('.test_fwd_resume, .mass_mail, .downloadexcell, .send_email, .app_copy, .application_copy').addClass("d-none");
                 $('.custom_hide').removeClass("d-none");
-                $('.send_email').addClass("d-none");
-                $('.downloadexcell').addClass("d-none");
-                $('.mass_mail').addClass("d-none");
-                $('.app_copy').addClass("d-none");
-                $('.application_copy').addClass("d-none");
             }
             updateAptkSelectionBar();
         });
@@ -2013,6 +3447,7 @@
         }
         function clearAptkSelection() {
             $('.chk_list, .chk_list_item').prop('checked', false);
+            $('.aptk-cand-card').removeClass('is-selected');
             $('.test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
             $('.custom_hide').removeClass('d-none');
             updateAptkSelectionBar();
@@ -2358,7 +3793,7 @@
             var maxAttempts = 3;
             var backoffs = [1000, 2000, 4000];
 
-            var $targetRow = $('tr[data-candidate-id="' + candidateId + '"]');
+            var $targetRow = $('.aptk-cand-card[data-candidate-id="' + candidateId + '"]');
             if ($targetRow.length > 0) {
                 try {
                     $targetRow[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2366,14 +3801,14 @@
 
                 // Clean up any stale highlights or badges
                 $('.aptk-just-added-badge').remove();
-                $('tr.aptk-enterprise-highlight').removeClass('aptk-enterprise-highlight aptk-highlight-fadeout');
+                $('.aptk-cand-card.aptk-enterprise-highlight').removeClass('aptk-enterprise-highlight aptk-highlight-fadeout');
 
-                // Apply sleek yellow/amber enterprise highlight (3px left rail + subtle warm tint)
+                // Apply sleek yellow/amber enterprise highlight (3.5px left rail + subtle warm tint)
                 $targetRow.addClass('aptk-enterprise-highlight');
 
                 // Attach compact "● JUST ADDED" badge next to candidate name
                 var $badge = $('<span class="aptk-just-added-badge" role="status" aria-label="Just Added Candidate"><span class="aptk-badge-dot" aria-hidden="true"></span>JUST ADDED</span>');
-                var $nameContainer = $targetRow.find('td:nth-child(2) .d-flex.flex-column a:first');
+                var $nameContainer = $targetRow.find('.aptk-cand-name').first();
                 if ($nameContainer.length > 0) {
                     $nameContainer.append($badge);
                 }
@@ -2490,6 +3925,10 @@
             $('#sc_table_card').show();
             $('#candidatetList').html(response.html);
             $('#pool_counter').html(response.total);
+            $('#aptk_visible_count').text(response.total || 0);
+            if (typeof clearAptkSelection === 'function') {
+                clearAptkSelection();
+            }
             localStorage.setItem('currentPage', targetPage);
             var mstatusvalue = $('#mstatus_id').val();
             localStorage.setItem('mstatusValueSet', mstatusvalue);

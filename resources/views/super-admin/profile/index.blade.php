@@ -1168,6 +1168,61 @@
             }
         });
 
+        // ── 4B. Client-Side Draft Recovery (SessionStorage) ──────────────────────
+        var DRAFT_STORAGE_KEY = 'sa_profile_draft_{{ $user->id }}';
+
+        function saveProfileDraft() {
+            try {
+                var draft = {
+                    name: $('#sa_name').val(),
+                    email: $('#sa_email').val(),
+                    whatsapp_number: $('#sa_whatsapp').val(),
+                    linkedin: $('#sa_linkedin').val(),
+                    calling_code: $('#sa_calling_code').val(),
+                    mobile: $('#sa_mobile').val()
+                };
+                sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+            } catch (e) {}
+        }
+
+        function restoreProfileDraft() {
+            try {
+                var raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+                if (raw) {
+                    var draft = JSON.parse(raw);
+                    if (draft && typeof draft === 'object') {
+                        if (draft.name) $('#sa_name').val(draft.name);
+                        if (draft.email) $('#sa_email').val(draft.email);
+                        if (draft.whatsapp_number) $('#sa_whatsapp').val(draft.whatsapp_number);
+                        if (draft.linkedin) $('#sa_linkedin').val(draft.linkedin);
+                        if (draft.calling_code) $('#sa_calling_code').val(draft.calling_code).trigger('change');
+                        if (draft.mobile) $('#sa_mobile').val(draft.mobile);
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function clearProfileDraft() {
+            try {
+                sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+            } catch (e) {}
+        }
+
+        $('#sa_name, #sa_email, #sa_whatsapp, #sa_linkedin, #sa_mobile').on('input', saveProfileDraft);
+        $('#sa_calling_code').on('change', saveProfileDraft);
+        restoreProfileDraft();
+
+        // RFC 4122 v4 UUID generator for Two-Tier Idempotency
+        function generateUUID() {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
         // Revert to Default Avatar
         $('#btn_remove_avatar').on('click', function() {
             $('#avatar_file_input').val('');
@@ -1177,6 +1232,7 @@
 
         // Discard / Reset Handler
         $('#btn-reset-top, #btn-reset-bottom').on('click', function() {
+            clearProfileDraft();
             setTimeout(function() {
                 $('#avatar_preview_img').attr('src', originalAvatarUrl);
                 $('#remove_image').val('0');
@@ -1190,6 +1246,11 @@
         $(document).on('click', '.js-btn-save-profile', function(e) {
             e.preventDefault();
 
+            var $btn = $(this);
+            if ($btn.data('submitting')) {
+                return false;
+            }
+
             // Clear previous errors
             $('.is-invalid').removeClass('is-invalid');
             $('.invalid-feedback').remove();
@@ -1197,9 +1258,12 @@
             var form = $('#editSettings')[0];
             var formData = new FormData(form);
 
+            var idempotencyKey = generateUUID();
+            formData.append('idempotency_key', idempotencyKey);
+
             var $saveBtns = $('.js-btn-save-profile');
             $saveBtns.each(function() {
-                $(this).attr('data-kt-indicator', 'on').prop('disabled', true);
+                $(this).data('submitting', true).attr('data-kt-indicator', 'on').prop('disabled', true);
             });
 
             var url = "{{ route('superadmin.profile.update', $user->id) }}";
@@ -1211,14 +1275,17 @@
                 processData: false,
                 contentType: false,
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Idempotency-Key': idempotencyKey
                 },
                 success: function(response) {
                     $saveBtns.each(function() {
-                        $(this).removeAttr('data-kt-indicator').prop('disabled', false);
+                        $(this).data('submitting', false).removeAttr('data-kt-indicator').prop('disabled', false);
                     });
 
                     if (response.status === 'success') {
+                        clearProfileDraft();
+
                         // Clear password inputs
                         $('#sa_current_password, #sa_new_password, #sa_password_confirmation').val('');
                         $('#sa_new_password').trigger('input');
@@ -1261,8 +1328,19 @@
                 },
                 error: function(xhr) {
                     $saveBtns.each(function() {
-                        $(this).removeAttr('data-kt-indicator').prop('disabled', false);
+                        $(this).data('submitting', false).removeAttr('data-kt-indicator').prop('disabled', false);
                     });
+
+                    if (xhr.status === 409) {
+                        Swal.fire({
+                            title: "Request in Progress",
+                            text: "Your profile update is currently processing. Please wait a moment.",
+                            icon: "warning",
+                            confirmButtonText: "OK",
+                            customClass: { confirmButton: "btn btn-primary fw-bold" }
+                        });
+                        return;
+                    }
 
                     if (xhr.status === 422 && xhr.responseJSON) {
                         var errors = xhr.responseJSON.errors || {};

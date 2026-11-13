@@ -116,8 +116,10 @@
     });
 
     // Submit handler
+    var isModalSubmitting = false;
     $('#submit-edit-modal-btn').on('click', function(e) {
         e.preventDefault();
+        if (isModalSubmitting) return;
         var $btn = $(this);
         var form = $('#editLangModalForm')[0];
 
@@ -129,11 +131,13 @@
         var formData = new FormData(form);
         formData.append('_method', 'PUT');
 
+        isModalSubmitting = true;
         $btn.attr('disabled', true);
         $btn.find('.indicator-label').hide();
         $btn.find('.indicator-progress').show();
 
         var updateUrl = "{{ route('superadmin.language-settings.update', $language->id) }}";
+        var idempKey = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ('idemp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));
 
         $.ajax({
             url: updateUrl,
@@ -142,14 +146,22 @@
             processData: false,
             contentType: false,
             headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-Idempotency-Key': idempKey
             },
             success: function(response) {
+                isModalSubmitting = false;
                 $btn.attr('disabled', false);
                 $btn.find('.indicator-label').show();
                 $btn.find('.indicator-progress').hide();
 
                 if (response.status === 'success') {
+                    try {
+                        if ('BroadcastChannel' in window) {
+                            var ch = new BroadcastChannel('jero_languages_sync');
+                            ch.postMessage({ action: 'saved', id: "{{ $language->id }}" });
+                        }
+                    } catch (e) {}
                     var modalEl = document.getElementById('application-md-modal');
                     if (modalEl) {
                         var bsModal = bootstrap.Modal.getInstance(modalEl);
@@ -180,6 +192,7 @@
                 }
             },
             error: function(xhr) {
+                isModalSubmitting = false;
                 $btn.attr('disabled', false);
                 $btn.find('.indicator-label').show();
                 $btn.find('.indicator-progress').hide();

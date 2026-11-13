@@ -1,387 +1,339 @@
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\AppTrackerCardPresenter;
+    use App\Services\CurrencyService;
     use Illuminate\Support\Facades\DB;
-    use Carbon\Carbon;
 
     $salaryMode = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
     $feedback_status = GeneralMethod::feedback_status();
     $currency = GeneralMethod::currency();
     $job_status_arr = GeneralMethod::job_status();
-
 @endphp
+
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
-    @php
-    $row = (object) $rowArr;
-    $jobMode = @$modeFilter;
-    $jobCurrency = @$currencyFilter;
-    $symbols = @$symbolsFilter;
-    @endphp
-        <tr style="height: 102px; position: relative;">
-            <td>
-                @php
-                    echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
-                    <input class="form-check-input chk_list_item " name="chk_list_item[]" type="checkbox" value="' .
-                        $row->id .
-                        '" />
-                  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$row->full_name);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                    }
-                    $profile_sidebar_css = 'website-show-application-detail';
+        @php
+            $row = (object) $rowArr;
+            $jobMode = @$modeFilter;
+            $jobCurrency = @$currencyFilter;
+            $symbols = @$symbolsFilter;
 
-                    $skilltag = '';
-                    $skilltagclass = '';
-                    $skillArr = $row->matched_skills;
-                    $allCandidateSkills = array_filter(array_map('trim', explode(',', (string) @$row->skills)));
+            // Candidate initials + avatar palette
+            $str = trim((string) @$row->full_name);
+            $strVal = strtolower($str[0] ?? 'c');
+            $ord = ord($strVal);
+            if ($ord >= 97 && $ord <= 101) {
+                $bgTextDecore = 'bg-light-danger text-danger';
+            } elseif ($ord >= 102 && $ord <= 106) {
+                $bgTextDecore = 'bg-light-warning text-warning';
+            } elseif ($ord >= 107 && $ord <= 111) {
+                $bgTextDecore = 'bg-light-primary text-primary';
+            } elseif ($ord >= 112 && $ord <= 116) {
+                $bgTextDecore = 'bg-light-success text-success';
+            } elseif ($ord >= 117 && $ord <= 121) {
+                $bgTextDecore = 'bg-dark text-secondary';
+            } else {
+                $bgTextDecore = 'bg-light-secondary text-dark';
+            }
 
-                    $targetJobId = $row->job_id ?? ($jobid ?? 0);
-                    if ($targetJobId > 0) {
-                        $percentageString = GeneralMethod::skill_percentage($targetJobId, $allCandidateSkills);
-                        $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
-                    } else {
-                        $matches = $row->matched_skill_count ?? 0;
-                        $totalElements = count($requiredSkillsForDisplay ?? []);
-                        $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-                        $percentage = (int) round(min($matchPercentage, 100));
-                    }
+            $profile_sidebar_css = 'website-show-application-detail';
 
-                    // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
-                    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
-                    $matchBg = $matchStyle['bg'];
-                    $matchColor = $matchStyle['color'];
-                    $matchBadge = '<span class="badge my-1" style="background-color:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;">Match ' . $percentage . '%</span>';
+            // 3-tier skill matching
+            $skillArr = is_array($row->matched_skills ?? null) ? $row->matched_skills : [];
+            $allCandidateSkills = array_values(array_filter(array_map('trim', explode(',', (string) @$row->skills))));
+            $targetJobId = $row->job_id ?? ($jobid ?? 0);
+            $jobSkillsArg = $rowMaps['skills'][$targetJobId] ?? ($rowMaps['job_skills'] ?? null);
+            if ($targetJobId > 0 || !empty($jobSkillsArg)) {
+                $percentageString = GeneralMethod::skill_percentage($jobSkillsArg ?: $targetJobId, $allCandidateSkills);
+                $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
+            } else {
+                $matches = $row->matched_skill_count ?? 0;
+                $totalElements = count($requiredSkillsForDisplay ?? []);
+                $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
+                $percentage = (int) round(min($matchPercentage, 100));
+            }
+            $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+            $matchBg = $matchStyle['bg'];
+            $matchColor = $matchStyle['color'];
 
-                    // Matched skill highlighting, three tiers — mirrors
-                    // internal_bench_ajax.blade.php: a match against a STARRED
-                    // (mandatory) requirement is a different signal than a match
-                    // against a skill that was just typed but not starred.
-                    // $row->matched_skills and $row->matched_mandatory_skills are
-                    // both computed server-side (GeneralMethod::matchedSkillsList())
-                    // in career_apply_data_ajax()'s must+should hybrid query.
-                    $mandatoryMatched = $row->matched_mandatory_skills ?? [];
-                    $optionalMatched = array_values(array_udiff($skillArr, $mandatoryMatched, 'strcasecmp'));
-                    $unmatchedSkillsArr = array_values(array_udiff($allCandidateSkills, $skillArr, 'strcasecmp'));
-                    foreach ($mandatoryMatched as $sval) {
-                        $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . ucfirst($sval) . '</span>  ';
-                    }
-                    foreach ($optionalMatched as $sval) {
-                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
-                    }
-                    foreach ($unmatchedSkillsArr as $sval) {
-                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                    }
+            $mandatoryMatched = $row->matched_mandatory_skills ?? [];
+            $optionalMatched = array_values(array_udiff($skillArr, $mandatoryMatched, 'strcasecmp'));
+            $unmatchedSkillsArr = array_values(array_udiff($allCandidateSkills, $skillArr, 'strcasecmp'));
 
-                    echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
-			      <a href="javascript:void(0);"   data-row-id="' .
-                        @$row->id .
-                        '" class="' .
-                        $profile_sidebar_css .
-                        '">
-			      <div class="symbol-label ' .
-                        @$bgTextDecore .
-                        ' border-radius-5">' .
-                        strtoupper(@$strVal) .
-                        '</div>
-                    </a>
-                    </div>                  
-                    <div class="d-flex flex-column">
-                    <a href="javascript:void(0);"  data-row-id="' .
-                        @$row->id .
-                        '"  class="text-dark fw-bolder text-hover-primary fs-6 ' .
-                        $profile_sidebar_css .
-                        ' " data-toggle="tooltip" title="' .
-                        ucwords(@$row->full_name) .
-                        '">' .
-                        ucwords(mb_substr(@$row->full_name, 0, 22)) .
-                        '</a>
-                    <a href="javascript:void(0);"  data-row-id="' .
-                        @$row->id .
-                        '"  class="text-muted fw-bold d-block fs-7 text-hover-primary ' .
-                        $profile_sidebar_css .
-                        ' " data-toggle="tooltip" title="' .
-                        ucwords(@$row->current_designation) .
-                        '">' .
-                        ucwords(mb_substr(@$row->current_designation, 0, 22)) .
-                        '</a>
-                    </div>
-                    <div class="' .
-                        $skilltagclass .
-                        '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                            '.$matchBadge.'
-                                        
-                                        ' .
-                        $skilltag .
-                        '
-                  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $total_exp = $row->total_exp;
-                    if($total_exp == '0.'){
-                    $total_exp = str_replace('.','',$total_exp);
-                    }
-                    $rel_exp = $row->rel_exp;
-                    if($total_exp == '0.'){
-                    $rel_exp = str_replace('.','',$rel_exp);
-                    }
-                    if($total_exp==0 && $rel_exp==0){
-                        $rel_exp = ''; 
-                    }
+            // Experience
+            $experience = trim((string) @$row->total_exp);
+            if ($experience === '0.') {
+                $experience = '0';
+            }
+            $formattedExperience = $experience !== '' ? $experience : '0';
 
-                        $experience = trim((string) @$row->total_exp);
-                        // Keep exact value like 3.0, 5.6, 9.10 — remove only ".00"
-                        if (strpos($experience, '.') !== false) {
-                            $parts = explode('.', $experience);
-                            if (isset($parts[1])) {
-                                // If decimals are exactly "00", remove them
-                                if ($parts[1] === '00') {
-                                    $formattedExperience = $parts[0];
-                                } else {
-                                    $formattedExperience = $experience; // keep as-is like 3.0, 5.6, 9.10
-                                }
-                            } else {
-                                $formattedExperience = $experience;
-                            }
-                        } else {
-                            $formattedExperience = $experience;
-                        }
+            $rel_experience = trim((string) @$row->rel_exp);
+            if ($rel_experience === '0.') {
+                $rel_experience = '0';
+            }
+            if ((float) ($row->total_exp ?? 0) == 0 && (float) ($row->rel_exp ?? 0) == 0) {
+                $rel_formattedExperience = '0';
+            } else {
+                $rel_formattedExperience = $rel_experience !== '' ? $rel_experience : '0';
+            }
 
-                        $rel_experience = trim((string) @$row->rel_exp);
-                        // Keep exact value like 3.0, 5.6, 9.10 — remove only ".00"
-                        if (strpos($rel_experience, '.') !== false) {
-                            $parts = explode('.', $rel_experience);
-                            if (isset($parts[1])) {
-                                // If decimals are exactly "00", remove them
-                                if ($parts[1] === '00') {
-                                    $rel_formattedExperience = $parts[0];
-                                } else {
-                                    $rel_formattedExperience = $rel_experience; // keep as-is like 3.0, 5.6, 9.10
-                                }
-                            } else {
-                                $rel_formattedExperience = $rel_experience;
-                            }
-                        } else {
-                            $rel_formattedExperience = $rel_experience;
-                        }
-
-                        echo '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .$formattedExperience . ' Y' . 
-                        '</a>
-                        <span class="text-muted fw-bold d-block fs-7">' . $rel_formattedExperience . ' Y'. 
-                        '</span>
-                    </div>';
-            @endphp
-
-            </td>
-            <td>
-                @php
-
-                    $pay_rate_currency = '';
-                    $pay_rate_currency = $currencySymbole[@$jobCurrency];
-
-                    $bill_rate_currency = '';
-                    $bill_rate_currency = $currencySymbole[@$jobCurrency];
-
-                    $pay_rate_amount = '';
-
-                    $currencymain = GeneralMethod::currency(); // Currency code
-                    // dd($currency);
-                    $currency = $currencymain[@$jobCurrency];
-                    // dd($currency);
-                    $convertedAmounEctc = GeneralMethod::conversionRates($currency, $row->ectc_yearly, 0);
-                    $convertedAmounCtc = GeneralMethod::conversionRates($currency, $row->ctc_yearly, 0);
-
-                    $exchangeRates = [
-                        'INR' => 1,
-                        'EUR' => 90.33, // Example exchange rate for EUR to INR
-                        'JPY' => 0.68, // Example exchange rate for JPY to INR
-                        'GBP' => 103.7, // Example exchange rate for GBP to INR
-                        'USD' => 83.63, // Example exchange rate for USD to INR
-                        'AED' => 20.38, // Example exchange rate for AED to INR
-                    ];
-                    // dd($currency);
-                    // $currencydd  = $currencymain[$currency];
-                    $exchangeRateInrToEur = 1 / $exchangeRates[$currency];
-
-                    // dd($convertedAmounEctc, $convertedAmounCtc,$sal_mode,$convertedAmounEctc[$sal_mode]);
-
+            // Compensation (preserve exact career_apply_ajax logic)
+            $plainCurrencySymbol = CurrencyService::resolvePlainSymbolFromLegacy(@$jobCurrency, $currencySymbole);
+            $pay_rate_currency = $plainCurrencySymbol;
+            $bill_rate_currency = $plainCurrencySymbol;
+            $pay_rate_amount = '0';
+            $bill_rate_amount = '0';
+            if ((@$row->ectc_yearly ?? 0) > 0 || (@$row->ctc_yearly ?? 0) > 0) {
+                $currencymain = GeneralMethod::currency();
+                $currencyCode = $currencymain[@$jobCurrency] ?? 'INR';
+                $convertedAmounEctc = GeneralMethod::conversionRates($currencyCode, $row->ectc_yearly, 0);
+                $convertedAmounCtc = GeneralMethod::conversionRates($currencyCode, $row->ctc_yearly, 0);
+                if (@$jobCurrency == 0) {
+                    $payFormatViewSalary = GeneralMethod::formatViewSalary($row->ctc_yearly, $symbols, $jobMode);
+                    $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly, $symbols, $jobMode);
+                    $pay_rate_amount = explode('.', (string) GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount))[0];
+                    $bill_rate_amount = explode('.', (string) GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount))[0];
+                } else {
                     $effective_sal_mode = ($sal_mode !== '' && $sal_mode !== null) ? $sal_mode : 0;
-                    $bill_rate_amount = $convertedAmounEctc[$effective_sal_mode] ?? 0;
-                    $pay_rate_amount = $convertedAmounCtc[$effective_sal_mode] ?? 0;
+                    $bill_rate_amount = explode('.', (string) GeneralMethod::thousandsCurrencyFormat($convertedAmounEctc[$effective_sal_mode] ?? 0))[0];
+                    $pay_rate_amount = explode('.', (string) GeneralMethod::thousandsCurrencyFormat($convertedAmounCtc[$effective_sal_mode] ?? 0))[0];
+                }
+            }
+            $pay_rate_mode = @$salaryMode[@$jobMode] ?? '';
+            $bill_rate_mode = @$salaryMode[@$jobMode] ?? '';
 
+            // Availability / Notice period
+            $npArr = ['Notice period', 'Available from', 'Immediate'];
+            $npModeIdx = (int) (@$row->serving_notice_period_mode ?? 0);
+            $npLabel = $npArr[$npModeIdx] ?? 'Notice period';
+            $npDate = $row->np_id ?? '';
+            if ($npModeIdx == 0) {
+                $npDate = ($row->np_id ?? '0') . ((int) ($row->np_id ?? 0) === 1 ? ' Day' : ' Days');
+            } elseif ($npModeIdx == 1) {
+                $npDate = date('d-M-y', strtotime($row->np_id));
+                $today = date('Y-m-d');
+                if (date('Y-m-d', strtotime($row->np_id)) < $today) {
+                    $npDate = 'Immediate';
+                    $npLabel = 'Immediate';
+                }
+            }
 
-                    $payFormatViewSalary = GeneralMethod::formatViewSalary($row->ctc_yearly,$symbols,$jobMode);
-                    $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly,$symbols,$jobMode);
+            if ($npLabel === 'Immediate') {
+                $npColor = '#16a34a';
+            } elseif ($npModeIdx == 0) {
+                $npColor = '#d97706';
+            } elseif ($npModeIdx == 1) {
+                $npColor = '#7c3aed';
+                $npDate = 'SNP LWD ' . $npDate;
+            } else {
+                $npColor = '#181c32';
+            }
 
+            // Location & Qualification
+            $row_country_name = @$row->country_name;
+            $row_city_name = @$row->city_name;
+            $qualFull = mb_strtoupper((string) @$row->qualification_name);
+            $wmMeta = AppTrackerCardPresenter::resolveWorkMode($row);
+            $wmIcon = !empty($wmMeta['icon']) ? $wmMeta['icon'] : 'fa-solid fa-building';
+            $wmLabel = !empty($wmMeta['label']) ? $wmMeta['label'] : '–';
 
-                    $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount);
-                    $pay_rate_amount = explode('.', $pay_rate_amount)[0];
+            // Last Active
+            $updated_at = !empty($row->updated_at) ? GeneralMethod::ymdTodmyNotTime($row->updated_at) : '—';
 
-                    $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount);
-                    $bill_rate_amount = explode('.', $bill_rate_amount)[0];
-                    // dd( $bill_rate_amount,$pay_rate_amount);
-                    $pay_rate_mode = '';
-                    $pay_rate_mode = @$salaryMode[@$jobMode];
-                    //$current_ctc_mode		= mb_substr($salaryMode[0], 0, 1);
+            // Added state
+            $candId = (int) (@$row->id ?? 0);
+            $isAdded = isset($assignedCandidateIds) && in_array($candId, $assignedCandidateIds, true);
+            if (!$isAdded && !isset($assignedCandidateIds)) {
+                try {
+                    $existingCandidatesQuery = DB::table('add_job_wise_condidates')
+                        ->select('job_application_id')
+                        ->where('add_job_wise_condidates.job_id', '=', $jobid)
+                        ->where('add_job_wise_condidates.job_application_id', '=', $candId)
+                        ->count();
+                    $recCounter = DB::table('rec_candidate_assign')
+                        ->where('source_jobid', '=', $jobid)
+                        ->where(function ($q) use ($candId) {
+                            $q->where('source_from_id', $candId)
+                              ->orWhere('source_application_id', $candId);
+                        })
+                        ->where('ac_status', 1)
+                        ->count();
+                    $isAdded = $existingCandidatesQuery > 0 || $recCounter > 0;
+                } catch (\Throwable $e) {
+                    $isAdded = false;
+                }
+            }
+        @endphp
 
-                    $bill_rate_mode = '';
-                    $bill_rate_mode = @$salaryMode[@$jobMode];
-                    //$current_ectc_mode		= mb_substr($salaryMode[0], 0, 1);
+        <article class="wcf-cand-card" data-candidate-id="{{ @$row->id }}">
+            <div class="wcf-cand-grid">
+                {{-- Sub-Card 1: Candidate Info --}}
+                <div class="wcf-cand-subcard wcf-cand-subcard--info">
+                    <div class="wcf-subcard-head">
+                        <span class="wcf-subcard-label">
+                            <span class="form-check form-check-sm form-check-custom form-check-solid me-1">
+                                <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" value="{{ $row->id }}" />
+                            </span>
+                            Candidate Info
+                        </span>
+                        <span class="wcf-career-badge">Career Page</span>
+                    </div>
+                    <div class="wcf-cand-info-row">
+                        <a href="javascript:void(0);" data-row-id="{{ @$row->id }}" class="{{ $profile_sidebar_css }} wcf-avatar {{ $bgTextDecore }}">
+                            {{ strtoupper(@$strVal) }}
+                        </a>
+                        <div class="wcf-cand-info-meta">
+                            <a href="javascript:void(0);" data-row-id="{{ @$row->id }}" class="{{ $profile_sidebar_css }} wcf-cand-name" title="{{ ucwords((string) @$row->full_name) }}">
+                                {{ ucwords((string) @$row->full_name) }}
+                            </a>
+                            <div class="wcf-cand-role" title="{{ ucwords((string) @$row->current_designation) }}">
+                                {{ ucwords((string) @$row->current_designation) ?: '—' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    echo '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                        @$bill_rate_currency .
-                        @$bill_rate_amount .
-                        '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
-                        $bill_rate_mode .
-                        '</span></a>
-                    <span class="text-muted fw-bold d-block fs-7">' .
-                        $pay_rate_currency .
-                        @$pay_rate_amount .
-                        '<span style="font-size:.85em;font-weight:500;color:inherit;white-space:nowrap;">/' .
-                        $pay_rate_mode .
-                        '</span></span>
-                  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $npArr = ['Notice period', 'Available from', 'Immediate'];
-                    $npDate = $row->np_id;
-                    $npLabel = $npArr[$row->serving_notice_period_mode];
-                    if ($row->serving_notice_period_mode == 0) {
-                        $npDate = $row->np_id . ' Days';
-                        if ($npDate == 1) {
-                            $npDate = $row->np_id . ' Day';
-                        }
-                    } elseif ($row->serving_notice_period_mode == 1) {
-                        $originalDate = $row->np_id;
-                        $npDate = '' . date('d-M-y', strtotime($originalDate));
-                         $today = date('Y-m-d');
-                            if(date('Y-m-d', strtotime($row->np_id)) < $today){
-                              $npDate = "Immediate";
-                              $npLabel = 'Immediate';
-                            }
-                    } else {
-                        $npDate = $row->np_id;
-                    }
+                {{-- Sub-Card 2: Compensation & Exp --}}
+                <div class="wcf-cand-subcard">
+                    <div class="wcf-subcard-head">
+                        <span class="wcf-subcard-label">Compensation &amp; Exp</span>
+                    </div>
+                    <div>
+                        <div class="wcf-sal-main" title="Expected: {{ $bill_rate_currency . $bill_rate_amount . '/' . $bill_rate_mode }}">
+                            {{ $bill_rate_currency }}{{ $bill_rate_amount }}<span class="wcf-sal-mode">/{{ $bill_rate_mode }}</span>
+                        </div>
+                        <div class="wcf-sal-sub">Cur: {{ $pay_rate_currency }}{{ $pay_rate_amount }}/{{ $pay_rate_mode }}</div>
+                    </div>
+                    <div>
+                        <div class="wcf-exp-main" title="Total: {{ $formattedExperience }} Y | Relevant: {{ $rel_formattedExperience }} Y">
+                            <i class="fa-solid fa-briefcase me-1 text-muted" style="font-size:10px;"></i>{{ $formattedExperience }} Y Total
+                        </div>
+                        <div class="wcf-exp-sub">{{ $rel_formattedExperience }} Y Relevant</div>
+                    </div>
+                </div>
 
-                    if ($npLabel === 'Immediate') {
-                        $npColor = '#16a34a';
-                    } elseif ($row->serving_notice_period_mode == 0) {
-                        $npColor = '#d97706';
-                    } elseif ($row->serving_notice_period_mode == 1) {
-                        $npColor = '#7c3aed';
-                        $npDate = 'SNP LWD ' . $npDate;
-                    } else {
-                        $npColor = '#181c32';
-                    }
+                {{-- Sub-Card 3: Availability --}}
+                <div class="wcf-cand-subcard">
+                    <div class="wcf-subcard-head">
+                        <span class="wcf-subcard-label">Availability</span>
+                    </div>
+                    <div>
+                        <div class="wcf-avail-main" style="color: {{ $npColor }};">
+                            {{ $npLabel }}
+                        </div>
+                        <div class="wcf-avail-sub" title="{{ @$row->np_id }}">
+                            <i class="fa-regular fa-clock me-1"></i>{{ $npDate ?: '—' }}
+                        </div>
+                    </div>
+                </div>
 
-                    echo '<div class="d-flex flex-column">
-					  <a href="javascript:void(0);" class="fw-bolder fs-6" style="color:' . $npColor . ' !important;">' .
-                        $npLabel .
-                        '</a>
-					  <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title="' .
-                        $row->np_id .
-                        '">' .
-                        $npDate .
-                        '</span>
-					</div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $row_country_name = @$row->country_name;
-                    $row_state_name = @$row->state_name;
-                    $row_city_name = @$row->city_name;
-                    echo '<div class="d-flex flex-column">
-                    	<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        ucwords($row_city_name) . ', ' . strtoupper($row_country_name) .
-                        '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) . ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) .
-                        '</a>
-                    	<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
-                        '">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 20)) .
-                        '</span>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $updated_at = '';
-                    $updated_at = GeneralMethod::ymdTodmyNotTime($row->updated_at); //$newDate = date("d M , Y", strtotime($row->updated_at));
-                    echo '<div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6">' .
-                        @$updated_at .
-                        '</span> </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $candId = (int) (@$row->id ?? 0);
-                    $isAdded = (isset($assignedCandidateIds) && in_array($candId, $assignedCandidateIds, true));
-                    if (! $isAdded && ! isset($assignedCandidateIds)) {
-                        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-                            ->select('job_application_id')
-                            ->where('add_job_wise_condidates.job_id', '=', $jobid)
-                            ->where('add_job_wise_condidates.job_application_id', '=', $candId)->count();
-                        $recCounter = DB::table('rec_candidate_assign')
-                            ->select('id')
-                            ->where('source_jobid', '=', $jobid)
-                            ->where(function ($q) use ($candId) {
-                                $q->where('source_from_id', $candId)
-                                  ->orWhere('source_application_id', $candId);
-                            })
-                            ->where('ac_status', 1)
-                            ->count();
-                        $isAdded = ($existingCandidatesQuery > 0 || $recCounter > 0);
-                    }
+                {{-- Sub-Card 4: Location & Degree (With Restored Work Mode) --}}
+                <div class="wcf-cand-subcard">
+                    <div class="wcf-subcard-head">
+                        <span class="wcf-subcard-label">Location &amp; Degree</span>
+                    </div>
+                    <div>
+                        <div class="wcf-loc-city text-truncate" title="{{ ucwords((string) $row_city_name) }}, {{ strtoupper((string) $row_country_name) }}">
+                            <i class="fa-solid fa-location-dot me-1"></i>{{ ucwords((string) $row_city_name) ?: '—' }}@if(!empty($row_country_name) && $row_country_name !== '----'), {{ strtoupper(mb_substr((string) $row_country_name, 0, 2)) }}@endif
+                        </div>
+                        <div class="wcf-loc-mode text-truncate" style="font-size:11px; color:#475569; margin:2px 0;" title="{{ !empty($wmMeta['label']) ? e($wmMeta['label']) : 'Work Mode: –' }}">
+                            <i class="{{ $wmIcon }} me-1 text-primary" style="font-size:10px;"></i><span>{{ $wmLabel }}</span>
+                        </div>
+                        <div class="wcf-loc-edu wcf-edu-uppercase text-truncate" style="font-size:11px;" title="{{ @$row->qualification_name }}">
+                            <i class="fa-solid fa-graduation-cap me-1"></i>{{ $qualFull ?: '—' }}
+                        </div>
+                    </div>
+                </div>
 
-                    if ($isAdded) {
-                        $html = '<div class="d-flex flex-column"> <button class="btn btn-sm" disabled style="background-color: #059669; color: #fff; opacity: 1; cursor: default; border: none; font-weight: 600;">Added</button><span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title=""> '.@$row->posted_by.'</span> </div>';
-                    } else {
-                        $html = '<div class="d-flex flex-column"> 
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-source_from_type="3" data-row-id="' . @$row->id . '" data-row-jobid="' . @$jobid . '">
-                                        Add to Job
-                                    </a> 
-                                </div>';
-                    }
+                {{-- Sub-Card 5: Applied / Updated --}}
+                <div class="wcf-cand-subcard">
+                    <div class="wcf-subcard-head">
+                        <span class="wcf-subcard-label">Applied On</span>
+                    </div>
+                    <div>
+                        <div class="wcf-active-date" title="Updated on {{ @$updated_at }}">
+                            <i class="fa-regular fa-calendar me-1"></i>{{ @$updated_at ?: '—' }}
+                        </div>
+                        <div class="wcf-avail-sub">
+                            <i class="fa-solid fa-globe me-1"></i>Direct Applicant
+                        </div>
+                    </div>
+                </div>
 
-                    echo $html;
+                {{-- Sub-Card 6: Action --}}
+                <div class="wcf-cand-subcard">
+                    <div class="wcf-subcard-head">
+                        <span class="wcf-subcard-label">Action</span>
+                    </div>
+                    <div class="wcf-action-wrap">
+                        <div class="d-flex flex-column">
+                            @if ($isAdded)
+                                <button type="button" class="btn btn-sm" disabled
+                                    style="background-color:#059669;color:#fff;opacity:1;cursor:default;border:none;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;gap:5px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Added
+                                </button>
+                                @if (!empty(@$row->posted_by))
+                                    <span class="wcf-added-by" title="{{ @$row->posted_by }}">{{ @$row->posted_by }}</span>
+                                @endif
+                            @else
+                                <a href="javascript:void(0);"
+                                    class="btn btn-sm btn-primary add_to_inreview"
+                                    style="font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;gap:5px;"
+                                    data-row-source_from_type="3"
+                                    data-row-id="{{ @$row->id }}"
+                                    data-row-jobid="{{ @$jobid }}">
+                                    Add to Job
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                @endphp
-            </td>
-
-        </tr>
+            {{-- Bottom Intelligence & 3-Tier Skills Strip --}}
+            <div class="wcf-cand-bottom">
+                <div class="wcf-bottom-left">
+                    <span class="wcf-match-pill" title="Matched {{ $percentage }}% of required job skills"
+                        style="background:{{ $matchBg }};color:{{ $matchColor }};cursor:help;">
+                        Match {{ $percentage }}%
+                    </span>
+                    <div class="wcf-skills-scroll">
+                        @foreach ($mandatoryMatched as $sval)
+                            <span class="wcf-skill-pill is-mandatory" title="Matches a mandatory (starred) skill">
+                                <span style="color:#eab308;">&#9733;</span> {{ ucfirst($sval) }}
+                            </span>
+                        @endforeach
+                        @foreach ($optionalMatched as $sval)
+                            <span class="wcf-skill-pill is-matched" title="Matches a required skill">
+                                {{ ucfirst($sval) }}
+                            </span>
+                        @endforeach
+                        @foreach ($unmatchedSkillsArr as $sval)
+                            <span class="wcf-skill-pill">{{ ucfirst($sval) }}</span>
+                        @endforeach
+                        @if (empty($mandatoryMatched) && empty($optionalMatched) && empty($unmatchedSkillsArr))
+                            <span class="wcf-skills-empty">No skills listed</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </article>
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="8" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr>
+    <div class="wcf-empty-card">
+        <div class="wcf-empty-icon">
+            <i class="fa-solid fa-users-slash"></i>
+        </div>
+        @if (!empty($search ?? null))
+            <div class="wcf-empty-title">No career page applicants match &quot;{{ $search }}&quot;</div>
+            <div class="wcf-empty-sub">Clear or change the search text to see all direct applicants.</div>
+        @elseif (!empty($hasActiveFilters ?? false))
+            <div class="wcf-empty-title">No career page applicants match your current filters</div>
+            <div class="wcf-empty-sub">Try widening or clearing a filter to see more results.</div>
+        @else
+            <div class="wcf-empty-title">No career page applicants found yet</div>
+            <div class="wcf-empty-sub">Candidates who apply via your career page will appear here.</div>
+        @endif
+    </div>
 @endif

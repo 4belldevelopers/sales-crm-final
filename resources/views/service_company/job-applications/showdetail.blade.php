@@ -3633,22 +3633,22 @@
                                   d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
                                 </path>
                               </svg>
-                              <svg class="star-skill '.(@$exp->rating >= 1 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                              <svg class="star-skill '.(@$exp->rating >= 2 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
                                 <path
                                   d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
                                 </path>
                               </svg>
-                              <svg class="star-skill '.(@$exp->rating >= 1 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                              <svg class="star-skill '.(@$exp->rating >= 3 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
                                 <path
                                   d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
                                 </path>
                               </svg>
-                              <svg class="star-skill '.(@$exp->rating >= 1 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                              <svg class="star-skill '.(@$exp->rating >= 4 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
                                 <path
                                   d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
                                 </path>
                               </svg>
-                              <svg class="star-skill '.(@$exp->rating >= 1 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none"
+                              <svg class="star-skill '.(@$exp->rating >= 5 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none"
                                 aria-hidden="true">
                                 <path
                                   d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
@@ -7058,22 +7058,34 @@ setTimeout(() => {
       ];
     }
   }
+  $rsVerifiedSkillsSet = [];
+  if (!empty($application->skills)) {
+    foreach (explode(',', (string) $application->skills) as $__rawSk) {
+      $__normSk = $rsSkillNormalize($__rawSk);
+      if ($__normSk !== '') $rsVerifiedSkillsSet[$__normSk] = true;
+    }
+  }
   if(empty($rsSkills)&&!empty($jobSkill)){
     foreach($jobSkill as $sv){
       $sv=(object)$sv; $sn=trim((string)($sv->skill_name??'')); if(!$sn) continue;
       $normKey = $rsSkillNormalize($sn);
       if(isset($rsSeenSkillKeys[$normKey])) continue;
-      $rsSeenSkillKeys[$normKey] = true;
       $expData=$rsParseSkillExperience($sv->skill_value??'');
+      $resolvedRating = $rsResolveSkillRating($sv,$sn);
+      $hasExpOrRating = ($expData['value'] > 0 || $resolvedRating > 0);
+      if (!isset($rsVerifiedSkillsSet[$normKey]) && !$hasExpOrRating) {
+        continue; // Never inject unpossessed, unevaluated job skills into candidate report
+      }
+      $rsSeenSkillKeys[$normKey] = true;
       $rsSkills[]=[
         'name'=>$sn,
-        'expText'=>$expData['text'],
+        'expText'=>$expData['value'] > 0 ? $expData['text'] : '--',
         'exp'=>$expData['value'],
-        'rating'=>$rsResolveSkillRating($sv,$sn)
+        'rating'=>$resolvedRating
       ];
     }
   }
-  if(empty($rsSkills)&&!empty($application->skills)){
+  if(!empty($application->skills)){
     foreach(array_slice(array_values(array_filter(array_map('trim',explode(',', $application->skills)))),0,12) as $sn){
       $normKey = $rsSkillNormalize($sn);
       if($sn && !isset($rsSeenSkillKeys[$normKey])) {
@@ -8516,8 +8528,8 @@ function roundedCard(stackContent, bgFill, borderStroke, mb) {
 
 /* Build the 100% exact replica of the Pre-Screened Candidate Report PDF definition */
 function buildDef(d){
-  var matchRaw=d.matchText?d.matchText.replace(/[^0-9.]/g,''):'92';
-  var matchNum=parseFloat(matchRaw)||92;
+  var matchRaw=d.matchText?d.matchText.replace(/[^0-9.]/g,''):'0';
+  var matchNum=parseFloat(matchRaw)||0;
   var mc=matchNum>=70?'#16A34A':matchNum>=40?'#EA580C':'#DC2626';
   var mLabel=matchNum>=90?'Excellent Match':matchNum>=70?'Strong Match':matchNum>=40?'Moderate Match':'Low Match';
 
@@ -8720,33 +8732,33 @@ function buildDef(d){
     ]
   ];
 
-  /* Extract & Filter pure candidate skills with ACCURATE column mapping */
+  /* Extract & Filter pure candidate skills with ACCURATE column mapping (zero hardcoded dummy data) */
   var rawSkills = (d.skillsTable && d.skillsTable.rows && d.skillsTable.rows.length) ? d.skillsTable.rows.filter(function(r){
     var name = (r[0]||'').toString().toLowerCase();
     return name.indexOf('question') === -1 && name.indexOf('communication rating') === -1 && name.indexOf('comfortable with wfo') === -1;
   }).slice(0, 8).map(function(r){
-    var skillName = r[0] || 'Skill';
-    var expDuration = (r[1] && r[1] !== 'Exp') ? r[1] : (r[2] && r[2].indexOf('Year') !== -1 ? r[2] : '1.0 Years');
-    var ratingVal = (r[2] && r[2] !== expDuration) ? r[2] : (r[3] && r[3] !== '✔' && r[3] !== '✖' ? r[3] : '★★★★☆');
+    var skillName = r[0] || '';
+    var expDuration = (r[1] && r[1] !== 'Exp') ? r[1] : ((r[2] && r[2].indexOf('Year') !== -1) ? r[2] : '--');
+    var ratingVal = (r[2] && r[2] !== expDuration) ? r[2] : (r[3] && r[3] !== '✔' && r[3] !== '✖' ? r[3] : 'Not Rated');
     var statusVal = (r[3] === '✔' || r[3] === '✖' || r[3] === '⚠') ? r[3] : '✔';
     return [skillName, expDuration, ratingVal, statusVal];
-  }) : [
-    ['UI DESIGNER', '1.1 Years', '2 / 5', '✔'],
-    ['FIGMA', '2.1 Years', '1 / 5', '✔'],
-    ['ADOBE XD', '10.9 Years', '2 / 5', '✔'],
-    ['SKETCH', '11. Years', '3 / 5', '✔'],
-    ['HTML', '12. Years', '4 / 5', '✔'],
-    ['CSS', '13. Years', '5 / 5', '✔']
-  ];
+  }) : [];
 
-  rawSkills.forEach(function(s){
+  if (!rawSkills.length) {
     skillRows.push([
-      {text:s[0],fontSize:8,bold:true,color:'#111827'},
-      {text:s[1],fontSize:8,color:'#374151'},
-      {text:s[2],fontSize:8,color:'#EA580C',bold:true},
-      {stack:[{svg:s[3]==='✖'?SVG_ICONS.amberClock:SVG_ICONS.greenCheck,width:10,alignment:'center'}],alignment:'center'}
+      {text:'No verified skill records found in candidate profile.',colSpan:4,fontSize:8,color:'#6B7280',alignment:'center'},
+      {},{},{}
     ]);
-  });
+  } else {
+    rawSkills.forEach(function(s){
+      skillRows.push([
+        {text:s[0],fontSize:8,bold:true,color:'#111827'},
+        {text:s[1],fontSize:8,color:'#374151'},
+        {text:s[2],fontSize:8,color:'#EA580C',bold:true},
+        {stack:[{svg:s[3]==='✖'?SVG_ICONS.amberClock:SVG_ICONS.greenCheck,width:10,alignment:'center'}],alignment:'center'}
+      ]);
+    });
+  }
 
   var skillsIntelligenceCard = roundedCard([
     {columns:[{svg:SVG_ICONS.note,width:11,margin:[0,1,4,0]},{text:'SKILLS INTELLIGENCE',bold:true,fontSize:8.5,color:'#111827'}],margin:[0,0,0,6]},
@@ -8757,7 +8769,7 @@ function buildDef(d){
   ], '#FFFFFF', '#E5E7EB', 8);
 
   /* 5. PROFESSIONAL SUMMARY & RECRUITER COMMENTS */
-  var summaryText = d.summary || 'Deepak Raut is an experienced UI/UX Designer with strong expertise in user interface architecture, Figma design systems, wireframing, and interactive prototyping. Demonstrates clean design principles, usability testing, and cross-functional team collaboration.';
+  var summaryText = d.summary || 'No professional summary provided.';
   if(summaryText.length > 350) summaryText = summaryText.substring(0, 350) + '…';
 
   var summaryCard = roundedCard([
@@ -8765,7 +8777,7 @@ function buildDef(d){
     {text:summaryText,fontSize:7.5,color:'#374151',lineHeight:1.35}
   ], '#FFFFFF', '#E5E7EB', 0);
 
-  var rnContent = d.rnText || 'Candidate has solid technical foundation with hands-on experience in the required technologies. Code quality, problem-solving approach, and technical depth were assessed during the screening.';
+  var rnContent = d.rnText || 'No recruiter comments recorded yet.';
   if(rnContent.length > 250) rnContent = rnContent.substring(0, 250) + '…';
 
   var recruiterCommentsCard = roundedCard([

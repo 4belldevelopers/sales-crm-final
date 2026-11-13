@@ -949,6 +949,114 @@
 <script>
     $(document).ready(function() {
 
+        // ─── Client-First Infrastructure & Concurrency Guards ───
+        var isMutationInFlight = false;
+        var activeDiagnosticXhr = null;
+        var activeStatusXhr = null;
+        var DRAFT_STORAGE_KEY = 'jero_linkedin_settings_draft';
+
+        /**
+         * Generate RFC 4122 v4 UUID for two-tier request idempotency.
+         */
+        function generateUUID() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        /**
+         * Cross-Tab Synchronization via BroadcastChannel.
+         */
+        var syncChannel = null;
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                syncChannel = new BroadcastChannel('jero_linkedin_settings_sync');
+                syncChannel.onmessage = function(event) {
+                    if (!event || !event.data) return;
+                    if (event.data.type === 'STATUS_TOGGLED') {
+                        var isEnabled = (event.data.status === 'enable');
+                        applyStatusUiState(isEnabled);
+                    } else if (event.data.type === 'SETTINGS_SAVED') {
+                        if (event.data.client_id) {
+                            $('#client_id').val(event.data.client_id);
+                        }
+                        var isEnabled = (event.data.status === 'enable');
+                        applyStatusUiState(isEnabled);
+                        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+                    }
+                };
+            }
+        } catch (e) {
+            // Non-critical fallback
+        }
+
+        /**
+         * Helper to reflect status in UI switch and badges without DOM mutation.
+         */
+        function applyStatusUiState(isChecked) {
+            $('#status').prop('checked', isChecked);
+            $('#status-toggle-label').text(isChecked ? 'Enabled' : 'Disabled');
+
+            var $badgeInline = $('#status-badge-inline');
+            var $toolbarBadge = $('#toolbar-status-badge');
+
+            if (isChecked) {
+                $badgeInline.removeClass('badge-light-secondary text-muted').addClass('badge-light-success text-success')
+                    .html('<i class="fas fa-check-circle text-success me-1"></i> System Active');
+                $toolbarBadge.html('<span class="linkedin-status-pill active"><i class="fas fa-check-circle text-success"></i> Active &amp; Ready</span>');
+            } else {
+                $badgeInline.removeClass('badge-light-success text-success').addClass('badge-light-secondary text-muted')
+                    .html('<i class="fas fa-pause-circle text-muted me-1"></i> System Paused');
+                $toolbarBadge.html('<span class="linkedin-status-pill inactive"><i class="fas fa-pause-circle text-muted"></i> Integration Inactive</span>');
+            }
+        }
+
+        /**
+         * Client-side draft persistence via sessionStorage (400ms debounce).
+         */
+        function restoreDraftFromStorage() {
+            try {
+                var draftRaw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+                if (draftRaw) {
+                    var draft = JSON.parse(draftRaw);
+                    if (draft && typeof draft === 'object') {
+                        if (draft.client_id && !$('#client_id').val()) {
+                            $('#client_id').val(draft.client_id);
+                        }
+                        if (draft.client_secret && !$('#client_secret').val()) {
+                            $('#client_secret').val(draft.client_secret);
+                        }
+                    }
+                }
+            } catch (err) {
+                // Ignore storage error
+            }
+        }
+
+        var draftTimer = null;
+        function saveDraftToStorage() {
+            clearTimeout(draftTimer);
+            draftTimer = setTimeout(function() {
+                try {
+                    var draft = {
+                        client_id: $('#client_id').val(),
+                        client_secret: $('#client_secret').val(),
+                        updated_at: Date.now()
+                    };
+                    sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+                } catch (e) {
+                    // Ignore storage quota
+                }
+            }, 400);
+        }
+
+        $('#client_id, #client_secret').on('input paste', saveDraftToStorage);
+        restoreDraftFromStorage();
+
         // ─── 1. Password Eye Toggle ───
         $('#toggle-secret-btn').on('click', function(e) {
             e.preventDefault();
@@ -1012,39 +1120,43 @@
             setTimeout(function() { $btn.html(originalHtml); }, 1800);
         }
 
-        // ─── 3. Switch Change Handler (Optimistic UI + Status Toggle) ───
+        // ─── 3. Switch Change Handler (Optimistic UI + Status Toggle + Idempotency) ───
         $('#status').on('change', function() {
+            if (isMutationInFlight) {
+                return false;
+            }
+
             var isChecked = $(this).is(':checked');
             var targetStatus = isChecked ? 'enable' : 'disable';
 
-            $('#status-toggle-label').text(isChecked ? 'Enabled' : 'Disabled');
+            applyStatusUiState(isChecked);
 
-            var $badgeInline = $('#status-badge-inline');
-            var $toolbarBadge = $('#toolbar-status-badge');
-
-            if (isChecked) {
-                $badgeInline.removeClass('badge-light-secondary text-muted').addClass('badge-light-success text-success')
-                    .html('<i class="fas fa-check-circle text-success me-1"></i> System Active');
-                $toolbarBadge.html('<span class="linkedin-status-pill active"><i class="fas fa-check-circle text-success"></i> Active &amp; Ready</span>');
-            } else {
-                $badgeInline.removeClass('badge-light-success text-success').addClass('badge-light-secondary text-muted')
-                    .html('<i class="fas fa-pause-circle text-muted me-1"></i> System Paused');
-                $toolbarBadge.html('<span class="linkedin-status-pill inactive"><i class="fas fa-pause-circle text-muted"></i> Integration Inactive</span>');
+            if (activeStatusXhr) {
+                activeStatusXhr.abort();
             }
 
-            // AJAX call to persist status toggle instantly
-            $.ajax({
+            var idempotencyKey = generateUUID();
+            isMutationInFlight = true;
+
+            activeStatusXhr = $.ajax({
                 url: '{{ route("superadmin.updateStatus", $linkedInSetting->id) }}',
                 type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: {
                     _token: '{{ csrf_token() }}',
-                    status: targetStatus
+                    status: targetStatus,
+                    idempotency_key: idempotencyKey
                 },
                 success: function(response) {
-                    if (response.status === 'fail') {
+                    isMutationInFlight = false;
+                    activeStatusXhr = null;
+
+                    if (response.status === 'fail' || response.status === 'error') {
                         // Revert checkbox state
-                        $('#status').prop('checked', !isChecked);
-                        $('#status-toggle-label').text(!isChecked ? 'Enabled' : 'Disabled');
+                        applyStatusUiState(!isChecked);
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({
                                 text: response.message || 'Error updating status.',
@@ -1054,12 +1166,26 @@
                                 customClass: { confirmButton: 'btn btn-primary' }
                             });
                         }
+                    } else {
+                        // Broadcast to other open tabs
+                        if (syncChannel) {
+                            syncChannel.postMessage({
+                                type: 'STATUS_TOGGLED',
+                                status: targetStatus
+                            });
+                        }
                     }
                 },
                 error: function(xhr) {
+                    isMutationInFlight = false;
+                    activeStatusXhr = null;
+
+                    if (xhr.statusText === 'abort') {
+                        return;
+                    }
+
                     // Revert checkbox state
-                    $('#status').prop('checked', !isChecked);
-                    $('#status-toggle-label').text(!isChecked ? 'Enabled' : 'Disabled');
+                    applyStatusUiState(!isChecked);
                     var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Server error while toggling status.';
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
@@ -1074,10 +1200,15 @@
             });
         });
 
-        // ─── 4. Save Form Handler ───
+        // ─── 4. Save Form Handler (In-Flight Lock + Two-Tier Idempotency) ───
         function submitSettingsForm() {
+            if (isMutationInFlight) {
+                return false;
+            }
+
             var $allSaveButtons = $('#save-form, #top-save-btn');
             $allSaveButtons.attr('data-kt-indicator', 'on').prop('disabled', true);
+            isMutationInFlight = true;
 
             var formData = new FormData($('#linkedinSettingsForm')[0]);
 
@@ -1086,6 +1217,9 @@
                 formData.set('status', 'disable');
             }
 
+            var idempotencyKey = generateUUID();
+            formData.set('idempotency_key', idempotencyKey);
+
             $.ajax({
                 url: '{{ route("superadmin.linkedin-settings.update", $linkedInSetting->id) }}',
                 type: 'POST',
@@ -1093,12 +1227,26 @@
                 processData: false,
                 contentType: false,
                 headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Idempotency-Key': idempotencyKey
                 },
                 success: function(response) {
+                    isMutationInFlight = false;
                     $allSaveButtons.removeAttr('data-kt-indicator').prop('disabled', false);
 
                     if (response.status === 'success') {
+                        // Purge draft storage on confirmed persist
+                        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+
+                        // Broadcast to other open tabs
+                        if (syncChannel) {
+                            syncChannel.postMessage({
+                                type: 'SETTINGS_SAVED',
+                                client_id: $('#client_id').val(),
+                                status: $('#status').is(':checked') ? 'enable' : 'disable'
+                            });
+                        }
+
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({
                                 text: response.message || 'LinkedIn settings updated successfully.',
@@ -1123,6 +1271,7 @@
                     }
                 },
                 error: function(xhr) {
+                    isMutationInFlight = false;
                     $allSaveButtons.removeAttr('data-kt-indicator').prop('disabled', false);
 
                     var msg = 'Failed to update settings.';
@@ -1153,7 +1302,9 @@
         // ─── 5. Reset Form Handler ───
         $('#form-reset-btn').on('click', function(e) {
             e.preventDefault();
+            if (isMutationInFlight) return;
             $('#linkedinSettingsForm')[0].reset();
+            sessionStorage.removeItem(DRAFT_STORAGE_KEY);
         });
 
         // ─── 6. Bulletproof Tab Switching Engine ───
@@ -1197,9 +1348,13 @@
             switchLinkedInTab('#tab-credentials');
         });
 
-        // ─── 7. Run Diagnostic Test Connection Handler ───
+        // ─── 7. Run Diagnostic Test Connection Handler (Single-Flight Protected) ───
         function runDiagnostic() {
             var $btn = $('#run-diagnostic-btn');
+            if ($btn.prop('disabled')) {
+                return;
+            }
+
             $btn.attr('data-kt-indicator', 'on').prop('disabled', true);
 
             var $status = $('#diagnostic-status');
@@ -1213,15 +1368,23 @@
             var clientId = $.trim($('#client_id').val());
             var clientSecret = $.trim($('#client_secret').val());
 
-            $.ajax({
+            if (activeDiagnosticXhr) {
+                activeDiagnosticXhr.abort();
+            }
+
+            activeDiagnosticXhr = $.ajax({
                 url: '{{ route("superadmin.linkedin-settings.testConnection") }}',
                 type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
                 data: {
                     _token: '{{ csrf_token() }}',
                     client_id: clientId,
                     client_secret: clientSecret
                 },
                 success: function(response) {
+                    activeDiagnosticXhr = null;
                     $btn.removeAttr('data-kt-indicator').prop('disabled', false);
 
                     var latencyMs = (response.data && response.data.latency_ms) ? response.data.latency_ms : '--';
@@ -1236,7 +1399,13 @@
                     }
                 },
                 error: function(xhr) {
+                    activeDiagnosticXhr = null;
                     $btn.removeAttr('data-kt-indicator').prop('disabled', false);
+
+                    if (xhr.statusText === 'abort') {
+                        return;
+                    }
+
                     $status.html('<span class="badge badge-light-danger text-danger fw-bold"><i class="fas fa-times-circle me-1"></i> Failed</span>');
                     var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Connection timed out or network error.';
                     $details.html('<span class="text-danger">' + msg + '</span>');

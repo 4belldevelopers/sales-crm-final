@@ -2206,6 +2206,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 ]
             );
         }
+
+        \App\Services\PrescreenDossierService::invalidateDossierCaches((int) $candidateId, null, (int) $companyId);
     }
 
     public function edit($id)
@@ -8547,8 +8549,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $wmRaw = trim((string) @$cand->wm);
             $cand->work_mode = $wmRaw !== '' ? ucwords(str_replace(['_', '-'], ' ', strtolower($wmRaw))) : 'Hybrid';
             $totExp = trim((string) @$cand->total_exp, " \t\n\r\0\x0B.");
-            $cand->experience = ($totExp !== '' && (float) $totExp > 0) ? $totExp.' Year'.((float) $totExp == 1.0 ? '' : 's') : '--';
-            $cand->match = ! empty($cand->rating) ? min(100, max(40, (int) ($cand->rating * 20))) : 85;
+            $cand->experience = \App\Services\PrescreenDossierService::formatExperienceDisplay(@$cand->total_exp, false);
+            $cand->match = isset($cand->skill_match) && is_numeric($cand->skill_match)
+                ? min(100, max(0, (int) round((float) $cand->skill_match)))
+                : 0;
             $cand->report_id = 'JR'.now()->format('Ymd').str_pad((string) $cand->id, 6, '0', STR_PAD_LEFT);
             $cand->report_date = now()->format('d M Y');
             $cand->recruiter_name = auth()->user()->name ?? 'Recruiter';
@@ -8633,7 +8637,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 }
                 $skillsArr[] = [
                     'name' => ucwords($sn),
-                    'expText' => ! empty($sExpParts) ? implode(' ', $sExpParts) : ($yr == 0 && $mo == 0 ? '0 Years' : '--'),
+                    'expText' => ! empty($sExpParts) ? implode(' ', $sExpParts) : '--',
                     'exp' => $yr + ($mo / 12),
                     'rating' => min(5, max(0, (int) ($bRow->rating ?? 0))),
                 ];
@@ -8646,9 +8650,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 foreach ($rawSkills as $sName) {
                     $skillsArr[] = [
                         'name' => ucwords($sName),
-                        'expText' => $cand->experience,
-                        'exp' => (float) $totExp ?: 0,
-                        'rating' => ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 3,
+                        'expText' => '--',
+                        'exp' => 0,
+                        'rating' => 0,
                     ];
                     if (count($skillsArr) >= 12) {
                         break;
@@ -9647,8 +9651,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $wmRaw = trim((string) @$cand->wm);
         $cand->work_mode = $wmRaw !== '' ? ucwords(str_replace(['_', '-'], ' ', strtolower($wmRaw))) : 'Hybrid';
         $totExp = trim((string) @$cand->total_exp, " \t\n\r\0\x0B.");
-        $cand->experience = ($totExp !== '' && (float) $totExp > 0) ? $totExp.' Year'.((float) $totExp == 1.0 ? '' : 's') : '--';
-        $cand->match = ! empty($cand->rating) ? min(100, max(40, (int) ($cand->rating * 20))) : 85;
+        $cand->experience = \App\Services\PrescreenDossierService::formatExperienceDisplay(@$cand->total_exp, false);
+        $cand->match = isset($cand->skill_match) && is_numeric($cand->skill_match)
+            ? min(100, max(0, (int) round((float) $cand->skill_match)))
+            : 0;
         $cand->report_id = 'JR'.now()->format('Ymd').str_pad((string) $cand->id, 6, '0', STR_PAD_LEFT);
         $cand->report_date = now()->format('d M Y');
         $cand->recruiter_name = auth()->user()->name ?? 'Recruiter';
@@ -9733,7 +9739,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
             $skillsArr[] = [
                 'name' => ucwords($sn),
-                'expText' => ! empty($sExpParts) ? implode(' ', $sExpParts) : ($yr == 0 && $mo == 0 ? '0 Years' : '--'),
+                'expText' => ! empty($sExpParts) ? implode(' ', $sExpParts) : '--',
                 'exp' => $yr + ($mo / 12),
                 'rating' => min(5, max(0, (int) ($bRow->rating ?? 0))),
             ];
@@ -9746,9 +9752,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             foreach ($rawSkills as $sName) {
                 $skillsArr[] = [
                     'name' => ucwords($sName),
-                    'expText' => $cand->experience,
-                    'exp' => (float) $totExp ?: 0,
-                    'rating' => ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 3,
+                    'expText' => '--',
+                    'exp' => 0,
+                    'rating' => 0,
                 ];
                 if (count($skillsArr) >= 12) {
                     break;

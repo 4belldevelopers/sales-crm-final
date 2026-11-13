@@ -1280,6 +1280,70 @@
             }
         }
 
+        var DRAFT_STORAGE_KEY = 'jero_superadmin_theme_draft';
+        var draftTimer = null;
+        var isMutationInFlight = false;
+        var syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('jero_theme_settings_sync') : null;
+
+        function generateIdempotencyUUID() {
+            if (window.crypto && window.crypto.randomUUID) {
+                return window.crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function scheduleDraftSave() {
+            clearTimeout(draftTimer);
+            draftTimer = setTimeout(function () {
+                try {
+                    var primaryInput = document.getElementById('primary_color_input');
+                    var draftData = {
+                        primary_color: primaryInput ? primaryInput.value : '',
+                        admin_custom_css: adminEditor ? adminEditor.getValue() : '',
+                        front_custom_css: frontEditor ? frontEditor.getValue() : '',
+                        saved_at: new Date().toISOString()
+                    };
+                    sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+                } catch (e) {}
+            }, 400);
+        }
+
+        function restoreDraft() {
+            try {
+                var rawDraft = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+                if (!rawDraft) return;
+                var draft = JSON.parse(rawDraft);
+                if (draft) {
+                    var primaryInput = document.getElementById('primary_color_input');
+                    if (draft.primary_color && primaryInput) {
+                        primaryInput.value = draft.primary_color;
+                        updateColorDisplay(draft.primary_color);
+                    }
+                    if (draft.admin_custom_css !== undefined && adminEditor) {
+                        adminEditor.setValue(draft.admin_custom_css, -1);
+                        var adminTa = document.getElementById('admin_custom_css_textarea');
+                        if (adminTa) adminTa.value = draft.admin_custom_css;
+                        updateEditorStats('admin', adminEditor);
+                    }
+                    if (draft.front_custom_css !== undefined && frontEditor) {
+                        frontEditor.setValue(draft.front_custom_css, -1);
+                        var frontTa = document.getElementById('front_custom_css_textarea');
+                        if (frontTa) frontTa.value = draft.front_custom_css;
+                        updateEditorStats('front', frontEditor);
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function clearDraft() {
+            try {
+                sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+            } catch (e) {}
+        }
+
         function initAceEditors() {
             try {
                 if (window.ace) {
@@ -1295,6 +1359,7 @@
                         var val = adminEditor.getValue();
                         document.getElementById('admin_custom_css_textarea').value = val;
                         updateEditorStats('admin', adminEditor);
+                        scheduleDraftSave();
                     });
                     adminEditor.selection.on('changeCursor', function () {
                         updateCursorStats('admin', adminEditor);
@@ -1314,6 +1379,7 @@
                         var val = frontEditor.getValue();
                         document.getElementById('front_custom_css_textarea').value = val;
                         updateEditorStats('front', frontEditor);
+                        scheduleDraftSave();
                     });
                     frontEditor.selection.on('changeCursor', function () {
                         updateCursorStats('front', frontEditor);
@@ -1333,6 +1399,26 @@
             var colorWell = document.getElementById('color_well_wrapper');
             var pickBtn = document.getElementById('btn_pick_color');
 
+            // Listen for cross-tab theme updates
+            if (syncChannel) {
+                syncChannel.onmessage = function (event) {
+                    if (!event.data) return;
+                    if (event.data.type === 'THEME_UPDATED') {
+                        if (primaryInput && event.data.primary_color) {
+                            primaryInput.value = event.data.primary_color;
+                            updateColorDisplay(event.data.primary_color);
+                        }
+                        if (event.data.background_image_url) {
+                            var previewImg = document.getElementById('bg_preview_img');
+                            var viewFullBtn = document.getElementById('btn_view_full_image');
+                            if (previewImg) previewImg.src = event.data.background_image_url;
+                            if (viewFullBtn) viewFullBtn.href = event.data.background_image_url;
+                            updateImageResolution(event.data.background_image_url);
+                        }
+                    }
+                };
+            }
+
             // Initialize color
             var initialColor = primaryInput.value || defaultColor;
             updateColorDisplay(initialColor);
@@ -1341,6 +1427,7 @@
             nativePicker.addEventListener('input', function () {
                 primaryInput.value = this.value.toUpperCase();
                 updateColorDisplay(this.value, true);
+                scheduleDraftSave();
             });
 
             // Hex input change & typing
@@ -1354,6 +1441,7 @@
                 this.value = val.toUpperCase();
                 if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(val)) {
                     updateColorDisplay(val);
+                    scheduleDraftSave();
                 }
             });
 
@@ -1363,6 +1451,7 @@
                     val = '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
                     this.value = val;
                     updateColorDisplay(val);
+                    scheduleDraftSave();
                 }
             });
 
@@ -1382,11 +1471,15 @@
                     var color = this.getAttribute('data-color');
                     primaryInput.value = color.toUpperCase();
                     updateColorDisplay(color);
+                    scheduleDraftSave();
                 });
             });
 
             // Initialize Ace Editors
             initAceEditors();
+
+            // Restore draft if present
+            restoreDraft();
 
             // Refresh Ace editors on tab switch to prevent layout clipping
             document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(function (tabEl) {
@@ -1610,6 +1703,10 @@
             saveBtn.addEventListener('click', function (e) {
                 e.preventDefault();
 
+                if (isMutationInFlight) {
+                    return;
+                }
+
                 // Explicitly sync Ace editor values to hidden textareas before submission
                 if (adminEditor) {
                     document.getElementById('admin_custom_css_textarea').value = adminEditor.getValue();
@@ -1618,12 +1715,15 @@
                     document.getElementById('front_custom_css_textarea').value = frontEditor.getValue();
                 }
 
+                isMutationInFlight = true;
                 // Show button loading spinner
                 saveBtn.setAttribute('data-kt-indicator', 'on');
                 saveBtn.disabled = true;
 
                 var form = document.getElementById('createForm');
                 var formData = new FormData(form);
+                var idempotencyKey = generateIdempotencyUUID();
+                formData.append('idempotency_key', idempotencyKey);
 
                 $.ajax({
                     url: "{{ route('superadmin.theme-settings.store') }}",
@@ -1632,11 +1732,14 @@
                     processData: false,
                     contentType: false,
                     headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'X-Idempotency-Key': idempotencyKey
                     },
                     success: function (response) {
+                        isMutationInFlight = false;
                         saveBtn.removeAttribute('data-kt-indicator');
                         saveBtn.disabled = false;
+                        clearDraft();
 
                         if (response.background_image_url) {
                             previewImg.src = response.background_image_url;
@@ -1651,6 +1754,15 @@
                             updateImageResolution(response.background_image_url);
                         }
 
+                        if (syncChannel) {
+                            syncChannel.postMessage({
+                                type: 'THEME_UPDATED',
+                                primary_color: response.primary_color || primaryInput.value,
+                                background_image_url: response.background_image_url,
+                                has_background_image: response.has_background_image
+                            });
+                        }
+
                         Swal.fire({
                             title: "Success!",
                             text: response.message || "Theme settings updated successfully.",
@@ -1660,11 +1772,14 @@
                         });
                     },
                     error: function (xhr) {
+                        isMutationInFlight = false;
                         saveBtn.removeAttribute('data-kt-indicator');
                         saveBtn.disabled = false;
 
                         var errorMsg = "An error occurred while saving theme settings.";
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                        if (xhr.status === 409) {
+                            errorMsg = "A theme settings update is currently in progress. Please wait a moment.";
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMsg = xhr.responseJSON.message;
                         } else if (xhr.responseJSON && xhr.responseJSON.errors) {
                             var errors = xhr.responseJSON.errors;
@@ -1685,6 +1800,10 @@
             // ─── Reset Theme to Defaults ───
             var resetBtn = document.getElementById('btn-reset-theme');
             resetBtn.addEventListener('click', function () {
+                if (isMutationInFlight) {
+                    return;
+                }
+
                 Swal.fire({
                     title: "Reset Theme Settings?",
                     text: "This will restore the primary brand color to #009EF7, clear custom CSS stylesheets, and restore the default background image.",
@@ -1696,16 +1815,24 @@
                     cancelButtonText: "Cancel"
                 }).then(function (result) {
                     if (result.isConfirmed) {
+                        isMutationInFlight = true;
                         resetBtn.disabled = true;
+                        var idempotencyKey = generateIdempotencyUUID();
 
                         $.ajax({
                             url: "{{ route('superadmin.theme-settings.reset') }}",
                             type: "POST",
+                            data: {
+                                idempotency_key: idempotencyKey
+                            },
                             headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                                'X-Idempotency-Key': idempotencyKey
                             },
                             success: function (response) {
+                                isMutationInFlight = false;
                                 resetBtn.disabled = false;
+                                clearDraft();
 
                                 primaryInput.value = defaultColor;
                                 updateColorDisplay(defaultColor);
@@ -1723,6 +1850,15 @@
                                 document.getElementById('bg_status_text').textContent = 'Default Background Selected';
                                 updateImageResolution(defaultSrc);
 
+                                if (syncChannel) {
+                                    syncChannel.postMessage({
+                                        type: 'THEME_UPDATED',
+                                        primary_color: defaultColor,
+                                        background_image_url: defaultSrc,
+                                        has_background_image: false
+                                    });
+                                }
+
                                 Swal.fire({
                                     title: "Reset Completed",
                                     text: "Theme settings have been reset to factory defaults.",
@@ -1730,11 +1866,16 @@
                                     confirmButtonColor: "#009ef7"
                                 });
                             },
-                            error: function () {
+                            error: function (xhr) {
+                                isMutationInFlight = false;
                                 resetBtn.disabled = false;
+                                var errorMsg = "Failed to reset theme settings. Please try again.";
+                                if (xhr.status === 409) {
+                                    errorMsg = "A reset operation is currently in progress. Please wait a moment.";
+                                }
                                 Swal.fire({
                                     title: "Error",
-                                    text: "Failed to reset theme settings. Please try again.",
+                                    text: errorMsg,
                                     icon: "error"
                                 });
                             }

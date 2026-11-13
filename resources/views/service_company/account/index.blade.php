@@ -4126,11 +4126,11 @@ input[type="radio"]:checked {
 <!--end::Google config-->
 
 <!--begin::Add department modal-->
-<div class="modal fade show" id="add_department" tabindex="-1" aria-modal="true" role="dialog">
+<div class="modal fade" id="add_department" tabindex="-1" aria-hidden="true" role="dialog">
   <div class="modal-dialog modal-dialog-centered mw-650px">
     <div class="modal-content rounded">
       <div class="modal-header pb-0 border-0 justify-content-end">
-        <div class="btn btn-sm btn-icon btn-active-color-primary" data-dismiss="modal"> <span class="svg-icon svg-icon-1">
+        <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"> <span class="svg-icon svg-icon-1">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
             <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"></rect>
             <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black"></rect>
@@ -4140,10 +4140,10 @@ input[type="radio"]:checked {
       <div class="modal-body scroll-y px-5 px-lg-5 pt-0 pb-5">
         <form id="add_department_form" class="form fv-plugins-bootstrap5 fv-plugins-framework" action="post">
           <div class="alert alert-success alert-dismissible fade show" id="dept_success_alert" style="display:none"> <strong>Success!</strong> Department Added successfully.
-            <button type="button" class="btn-close" data-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" data-dismiss="alert"></button>
           </div>
           <div class="alert alert-danger alert-dismissible fade show" id="dept_warning_alert" style="display:none"> <strong>Warning!</strong> Department can not be blank.
-            <button type="button" class="btn-close" data-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" data-dismiss="alert"></button>
           </div>
           <div class="mb-11 text-center">
             <h1 class="">Add Department</h1>
@@ -4154,7 +4154,7 @@ input[type="radio"]:checked {
             <div class="fv-plugins-message-container invalid-feedback"> </div>
           </div>
           <div class="text-center">
-            <button type="button" class="btn btn-secondary me-3" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-secondary me-3" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-primary submit_department">Submit</button>
           </div>
         </form>
@@ -5629,51 +5629,79 @@ $(document).ready(function(){
             });
         }
    
-			$('.submit_department').click(function(){
-   									var dept_name	=	$('#dept_name').val();								
-									if(dept_name ==''){
-											$('#dept_name').val('');	
-											$("#dept_warning_alert").fadeTo(2000, 500).slideUp(500, function() {
-												$("#dept_warning_alert").slideUp(500);
-											});	
-											return false;
-									}
-									var url 					= "{{ route('service_company.account.storeDept') }}";
-									var token 					= "{{ csrf_token() }}";
-									var baseurl    				= "{{ asset('assets/images/Loading2.gif') }}"; 		
-									$.ajax({
-												type		: 'POST',
-												url			: url,
-												beforeSend	: function() { $('.dept_content').html('<img src="'+baseurl+'" height="60%" width="100%">'); },
-												data		: {'_token': token, 'dept_name':dept_name },
-												success		: function (response) {
-																						if (response.status == "success") {
-																																$('#dept_name').val('');
-																																$("#dept_success_alert").fadeTo(2000, 500).slideUp(500, function() {
-																																	$("#dept_success_alert").slideUp(500);
-																																});
-																																$('.dept_content').html(response.html);
-																																if ('BroadcastChannel' in window) {
-																																	try {
-																																		var bc = new BroadcastChannel('jero_dept_channel');
-																																		bc.postMessage({ type: 'DEPT_UPDATED', timestamp: Date.now() });
-																																	} catch(e) {}
-																																}
-																																try {
-																																	localStorage.setItem('jero_dept_sync_timestamp', Date.now());
-																																} catch(e) {}
-																																if (response.already_exists && response.message) {
-																																	Swal.fire({
-																																		title: 'Department Exists',
-																																		html: response.message,
-																																		icon: 'info',
-																																		confirmButtonColor: '#2563eb'
-																																	});
-																																}
-																														  }
-																				 }
-									});
-   			});
+			$(document).on('click', '.submit_department', function(e){
+				e.preventDefault();
+				var $submitBtn = $(this);
+				if ($submitBtn.prop('disabled')) return;
+
+				var dept_name = $.trim($('#dept_name').val());								
+				if(dept_name === ''){
+					$('#dept_name').val('');	
+					$("#dept_warning_alert").stop(true, true).fadeIn(200).delay(2500).fadeOut(400);	
+					return false;
+				}
+
+				$submitBtn.prop('disabled', true).text('Adding...');
+				var url = "{{ route('service_company.account.storeDept') }}";
+				var token = "{{ csrf_token() }}";
+				
+				$.ajax({
+					type: 'POST',
+					url: url,
+					data: {'_token': token, 'dept_name': dept_name },
+					success: function (response) {
+						$submitBtn.prop('disabled', false).text('Submit');
+						if (response.status == "success") {
+							$('#dept_name').val('');
+							$("#dept_warning_alert").hide();
+							$("#dept_success_alert").stop(true, true).fadeIn(200).delay(1500).fadeOut(400);
+							
+							if (response.html) {
+								$('.dept_content').html(response.html);
+							}
+							
+							var count = $('.dept_content').find('.dept-item-col').length;
+							$('#dept_tab_badge').text(count);
+							$('#dept_card_badge').html('<i class="fas fa-sitemap"></i> ' + count + ' Active Departments');
+
+							if ('BroadcastChannel' in window) {
+								try {
+									var bc = new BroadcastChannel('jero_dept_channel');
+									bc.postMessage({ type: 'DEPT_UPDATED', timestamp: Date.now() });
+								} catch(e) {}
+							}
+							try {
+								localStorage.setItem('jero_dept_sync_timestamp', Date.now());
+							} catch(e) {}
+
+							// Close modal and completely clean up any lingering modal backdrop or scroll-freeze
+							setTimeout(function() {
+								if (typeof $('#add_department').modal === 'function') {
+									$('#add_department').modal('hide');
+								}
+								$('#add_department').removeClass('show').hide();
+								$('body').removeClass('modal-open').css({'overflow':'','padding-right':''});
+								$('.modal-backdrop').remove();
+							}, 500);
+
+							if (response.already_exists && response.message) {
+								Swal.fire({
+									title: 'Department Exists',
+									html: response.message,
+									icon: 'info',
+									confirmButtonColor: '#2563eb'
+								});
+							}
+						} else {
+							Swal.fire('Error', response.message || 'Unable to add department.', 'error');
+						}
+					},
+					error: function(xhr) {
+						$submitBtn.prop('disabled', false).text('Submit');
+						Swal.fire('Error', 'Unable to add department. Please try again.', 'error');
+					}
+				});
+			});
 				
 			  $('body').on('click', '.dept_delete', function(){
    	   			
@@ -6479,19 +6507,56 @@ $(document).ready(function(){
 
     // ── Interview Pipeline Builder (Stack-Based Architecture Rule 20) Helpers ──
     window.ipsToggleStage = function(cardId, event) {
-        if ($(event.target).closest('.ips-btn-add-sub, .ips-btn-del-subcard, .ips-drag-handle, a, button').length) {
+        if ($(event.target).closest('.ips-btn-del-subcard, .ips-drag-handle, a, button').length) {
             return;
         }
-        $('#' + cardId).toggleClass('collapsed');
+        var $card = $('#' + cardId);
+        $card.toggleClass('collapsed');
+
+        // Dynamic header button sync when expanding a stage card
+        if (!$card.hasClass('collapsed')) {
+            var stageId = $card.data('stage-id') || 1;
+            var stageTitle = $card.data('stage-title') || 'Substage';
+            var stageRoot = $card.data('stage-root') || 'root_sourcing';
+            var stageClass = $card.data('stage-class') || 'bg-secondary';
+
+            $('#ipsHeaderAddBtn')
+                .data('id', stageId)
+                .data('title', stageTitle)
+                .data('root', stageRoot)
+                .data('class', stageClass);
+            $('#ipsHeaderAddBtnText').text('Add ' + stageTitle + ' Substage');
+        }
     };
 
     window.ipsFilterStage = function(stageKey, btn) {
         $('#ipsFilterTabs .ips-tab-btn').removeClass('active');
         $(btn).addClass('active');
 
+        var $addBtn = $('#ipsHeaderAddBtn');
+        var $addBtnText = $('#ipsHeaderAddBtnText');
+
         if (stageKey === 'all') {
             $('.ips-stack-card').show().removeClass('collapsed');
+            $addBtn
+                .data('id', 1)
+                .data('title', 'Pipeline')
+                .data('root', 'root_sourcing')
+                .data('class', 'bg-secondary');
+            $addBtnText.text('Add Substage');
         } else {
+            var stageId = $(btn).data('stage-id') || 1;
+            var stageTitle = $(btn).data('stage-title') || 'Substage';
+            var stageRoot = $(btn).data('stage-root') || ('root_' + stageKey);
+            var stageClass = $(btn).data('stage-class') || 'bg-secondary';
+
+            $addBtn
+                .data('id', stageId)
+                .data('title', stageTitle)
+                .data('root', stageRoot)
+                .data('class', stageClass);
+            $addBtnText.text('Add ' + stageTitle + ' Substage');
+
             $('.ips-stack-card').each(function() {
                 if ($(this).data('stage') === stageKey) {
                     $(this).show().removeClass('collapsed');
@@ -6505,14 +6570,15 @@ $(document).ready(function(){
         }
     };
 
-    window.ipsUpdatePriority = function(data) {
+    window.ipsUpdatePriority = function(data, parentId) {
         if (!data || !data.length) return;
         $.ajax({
             type: 'POST',
             url: "{{ route('service_company.account.updatePriority') }}",
             data: {
                 '_token': "{{ csrf_token() }}",
-                'data': data
+                'data': data,
+                'parent_id': parentId || 0
             },
             success: function(res) {}
         });
@@ -6542,82 +6608,211 @@ $(document).ready(function(){
                 }
             }
 
-            // Re-index steps
+            // Re-index steps to "Stage 1", "Stage 2" per user requirement
             $('#' + rootId + ' > li.ips-subcard-item').each(function(idx) {
-                $(this).find('.ips-subcard-seq').text('Step ' + (idx + 1));
+                $(this).find('.ips-subcard-seq').text('Stage ' + (idx + 1));
             });
         });
 
         $('#ipsTabCountAll').text(globalTotal);
-        $('#ipsGlobalTotalBadge').text(globalTotal + ' Sub-Stages Defined');
     };
 
-    // Live 300ms Debounced Search for Pipeline Builder
-    (function() {
-        var searchTimer = null;
-        $(document).on('input', '#ipsSearchInput', function() {
-            clearTimeout(searchTimer);
-            var q = $(this).val().trim().toLowerCase();
-            if (q.length > 0) {
-                $('#ipsSearchClear').addClass('visible');
-            } else {
-                $('#ipsSearchClear').removeClass('visible');
+    // ── Universal Drag & Drop Sub-Stage Reordering Engine ──
+    (function initIpsDragAndDrop() {
+        var draggedItem = null;
+        var sourceList = null;
+
+        $(document).on('dragstart', '.ips-subcard-item', function(e) {
+            draggedItem = this;
+            sourceList = $(this).closest('.ips-subcards-stream')[0];
+            $(this).addClass('is-dragging');
+            if (e.originalEvent && e.originalEvent.dataTransfer) {
+                e.originalEvent.dataTransfer.effectAllowed = 'move';
+                e.originalEvent.dataTransfer.setData('text/plain', $(this).data('id') || $(this).attr('id'));
             }
-            searchTimer = setTimeout(function() {
-                ipsPerformSearch(q);
-            }, 250);
         });
 
-        $(document).on('click', '#ipsSearchClear', function() {
-            $('#ipsSearchInput').val('');
-            $(this).removeClass('visible');
-            ipsPerformSearch('');
+        $(document).on('dragend', '.ips-subcard-item', function(e) {
+            $(this).removeClass('is-dragging');
+            $('.ips-subcards-stream').removeClass('drag-over');
+            draggedItem = null;
+            sourceList = null;
         });
 
-        function ipsPerformSearch(q) {
-            $('.ips-stack-card').each(function() {
-                var $card = $(this);
-                var title = $card.find('.ips-stack-title').text().toLowerCase();
-                var desc = $card.find('.ips-stack-desc').text().toLowerCase();
-                var hasSubMatch = false;
+        $(document).on('dragover', '.ips-subcards-stream', function(e) {
+            e.preventDefault();
+            if (e.originalEvent && e.originalEvent.dataTransfer) {
+                e.originalEvent.dataTransfer.dropEffect = 'move';
+            }
+            $(this).addClass('drag-over');
 
-                $card.find('.ips-subcard-item').each(function() {
-                    var name = ($(this).data('name') || $(this).text()).toLowerCase();
-                    if (q === '' || name.indexOf(q) !== -1) {
-                        $(this).show();
-                        hasSubMatch = true;
-                    } else {
-                        $(this).hide();
-                    }
-                });
+            if (!draggedItem) return;
 
-                if (q === '' || title.indexOf(q) !== -1 || desc.indexOf(q) !== -1 || hasSubMatch) {
-                    $card.show().removeClass('collapsed');
-                } else {
-                    $card.hide();
-                }
+            var targetList = this;
+            var afterElement = getDragAfterElement(targetList, e.clientY || (e.originalEvent && e.originalEvent.clientY));
+            if (afterElement == null) {
+                targetList.appendChild(draggedItem);
+            } else {
+                targetList.insertBefore(draggedItem, afterElement);
+            }
+        });
+
+        $(document).on('dragleave', '.ips-subcards-stream', function(e) {
+            if (!$(this).has(e.relatedTarget).length) {
+                $(this).removeClass('drag-over');
+            }
+        });
+
+        $(document).on('drop', '.ips-subcards-stream', function(e) {
+            e.preventDefault();
+            $(this).removeClass('drag-over');
+            if (!draggedItem) return;
+
+            var destList = this;
+            var destRootId = $(destList).attr('id');
+            var destParentId = $(destList).data('parent-id');
+
+            // Collect new order for destination list
+            var destOrder = [];
+            $('#' + destRootId + ' > li.ips-subcard-item').each(function(idx) {
+                destOrder.push($(this).data('id') || $(this).attr('id'));
+                $(this).find('.ips-subcard-seq').text('Stage ' + (idx + 1));
             });
-        }
-    })();
+            ipsUpdatePriority(destOrder, destParentId);
 
-    // Initialize jQuery UI sortable on sub-cards if loaded
-    $(document).ready(function() {
-        if (typeof $.fn.sortable === 'function') {
-            ['root_sourcing', 'root_screening', 'root_evaluation', 'root_negotation', 'root_offer', 'root_joined', 'root_rejected'].forEach(function(rootId) {
-                $('#' + rootId).sortable({
+            // If moved across lists, also re-index and save source list
+            if (sourceList && sourceList !== destList) {
+                var srcRootId = $(sourceList).attr('id');
+                var srcParentId = $(sourceList).data('parent-id');
+                var srcOrder = [];
+                $('#' + srcRootId + ' > li.ips-subcard-item').each(function(idx) {
+                    srcOrder.push($(this).data('id') || $(this).attr('id'));
+                    $(this).find('.ips-subcard-seq').text('Stage ' + (idx + 1));
+                });
+                if (srcOrder.length > 0) {
+                    ipsUpdatePriority(srcOrder, srcParentId);
+                }
+            }
+
+            updateIpsCounters();
+        });
+
+        function getDragAfterElement(container, y) {
+            var draggableElements = Array.prototype.slice.call(container.querySelectorAll('.ips-subcard-item:not(.is-dragging)'));
+            return draggableElements.reduce(function(closest, child) {
+                var box = child.getBoundingClientRect();
+                var offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // jQuery UI Sortable fallback if library is present
+        $(document).ready(function() {
+            if (typeof $.fn.sortable === 'function') {
+                $('.ips-subcards-stream').sortable({
+                    connectWith: '.ips-subcards-stream',
                     handle: '.ips-drag-handle',
                     items: '> li.ips-subcard-item',
+                    placeholder: 'ips-sortable-placeholder',
+                    cursor: 'grabbing',
                     update: function(event, ui) {
+                        var rootId = $(this).attr('id');
+                        var parentId = $(this).data('parent-id');
                         var order = [];
                         $('#' + rootId + ' > li.ips-subcard-item').each(function(idx) {
                             order.push($(this).data('id') || $(this).attr('id'));
-                            $(this).find('.ips-subcard-seq').text('Step ' + (idx + 1));
+                            $(this).find('.ips-subcard-seq').text('Stage ' + (idx + 1));
                         });
-                        ipsUpdatePriority(order);
+                        ipsUpdatePriority(order, parentId);
+                        updateIpsCounters();
                     }
                 });
-            });
-        }
+            }
+        });
+    })();
+
+    // ── Reset Interview Pipeline Stages to System Defaults ──
+    $(document).on('click', '#ipsResetPipelineBtn', function(e) {
+        e.preventDefault();
+
+        const swalReset = Swal.mixin({
+            customClass: {
+                confirmButton: 'btn btn-danger',
+                cancelButton: 'btn btn-secondary me-3'
+            },
+            buttonsStyling: false
+        });
+
+        swalReset.fire({
+            title: 'Reset Interview Pipeline?',
+            html: '<div style="text-align:left; font-size:13px; color:#475569; line-height:1.6;">' +
+                  '<p class="mb-2"><strong>This will permanently delete all manually created sub-stages.</strong></p>' +
+                  '<p class="mb-0">Only default system-created sub-stages (such as <em>Onboarded</em>, <em>Backed Out</em>, and standard <em>Rejection</em> categories) will be preserved in their initial order.</p>' +
+                  '</div>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Reset to Defaults',
+            cancelButtonText: 'No, Keep Custom Sub-Stages',
+            reverseButtons: true,
+            focusCancel: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var $btn = $('#ipsResetPipelineBtn');
+                var originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Resetting...');
+
+                $.ajax({
+                    type: 'POST',
+                    url: "{{ route('service_company.account.resetIntStages') }}",
+                    data: {
+                        '_token': "{{ csrf_token() }}"
+                    },
+                    success: function(response) {
+                        $btn.prop('disabled', false).html(originalHtml);
+                        if (response.status === 'success') {
+                            if (response.html) {
+                                $('#interview_Stage').html(response.html);
+                            } else {
+                                $('.ips-subcard-item').each(function() {
+                                    if ($(this).find('.system-tag').length === 0) {
+                                        $(this).remove();
+                                    }
+                                });
+                            }
+
+                            if (typeof updateIpsCounters === 'function') {
+                                updateIpsCounters();
+                            }
+
+                            if (typeof ipsFilterStage === 'function') {
+                                var $allTab = $('#ipsFilterTabs .ips-tab-btn[data-filter="all"]');
+                                if ($allTab.length) {
+                                    ipsFilterStage('all', $allTab[0]);
+                                }
+                            }
+
+                            swalReset.fire({
+                                title: 'Pipeline Reset Complete!',
+                                text: response.message || 'Interview pipeline has been reset to system defaults. All manually created sub-stages have been removed.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            });
+                        } else {
+                            swalReset.fire('Error', response.message || 'Failed to reset pipeline. Please try again.', 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        $btn.prop('disabled', false).html(originalHtml);
+                        var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Server error occurred while resetting interview pipeline.';
+                        swalReset.fire('Server Error', msg, 'error');
+                    }
+                });
+            }
+        });
     });
 
 

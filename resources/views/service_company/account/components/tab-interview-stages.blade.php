@@ -40,7 +40,7 @@
       'border'      => '#bfdbfe',
       'list'        => $sourcingList,
       'count'       => $sourcingCount,
-      'empty_text'  => 'Candidates progress directly into Sourcing. Add sub-stages like "Agency Submissions" or "Direct Inbound".'
+      'empty_text'  => 'Candidates progress directly into Sourcing. Use the header Add Substage button to configure sub-stages.'
     ],
     [
       'id'          => 2,
@@ -91,7 +91,7 @@
       'border'      => '#fbcfe8',
       'list'        => $negotiationList,
       'count'       => $negotiationCount,
-      'empty_text'  => 'Define steps like "Rate Discussion", "Client Approval", or "Notice Period Buyout".'
+      'empty_text'  => 'Define sub-stages like "Rate Discussion", "Client Approval", or "Notice Period Buyout".'
     ],
     [
       'id'          => 5,
@@ -149,9 +149,10 @@
 
 <div class="ips-pipeline-wrapper">
 
-  <!-- ══════════════════════════════════════════════════════════════
+  {{-- ══════════════════════════════════════════════════════════════
        TIER 1: PURE WHITE TOOLBAR HEADER CARD (Rule 20)
-       ══════════════════════════════════════════════════════════════ -->
+       Header Toolbar with dynamic Add Substage action
+       ══════════════════════════════════════════════════════════════ --}}
   <div class="ips-toolbar-card">
     <div class="ips-toolbar-left">
       <div class="ips-toolbar-icon">
@@ -160,27 +161,20 @@
       <div class="ips-toolbar-info">
         <div class="ips-toolbar-title-row">
           <h2 class="ips-toolbar-title">Interview Pipeline Builder</h2>
-          <span class="ips-pill-badge ips-pill-primary"><i class="fas fa-stream"></i> 7 Master Stages</span>
-          <span class="ips-pill-badge ips-pill-success"><span class="pulse-dot"></span> Live ATS Pipeline</span>
         </div>
         <div class="ips-toolbar-sub">
           <span>Candidate lifecycle stages & configurable assessment sub-stages</span>
-          <span>•</span>
-          <span class="ips-pill-badge ips-pill-muted" id="ipsGlobalTotalBadge">{{ $totalSubStages }} Sub-Stages Defined</span>
         </div>
       </div>
     </div>
 
     <div class="ips-toolbar-right">
-      <div class="ips-search-subcard">
-        <i class="fas fa-search"></i>
-        <input type="text" id="ipsSearchInput" placeholder="Search stages or sub-stages..." autocomplete="off">
-        <button type="button" class="ips-search-clear" id="ipsSearchClear" title="Clear search"><i class="fas fa-times-circle"></i></button>
-      </div>
-
-      @if(in_array("add_settings", $userPermissions))
-        <button type="button" class="btn btn-primary ips-btn-primary interview_stage" data-id="1" data-title="Sourcing" data-root="root_sourcing" data-class="bg-secondary" data-toggle="modal" data-target="#add_interview_sub_stage">
-          <i class="fas fa-plus"></i> Add Sub-Stage
+      @if(in_array("add_settings", $userPermissions) || in_array("edit_settings", $userPermissions))
+        <button type="button" class="btn ips-btn-reset" id="ipsResetPipelineBtn" title="Reset interview pipeline to system defaults">
+          <i class="fas fa-undo-alt"></i> <span>Reset</span>
+        </button>
+        <button type="button" class="btn btn-primary ips-btn-primary interview_stage" id="ipsHeaderAddBtn" data-id="1" data-title="Sourcing" data-root="root_sourcing" data-class="bg-secondary" data-toggle="modal" data-target="#add_interview_sub_stage">
+          <i class="fas fa-plus"></i> <span id="ipsHeaderAddBtnText">Add Substage</span>
         </button>
       @endif
     </div>
@@ -194,7 +188,7 @@
       <i class="fas fa-th-list"></i> All Pipeline <span class="ips-tab-badge" id="ipsTabCountAll">{{ $totalSubStages }}</span>
     </button>
     @foreach($stagesConfig as $cfg)
-      <button type="button" class="ips-tab-btn" data-filter="{{ $cfg['key'] }}" onclick="ipsFilterStage('{{ $cfg['key'] }}', this)">
+      <button type="button" class="ips-tab-btn" data-filter="{{ $cfg['key'] }}" data-stage-id="{{ $cfg['id'] }}" data-stage-title="{{ $cfg['title'] }}" data-stage-root="{{ $cfg['root'] }}" data-stage-class="{{ $cfg['class'] }}" onclick="ipsFilterStage('{{ $cfg['key'] }}', this)">
         {{ $cfg['step'] }} {{ $cfg['title'] }} <span class="ips-tab-badge" id="ipsTabCount_{{ $cfg['key'] }}">{{ $cfg['count'] }}</span>
       </button>
     @endforeach
@@ -207,9 +201,9 @@
     <div class="ips-stack-spine"></div>
 
     @foreach($stagesConfig as $cfg)
-      <div class="ips-stack-card" id="ipsStageCard_{{ $cfg['key'] }}" data-stage="{{ $cfg['key'] }}" style="--stage-color: {{ $cfg['color'] }}; --stage-light: {{ $cfg['light'] }}; --stage-border: {{ $cfg['border'] }};">
+      <div class="ips-stack-card" id="ipsStageCard_{{ $cfg['key'] }}" data-stage="{{ $cfg['key'] }}" data-stage-id="{{ $cfg['id'] }}" data-stage-title="{{ $cfg['title'] }}" data-stage-root="{{ $cfg['root'] }}" data-stage-class="{{ $cfg['class'] }}" style="--stage-color: {{ $cfg['color'] }}; --stage-light: {{ $cfg['light'] }}; --stage-border: {{ $cfg['border'] }};">
         
-        <!-- Master Stage Header Row -->
+        <!-- Master Stage Header Row with dedicated light background color of that stage -->
         <div class="ips-stack-header" onclick="ipsToggleStage('ipsStageCard_{{ $cfg['key'] }}', event)">
           <div class="ips-stack-header-left">
             <div class="ips-stack-step-pill">{{ $cfg['step'] }}</div>
@@ -228,17 +222,13 @@
               <i class="fas fa-layer-group"></i> <span class="count-num">{{ $cfg['count'] }}</span> Sub-Stage{{ $cfg['count'] == 1 ? '' : 's' }}
             </span>
 
-            @if(in_array("add_settings", $userPermissions))
-              <button type="button" class="ips-btn-add-sub interview_stage" data-id="{{ $cfg['id'] }}" data-title="{{ $cfg['title'] }}" data-root="{{ $cfg['root'] }}" data-class="{{ $cfg['class'] }}" data-toggle="modal" data-target="#add_interview_sub_stage" onclick="event.stopPropagation();">
-                <i class="fas fa-plus"></i> Add
-              </button>
-            @endif
+            {{-- + Add button removed from every stage card per user request --}}
 
             <button type="button" class="ips-collapse-toggle" title="Toggle Stage View"><i class="fas fa-chevron-down"></i></button>
           </div>
         </div>
 
-        <!-- Master Stage Body: Discrete Sub-Cards Stream -->
+        <!-- Master Stage Body: Discrete Sub-Cards Stream with Drag & Drop Moving -->
         <div class="ips-stack-body">
           <ul class="ips-subcards-stream kanban-drag" id="{{ $cfg['root'] }}" data-parent-id="{{ $cfg['id'] }}" data-stage-key="{{ $cfg['key'] }}">
             @if(!empty($cfg['list']) && count($cfg['list']) > 0)
@@ -246,10 +236,10 @@
                 @php
                   $isProtected = (@$val->delete_status == 0);
                 @endphp
-                <li id="{{ $val->id }}" class="ips-subcard-item kanban-item root_child {{ $cfg['class'] }}" data-name="{{ $val->name }}" data-id="{{ $val->id }}">
+                <li id="{{ $val->id }}" class="ips-subcard-item kanban-item root_child {{ $cfg['class'] }}" draggable="true" data-name="{{ $val->name }}" data-id="{{ $val->id }}">
                   <div class="ips-subcard-left">
-                    <span class="ips-drag-handle" title="Drag to reorder priority"><i class="fas fa-grip-vertical"></i></span>
-                    <span class="ips-subcard-seq">Step {{ $loop->iteration }}</span>
+                    <span class="ips-drag-handle" title="Drag to move or reorder sub-stage"><i class="fas fa-grip-vertical"></i></span>
+                    <span class="ips-subcard-seq">Stage {{ $loop->iteration }}</span>
                     <span class="ips-subcard-name">{{ $val->name }}</span>
                     @if($isProtected)
                       <span class="ips-subcard-tag system-tag"><i class="fas fa-shield-alt me-1"></i> System Protected</span>
@@ -271,7 +261,7 @@
             @endif
           </ul>
 
-          <!-- Empty State when Stage has 0 Sub-Stages -->
+          <!-- Empty State when Stage has 0 Sub-Stages (Add button removed per spec) -->
           <div class="ips-subcards-empty" id="ipsEmpty_{{ $cfg['key'] }}" style="{{ $cfg['count'] > 0 ? 'display:none;' : '' }}">
             <div class="ips-empty-left">
               <div class="ips-empty-icon"><i class="fas fa-inbox"></i></div>
@@ -280,35 +270,12 @@
                 <div class="ips-empty-sub">{{ $cfg['empty_text'] }}</div>
               </div>
             </div>
-            @if(in_array("add_settings", $userPermissions))
-              <button type="button" class="ips-btn-empty-add interview_stage" data-id="{{ $cfg['id'] }}" data-title="{{ $cfg['title'] }}" data-root="{{ $cfg['root'] }}" data-class="{{ $cfg['class'] }}" data-toggle="modal" data-target="#add_interview_sub_stage" onclick="event.stopPropagation();">
-                <i class="fas fa-plus"></i> Add Sub-Stage
-              </button>
-            @endif
           </div>
         </div>
 
       </div>
     @endforeach
 
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════════
-       BOTTOM GUIDANCE & SYSTEM NOTICES (Rule 20 Activity Strip)
-       ══════════════════════════════════════════════════════════════ -->
-  <div class="ips-bottom-strip">
-    <div class="ips-strip-item">
-      <i class="fas fa-lock"></i>
-      <div><strong>System Defined Stages:</strong> Master stages 01 through 07 are architecturally fixed to ensure pipeline consistency across all ATS modules.</div>
-    </div>
-    <div class="ips-strip-item">
-      <i class="fas fa-sort-amount-down"></i>
-      <div><strong>Priority Reordering:</strong> Drag sub-stages using the grip handle to customize sequencing in candidate drawer filters.</div>
-    </div>
-    <div class="ips-strip-item">
-      <i class="fas fa-bolt"></i>
-      <div><strong>Instant AJAX Sync:</strong> Adding or deleting a sub-stage triggers atomic cache invalidation with zero page reload.</div>
-    </div>
   </div>
 
 </div>
@@ -379,44 +346,6 @@
     gap: 8px;
     flex-wrap: wrap;
   }
-  .ips-pill-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-  }
-  .ips-pill-primary {
-    background: #eff6ff;
-    color: #009ef7;
-    border: 1px solid #bfdbfe;
-  }
-  .ips-pill-success {
-    background: #ecfdf5;
-    color: #10b981;
-    border: 1px solid #a7f3d0;
-  }
-  .ips-pill-muted {
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #e2e8f0;
-  }
-  .pulse-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #10b981;
-    display: inline-block;
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-    animation: ipsPulse 2s infinite;
-  }
-  @keyframes ipsPulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-  }
 
   .ips-toolbar-right {
     display: flex;
@@ -424,46 +353,35 @@
     gap: 12px;
     flex-wrap: wrap;
   }
-  .ips-search-subcard {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 0 12px;
-    height: 38px;
-    width: 270px;
-    transition: all 0.15s ease-in-out;
-  }
-  .ips-search-subcard:focus-within {
-    background: #ffffff;
-    border-color: #009ef7;
-    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
-  }
-  .ips-search-subcard i {
-    color: #94a3b8;
-    font-size: 13px;
-  }
-  .ips-search-subcard input {
-    border: none;
-    background: transparent;
-    outline: none;
-    font-size: 12px;
-    color: #0f172a;
-    width: 100%;
-  }
-  .ips-search-clear {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    font-size: 12px;
-    cursor: pointer;
-    display: none;
-    padding: 2px;
-  }
-  .ips-search-clear.visible {
+  .ips-btn-reset {
     display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #ffffff !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 8.5px 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .ips-btn-reset:hover {
+    color: #e11d48 !important;
+    background: #fff1f2 !important;
+    border-color: #fecdd3 !important;
+    box-shadow: 0 2px 4px rgba(225, 29, 72, 0.12);
+    transform: translateY(-1px);
+  }
+  .ips-btn-reset:active {
+    transform: translateY(0);
+  }
+  .ips-btn-reset:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
   }
   .ips-btn-primary {
     display: inline-flex;
@@ -473,15 +391,16 @@
     color: #ffffff !important;
     border: none !important;
     border-radius: 8px !important;
-    padding: 9px 15px !important;
-    font-size: 12.5px !important;
+    padding: 9px 18px !important;
+    font-size: 13px !important;
     font-weight: 600 !important;
     cursor: pointer;
     transition: all 0.15s ease-in-out;
-    box-shadow: 0 1px 3px rgba(0, 158, 247, 0.25);
+    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.25);
   }
   .ips-btn-primary:hover {
     background: #0086d4 !important;
+    box-shadow: 0 4px 8px rgba(0, 158, 247, 0.35);
     transform: translateY(-1px);
   }
 
@@ -585,10 +504,11 @@
     background: var(--stage-color, #009ef7);
   }
 
-  /* Stage Header Row */
+  /* Stage Header Row with dedicated light background color of that stage */
   .ips-stack-header {
     padding: 14px 20px 14px 18px;
-    background: #ffffff;
+    background: var(--stage-light, #f8fafc);
+    border-bottom: 1px solid var(--stage-border, #e2e8f0);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -596,6 +516,10 @@
     flex-wrap: wrap;
     cursor: pointer;
     user-select: none;
+    transition: all 0.18s ease;
+  }
+  .ips-stack-header:hover {
+    filter: brightness(0.985);
   }
   .ips-stack-header-left {
     display: flex;
@@ -607,7 +531,7 @@
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: var(--stage-light, #eff6ff);
+    background: #ffffff;
     color: var(--stage-color, #009ef7);
     border: 1px solid var(--stage-border, #bfdbfe);
     display: flex;
@@ -616,6 +540,7 @@
     font-size: 12px;
     font-weight: 700;
     flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
   .ips-stack-icon {
     font-size: 16px;
@@ -643,13 +568,13 @@
     letter-spacing: 0.5px;
     padding: 1px 7px;
     border-radius: 4px;
-    background: var(--stage-light, #f1f5f9);
+    background: #ffffff;
     color: var(--stage-color, #475569);
     border: 1px solid var(--stage-border, #e2e8f0);
   }
   .ips-stack-desc {
     font-size: 11.5px;
-    color: #64748b;
+    color: #475569;
     margin-top: 1px;
   }
 
@@ -661,38 +586,14 @@
   .ips-count-pill {
     font-size: 11.5px;
     font-weight: 600;
-    color: #475569;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
+    color: var(--stage-color, #009ef7);
+    background: #ffffff;
+    border: 1px solid var(--stage-border, #bfdbfe);
     padding: 3px 10px;
     border-radius: 6px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-  }
-  .ips-count-pill.has-items {
-    background: var(--stage-light, #eff6ff);
-    color: var(--stage-color, #009ef7);
-    border-color: var(--stage-border, #bfdbfe);
-  }
-  .ips-btn-add-sub {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    background: #f8fafc;
-    color: #334155;
-    border: 1px solid #cbd5e1;
-    font-size: 11.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease-in-out;
-  }
-  .ips-btn-add-sub:hover {
-    background: #eff6ff;
-    color: #009ef7;
-    border-color: #93c5fd;
   }
   .ips-collapse-toggle {
     width: 28px;
@@ -701,14 +602,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
+    color: #64748b;
     border: 1px solid transparent;
     background: transparent;
     cursor: pointer;
     transition: all 0.15s ease;
   }
   .ips-collapse-toggle:hover {
-    background: #f1f5f9;
+    background: rgba(0, 0, 0, 0.05);
     color: #0f172a;
   }
   .ips-collapse-toggle i {
@@ -722,7 +623,7 @@
   .ips-stack-body {
     padding: 12px 20px 16px 20px;
     background: #fafbfc;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid transparent;
     display: block;
   }
   .ips-stack-card.collapsed .ips-stack-body {
@@ -738,8 +639,13 @@
     padding: 0;
     min-height: 20px;
   }
+  .ips-subcards-stream.drag-over {
+    background: rgba(0, 158, 247, 0.04);
+    border: 1.5px dashed #009ef7;
+    border-radius: 8px;
+  }
 
-  /* Sub-Card Item */
+  /* Sub-Card Item with Drag & Drop Visuals */
   .ips-subcard-item {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
@@ -752,11 +658,17 @@
     gap: 12px !important;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
     transition: all 0.15s ease-in-out;
+    cursor: default;
   }
   .ips-subcard-item:hover {
     border-color: #cbd5e1 !important;
     box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04) !important;
     background: #ffffff !important;
+  }
+  .ips-subcard-item.is-dragging {
+    opacity: 0.45 !important;
+    border: 1.5px dashed #009ef7 !important;
+    background: #eff6ff !important;
   }
   .ips-subcard-left {
     display: flex;
@@ -765,24 +677,32 @@
     min-width: 0;
   }
   .ips-drag-handle {
-    color: #cbd5e1;
+    color: #94a3b8;
     cursor: grab;
+    cursor: -webkit-grab;
     font-size: 13px;
-    padding: 2px 4px;
-    transition: color 0.15s ease;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: color 0.15s ease, background 0.15s ease;
   }
   .ips-drag-handle:hover {
-    color: #64748b;
+    color: #009ef7;
+    background: #eff6ff;
+  }
+  .ips-drag-handle:active {
+    cursor: grabbing;
+    cursor: -webkit-grabbing;
   }
   .ips-subcard-seq {
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 700;
-    color: #64748b;
+    color: #475569;
     background: #f1f5f9;
     border: 1px solid #e2e8f0;
-    padding: 1px 6px;
-    border-radius: 4px;
+    padding: 1.5px 7px;
+    border-radius: 5px;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .ips-subcard-name {
     font-size: 13px;
@@ -875,55 +795,6 @@
     font-size: 11px;
     color: #94a3b8;
   }
-  .ips-btn-empty-add {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    color: #475569;
-    padding: 5px 12px;
-    border-radius: 6px;
-    font-size: 11.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  .ips-btn-empty-add:hover {
-    background: #eff6ff;
-    border-color: #93c5fd;
-    color: #009ef7;
-  }
-
-  /* Bottom Guidance Strip */
-  .ips-bottom-strip {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 12px 20px;
-    margin-top: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-  }
-  .ips-strip-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 11.5px;
-    color: #64748b;
-  }
-  .ips-strip-item i {
-    font-size: 13px;
-    color: #009ef7;
-  }
-  .ips-strip-item strong {
-    color: #0f172a;
-    font-weight: 600;
-  }
 
   @media (max-width: 992px) {
     .ips-toolbar-card {
@@ -931,10 +802,7 @@
       align-items: stretch;
     }
     .ips-toolbar-right {
-      justify-content: space-between;
-    }
-    .ips-search-subcard {
-      width: 100%;
+      justify-content: flex-end;
     }
     .ips-stack-spine {
       display: none;

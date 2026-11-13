@@ -235,7 +235,7 @@
             });
         },
 
-        getCandidates: async function (ids) {
+        getCandidates: async function (ids, jobId) {
             var self = this;
             if (!Array.isArray(ids) || ids.length === 0) return [];
             var db = await self.init();
@@ -251,6 +251,8 @@
             );
             var curUser = parseInt(window.userId || (window.authUserId ? window.authUserId : 0), 10);
             var curSessionGen = window._jeroSessionGen || ('gen_' + (curTenant || '0'));
+            var activeJobId = parseInt(jobId || 0, 10) || 0;
+            var now = Date.now();
 
             return new Promise(function (resolve) {
                 try {
@@ -263,11 +265,13 @@
                         req.onsuccess = function () {
                             if (req.result) {
                                 var rec = req.result;
-                                // Runtime Triple-Check (Section 10.2)
+                                // Runtime Multi-Tenant + Job + Short-TTL Freshness Gate
                                 var isMatch = true;
                                 if (rec._tenant_id && curTenant && rec._tenant_id !== curTenant) isMatch = false;
                                 if (rec._user_id && curUser && rec._user_id !== curUser) isMatch = false;
                                 if (rec._session_generation && rec._session_generation !== curSessionGen) isMatch = false;
+                                if ((parseInt(rec._job_id || 0, 10) || 0) !== activeJobId) isMatch = false;
+                                if (!rec._cached_at || (now - rec._cached_at) > 60000) isMatch = false;
                                 if (isMatch) {
                                     results.push(rec);
                                 }
@@ -286,7 +290,7 @@
             });
         },
 
-        saveCandidates: async function (candidates) {
+        saveCandidates: async function (candidates, jobId) {
             var self = this;
             if (!Array.isArray(candidates) || candidates.length === 0) return;
             var db = await self.init();
@@ -302,6 +306,7 @@
             );
             var curUser = parseInt(window.userId || (window.authUserId ? window.authUserId : 0), 10);
             var curSessionGen = window._jeroSessionGen || ('gen_' + (curTenant || '0'));
+            var activeJobId = parseInt(jobId || 0, 10) || 0;
 
             try {
                 var tx = db.transaction(['candidates'], 'readwrite');
@@ -313,6 +318,7 @@
                         cand._tenant_id = curTenant;
                         cand._user_id = curUser;
                         cand._session_generation = curSessionGen;
+                        cand._job_id = activeJobId;
                         store.put(cand);
                     }
                 });
@@ -736,8 +742,15 @@
             // 3. Ensure WASM Engine is loaded in background
             self._loadEngineScript();
 
-            // 4. Local-First SWR: Check L2 IndexedDB for Instant Activation (< 8ms)
-            JeroFwdDB.getCandidates(candidateIds).then(function (cachedCands) {
+            var activeJobId = 0;
+            if (Array.isArray(jobIdArr) && jobIdArr.length > 0) {
+                activeJobId = parseInt(jobIdArr[0], 10) || 0;
+            } else if (jobIdArr) {
+                activeJobId = parseInt(jobIdArr, 10) || 0;
+            }
+
+            // 4. Local-First SWR: Check L2 IndexedDB for Instant Activation (< 8ms), strictly scoped by job_id & TTL
+            JeroFwdDB.getCandidates(candidateIds, activeJobId).then(function (cachedCands) {
                 if (cachedCands && cachedCands.length === candidateIds.length) {
                     var cachedData = {
                         applicationData: cachedCands,
@@ -768,8 +781,8 @@
                         var latency = Math.round(performance.now() - startTime);
                         console.info('V4.1 Forward Resume Drawer network revalidation ready in ' + latency + 'ms');
                         self._hydrateData(res);
-                        // Persist to L2 IndexedDB for zero-latency future hits
-                        if (res.applicationData) JeroFwdDB.saveCandidates(res.applicationData);
+                        // Persist to L2 IndexedDB scoped by target job_id
+                        if (res.applicationData) JeroFwdDB.saveCandidates(res.applicationData, res.targetJobId || activeJobId);
                         if (res.templateData) JeroFwdDB.saveTemplates(res.templateData);
                     } else {
                         console.warn('Micro-JSON response failure:', res);
@@ -1007,10 +1020,12 @@
             self._jobSkills = data.jobSkills || data.job_skills || [];
             self._templateData = data.templateData || data.templates || [];
 
-            // Authoritative Freshness: Clear any pre-compiled attachments so fresh notes/skills/ratings are used
+            // Authoritative Freshness: Abort any in-flight SWR compile, clear stale blobs, and compile fresh data
+            self._compileToken++;
+            self._isCompiling = false;
             self._compiledAttachments = {};
             var currentFormat = parseInt($('#test_fwd_resume_format').val(), 10) || 46;
-            if (currentFormat > 1 && !self._isCompiling) {
+            if (currentFormat > 1) {
                 self.startCompilationForOption(currentFormat);
             }
 
@@ -1771,7 +1786,8 @@
                 var comp = escapeHtml(cand.company || cand.current_company || '--');
                 var exp = escapeHtml(cand.experience || cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
                 if (typeof exp === 'number') exp = exp + ' Yrs';
-                var relExp = escapeHtml(cand.rel_exp ? (cand.rel_exp + ' Yrs') : exp);
+                var rawRelExp = cand.rel_exp || cand.relevant_experience || '';
+                var relExp = rawRelExp ? escapeHtml(isNaN(rawRelExp) ? String(rawRelExp) : (rawRelExp + ' Yrs')) : '--';
                 var loc = escapeHtml(cand.location || cand.current_location || '--');
                 var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
                 var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
@@ -1858,30 +1874,32 @@
                 var comp = escapeHtml(cand.company || cand.current_company || '--');
                 var exp = escapeHtml(cand.experience || cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
                 if (typeof exp === 'number') exp = exp + ' Yrs';
-                var relExp = escapeHtml(cand.rel_exp ? (cand.rel_exp + ' Yrs') : exp);
+                var rawRelExp = cand.rel_exp || cand.relevant_experience || '';
+                var relExp = rawRelExp ? escapeHtml(isNaN(rawRelExp) ? String(rawRelExp) : (rawRelExp + ' Yrs')) : '--';
                 var loc = escapeHtml(cand.location || cand.current_location || '--');
                 var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
                 var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
                 var ctc = escapeHtml((cand.ctc || '--') + ' / ' + (cand.ectc || '--'));
 
-                var reasonChange = escapeHtml(cand.reason_for_job_change || cand.recruiter_note_text || 'Seeking professional career growth & new technical challenges matching core competencies.');
+                var reasonChange = escapeHtml(cand.reason_for_job_change || cand.recruiter_note_text || 'Not Specified');
 
-                // Skills Breakdown
+                // Skills Breakdown (zero fabrication)
                 var skillsList = [];
                 if (Array.isArray(cand.skills) && cand.skills.length > 0) {
                     skillsList = cand.skills.map(function(s) {
                         if (typeof s === 'object') {
-                            return { name: s.name || s.skill_name || 'Skill', exp: s.expText || exp, rating: s.rating || 4 };
+                            return {
+                                name: String(s.name || s.skill_name || '').trim(),
+                                exp: s.expText || s.exp || '--',
+                                rating: Math.min(5, Math.max(0, parseInt(s.rating, 10) || 0))
+                            };
                         }
-                        return { name: String(s), exp: exp, rating: 4 };
-                    });
+                        return { name: String(s).trim(), exp: '--', rating: 0 };
+                    }).filter(function(s) { return s.name !== ''; });
                 } else if (typeof cand.skills === 'string' && cand.skills.trim() !== '') {
-                    skillsList = cand.skills.split(',').slice(0, 5).map(function(s) {
-                        return { name: s.trim(), exp: exp, rating: 4 };
-                    });
-                }
-                if (skillsList.length === 0) {
-                    skillsList.push({ name: 'Primary Technical Domain Expertise', exp: exp, rating: 5 });
+                    skillsList = cand.skills.split(',').map(function(s) {
+                        return { name: s.trim(), exp: '--', rating: 0 };
+                    }).filter(function(s) { return s.name !== ''; }).slice(0, 5);
                 }
 
                 // Q&A
@@ -1890,13 +1908,6 @@
                     qaList = cand.screening_qa;
                 } else if (cand.screening_qa && typeof cand.screening_qa === 'object') {
                     qaList = Object.values(cand.screening_qa);
-                }
-                if (qaList.length === 0) {
-                    qaList = [
-                        { question: 'Key Technical Skills & Project Scope Assessed', answer: 'Candidate demonstrated hands-on technical proficiency with solid architectural and coding foundations.' },
-                        { question: 'Notice Period & Availability Confirmation', answer: 'Confirmed current notice period is ' + notice + '. Candidate is actively interviewing and available for timely joining.' },
-                        { question: 'Reason for Exploring New Opportunities', answer: reasonChange }
-                    ];
                 }
 
                 html += '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:980px;font-family:Calibri,Arial,sans-serif;font-size:12px;color:#1F2937;border:solid 1px #1E3A8A;margin:16px 0;">';
@@ -1934,17 +1945,22 @@
                 html += '<th style="border:solid 1px #0284C7;padding:7px 10px;text-align:center;width:25%;">PROFICIENCY / RATING</th>';
                 html += '</tr>';
 
-                skillsList.forEach(function (skItem, sIdx) {
-                    var rNum = Math.min(5, Math.max(1, skItem.rating || 4));
-                    var ratingStars = '★★★★★'.substring(0, rNum) + '☆☆☆☆☆'.substring(0, 5 - rNum);
-                    var bg = (sIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
-                    html += '<tr style="background:' + bg + ';">';
-                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;font-weight:bold;color:#0284C7;">' + (sIdx + 1) + '</td>';
-                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:600;color:#111827;">' + escapeHtml(skItem.name) + '</td>';
-                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#374151;">' + escapeHtml(skItem.exp) + '</td>';
-                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#D97706;font-weight:bold;">' + ratingStars + ' (' + rNum + '/5)</td>';
-                    html += '</tr>';
-                });
+                if (skillsList.length === 0) {
+                    html += '<tr><td colspan="4" style="border:solid 1px #D1D5DB;padding:8px 10px;text-align:center;color:#6B7280;">No verified candidate skills recorded in profile.</td></tr>';
+                } else {
+                    skillsList.forEach(function (skItem, sIdx) {
+                        var rNum = Math.min(5, Math.max(0, parseInt(skItem.rating, 10) || 0));
+                        var ratingStars = '★★★★★'.substring(0, rNum) + '☆☆☆☆☆'.substring(0, 5 - rNum);
+                        var ratingLabel = rNum > 0 ? (ratingStars + ' (' + rNum + '/5)') : (ratingStars + ' (Not Rated)');
+                        var bg = (sIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                        html += '<tr style="background:' + bg + ';">';
+                        html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;font-weight:bold;color:#0284C7;">' + (sIdx + 1) + '</td>';
+                        html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:600;color:#111827;">' + escapeHtml(skItem.name) + '</td>';
+                        html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#374151;">' + escapeHtml(skItem.exp || '--') + '</td>';
+                        html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#D97706;font-weight:bold;">' + ratingLabel + '</td>';
+                        html += '</tr>';
+                    });
+                }
 
                 // Section 3: Telephonic Screening Q&A
                 html += '<tr style="background:#1E3A8A;color:#FFFFFF;font-weight:bold;">';
@@ -1953,16 +1969,20 @@
                 html += '<th colspan="2" style="border:solid 1px #1E3A8A;padding:7px 10px;text-align:left;width:50%;">CANDIDATE\'S VERIFIED RESPONSE</th>';
                 html += '</tr>';
 
-                qaList.forEach(function (item, qIdx) {
-                    var qText = escapeHtml(item.question || item.job_detail_value || item.q || '');
-                    var aText = escapeHtml(item.answer || item.application_detail_value || item.a || '');
-                    var bg = (qIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
-                    html += '<tr style="background:' + bg + ';">';
-                    html += '<td style="border:solid 1px #D1D5DB;padding:8px 10px;text-align:center;font-weight:bold;color:#1E3A8A;">' + (qIdx + 1) + '</td>';
-                    html += '<td style="border:solid 1px #D1D5DB;padding:8px 10px;font-weight:600;color:#1F2937;">' + qText + '</td>';
-                    html += '<td colspan="2" style="border:solid 1px #D1D5DB;padding:8px 10px;color:#111827;line-height:1.4;">' + aText + '</td>';
-                    html += '</tr>';
-                });
+                if (qaList.length === 0) {
+                    html += '<tr><td colspan="4" style="border:solid 1px #D1D5DB;padding:8px 10px;text-align:center;color:#6B7280;">No screening Q&amp;A responses recorded for this candidate and job.</td></tr>';
+                } else {
+                    qaList.forEach(function (item, qIdx) {
+                        var qText = escapeHtml(item.question || item.job_detail_value || item.q || '');
+                        var aText = escapeHtml(item.answer || item.application_detail_value || item.a || '');
+                        var bg = (qIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                        html += '<tr style="background:' + bg + ';">';
+                        html += '<td style="border:solid 1px #D1D5DB;padding:8px 10px;text-align:center;font-weight:bold;color:#1E3A8A;">' + (qIdx + 1) + '</td>';
+                        html += '<td style="border:solid 1px #D1D5DB;padding:8px 10px;font-weight:600;color:#1F2937;">' + qText + '</td>';
+                        html += '<td colspan="2" style="border:solid 1px #D1D5DB;padding:8px 10px;color:#111827;line-height:1.4;">' + aText + '</td>';
+                        html += '</tr>';
+                    });
+                }
 
                 html += '</tbody></table>';
             });
@@ -1984,17 +2004,18 @@
                 if (Array.isArray(cand.skills) && cand.skills.length > 0) {
                     skillsList = cand.skills.map(function(s) {
                         if (typeof s === 'object') {
-                            return { name: s.name || s.skill_name || 'Skill', exp: s.expText || exp, rating: s.rating || 4 };
+                            return {
+                                name: String(s.name || s.skill_name || '').trim(),
+                                exp: s.expText || s.exp || '--',
+                                rating: Math.min(5, Math.max(0, parseInt(s.rating, 10) || 0))
+                            };
                         }
-                        return { name: String(s), exp: exp, rating: 4 };
-                    });
+                        return { name: String(s).trim(), exp: '--', rating: 0 };
+                    }).filter(function(s) { return s.name !== ''; });
                 } else if (typeof cand.skills === 'string' && cand.skills.trim() !== '') {
-                    skillsList = cand.skills.split(',').slice(0, 7).map(function(s) {
-                        return { name: s.trim(), exp: exp, rating: 4 };
-                    });
-                }
-                if (skillsList.length === 0) {
-                    skillsList.push({ name: 'Primary Domain Technical Expertise', exp: exp, rating: 5 });
+                    skillsList = cand.skills.split(',').map(function(s) {
+                        return { name: s.trim(), exp: '--', rating: 0 };
+                    }).filter(function(s) { return s.name !== ''; }).slice(0, 7);
                 }
 
                 html += '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:980px;font-family:Calibri,Arial,sans-serif;font-size:12px;color:#1F2937;border:solid 1px #0284C7;margin:14px 0;">';
@@ -2010,17 +2031,22 @@
                 html += '</tr>';
                 html += '</thead><tbody>';
 
-                skillsList.forEach(function (skItem, sIdx) {
-                    var rNum = Math.min(5, Math.max(1, skItem.rating || 4));
-                    var ratingStars = '★★★★★'.substring(0, rNum) + '☆☆☆☆☆'.substring(0, 5 - rNum);
-                    var bg = (sIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
-                    html += '<tr style="background:' + bg + ';">';
-                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;font-weight:bold;color:#0284C7;">' + (sIdx + 1) + '</td>';
-                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:600;color:#111827;">' + escapeHtml(skItem.name) + '</td>';
-                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#374151;">' + escapeHtml(skItem.exp) + '</td>';
-                    html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#D97706;font-weight:bold;">' + ratingStars + ' (' + rNum + '/5)</td>';
-                    html += '</tr>';
-                });
+                if (skillsList.length === 0) {
+                    html += '<tr><td colspan="4" style="border:solid 1px #D1D5DB;padding:8px 10px;text-align:center;color:#6B7280;">No verified candidate skills recorded in profile.</td></tr>';
+                } else {
+                    skillsList.forEach(function (skItem, sIdx) {
+                        var rNum = Math.min(5, Math.max(0, parseInt(skItem.rating, 10) || 0));
+                        var ratingStars = '★★★★★'.substring(0, rNum) + '☆☆☆☆☆'.substring(0, 5 - rNum);
+                        var ratingLabel = rNum > 0 ? (ratingStars + ' (' + rNum + '/5)') : (ratingStars + ' (Not Rated)');
+                        var bg = (sIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                        html += '<tr style="background:' + bg + ';">';
+                        html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;font-weight:bold;color:#0284C7;">' + (sIdx + 1) + '</td>';
+                        html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;font-weight:600;color:#111827;">' + escapeHtml(skItem.name) + '</td>';
+                        html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#374151;">' + escapeHtml(skItem.exp || '--') + '</td>';
+                        html += '<td style="border:solid 1px #D1D5DB;padding:6px 10px;text-align:center;color:#D97706;font-weight:bold;">' + ratingLabel + '</td>';
+                        html += '</tr>';
+                    });
+                }
 
                 html += '</tbody></table>';
             });

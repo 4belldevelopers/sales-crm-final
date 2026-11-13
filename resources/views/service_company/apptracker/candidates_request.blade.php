@@ -650,12 +650,198 @@
             background: rgba(37,99,235,.28) !important;
             color: #1d4ed8 !important;
         }
+
+        /* Crisp Search Clear & Refresh Controls in Toolbar */
+        .brf-search-wrap { position: relative; }
+        .brf-search-input.form-control { padding-right: 30px !important; }
+        .brf-search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .brf-search-clear:hover { background: #e2e8f0; color: #0f172a; }
+        .brf-refresh-btn {
+            height: 44px;
+            border-radius: 10px !important;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            padding: 0 14px !important;
+            background: #ffffff !important;
+            border: 1px solid #e4e6ef !important;
+            color: #3f4254 !important;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .brf-refresh-btn:hover { background: #f8fafc !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+        .brf-refresh-btn.is-spinning svg { animation: brfSpin 0.8s linear infinite; }
+        @keyframes brfSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Selection Bar (Copy Application) */
+        .brf-sel-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 8px 14px; margin-bottom: 10px; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .brf-sel-info { font-size: 12.5px; font-weight: 600; color: #1e40af; }
+        .brf-sel-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        /* Rule 20 Card + Sub-Card Candidate Stream (.brf-stream-wrapper / .brf-cand-*) */
+        .brf-stream-wrapper { background: transparent; border: none; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .brf-stream-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 14px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); flex-wrap: wrap; }
+        .brf-stream-bar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .brf-select-all-label { display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; font-size: 12px; font-weight: 600; color: #334155; }
+        .brf-active-pill { display: inline-flex; align-items: center; padding: 2.5px 10px; border-radius: 6px; background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; font-size: 11px; font-weight: 700; }
+        .brf-stream-count { font-size: 12px; color: #64748b; font-weight: 500; }
+        .brf-stream-count strong { color: #0f172a; font-weight: 700; }
+        .brf-stream-hint { font-size: 11px; color: #64748b; font-weight: 500; }
+        .brf-cand-stream { display: flex; flex-direction: column; gap: 8px; }
+        .brf-cand-card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 3.5px solid #cbd5e1; border-radius: 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); transition: border-color 0.15s ease, box-shadow 0.15s ease; overflow: hidden; position: relative; }
+        .brf-cand-card:hover { border-color: #bae6fd; border-left-color: #009ef7; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06); }
+        .brf-cand-card.is-selected { border-color: #93c5fd; border-left-color: #009ef7; background: #f8fbff; }
+        .brf-cand-card.is-duplicate { border-left-color: #ef4444; }
+        .brf-cand-grid { display: grid; grid-template-columns: minmax(0, 2.0fr) minmax(0, 1.0fr) minmax(0, 1.35fr) minmax(0, 1.2fr) minmax(0, 1.25fr) minmax(0, 1.35fr); gap: 8px; padding: 10px 12px; align-items: stretch; }
+        .brf-cand-subcard { background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 9px; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; transition: background-color 0.15s ease, border-color 0.15s ease; }
+        .brf-cand-card:hover .brf-cand-subcard { border-color: #e2e8f0; }
+        .brf-subcard-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+        .brf-subcard-label { display: inline-flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #64748b; }
+        .brf-dup-pill { display: inline-flex; align-items: center; gap: 3px; padding: 1.5px 6px; border-radius: 4px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-size: 9.5px; font-weight: 700; }
+        .brf-comm-pill { display: inline-flex; align-items: center; padding: 1.5px 6px; border-radius: 4px; font-size: 9.5px; font-weight: 700; }
+        .brf-comm-pill.is-free { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        .brf-comm-pill.is-paid { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+        .brf-cand-subcard--info { cursor: pointer; }
+        .brf-cand-info-row { display: flex; align-items: center; gap: 9px; min-width: 0; }
+        .brf-avatar { width: 34px; height: 34px; min-width: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; text-decoration: none; }
+        .brf-cand-info-meta { min-width: 0; flex: 1; }
+        .brf-cand-name { display: block; font-size: 12.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; line-height: 1.25; }
+        .brf-cand-name:hover { color: #009ef7; }
+        .brf-cand-role { font-size: 11px; font-weight: 500; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; margin-top: 1px; }
+        .brf-exp-main { font-size: 12px; font-weight: 700; color: #0f172a; line-height: 1.25; font-variant-numeric: tabular-nums; }
+        .brf-exp-sub { font-size: 10.5px; font-weight: 500; color: #64748b; line-height: 1.3; font-variant-numeric: tabular-nums; }
+        .brf-sal-main { font-size: 12.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+        .brf-sal-mode { font-size: 10.5px; font-weight: 500; color: #64748b; }
+        .brf-sal-sub { font-size: 10.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+        .brf-outsource-pill { display: inline-flex; align-items: center; padding: 1px 6px; border-radius: 4px; background: #f1f5f9; color: #334155; font-size: 10px; font-weight: 600; margin-top: 3px; width: fit-content; }
+        .brf-avail-main { font-size: 11.5px; font-weight: 700; line-height: 1.3; }
+        .brf-avail-sub { font-size: 10.5px; font-weight: 500; color: #64748b; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .brf-loc-city { font-size: 11.5px; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+        .brf-loc-city i { font-size: 10px; color: #94a3b8; }
+        .brf-loc-edu { font-size: 10.5px; font-weight: 500; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; margin-top: 2px; }
+        .brf-loc-edu i { font-size: 10px; color: #94a3b8; }
+        .brf-edu-uppercase { text-transform: uppercase; }
+        .brf-active-date { font-size: 11px; font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .brf-active-date i { font-size: 10px; color: #94a3b8; }
+        .brf-expire-txt { font-size: 10.5px; font-weight: 700; line-height: 1.25; }
+        .brf-action-wrap { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+        .brf-cand-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 12px; background: #ffffff; border-top: 1px solid #f1f5f9; width: 100%; overflow: hidden; }
+        .brf-bottom-left { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
+        .brf-match-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 5px; font-size: 10.5px; font-weight: 700; line-height: 1.3; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+        .brf-skills-scroll { display: flex; align-items: center; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -ms-overflow-style: none; white-space: nowrap; min-width: 0; }
+        .brf-skills-scroll::-webkit-scrollbar { display: none; }
+        .brf-skill-pill { display: inline-flex; align-items: center; gap: 3px; padding: 1.5px 7px; border-radius: 4px; background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; font-size: 10px; font-weight: 500; line-height: 1.4; flex-shrink: 0; }
+        .brf-skill-pill.is-matched { background: #dcfce7; color: #15803d; border-color: #bbf7d0; font-weight: 600; }
+        .brf-skill-pill.is-mandatory { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; font-weight: 600; }
+        .brf-skills-empty { font-size: 10.5px; color: #94a3b8; }
+        .brf-empty-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 42px 20px; text-align: center; }
+        .brf-empty-icon { width: 48px; height: 48px; border-radius: 12px; background: #f1f5f9; color: #94a3b8; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+        .brf-empty-title { font-size: 14px; font-weight: 600; color: #1e293b; }
+        .brf-empty-sub { font-size: 12px; color: #64748b; margin-top: 3px; }
+        .brf-skeleton-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+        .brf-skeleton-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+        .brf-skeleton-box { height: 62px; border-radius: 8px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: brfShimmer 1.3s infinite; }
+        @keyframes brfShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .brf-pagination-card { margin-top: 12px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; background: #ffffff; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); }
+        @media (max-width: 1440px) {
+            .brf-cand-grid { grid-template-columns: minmax(0, 1.95fr) minmax(0, 0.95fr) minmax(0, 1.3fr) minmax(0, 1.15fr) minmax(0, 1.2fr) minmax(0, 1.3fr); gap: 6px; padding: 8px 10px; }
+            .brf-cand-subcard { padding: 6px 8px; }
+        }
+        @media (max-width: 1180px) { .brf-cand-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
+        @media (max-width: 640px) {
+            .brf-cand-grid { grid-template-columns: 1fr; gap: 8px; }
+            .brf-cand-bottom { flex-direction: column; align-items: flex-start; gap: 6px; }
+        }
+
+        /* AppTracker Flat Light-Tinted Enterprise Header (.brf-job-toolbar / .brf-hdr-*) */
+        @media (min-width: 1181px) {
+            body#kt_body.toolbar-fixed { --kt-toolbar-height: 62px !important; }
+            body#kt_body.toolbar-fixed .wrapper { padding-top: calc(var(--kt-header-height, 65px) + 62px) !important; }
+        }
+        @media (max-width: 1180px) {
+            #kt_toolbar.brf-job-toolbar { position: relative !important; top: auto !important; left: auto !important; right: auto !important; height: auto !important; }
+            body#kt_body.toolbar-fixed .wrapper { padding-top: var(--kt-header-height, 65px) !important; }
+        }
+        #kt_toolbar.brf-job-toolbar { background: #ffffff !important; border-bottom: none !important; box-shadow: none !important; height: auto !important; min-height: 60px; padding: 0 !important; margin: 0 !important; }
+        #kt_toolbar.brf-job-toolbar #kt_toolbar_container { width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; display: block !important; }
+        .brf-hdr-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 60px; background: var(--hdr-bg, #ffffff); border: none; border-bottom: 1px solid var(--hdr-border, #dbeafe); border-left: 4px solid var(--hdr-accent, #2563eb); border-radius: 0 !important; padding: 10px 20px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
+        .brf-hdr-card.hp-org-my { --hdr-bg: linear-gradient(90deg, #fffbeb 0%, #fffdf7 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #fde68a; --hdr-accent: #d97706; --hdr-logo-bg: #fffbeb; --hdr-logo-border: #fde68a; --hdr-icon-color: #d97706; --hdr-pill-bg: #fef3c7; --hdr-pill-border: #fcd34d; --hdr-pill-color: #92400e; --hdr-btn-outline-border: #f59e0b; --hdr-btn-outline-color: #b45309; --hdr-btn-outline-hover-bg: #fef3c7; --hdr-btn-outline-hover-color: #78350f; --hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%); --hdr-btn-solid-border: #eab308; --hdr-btn-solid-color: #422006; --hdr-btn-solid-hover: linear-gradient(135deg, #facc15 0%, #ca8a04 100%); --hdr-btn-solid-hover-border: #ca8a04; --hdr-btn-shadow: rgba(234, 179, 8, 0.28); }
+        .brf-hdr-card.hp-org-internal { --hdr-bg: linear-gradient(90deg, #eff6ff 0%, #f7faff 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #bfdbfe; --hdr-accent: #2563eb; --hdr-logo-bg: #eff6ff; --hdr-logo-border: #bfdbfe; --hdr-icon-color: #2563eb; --hdr-pill-bg: #dbeafe; --hdr-pill-border: #93c5fd; --hdr-pill-color: #1e40af; --hdr-btn-outline-border: #60a5fa; --hdr-btn-outline-color: #1d4ed8; --hdr-btn-outline-hover-bg: #dbeafe; --hdr-btn-outline-hover-color: #1e3a8a; --hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%); --hdr-btn-solid-border: #1d4ed8; --hdr-btn-solid-color: #ffffff; --hdr-btn-solid-hover: linear-gradient(135deg, #1e40af 0%, #172554 100%); --hdr-btn-solid-hover-border: #1e3a8a; --hdr-btn-shadow: rgba(29, 78, 216, 0.30); }
+        .brf-hdr-card.hp-org-direct { --hdr-bg: linear-gradient(90deg, #ecfdf5 0%, #f5fdf9 34%, #ffffff 64%, #ffffff 100%); --hdr-border: #a7f3d0; --hdr-accent: #16a34a; --hdr-logo-bg: #ecfdf5; --hdr-logo-border: #a7f3d0; --hdr-icon-color: #16a34a; --hdr-pill-bg: #d1fae5; --hdr-pill-border: #6ee7b7; --hdr-pill-color: #166534; --hdr-btn-outline-border: #34d399; --hdr-btn-outline-color: #15803d; --hdr-btn-outline-hover-bg: #d1fae5; --hdr-btn-outline-hover-color: #14532d; --hdr-btn-solid-bg: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%); --hdr-btn-solid-border: #34d399; --hdr-btn-solid-color: #064e3b; --hdr-btn-solid-hover: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%); --hdr-btn-solid-hover-border: #10b981; --hdr-btn-shadow: rgba(16, 185, 129, 0.22); }
+        .brf-hdr-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .brf-hdr-sep { width: 1px; height: 30px; background: #e2e8f0; flex-shrink: 0; }
+        .brf-hdr-col { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        .brf-hdr-col--identity { flex-direction: row; align-items: center; gap: 10px; flex: 0 1 320px; min-width: 185px; max-width: clamp(220px, 26vw, 350px); cursor: pointer; }
+        .brf-hdr-col--status { gap: 3px; flex-shrink: 0; cursor: pointer; }
+        .brf-hdr-col--comp, .brf-hdr-col--loc, .brf-hdr-col--meta { gap: 2px; flex-shrink: 0; }
+        .brf-hdr-logo-wrap { width: 38px; height: 38px; min-width: 38px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+        .brf-hdr-logo-img { width: 100%; height: 100%; object-fit: cover; }
+        .brf-hdr-logo-mono { background: var(--hdr-logo-bg, #eff6ff) !important; border-color: var(--hdr-logo-border, #bfdbfe) !important; color: var(--hdr-icon-color, #2563eb) !important; font-size: 14px !important; font-weight: 700 !important; }
+        .brf-hdr-identity-txt { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+        .brf-hdr-job-title { font-size: 13px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; text-decoration: none; transition: color 0.15s ease; }
+        .brf-hdr-col--identity:hover .brf-hdr-job-title { color: var(--hdr-accent, #2563eb); }
+        .brf-hdr-company-name { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 500; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; text-decoration: none; }
+        .brf-hdr-company-name i { font-size: 10.5px; color: #94a3b8; flex-shrink: 0; }
+        .brf-hdr-sub-top { display: flex; align-items: center; gap: 6px; }
+        .brf-hdr-status-badge { font-size: 11px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 5px !important; line-height: 1.25 !important; }
+        .brf-hdr-job-id { font-size: 11px; font-weight: 600; color: #64748b; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .brf-hdr-sub-btm { display: flex; align-items: center; }
+        .brf-hdr-org-pill { display: inline-flex; align-items: center; gap: 4px; padding: 1.5px 7px; border-radius: 5px; background: var(--hdr-pill-bg, #dbeafe); border: 1px solid var(--hdr-pill-border, #93c5fd); color: var(--hdr-pill-color, #1e40af); font-size: 10.5px; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+        .brf-hdr-org-pill i { font-size: 9.5px; flex-shrink: 0; }
+        .brf-hdr-sub-row { display: flex; align-items: center; gap: 5px; min-width: 0; }
+        .brf-hdr-col-icon { font-size: 11px; color: var(--hdr-icon-color, #2563eb); flex-shrink: 0; }
+        .brf-hdr-sub-val { font-size: 12.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; font-variant-numeric: tabular-nums; }
+        .brf-hdr-loc-plus { font-size: 11px; font-weight: 700; color: var(--hdr-icon-color, #2563eb); margin-left: 2px; }
+        .brf-hdr-sub-meta { font-size: 11.5px; font-weight: 500; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; font-variant-numeric: tabular-nums; }
+        .brf-hdr-actions-form { flex: 0 0 auto; display: flex; align-items: center; margin: 0 !important; }
+        .brf-hdr-actions { display: flex; align-items: center; gap: 8px; padding-left: 16px; border-left: 1px solid #e2e8f0; min-height: 38px; white-space: nowrap; }
+        .brf-hdr-btn-outline { background: #ffffff !important; border: 1.5px solid var(--hdr-btn-outline-border, #60a5fa) !important; color: var(--hdr-btn-outline-color, #1d4ed8) !important; border-radius: 8px !important; height: 38px !important; min-height: 38px !important; padding: 0 14px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; font-size: 12.5px !important; font-weight: 600 !important; line-height: 1 !important; margin: 0 !important; transition: all 0.15s ease !important; }
+        .brf-hdr-btn-outline:hover, .brf-hdr-btn-outline:focus { background: var(--hdr-btn-outline-hover-bg, #dbeafe) !important; border-color: var(--hdr-accent, #2563eb) !important; color: var(--hdr-btn-outline-hover-color, #1e3a8a) !important; }
+        .brf-hdr-btn-solid { background: var(--hdr-btn-solid-bg, linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%)) !important; border: 1.5px solid var(--hdr-btn-solid-border, #1d4ed8) !important; color: var(--hdr-btn-solid-color, #ffffff) !important; border-radius: 8px !important; height: 38px !important; min-height: 38px !important; padding: 0 16px !important; font-size: 13px !important; font-weight: 600 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; white-space: nowrap !important; line-height: 1 !important; margin: 0 !important; box-shadow: 0 2px 5px var(--hdr-btn-shadow, rgba(29, 78, 216, 0.25)) !important; transition: all 0.15s ease !important; }
+        .brf-hdr-btn-solid:hover, .brf-hdr-btn-solid:focus { background: var(--hdr-btn-solid-hover, linear-gradient(135deg, #1e40af 0%, #172554 100%)) !important; border-color: var(--hdr-btn-solid-hover-border, #1e3a8a) !important; color: var(--hdr-btn-solid-color, #ffffff) !important; transform: translateY(-0.5px); }
+        .brf-hdr-btn-solid .svg-icon svg path { fill: var(--hdr-btn-solid-color, #ffffff) !important; }
+        @media (max-width: 1440px) {
+            .brf-hdr-card { gap: 12px; padding: 9px 16px; }
+            .brf-hdr-main { gap: 8px; }
+            .brf-hdr-col--identity { flex: 0 1 285px; max-width: 295px; }
+            .brf-hdr-actions { padding-left: 12px; min-height: 36px; }
+            .brf-hdr-btn-outline { height: 36px !important; min-height: 36px !important; padding: 0 12px !important; font-size: 12px !important; }
+            .brf-hdr-btn-solid { height: 36px !important; min-height: 36px !important; padding: 0 14px !important; font-size: 12px !important; }
+        }
+        @media (max-width: 1180px) {
+            .brf-hdr-card { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 14px; }
+            .brf-hdr-main { justify-content: flex-start; flex-wrap: wrap; gap: 10px 18px; }
+            .brf-hdr-sep { display: none !important; }
+            .brf-hdr-col--identity { max-width: 100%; flex: 1 1 100%; }
+            .brf-hdr-actions { width: 100%; min-height: auto; justify-content: flex-end; border-left: none; border-top: 1px solid #e2e8f0; padding-left: 0; padding-top: 8px; }
+        }
+        @media (max-width: 640px) { .brf-hdr-actions { flex-wrap: wrap; } .brf-hdr-actions > * { flex: 1; } }
     </style>
 @endpush
 
 @section('content')
     <!--begin::Toolbar-->
-    <div class="toolbar" id="kt_toolbar">
+    <div class="toolbar brf-job-toolbar {{ $hpOrgClass ?? 'hp-org-internal' }}" id="kt_toolbar">
         @php
             use App\Helper\GeneralMethod;
             $req_path = url('/service_company/apptracker/' . GeneralMethod::value_encrypt(@$job->id) . '/all');
@@ -703,86 +889,58 @@
                     ];
         @endphp
         <!--begin::Container-->
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+        <div id="kt_toolbar_container" class="container-fluid">
+            <div class="brf-hdr-card {{ $hpOrgClass ?? 'hp-org-internal' }}">
             <!--begin::Page title-->
-        @include('sections.service_company.toolbar',['id' => $job->id])
+        @include('sections.service_company.toolbar', [
+            'id' => $job->id,
+            'apptrackerHeaderCard' => true,
+            'headerPrefix' => 'brf-hdr',
+            'hpOrgClass' => $hpOrgClass ?? null,
+        ])
         <!--end::Page title-->
-        <form action="" id="filter-form" style="">
+        <form action="" id="filter-form" class="brf-hdr-actions-form" style="">
             @csrf
             <input type="hidden" name="jobid" id="jobid" value="{{ @$job->id }}" />
             <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
+            <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" value="" />
             <!--begin::Actions-->
-            <div class="d-flex align-items-center py-1">
+            <div class="brf-hdr-actions">
                 @if (in_array('view_jobs', $userPermissions))
-                    {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
-                         defined once in the shared layout) that the job title/logo already
-                         uses elsewhere — .show-detail-open's click handler in
-                         service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
                     <a href="javascript:void(0);" data-id="{{ $job->id }}"
-                        class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
-                        View Job
+                        class="btn btn-sm brf-hdr-btn-outline show-detail-open">
+                        <i class="far fa-eye" aria-hidden="true"></i>
+                        <span>View Job</span>
                     </a>
                 @endif
-                <!--begin::Search-->
-                <div class="d-flex align-items-center position-relative my-1 me-3 d-none">
-                    <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-                    <span class="svg-icon svg-icon-1 position-absolute ms-6">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="none">
-                            <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546" height="2" rx="1"
-                                transform="rotate(45 17.0365 15.1223)" fill="black" />
-                            <path
-                                d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
-                                fill="black" />
-                        </svg>
-                    </span>
-                    <!--end::Svg Icon-->
-                    <input type="text" id="inputSearch" data-kt-user-table-filter="search"
-                        class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                        placeholder="Search..." />
-                </div>
-                <!--end::Search-->
-                <div class="card-toolbar">
-                    <!--begin::Toolbar-->
-                    <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-
-                        <!--begin::Search-->
-                        <div class="d-flex align-items-center position-relative my-1 me-3">
-
-                            <!--end::Svg Icon-->
-                            <input type="hidden" id="inputSearch" data-kt-user-table-filter="search"
-                                class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                                placeholder="Search..." />
-                        </div>
-                        <!--end::Search-->
-
-                        <!--begin::Export-->
+                @if (in_array('add_job_applications', $userPermissions))
+                    <a href="javascript:void(0);" class="d-inline-flex">
                         <button type="button"
-                            class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3 d-none"
-                            data-bs-toggle="modal" data-bs-target="#kt_modal_export_users">
-                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
-                            <span class="svg-icon svg-icon-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="none">
-                                    <rect opacity="0.3" x="12.75" y="4.25" width="12" height="2" rx="1"
-                                        transform="rotate(90 12.75 4.25)" fill="black" />
-                                    <path
-                                        d="M12.0573 6.11875L13.5203 7.87435C13.9121 8.34457 14.6232 8.37683 15.056 7.94401C15.4457 7.5543 15.4641 6.92836 15.0979 6.51643L12.4974 3.59084C12.0996 3.14332 11.4004 3.14332 11.0026 3.59084L8.40206 6.51643C8.0359 6.92836 8.0543 7.5543 8.44401 7.94401C8.87683 8.37683 9.58785 8.34458 9.9797 7.87435L11.4427 6.11875C11.6026 5.92684 11.8974 5.92684 12.0573 6.11875Z"
-                                        fill="black" />
-                                    <path
-                                        d="M18.75 8.25H17.75C17.1977 8.25 16.75 8.69772 16.75 9.25C16.75 9.80228 17.1977 10.25 17.75 10.25C18.3023 10.25 18.75 10.6977 18.75 11.25V18.25C18.75 18.8023 18.3023 19.25 17.75 19.25H5.75C5.19772 19.25 4.75 18.8023 4.75 18.25V11.25C4.75 10.6977 5.19771 10.25 5.75 10.25C6.30229 10.25 6.75 9.80228 6.75 9.25C6.75 8.69772 6.30229 8.25 5.75 8.25H4.75C3.64543 8.25 2.75 9.14543 2.75 10.25V19.25C2.75 20.3546 3.64543 21.25 4.75 21.25H18.75C19.8546 21.25 20.75 20.3546 20.75 19.25V10.25C20.75 9.14543 19.8546 8.25 18.75 8.25Z"
-                                        fill="#C4C4C4" />
+                            class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder brf-hdr-btn-solid"
+                            id="addServiceCandidate"
+                            data-job-status="{{ $job->status }}">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x me-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                    width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                        <polygon points="0 0 24 0 24 24" />
+                                        <path
+                                            d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
+                                            fill="#000000" fill-rule="nonzero" opacity="0.3" />
+                                        <path
+                                            d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
+                                            fill="#000000" fill-rule="nonzero" />
+                                    </g>
                                 </svg>
                             </span>
-                            <!--end::Svg Icon-->
-                            Export</button>
-                        <!--end::Export-->
-                    </div>
-                    <!--end::Toolbar-->
-                </div>
+                            Add Candidate
+                        </button>
+                    </a>
+                @endif
             </div>
             <!--end::Actions-->
         </form>
+        </div>
     </div>
     <!--end::Container-->
     </div>
@@ -855,6 +1013,9 @@
                                 </span>
                                 <input type="text" class="form-control brf-search-input" name="inputJobSearch"
                                     value="" placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" autocomplete="off" />
+                                <button type="button" id="btnBrfSearchClear" class="brf-search-clear d-none" title="Clear search" aria-label="Clear search">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
                             </div>
                             <div class="brf-sort-wrap" id="brf_sort_wrap">
                                 <span class="brf-sort-icon">
@@ -885,6 +1046,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
                                 <span>Filter<span id="brf_filter_count_text"></span></span>
                                 <span class="badge badge-circle badge-primary brf-count-badge d-none" id="brf_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
+                            </button>
+                            <button type="button" id="btnBrfRefreshList" class="btn brf-refresh-btn" title="Refresh candidates">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                                <span>Refresh</span>
                             </button>
                         </div>
                     </div>
@@ -1394,38 +1559,61 @@
                     <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
                 </div>
 
-                <!--begin::Card-->
-                <div class="card" id="sc_table_card" style="display:none;">
-                    <!--begin::Card body-->
-                    <div class="card-body pt-3 px-5">
-                        <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class"
-                            id="candidates_request">
-                            <thead>
-                                <tr class="fw-bolder text-muted" role="row">
-                                    <th class="w-10px pe-0 sorting_disabled" rowspan="1" colspan="1"
-                                        style="width: 30px;">
-                                        <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                            <input class="form-check-input" type="checkbox" data-kt-check="true"
-                                                data-kt-check-target="#candidates_request .form-check-input"
-                                                value="1">
-                                        </div>
-                                    </th>
-                                    <th class="">Candidate Name</th>
-                                    <th class="">Exp.</th>
-                                    <th class="">Salary</th>
-                                    <th class="">Notice</th>
-                                    <th class="">Location</th>
-                                    {{-- <th class="">Type</th> --}}
-                                    <th class="">Last Active</th>
-                                    <th class="">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-gray-600 fw-bold" id="candidatetList">
-                            </tbody>
-                        </table>
-                        <div id="paginationcandidate"></div>
+                <!--begin::Selection Bulk Bar (shown when checkboxes selected)-->
+                <div id="brf_selection_bar" class="brf-sel-bar d-none">
+                    <div class="brf-sel-info">
+                        <span id="brf_selected_count">0</span> candidate(s) selected
                     </div>
-                    <!--end::Card body-->
+                    <div class="brf-sel-actions">
+                        <button type="button" class="btn btn-sm btn-primary application_copy d-none" data-bs-toggle="modal" data-bs-target="#kt_modal_copy_application">
+                            <i class="fa-regular fa-copy me-1"></i>Copy Application
+                        </button>
+                    </div>
+                </div>
+                <!--end::Selection Bulk Bar-->
+
+                <!--begin::Card-->
+                <div class="brf-stream-wrapper" id="sc_table_card" style="display:none;">
+                    <div class="brf-stream-bar">
+                        <div class="brf-stream-bar-left">
+                            <label class="brf-select-all-label">
+                                <span class="form-check form-check-sm form-check-custom form-check-solid">
+                                    <input class="form-check-input chk_list" id="brf_select_all" type="checkbox" value="1" />
+                                </span>
+                                <span>Select All</span>
+                            </label>
+                            <span class="brf-active-pill">Bench Talent Requests</span>
+                            <span class="brf-stream-count"><strong id="brf_visible_count">0</strong> talent requests</span>
+                        </div>
+                        <div class="brf-stream-hint d-none d-md-block">
+                            <i class="fa-solid fa-circle-info text-primary me-1"></i>Click candidate for profile drawer &bull; Track expiry &amp; Add to Job directly
+                        </div>
+                    </div>
+
+                    <div id="candidatetList" class="brf-cand-stream">
+                        <div class="brf-skeleton-card">
+                            <div class="brf-skeleton-grid">
+                                <div class="brf-skeleton-box"></div>
+                                <div class="brf-skeleton-box"></div>
+                                <div class="brf-skeleton-box"></div>
+                                <div class="brf-skeleton-box"></div>
+                                <div class="brf-skeleton-box"></div>
+                                <div class="brf-skeleton-box"></div>
+                            </div>
+                        </div>
+                        <div class="brf-skeleton-card">
+                            <div class="brf-skeleton-grid">
+                                <div class="brf-skeleton-box"></div>
+                                <div class="brf-skeleton-box"></div>
+                                <div class="brf-skeleton-box"></div>
+                                <div class="brf-skeleton-box"></div>
+                                <div class="brf-skeleton-box"></div>
+                                <div class="brf-skeleton-box"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="paginationcandidate" class="brf-pagination-card"></div>
                 </div>
                 <!--end::Card-->
             </div>
@@ -1934,44 +2122,48 @@
 
 
 
-        $(document).on("click", ".chk_list", function() {
-            if ($(".chk_list").prop('checked') == true) {
-                var chk_list = $('.chk_list').val();
-                $('.chk_list_item').attr('checked', 'checked');
-            } else {
-                $('.chk_list_item').removeAttr('checked');
-            }
-        });
-        $(document).on("click", ".chk_list", function() {
-            if ($(".chk_list").prop('checked') == true) {
-                var chk_list = $('.chk_list').val();
+        function brfSyncSelectionUi() {
+            var $items = $('#candidatetList .chk_list_item');
+            var checkedCount = $items.filter(':checked').length;
+            $('#brf_select_all, .chk_list').prop('checked', $items.length > 0 && checkedCount === $items.length);
+            $('#brf_selected_count').text(checkedCount);
+            if (checkedCount > 0) {
+                $('#brf_selection_bar').removeClass('d-none');
                 $('.custom_hide').addClass("d-none");
                 $('.send_email').removeClass("d-none");
                 $('.app_copy').removeClass("d-none");
                 $('.application_copy').removeClass("d-none");
             } else {
+                $('#brf_selection_bar').addClass('d-none');
                 $('.custom_hide').removeClass("d-none");
                 $('.send_email').addClass("d-none");
                 $('.app_copy').addClass("d-none");
                 $('.application_copy').addClass("d-none");
             }
+        }
+        $(document).on("change click", ".chk_list, #brf_select_all", function() {
+            var isChecked = $(this).prop('checked');
+            $('#candidatetList .chk_list_item').prop('checked', isChecked);
+            $('#candidatetList .brf-cand-card').toggleClass('is-selected', isChecked);
+            brfSyncSelectionUi();
         });
-        $(document).on("click", ".chk_list_item", function() {
-            var i = 0;
-            var arr = [];
-            $('.chk_list_item:checked').each(function() {
-                arr.push($(this).val());
-            });
-            if (arr.length > 0) {
-                $('.custom_hide').addClass("d-none");
-                $('.send_email').removeClass("d-none");
-                $('.app_copy').removeClass("d-none");
-                $('.application_copy').removeClass("d-none");
-            } else {
-                $('.custom_hide').removeClass("d-none");
-                $('.send_email').addClass("d-none");
-                $('.app_copy').addClass("d-none");
-                $('.application_copy').addClass("d-none");
+        $(document).on("change click", ".chk_list_item", function() {
+            $(this).closest('.brf-cand-card').toggleClass('is-selected', $(this).prop('checked'));
+            brfSyncSelectionUi();
+        });
+        $(document).on("click", "#btnBrfClearSelection", function() {
+            $('#brf_select_all, .chk_list, #candidatetList .chk_list_item').prop('checked', false);
+            $('#candidatetList .brf-cand-card').removeClass('is-selected');
+            brfSyncSelectionUi();
+        });
+        // Clicking the candidate info sub-card triggers the existing .pbench_show_application_detail handler
+        $(document).on('click', '.brf-cand-subcard--info', function(e) {
+            if ($(e.target).closest('input, button, a, label, .form-check, .pbench_show_application_detail').length) {
+                return;
+            }
+            var trigger = $(this).find('.pbench_show_application_detail').first();
+            if (trigger.length) {
+                trigger.trigger('click');
             }
         });
     </script>
@@ -2011,6 +2203,29 @@
         $(document).ready(function() {
             // $.noConflict();
             
+            $(document).on('click', '#addServiceCandidate', function() {
+                var url = "{{ route('service_company.auth-custom-package.validatePackage') }}";
+                var token = "{{ csrf_token() }}";
+                var eventId = 4;
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: {
+                        '_token': token,
+                        'event': 'CVACCESS',
+                        'eventId': eventId
+                    },
+                    success: function(response) {
+                        if (response.status == "success") {
+                            var redirectUrl = "{{ url('service_company/job-applications/create/' . GeneralMethod::value_encrypt(@$job->id) . '/0') }}";
+                            window.location = redirectUrl;
+                        } else if (response.status == "info") {
+                            sweetAlert("Fail!", response.message, "error");
+                        }
+                    }
+                });
+            });
+
             setTimeout(() => {
                 fetchCandidates();
             }, 200);

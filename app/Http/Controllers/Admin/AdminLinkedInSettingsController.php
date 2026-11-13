@@ -25,7 +25,7 @@ class AdminLinkedInSettingsController extends AdminBaseController
 
     public function index()
 		{
-        $linkedinGlobal = LinkedInSetting::first();
+        $linkedinGlobal = LinkedInSetting::getGlobalSetting();
         if($linkedinGlobal->status == 'disable')
         {
             abort(404);

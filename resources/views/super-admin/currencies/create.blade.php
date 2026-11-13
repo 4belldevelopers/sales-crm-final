@@ -285,13 +285,28 @@ $(document).ready(function() {
         }
     });
 
+    var isMutationInFlight = false;
+    function generateIdempotencyKey() {
+        if (window.crypto && window.crypto.randomUUID) {
+            return window.crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
     // Form submit AJAX
     $('#createCurrencyForm').on('submit', function(e) {
         e.preventDefault();
+        if (isMutationInFlight) return;
+
         $('.is-invalid').removeClass('is-invalid');
         $('.invalid-feedback').text('');
 
+        var idempotencyKey = generateIdempotencyKey();
         var $btn = $('#btnSaveCurrency');
+        isMutationInFlight = true;
         $btn.attr('data-kt-indicator', 'on').prop('disabled', true);
 
         var data = {
@@ -300,15 +315,20 @@ $(document).ready(function() {
             currency_code: $('#currency_code').val().toUpperCase(),
             currency_symbol: $('#currency_symbol').val(),
             usd_based_rates: $('#usd_based_rates').val(),
-            inr_based_rates: $('#inr_based_rates').val()
+            inr_based_rates: $('#inr_based_rates').val(),
+            idempotency_key: idempotencyKey
         };
 
         $.ajax({
             url: "{{ route('superadmin.currency-settings.store') }}",
             type: "POST",
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
             data: data,
             dataType: "json",
             success: function(response) {
+                isMutationInFlight = false;
                 $btn.removeAttr('data-kt-indicator').prop('disabled', false);
                 Swal.fire({
                     icon: 'success',
@@ -320,6 +340,7 @@ $(document).ready(function() {
                 });
             },
             error: function(xhr) {
+                isMutationInFlight = false;
                 $btn.removeAttr('data-kt-indicator').prop('disabled', false);
                 if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                     var errors = xhr.responseJSON.errors;

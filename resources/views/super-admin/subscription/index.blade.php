@@ -1191,6 +1191,15 @@
             $root.find('#bg_5').text(counts.last_active_7_days_count || 0);
         }
 
+        // Detect initial condition from URL path if present (e.g. /super-admin/subscription/all or /1)
+        const pathParts = window.location.pathname.split('/');
+        const lastPart = pathParts[pathParts.length - 1];
+        if (lastPart && ['all', '1', '2', '3', '4', '5'].includes(lastPart)) {
+            $root.find('#mstatus_id').val(lastPart);
+            $root.find('.kpi-card').removeClass('active-kpi');
+            $root.find(`#kpi_${lastPart}`).addClass('active-kpi');
+        }
+
         // Initial load
         fetchSubscription(1);
 
@@ -1573,41 +1582,96 @@
         // Real-Time WebSockets Synchronization via Laravel Reverb / Echo
         if (typeof window.Echo !== 'undefined') {
             try {
+                const processedEvents = new Set();
+                const lastEntityVersions = new Map();
+
+                const handleRealtimeDelta = function(event) {
+                    if (!event) return;
+
+                    const compId = event.company_id || event.companyId;
+                    const eventId = event.event_id || event.idempotency_key || (compId ? (compId + ':' + (event.entityVersion || event.action || Date.now())) : null);
+                    const incomingVersion = parseInt(event.entityVersion || (event.delta && event.delta.aggregate_version) || 0, 10);
+
+                    // 1. Event ID Deduplication (sliding window)
+                    if (eventId) {
+                        if (processedEvents.has(eventId)) {
+                            return;
+                        }
+                        processedEvents.add(eventId);
+                        if (processedEvents.size > 200) {
+                            const oldest = processedEvents.values().next().value;
+                            processedEvents.delete(oldest);
+                        }
+                    }
+
+                    // 2. Monotonic Aggregate Version Protection & Sequence Gap Detection
+                    if (compId && incomingVersion > 0) {
+                        const lastVer = lastEntityVersions.get(String(compId)) || 0;
+                        if (incomingVersion < lastVer) {
+                            // Discard older out-of-order event
+                            return;
+                        }
+                        // Sequence gap detection: if an event was missed, trigger authoritative dataset convergence
+                        if (lastVer > 0 && incomingVersion > lastVer + 1) {
+                            lastEntityVersions.set(String(compId), incomingVersion);
+                            SessionRAMCache.invalidateKpi();
+                            JeroSubscriptionDB.clearPageCache();
+                            fetchSubscription(SubscriptionState.currentPage);
+                            refreshKpiCounts($root.find('#pck_id').val(), true);
+                            return;
+                        }
+                        lastEntityVersions.set(String(compId), incomingVersion);
+                    }
+
+                    SessionRAMCache.invalidateKpi();
+                    JeroSubscriptionDB.clearPageCache();
+
+                    const action = event.action || (event.delta && (event.delta.pack_status || event.delta.status));
+
+                    if (compId) {
+                        JeroSubscriptionDB.deleteDossier(compId);
+                        dossierRamCache.delete(String(compId));
+                    }
+
+                    if (action === 'deleted') {
+                        const $row = $root.find(`tr:has([data-row-id="${compId}"])`);
+                        if ($row.length) {
+                            $row.fadeOut(300, function() {
+                                $(this).remove();
+                            });
+                        }
+                    } else if (action === 'active' || action === 'inactive') {
+                        const $row = $root.find(`tr:has([data-row-id="${compId}"])`);
+                        if ($row.length) {
+                            const isNowActive = (action === 'active');
+                            const $badgeCell = $row.find('.status-cell');
+                            const $btn = $row.find('.action-toggle-active');
+                            if (isNowActive) {
+                                $badgeCell.html('<span class="badge badge-light-success d-inline-flex align-items-center py-1 px-3 fs-7" style="border-radius: 12px; font-weight: 600;"><span class="bullet bullet-dot bg-success h-6px w-6px me-2"></span> Active</span>');
+                                $btn.html('<i class="fa-solid fa-power-off me-2 text-danger fs-7"></i> Deactivate');
+                            } else {
+                                $badgeCell.html('<span class="badge badge-light-danger d-inline-flex align-items-center py-1 px-3 fs-7" style="border-radius: 12px; font-weight: 600;"><span class="bullet bullet-dot bg-danger h-6px w-6px me-2"></span> Inactive</span>');
+                                $btn.html('<i class="fa-solid fa-power-off me-2 text-success fs-7"></i> Activate');
+                            }
+                        }
+                    }
+
+                    refreshKpiCounts($root.find('#pck_id').val(), true);
+                };
+
                 window.Echo.private('superadmin.companies')
-                    .listen('.company.delta.updated', function(event) {
+                    .listen('.company.delta', handleRealtimeDelta)
+                    .listen('.company.delta.updated', handleRealtimeDelta);
+
+                // Auto-reconnect resynchronization
+                if (window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection) {
+                    window.Echo.connector.pusher.connection.bind('connected', function() {
                         SessionRAMCache.invalidateKpi();
                         JeroSubscriptionDB.clearPageCache();
-
-                        if (event.companyId) {
-                            JeroSubscriptionDB.deleteDossier(event.companyId);
-                            dossierRamCache.delete(String(event.companyId));
-                        }
-
-                        if (event.action === 'deleted') {
-                            const $row = $root.find(`tr:has([data-row-id="${event.companyId}"])`);
-                            if ($row.length) {
-                                $row.fadeOut(300, function() {
-                                    $(this).remove();
-                                });
-                            }
-                        } else if (event.action === 'active' || event.action === 'inactive') {
-                            const $row = $root.find(`tr:has([data-row-id="${event.companyId}"])`);
-                            if ($row.length) {
-                                const isNowActive = (event.action === 'active');
-                                const $badgeCell = $row.find('.status-cell');
-                                const $btn = $row.find('.action-toggle-active');
-                                if (isNowActive) {
-                                    $badgeCell.html('<span class="badge badge-light-success d-inline-flex align-items-center py-1 px-3 fs-7" style="border-radius: 12px; font-weight: 600;"><span class="bullet bullet-dot bg-success h-6px w-6px me-2"></span> Active</span>');
-                                    $btn.html('<i class="fa-solid fa-power-off me-2 text-danger fs-7"></i> Deactivate');
-                                } else {
-                                    $badgeCell.html('<span class="badge badge-light-danger d-inline-flex align-items-center py-1 px-3 fs-7" style="border-radius: 12px; font-weight: 600;"><span class="bullet bullet-dot bg-danger h-6px w-6px me-2"></span> Inactive</span>');
-                                    $btn.html('<i class="fa-solid fa-power-off me-2 text-success fs-7"></i> Activate');
-                                }
-                            }
-                        }
-
+                        fetchSubscription(SubscriptionState.currentPage);
                         refreshKpiCounts($root.find('#pck_id').val(), true);
                     });
+                }
             } catch (echoErr) {
                 console.warn('Echo real-time listener non-fatal error:', echoErr);
             }

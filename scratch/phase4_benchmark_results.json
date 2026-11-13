@@ -1,0 +1,120 @@
+{
+    "resident_kernel_octane_target": {
+        "1k": {
+            "tier": 1000,
+            "duration_sec": 2.008,
+            "rps": 497.92,
+            "min_ms": 0.486,
+            "p50_ms": 1.077,
+            "p95_ms": 2.429,
+            "p99_ms": 6.192,
+            "max_ms": 211.956,
+            "mysql_domain_queries": 0,
+            "memory_delta_kb": 0
+        },
+        "5k": {
+            "tier": 5000,
+            "duration_sec": 4.861,
+            "rps": 1028.61,
+            "min_ms": 0.402,
+            "p50_ms": 0.848,
+            "p95_ms": 1.718,
+            "p99_ms": 2.217,
+            "max_ms": 15.634,
+            "mysql_domain_queries": 0,
+            "memory_delta_kb": 0
+        },
+        "10k": {
+            "tier": 10000,
+            "duration_sec": 8.745,
+            "rps": 1143.45,
+            "min_ms": 0.319,
+            "p50_ms": 0.746,
+            "p95_ms": 1.752,
+            "p99_ms": 2.486,
+            "max_ms": 35.792,
+            "mysql_domain_queries": 0,
+            "memory_delta_kb": 0
+        },
+        "10k_sustained": {
+            "tier": 10000,
+            "duration_sec": 7.577,
+            "rps": 1319.79,
+            "min_ms": 0.318,
+            "p50_ms": 0.683,
+            "p95_ms": 1.517,
+            "p99_ms": 1.97,
+            "max_ms": 3.433,
+            "mysql_domain_queries": 0,
+            "memory_delta_kb": 0
+        }
+    },
+    "http_socket_apache_network": {
+        "batch_25_sockets": {
+            "total_requests": 50,
+            "simultaneous_sockets": 25,
+            "duration_sec": 14.307,
+            "rps": 3.49,
+            "min_ms": 5122.6,
+            "p50_ms": 6800.28,
+            "p95_ms": 8586.18,
+            "p99_ms": 9183.93,
+            "max_ms": 9183.93,
+            "status_codes": {
+                "200": 50
+            },
+            "mysql_query_delta": 601
+        },
+        "batch_50_sockets": {
+            "total_requests": 100,
+            "simultaneous_sockets": 50,
+            "duration_sec": 29.967,
+            "rps": 3.34,
+            "min_ms": 5786.64,
+            "p50_ms": 11661.24,
+            "p95_ms": 20098.53,
+            "p99_ms": 20098.56,
+            "max_ms": 20098.56,
+            "status_codes": {
+                "200": 83,
+                "500": 3,
+                "0": 14
+            },
+            "mysql_query_delta": 1179
+        }
+    },
+    "observability": {
+        "cache": {
+            "version": 26,
+            "hits": 52599,
+            "misses": 54,
+            "contention_events": 0,
+            "total_requests": 52653,
+            "hit_ratio_percent": 99.9
+        },
+        "outbox": {
+            "backlog_pending": 0,
+            "in_flight_processing": 0,
+            "retryable_failed": 0,
+            "dead_letter": 0,
+            "lifetime_completed": 19
+        },
+        "circuit_breaker": {
+            "state": "CLOSED",
+            "mode": "NORMAL_CQRS",
+            "failures": 0,
+            "successes": 0,
+            "trip_count": 0,
+            "fallback_count": 0,
+            "last_failure": null,
+            "recovery_timeout_sec": 30
+        },
+        "timestamp": "2026-11-12T18:21:37+05:30"
+    },
+    "infrastructure": {
+        "redis_ping_ms": 0.66,
+        "elasticsearch_health": "green",
+        "elasticsearch_latency_ms": 81.32,
+        "mysql_threads_connected": "1"
+    }
+}

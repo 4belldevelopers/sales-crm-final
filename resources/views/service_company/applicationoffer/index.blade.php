@@ -1,534 +1,1987 @@
+{{--
+  JERO ATS — Service Company Offer Tracker (Rule 20 Modern Card + Sub-Card Design System)
+  Intent: Enterprise-grade, page-isolated Offer Tracker featuring Client-Tracker-inspired
+          interactive KPI stat cards, interlocking Offers Pipeline funnel, Rule 20 Search/Filter
+          & Sub-Tabs cards, and Card + Sub-Card offer stream powered by Elasticsearch projections,
+          3-tier Browser RAM/IndexedDB/Redis caching, and real-time Reverb synchronization.
+  Tenancy & Security: Strictly scoped by auth()->user()->company_id across IndexedDB, BroadcastChannel,
+                      and Reverb channels. Zero MySQL reads on listing path.
+  Screen Fit: 100% fluid fit on 15.6" screens (1366x768 & 1920x1080) with zero horizontal overflow.
+--}}
 @extends('layouts.service_company_layout')
 
 @push('head-script')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
-/* ──────────────────────────────────────────────
-   Offer Tracker — redesigned layout v2
-   Font: Poppins (inherited), max 14px per UI spec
-────────────────────────────────────────────── */
-body { overflow-x: hidden; }
-
-/* Poppins everywhere in the hero + pipeline; 16px hard cap per spec. */
-.ot-page-head, .ot-stats-grid, .ot-pipeline-wrap,
-.ot-page-head *, .ot-stats-grid *, .ot-pipeline-wrap * {
-    font-family: 'Poppins', sans-serif !important;
+/* ==========================================================================
+   Offer Tracker — Page-Isolated Enterprise Card + Sub-Card Design System
+   Font: Poppins strictly throughout; tabular-nums for all metrics/currency
+   ========================================================================== */
+:root {
+    --ot-primary: #009ef7;
+    --ot-primary-deep: #2563eb;
+    --ot-primary-soft: #eff6ff;
+    --ot-success: #16a34a;
+    --ot-success-soft: #ecfdf5;
+    --ot-warning: #d97706;
+    --ot-warning-soft: #fffbeb;
+    --ot-danger: #dc2626;
+    --ot-danger-soft: #fef2f2;
+    --ot-indigo: #4f46e5;
+    --ot-indigo-soft: #eef2ff;
+    --ot-cyan: #0891b2;
+    --ot-cyan-soft: #ecfeff;
+    --ot-rose: #db2777;
+    --ot-rose-soft: #fdf2f8;
+    --ot-text-main: #0f172a;
+    --ot-text-mid: #475569;
+    --ot-text-muted: #64748b;
+    --ot-text-light: #94a3b8;
+    --ot-border: #e2e8f0;
+    --ot-border-soft: #f1f5f9;
+    --ot-bg-subcard: #f8fafc;
 }
 
-/* Page header (hero) */
-.ot-page-head {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 24px 0;
-}
-.ot-page-head h4 { font-size: 16px; font-weight: 700; margin: 0; color: #0f172a; }
-.ot-page-head p  { font-size: 11px; color: #64748b; margin: 2px 0 0; }
-.ot-head-actions { display: flex; gap: 10px; align-items: center; }
-.ot-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; color: #374151; }
-.ot-btn:hover { background: #f8fafc; }
-.ot-btn svg { width: 14px; height: 14px; }
-.ot-btn-more { background: #fff; }
+/* Remove legacy toolbar gap & guarantee 0% horizontal page scroll */
+#kt_toolbar { display: none !important; }
+#kt_content { margin-top: 0 !important; padding-top: 12px !important; }
+#kt_post { margin-top: 0 !important; }
+#kt_content_container,
+body { overflow-x: hidden !important; }
 
-/* ── KPI stat cards (hero boxes) — heights trimmed ~20% ── */
-.ot-stats-grid {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
-    padding: 14px 24px 0;
+.ot-dashboard,
+.ot-dashboard * {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    box-sizing: border-box !important;
 }
-.ot-stat-card {
-    background: #fff; border-radius: 14px; padding: 13px 16px;
-    border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
-}
-.ot-stat-icon {
-    width: 38px; height: 38px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
-}
-.ot-stat-icon svg { width: 18px; height: 18px; }
-.ot-stat-body { flex: 1; min-width: 0; }
-.ot-stat-label { font-size: 10px; color: #94a3b8; font-weight: 500; margin: 0 0 2px; text-transform: uppercase; letter-spacing: .4px; }
-.ot-stat-value { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.1; }
-.ot-stat-delta {
-    font-size: 10px; margin-top: 4px; display: flex; align-items: center; gap: 3px; font-weight: 500;
-}
-.ot-stat-delta.up   { color: #16a34a; }
-.ot-stat-delta.down { color: #dc2626; }
-.ot-stat-delta.warn { color: #d97706; }
-.ot-stat-delta.info { color: #0891b2; }
-.ot-delta-ico { width: 13px; height: 13px; flex-shrink: 0; }
 
-/* ── Pipeline section ── */
+.ot-dashboard {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 14px 24px !important;
+    color: var(--ot-text-main);
+    -webkit-font-smoothing: antialiased;
+}
+
+.ot-num,
+.ot-kpi-num,
+.ot-tab-badge,
+.ot-pipe-big,
+.ot-pipe-pct-v2,
+.ot-pipe-sub-v2,
+.ot-comp-amount {
+    font-variant-numeric: tabular-nums !important;
+}
+
+/* ==========================================================================
+   HEADER CARD (Client Tracker Inspired Enterprise Header)
+   ========================================================================== */
+.ot-header-card {
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 12px !important;
+    padding: 13px 18px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+}
+
+.ot-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+}
+
+.ot-header-icon-box {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 10px !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #2563eb !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08) !important;
+}
+
+.ot-header-title-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+}
+
+.ot-header-title {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: var(--ot-text-main) !important;
+    letter-spacing: -0.015em !important;
+    margin: 0 !important;
+    line-height: 1.25 !important;
+}
+
+.ot-verified-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #16a34a !important;
+}
+
+.ot-header-count-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2px 9px !important;
+    border-radius: 999px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    background: var(--ot-primary-soft) !important;
+    color: var(--ot-primary-deep) !important;
+    border: 1px solid #bfdbfe !important;
+    line-height: 1.3 !important;
+}
+
+.ot-header-subtitle {
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    color: var(--ot-text-muted) !important;
+    margin-top: 2px !important;
+    line-height: 1.35 !important;
+}
+
+.ot-header-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+    flex-wrap: wrap !important;
+}
+
+.ot-hdr-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    height: 36px !important;
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 8px !important;
+    padding: 0 13px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--ot-text-main) !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+}
+
+.ot-hdr-btn:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: var(--ot-primary-deep) !important;
+}
+
+.ot-hdr-btn.is-syncing i.fa-sync-alt {
+    animation: otSpin 0.8s linear infinite;
+}
+
+@keyframes otSpin {
+    to { transform: rotate(360deg); }
+}
+
+.ot-dropdown-menu {
+    min-width: 245px !important;
+    padding: 6px !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--ot-border) !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06) !important;
+    background: #ffffff !important;
+    margin-top: 6px !important;
+    z-index: 1050 !important;
+}
+
+.ot-dropdown-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 10px !important;
+    border-radius: 7px !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: background 0.12s ease !important;
+}
+
+.ot-dropdown-item:hover {
+    background: #f1f5f9 !important;
+}
+
+.ot-drop-ico {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    font-size: 13px !important;
+}
+.ot-drop-ico.csv { background: #eff6ff; color: #2563eb; }
+.ot-drop-ico.pdf { background: #fef2f2; color: #dc2626; }
+.ot-drop-ico.act { background: #ecfdf5; color: #059669; }
+.ot-drop-ico.rst { background: #fffbeb; color: #d97706; }
+
+.ot-drop-title {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    display: block !important;
+    line-height: 1.25 !important;
+}
+
+.ot-drop-sub {
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    display: block !important;
+    margin-top: 1px !important;
+}
+
+/* ==========================================================================
+   KPI STAT CARDS — Client Tracker Inspired (6 Cards in 1 Horizontal Row)
+   ========================================================================== */
+.ot-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 9px !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+}
+
+.ot-kpi-card {
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 11px !important;
+    padding: 10px 11px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease !important;
+    min-width: 0 !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    text-align: left !important;
+    outline: none !important;
+}
+
+.ot-kpi-card:hover {
+    transform: translateY(-1px) !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+    text-decoration: none !important;
+}
+
+.ot-kpi-top {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 6px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.ot-kpi-icon {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-kpi-icon svg {
+    width: 17px !important;
+    height: 17px !important;
+}
+
+.ot-kpi-icon.blue   { background: #eff6ff !important; color: #2563eb !important; }
+.ot-kpi-icon.amber  { background: #fffbeb !important; color: #d97706 !important; }
+.ot-kpi-icon.indigo { background: #eef2ff !important; color: #4f46e5 !important; }
+.ot-kpi-icon.green  { background: #ecfdf5 !important; color: #16a34a !important; }
+.ot-kpi-icon.cyan   { background: #ecfeff !important; color: #0891b2 !important; }
+.ot-kpi-icon.rose   { background: #fdf2f8 !important; color: #db2777 !important; }
+
+.ot-kpi-meta {
+    min-width: 0 !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+}
+
+.ot-kpi-num-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+}
+
+.ot-kpi-num {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: var(--ot-text-main) !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+}
+
+.ot-kpi-lbl {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: var(--ot-text-muted) !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
+}
+
+.ot-kpi-pending-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 1.5px 6px !important;
+    background: #fef3c7 !important;
+    border: 1px solid #fde68a !important;
+    border-radius: 999px !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    color: #b45309 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+}
+
+.ot-kpi-dot-pulse {
+    width: 5px !important;
+    height: 5px !important;
+    border-radius: 50% !important;
+    background: #d97706 !important;
+    display: inline-block !important;
+    animation: otPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes otPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(1.2); }
+}
+
+.ot-kpi-sub {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 2px !important;
+}
+
+.ot-kpi-sub svg { width: 11px !important; height: 11px !important; flex-shrink: 0 !important; }
+.ot-kpi-sub.slate  { color: #64748b !important; }
+.ot-kpi-sub.amber  { color: #d97706 !important; }
+.ot-kpi-sub.indigo { color: #4f46e5 !important; }
+.ot-kpi-sub.green  { color: #16a34a !important; }
+.ot-kpi-sub.cyan   { color: #0891b2 !important; }
+.ot-kpi-sub.rose   { color: #db2777 !important; }
+
+/* ── Client Tracker Style Active KPI Highlight States ── */
+.ot-kpi-card.active[data-tab="all"] {
+    background: #eff6ff !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
+}
+.ot-kpi-card.active[data-tab="all"] .ot-kpi-icon { background: #ffffff !important; color: #2563eb !important; box-shadow: 0 1px 3px rgba(37, 99, 235, 0.16) !important; }
+.ot-kpi-card.active[data-tab="all"] .ot-kpi-num  { color: #1d4ed8 !important; }
+.ot-kpi-card.active[data-tab="all"] .ot-kpi-lbl  { color: #1e40af !important; font-weight: 700 !important; }
+
+.ot-kpi-card.active[data-tab="pending"] {
+    background: #fffbeb !important;
+    border-color: #fbbf24 !important;
+    box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.13) !important;
+}
+.ot-kpi-card.active[data-tab="pending"] .ot-kpi-icon { background: #ffffff !important; color: #d97706 !important; box-shadow: 0 1px 3px rgba(217, 119, 6, 0.18) !important; }
+.ot-kpi-card.active[data-tab="pending"] .ot-kpi-num  { color: #b45309 !important; }
+.ot-kpi-card.active[data-tab="pending"] .ot-kpi-lbl  { color: #92400e !important; font-weight: 700 !important; }
+
+.ot-kpi-card.active[data-tab="sent"] {
+    background: #eef2ff !important;
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 1.5px #4f46e5, 0 4px 14px rgba(79, 70, 229, 0.12) !important;
+}
+.ot-kpi-card.active[data-tab="sent"] .ot-kpi-icon { background: #ffffff !important; color: #4f46e5 !important; box-shadow: 0 1px 3px rgba(79, 70, 229, 0.16) !important; }
+.ot-kpi-card.active[data-tab="sent"] .ot-kpi-num  { color: #3730a3 !important; }
+.ot-kpi-card.active[data-tab="sent"] .ot-kpi-lbl  { color: #4338ca !important; font-weight: 700 !important; }
+
+.ot-kpi-card.active[data-tab="accepted"] {
+    background: #ecfdf5 !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 1.5px #16a34a, 0 4px 14px rgba(22, 163, 74, 0.13) !important;
+}
+.ot-kpi-card.active[data-tab="accepted"] .ot-kpi-icon { background: #ffffff !important; color: #16a34a !important; box-shadow: 0 1px 3px rgba(22, 163, 74, 0.16) !important; }
+.ot-kpi-card.active[data-tab="accepted"] .ot-kpi-num  { color: #15803d !important; }
+.ot-kpi-card.active[data-tab="accepted"] .ot-kpi-lbl  { color: #166534 !important; font-weight: 700 !important; }
+
+.ot-kpi-card.active[data-tab="joining_soon"] {
+    background: #ecfeff !important;
+    border-color: #22d3ee !important;
+    box-shadow: 0 0 0 1.5px #0891b2, 0 4px 14px rgba(8, 145, 178, 0.13) !important;
+}
+.ot-kpi-card.active[data-tab="joining_soon"] .ot-kpi-icon { background: #ffffff !important; color: #0891b2 !important; box-shadow: 0 1px 3px rgba(8, 145, 178, 0.16) !important; }
+.ot-kpi-card.active[data-tab="joining_soon"] .ot-kpi-num  { color: #0e7490 !important; }
+.ot-kpi-card.active[data-tab="joining_soon"] .ot-kpi-lbl  { color: #155e75 !important; font-weight: 700 !important; }
+
+.ot-kpi-card.active[data-tab="expired"] {
+    background: #fdf2f8 !important;
+    border-color: #f472b6 !important;
+    box-shadow: 0 0 0 1.5px #db2777, 0 4px 14px rgba(219, 39, 119, 0.14) !important;
+}
+.ot-kpi-card.active[data-tab="expired"] .ot-kpi-icon { background: #ffffff !important; color: #db2777 !important; box-shadow: 0 1px 3px rgba(219, 39, 119, 0.16) !important; }
+.ot-kpi-card.active[data-tab="expired"] .ot-kpi-num  { color: #9d174d !important; }
+.ot-kpi-card.active[data-tab="expired"] .ot-kpi-lbl  { color: #831843 !important; font-weight: 700 !important; }
+
+/* ==========================================================================
+   OFFERS PIPELINE FUNNEL CARD
+   ========================================================================== */
 .ot-pipeline-wrap {
-    background: #fff; border-radius: 14px; border: 1px solid #f1f5f9;
-    margin: 14px 24px 0; padding: 14px 20px 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 10px !important;
+    margin-bottom: 12px !important;
+    padding: 12px 16px 14px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
 }
+
 .ot-pipeline-head {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 10px !important;
+    gap: 10px !important;
 }
-.ot-pipeline-head h5 { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0; }
+
+.ot-pipeline-title-wrap {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.ot-pipeline-head h5 {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: var(--ot-text-main) !important;
+    margin: 0 !important;
+}
+
+.ot-pipeline-sub-tag {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: var(--ot-text-muted) !important;
+    background: #f1f5f9 !important;
+    padding: 2px 8px !important;
+    border-radius: 999px !important;
+}
+
 .ot-pipeline-range {
-    border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px 10px; font-size: 12px; color: #374151; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 5px;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 8px !important;
+    padding: 5px 10px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: var(--ot-text-main) !important;
+    background: #f8fafc !important;
+    cursor: pointer !important;
+    outline: none !important;
 }
-/* ── Arrow/breadcrumb pipeline cards ──
-   Interlocking chevron segments built with clip-path only.
-   A small flex `gap` leaves the clean white chevron seam between
-   segments (no separate chevron elements, no negative margins —
-   that combination was what broke the layout previously). The whole
-   row lives in a horizontally-scrollable rail so the funnel never
-   wraps or crushes on 15.6" / smaller corporate laptop screens. */
-.ot-pipeline-rail { overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; }
-.ot-pipeline-rail::-webkit-scrollbar { height: 6px; }
-.ot-pipeline-rail::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 99px; }
-/* No flex gap: segments OVERLAP via negative margin so each arrow point
-   nests inside the next segment's notch, leaving only a thin parallel
-   white seam (arrow depth 14px, overlap 10px → ~4px seam). */
+
+.ot-pipeline-range:focus {
+    border-color: var(--ot-primary) !important;
+    background: #ffffff !important;
+}
+
+.ot-pipeline-rail {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+}
+.ot-pipeline-rail::-webkit-scrollbar { height: 5px; }
+.ot-pipeline-rail::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
 .ot-pipeline-flow {
-    display: flex; align-items: stretch; gap: 0;
+    display: flex !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    width: 100% !important;
 }
+
 .ot-pipe-card-v2 {
-    flex: 1 1 0; min-width: 150px; position: relative;
-    padding: 8px 14px 9px 24px;
-    margin-left: -10px;
-    /* middle segment: notch on the left, arrow point on the right */
+    flex: 1 1 0 !important;
+    min-width: 138px !important;
+    position: relative !important;
+    padding: 8px 14px 9px 22px !important;
+    margin-left: -10px !important;
     clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
+    transition: filter 0.15s ease !important;
 }
-/* First card — softly rounded left corners + arrow right (no left notch) */
+
+.ot-pipe-card-v2:hover {
+    filter: brightness(0.97);
+}
+
 .ot-pipe-card-v2:first-child {
-    margin-left: 0; padding-left: 16px;
+    margin-left: 0 !important;
+    padding-left: 14px !important;
     clip-path: polygon(0 6px, 6px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 6px 100%, 0 calc(100% - 6px));
 }
-/* Last card — left notch + softly rounded right corners (no arrow point) */
+
 .ot-pipe-card-v2:last-child {
-    padding-right: 16px;
+    padding-right: 14px !important;
     clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 14px 50%);
 }
+
 .ot-pipe-head-row {
-    display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
-}
-.ot-pipe-icon-sm { width: 18px; height: 18px; flex-shrink: 0; }
-.ot-pipe-icon-sm svg { width: 16px; height: 16px; }
-.ot-pipe-lbl { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ot-pipe-big { font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.1; }
-.ot-pipe-pct-v2 { font-size: 11px; color: #64748b; font-weight: 500; }
-.ot-pipe-sub-v2 { font-size: 10px; color: #94a3b8; }
-/* Every stage card: main value pinned top-left, percentage/fraction pinned top-right */
-.ot-pipe-data-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.ot-pipe-data-row .ot-pipe-pct-v2,
-.ot-pipe-data-row .ot-pipe-sub-v2 { margin-top: 2px; white-space: nowrap; }
-
-/* ── Table card ── */
-.ot-card {
-    background: #fff; border-radius: 14px; border: 1px solid #f1f5f9;
-    margin: 18px 24px 24px; overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-bottom: 4px !important;
 }
 
-/* Search + filter bar */
-.ot-filter-bar {
-    display: flex; align-items: center; gap: 12px; padding: 16px 20px;
-    border-bottom: 1px solid #f1f5f9; flex-wrap: wrap;
-}
-.ot-filter-bar .ot-sort-bar { padding: 0; flex-shrink: 0; }
-.ot-search-wrap { flex: 1; min-width: 220px; position: relative; }
-.ot-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 16px; height: 16px; pointer-events: none; }
-.ot-search-input {
-    width: 100%; border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px 8px 36px;
-    font-size: 13px; color: #374151; outline: none; background: #f8fafc;
-}
-.ot-search-input:focus { border-color: #6366f1; background: #fff; }
-.ot-location-select {
-    border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px; font-size: 13px; color: #374151; background: #f8fafc; cursor: pointer; outline: none; min-width: 160px;
-}
-.ot-location-select:focus { border-color: #6366f1; background: #fff; }
+.ot-pipe-icon-sm { width: 16px !important; height: 16px !important; flex-shrink: 0 !important; display: inline-flex; align-items: center; }
+.ot-pipe-icon-sm svg { width: 15px !important; height: 15px !important; }
+.ot-pipe-lbl { font-size: 11px !important; font-weight: 700 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ot-pipe-data-row { display: flex !important; align-items: baseline !important; justify-content: space-between !important; gap: 6px !important; }
+.ot-pipe-big { font-size: 16px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.15 !important; }
+.ot-pipe-pct-v2 { font-size: 11px !important; color: #64748b !important; font-weight: 600 !important; }
+.ot-pipe-sub-v2 { font-size: 10px !important; color: #64748b !important; font-weight: 600 !important; }
 
-/* Tabs row */
-.ot-tabs-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; border-bottom: 1px solid #f1f5f9;
+/* ==========================================================================
+   RULE 20 TIER 1 & TIER 2: TOOLBAR & DEDICATED SUB-TABS CARDS
+   ========================================================================== */
+.ot-toolbar-card {
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 10px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
 }
-.ot-tabs { display: flex; gap: 0; overflow-x: auto; }
-.ot-tab {
-    padding: 11px 16px; font-size: 12px; font-weight: 500; color: #64748b;
-    cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; user-select: none;
-    display: flex; align-items: center; gap: 6px; transition: color .15s;
+
+.ot-search-subcard {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 280px !important;
+    min-width: 220px !important;
+    height: 38px !important;
+    background: #f8fafc !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 8px !important;
+    padding: 0 10px 0 12px !important;
+    transition: all 0.15s ease !important;
 }
-.ot-tab:hover { color: #374151; }
+
+.ot-search-subcard:hover {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+}
+
+.ot-search-subcard:focus-within {
+    background: #ffffff !important;
+    border-color: var(--ot-primary) !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+
+.ot-search-subcard i.fa-search {
+    color: var(--ot-text-light) !important;
+    font-size: 13px !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-search-subcard input {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    color: var(--ot-text-main) !important;
+    width: 100% !important;
+    height: 34px !important;
+    padding: 0 !important;
+}
+
+.ot-search-subcard input::placeholder {
+    color: var(--ot-text-light) !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+}
+
+.ot-search-clear-btn {
+    border: none !important;
+    background: #e2e8f0 !important;
+    color: #64748b !important;
+    width: 19px !important;
+    height: 19px !important;
+    border-radius: 50% !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-search-clear-btn:hover {
+    background: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+.ot-search-kbd {
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    color: #94a3b8 !important;
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 4px !important;
+    padding: 2px 5px !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+    user-select: none !important;
+}
+
+.ot-inline-filters {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-filter-pill {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    height: 38px !important;
+    background: #f8fafc !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 8px !important;
+    padding: 0 10px !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-filter-pill:hover {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+}
+
+.ot-filter-pill:focus-within {
+    background: #ffffff !important;
+    border-color: var(--ot-primary) !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+
+.ot-filter-pill-lbl {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: var(--ot-text-muted) !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.ot-filter-select {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--ot-text-main) !important;
+    height: 34px !important;
+    padding-right: 6px !important;
+    cursor: pointer !important;
+}
+
+.ot-reset-btn {
+    height: 38px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--ot-border) !important;
+    background: #ffffff !important;
+    color: var(--ot-primary-deep) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+}
+
+.ot-reset-btn:hover {
+    background: var(--ot-primary-soft) !important;
+    border-color: #bfdbfe !important;
+}
+
+/* Tier 2: Dedicated White Sub-Tabs Card */
+.ot-tabs-card {
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+}
+
+.ot-tabs-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+}
+
+.ot-tab-btn {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    padding: 6px 13px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: var(--ot-text-mid) !important;
+    border: 1px solid var(--ot-border) !important;
+    transition: all 0.15s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+}
+
+.ot-tab-btn:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: var(--ot-text-main) !important;
+}
+
+/* Strict Rule 20 Single Active Primary Blue Highlight */
+.ot-tab-btn.active {
+    background: var(--ot-primary) !important;
+    color: #ffffff !important;
+    border-color: var(--ot-primary) !important;
+    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.22) !important;
+}
+
 .ot-tab-badge {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 20px; height: 18px; border-radius: 99px; font-size: 10px; font-weight: 700;
-    background: #f1f5f9; color: #64748b; padding: 0 5px; transition: all .15s;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 20px !important;
+    height: 18px !important;
+    padding: 0 6px !important;
+    border-radius: 10px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    background: #f1f5f9 !important;
+    color: var(--ot-text-mid) !important;
+    line-height: 1 !important;
 }
 
-/* Per-tab active colors */
-.ot-tab[data-filter="all"].active        { color: #0f172a;  border-bottom-color: #0f172a;  font-weight: 700; }
-.ot-tab[data-filter="all"].active .ot-tab-badge        { background: #e2e8f0; color: #0f172a; }
-.ot-tab[data-filter="pending"].active    { color: #d97706;  border-bottom-color: #d97706;  font-weight: 700; }
-.ot-tab[data-filter="pending"].active .ot-tab-badge    { background: #fef3c7; color: #d97706; }
-.ot-tab[data-filter="sent"].active       { color: #2563eb;  border-bottom-color: #2563eb;  font-weight: 700; }
-.ot-tab[data-filter="sent"].active .ot-tab-badge       { background: #dbeafe; color: #2563eb; }
-.ot-tab[data-filter="accepted"].active   { color: #16a34a;  border-bottom-color: #16a34a;  font-weight: 700; }
-.ot-tab[data-filter="accepted"].active .ot-tab-badge   { background: #dcfce7; color: #16a34a; }
-.ot-tab[data-filter="joining_soon"].active { color: #0891b2; border-bottom-color: #0891b2; font-weight: 700; }
-.ot-tab[data-filter="joining_soon"].active .ot-tab-badge { background: #cffafe; color: #0891b2; }
-.ot-tab[data-filter="expired"].active    { color: #dc2626;  border-bottom-color: #dc2626;  font-weight: 700; }
-.ot-tab[data-filter="expired"].active .ot-tab-badge    { background: #fee2e2; color: #dc2626; }
-
-.ot-sort-bar { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
-.ot-sort-label { font-size: 12px; color: #94a3b8; white-space: nowrap; }
-.ot-sort-select {
-    border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px; font-size: 13px; color: #374151; background: #f8fafc; outline: none; cursor: pointer; min-width: 160px;
+.ot-tab-btn.active .ot-tab-badge {
+    background: rgba(255, 255, 255, 0.28) !important;
+    color: #ffffff !important;
 }
-.ot-sort-select:focus { border-color: #6366f1; background: #fff; }
-.ot-view-btns { display: flex; gap: 4px; }
-.ot-view-btn {
-    width: 30px; height: 30px; border-radius: 7px; border: 1px solid #e2e8f0; background: #fff;
-    display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8;
-}
-.ot-view-btn.active { background: #f1f5f9; color: #374151; border-color: #cbd5e1; }
-.ot-view-btn svg { width: 14px; height: 14px; }
 
-/* Table */
-.ot-table { width: 100%; border-collapse: collapse; }
-.ot-table thead tr { background: #f8fafc; }
-.ot-table th {
-    padding: 10px 14px; font-size: 11px; font-weight: 600; color: #64748b;
-    text-align: left; white-space: nowrap; letter-spacing: .3px;
-    border-bottom: 1px solid #f1f5f9;
-}
-.ot-table th .ot-sort-ico { margin-left: 4px; color: #cbd5e1; font-size: 10px; }
-.ot-table th.ot-th-sort { cursor: pointer; user-select: none; }
-.ot-table th.ot-th-sort:hover { color: #334155; }
-.ot-table th.ot-th-sort:hover .ot-sort-ico { color: #94a3b8; }
-.ot-table th.ot-th-sort.active { color: #6366f1; }
-.ot-table th.ot-th-sort.active .ot-sort-ico { color: #6366f1; }
-.ot-row { border-bottom: 1px solid #f8fafc; transition: background .12s; }
-.ot-row:hover { background: #fafbff; }
-.ot-td { padding: 12px 14px; vertical-align: middle; }
+.ot-tab-btn:not(.active) .ot-tab-badge.badge-pending  { background: #fef3c7 !important; color: #b45309 !important; }
+.ot-tab-btn:not(.active) .ot-tab-badge.badge-sent     { background: #eff6ff !important; color: #1d4ed8 !important; }
+.ot-tab-btn:not(.active) .ot-tab-badge.badge-accepted { background: #dcfce7 !important; color: #15803d !important; }
+.ot-tab-btn:not(.active) .ot-tab-badge.badge-joining  { background: #ecfeff !important; color: #0e7490 !important; }
+.ot-tab-btn:not(.active) .ot-tab-badge.badge-expired  { background: #fee2e2 !important; color: #b91c1c !important; }
 
-/* Candidate cell — listing font sizes reduced ~10% per request (header/Stage untouched) */
-.ot-cand { display: flex; align-items: center; gap: 10px; }
+.ot-tabs-right-meta {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 11px !important;
+    color: var(--ot-text-muted) !important;
+    font-weight: 500 !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-live-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 3px 9px !important;
+    border-radius: 999px !important;
+    background: #f0fdf4 !important;
+    border: 1px solid #bbf7d0 !important;
+    color: #15803d !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+}
+
+.ot-live-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    background: #16a34a !important;
+    animation: otPulse 2s infinite;
+}
+
+/* ==========================================================================
+   RULE 20 TIER 3: PRIMARY OFFER CARD & 5 DISCRETE SUB-CARDS STREAM
+   ========================================================================== */
+.ot-stream-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    min-height: 160px !important;
+}
+
+.ot-cards-stream {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.ot-entity-card {
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 10px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+.ot-entity-card:hover {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+    transform: translateY(-1px);
+}
+
+.ot-entity-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.9fr) minmax(0, 1.35fr) minmax(0, 1.5fr) minmax(0, 1.35fr) !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+}
+
+.ot-subcard {
+    background: var(--ot-bg-subcard) !important;
+    border: 1px solid #edf2f7 !important;
+    border-radius: 8px !important;
+    padding: 8px 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    position: relative !important;
+}
+
+.ot-subcard-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 5px !important;
+    min-height: 18px !important;
+}
+
+.ot-subcard-label {
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.35px !important;
+    color: var(--ot-text-muted) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.ot-subcard-badges {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-micro-pill {
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    padding: 1.5px 6px !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+    line-height: 1.3 !important;
+}
+
+.ot-pill-neutral { background: #ffffff !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+.ot-pill-bench   { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
+
+/* Sub-Card 1: Candidate */
+.ot-cand-body {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    min-width: 0 !important;
+}
+
 .ot-avatar {
-    width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center;
-    justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
 }
-.ot-avatar-img { width: 38px; height: 38px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
-.ot-cand-info { min-width: 0; }
+
+.ot-avatar-img {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 8px !important;
+    object-fit: cover !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    border: 1px solid var(--ot-border) !important;
+}
+
+.ot-cand-text {
+    flex: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
 .ot-cand-name {
-    font-size: 12px; font-weight: 600; color: #0f172a; display: block; text-decoration: none;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: var(--ot-text-main) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    line-height: 1.3 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
 }
-.ot-cand-name:hover { color: #6366f1; }
-.ot-cand-role { font-size: 10px; color: #94a3b8; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
-.ot-bench { font-size: 8px; background: #fef3c7; color: #d97706; padding: 1px 5px; border-radius: 4px; font-weight: 600; }
 
-/* Job cell */
-.ot-job-title { font-size: 12px; font-weight: 600; color: #1e293b; display: block; }
-.ot-job-type  { font-size: 10px; color: #94a3b8; display: block; margin-top: 2px; }
-
-/* Job Status, ID & Client pill */
-.ot-status-pill {
-    display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 10px; font-weight: 600; margin-bottom: 3px;
+.ot-cand-name:hover {
+    color: var(--ot-primary) !important;
 }
-.ot-job-meta { font-size: 10px; color: #64748b; display: block; margin-top: 2px; }
 
-/* Compensation */
-.ot-comp-amount { font-size: 12px; font-weight: 600; color: #0f172a; display: block; }
-.ot-comp-type   { font-size: 10px; color: #94a3b8; display: block; margin-top: 1px; }
-.ot-comp-change { font-size: 10px; color: #6366f1; font-weight: 600; display: block; margin-top: 2px; }
-a:hover .ot-comp-change { text-decoration: underline; }
-.ot-pending-badge { font-size: 10px; color: #f59e0b; background: #fef3c7; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
-.ot-create-btn { font-size: 11px; color: #f59e0b; font-weight: 700; text-decoration: none; }
-.ot-create-btn:hover { color: #d97706; text-decoration: underline; }
+.ot-cand-role {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: var(--ot-text-muted) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    margin-top: 1px !important;
+}
 
-/* Offer Status badge with icon */
+.ot-cand-loc {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 10px !important;
+    color: var(--ot-text-light) !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Sub-Card 2: Job & Client */
+.ot-scope-pill {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1.5px 6px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+    white-space: nowrap !important;
+    line-height: 1.3 !important;
+}
+.ot-scope-direct   { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+.ot-scope-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+
+.ot-job-status-pill {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1.5px 6px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+    white-space: nowrap !important;
+    line-height: 1.3 !important;
+}
+.ot-pill-hiring  { background: #dcfce7 !important; color: #15803d !important; border: 1px solid #bbf7d0 !important; }
+.ot-pill-hold    { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
+.ot-pill-closed  { background: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fecaca !important; }
+.ot-pill-neutral { background: #f1f5f9 !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+
+.ot-job-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+}
+
+.ot-job-title {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: var(--ot-text-main) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+}
+
+.ot-job-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 10.5px !important;
+    color: var(--ot-text-muted) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+}
+
+.ot-job-id {
+    font-weight: 700 !important;
+    color: #0284c7 !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-job-client {
+    font-weight: 600 !important;
+    color: var(--ot-text-mid) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-transform: uppercase !important;
+    font-size: 10px !important;
+}
+
+.ot-job-tags {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-top: 2px !important;
+}
+
+.ot-tag-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    color: var(--ot-text-muted) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 4px !important;
+    padding: 1px 6px !important;
+}
+
+/* Sub-Card 3: Compensation */
+.ot-comp-body {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+}
+
+.ot-create-offer-cta {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    width: fit-content !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    background: #fffbeb !important;
+    border: 1px solid #fcd34d !important;
+    color: #b45309 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-create-offer-cta:hover {
+    background: #f59e0b !important;
+    border-color: #f59e0b !important;
+    color: #ffffff !important;
+}
+
+.ot-pending-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    width: fit-content !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+}
+
+.ot-comp-hint {
+    font-size: 10px !important;
+    color: var(--ot-text-light) !important;
+    font-weight: 500 !important;
+}
+
+.ot-comp-link {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+.ot-comp-amount {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: var(--ot-text-main) !important;
+    line-height: 1.2 !important;
+}
+
+.ot-comp-edit-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    width: fit-content !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: var(--ot-primary-deep) !important;
+}
+
+.ot-comp-link:hover .ot-comp-edit-pill:not(.is-locked) {
+    text-decoration: underline !important;
+}
+
+.ot-comp-edit-pill.is-locked {
+    color: var(--ot-text-muted) !important;
+}
+
+/* Sub-Card 4: Offer Status */
+.ot-date-chip {
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    color: var(--ot-text-muted) !important;
+    white-space: nowrap !important;
+}
+
+.ot-status-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+}
+
 .ot-offer-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px 3px 8px; border-radius: 8px; font-size: 10px; font-weight: 700; margin-bottom: 3px;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    width: fit-content !important;
+    padding: 3px 9px !important;
+    border-radius: 6px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
 }
-.ot-offer-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
-.ot-offer-sub { font-size: 10px; color: #64748b; display: block; }
-.ot-offer-date { font-size: 9px; color: #94a3b8; display: block; margin-top: 1px; }
 
-/* Joining */
-.ot-join-date      { font-size: 12px; font-weight: 600; color: #1e293b; display: block; }
-.ot-join-time      { font-size: 10px; color: #94a3b8; display: block; margin-top: 1px; }
-.ot-join-countdown { font-size: 10px; font-weight: 600; display: block; margin-top: 2px; }
-.ot-na             { font-size: 13px; color: #cbd5e1; }
-.ot-na-sub         { font-size: 10px; color: #94a3b8; display: block; }
+.ot-offer-badge svg {
+    width: 12px !important;
+    height: 12px !important;
+    flex-shrink: 0 !important;
+}
 
-/* Stage — outlined button (font size intentionally unchanged — not part of this request) */
-.ot-td-stage { text-align: center; }
+.ot-offer-sub {
+    font-size: 10.5px !important;
+    color: var(--ot-text-muted) !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Sub-Card 5: Joining */
+.ot-joining-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+}
+
+.ot-join-date {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: var(--ot-text-main) !important;
+}
+
+.ot-join-date i {
+    color: var(--ot-primary-deep) !important;
+    font-size: 11px !important;
+}
+
+.ot-join-time {
+    font-size: 10px !important;
+    color: var(--ot-text-muted) !important;
+    font-weight: 500 !important;
+}
+
+.ot-join-empty {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #cbd5e1 !important;
+    line-height: 1.2 !important;
+}
+
+/* Sub-Card 6: Bottom Strip */
+.ot-entity-bottom {
+    background: #ffffff !important;
+    border-top: 1px solid var(--ot-border-soft) !important;
+    padding: 7px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+.ot-bottom-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+    font-size: 10.5px !important;
+    color: var(--ot-text-muted) !important;
+}
+
+.ot-bottom-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+}
+
+.ot-bottom-lbl {
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.25px !important;
+    color: var(--ot-text-light) !important;
+}
+
+.ot-bottom-strong {
+    color: var(--ot-text-main) !important;
+    font-weight: 600 !important;
+}
+
+.ot-bottom-muted {
+    color: var(--ot-text-muted) !important;
+    font-weight: 500 !important;
+}
+
+.ot-dot-sep {
+    color: #cbd5e1 !important;
+    font-size: 9px !important;
+}
+
 .ot-stage-btn {
-    display: inline-block; padding: 5px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
-    background: transparent; color: #7c3aed; border: 1.5px solid #c4b5fd;
-    cursor: pointer; text-decoration: none; transition: all .15s;
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 2px 9px !important;
+    border-radius: 5px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    background: #f5f3ff !important;
+    color: #6d28d9 !important;
+    border: 1px solid #ddd6fe !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    transition: all 0.15s ease !important;
 }
-.ot-stage-btn:hover { background: #ede9fe; border-color: #7c3aed; color: #7c3aed; }
+
+.ot-stage-btn:hover {
+    background: #ede9fe !important;
+    border-color: #8b5cf6 !important;
+}
+
+.ot-stage-btn.ot-stage-offered {
+    background: #fff7ed !important;
+    color: #c2410c !important;
+    border-color: #fdba74 !important;
+}
+
+.ot-stage-btn.ot-stage-offered:hover {
+    background: #ffedd5 !important;
+    border-color: #ea580c !important;
+}
+
 .ot-stage-disabled {
-    background: transparent; color: #94a3b8; border: 1.5px solid #e2e8f0; cursor: default;
-}
-.ot-stage-disabled:hover { background: transparent; border-color: #e2e8f0; }
-/* "Offered" stage — orange instead of the default purple */
-.ot-stage-btn.ot-stage-offered { color: #ea580c; border-color: #fdba74; }
-.ot-stage-btn.ot-stage-offered:hover { background: #ffedd5; border-color: #ea580c; color: #ea580c; }
-
-/* Empty state */
-.ot-empty td { padding: 60px 14px; text-align: center; }
-.ot-empty-inner p { margin: 12px 0 0; font-size: 13px; color: #94a3b8; }
-
-/* Table footer */
-.ot-table-footer {
-    display: flex; align-items: center; justify-content: flex-end;
-    padding: 12px 20px; border-top: none; background: transparent;
-}
-.ot-rows-per { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; }
-.ot-rows-select {
-    border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; font-size: 12px; background: #fff; cursor: pointer;
+    background: #f8fafc !important;
+    color: #94a3b8 !important;
+    border-color: #e2e8f0 !important;
+    cursor: default !important;
 }
 
-/* loading shimmer cards */
-.ot-shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; height: 16px; }
-@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.ot-substage-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 1.5px 7px !important;
+    border-radius: 4px !important;
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    background: #f8fafc !important;
+    color: var(--ot-text-mid) !important;
+    border: 1px solid var(--ot-border) !important;
+}
 
-/* Tighten a touch on ~1366px 15.6" laptops so all six
-   segments fit the row without triggering the scroll rail. */
+.ot-bottom-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-action-ghost {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    background: #ffffff !important;
+    color: var(--ot-text-mid) !important;
+    border: 1px solid var(--ot-border) !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-action-ghost:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: var(--ot-text-main) !important;
+}
+
+.ot-action-primary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 4px 11px !important;
+    border-radius: 6px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    background: #eff6ff !important;
+    color: var(--ot-primary-deep) !important;
+    border: 1px solid #bfdbfe !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-action-primary:hover {
+    background: var(--ot-primary) !important;
+    border-color: var(--ot-primary) !important;
+    color: #ffffff !important;
+}
+
+/* Loading, Empty & Footer Cards */
+.ot-loading-card {
+    background: #ffffff !important;
+    border: 1px dashed #cbd5e1 !important;
+    border-radius: 10px !important;
+    padding: 36px 20px !important;
+    text-align: center !important;
+    color: var(--ot-text-muted) !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    margin-bottom: 12px !important;
+}
+
+.ot-empty-card {
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 10px !important;
+    padding: 48px 20px !important;
+    text-align: center !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    margin-bottom: 12px !important;
+}
+
+.ot-empty-icon {
+    width: 50px !important;
+    height: 50px !important;
+    margin: 0 auto 12px !important;
+    border-radius: 12px !important;
+    background: var(--ot-primary-soft) !important;
+    color: var(--ot-primary-deep) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.ot-empty-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: var(--ot-text-main) !important;
+}
+
+.ot-empty-sub {
+    font-size: 12px !important;
+    color: var(--ot-text-muted) !important;
+    margin-top: 4px !important;
+}
+
+.ot-empty-reset-btn {
+    margin-top: 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 7px 14px !important;
+    border-radius: 8px !important;
+    border: 1px solid #bfdbfe !important;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+}
+
+.ot-footer-card {
+    background: #ffffff !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+.ot-footer-card .pagi-bar {
+    border-top: none !important;
+}
+
+/* ==========================================================================
+   15.6" SCREEN FIT & RESPONSIVE BREAKPOINTS (1366x768 & 1920x1080)
+   ========================================================================== */
 @media (max-width: 1440px) {
-    .ot-pipe-card-v2 { padding: 8px 10px 9px 22px; min-width: 142px; }
+    .ot-kpi-grid { gap: 7px !important; }
+    .ot-kpi-card { padding: 9px 9px !important; }
+    .ot-kpi-top  { gap: 7px !important; margin-bottom: 5px !important; }
+    .ot-kpi-icon { width: 30px !important; height: 30px !important; min-width: 30px !important; border-radius: 7px !important; }
+    .ot-kpi-icon svg { width: 15px !important; height: 15px !important; }
+    .ot-kpi-num  { font-size: 16.5px !important; }
+    .ot-kpi-lbl  { font-size: 10px !important; }
+    .ot-kpi-sub  { font-size: 9.5px !important; }
+
+    .ot-pipe-card-v2 { padding: 8px 10px 9px 20px !important; min-width: 132px !important; }
+
+    .ot-entity-grid {
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1.85fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 1.35fr) !important;
+        gap: 7px !important;
+        padding: 9px 11px !important;
+    }
+    .ot-subcard { padding: 7px 9px !important; }
+    .ot-search-kbd { display: none !important; }
 }
-@media (max-width: 1200px) {
-    .ot-stats-grid { grid-template-columns: repeat(3, 1fr); }
+
+@media (max-width: 1150px) {
+    .ot-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+    .ot-entity-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 }
+
 @media (max-width: 768px) {
-    .ot-stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .ot-page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
-    /* The funnel stays intact and simply scrolls horizontally on phones. */
-    .ot-pipe-card-v2 { min-width: 144px; }
+    .ot-dashboard { padding: 0 10px 20px !important; }
+    .ot-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .ot-entity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .ot-header-card { flex-direction: column !important; align-items: flex-start !important; }
+    .ot-header-actions { width: 100% !important; justify-content: flex-start !important; }
+}
+
+@media (max-width: 520px) {
+    .ot-kpi-grid { grid-template-columns: minmax(0, 1fr) !important; }
+    .ot-entity-grid { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+/* Print / Executive PDF styling */
+@media print {
+    .ot-header-actions, .ot-toolbar-card, .ot-tabs-card, .ot-footer-card,
+    .ot-bottom-right, .ot-create-offer-cta { display: none !important; }
+    .ot-dashboard { padding: 0 !important; }
+    .ot-entity-card { break-inside: avoid; box-shadow: none !important; }
 }
 </style>
 @endpush
 
 @section('content')
 
-{{-- ── Toolbar (page header, matches Metronic layout pattern) ── --}}
-<div class="toolbar" id="kt_toolbar">
-    <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-<div class="ot-page-head" style="padding:0;width:100%">
-    <div>
-        <h4>Offer Tracker</h4>
-        <p>Track and manage all your offers in one place</p>
-    </div>
-    <div class="ot-head-actions">
-        <button class="ot-btn" onclick="exportOffers()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
-            Export
-        </button>
-        <button class="ot-btn ot-btn-more">
-            More Actions
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </button>
-    </div>
-</div>
-    </div>{{-- /kt_toolbar_container --}}
-</div>{{-- /kt_toolbar --}}
-
 <div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
 <div class="post d-flex flex-column-fluid" id="kt_post">
-<div class="container-fluid px-0">
+<div class="container-fluid px-0" id="kt_content_container">
 
-{{-- ── KPI Stats (server-rendered) ── --}}
-@php
-    $statCards = [
-        [
-            'label'  => 'Total Offers',
-            'key'    => 'total',
-            'icon'   => 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z',
-            'bg'     => '#ede9fe', 'ic' => '#7c3aed',
-            'delta'  => 'All offers tracked', 'delta_type' => 'info',
-            'delta_ico' => null,
-        ],
-        [
-            'label'  => 'Pending Offers',
-            'key'    => 'pending',
-            'icon'   => 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
-            'bg'     => '#fef3c7', 'ic' => '#d97706',
-            'delta'  => 'Awaiting action', 'delta_type' => 'warn',
-            'delta_ico' => 'up',
-        ],
-        [
-            'label'  => 'Offer Released',
-            'key'    => 'sent',
-            'icon'   => 'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5',
-            'bg'     => '#dbeafe', 'ic' => '#2563eb',
-            'delta'  => 'Emailed to Candidate', 'delta_type' => 'up',
-            'delta_ico' => 'up',
-        ],
-        [
-            'label'  => 'Expired',
-            'key'    => 'expired',
-            'icon'   => 'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z',
-            'bg'     => '#fee2e2', 'ic' => '#dc2626',
-            'delta'  => 'Need renewal', 'delta_type' => 'down',
-            'delta_ico' => 'down',
-        ],
-        [
-            'label'  => 'Joining Soon',
-            'key'    => 'joining_soon',
-            'icon'   => 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5',
-            'bg'     => '#cffafe', 'ic' => '#0891b2',
-            'delta'  => 'Next 7 days', 'delta_type' => 'info',
-            'delta_ico' => null,
-        ],
-    ];
-@endphp
-<div class="ot-stats-grid">
-    @foreach($statCards as $card)
-    <div class="ot-stat-card">
-        <div class="ot-stat-icon" style="background:{{ $card['bg'] }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="{{ $card['ic'] }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $card['icon'] }}"/></svg>
-        </div>
-        <div class="ot-stat-body">
-            <p class="ot-stat-label">{{ $card['label'] }}</p>
-            <p class="ot-stat-value" data-kpi="{{ $card['key'] }}">{{ $offerStats[$card['key']] ?? 0 }}</p>
-            <div class="ot-stat-delta {{ $card['delta_type'] }}">
-                @if($card['delta_ico'] === 'up')
-                    <svg class="ot-delta-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
-                @elseif($card['delta_ico'] === 'down')
-                    <svg class="ot-delta-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l8-8h-5V4H9v8H4z"/></svg>
-                @endif
-                <span>{{ $card['delta'] }}</span>
+<div class="ot-dashboard" id="offerTrackerDashboard">
+
+    {{-- ══════════════════════════════════════════════════════════════
+         ENTERPRISE HEADER TOOLBAR CARD (Client Tracker Inspired)
+         ══════════════════════════════════════════════════════════════ --}}
+    <div class="ot-header-card">
+        <div class="ot-header-left">
+            <div class="ot-header-icon-box">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <path d="m9 15 2 2 4-4"/>
+                </svg>
             </div>
-        </div>
-    </div>
-    @endforeach
-</div>
-
-{{-- ── Pipeline (server-rendered) ── --}}
-<div class="ot-pipeline-wrap">
-    <div class="ot-pipeline-head">
-        <h5>Offers Pipeline</h5>
-        <select class="ot-pipeline-range" id="ot_pipeline_range">
-            <option value="current">This Month</option>
-            <option value="6m">Last 6 Months</option>
-            <option value="all">All Time</option>
-        </select>
-    </div>
-    <div class="ot-pipeline-rail">
-        <div class="ot-pipeline-flow">
-            @foreach($offerPipeline as $p)
-            <div class="ot-pipe-card-v2" data-pipe="{{ $p['key'] ?? '' }}" style="background:{{ $p['icon_bg'] ?? '#f8fafc' }}">
-                <div class="ot-pipe-head-row">
-                    <span class="ot-pipe-icon-sm">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="{{ $p['icon_clr'] ?? $p['color'] }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="{{ $p['icon'] ?? '' }}"/>
+            <div>
+                <div class="ot-header-title-row">
+                    <h1 class="ot-header-title">Offer Tracker</h1>
+                    <span class="ot-verified-badge" title="Verified ATS Module">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="m9 12 2 2 4-4" stroke-width="2.4"/>
                         </svg>
                     </span>
-                    <span class="ot-pipe-lbl" style="color:{{ $p['color'] }}">{{ $p['label'] }}</span>
+                    <span class="ot-header-count-pill ot-num" id="otHeaderTotalBadge">{{ $offerStats['total'] ?? 0 }}</span>
                 </div>
-                @if(isset($p['sub']))
-                    {{-- Ratio card: percentage (top-left) and the fraction (top-right) --}}
-                    <div class="ot-pipe-data-row">
-                        <span class="ot-pipe-big">{{ $p['pct'] }}%</span>
-                        <span class="ot-pipe-sub-v2">{{ $p['sub'] }}</span>
-                    </div>
-                @else
-                    {{-- All other stages: count (top-left) and percentage (top-right) --}}
-                    <div class="ot-pipe-data-row">
-                        <span class="ot-pipe-big">{{ $p['count'] }}</span>
-                        <span class="ot-pipe-pct-v2">{{ $p['pct'] }}%</span>
-                    </div>
-                @endif
+                <div class="ot-header-subtitle">Manage compensation proposals, approval workflows, candidate acceptances, and joining readiness.</div>
             </div>
-            @endforeach
+        </div>
+
+        <div class="ot-header-actions">
+            <button type="button" class="ot-hdr-btn" id="otRefreshBtn" onclick="window.jeroOfferTracker && window.jeroOfferTracker.refresh(false)" title="Sync live offers from Elasticsearch">
+                <i class="fas fa-sync-alt text-primary"></i>
+                <span>Sync</span>
+            </button>
+
+            <div class="dropdown">
+                <button type="button" class="ot-hdr-btn" id="otExportDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span>Export</span>
+                    <i class="fas fa-chevron-down" style="font-size:10px;color:#64748b;"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end ot-dropdown-menu" aria-labelledby="otExportDropdownBtn">
+                    <li>
+                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="exportOffersCsv()">
+                            <span class="ot-drop-ico csv"><i class="fas fa-file-csv"></i></span>
+                            <span>
+                                <span class="ot-drop-title">Export Current View (CSV)</span>
+                                <span class="ot-drop-sub">Instant browser-side download</span>
+                            </span>
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider my-1 border-gray-200"></li>
+                    <li>
+                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="exportOffers()">
+                            <span class="ot-drop-ico pdf"><i class="fas fa-print"></i></span>
+                            <span>
+                                <span class="ot-drop-title">Save / Print Report (PDF)</span>
+                                <span class="ot-drop-sub">Executive offer summary</span>
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <button type="button" class="ot-hdr-btn" id="otMoreActionsBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span>More Actions</span>
+                    <i class="fas fa-chevron-down" style="font-size:10px;color:#64748b;"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end ot-dropdown-menu" aria-labelledby="otMoreActionsBtn">
+                    <li>
+                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="selectOfferTab('pending')">
+                            <span class="ot-drop-ico rst"><i class="far fa-clock"></i></span>
+                            <span>
+                                <span class="ot-drop-title">Filter Pending Offers</span>
+                                <span class="ot-drop-sub">Review offers awaiting action</span>
+                            </span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="selectOfferTab('joining_soon')">
+                            <span class="ot-drop-ico act"><i class="far fa-calendar-check"></i></span>
+                            <span>
+                                <span class="ot-drop-title">View Joining Soon (7d)</span>
+                                <span class="ot-drop-sub">Upcoming onboarding candidates</span>
+                            </span>
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider my-1 border-gray-200"></li>
+                    <li>
+                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="window.jeroOfferTracker && window.jeroOfferTracker.resetFilters()">
+                            <span class="ot-drop-ico csv"><i class="fas fa-undo-alt"></i></span>
+                            <span>
+                                <span class="ot-drop-title">Reset All Filters</span>
+                                <span class="ot-drop-sub">Clear search, location &amp; tab</span>
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
-</div>
 
-{{-- ── Table card ── --}}
-<div class="ot-card">
-    {{-- Search + Location filter --}}
-    <div class="ot-filter-bar">
-        <div class="ot-search-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input type="text" class="ot-search-input" id="ot_search" placeholder="Search by candidate name, job or offer ID..." />
-        </div>
-        <select class="ot-location-select" id="ot_country">
-            <option value="">All Locations</option>
-            @foreach($countries as $c)
-            <option value="{{ $c->id }}">{{ $c->country_name }}</option>
-            @endforeach
-        </select>
-        <div class="ot-sort-bar">
-            <span class="ot-sort-label">Sort by:</span>
-            <select class="ot-sort-select" id="ot_sort">
-                <option value="">Latest Updated</option>
-                <option value="10">Newest (Offer Date)</option>
-                <option value="11">Oldest (Offer Date)</option>
-                <option value="12">Newest (Join Date)</option>
-                <option value="13">Oldest (Join Date)</option>
-                <option value="14">Low → High (Amount)</option>
-                <option value="15">High → Low (Amount)</option>
+    {{-- ══════════════════════════════════════════════════════════════
+         KPI STAT CARDS — Client Tracker Inspired (6 Clickable Cards)
+         ══════════════════════════════════════════════════════════════ --}}
+    @php
+        $totalOffersInit   = (int) ($offerStats['total'] ?? 0);
+        $pendingOffersInit = (int) ($offerStats['pending'] ?? 0);
+        $sentOffersInit    = (int) ($offerStats['sent'] ?? 0);
+        $acceptedInit      = (int) ($offerStats['accepted'] ?? 0);
+        $joiningSoonInit   = (int) ($offerStats['joining_soon'] ?? 0);
+        $expiredInit       = (int) ($offerStats['expired'] ?? 0);
+        $acceptedPctInit   = $totalOffersInit > 0 ? round(($acceptedInit / $totalOffersInit) * 100) : 0;
+    @endphp
+    <div class="ot-kpi-grid" id="otKpiGrid">
+        {{-- Card 1: Total Offers --}}
+        <button type="button" class="ot-kpi-card ot-kpi-filter active" data-tab="all" onclick="selectOfferTab('all')">
+            <div class="ot-kpi-top">
+                <div class="ot-kpi-icon blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                </div>
+                <div class="ot-kpi-meta">
+                    <div class="ot-kpi-num-row">
+                        <div class="ot-kpi-num" data-kpi="total">{{ $totalOffersInit }}</div>
+                        <span class="ot-kpi-pending-badge" id="kpiPendingPill" style="{{ $pendingOffersInit > 0 ? '' : 'display:none;' }}">
+                            <span class="ot-kpi-dot-pulse"></span>
+                            <span id="kpiPendingPillText">{{ $pendingOffersInit }} pending</span>
+                        </span>
+                    </div>
+                    <div class="ot-kpi-lbl">Total Offers</div>
+                </div>
+            </div>
+            <div class="ot-kpi-sub slate">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span>All offers tracked</span>
+            </div>
+        </button>
+
+        {{-- Card 2: Pending Offers --}}
+        <button type="button" class="ot-kpi-card ot-kpi-filter" data-tab="pending" onclick="selectOfferTab('pending')">
+            <div class="ot-kpi-top">
+                <div class="ot-kpi-icon amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="ot-kpi-meta">
+                    <div class="ot-kpi-num" data-kpi="pending">{{ $pendingOffersInit }}</div>
+                    <div class="ot-kpi-lbl">Pending Offers</div>
+                </div>
+            </div>
+            <div class="ot-kpi-sub amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m18 15-6-6-6 6"/></svg>
+                <span>Awaiting action</span>
+            </div>
+        </button>
+
+        {{-- Card 3: Offer Released --}}
+        <button type="button" class="ot-kpi-card ot-kpi-filter" data-tab="sent" onclick="selectOfferTab('sent')">
+            <div class="ot-kpi-top">
+                <div class="ot-kpi-icon indigo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </div>
+                <div class="ot-kpi-meta">
+                    <div class="ot-kpi-num" data-kpi="sent">{{ $sentOffersInit }}</div>
+                    <div class="ot-kpi-lbl">Offer Released</div>
+                </div>
+            </div>
+            <div class="ot-kpi-sub indigo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span>Emailed to candidate</span>
+            </div>
+        </button>
+
+        {{-- Card 4: Accepted --}}
+        <button type="button" class="ot-kpi-card ot-kpi-filter" data-tab="accepted" onclick="selectOfferTab('accepted')">
+            <div class="ot-kpi-top">
+                <div class="ot-kpi-icon green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <div class="ot-kpi-meta">
+                    <div class="ot-kpi-num" data-kpi="accepted">{{ $acceptedInit }}</div>
+                    <div class="ot-kpi-lbl">Accepted</div>
+                </div>
+            </div>
+            <div class="ot-kpi-sub green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                <span id="kpiAcceptedPct">{{ $acceptedPctInit }}% of total offers</span>
+            </div>
+        </button>
+
+        {{-- Card 5: Joining Soon --}}
+        <button type="button" class="ot-kpi-card ot-kpi-filter" data-tab="joining_soon" onclick="selectOfferTab('joining_soon')">
+            <div class="ot-kpi-top">
+                <div class="ot-kpi-icon cyan">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </div>
+                <div class="ot-kpi-meta">
+                    <div class="ot-kpi-num" data-kpi="joining_soon">{{ $joiningSoonInit }}</div>
+                    <div class="ot-kpi-lbl">Joining Soon</div>
+                </div>
+            </div>
+            <div class="ot-kpi-sub cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Next 7 days</span>
+            </div>
+        </button>
+
+        {{-- Card 6: Expired --}}
+        <button type="button" class="ot-kpi-card ot-kpi-filter" data-tab="expired" onclick="selectOfferTab('expired')">
+            <div class="ot-kpi-top">
+                <div class="ot-kpi-icon rose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="ot-kpi-meta">
+                    <div class="ot-kpi-num" data-kpi="expired">{{ $expiredInit }}</div>
+                    <div class="ot-kpi-lbl">Expired</div>
+                </div>
+            </div>
+            <div class="ot-kpi-sub rose">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+                <span>Need renewal</span>
+            </div>
+        </button>
+    </div>
+
+    {{-- ══════════════════════════════════════════════════════════════
+         OFFERS PIPELINE FUNNEL CARD
+         ══════════════════════════════════════════════════════════════ --}}
+    <div class="ot-pipeline-wrap">
+        <div class="ot-pipeline-head">
+            <div class="ot-pipeline-title-wrap">
+                <h5>Offers Pipeline</h5>
+                <span class="ot-pipeline-sub-tag">Conversion Funnel</span>
+            </div>
+            <select class="ot-pipeline-range" id="ot_pipeline_range" aria-label="Offers pipeline date window">
+                <option value="current">This Month</option>
+                <option value="6m">Last 6 Months</option>
+                <option value="all">All Time</option>
             </select>
         </div>
-    </div>
-
-    {{-- Tabs + Sort --}}
-    <div class="ot-tabs-bar">
-        <div class="ot-tabs" id="ot_tabs">
-            <div class="ot-tab active" data-filter="all">All <span class="ot-tab-badge" id="tab_total">—</span></div>
-            <div class="ot-tab" data-filter="pending">Pending <span class="ot-tab-badge" id="tab_pending">—</span></div>
-            <div class="ot-tab" data-filter="sent">Offer Released <span class="ot-tab-badge" id="tab_sent">—</span></div>
-            <div class="ot-tab" data-filter="accepted">Accepted <span class="ot-tab-badge" id="tab_accepted">—</span></div>
-            <div class="ot-tab" data-filter="joining_soon">Joining Soon <span class="ot-tab-badge" id="tab_joining">—</span></div>
-            <div class="ot-tab" data-filter="expired">Expired <span class="ot-tab-badge" id="tab_expired">—</span></div>
-        </div>
-        <div class="ot-sort-bar">
-            <div class="ot-view-btns">
-                <button class="ot-view-btn active" title="List">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                </button>
-                <button class="ot-view-btn" title="Grid">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                </button>
+        <div class="ot-pipeline-rail">
+            <div class="ot-pipeline-flow">
+                @foreach($offerPipeline as $p)
+                <div class="ot-pipe-card-v2" data-pipe="{{ $p['key'] ?? '' }}" style="background:{{ $p['icon_bg'] ?? '#f8fafc' }}">
+                    <div class="ot-pipe-head-row">
+                        <span class="ot-pipe-icon-sm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="{{ $p['icon_clr'] ?? $p['color'] }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="{{ $p['icon'] ?? '' }}"/>
+                            </svg>
+                        </span>
+                        <span class="ot-pipe-lbl" style="color:{{ $p['color'] }}">{{ $p['label'] }}</span>
+                    </div>
+                    @if(isset($p['sub']))
+                        <div class="ot-pipe-data-row">
+                            <span class="ot-pipe-big">{{ $p['pct'] }}%</span>
+                            <span class="ot-pipe-sub-v2">{{ $p['sub'] }}</span>
+                        </div>
+                    @else
+                        <div class="ot-pipe-data-row">
+                            <span class="ot-pipe-big">{{ $p['count'] }}</span>
+                            <span class="ot-pipe-pct-v2">{{ $p['pct'] }}%</span>
+                        </div>
+                    @endif
+                </div>
+                @endforeach
             </div>
         </div>
     </div>
 
-    {{-- Table --}}
-    @if(in_array('view_offer', $userPermissions))
-    <div style="overflow-x:auto;">
-        <table class="ot-table">
-            <thead>
-                <tr>
-                    <th>Candidate</th>
-                    <th>Job</th>
-                    <th>Job Status, ID &amp; Client</th>
-                    <th>Ownership</th>
-                    <th class="ot-th-sort" data-asc="14" data-desc="15">Compensation <span class="ot-sort-ico">⇵</span></th>
-                    <th class="ot-th-sort" data-asc="11" data-desc="10">Offer Status <span class="ot-sort-ico">⇵</span></th>
-                    <th class="ot-th-sort" data-asc="13" data-desc="12">Joining <span class="ot-sort-ico">⇵</span></th>
-                    <th style="text-align:center;">Stage</th>
-                </tr>
-            </thead>
-            <tbody id="offer-tracker">
-                <tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">
-                    <img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...
-                </td></tr>
-            </tbody>
-        </table>
+    {{-- ══════════════════════════════════════════════════════════════
+         RULE 20 TIER 1: SEARCH & FILTER TOOLBAR CARD
+         ══════════════════════════════════════════════════════════════ --}}
+    <div class="ot-toolbar-card">
+        <div class="ot-search-subcard">
+            <i class="fas fa-search"></i>
+            <input type="text" id="ot_search" placeholder="Search by candidate name, job title, client, recruiter, or ID..." autocomplete="off" />
+            <button type="button" class="ot-search-clear-btn" id="otSearchClear" style="display:none;" title="Clear search (Esc)" aria-label="Clear search">✕</button>
+            <kbd class="ot-search-kbd" id="otSearchKbd" title="Press Ctrl+K to search">Ctrl+K</kbd>
+        </div>
+
+        <div class="ot-inline-filters">
+            <div class="ot-filter-pill">
+                <span class="ot-filter-pill-lbl"><i class="fas fa-map-marker-alt text-muted"></i> Location:</span>
+                <select class="ot-filter-select" id="ot_country" aria-label="Filter by location">
+                    <option value="">All Locations</option>
+                    @foreach($countries as $c)
+                    <option value="{{ $c->id }}">{{ $c->country_name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="ot-filter-pill">
+                <span class="ot-filter-pill-lbl"><i class="fas fa-sort-amount-down text-muted"></i> Sort:</span>
+                <select class="ot-filter-select" id="ot_sort" aria-label="Sort offers">
+                    <option value="">Latest Updated</option>
+                    <option value="10">Newest (Offer Date)</option>
+                    <option value="11">Oldest (Offer Date)</option>
+                    <option value="12">Newest (Join Date)</option>
+                    <option value="13">Oldest (Join Date)</option>
+                    <option value="14">Low → High (Amount)</option>
+                    <option value="15">High → Low (Amount)</option>
+                </select>
+            </div>
+
+            <button type="button" class="ot-reset-btn" id="otResetBtn" onclick="window.jeroOfferTracker && window.jeroOfferTracker.resetFilters()" title="Reset all filters">
+                <i class="fas fa-undo-alt"></i>
+                <span>Reset</span>
+            </button>
+        </div>
     </div>
 
-    {{-- Footer: pagination view includes info and per-page select --}}
-    <div id="ot_pagination"></div>
-    @else
-    <div style="padding:40px;text-align:center;color:#ef4444;font-size:13px;font-weight:600;">
-        ACCESS DENIED — Contact your administrator
+    {{-- ══════════════════════════════════════════════════════════════
+         RULE 20 TIER 2: DEDICATED WHITE SUB-TABS CARD
+         ══════════════════════════════════════════════════════════════ --}}
+    <div class="ot-tabs-card">
+        <div class="ot-tabs-group" id="ot_tabs">
+            <button type="button" class="ot-tab-btn active" data-filter="all">
+                <span>All Offers</span>
+                <span class="ot-tab-badge" id="tab_total">—</span>
+            </button>
+            <button type="button" class="ot-tab-btn" data-filter="pending">
+                <span>Pending</span>
+                <span class="ot-tab-badge badge-pending" id="tab_pending">—</span>
+            </button>
+            <button type="button" class="ot-tab-btn" data-filter="sent">
+                <span>Offer Released</span>
+                <span class="ot-tab-badge badge-sent" id="tab_sent">—</span>
+            </button>
+            <button type="button" class="ot-tab-btn" data-filter="accepted">
+                <span>Accepted</span>
+                <span class="ot-tab-badge badge-accepted" id="tab_accepted">—</span>
+            </button>
+            <button type="button" class="ot-tab-btn" data-filter="joining_soon">
+                <span>Joining Soon</span>
+                <span class="ot-tab-badge badge-joining" id="tab_joining">—</span>
+            </button>
+            <button type="button" class="ot-tab-btn" data-filter="expired">
+                <span>Expired</span>
+                <span class="ot-tab-badge badge-expired" id="tab_expired">—</span>
+            </button>
+        </div>
+
+        <div class="ot-tabs-right-meta">
+            <span id="otShowingSummary">Loading offers...</span>
+            <span class="ot-live-chip" title="Real-time Elasticsearch + Reverb projection">
+                <span class="ot-live-dot"></span>
+                <span>Live</span>
+            </span>
+        </div>
     </div>
+
+    {{-- ══════════════════════════════════════════════════════════════
+         RULE 20 TIER 3: PRIMARY OFFER CARD + SUB-CARDS STREAM
+         ══════════════════════════════════════════════════════════════ --}}
+    @if(in_array('view_offer', $userPermissions))
+        <div class="ot-stream-wrapper">
+            <div id="offer-tracker" class="ot-cards-stream">
+                <div class="ot-loading-card">
+                    <img src="{{ asset('assets/images/Loading2.gif') }}" height="28" alt=""> &nbsp; Loading offers...
+                </div>
+            </div>
+        </div>
+
+        <div class="ot-footer-card">
+            <div id="ot_pagination"></div>
+        </div>
+    @else
+        <div class="ot-empty-card">
+            <div class="ot-empty-icon" style="background:#fef2f2!important;color:#dc2626!important;">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div class="ot-empty-title">Access Denied</div>
+            <div class="ot-empty-sub">You do not have permission to view Offer Tracker. Contact your administrator.</div>
+        </div>
     @endif
-</div>
+
+</div>{{-- /ot-dashboard --}}
 
 {{-- Add Approver — right-side drawer (replaces #fwd_offer modal) --}}
 <style>
-/* Force the approver drawer above every other layer on this page
-   (Metronic default drawer z-index is 105; create-offer drawer is also ~105;
-   modal backdrops are 1050 in BS4. Using 1055 puts us safely above all of them.) */
 #kt_fwd_offer_drawer {
     position: fixed !important;
     top: 0; right: 0; bottom: 0;
@@ -549,8 +2002,6 @@ a:hover .ot-comp-change { text-decoration: underline; }
     z-index: 1054;
 }
 #kt_fwd_offer_overlay.active { display: block; }
-/* Keep the body content area a fixed block so absolute-positioned inner pickers
-   don't expand it and create empty space below the form. */
 #application_fwd_offer_body_content {
     overflow: hidden !important;
     flex: 1 1 0 !important;
@@ -577,6 +2028,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
     </div>
 </div>
 
+{{-- Change Candidate Stage — right-side drawer --}}
 <style>
   #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
   #csd_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -635,12 +2087,12 @@ a:hover .ot-comp-change { text-decoration: underline; }
 
     /* ── state ── */
     var state = {
-        page    : 1,
-        size    : parseInt(localStorage.getItem('candidatePerPage'), 10) || 10,
-        search  : '',
-        country : '',
-        sort    : '',
-        tab     : 'all',
+        page          : 1,
+        size          : parseInt(localStorage.getItem('candidatePerPage'), 10) || 10,
+        search        : '',
+        country       : '',
+        sort          : '',
+        tab           : 'all',
         pipelineRange : 'current',
     };
 
@@ -688,7 +2140,6 @@ a:hover .ot-comp-change { text-decoration: underline; }
                             metaReq.onsuccess = function () {
                                 var meta = metaReq.result;
                                 if (meta && (meta.tenant_id !== JERO_TENANT_ID || meta.user_id !== JERO_USER_ID)) {
-                                    // User/tenant switched: wipe to prevent cross-tenant data leakage
                                     try {
                                         var wipeTx = db.transaction(['offers_cache', 'meta'], 'readwrite');
                                         wipeTx.objectStore('offers_cache').clear();
@@ -726,7 +2177,6 @@ a:hover .ot-comp-change { text-decoration: underline; }
 
         return {
             get: function (key) {
-                // Strict timeout wrapper: never block rendering if IndexedDB takes longer than 250ms
                 return Promise.race([
                     getDB().then(function (db) {
                         if (!db || !key) return null;
@@ -794,7 +2244,6 @@ a:hover .ot-comp-change { text-decoration: underline; }
         } catch (e) {}
     }
 
-    /* ── Invalidate cache across Layer 1 (RAM), Layer 2 (IndexedDB), and other tabs ── */
     function invalidateClientCache(broadcastSync) {
         clientCache = {};
         JeroOfferLocalStore.purge();
@@ -805,8 +2254,24 @@ a:hover .ot-comp-change { text-decoration: underline; }
         }
     }
 
-    /* ── URLs ── */
     var URL_CANDIDATES = '{!! route('service_company.cvtracker.allcandidates') !!}';
+
+    /* ── Sync active tab + KPI card state ── */
+    function syncActiveTabUI(tabKey) {
+        document.querySelectorAll('#ot_tabs .ot-tab-btn').forEach(function (btn) {
+            btn.classList.toggle('active', btn.dataset.filter === tabKey);
+        });
+        document.querySelectorAll('#otKpiGrid .ot-kpi-filter').forEach(function (card) {
+            card.classList.toggle('active', card.dataset.tab === tabKey);
+        });
+    }
+
+    window.selectOfferTab = function (tabKey) {
+        if (!tabKey) tabKey = 'all';
+        state.tab = tabKey;
+        syncActiveTabUI(tabKey);
+        fetchTable(true);
+    };
 
     /* ── fetch table (3-Layer Execution: RAM -> IndexedDB -> Server) ── */
     function fetchTable(resetPage) {
@@ -822,37 +2287,38 @@ a:hover .ot-comp-change { text-decoration: underline; }
             pr: state.pipelineRange
         });
 
-        // Layer 1: Instant Browser RAM Cache (< 1ms render)
         if (clientCache[cacheKey]) {
             renderTableResponse(clientCache[cacheKey]);
             return;
         }
 
-        // Layer 2: Fast Native IndexedDB Cache (< 8ms render on refresh / back navigation)
         JeroOfferLocalStore.get(cacheKey).then(function (cachedInIDB) {
             if (cachedInIDB) {
                 clientCache[cacheKey] = cachedInIDB;
                 renderTableResponse(cachedInIDB);
                 return;
             }
-
-            // Layer 3: Authoritative Elasticsearch / Server Fetch
             executeServerFetch(cacheKey);
         }).catch(function () {
             executeServerFetch(cacheKey);
         });
     }
 
+    function setSyncSpin(isSpinning) {
+        var btn = document.getElementById('otRefreshBtn');
+        if (btn) btn.classList.toggle('is-syncing', !!isSpinning);
+    }
+
     function executeServerFetch(cacheKey) {
         if (activeAjaxRequest && activeAjaxRequest.readyState !== 4) {
-            try {
-                activeAjaxRequest.abort();
-            } catch (e) {}
+            try { activeAjaxRequest.abort(); } catch (e) {}
         }
 
-        var loader = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...</td></tr>';
+        setSyncSpin(true);
         var trackerEl = document.getElementById('offer-tracker');
-        if (trackerEl) trackerEl.innerHTML = loader;
+        if (trackerEl) {
+            trackerEl.innerHTML = '<div class="ot-loading-card"><img src="{{ asset('assets/images/Loading2.gif') }}" height="28" alt=""> &nbsp; Loading offers...</div>';
+        }
 
         activeAjaxRequest = $.ajax({
             url  : URL_CANDIDATES + '?page=' + state.page,
@@ -870,19 +2336,22 @@ a:hover .ot-comp-change { text-decoration: underline; }
             },
             success: function (resp) {
                 activeAjaxRequest = null;
+                setSyncSpin(false);
                 if (typeof resp === 'string') {
                     try { resp = JSON.parse(resp); } catch (e) {}
                 }
-                // Save in Browser RAM (Layer 1) & Native IndexedDB (Layer 2)
                 clientCache[cacheKey] = resp;
                 JeroOfferLocalStore.set(cacheKey, resp);
                 renderTableResponse(resp);
             },
             error: function (xhr, status) {
+                setSyncSpin(false);
                 if (status === 'abort') return;
                 activeAjaxRequest = null;
                 var el = document.getElementById('offer-tracker');
-                if (el) el.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
+                if (el) {
+                    el.innerHTML = '<div class="ot-empty-card"><div class="ot-empty-title" style="color:#dc2626;">Error Loading Offers</div><div class="ot-empty-sub">Unable to reach search projection. Please click Sync or refresh.</div></div>';
+                }
             }
         });
     }
@@ -890,17 +2359,23 @@ a:hover .ot-comp-change { text-decoration: underline; }
     function renderTableResponse(resp) {
         if (!resp) return;
         var trackerEl = document.getElementById('offer-tracker');
-        var pagiEl = document.getElementById('ot_pagination');
+        var pagiEl    = document.getElementById('ot_pagination');
+        var summaryEl = document.getElementById('otShowingSummary');
+
         if (trackerEl) {
             var html = resp.html;
             if (typeof html === 'string' && html.trim().length > 0) {
                 trackerEl.innerHTML = html;
             } else {
-                trackerEl.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No offers found</td></tr>';
+                trackerEl.innerHTML = '<div class="ot-empty-card"><div class="ot-empty-title">No Offers Found</div><div class="ot-empty-sub">No offer records match your active filter criteria.</div></div>';
             }
         }
         if (pagiEl && resp.pagination !== undefined) {
             pagiEl.innerHTML = resp.pagination || '';
+        }
+        if (summaryEl && resp.total !== undefined) {
+            var totalVal = Number(resp.total) || 0;
+            summaryEl.textContent = totalVal + (totalVal === 1 ? ' offer matching' : ' offers matching');
         }
         if (resp.counts) {
             try {
@@ -911,14 +2386,11 @@ a:hover .ot-comp-change { text-decoration: underline; }
         }
     }
 
-    /* ── Sync tab badges + KPI cards + pipeline from the Elasticsearch counts ──
-       Every number comes from the same aggregation that backs the table, so the
-       badges/hero/pipeline always match the actual filtered result set. */
+    /* ── Sync tab badges + KPI cards + pipeline from Elasticsearch counts ── */
     function updateOfferCounts(c, p) {
         if (!c) return;
-        var n = function (v) { return (v != null ? v : 0); };
+        var n = function (v) { return (v != null ? Number(v) : 0); };
 
-        /* Tab badges — from the full table result set */
         var badges = {
             tab_total: c.total, tab_pending: c.pending, tab_sent: c.sent,
             tab_accepted: c.accepted, tab_joining: c.joining_soon, tab_expired: c.expired
@@ -928,19 +2400,40 @@ a:hover .ot-comp-change { text-decoration: underline; }
             if (el) el.textContent = n(badges[id]);
         });
 
-        /* KPI stat cards (data-kpi) — from the full table result set */
         var kpi = {
-            total: c.total, pending: c.pending, sent: c.sent,
-            expired: c.expired, joining_soon: c.joining_soon
+            total: n(c.total),
+            pending: n(c.pending),
+            sent: n(c.sent),
+            accepted: n(c.accepted),
+            expired: n(c.expired),
+            joining_soon: n(c.joining_soon)
         };
         document.querySelectorAll('[data-kpi]').forEach(function (el) {
             var k = el.getAttribute('data-kpi');
             if (kpi[k] != null) el.textContent = kpi[k];
         });
 
-        /* Pipeline arrows (data-pipe) — driven by the date-windowed counts
-           (dropdown: this month / last 6 months / all time); falls back to
-           the full counts if the server didn't return a windowed set. */
+        var headerBadge = document.getElementById('otHeaderTotalBadge');
+        if (headerBadge) headerBadge.textContent = kpi.total;
+
+        var pendingPill     = document.getElementById('kpiPendingPill');
+        var pendingPillText = document.getElementById('kpiPendingPillText');
+        if (pendingPill && pendingPillText) {
+            if (kpi.pending > 0) {
+                pendingPill.style.display = 'inline-flex';
+                pendingPillText.textContent = kpi.pending + ' pending';
+            } else {
+                pendingPill.style.display = 'none';
+            }
+        }
+
+        var acceptedPctEl = document.getElementById('kpiAcceptedPct');
+        if (acceptedPctEl) {
+            var accPct = kpi.total > 0 ? Math.round((kpi.accepted / kpi.total) * 100) : 0;
+            acceptedPctEl.textContent = accPct + '% of total offers';
+        }
+
+        /* Pipeline funnel arrows */
         var pc = p || c;
         var ptotal = +pc.total || 0;
         var pctOf = function (v) { return ptotal > 0 ? Math.round((v / ptotal) * 100) : 0; };
@@ -956,7 +2449,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
         document.querySelectorAll('[data-pipe]').forEach(function (card) {
             var d = pipe[card.getAttribute('data-pipe')];
             if (!d) return;
-            var big = card.querySelector('.ot-pipe-big');
+            var big   = card.querySelector('.ot-pipe-big');
             var pctEl = card.querySelector('.ot-pipe-pct-v2');
             var subEl = card.querySelector('.ot-pipe-sub-v2');
             if (big)   big.textContent = d.count;
@@ -965,30 +2458,68 @@ a:hover .ot-comp-change { text-decoration: underline; }
         });
     }
 
-    /* ── Column-header sorting (kept in sync with the Sort-by dropdown) ── */
-    function clearHeaderSort() {
-        document.querySelectorAll('.ot-th-sort').forEach(function (th) {
-            th.classList.remove('active');
-            var ico = th.querySelector('.ot-sort-ico');
-            if (ico) ico.textContent = '⇵';
-        });
+    function resetFilters() {
+        state.page    = 1;
+        state.search  = '';
+        state.country = '';
+        state.sort    = '';
+        state.tab     = 'all';
+
+        var sInp = document.getElementById('ot_search');
+        var sClr = document.getElementById('otSearchClear');
+        var cSel = document.getElementById('ot_country');
+        var rSel = document.getElementById('ot_sort');
+        if (sInp) sInp.value = '';
+        if (sClr) sClr.style.display = 'none';
+        if (cSel) cSel.value = '';
+        if (rSel) rSel.value = '';
+
+        syncActiveTabUI('all');
+        fetchTable(true);
     }
 
     /* ── Setup Event Listeners after DOM is ready ── */
     function setupEventListeners() {
-        /* search (debounced) */
         var searchTimer;
         var searchInput = document.getElementById('ot_search');
+        var searchClear = document.getElementById('otSearchClear');
+
         if (searchInput) {
             searchInput.addEventListener('input', function () {
                 clearTimeout(searchTimer);
                 var val = this.value;
+                if (searchClear) searchClear.style.display = val.length > 0 ? 'inline-flex' : 'none';
                 searchTimer = setTimeout(function () {
                     state.search = val;
                     fetchTable(true);
-                }, 380);
+                }, 300);
+            });
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && this.value) {
+                    this.value = '';
+                    if (searchClear) searchClear.style.display = 'none';
+                    state.search = '';
+                    fetchTable(true);
+                }
             });
         }
+
+        if (searchClear) {
+            searchClear.addEventListener('click', function () {
+                if (searchInput) searchInput.value = '';
+                this.style.display = 'none';
+                state.search = '';
+                fetchTable(true);
+            });
+        }
+
+        /* Ctrl+K shortcut focuses search */
+        document.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                if (searchInput) searchInput.focus();
+            }
+        });
 
         var countrySelect = document.getElementById('ot_country');
         if (countrySelect) {
@@ -1002,27 +2533,9 @@ a:hover .ot-comp-change { text-decoration: underline; }
         if (sortSelect) {
             sortSelect.addEventListener('change', function () {
                 state.sort = this.value;
-                clearHeaderSort();
                 fetchTable(true);
             });
         }
-
-        document.querySelectorAll('.ot-th-sort').forEach(function (th) {
-            th.addEventListener('click', function () {
-                var asc  = this.dataset.asc;
-                var desc = this.dataset.desc;
-                var goAsc = this.dataset.dir !== 'asc';
-                clearHeaderSort();
-                this.dataset.dir = goAsc ? 'asc' : 'desc';
-                this.classList.add('active');
-                var ico = this.querySelector('.ot-sort-ico');
-                if (ico) ico.textContent = goAsc ? '↑' : '↓';
-                state.sort = goAsc ? asc : desc;
-                var sel = document.getElementById('ot_sort');
-                if (sel) sel.value = state.sort;
-                fetchTable(true);
-            });
-        });
 
         var pagiWrap = document.getElementById('ot_pagination');
         if (pagiWrap) {
@@ -1048,7 +2561,6 @@ a:hover .ot-comp-change { text-decoration: underline; }
             });
         }
 
-        /* Offers Pipeline date window */
         var pipeRangeEl = document.getElementById('ot_pipeline_range');
         if (pipeRangeEl) {
             pipeRangeEl.addEventListener('change', function () {
@@ -1057,18 +2569,14 @@ a:hover .ot-comp-change { text-decoration: underline; }
             });
         }
 
-        /* tab clicks */
-        document.querySelectorAll('#ot_tabs .ot-tab').forEach(function (tab) {
+        document.querySelectorAll('#ot_tabs .ot-tab-btn').forEach(function (tab) {
             tab.addEventListener('click', function () {
-                document.querySelectorAll('#ot_tabs .ot-tab').forEach(function (t) { t.classList.remove('active'); });
-                this.classList.add('active');
-                state.tab = this.dataset.filter;
-                fetchTable(true);
+                selectOfferTab(this.dataset.filter);
             });
         });
     }
 
-    /* Stage sub-stage */
+    /* Stage sub-stage drawer */
     $(document).on('click', '#stage_sub_stage_close', function () {
         $('#csd_drawer_close').trigger('click');
     });
@@ -1143,7 +2651,6 @@ a:hover .ot-comp-change { text-decoration: underline; }
     }
     $(document).on('click', '#kt_fwd_offer_close, #kt_fwd_offer_overlay', closeApproverDrawer);
 
-    /* Fwd offer — opens as right-side drawer */
     $(document).on('click', '.fwd_offer', function (e) {
         e.preventDefault();
         var jobId     = $(this).data('jobid');
@@ -1169,7 +2676,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
         });
     });
 
-    /* Client-job offer: show warning instead of opening create-offer drawer */
+    /* Client-job offer warning */
     $(document).on('click', '.ot-client-offer-warn', function (e) {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -1185,7 +2692,39 @@ a:hover .ot-comp-change { text-decoration: underline; }
         }
     });
 
-    /* Export */
+    /* Client-First Browser-Side CSV Export (0% Server Read Strain) */
+    window.exportOffersCsv = function () {
+        var cards = document.querySelectorAll('#offer-tracker .ot-entity-card');
+        if (!cards.length) {
+            if (typeof Swal !== 'undefined') Swal.fire('No Data', 'There are no visible offers to export.', 'info');
+            return;
+        }
+        var esc = function (v) { return '"' + String(v || '').replace(/"/g, '""') + '"'; };
+        var rows = [['Candidate', 'Job Title', 'Job ID', 'Client', 'Compensation', 'Offer Status', 'Joining', 'Owner', 'Offer Ref']];
+        cards.forEach(function (card) {
+            rows.push([
+                card.dataset.candName || '',
+                card.dataset.jobTitle || '',
+                card.dataset.jobId || '',
+                card.dataset.clientName || '',
+                card.dataset.comp || '',
+                card.dataset.offerStatus || '',
+                card.dataset.joining || '',
+                card.dataset.owner || '',
+                card.dataset.offerId ? ('#OFF-' + card.dataset.offerId) : ''
+            ]);
+        });
+        var csv = rows.map(function (r) { return r.map(esc).join(','); }).join('\r\n');
+        var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'Offer-Tracker-' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    /* Executive Print-to-PDF Export */
     window.exportOffers = function () {
         var prevTitle = document.title;
         document.title = 'Offer-Tracker-' + new Date().toISOString().slice(0,10);
@@ -1195,7 +2734,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
         setTimeout(done, 1500);
     };
 
-    /* ── Real-time Reverb / WebSocket Delta Synchronization (Phase 4) ── */
+    /* ── Real-time Reverb / WebSocket Delta Synchronization ── */
     var JERO_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
     var reverbDebounceTimer = null;
 
@@ -1203,10 +2742,9 @@ a:hover .ot-comp-change { text-decoration: underline; }
         if (typeof window.Echo === 'undefined' || typeof window.Echo.private !== 'function' || !JERO_COMPANY_ID) {
             return;
         }
-
         try {
             window.Echo.private('company.' + JERO_COMPANY_ID)
-                .listen('.offer.updated', function (e) {
+                .listen('.offer.updated', function () {
                     invalidateClientCache();
                     if (reverbDebounceTimer) clearTimeout(reverbDebounceTimer);
                     reverbDebounceTimer = setTimeout(function () {
@@ -1214,7 +2752,6 @@ a:hover .ot-comp-change { text-decoration: underline; }
                     }, 250);
                 });
 
-            // Reconnection recovery: if WebSocket connection drops and reconnects, invalidate cache and re-sync
             if (window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection) {
                 window.Echo.connector.pusher.connection.bind('connected', function () {
                     invalidateClientCache();
@@ -1226,23 +2763,23 @@ a:hover .ot-comp-change { text-decoration: underline; }
         }
     }
 
-    /* ── Expose Global Bridge for In-Page Drawers & Sub-Components ── */
+    /* ── Global Bridge for Drawers & Sub-Components ── */
     window.jeroOfferTracker = {
         refresh: function (resetPage) {
             invalidateClientCache(true);
             fetchTable(resetPage === true);
         },
         invalidateClientCache: invalidateClientCache,
-        fetchTable: fetchTable
+        fetchTable: fetchTable,
+        resetFilters: resetFilters
     };
 
-    /* Listen for custom in-page window events */
-    window.addEventListener('jero:offer_updated', function (e) {
+    window.addEventListener('jero:offer_updated', function () {
         invalidateClientCache(false);
         fetchTable(false);
     });
 
-    /* ── init ── */
+    /* ── Init ── */
     $(function () {
         setupEventListeners();
         fetchTable(false);

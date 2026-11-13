@@ -174,6 +174,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'immediate' => 0,
             'without_resume' => 0,
             'tabs' => [
+                'all' => (int) $this->applicationCounter,
                 'inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0,
                 'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0,
             ],
@@ -376,6 +377,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'pipeline_range' => request('pipeline_range'),
                 // CV Tracker stage tab must also vary the cache key for the same reason.
                 'stage_tab' => request('stage_tab'),
+                'company_type' => request('company_type'),
             ];
 
             $salView = in_array('salary_view', (array) $this->userPermissions) ? 's1' : 's0';
@@ -1182,6 +1184,64 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // 	];
             // }
 
+            // Company Type Filter: My Organization, Internal Client, Direct Client (Rule 25 compliant)
+            // Applied to base query so BOTH hits and status KPI tab counts reflect the active company type.
+            $company_type = request('company_type');
+            if (! empty($company_type) && $company_type !== 'all') {
+                if ($company_type === 'my_organization') {
+                    $boolQuery['bool']['filter'][] = [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['client_self_company' => 1]],
+                                ['term' => ['ClientComID' => 0]],
+                                ['term' => ['self_company' => 1]],
+                            ],
+                            'minimum_should_match' => 1,
+                            'must_not' => [
+                                ['term' => ['is_direct_client' => true]],
+                                ['term' => ['is_direct_client' => 1]],
+                            ],
+                        ],
+                    ];
+                } elseif ($company_type === 'direct_client') {
+                    $boolQuery['bool']['filter'][] = [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['is_direct_client' => true]],
+                                ['term' => ['is_direct_client' => 1]],
+                                ['range' => ['recommendation_id' => ['gt' => 0]]],
+                                [
+                                    'bool' => [
+                                        'must' => [
+                                            ['range' => ['ClientComID' => ['gt' => 0]]],
+                                        ],
+                                        'must_not' => [
+                                            ['term' => ['ClientComID' => $company_id]],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                } elseif ($company_type === 'internal_client') {
+                    $boolQuery['bool']['filter'][] = [
+                        'bool' => [
+                            'must' => [
+                                ['range' => ['ClientComID' => ['gt' => 0]]],
+                            ],
+                            'must_not' => [
+                                ['term' => ['client_self_company' => 1]],
+                                ['term' => ['self_company' => 1]],
+                                ['term' => ['is_direct_client' => true]],
+                                ['term' => ['is_direct_client' => 1]],
+                                ['range' => ['recommendation_id' => ['gt' => 0]]],
+                            ],
+                        ],
+                    ];
+                }
+            }
+
             // Snapshot the base query (all filters EXCEPT the active tab) for the count
             // aggregation, then apply the tab filter to the paginated hits query only.
             $offerCountsBase = $boolQuery;
@@ -1395,6 +1455,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     'immediate' => (int) ($ca['immediate']['doc_count'] ?? 0),
                     'without_resume' => (int) ($ca['without_resume']['doc_count'] ?? 0),
                     'tabs' => [
+                        'all' => (int) ($cResp['hits']['total']['value'] ?? 0),
                         'inreview' => $statusBuckets[8] ?? 0,
                         'sourcing' => $statusBuckets[1] ?? 0,
                         'screening' => $statusBuckets[2] ?? 0,
@@ -3252,35 +3313,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
         $this->jobSkills = $jobSkillsList;
 
-        // Bulk-load real skill experiences and ratings for selected candidates matching showdetail logic
-        $appIds = collect($this->applicationData)->pluck('id')->toArray();
-
-        $cjseSkills = collect();
-        if (! empty($appIds)) {
-            $cjseSkills = DB::table('candidate_job_skill_exp')
-                ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                ->whereIn('candidate_job_skill_exp.candidate_id', $appIds)
-                ->select(
-                    'candidate_job_skill_exp.candidate_id',
-                    'job_metronics_skills.skill_name',
-                    'candidate_job_skill_exp.skill_value',
-                    'candidate_job_skill_exp.rating'
-                )
-                ->get()
-                ->groupBy('candidate_id');
-        }
-
-        $benchSkills = collect();
-        if (! empty($appIds)) {
-            $benchSkills = DB::table('bench_candidate_skill_experience')
-                ->whereIn('candidate_id', $appIds)
-                ->select('candidate_id', 'skill_key', 'year', 'month', 'total_months', 'rating')
-                ->orderBy('skill_key')
-                ->get()
-                ->groupBy('candidate_id');
-        }
+        // Resolve authoritative, job-isolated prescreen dossiers for all selected candidates (zero fabrication)
+        $targetJobIdForDossier = ! empty($this->jobIdArr[0]) ? (int) $this->jobIdArr[0] : (int) ($request->id ?: 0);
+        $companyId = (int) auth()->user()->company_id;
+        $prescreenDossierMap = app(\App\Services\PrescreenDossierService::class)->resolveCandidateDossiers(
+            $this->applicationData,
+            $targetJobIdForDossier > 0 ? $targetJobIdForDossier : null,
+            $companyId,
+            $jobSkillsList
+        );
 
         foreach ($this->applicationData as $cand) {
+            $candDossier = $prescreenDossierMap[(int) $cand->id] ?? null;
             // Notice Period formatting (matching showdetail & bench rules)
             $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
             $npRaw = trim((string) @$cand->np_id);
@@ -3344,26 +3388,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cand->report_company_name = $this->companyName;
             $cand->report_company_logo = $this->companyLogo;
 
-            // Match score / Hiring confidence percentage (exact 1:1 match with profile icon / table)
-            $candSkillsList = array_values(array_filter(array_map('trim', explode(',', (string) @$cand->skills))));
-            $matchPct = 0;
-            if (! empty($clientMatchMap[$cand->id]) && (int) $clientMatchMap[$cand->id] > 0) {
+            // Match score / Hiring confidence percentage (strictly verified skills vs job skills, zero fabrication)
+            $matchPct = (int) ($candDossier['match'] ?? 0);
+            if ($matchPct === 0 && ! empty($clientMatchMap[$cand->id]) && (int) $clientMatchMap[$cand->id] > 0) {
                 $matchPct = (int) $clientMatchMap[$cand->id];
-            } elseif (! empty($cand->wise_skill_match)) {
+            } elseif ($matchPct === 0 && ! empty($cand->wise_skill_match)) {
                 $matchPct = (int) round((float) rtrim((string) $cand->wise_skill_match, '%'));
             }
-            if ($matchPct === 0 && ! empty($cand->job_id) && ! empty($candSkillsList)) {
-                $calcPct = GeneralMethod::skill_percentage($cand->job_id, $candSkillsList);
-                $matchPct = (int) round((float) rtrim($calcPct, '%'));
-            }
-            if ($matchPct === 0 && ! empty($jobSkillsList) && ! empty($candSkillsList)) {
-                $calcPct = GeneralMethod::skill_percentage_from_array($jobSkillsList, $candSkillsList);
-                $matchPct = (int) round((float) rtrim($calcPct, '%'));
-            }
-            if ($matchPct === 0) {
-                $matchPct = ! empty($cand->rating) ? min(100, max(40, (int) ($cand->rating * 20))) : 85;
-            }
-            $cand->match = $matchPct;
+            $cand->match = min(100, max(0, $matchPct));
+            $cand->rating = (int) ($candDossier['overall_rating'] ?? min(5, max(0, (int) ($cand->rating ?? 0))));
 
             // Career Summary & Recruiter Note
             $sum = trim(strip_tags(html_entity_decode((string) (@$cand->careersummary ?: @$cand->cover_letter), ENT_QUOTES, 'UTF-8')));
@@ -3372,192 +3405,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $note = trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?? ''), ENT_QUOTES, 'UTF-8')));
             $cand->recruiter_note_text = $note;
 
-            // Real Skills & Ratings for Skill Intelligence card
-            $skillsArr = [];
-            $seenSkillNames = [];
-
-            // A. Check bench candidate skills if applicable
-            $benchList = $benchSkills->get($cand->id);
-            if ($benchList && count($benchList) > 0) {
-                foreach ($benchList as $bRow) {
-                    $sn = trim((string) $bRow->skill_key);
-                    $snLower = strtolower($sn);
-                    if ($sn === '' || isset($seenSkillNames[$snLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$snLower] = true;
-
-                    $yr = (int) ($bRow->year ?? 0);
-                    $mo = (int) ($bRow->month ?? 0);
-                    if (isset($bRow->total_months) && is_numeric($bRow->total_months) && (int) $bRow->total_months > 0) {
-                        $yr = intdiv((int) $bRow->total_months, 12);
-                        $mo = (int) $bRow->total_months % 12;
-                    }
-                    $sExpParts = [];
-                    if ($yr > 0) {
-                        $sExpParts[] = $yr.' Year'.($yr > 1 ? 's' : '');
-                    }
-                    if ($mo > 0) {
-                        $sExpParts[] = $mo.' Month'.($mo > 1 ? 's' : '');
-                    }
-                    $sExpText = ! empty($sExpParts) ? implode(' ', $sExpParts) : ($yr === 0 && $mo === 0 ? '0 Years' : '--');
-
-                    $ratingVal = (int) ($bRow->rating ?? 0);
-                    if ($ratingVal <= 0 && ! empty($cand->rating)) {
-                        $ratingVal = (int) $cand->rating;
-                    }
-                    $ratingVal = min(5, max(0, $ratingVal));
-
-                    $skillsArr[] = [
-                        'name' => ucwords($sn),
-                        'expText' => $sExpText,
-                        'exp' => $yr + ($mo / 12),
-                        'rating' => $ratingVal,
-                    ];
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
-
-            // B. Map candidate evaluations from candidate_job_skill_exp
-            $cjseList = $cjseSkills->get($cand->id);
-            $cjseMap = [];
-            if ($cjseList && count($cjseList) > 0) {
-                foreach ($cjseList as $cRow) {
-                    $snLower = strtolower(trim((string) $cRow->skill_name));
-                    if ($snLower !== '') {
-                        $cjseMap[$snLower] = $cRow;
-                    }
-                }
-            }
-
-            // Prioritize active job skills
-            if (! empty($jobSkillsList) && count($skillsArr) < 7) {
-                foreach ($jobSkillsList as $jsName) {
-                    $jsTrim = trim((string) $jsName);
-                    $jsLower = strtolower($jsTrim);
-                    if ($jsLower === '' || isset($seenSkillNames[$jsLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$jsLower] = true;
-
-                    if (isset($cjseMap[$jsLower])) {
-                        $cRow = $cjseMap[$jsLower];
-                        $rawVal = trim((string) $cRow->skill_value);
-                        $sExpText = '--';
-                        $sExpNum = 0.0;
-                        if ($rawVal !== '') {
-                            if (preg_match('/(\d+)\s*(?:years?|yrs?)?\s+(\d+)\s*(?:months?|mos?)/i', $rawVal, $m)) {
-                                $y = (int) $m[1];
-                                $mo = (int) $m[2];
-                                $sExpText = $y.' Year'.($y > 1 ? 's' : '').($mo > 0 ? ' '.$mo.' Month'.($mo > 1 ? 's' : '') : '');
-                                $sExpNum = $y + ($mo / 12);
-                            } elseif (preg_match('/^(\d+(?:\.\d+)?)/', $rawVal, $m)) {
-                                $sExpNum = (float) $m[1];
-                                $sExpText = $rawVal;
-                            } else {
-                                $sExpText = $rawVal;
-                            }
-                        }
-
-                        $ratingVal = (int) ($cRow->rating ?? 0);
-                        if ($ratingVal <= 0 && ! empty($cand->rating)) {
-                            $ratingVal = (int) $cand->rating;
-                        }
-                        $ratingVal = min(5, max(0, $ratingVal));
-
-                        $skillsArr[] = [
-                            'name' => ucwords($jsTrim),
-                            'expText' => $sExpText,
-                            'exp' => $sExpNum,
-                            'rating' => $ratingVal,
-                        ];
-                    } else {
-                        $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
-                        $skillsArr[] = [
-                            'name' => ucwords($jsTrim),
-                            'expText' => $expStr,
-                            'exp' => (float) $totExp ?: 0,
-                            'rating' => $defaultRating,
-                        ];
-                    }
-
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
-
-            // C. If slots remain (< 7), include candidate's remaining evaluated or profile skills
-            if (count($skillsArr) < 7 && $cjseList && count($cjseList) > 0) {
-                foreach ($cjseList as $cRow) {
-                    $sn = trim((string) $cRow->skill_name);
-                    $snLower = strtolower($sn);
-                    if ($sn === '' || isset($seenSkillNames[$snLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$snLower] = true;
-
-                    $rawVal = trim((string) $cRow->skill_value);
-                    $sExpText = '--';
-                    $sExpNum = 0.0;
-                    if ($rawVal !== '') {
-                        if (preg_match('/(\d+)\s*(?:years?|yrs?)?\s+(\d+)\s*(?:months?|mos?)/i', $rawVal, $m)) {
-                            $y = (int) $m[1];
-                            $mo = (int) $m[2];
-                            $sExpText = $y.' Year'.($y > 1 ? 's' : '').($mo > 0 ? ' '.$mo.' Month'.($mo > 1 ? 's' : '') : '');
-                            $sExpNum = $y + ($mo / 12);
-                        } elseif (preg_match('/^(\d+(?:\.\d+)?)/', $rawVal, $m)) {
-                            $sExpNum = (float) $m[1];
-                            $sExpText = $rawVal;
-                        } else {
-                            $sExpText = $rawVal;
-                        }
-                    }
-
-                    $ratingVal = (int) ($cRow->rating ?? 0);
-                    if ($ratingVal <= 0 && ! empty($cand->rating)) {
-                        $ratingVal = (int) $cand->rating;
-                    }
-                    $ratingVal = min(5, max(0, $ratingVal));
-
-                    $skillsArr[] = [
-                        'name' => ucwords($sn),
-                        'expText' => $sExpText,
-                        'exp' => $sExpNum,
-                        'rating' => $ratingVal,
-                    ];
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
-
-            if (count($skillsArr) < 7 && ! empty($candSkillsList)) {
-                $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
-                foreach ($candSkillsList as $skName) {
-                    if (! $skName) {
-                        continue;
-                    }
-                    $snLower = strtolower($skName);
-                    if (isset($seenSkillNames[$snLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$snLower] = true;
-
-                    $skillsArr[] = [
-                        'name' => ucwords($skName),
-                        'expText' => $expStr,
-                        'exp' => (float) $totExp ?: 0,
-                        'rating' => $defaultRating,
-                    ];
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
-            $cand->parsed_skills = $skillsArr;
+            // Strict verified skills & evaluations from PrescreenDossierService
+            $cand->parsed_skills = $candDossier['skills'] ?? [];
+            $cand->skills_authoritative = true;
+            $cand->screening_qa = $candDossier['screening_qa'] ?? [];
 
             // Validation badges matching showdetail
             // Resume presence detection & verification
@@ -3871,38 +3722,21 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
         $this->jobSkills = $jobSkillsList;
 
-        // Bulk-load real skill experiences and ratings for selected candidates matching showdetail logic
-        $appIds = collect($this->applicationData)->pluck('id')->toArray();
-
-        $cjseSkills = collect();
-        if (! empty($appIds)) {
-            $cjseSkills = DB::table('candidate_job_skill_exp')
-                ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                ->whereIn('candidate_job_skill_exp.candidate_id', $appIds)
-                ->select(
-                    'candidate_job_skill_exp.candidate_id',
-                    'job_metronics_skills.skill_name',
-                    'candidate_job_skill_exp.skill_value',
-                    'candidate_job_skill_exp.rating'
-                )
-                ->get()
-                ->groupBy('candidate_id');
-        }
-
-        $benchSkills = collect();
-        if (! empty($appIds)) {
-            $benchSkills = DB::table('bench_candidate_skill_experience')
-                ->whereIn('candidate_id', $appIds)
-                ->select('candidate_id', 'skill_key', 'year', 'month', 'total_months', 'rating')
-                ->orderBy('skill_key')
-                ->get()
-                ->groupBy('candidate_id');
-        }
+        // Resolve authoritative, job-isolated prescreen dossiers for all selected candidates (zero fabrication)
+        $targetJobIdForDossier = ! empty($this->jobIdArr[0]) ? (int) $this->jobIdArr[0] : (int) ($request->id ?: 0);
+        $companyIdForDossier = (int) auth()->user()->company_id;
+        $prescreenDossierMap = app(\App\Services\PrescreenDossierService::class)->resolveCandidateDossiers(
+            $this->applicationData,
+            $targetJobIdForDossier > 0 ? $targetJobIdForDossier : null,
+            $companyIdForDossier,
+            $jobSkillsList
+        );
 
         $todayFormatted = now()->format('d M Y');
         $recruiterName = auth()->user()->name ? ucwords((string) auth()->user()->name) : 'Hiring Team';
 
         foreach ($this->applicationData as $cand) {
+            $candDossier = $prescreenDossierMap[(int) $cand->id] ?? null;
             // Notice Period formatting (matching showdetail & bench rules)
             $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
             $npRaw = trim((string) @$cand->np_id);
@@ -3966,26 +3800,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cand->report_company_name = $this->companyName;
             $cand->report_company_logo = $this->companyLogo;
 
-            // Match score / Hiring confidence percentage (exact 1:1 match with profile icon / table)
-            $candSkillsList = array_values(array_filter(array_map('trim', explode(',', (string) @$cand->skills))));
-            $matchPct = 0;
-            if (! empty($clientMatchMap[$cand->id]) && (int) $clientMatchMap[$cand->id] > 0) {
+            // Match score / Hiring confidence percentage (strictly verified skills vs job skills, zero fabrication)
+            $matchPct = (int) ($candDossier['match'] ?? 0);
+            if ($matchPct === 0 && ! empty($clientMatchMap[$cand->id]) && (int) $clientMatchMap[$cand->id] > 0) {
                 $matchPct = (int) $clientMatchMap[$cand->id];
-            } elseif (! empty($cand->wise_skill_match)) {
+            } elseif ($matchPct === 0 && ! empty($cand->wise_skill_match)) {
                 $matchPct = (int) round((float) rtrim((string) $cand->wise_skill_match, '%'));
             }
-            if ($matchPct === 0 && ! empty($cand->job_id) && ! empty($candSkillsList)) {
-                $calcPct = GeneralMethod::skill_percentage($cand->job_id, $candSkillsList);
-                $matchPct = (int) round((float) rtrim($calcPct, '%'));
-            }
-            if ($matchPct === 0 && ! empty($jobSkillsList) && ! empty($candSkillsList)) {
-                $calcPct = GeneralMethod::skill_percentage_from_array($jobSkillsList, $candSkillsList);
-                $matchPct = (int) round((float) rtrim($calcPct, '%'));
-            }
-            if ($matchPct === 0) {
-                $matchPct = ! empty($cand->rating) ? min(100, max(40, (int) ($cand->rating * 20))) : 85;
-            }
-            $cand->match = $matchPct;
+            $cand->match = min(100, max(0, $matchPct));
+            $cand->rating = (int) ($candDossier['overall_rating'] ?? min(5, max(0, (int) ($cand->rating ?? 0))));
 
             // Career Summary & Recruiter Note
             $sum = trim(strip_tags(html_entity_decode((string) (@$cand->careersummary ?: @$cand->cover_letter), ENT_QUOTES, 'UTF-8')));
@@ -3994,192 +3817,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $note = trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?? ''), ENT_QUOTES, 'UTF-8')));
             $cand->recruiter_note_text = $note;
 
-            // Real Skills & Ratings for Skill Intelligence card
-            $skillsArr = [];
-            $seenSkillNames = [];
-
-            // A. Check bench candidate skills if applicable
-            $benchList = $benchSkills->get($cand->id);
-            if ($benchList && count($benchList) > 0) {
-                foreach ($benchList as $bRow) {
-                    $sn = trim((string) $bRow->skill_key);
-                    $snLower = strtolower($sn);
-                    if ($sn === '' || isset($seenSkillNames[$snLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$snLower] = true;
-
-                    $yr = (int) ($bRow->year ?? 0);
-                    $mo = (int) ($bRow->month ?? 0);
-                    if (isset($bRow->total_months) && is_numeric($bRow->total_months) && (int) $bRow->total_months > 0) {
-                        $yr = intdiv((int) $bRow->total_months, 12);
-                        $mo = (int) $bRow->total_months % 12;
-                    }
-                    $sExpParts = [];
-                    if ($yr > 0) {
-                        $sExpParts[] = $yr.' Year'.($yr > 1 ? 's' : '');
-                    }
-                    if ($mo > 0) {
-                        $sExpParts[] = $mo.' Month'.($mo > 1 ? 's' : '');
-                    }
-                    $sExpText = ! empty($sExpParts) ? implode(' ', $sExpParts) : ($yr === 0 && $mo === 0 ? '0 Years' : '--');
-
-                    $ratingVal = (int) ($bRow->rating ?? 0);
-                    if ($ratingVal <= 0 && ! empty($cand->rating)) {
-                        $ratingVal = (int) $cand->rating;
-                    }
-                    $ratingVal = min(5, max(0, $ratingVal));
-
-                    $skillsArr[] = [
-                        'name' => ucwords($sn),
-                        'expText' => $sExpText,
-                        'exp' => $yr + ($mo / 12),
-                        'rating' => $ratingVal,
-                    ];
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
-
-            // B. Map candidate evaluations from candidate_job_skill_exp
-            $cjseList = $cjseSkills->get($cand->id);
-            $cjseMap = [];
-            if ($cjseList && count($cjseList) > 0) {
-                foreach ($cjseList as $cRow) {
-                    $snLower = strtolower(trim((string) $cRow->skill_name));
-                    if ($snLower !== '') {
-                        $cjseMap[$snLower] = $cRow;
-                    }
-                }
-            }
-
-            // Prioritize active job skills
-            if (! empty($jobSkillsList) && count($skillsArr) < 7) {
-                foreach ($jobSkillsList as $jsName) {
-                    $jsTrim = trim((string) $jsName);
-                    $jsLower = strtolower($jsTrim);
-                    if ($jsLower === '' || isset($seenSkillNames[$jsLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$jsLower] = true;
-
-                    if (isset($cjseMap[$jsLower])) {
-                        $cRow = $cjseMap[$jsLower];
-                        $rawVal = trim((string) $cRow->skill_value);
-                        $sExpText = '--';
-                        $sExpNum = 0.0;
-                        if ($rawVal !== '') {
-                            if (preg_match('/(\d+)\s*(?:years?|yrs?)?\s+(\d+)\s*(?:months?|mos?)/i', $rawVal, $m)) {
-                                $y = (int) $m[1];
-                                $mo = (int) $m[2];
-                                $sExpText = $y.' Year'.($y > 1 ? 's' : '').($mo > 0 ? ' '.$mo.' Month'.($mo > 1 ? 's' : '') : '');
-                                $sExpNum = $y + ($mo / 12);
-                            } elseif (preg_match('/^(\d+(?:\.\d+)?)/', $rawVal, $m)) {
-                                $sExpNum = (float) $m[1];
-                                $sExpText = $sExpNum.' Year'.($sExpNum == 1.0 ? '' : 's');
-                            } else {
-                                $sExpText = $rawVal;
-                            }
-                        }
-
-                        $ratingVal = (int) ($cRow->rating ?? 0);
-                        if ($ratingVal <= 0 && ! empty($cand->rating)) {
-                            $ratingVal = (int) $cand->rating;
-                        }
-                        $ratingVal = min(5, max(0, $ratingVal));
-
-                        $skillsArr[] = [
-                            'name' => ucwords($jsTrim),
-                            'expText' => $sExpText,
-                            'exp' => $sExpNum,
-                            'rating' => $ratingVal,
-                        ];
-                    } else {
-                        $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
-                        $skillsArr[] = [
-                            'name' => ucwords($jsTrim),
-                            'expText' => $expStr,
-                            'exp' => (float) $totExp ?: 0,
-                            'rating' => $defaultRating,
-                        ];
-                    }
-
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
-
-            // C. If slots remain (< 7), include candidate's remaining evaluated or profile skills
-            if (count($skillsArr) < 7 && $cjseList && count($cjseList) > 0) {
-                foreach ($cjseList as $cRow) {
-                    $sn = trim((string) $cRow->skill_name);
-                    $snLower = strtolower($sn);
-                    if ($sn === '' || isset($seenSkillNames[$snLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$snLower] = true;
-
-                    $rawVal = trim((string) $cRow->skill_value);
-                    $sExpText = '--';
-                    $sExpNum = 0.0;
-                    if ($rawVal !== '') {
-                        if (preg_match('/(\d+)\s*(?:years?|yrs?)?\s+(\d+)\s*(?:months?|mos?)/i', $rawVal, $m)) {
-                            $y = (int) $m[1];
-                            $mo = (int) $m[2];
-                            $sExpText = $y.' Year'.($y > 1 ? 's' : '').($mo > 0 ? ' '.$mo.' Month'.($mo > 1 ? 's' : '') : '');
-                            $sExpNum = $y + ($mo / 12);
-                        } elseif (preg_match('/^(\d+(?:\.\d+)?)/', $rawVal, $m)) {
-                            $sExpNum = (float) $m[1];
-                            $sExpText = $sExpNum.' Year'.($sExpNum == 1.0 ? '' : 's');
-                        } else {
-                            $sExpText = $rawVal;
-                        }
-                    }
-
-                    $ratingVal = (int) ($cRow->rating ?? 0);
-                    if ($ratingVal <= 0 && ! empty($cand->rating)) {
-                        $ratingVal = (int) $cand->rating;
-                    }
-                    $ratingVal = min(5, max(0, $ratingVal));
-
-                    $skillsArr[] = [
-                        'name' => ucwords($sn),
-                        'expText' => $sExpText,
-                        'exp' => $sExpNum,
-                        'rating' => $ratingVal,
-                    ];
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
-
-            if (count($skillsArr) < 7 && ! empty($candSkillsList)) {
-                $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
-                foreach ($candSkillsList as $skName) {
-                    if (! $skName) {
-                        continue;
-                    }
-                    $snLower = strtolower($skName);
-                    if (isset($seenSkillNames[$snLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$snLower] = true;
-
-                    $skillsArr[] = [
-                        'name' => ucwords($skName),
-                        'expText' => $expStr,
-                        'exp' => (float) $totExp ?: 0,
-                        'rating' => $defaultRating,
-                    ];
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
-            $cand->parsed_skills = $skillsArr;
+            // Strict verified skills & evaluations from PrescreenDossierService
+            $cand->parsed_skills = $candDossier['skills'] ?? [];
+            $cand->skills_authoritative = true;
+            $cand->screening_qa = $candDossier['screening_qa'] ?? [];
+            $cand->dossier_fingerprint = $candDossier['fingerprint'] ?? '';
 
             // Resume presence detection & verification
             $candResume = trim((string) @$cand->resume);
@@ -4259,12 +3901,20 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $candItem->skills ?? '',
                 $candItem->resume ?? '',
                 $candItem->rating ?? '',
+                $candItem->total_exp ?? '',
+                $candItem->rel_exp ?? '',
+                $candItem->current_designation ?? '',
+                $candItem->current_company ?? '',
                 $candItem->ctc ?? '',
                 $candItem->ectc ?? '',
                 $candItem->np_id ?? '',
+                $candItem->wm ?? '',
+                $candItem->recruiter_note ?? '',
+                $candItem->updated_at ?? '',
+                $candItem->dossier_fingerprint ?? '',
             ]);
         }
-        $fingerprintComponents[] = $companyId.':'.($targetJobId ?? 0).':'.($this->job_type ?? '').':'.count($this->client_contacts_data).':'.count($this->internal_team_data);
+        $fingerprintComponents[] = $companyId.':'.($targetJobId ?? 0).':'.($this->job_type ?? '').':'.count($this->client_contacts_data).':'.count($this->internal_team_data).':'.implode(',', $jobSkillsList);
         $authoritativeFingerprint = md5(implode('|', $fingerprintComponents));
 
         $clientFingerprint = trim((string) $request->input('fingerprint', ''));
@@ -4448,107 +4098,38 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $candidates = $dbCandidates;
         }
 
-        // Fetch Skill Experience with Dragonfly L2 Multi-Tenant Caching (CQRS-01 Compliance)
-        // Intent: Prevent redundant MySQL joins on candidate_job_skill_exp during repeated warm drawer opens.
-        // Tenancy: Keys are strictly isolated by company_id (fwd_cand_skills:{companyId}:{candidateId}) with 300s TTL.
-        $appIds = collect($candidates)->pluck('id')->filter()->unique()->values()->toArray();
-        $cjseSkills = collect();
-        if (! empty($appIds)) {
-            $cachedSkills = [];
-            $missingIds = [];
-
-            foreach ($appIds as $aId) {
-                $cacheKey = "fwd_cand_skills:{$companyId}:{$aId}";
-                $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
-                if ($cached !== null) {
-                    $cachedSkills[$aId] = collect($cached)->map(fn ($r) => (object) $r);
-                } else {
-                    $missingIds[] = $aId;
-                }
-            }
-
-            if (! empty($missingIds)) {
-                $freshSkills = DB::table('candidate_job_skill_exp')
-                    ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                    ->whereIn('candidate_job_skill_exp.candidate_id', $missingIds)
-                    ->select('candidate_job_skill_exp.candidate_id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
-                    ->get()
-                    ->groupBy('candidate_id');
-
-                foreach ($missingIds as $mId) {
-                    $candSkills = $freshSkills->get($mId, collect())->toArray();
-                    \Illuminate\Support\Facades\Cache::put("fwd_cand_skills:{$companyId}:{$mId}", $candSkills, 300);
-                    $cachedSkills[$mId] = collect($candSkills)->map(fn ($r) => (object) $r);
-                }
-            }
-
-            $cjseSkills = collect($cachedSkills);
-        }
-
-        // Fetch Candidate Screening Questions & Answers with Dragonfly L2 Multi-Tenant Caching (CQRS-01 Compliance)
-        // Intent: Cache candidate screening call Q&A to eliminate database read strain during forward drawer open
-        $candidateQaMap = [];
-        if (! empty($appIds)) {
-            $cachedQa = [];
-            $missingQaIds = [];
-
-            foreach ($appIds as $aId) {
-                $cacheKey = "tenant:{$companyId}:cand_qa:{$aId}";
-                $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
-                if ($cached !== null) {
-                    $cachedQa[$aId] = $cached;
-                } else {
-                    $missingQaIds[] = $aId;
-                }
-            }
-
-            if (! empty($missingQaIds)) {
-                $freshQa = DB::table('application_additional_detail')
-                    ->whereIn('application_id', $missingQaIds)
-                    ->whereNotNull('application_detail_value')
-                    ->where('application_detail_value', '!=', '')
-                    ->select('application_id', 'job_id', 'question_id', 'job_detail_value', 'application_detail_value')
-                    ->orderBy('id', 'ASC')
-                    ->get()
-                    ->groupBy('application_id');
-
-                foreach ($missingQaIds as $mId) {
-                    $qList = $freshQa->get($mId, collect())->map(function ($r) {
-                        return [
-                            'question' => trim((string) $r->job_detail_value),
-                            'answer' => trim((string) $r->application_detail_value),
-                        ];
-                    })->toArray();
-                    \Illuminate\Support\Facades\Cache::put("tenant:{$companyId}:cand_qa:{$mId}", $qList, 300);
-                    $cachedQa[$mId] = $qList;
-                }
-            }
-
-            $candidateQaMap = $cachedQa;
-        }
+        // Resolve authoritative, job-isolated prescreen dossiers via PrescreenDossierService (zero fabrication)
+        $targetJobIdForDossier = ! empty($jobIdArr[0]) ? (int) $jobIdArr[0] : null;
+        $prescreenDossierMap = app(\App\Services\PrescreenDossierService::class)->resolveCandidateDossiers(
+            $candidates,
+            $targetJobIdForDossier,
+            $companyId,
+            $jobSkillsList
+        );
 
         $formattedCandidates = [];
         foreach ($candidates as $cand) {
             $cId = (int) $cand->id;
-            $candSkillsList = array_values(array_filter(array_map('trim', explode(',', (string) @$cand->skills))));
+            $dossier = $prescreenDossierMap[$cId] ?? null;
+            $candSkillsList = $dossier['verified_skill_names'] ?? array_values(array_filter(array_map('trim', explode(',', (string) @$cand->skills))));
 
             // Reason for Job Change (Authoritative from candidate application or recruiter note fallback)
             $rawReasonForChange = trim((string) @$cand->reason_for_job_change);
             $reasonForJobChange = $rawReasonForChange !== ''
                 ? $rawReasonForChange
-                : (trim((string) @$cand->recruiter_note) ?: 'Seeking professional career growth & new technical challenges matching core competencies.');
+                : trim((string) @$cand->recruiter_note);
 
             // Target job for this candidate dossier: prioritize active target job from request over historical profile job_id
             $targetJobIdForCand = ! empty($jobIdArr[0]) ? (int) $jobIdArr[0] : (! empty($cand->job_id) ? (int) $cand->job_id : null);
 
-            // Server-authoritative match score
-            $authoritativeMatch = $authService->computeAuthoritativeMatch(
+            // Server-authoritative match score strictly from verified candidate skills vs target job skills
+            $authoritativeMatch = (int) ($dossier['match'] ?? $authService->computeAuthoritativeMatch(
                 $cId,
                 $targetJobIdForCand,
                 $candSkillsList,
                 $jobSkillsList,
-                (int) (@$cand->rating ?: 4)
-            );
+                isset($cand->rating) ? (int) $cand->rating : 0
+            ));
 
             // Notice Period formatting
             $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
@@ -4586,99 +4167,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $locationText = ! empty($locParts) ? implode(', ', $locParts) : '--';
 
             // Experience
-            $totExp = trim((string) @$cand->total_exp, " \t\n\r\0\x0B.");
-            $expStr = ($totExp !== '' && (float) $totExp > 0) ? $totExp.' Year'.((float) $totExp == 1.0 ? '' : 's') : '--';
+            $expStr = $dossier['total_exp_display'] ?? \App\Services\PrescreenDossierService::formatExperienceDisplay(@$cand->total_exp, false);
+            $relExpStr = $dossier['rel_exp_display'] ?? \App\Services\PrescreenDossierService::formatExperienceDisplay(@$cand->rel_exp, false);
 
             // Resume detection
             $candResume = trim((string) @$cand->resume);
             $hasResume = ($candResume !== '' && $candResume !== '0' && strtolower($candResume) !== 'null');
             $resumeUrl = $hasResume ? route('service_company.cvtracker.resume', $cId) : '';
 
-            // Skill ratings for dossier - prioritizes active job skills mapped to candidate evaluations
-            $skillsArr = [];
-            $seenSkillNames = [];
-            $cjseList = $cjseSkills->get($cId);
-            $cjseMap = [];
-            if ($cjseList && count($cjseList) > 0) {
-                foreach ($cjseList as $cRow) {
-                    $snLower = strtolower(trim((string) $cRow->skill_name));
-                    if ($snLower !== '') {
-                        $cjseMap[$snLower] = $cRow;
-                    }
-                }
-            }
-
-            // A. Prioritize active job skills
-            if (! empty($jobSkillsList)) {
-                foreach ($jobSkillsList as $jsName) {
-                    $jsTrim = trim((string) $jsName);
-                    $jsLower = strtolower($jsTrim);
-                    if ($jsLower === '' || isset($seenSkillNames[$jsLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$jsLower] = true;
-
-                    if (isset($cjseMap[$jsLower])) {
-                        $cRow = $cjseMap[$jsLower];
-                        $rawVal = trim((string) $cRow->skill_value);
-                        $skillsArr[] = [
-                            'name' => ucwords($jsTrim),
-                            'expText' => $rawVal !== '' ? $rawVal : $expStr,
-                            'rating' => min(5, max(0, (int) ($cRow->rating ?? ($cand->rating ?? 4)))),
-                        ];
-                    } else {
-                        $skillsArr[] = [
-                            'name' => ucwords($jsTrim),
-                            'expText' => $expStr,
-                            'rating' => min(5, max(0, (int) (@$cand->rating ?: 4))),
-                        ];
-                    }
-
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
-
-            // B. If slots remain (< 7), include candidate's remaining evaluated skills
-            if (count($skillsArr) < 7 && $cjseList && count($cjseList) > 0) {
-                foreach ($cjseList as $cRow) {
-                    $sn = trim((string) $cRow->skill_name);
-                    $snLower = strtolower($sn);
-                    if ($sn === '' || isset($seenSkillNames[$snLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$snLower] = true;
-                    $rawVal = trim((string) $cRow->skill_value);
-                    $skillsArr[] = [
-                        'name' => ucwords($sn),
-                        'expText' => $rawVal !== '' ? $rawVal : $expStr,
-                        'rating' => min(5, max(0, (int) ($cRow->rating ?? ($cand->rating ?? 4)))),
-                    ];
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
-
-            // C. If still empty or slots remain (< 7), fill from candidate profile skills
-            if (count($skillsArr) < 7 && ! empty($candSkillsList)) {
-                foreach ($candSkillsList as $skName) {
-                    $snLower = strtolower(trim((string) $skName));
-                    if ($snLower === '' || isset($seenSkillNames[$snLower])) {
-                        continue;
-                    }
-                    $seenSkillNames[$snLower] = true;
-                    $skillsArr[] = [
-                        'name' => ucwords($skName),
-                        'expText' => $expStr,
-                        'rating' => min(5, max(0, (int) (@$cand->rating ?: 4))),
-                    ];
-                    if (count($skillsArr) >= 7) {
-                        break;
-                    }
-                }
-            }
+            $skillsArr = $dossier['skills'] ?? [];
+            $overallRating = (int) ($dossier['overall_rating'] ?? min(5, max(0, (int) (@$cand->rating ?? 0))));
 
             // Validation Badges
             $valArr = [
@@ -4712,6 +4210,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $formattedCandidates[] = [
                 'id' => $cId,
+                'job_id' => $dossier['job_id'] ?? ($targetJobIdForCand ?? 0),
                 'full_name' => $cand->full_name ?: ('Candidate #'.$cId),
                 'safe_name' => $candSafeName,
                 'designation' => $cand->current_designation ?: (@$cand->job_title ?: 'Profile'),
@@ -4725,6 +4224,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'download_url' => $resumeUrl,
                 'preview_url' => $streamProxyUrl,
                 'experience' => $expStr,
+                'total_exp' => @$cand->total_exp,
+                'rel_exp' => $relExpStr,
                 'notice' => $noticeText,
                 'is_immediate' => $isImmediate,
                 'location' => $locationText,
@@ -4733,10 +4234,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'career_summary' => trim(strip_tags(html_entity_decode((string) (@$cand->careersummary ?: @$cand->cover_letter), ENT_QUOTES, 'UTF-8'))),
                 'recruiter_note_text' => trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?? ''), ENT_QUOTES, 'UTF-8'))),
                 'reason_for_job_change' => $reasonForJobChange,
-                'screening_qa' => $candidateQaMap[$cId] ?? [],
+                'screening_qa' => $dossier['screening_qa'] ?? [],
                 'match' => $authoritativeMatch,
-                'rating' => (int) (@$cand->rating ?: 4),
+                'rating' => $overallRating,
                 'skills' => $skillsArr,
+                'skills_authoritative' => true,
+                'dossier_fingerprint' => $dossier['fingerprint'] ?? '',
                 'validation' => $valArr,
                 'report_id' => 'JR'.now()->format('Ymd').str_pad((string) $cId, 6, '0', STR_PAD_LEFT),
                 'report_date' => $todayFormatted,
@@ -4756,6 +4259,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'applicationData' => $formattedCandidates,
             'job_skills' => $jobSkillsList,
             'jobSkills' => $jobSkillsList,
+            'target_job_id' => (int) ($targetJobIdForDossier ?? 0),
             'sender_email' => $user->email,
             'sender_name' => $user->name ?: $user->email,
             'from_email' => $user->email,
@@ -7127,9 +6631,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $EMAIL_TRACKER_HR = ''; // @$assignData->name;
 
         // Build Excel table trackers for Screening Q&A, Skills Matrix & Career Insights
-        $screening_qa_tracker_html = $this->buildScreeningQATrackerHtml($applicationData);
-        $career_insights_tracker_html = $this->buildCareerInsightsTrackerHtml($applicationData);
-        $skills_experience_tracker_html = $this->buildSkillsExperienceTrackerHtml($applicationData);
+        $trackerJobId = ! empty($jobid) ? (int) $jobid : null;
+        $screening_qa_tracker_html = $this->buildScreeningQATrackerHtml($applicationData, $trackerJobId);
+        $career_insights_tracker_html = $this->buildCareerInsightsTrackerHtml($applicationData, '', $trackerJobId);
+        $skills_experience_tracker_html = $this->buildSkillsExperienceTrackerHtml($applicationData, $trackerJobId);
         $firstReasonForChange = '';
         if ($applicationData->isNotEmpty()) {
             $firstCand = $applicationData->first();
@@ -9527,7 +9032,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
      * @param  string  $companyName
      * @return string
      */
-    protected function buildScreeningQATrackerHtml($applicationData, $companyName = '')
+    protected function buildScreeningQATrackerHtml($applicationData, ?int $targetJobId = null, $companyName = '')
     {
         if (empty($applicationData) || (is_object($applicationData) && method_exists($applicationData, 'isEmpty') && $applicationData->isEmpty())) {
             return '';
@@ -9539,10 +9044,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cRole = ucwords(trim((string) (@$appData->job_title ?: @$appData->current_designation))) ?: 'Technical Specialist';
             $cCompany = trim((string) @$appData->current_company) ?: '--';
             $cDesig = ucwords(trim((string) @$appData->current_designation)) ?: '--';
-            $cExp = trim((string) @$appData->total_exp);
-            $cExpStr = ($cExp !== '' && (float) $cExp > 0) ? ($cExp.' Yrs') : '--';
-            $cRelExp = trim((string) @$appData->rel_exp);
-            $cRelExpStr = ($cRelExp !== '' && (float) $cRelExp > 0) ? ($cRelExp.' Yrs') : '--';
+            $cExpStr = \App\Services\PrescreenDossierService::formatExperienceDisplay(@$appData->total_exp, true);
+            $cRelExpStr = \App\Services\PrescreenDossierService::formatExperienceDisplay(@$appData->rel_exp, true);
 
             // Notice Period
             $np = trim((string) @$appData->np_id);
@@ -9565,11 +9068,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // CTC
             $ctcStr = (! empty($appData->ctc) ? $appData->ctc : '--').' / '.(! empty($appData->ectc) ? $appData->ectc : '--');
 
-            // Q&A from application_additional_detail
-            $qaRecords = DB::table('application_additional_detail')
+            // Q&A from application_additional_detail strictly scoped to active target job
+            $effectiveJobId = ($targetJobId !== null && $targetJobId > 0) ? $targetJobId : (int) ($appData->job_id ?? 0);
+            $qaQuery = DB::table('application_additional_detail')
                 ->where('application_id', $appData->id)
                 ->whereNotNull('application_detail_value')
-                ->where('application_detail_value', '!=', '')
+                ->where('application_detail_value', '!=', '');
+            if ($effectiveJobId > 0) {
+                $qaQuery->where('job_id', $effectiveJobId);
+            }
+            $qaRecords = $qaQuery
                 ->select('job_detail_value', 'application_detail_value')
                 ->orderBy('id', 'ASC')
                 ->get();
@@ -9581,15 +9089,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 if ($qText !== '' && $aText !== '') {
                     $qaList[] = ['q' => $qText, 'a' => $aText];
                 }
-            }
-
-            // Fallback if no questions recorded yet: provide structured telephonic screening assessment items
-            if (empty($qaList)) {
-                $qaList = [
-                    ['q' => 'Key Technical Skills & Project Scope Assessed', 'a' => 'Candidate demonstrated hands-on technical proficiency in '.(trim((string) @$appData->skills) ?: 'primary domain').' with solid design and implementation experience.'],
-                    ['q' => 'Notice Period & Availability Confirmation', 'a' => 'Confirmed current notice period is '.$noticeStr.'. Candidate is actively interviewing and available for timely joining.'],
-                    ['q' => 'Compensation & Relocation / Work Mode Alignment', 'a' => 'Compensation expectations aligned with requisition budget ('.$ctcStr.'). Willing to work in required office / hybrid setup.'],
-                ];
             }
 
             $html .= '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; max-width:980px; font-family:Calibri, Arial, sans-serif; font-size:12px; color:#1F2937; border:solid 1px #2B579A; margin:16px 0;">';
@@ -9657,22 +9156,30 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
      * @param  string  $companyName
      * @return string
      */
-    protected function buildCareerInsightsTrackerHtml($applicationData, $companyName = '')
+    protected function buildCareerInsightsTrackerHtml($applicationData, $companyName = '', ?int $targetJobId = null)
     {
         if (empty($applicationData) || (is_object($applicationData) && method_exists($applicationData, 'isEmpty') && $applicationData->isEmpty())) {
             return '';
         }
 
+        $companyId = (int) (auth()->check() ? auth()->user()->company_id : 0);
+        $dossiers = app(\App\Services\PrescreenDossierService::class)->resolveCandidateDossiers(
+            $applicationData,
+            $targetJobId,
+            $companyId
+        );
+
         $html = '';
         foreach ($applicationData as $candIdx => $appData) {
+            $cId = (int) ($appData->id ?? 0);
+            $dossier = $dossiers[$cId] ?? null;
+
             $cName = ucwords(trim((string) @$appData->full_name)) ?: ('Candidate #'.($candIdx + 1));
             $cRole = ucwords(trim((string) (@$appData->job_title ?: @$appData->current_designation))) ?: 'Technical Specialist';
             $cCompany = trim((string) @$appData->current_company) ?: '--';
             $cDesig = ucwords(trim((string) @$appData->current_designation)) ?: '--';
-            $cExp = trim((string) @$appData->total_exp);
-            $cExpStr = ($cExp !== '' && (float) $cExp > 0) ? ($cExp.' Yrs') : '--';
-            $cRelExp = trim((string) @$appData->rel_exp);
-            $cRelExpStr = ($cRelExp !== '' && (float) $cRelExp > 0) ? ($cRelExp.' Yrs') : '--';
+            $cExpStr = $dossier['total_exp_compact'] ?? \App\Services\PrescreenDossierService::formatExperienceDisplay(@$appData->total_exp, true);
+            $cRelExpStr = $dossier['rel_exp_compact'] ?? \App\Services\PrescreenDossierService::formatExperienceDisplay(@$appData->rel_exp, true);
 
             // Notice Period
             $np = trim((string) @$appData->np_id);
@@ -9695,64 +9202,27 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // Reason for Job Change
             $reasonForChange = trim((string) @$appData->reason_for_job_change);
             if (empty($reasonForChange)) {
-                $reasonForChange = trim((string) @$appData->recruiter_note) ?: 'Seeking professional career growth, new technical challenges, and role advancement aligned with skill expertise.';
+                $reasonForChange = trim((string) @$appData->recruiter_note) ?: '--';
             }
 
-            // Skills Breakdown from candidate_job_skill_exp or skills field
+            // Verified Skills Breakdown from PrescreenDossierService (zero fabrication)
             $skillsList = [];
-            $freshSkills = DB::table('candidate_job_skill_exp')
-                ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                ->where('candidate_job_skill_exp.candidate_id', $appData->id)
-                ->select('job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
-                ->get();
-
-            if ($freshSkills->isNotEmpty()) {
-                foreach ($freshSkills as $fs) {
-                    $skillsList[] = [
-                        'name' => ucwords(trim($fs->skill_name)),
-                        'exp' => trim((string) $fs->skill_value) ?: $cExpStr,
-                        'rating' => (int) ($fs->rating ?: 4),
-                    ];
-                }
-            } else {
-                $rawSkills = array_filter(array_map('trim', explode(',', (string) @$appData->skills)));
-                foreach (array_slice($rawSkills, 0, 5) as $rsk) {
-                    $skillsList[] = [
-                        'name' => ucwords($rsk),
-                        'exp' => $cExpStr,
-                        'rating' => 4,
-                    ];
-                }
+            foreach ($dossier['skills'] ?? [] as $sk) {
+                $skillsList[] = [
+                    'name' => $sk['name'],
+                    'exp' => $sk['expText'] ?? '--',
+                    'rating' => min(5, max(0, (int) ($sk['rating'] ?? 0))),
+                ];
             }
 
-            if (empty($skillsList)) {
-                $skillsList[] = ['name' => 'Primary Domain Technical Expertise', 'exp' => $cExpStr, 'rating' => 5];
-            }
-
-            // Q&A from application_additional_detail
-            $qaRecords = DB::table('application_additional_detail')
-                ->where('application_id', $appData->id)
-                ->whereNotNull('application_detail_value')
-                ->where('application_detail_value', '!=', '')
-                ->select('job_detail_value', 'application_detail_value')
-                ->orderBy('id', 'ASC')
-                ->get();
-
+            // Job-scoped screening Q&A from PrescreenDossierService
             $qaList = [];
-            foreach ($qaRecords as $qr) {
-                $qText = trim((string) $qr->job_detail_value);
-                $aText = trim((string) $qr->application_detail_value);
+            foreach ($dossier['screening_qa'] ?? [] as $qr) {
+                $qText = trim((string) ($qr['question'] ?? ''));
+                $aText = trim((string) ($qr['answer'] ?? ''));
                 if ($qText !== '' && $aText !== '') {
                     $qaList[] = ['q' => $qText, 'a' => $aText];
                 }
-            }
-
-            if (empty($qaList)) {
-                $qaList = [
-                    ['q' => 'Key Technical Skills & Project Scope Assessed', 'a' => 'Candidate demonstrated hands-on technical proficiency with solid architectural and coding foundations.'],
-                    ['q' => 'Notice Period & Availability Confirmation', 'a' => 'Confirmed current notice period is '.$noticeStr.'. Candidate is actively interviewing and available for timely joining.'],
-                    ['q' => 'Reason for Exploring New Opportunities', 'a' => e($reasonForChange)],
-                ];
             }
 
             $html .= '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; max-width:980px; font-family:Calibri, Arial, sans-serif; font-size:12px; color:#1F2937; border:solid 1px #1E3A8A; margin:16px 0;">';
@@ -9795,31 +9265,39 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $html .= '<th style="border:solid 1px #0284C7; padding:7px 10px; text-align:center; width:25%;">PROFICIENCY / RATING</th>';
             $html .= '</tr>';
 
-            foreach ($skillsList as $skIdx => $skItem) {
-                $ratingStars = str_repeat('★', min(5, max(1, $skItem['rating']))).str_repeat('☆', 5 - min(5, max(1, $skItem['rating'])));
-                $bgRow = ($skIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
-                $html .= '<tr style="background:'.$bgRow.';">';
-                $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; font-weight:bold; color:#0284C7;">'.($skIdx + 1).'</td>';
-                $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; font-weight:600; color:#111827;">'.e($skItem['name']).'</td>';
-                $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; color:#374151;">'.e($skItem['exp']).'</td>';
-                $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; color:#D97706; font-weight:bold;">'.$ratingStars.' ('.$skItem['rating'].'/5)</td>';
-                $html .= '</tr>';
+            if (empty($skillsList)) {
+                $html .= '<tr><td colspan="4" style="border:solid 1px #D1D5DB; padding:8px 10px; text-align:center; color:#6B7280;">No verified candidate skills recorded in profile.</td></tr>';
+            } else {
+                foreach ($skillsList as $skIdx => $skItem) {
+                    $rNum = min(5, max(0, (int) $skItem['rating']));
+                    $ratingStars = str_repeat('★', $rNum).str_repeat('☆', 5 - $rNum);
+                    $ratingLabel = $rNum > 0 ? ($ratingStars.' ('.$rNum.'/5)') : ($ratingStars.' (Not Rated)');
+                    $bgRow = ($skIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                    $html .= '<tr style="background:'.$bgRow.';">';
+                    $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; font-weight:bold; color:#0284C7;">'.($skIdx + 1).'</td>';
+                    $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; font-weight:600; color:#111827;">'.e($skItem['name']).'</td>';
+                    $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; color:#374151;">'.e($skItem['exp']).'</td>';
+                    $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; color:#D97706; font-weight:bold;">'.$ratingLabel.'</td>';
+                    $html .= '</tr>';
+                }
             }
 
             // Section 3: Telephonic Screening Q&A
-            $html .= '<tr style="background:#1E3A8A; color:#FFFFFF; font-weight:bold;">';
-            $html .= '<th style="border:solid 1px #1E3A8A; padding:7px 10px; text-align:center; width:6%;">#</th>';
-            $html .= '<th style="border:solid 1px #1E3A8A; padding:7px 10px; text-align:left; width:44%;">SCREENING QUESTION (ASKED DURING CALL)</th>';
-            $html .= '<th colspan="2" style="border:solid 1px #1E3A8A; padding:7px 10px; text-align:left; width:50%;">CANDIDATE\'S VERIFIED RESPONSE</th>';
-            $html .= '</tr>';
-
-            foreach ($qaList as $qIdx => $qaItem) {
-                $bgRow = ($qIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
-                $html .= '<tr style="background:'.$bgRow.';">';
-                $html .= '<td style="border:solid 1px #D1D5DB; padding:8px 10px; text-align:center; font-weight:bold; color:#1E3A8A;">'.($qIdx + 1).'</td>';
-                $html .= '<td style="border:solid 1px #D1D5DB; padding:8px 10px; font-weight:600; color:#1F2937;">'.e($qaItem['q']).'</td>';
-                $html .= '<td colspan="2" style="border:solid 1px #D1D5DB; padding:8px 10px; color:#111827; line-height:1.4;">'.e($qaItem['a']).'</td>';
+            if (! empty($qaList)) {
+                $html .= '<tr style="background:#1E3A8A; color:#FFFFFF; font-weight:bold;">';
+                $html .= '<th style="border:solid 1px #1E3A8A; padding:7px 10px; text-align:center; width:6%;">#</th>';
+                $html .= '<th style="border:solid 1px #1E3A8A; padding:7px 10px; text-align:left; width:44%;">SCREENING QUESTION (ASKED DURING CALL)</th>';
+                $html .= '<th colspan="2" style="border:solid 1px #1E3A8A; padding:7px 10px; text-align:left; width:50%;">CANDIDATE\'S VERIFIED RESPONSE</th>';
                 $html .= '</tr>';
+
+                foreach ($qaList as $qIdx => $qaItem) {
+                    $bgRow = ($qIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                    $html .= '<tr style="background:'.$bgRow.';">';
+                    $html .= '<td style="border:solid 1px #D1D5DB; padding:8px 10px; text-align:center; font-weight:bold; color:#1E3A8A;">'.($qIdx + 1).'</td>';
+                    $html .= '<td style="border:solid 1px #D1D5DB; padding:8px 10px; font-weight:600; color:#1F2937;">'.e($qaItem['q']).'</td>';
+                    $html .= '<td colspan="2" style="border:solid 1px #D1D5DB; padding:8px 10px; color:#111827; line-height:1.4;">'.e($qaItem['a']).'</td>';
+                    $html .= '</tr>';
+                }
             }
 
             $html .= '</tbody></table>';
@@ -9832,51 +9310,38 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
      * Build Microsoft Excel styled table tracker for Key Skills Experience Matrix
      *
      * Intent: Generates formatted HTML spreadsheet tracker for technical candidate skills and ratings.
-     * Tenancy & Isolation: Scoped to candidates in active request.
+     * Tenancy & Isolation: Scoped to candidates and job ID in authorized request context.
      *
      * @param  \Illuminate\Support\Collection|array  $applicationData
+     * @param  int|null  $targetJobId
      * @return string
      */
-    protected function buildSkillsExperienceTrackerHtml($applicationData)
+    protected function buildSkillsExperienceTrackerHtml($applicationData, ?int $targetJobId = null)
     {
         if (empty($applicationData) || (is_object($applicationData) && method_exists($applicationData, 'isEmpty') && $applicationData->isEmpty())) {
             return '';
         }
 
+        $companyId = (int) (auth()->check() ? auth()->user()->company_id : 0);
+        $dossiers = app(\App\Services\PrescreenDossierService::class)->resolveCandidateDossiers(
+            $applicationData,
+            $targetJobId,
+            $companyId
+        );
+
         $html = '';
         foreach ($applicationData as $candIdx => $appData) {
+            $cId = (int) ($appData->id ?? 0);
+            $dossier = $dossiers[$cId] ?? null;
             $cName = ucwords(trim((string) @$appData->full_name)) ?: ('Candidate #'.($candIdx + 1));
-            $cExp = trim((string) @$appData->total_exp);
-            $cExpStr = ($cExp !== '' && (float) $cExp > 0) ? ($cExp.' Yrs') : '--';
-
-            $freshSkills = DB::table('candidate_job_skill_exp')
-                ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                ->where('candidate_job_skill_exp.candidate_id', $appData->id)
-                ->select('job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
-                ->get();
 
             $skillsList = [];
-            if ($freshSkills->isNotEmpty()) {
-                foreach ($freshSkills as $fs) {
-                    $skillsList[] = [
-                        'name' => ucwords(trim($fs->skill_name)),
-                        'exp' => trim((string) $fs->skill_value) ?: $cExpStr,
-                        'rating' => (int) ($fs->rating ?: 4),
-                    ];
-                }
-            } else {
-                $rawSkills = array_filter(array_map('trim', explode(',', (string) @$appData->skills)));
-                foreach (array_slice($rawSkills, 0, 7) as $rsk) {
-                    $skillsList[] = [
-                        'name' => ucwords($rsk),
-                        'exp' => $cExpStr,
-                        'rating' => 4,
-                    ];
-                }
-            }
-
-            if (empty($skillsList)) {
-                $skillsList[] = ['name' => 'Primary Domain Technical Expertise', 'exp' => $cExpStr, 'rating' => 5];
+            foreach ($dossier['skills'] ?? [] as $sk) {
+                $skillsList[] = [
+                    'name' => $sk['name'],
+                    'exp' => $sk['expText'] ?? '--',
+                    'rating' => min(5, max(0, (int) ($sk['rating'] ?? 0))),
+                ];
             }
 
             $html .= '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; max-width:980px; font-family:Calibri, Arial, sans-serif; font-size:12px; color:#1F2937; border:solid 1px #0284C7; margin:14px 0;">';
@@ -9892,15 +9357,21 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $html .= '</tr>';
             $html .= '</thead><tbody>';
 
-            foreach ($skillsList as $skIdx => $skItem) {
-                $ratingStars = str_repeat('★', min(5, max(1, $skItem['rating']))).str_repeat('☆', 5 - min(5, max(1, $skItem['rating'])));
-                $bgRow = ($skIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
-                $html .= '<tr style="background:'.$bgRow.';">';
-                $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; font-weight:bold; color:#0284C7;">'.($skIdx + 1).'</td>';
-                $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; font-weight:600; color:#111827;">'.e($skItem['name']).'</td>';
-                $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; color:#374151;">'.e($skItem['exp']).'</td>';
-                $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; color:#D97706; font-weight:bold;">'.$ratingStars.' ('.$skItem['rating'].'/5)</td>';
-                $html .= '</tr>';
+            if (empty($skillsList)) {
+                $html .= '<tr><td colspan="4" style="border:solid 1px #D1D5DB; padding:8px 10px; text-align:center; color:#6B7280;">No verified candidate skills recorded in profile.</td></tr>';
+            } else {
+                foreach ($skillsList as $skIdx => $skItem) {
+                    $rNum = min(5, max(0, (int) $skItem['rating']));
+                    $ratingStars = str_repeat('★', $rNum).str_repeat('☆', 5 - $rNum);
+                    $ratingLabel = $rNum > 0 ? ($ratingStars.' ('.$rNum.'/5)') : ($ratingStars.' (Not Rated)');
+                    $bgRow = ($skIdx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                    $html .= '<tr style="background:'.$bgRow.';">';
+                    $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; font-weight:bold; color:#0284C7;">'.($skIdx + 1).'</td>';
+                    $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; font-weight:600; color:#111827;">'.e($skItem['name']).'</td>';
+                    $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; color:#374151;">'.e($skItem['exp']).'</td>';
+                    $html .= '<td style="border:solid 1px #D1D5DB; padding:6px 10px; text-align:center; color:#D97706; font-weight:bold;">'.$ratingLabel.'</td>';
+                    $html .= '</tr>';
+                }
             }
 
             $html .= '</tbody></table>';
