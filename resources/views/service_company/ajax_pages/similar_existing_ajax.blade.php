@@ -241,8 +241,8 @@
             $qualFull = mb_strtoupper((string) @$row->qualification_name);
 
             // Work mode resolution
-            $candId = (int) (@$row->candidate_id ?? @$row->id ?? 0);
-            $rawWiseId = (int) ($rowArr['id'] ?? $row->wiseId ?? $row->wise_id ?? 0);
+            $candId = (int) ($row->candidate_id ?? (is_array($rowArr) ? ($rowArr['candidate_id'] ?? 0) : ($row->candidate_id ?? 0)) ?? $row->id ?? 0);
+            $rawWiseId = (int) (is_array($rowArr) ? ($rowArr['id'] ?? 0) : ($row->id ?? $row->wiseId ?? $row->wise_id ?? 0));
             if (empty($row->wm) && isset($rowMaps['work_mode_map'][$candId])) {
                 $row->wm = $rowMaps['work_mode_map'][$candId];
             }
