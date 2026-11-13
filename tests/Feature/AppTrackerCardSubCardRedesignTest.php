@@ -378,6 +378,21 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('(US, H-1B)', $richAppHtml);
         $this->assertStringNotContainsString('View Profile', $richAppHtml);
 
+        $richClientHtml = View::make('service_company.ajax_pages.clientappdata_ajax', [
+            'data' => [$richRow],
+            'userPermissions' => ['view_job_applications'],
+            'rowMaps' => $this->baseRowMaps(),
+            'citiesMap' => [],
+            'jobid' => 117,
+            'company_id' => 1,
+        ])->render();
+
+        $this->assertStringContainsString('LinkedIn Verified', $richClientHtml);
+        $this->assertStringContainsString('https://www.linkedin.com/in/disha-gupta', $richClientHtml);
+        $this->assertStringContainsString('(US, H-1B)', $richClientHtml);
+        $this->assertStringContainsString('caf-visa-pill', $richClientHtml);
+        $this->assertStringNotContainsString('View Profile', $richClientHtml);
+
         $minimalRow = $this->makeCandidateRow([
             'current_company' => '',
             'apl_company_name' => 'Agency Only Name',
