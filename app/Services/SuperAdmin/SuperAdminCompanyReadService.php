@@ -7,7 +7,6 @@ use App\Models\Company;
 use App\Models\Country;
 use App\Models\JobCategory;
 use App\Services\ElasticService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -111,6 +110,19 @@ class SuperAdminCompanyReadService
             CompanyCircuitBreaker::recordSuccess();
 
             $totalCompanies = (int) ($response['hits']['total']['value'] ?? 0);
+
+            // Just-In-Time (JIT) Self-Healing Reconciliation (Rule 22)
+            try {
+                $dbTotal = DB::table('companies')->whereNotIn('id', $superAdminCompanyIds)->count();
+                if ($totalCompanies < $dbTotal) {
+                    $this->reconcileMissingCompaniesInElastic($superAdminCompanyIds);
+                    $response = $this->elasticService->getClient()->search($params);
+                    $totalCompanies = (int) ($response['hits']['total']['value'] ?? 0);
+                }
+            } catch (Throwable $e) {
+                Log::warning('SuperAdminCompanyReadService JIT self-healing check error: '.$e->getMessage());
+            }
+
             $activeCompanies = 0;
             $inactiveCompanies = 0;
 
@@ -140,6 +152,56 @@ class SuperAdminCompanyReadService
     }
 
     /**
+     * Just-In-Time self-healing: detects non-superadmin company records present in MySQL
+     * but absent from Elasticsearch, indexing them on-the-fly (Rule 22).
+     */
+    protected function reconcileMissingCompaniesInElastic(array $superAdminCompanyIds): void
+    {
+        try {
+            $index = config('constants.ELASTIC_COMPANIES_INDEX', defined('ELASTIC_COMPANIES_INDEX') ? ELASTIC_COMPANIES_INDEX : 'local_companies_elastic');
+            if (! $this->elasticService->indexExists($index)) {
+                return;
+            }
+
+            $esRes = $this->elasticService->getClient()->search([
+                'index' => $index,
+                'body' => [
+                    'size' => 1000,
+                    '_source' => ['id'],
+                    'query' => [
+                        'bool' => [
+                            'must_not' => ! empty($superAdminCompanyIds) ? [['terms' => ['id' => $superAdminCompanyIds]]] : [],
+                        ],
+                    ],
+                ],
+            ]);
+
+            $indexedIds = [];
+            foreach ($esRes['hits']['hits'] ?? [] as $hit) {
+                $id = (int) ($hit['_source']['id'] ?? $hit['_id'] ?? 0);
+                if ($id > 0) {
+                    $indexedIds[] = $id;
+                }
+            }
+
+            $missingIds = DB::table('companies')
+                ->whereNotIn('id', $superAdminCompanyIds)
+                ->whereNotIn('id', $indexedIds)
+                ->pluck('id');
+
+            if ($missingIds->isNotEmpty()) {
+                $indexer = app(\App\Services\ElasticCaompanyIndex::class);
+                foreach ($missingIds as $missingId) {
+                    $indexer->companyIndexElastic($missingId);
+                }
+                $this->elasticService->getClient()->indices()->refresh(['index' => $index]);
+            }
+        } catch (Throwable $e) {
+            Log::warning('SuperAdminCompanyReadService: JIT reconciliation error: '.$e->getMessage());
+        }
+    }
+
+    /**
      * Emergency fallback for KPI counts reading from MySQL under storm guard cache.
      */
     protected function fallbackDbKpiCounts(): object
@@ -157,11 +219,16 @@ class SuperAdminCompanyReadService
             $inactive = (clone $baseQuery)->where('status', 'inactive')->count();
 
             $locations = DB::table('client_location')
-                ->whereNotNull('city')
-                ->where('city', '!=', '')
-                ->distinct()
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->select(DB::raw("DISTINCT COALESCE(NULLIF(client_location.city, ''), city_list.city, client_location.address) as city_name"))
+                ->whereNotNull(DB::raw("COALESCE(NULLIF(client_location.city, ''), city_list.city, client_location.address)"))
+                ->where(DB::raw("COALESCE(NULLIF(client_location.city, ''), city_list.city, client_location.address)"), '!=', '')
                 ->limit(100)
-                ->pluck('city')
+                ->pluck('city_name')
+                ->map(fn ($c) => ucwords(trim($c)))
+                ->filter()
+                ->unique()
+                ->values()
                 ->toArray();
 
             return (object) [
@@ -301,11 +368,26 @@ class SuperAdminCompanyReadService
                     $response = $this->elasticService->getClient()->search($params);
                     CompanyCircuitBreaker::recordSuccess();
                     $total = (int) ($response['hits']['total']['value'] ?? 0);
+
+                    // JIT Self-Healing: if list query without filters has fewer hits than DB, reconcile and retry
+                    if (empty($searchTerms) && empty($status) && empty($location)) {
+                        try {
+                            $dbTotal = DB::table('companies')->whereNotIn('id', $superAdminCompanyIds)->count();
+                            if ($total < $dbTotal) {
+                                $this->reconcileMissingCompaniesInElastic($superAdminCompanyIds);
+                                $response = $this->elasticService->getClient()->search($params);
+                                $total = (int) ($response['hits']['total']['value'] ?? 0);
+                            }
+                        } catch (Throwable) {
+                        }
+                    }
+
                     $data = array_map(function ($hit) {
                         return $hit['_source'];
                     }, $response['hits']['hits']);
                 } catch (Throwable $e) {
                     CompanyCircuitBreaker::recordFailure($e);
+
                     return $this->fallbackDbCompanyList($page, $size, $status, $location, $searchTerms, $accountCompanyType);
                 }
             } else {
@@ -418,9 +500,54 @@ class SuperAdminCompanyReadService
             $data = [];
             foreach ($rows as $row) {
                 $rowArr = (array) $row;
-                $rowArr['company_coins'] = DB::table('company_coins')->where('company_id', $row->id)->get()->map(function ($c) {
-                    return (array) $c;
-                })->toArray();
+                $rowArr['company_coins'] = DB::table('company_coins')
+                    ->where('company_coins.company_id', $row->id)
+                    ->leftJoin('coin_orders', 'coin_orders.id', '=', 'company_coins.coin_order_id')
+                    ->leftJoin('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id')
+                    ->leftJoin('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
+                    ->select(
+                        'company_coins.*',
+                        'coin_package_types.title as package_name',
+                        'coin_packages.custome_pck as package_type'
+                    )
+                    ->get()
+                    ->map(function ($c) {
+                        $cArr = (array) $c;
+                        if (empty($cArr['package_name']) && ! empty($cArr['free_pack_status']) && in_array(strtolower((string) $cArr['free_pack_status']), ['yes', 'active', '1'], true)) {
+                            $cArr['package_name'] = 'Free';
+                            $cArr['package_type'] = 2;
+                        }
+
+                        return $cArr;
+                    })
+                    ->toArray();
+
+                // Populate locations_address
+                $locs = DB::table('client_location')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                    ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                    ->where('client_location.company_id', $row->id)
+                    ->select('client_location.address', 'city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                    ->get()
+                    ->map(fn ($l) => (array) $l)
+                    ->toArray();
+
+                if (empty($locs)) {
+                    $locs = DB::table('clients')
+                        ->join('client_location', 'client_location.client_id', '=', 'clients.id')
+                        ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                        ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                        ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                        ->where('clients.company_id', $row->id)
+                        ->where('clients.self_company', 1)
+                        ->select('client_location.address', 'city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                        ->get()
+                        ->map(fn ($l) => (array) $l)
+                        ->toArray();
+                }
+
+                $rowArr['locations_address'] = ! empty($locs) ? [['locations_address' => $locs]] : [];
                 $data[] = $rowArr;
             }
 

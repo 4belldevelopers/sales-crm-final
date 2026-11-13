@@ -199,9 +199,23 @@ class SuperAdminSubscriptionReadService
             $response = $this->elasticService->getClient()->search($params);
             SubscriptionCircuitBreaker::recordSuccess();
             $aggs = $response['aggregations'] ?? [];
+            $allCount = (int) ($aggs['all_count']['filtered']['doc_count'] ?? 0);
+
+            // Just-In-Time (JIT) Self-Healing Reconciliation (Rule 22)
+            try {
+                $dbTotal = DB::table('companies')->whereNotIn('id', $superAdminCompanyIds)->count();
+                if ($allCount < $dbTotal) {
+                    $this->reconcileMissingCompaniesInElastic($superAdminCompanyIds);
+                    $response = $this->elasticService->getClient()->search($params);
+                    $aggs = $response['aggregations'] ?? [];
+                    $allCount = (int) ($aggs['all_count']['filtered']['doc_count'] ?? 0);
+                }
+            } catch (Throwable $e) {
+                Log::warning('SuperAdminSubscriptionReadService JIT self-healing check error: '.$e->getMessage());
+            }
 
             return (object) [
-                'all_count' => $aggs['all_count']['filtered']['doc_count'] ?? 0,
+                'all_count' => $allCount,
                 'free_count' => $aggs['free_count']['filtered']['doc_count'] ?? 0,
                 'paid_count' => $aggs['paid_count']['filtered']['doc_count'] ?? 0,
                 'expiry_in_30_days_count' => $aggs['expiry_in_30_days_count']['filtered']['doc_count'] ?? 0,
@@ -215,6 +229,56 @@ class SuperAdminSubscriptionReadService
             ]);
 
             return $this->fallbackDbKpiCounts($coinEventType);
+        }
+    }
+
+    /**
+     * Just-In-Time self-healing: detects non-superadmin company records present in MySQL
+     * but absent from Elasticsearch, indexing them on-the-fly (Rule 22).
+     */
+    protected function reconcileMissingCompaniesInElastic(array $superAdminCompanyIds): void
+    {
+        try {
+            $index = config('constants.ELASTIC_COMPANIES_INDEX', defined('ELASTIC_COMPANIES_INDEX') ? ELASTIC_COMPANIES_INDEX : 'local_companies_elastic');
+            if (! $this->elasticService->indexExists($index)) {
+                return;
+            }
+
+            $esRes = $this->elasticService->getClient()->search([
+                'index' => $index,
+                'body' => [
+                    'size' => 1000,
+                    '_source' => ['id'],
+                    'query' => [
+                        'bool' => [
+                            'must_not' => ! empty($superAdminCompanyIds) ? [['terms' => ['id' => $superAdminCompanyIds]]] : [],
+                        ],
+                    ],
+                ],
+            ]);
+
+            $indexedIds = [];
+            foreach ($esRes['hits']['hits'] ?? [] as $hit) {
+                $id = (int) ($hit['_source']['id'] ?? $hit['_id'] ?? 0);
+                if ($id > 0) {
+                    $indexedIds[] = $id;
+                }
+            }
+
+            $missingIds = DB::table('companies')
+                ->whereNotIn('id', $superAdminCompanyIds)
+                ->whereNotIn('id', $indexedIds)
+                ->pluck('id');
+
+            if ($missingIds->isNotEmpty()) {
+                $indexer = app(\App\Services\ElasticCaompanyIndex::class);
+                foreach ($missingIds as $missingId) {
+                    $indexer->companyIndexElastic($missingId);
+                }
+                $this->elasticService->getClient()->indices()->refresh(['index' => $index]);
+            }
+        } catch (Throwable $e) {
+            Log::warning('SuperAdminSubscriptionReadService: JIT reconciliation error: '.$e->getMessage());
         }
     }
 
@@ -233,13 +297,22 @@ class SuperAdminSubscriptionReadService
                     ->join('company_coins', function ($join) use ($coinEventType) {
                         $join->on('company_coins.company_id', '=', 'companies.id')
                             ->where('company_coins.event_type', '=', $coinEventType);
-                    });
+                    })
+                    ->leftJoin('coin_orders', 'coin_orders.id', '=', 'company_coins.coin_order_id')
+                    ->leftJoin('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id');
 
                 $allCount = (clone $baseQuery)->count('companies.id');
-                $freeCount = (clone $baseQuery)->where('company_coins.package_type', 2)->count('companies.id');
+                $freeCount = (clone $baseQuery)->where(function ($q) {
+                    $q->where('coin_packages.custome_pck', 2)
+                        ->orWhere(function ($sub) {
+                            $sub->whereNull('coin_packages.custome_pck')
+                                ->whereIn('company_coins.free_pack_status', ['yes', 'active', '1']);
+                        });
+                })->count('companies.id');
+
                 $paidCount = (clone $baseQuery)->where(function ($q) {
-                    $q->whereNull('company_coins.package_type')
-                        ->orWhere('company_coins.package_type', '!=', 2);
+                    $q->whereNotNull('coin_packages.custome_pck')
+                        ->where('coin_packages.custome_pck', '!=', 2);
                 })->count('companies.id');
 
                 $expiryCount = (clone $baseQuery)
@@ -392,14 +465,44 @@ class SuperAdminSubscriptionReadService
         if (! empty($coinMustNot)) {
             $coinBool['must_not'] = $coinMustNot;
         }
-        $filters[] = [
-            'nested' => [
-                'path' => $coinPath,
-                'query' => [
-                    'bool' => $coinBool,
+
+        // When viewing "All" with no package filter and no coin constraint, do not exclude companies with empty/missing coins
+        if ((empty($mstatusId) || $mstatusId === 'all') && empty($packageFilter)) {
+            $filters[] = [
+                'bool' => [
+                    'should' => [
+                        [
+                            'nested' => [
+                                'path' => $coinPath,
+                                'query' => [
+                                    'bool' => $coinBool,
+                                ],
+                            ],
+                        ],
+                        [
+                            'bool' => [
+                                'must_not' => [
+                                    ['nested' => [
+                                        'path' => $coinPath,
+                                        'query' => ['exists' => ['field' => "$coinAlias.id"]],
+                                    ]],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'minimum_should_match' => 1,
                 ],
-            ],
-        ];
+            ];
+        } else {
+            $filters[] = [
+                'nested' => [
+                    'path' => $coinPath,
+                    'query' => [
+                        'bool' => $coinBool,
+                    ],
+                ],
+            ];
+        }
 
         // Status dropdown filter
         $statusFilter = trim((string) $request->input('status', ''));
@@ -527,7 +630,21 @@ class SuperAdminSubscriptionReadService
         try {
             $response = $this->elasticService->getClient()->search($params);
             SubscriptionCircuitBreaker::recordSuccess();
-            $total = $response['hits']['total']['value'] ?? 0;
+            $total = (int) ($response['hits']['total']['value'] ?? 0);
+
+            // JIT Self-Healing: if list query without filters has fewer hits than DB, reconcile and retry
+            if (empty($searchQuery) && empty($statusFilter) && empty($locationFilter) && (empty($mstatusId) || $mstatusId === 'all') && empty($packageFilter)) {
+                try {
+                    $dbTotal = DB::table('companies')->whereNotIn('id', $superAdminCompanyIds)->count();
+                    if ($total < $dbTotal) {
+                        $this->reconcileMissingCompaniesInElastic($superAdminCompanyIds);
+                        $response = $this->elasticService->getClient()->search($params);
+                        $total = (int) ($response['hits']['total']['value'] ?? 0);
+                    }
+                } catch (Throwable) {
+                }
+            }
+
             $data = array_map(function ($hit) {
                 return $hit['_source'];
             }, $response['hits']['hits']);
@@ -574,6 +691,9 @@ class SuperAdminSubscriptionReadService
                     $join->on('company_coins.company_id', '=', 'companies.id')
                         ->where('company_coins.event_type', '=', $coinEventType);
                 })
+                ->leftJoin('coin_orders', 'coin_orders.id', '=', 'company_coins.coin_order_id')
+                ->leftJoin('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id')
+                ->leftJoin('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
                 ->select(
                     'companies.id',
                     'companies.company_name',
@@ -581,7 +701,11 @@ class SuperAdminSubscriptionReadService
                     'companies.company_type',
                     'companies.status',
                     'companies.last_login',
-                    'companies.created_at'
+                    'companies.created_at',
+                    'company_coins.coins as current_coins',
+                    'company_coins.end_date as current_end_date',
+                    'coin_packages.custome_pck as current_package_type',
+                    'coin_package_types.title as current_package_name'
                 );
 
             $searchQuery = trim((string) $request->input('q', ''));
@@ -594,18 +718,124 @@ class SuperAdminSubscriptionReadService
                 $query->where('companies.status', '=', strtolower($statusFilter));
             }
 
+            // Location filter in fallback
+            $locationFilter = trim((string) $request->input('location', ''));
+            if (! empty($locationFilter)) {
+                $query->whereExists(function ($sub) use ($locationFilter) {
+                    $sub->select(DB::raw(1))
+                        ->from('client_location')
+                        ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                        ->whereRaw('(client_location.company_id = companies.id OR client_location.client_id IN (SELECT id FROM clients WHERE company_id = companies.id))')
+                        ->where(function ($q) use ($locationFilter) {
+                            $q->where('client_location.city', 'like', "%{$locationFilter}%")
+                                ->orWhere('city_list.city', 'like', "%{$locationFilter}%")
+                                ->orWhere('client_location.address', 'like', "%{$locationFilter}%");
+                        });
+                });
+            }
+
+            // Package filter in fallback
+            $packageFilter = trim((string) $request->input('package', ''));
+            if (! empty($packageFilter)) {
+                if (strtolower($packageFilter) === 'free') {
+                    $query->where(function ($q) {
+                        $q->where('coin_packages.custome_pck', 2)
+                            ->orWhereIn('company_coins.free_pack_status', ['yes', 'active', '1']);
+                    });
+                } elseif (strtolower($packageFilter) === 'custom') {
+                    $query->where('coin_packages.custome_pck', 1);
+                } else {
+                    $query->where('coin_package_types.title', 'like', "%{$packageFilter}%");
+                }
+            }
+
+            // KPI card filter (mstatus_id) in fallback
+            $mstatusId = $request->input('mstatus_id');
+            if ($mstatusId == 1 || $mstatusId === '1') {
+                $query->where(function ($q) {
+                    $q->where('coin_packages.custome_pck', 2)
+                        ->orWhereIn('company_coins.free_pack_status', ['yes', 'active', '1']);
+                });
+            } elseif ($mstatusId == 2 || $mstatusId === '2') {
+                $query->whereNotNull('coin_packages.custome_pck')
+                    ->where('coin_packages.custome_pck', '!=', 2);
+            } elseif ($mstatusId == 3 || $mstatusId === '3') {
+                $query->where('company_coins.end_date', '>=', DB::raw('CURDATE()'))
+                    ->where('company_coins.end_date', '<=', DB::raw('DATE_ADD(CURDATE(), INTERVAL 30 DAY)'));
+            } elseif ($mstatusId == 4 || $mstatusId === '4') {
+                $query->where('company_coins.coins', '<=', 100);
+            } elseif ($mstatusId == 5 || $mstatusId === '5') {
+                $sevenDaysAgo = Carbon::now()->subDays(7);
+                $query->where('companies.last_login', '<', $sevenDaysAgo);
+            }
+
+            // Sorting
+            $sortCol = (string) $request->input('sort', 'id');
+            $sortDir = strtolower((string) $request->input('order', 'desc')) === 'asc' ? 'asc' : 'desc';
+            if ($sortCol === 'op_coins' || $sortCol === 'sales_coins') {
+                $query->orderBy('company_coins.coins', $sortDir);
+            } elseif ($sortCol === 'created_at') {
+                $query->orderBy('companies.created_at', $sortDir);
+            } elseif ($sortCol === 'last_login') {
+                $query->orderBy('companies.last_login', $sortDir);
+            } elseif ($sortCol === 'company_name') {
+                $query->orderBy('companies.company_name', $sortDir);
+            } else {
+                $query->orderBy('companies.id', 'desc');
+            }
+
             $total = (clone $query)->count('companies.id');
-            $rows = $query->orderBy('companies.id', 'desc')
-                ->skip(($page - 1) * $size)
+            $rows = $query->skip(($page - 1) * $size)
                 ->take($size)
                 ->get();
 
             $data = [];
             foreach ($rows as $row) {
-                $coins = DB::table('company_coins')->where('company_id', $row->id)->get()->toArray();
-                $coinsArray = array_map(function ($c) {
-                    return (array) $c;
-                }, $coins);
+                $coins = DB::table('company_coins')
+                    ->where('company_coins.company_id', $row->id)
+                    ->leftJoin('coin_orders', 'coin_orders.id', '=', 'company_coins.coin_order_id')
+                    ->leftJoin('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id')
+                    ->leftJoin('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
+                    ->select(
+                        'company_coins.*',
+                        'coin_package_types.title as package_name',
+                        'coin_packages.custome_pck as package_type'
+                    )
+                    ->get()
+                    ->map(function ($c) {
+                        $cArr = (array) $c;
+                        if (empty($cArr['package_name']) && ! empty($cArr['free_pack_status']) && in_array(strtolower((string) $cArr['free_pack_status']), ['yes', 'active', '1'], true)) {
+                            $cArr['package_name'] = 'Free';
+                            $cArr['package_type'] = 2;
+                        }
+
+                        return $cArr;
+                    })
+                    ->toArray();
+
+                $locs = DB::table('client_location')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                    ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                    ->where('client_location.company_id', $row->id)
+                    ->select('client_location.address', 'city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                    ->get()
+                    ->map(fn ($l) => (array) $l)
+                    ->toArray();
+
+                if (empty($locs)) {
+                    $locs = DB::table('clients')
+                        ->join('client_location', 'client_location.client_id', '=', 'clients.id')
+                        ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                        ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                        ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                        ->where('clients.company_id', $row->id)
+                        ->where('clients.self_company', 1)
+                        ->select('client_location.address', 'city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                        ->get()
+                        ->map(fn ($l) => (array) $l)
+                        ->toArray();
+                }
 
                 $data[] = [
                     'id' => $row->id,
@@ -615,8 +845,8 @@ class SuperAdminSubscriptionReadService
                     'status' => $row->status,
                     'last_login' => $row->last_login,
                     'created_at' => $row->created_at,
-                    'company_coins' => $coinsArray,
-                    'locations_address' => [],
+                    'company_coins' => $coins,
+                    'locations_address' => ! empty($locs) ? [['locations_address' => $locs]] : [],
                     'industry' => [],
                 ];
             }

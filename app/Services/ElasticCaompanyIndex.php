@@ -35,10 +35,9 @@ class ElasticCaompanyIndex
                 ->get()
                 ->map(function ($c) {
                     $coin_orders = DB::table('coin_orders')
-                        ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_orders.coin_package_id')
-                        ->join('coin_packages', 'coin_packages.coin_package_type_id', '=', 'coin_package_types.id')
+                        ->leftJoin('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id')
+                        ->leftJoin('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
                         ->where('coin_orders.id', $c->coin_order_id)
-                        ->where('coin_orders.status', 1)
                         ->select('coin_package_types.title', 'coin_packages.custome_pck')
                         ->first();
                     $package_name = null;
@@ -46,6 +45,9 @@ class ElasticCaompanyIndex
                     if ($coin_orders) {
                         $package_name = @$coin_orders->title;
                         $package_type = @$coin_orders->custome_pck;
+                    } elseif (! empty($c->free_pack_status) && in_array(strtolower((string) $c->free_pack_status), ['yes', 'active', '1'], true)) {
+                        $package_name = 'Free';
+                        $package_type = 2;
                     }
 
                     return [
@@ -118,6 +120,38 @@ class ElasticCaompanyIndex
                     ];
                 })
                 ->toArray();
+
+            if (empty($clients) || empty($clients[0]['locations_address'])) {
+                $directLocations = DB::table('client_location')
+                    ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                    ->select('client_location.address', 'city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                    ->where('client_location.company_id', $company_id)
+                    ->get()
+                    ->map(function ($s) {
+                        return [
+                            'address' => $s->address,
+                            'city_name' => $s->city_name,
+                            'state_name' => $s->state_name,
+                            'country_name' => $s->country_name,
+                        ];
+                    })
+                    ->toArray();
+
+                if (! empty($directLocations)) {
+                    $clients = [['locations_address' => $directLocations]];
+                } elseif (! empty($company->address)) {
+                    $clients = [[
+                        'locations_address' => [[
+                            'address' => $company->address,
+                            'city_name' => $company->address,
+                            'state_name' => '',
+                            'country_name' => 'India',
+                        ]],
+                    ]];
+                }
+            }
 
             $job_metronics_skills = DB::table('job_metronics_skills')
                 ->where('company_id', $company_id)
