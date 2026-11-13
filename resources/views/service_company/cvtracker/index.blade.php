@@ -512,15 +512,16 @@
 
         /* ============================================================
            Candidate Stream & Master Card + Sub-Card Architecture
-           App Tracker Design Pattern (Rule 20 Modern Card + Sub-Card)
+           App Tracker / Similar Candidates Format (Rule 20 Modern Card + Sub-Card)
         ============================================================ */
-        .cv-cards-stream {
+        .cv-cards-stream, .simf-cand-stream {
             font-family: 'Poppins', sans-serif;
             width: 100%;
         }
-        .aptk-cand-card {
+        .simf-cand-card, .aptk-cand-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
+            border-left: 3.5px solid #cbd5e1;
             border-radius: 10px;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
             display: flex;
@@ -530,27 +531,30 @@
             transition: all 0.2s ease;
             width: 100%;
         }
-        .aptk-cand-card:hover {
+        .simf-cand-card:hover, .aptk-cand-card:hover {
             border-color: #cbd5e1;
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
         }
-        .aptk-cand-card.is-selected {
+        .simf-cand-card.is-selected, .aptk-cand-card.is-selected {
             background-color: #f8fbff !important;
             border-color: #009ef7 !important;
             box-shadow: 0 2px 10px rgba(0, 158, 247, 0.12) !important;
         }
+        .simf-cand-card.is-duplicate, .aptk-cand-card.is-duplicate {
+            border-left-color: #ef4444;
+        }
 
-        /* 6 Upper Discrete Sub-Cards Grid */
-        .aptk-cand-grid {
+        /* 6 Upper Discrete Sub-Cards Grid (15.6" screen optimized) */
+        .simf-cand-grid, .aptk-cand-grid {
             display: grid;
-            grid-template-columns: minmax(0, 2.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.3fr);
+            grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.15fr);
             gap: 8px;
             padding: 10px 12px;
             width: 100%;
             max-width: 100%;
             align-items: stretch;
         }
-        .aptk-cand-subcard {
+        .simf-cand-subcard, .aptk-cand-subcard {
             background: #f8fafc;
             border: 1px solid #edf2f7;
             border-radius: 8px;
@@ -562,8 +566,27 @@
             overflow: hidden;
             transition: border-color 0.15s ease, background-color 0.15s ease;
         }
+        .simf-cand-card:hover .simf-cand-subcard,
         .aptk-cand-card:hover .aptk-cand-subcard {
             border-color: #e2e8f0;
+        }
+
+        /* Sub-Card 4: TARGET REQ Highlighting (Rule 25 canonical tokens) */
+        .simf-cand-subcard--my-org {
+            background: #f0fdfa !important;
+            border-color: #a5f3fc !important;
+        }
+        .simf-cand-subcard--internal {
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+        }
+        .simf-cand-subcard--direct {
+            background: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+        }
+        .simf-target-type-badge {
+            white-space: nowrap !important;
+            flex-shrink: 0;
         }
         .aptk-subcard-hdr {
             display: flex;
@@ -954,7 +977,47 @@
             align-items: center;
             gap: 6px;
         }
-        .aptk-linkedin-pill {
+        .simf-resume-pill, .aptk-resume-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .simf-resume-pill.cursor-pointer, .aptk-resume-pill.cursor-pointer, .jw-open-resume-tab {
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+        .simf-resume-pill.cursor-pointer:hover, .aptk-resume-pill.cursor-pointer:hover, .jw-open-resume-tab:hover {
+            background: #dcfce7;
+            border-color: #86efac;
+            transform: translateY(-1px);
+            box-shadow: 0 1px 2px rgba(22, 163, 74, 0.15);
+        }
+        .simf-nocv-pill, .aptk-nocv-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .simf-linkedin-pill, .aptk-linkedin-pill {
             display: inline-flex;
             align-items: center;
             gap: 4px;
@@ -971,8 +1034,8 @@
             flex-shrink: 0;
             transition: all 0.15s ease;
         }
-        .aptk-linkedin-pill:hover { background: #dcfce7; color: #166534; border-color: #4ade80; }
-        .aptk-visa-pill {
+        .simf-linkedin-pill:hover, .aptk-linkedin-pill:hover { background: #dcfce7; color: #166534; border-color: #4ade80; }
+        .simf-visa-pill, .aptk-visa-pill {
             display: inline-flex;
             align-items: center;
             gap: 4px;
@@ -987,7 +1050,7 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .aptk-empty-card {
+        .simf-empty-card, .aptk-empty-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
@@ -996,21 +1059,21 @@
             font-family: 'Poppins', sans-serif;
         }
 
-        /* 15.6" screen responsive grid adjustments */
+        /* 15.6" screen responsive grid adjustments (1366x768 & 1920x1080) */
         @media (max-width: 1440px) {
-            .aptk-cand-grid {
-                grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.25fr);
+            .simf-cand-grid, .aptk-cand-grid {
+                grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.15fr);
                 gap: 6px;
                 padding: 8px 10px;
             }
-            .aptk-cand-subcard { padding: 6px 8px; }
+            .simf-cand-subcard, .aptk-cand-subcard { padding: 6px 8px; }
         }
         @media (max-width: 1180px) {
-            .aptk-cand-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+            .simf-cand-grid, .aptk-cand-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
         }
         @media (max-width: 640px) {
-            .aptk-cand-grid { grid-template-columns: 1fr; gap: 8px; }
-            .aptk-cand-bottom { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .simf-cand-grid, .aptk-cand-grid { grid-template-columns: 1fr; gap: 8px; }
+            .simf-cand-bottom, .aptk-cand-bottom { flex-direction: column; align-items: flex-start; gap: 6px; }
         }
 
         /* Selected-rows action bar */
@@ -2583,88 +2646,19 @@
                     return;
                 }
 
-                @if(config('feature.fwd_resume_v4_enabled', true))
                 if (window.ForwardResumeManager) {
-                    window.ForwardResumeManager.initRoutes({
-                        shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/shell.v4.html')) ?: '4.1' }}",
-                        engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/engine.v4.js')) ?: '4.1' }}",
-                        ckeditorJs: "{{ asset('demo/ckeditor/ckeditor.js') }}",
-                        data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
-                        recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
-                        intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
-                        send: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
-                        quickUpload: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
-                        emailTemplate: "{{ url('service_company/cvtracker/email_template') }}",
-                        legacyFallback: "{{ url('service_company/cvtracker/test_fwd_resume') }}"
-                    });
                     window.ForwardResumeManager.open(arr, jobIdArr, matchMap);
-                    return;
+                } else if (typeof window.openCandidateForwardResume === 'function') {
+                    window.openCandidateForwardResume(arr, jobIdArr);
                 }
-                @endif
-
-                // Open the Forward Resume drawer
-                var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
-                if (drawerEl && typeof KTDrawer !== 'undefined') {
-                    var drawer = KTDrawer.getInstance(drawerEl);
-                    if (drawer) { drawer.show(); }
-                }
-
-                $('#application_test_fwd_resume_body_content').html(
-                    '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
-                    '<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading Forward Resume Engine...</div>'
-                );
-
-                var id = jobIdArr[0];
-                var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}";
-                url = url.replace(':id', id);
-                var token = "{{ csrf_token() }}";
-
-                $.ajax({
-                    type: 'POST',
-                    url: url,
-                    data: {
-                        '_token': token,
-                        '_method': 'POST',
-                        'arr': arr,
-                        'jobIdArr': jobIdArr,
-                        'matchMap': matchMap
-                    },
-                    cache: false,
-                    success: function(response) {
-                        if (response.status == "success") {
-                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                                try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
-                            }
-                            $('#application_test_fwd_resume_body_content').html(response.view);
-                        } else {
-                            toastr.error(response.message || 'Failed to initialize Forward Resume');
-                        }
-                    },
-                    error: function() {
-                        toastr.error('Server error initializing Forward Resume');
-                    }
-                });
             });
 
-            $(document).on('click', '#kt_test_fwd_resume_drawer_close', function() {
+            $(document).on('click', '#kt_test_fwd_resume_drawer_close', function(e) {
+                e.preventDefault();
                 if (window.ForwardResumeManager && typeof window.ForwardResumeManager.close === 'function') {
                     window.ForwardResumeManager.close();
-                } else if (typeof window.closeTestFwdResumeDrawer === 'function') {
-                    window.closeTestFwdResumeDrawer();
-                } else {
-                    var el = document.getElementById('kt_test_fwd_resume_drawer');
-                    if (el) {
-                        if (typeof KTDrawer !== 'undefined') {
-                            var drawer = KTDrawer.getInstance(el);
-                            if (drawer) {
-                                try { drawer.hide(); } catch(e) {}
-                            } else {
-                                el.classList.remove('drawer-on');
-                            }
-                        } else {
-                            el.classList.remove('drawer-on');
-                        }
-                    }
+                } else if (typeof window.closeCandidateForwardResume === 'function') {
+                    window.closeCandidateForwardResume();
                 }
             });
 
@@ -2930,6 +2924,69 @@
                             function() {
                                 $("#kt_activitiesCopy_close").click();
                             });
+                        return false;
+                    }
+                    if (response.status == "success") {
+                        $('#application_copy_body_content').html(response.view);
+                    }
+                }
+            });
+        });
+
+        // "Add to Other Job" Button Handler (CV Tracker Candidate Card Action -> Copy Candidate Drawer)
+        $(document).on('click', '.cv-add-to-other-job', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var candId = $(this).attr('data-candidate-id') || $(this).data('candidate-id');
+            var wiseId = $(this).attr('data-wise-id') || $(this).data('wise-id');
+            var cname = $(this).attr('data-cname') || $(this).data('cname') || '';
+            var skills = $(this).attr('data-skills') || $(this).data('skills') || '';
+
+            // Uncheck other cards, select this candidate's checkbox
+            $('.chk_list_item').prop('checked', false);
+            var $card = $(this).closest('.simf-cand-card, .aptk-cand-card');
+            $card.find('.chk_list_item').prop('checked', true);
+
+            $('.simf-cand-card, .aptk-cand-card').removeClass('is-selected');
+            $card.addClass('is-selected');
+
+            // Trigger copy drawer workflow for this specific candidate
+            window._currentCandidateName = cname;
+            var candSkills = [];
+            if (skills) {
+                var sArr = String(skills).split(',');
+                sArr.forEach(function(s) {
+                    var cleaned = $.trim(s).toLowerCase();
+                    if (cleaned && candSkills.indexOf(cleaned) === -1) {
+                        candSkills.push(cleaned);
+                    }
+                });
+            }
+            window._candidateSkills = candSkills;
+
+            $('#application_copy_body_content').html('');
+            $('#kt_activitiesCopy_toggle').trigger('click');
+
+            var id = 1;
+            var url = "{{ route('service_company.cvtracker.application_copy', ':id') }}";
+            url = url.replace(':id', id);
+            var token = "{{ csrf_token() }}";
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    '_token': token,
+                    '_method': 'POST',
+                    'arr': [candId],
+                    'wiseId': [wiseId]
+                },
+                success: function(response) {
+                    if (response.status == "block") {
+                        Swal.fire("Warning", 'Bench candidate cannot be copied', "warning").then(function() {
+                            $("#kt_activitiesCopy_close").click();
+                        });
                         return false;
                     }
                     if (response.status == "success") {
