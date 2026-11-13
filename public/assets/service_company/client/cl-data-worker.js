@@ -46,6 +46,12 @@ self.onmessage = function(e) {
             pipelineRevisionUpdate(msg.clientId, msg.revision, msg.pv, msg.changed);
             break;
 
+        case 'CLEAR_CACHE':
+            self.dataset = [];
+            if (self.datasetMap) self.datasetMap.clear();
+            self.dataVersion = 0;
+            break;
+
         default:
             break;
     }

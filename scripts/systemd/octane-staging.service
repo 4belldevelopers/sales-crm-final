@@ -1,0 +1,41 @@
+[Unit]
+Description=Laravel Octane (FrankenPHP) Application Server for JERO Staging (testing.jero.works)
+After=network-online.target dragonfly.service docker.service
+Wants=network-online.target dragonfly.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/www/wwwroot/testing.jero.works
+Environment="HOME=/root"
+Environment="PATH=/www/server/php/83/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PHPRC=/www/server/php/83/etc/php-cli.ini"
+
+# Pre-flight: reclaim orphaned sockets (8010/2029) and clear stale PID state before start
+ExecStartPre=/bin/bash /usr/local/bin/jero-octane-preflight.sh /www/wwwroot/testing.jero.works 8010 2029
+
+# Launch Octane on port 8010 with 8 workers and 500 max-requests per worker (8 GB staging host)
+ExecStart=/www/server/php/83/bin/php artisan octane:start --server=frankenphp --host=127.0.0.1 --port=8010 --workers=8 --max-requests=500
+
+# Lifecycle management (cgroup guarantees clean child termination of frankenphp + workers)
+ExecStop=/www/server/php/83/bin/php artisan octane:stop
+ExecReload=/www/server/php/83/bin/php artisan octane:reload
+KillMode=control-group
+KillSignal=SIGTERM
+TimeoutStartSec=30
+TimeoutStopSec=15
+
+# Self-healing watchdog: auto-restart in 3s forever, never enter permanent failed state
+Restart=always
+RestartSec=3s
+
+# High-concurrency file descriptor limit
+LimitNOFILE=65535
+
+# Standardized logging
+StandardOutput=append:/www/wwwroot/testing.jero.works/storage/logs/octane-service.log
+StandardError=append:/www/wwwroot/testing.jero.works/storage/logs/octane-service.log
+
+[Install]
+WantedBy=multi-user.target

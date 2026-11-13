@@ -531,14 +531,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         ⚡ Phase 6: ETag & HTTP 304 Not Modified Optimization
         Pure derivation: zero Elasticsearch queries or DB reads on warm hit
         ----------------------------------------------------- */
-        if ($request->header('If-None-Match') === $etag) {
+        if (! $request->boolean('nocache') && $request->header('If-None-Match') === $etag) {
             return response('', 304)->header('ETag', $etag);
         }
 
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
+        if (! $request->boolean('nocache') && cache()->has($cacheKeySet)) {
             $cached = cache()->get($cacheKeySet);
             if (! isset($cached['clientDataCnt'])) {
                 $cached['clientDataCnt'] = $this->commonclient();
@@ -556,7 +556,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $singleFlightLock = cache()->lock($lockKey, 5);
             if (! $singleFlightLock->block(2)) {
                 $singleFlightLock = null;
-                if (cache()->has($cacheKeySet)) {
+                if (! $request->boolean('nocache') && cache()->has($cacheKeySet)) {
                     $cached = cache()->get($cacheKeySet);
                     if (! isset($cached['clientDataCnt'])) {
                         $cached['clientDataCnt'] = $this->commonclient();
@@ -565,7 +565,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     return response()->json($cached)->header('ETag', $etag);
                 }
             } else {
-                if (cache()->has($cacheKeySet)) {
+                if (! $request->boolean('nocache') && cache()->has($cacheKeySet)) {
                     $singleFlightLock->release();
                     $singleFlightLock = null;
 
@@ -2216,14 +2216,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         ⚡ Phase 6: ETag & HTTP 304 Not Modified Optimization
         Pure derivation: zero Elasticsearch queries or DB reads on warm hit
         ----------------------------------------------------- */
-        if ($request->header('If-None-Match') === $etag) {
+        if (! $request->boolean('nocache') && $request->header('If-None-Match') === $etag) {
             return response('', 304)->header('ETag', $etag);
         }
 
         /* ----------------------------
         ⚡ DragonflyDB / Redis Cache Hit
         ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
+        if (! $request->boolean('nocache') && cache()->has($cacheKeySet)) {
             $cached = cache()->get($cacheKeySet);
             if (! isset($cached['clientDataCnt'])) {
                 $cached['clientDataCnt'] = $this->commonclient();
@@ -2241,7 +2241,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $singleFlightLock = cache()->lock($lockKey, 5);
             if (! $singleFlightLock->block(2)) {
                 $singleFlightLock = null;
-                if (cache()->has($cacheKeySet)) {
+                if (! $request->boolean('nocache') && cache()->has($cacheKeySet)) {
                     $cached = cache()->get($cacheKeySet);
                     if (! isset($cached['clientDataCnt'])) {
                         $cached['clientDataCnt'] = $this->commonclient();
@@ -2250,7 +2250,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     return response()->json($cached)->header('ETag', $etag);
                 }
             } else {
-                if (cache()->has($cacheKeySet)) {
+                if (! $request->boolean('nocache') && cache()->has($cacheKeySet)) {
                     $singleFlightLock->release();
                     $singleFlightLock = null;
 
@@ -2311,7 +2311,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
             $params = [
                 'index' => ELASTIC_CLIENT_REQUEST,
-                'request_cache' => true,
                 'body' => [
                     'from' => $from,
                     'size' => $size,
@@ -2646,7 +2645,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
                 $params = [
                     'index' => ELASTIC_CLIENT_REQUEST,
-                    'request_cache' => true,
                     'body' => [
                         'from' => 0,
                         'size' => 100,
@@ -2751,13 +2749,16 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
      */
     public static function invalidateTenantClientCache(int $companyId): int
     {
-        $oldVersion = (int) cache()->get('tenant_'.$companyId.'_client_version', 1);
-        $newVersion = (int) cache()->increment('tenant_'.$companyId.'_client_version');
-        cache()->forget("ats:v2:client_counters:{$companyId}:{$oldVersion}");
-        cache()->forget("ats:v2:client_counters:{$companyId}:{$newVersion}");
-        cache()->forget("ats:v2:client_counters:{$companyId}:1");
-        cache()->forget("ats:v2:hiring_clients:{$companyId}:{$oldVersion}");
-        cache()->forget("ats:v2:hiring_clients:{$companyId}:{$newVersion}");
+        $current = (int) cache()->get('tenant_'.$companyId.'_client_version', 0);
+        $newVersion = ($current > 0) ? (int) cache()->increment('tenant_'.$companyId.'_client_version') : 2;
+        cache()->forever('tenant_'.$companyId.'_client_version', $newVersion);
+
+        // Purge tenant counter, hiring client, and projection cache keys across active version window
+        for ($v = max(1, $current - 2); $v <= $newVersion + 2; $v++) {
+            cache()->forget("ats:v2:client_counters:{$companyId}:{$v}");
+            cache()->forget("ats:v2:hiring_clients:{$companyId}:{$v}");
+            cache()->forget("ats:v2:clients_projection:{$companyId}:{$v}");
+        }
 
         return $newVersion;
     }
@@ -5544,17 +5545,23 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $tenantVersion = (int) cache()->get('tenant_'.$company_id.'_client_version', 1);
         $etag = 'W/"cl_proj_'.$company_id.'_'.$tenantVersion.'"';
 
-        if ($request->header('If-None-Match') === $etag) {
+        if (! $request->boolean('nocache') && $request->header('If-None-Match') === $etag) {
             return response(null, 304)->header('ETag', $etag);
         }
 
         $cacheKey = "ats:v2:clients_projection:{$company_id}:{$tenantVersion}";
-        $data = cache()->remember($cacheKey, 86400, function () {
+        if ($request->boolean('nocache')) {
+            cache()->forget($cacheKey);
+        }
+
+        $isNoCache = $request->boolean('nocache');
+        $fetchProjection = function () use ($isNoCache) {
             $projectionRequest = new Request([
                 'tab' => 'all',
                 'page' => 1,
                 'per_page' => 5000,
                 'size' => 5000,
+                'nocache' => $isNoCache ? 1 : 0,
             ]);
             $res = $this->all_clients_data_ajax($projectionRequest);
             $payload = $res->getData(true);
@@ -5566,7 +5573,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'data_version' => $payload['data_version'] ?? 1,
                 'clientDataCnt' => $this->commonclient(),
             ];
-        });
+        };
+
+        $data = $isNoCache ? $fetchProjection() : cache()->remember($cacheKey, 86400, $fetchProjection);
 
         return response()->json($data)
             ->header('ETag', $etag)
@@ -6513,11 +6522,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $existingInv = DB::table('staffing_company_invitation')->where('id', $invitation_id)->first();
                 $alreadyStatus = ($existingInv && (int) $existingInv->to_invitation_status === 1) ? 'Accepted' : 'Declined';
 
+                $conflictListRequest = new Request(['tab' => 'all', 'page' => 1, 'size' => 10, 'nocache' => 1]);
+                $conflictListData = $this->all_clients_data_ajax($conflictListRequest)->getData(true);
+
                 return response()->json([
                     'status' => 'conflict',
                     'code' => 'REQUEST_ALREADY_PROCESSED',
                     'message' => "This request has already been {$alreadyStatus}.",
                     'clientDataCnt' => $this->commonclient(),
+                    'clientList' => $conflictListData,
                 ], 409);
             }
 
@@ -6550,7 +6563,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                                     'updated_at' => now()->toIso8601String(),
                                 ],
                             ],
-                            'refresh' => false,
+                            'refresh' => true,
                         ]);
                     }
                 } catch (\Throwable $e) {
@@ -6567,13 +6580,21 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     GeneralMethod::cacheClean($key);
                 }
                 $newVersion = self::invalidateTenantClientCache($company_id);
+                if ($from_company) {
+                    self::invalidateTenantClientCache($from_company);
+                }
                 $clientDataCnt = $this->commonclient();
+
+                $freshRequest = new Request(['tab' => 'all', 'page' => 1, 'size' => 10, 'nocache' => 1]);
+                $freshResponse = $this->all_clients_data_ajax($freshRequest);
+                $freshData = $freshResponse->getData(true);
 
                 return Reply::dataOnly([
                     'status' => 'success',
                     'mutation_version' => $newVersion,
                     'projection_status' => 'syncing',
                     'clientDataCnt' => $clientDataCnt,
+                    'clientList' => $freshData,
                     'message' => 'Request has been Declined.',
                 ]);
             } elseif ($event_id == 1) {
@@ -6645,7 +6666,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                                     'updated_at' => now()->toIso8601String(),
                                 ],
                             ],
-                            'refresh' => false,
+                            'refresh' => true,
                         ]);
                     }
                 } catch (\Throwable $e) {
@@ -6659,7 +6680,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         if ($job) {
                             $checkMailPermision = GeneralMethod::mailPermission(20);
                             if ($checkMailPermision) {
-                                $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);
+                                $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $company_id);
                                 $mailTypeSubject = GeneralMethod::mailTypeSubject(20, 1);
                                 if ($mailTypeSubject && $detailsVendorSide) {
                                     $senderName = $currentUser ? $currentUser->name : '';
@@ -6707,13 +6728,21 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     GeneralMethod::cacheClean($key);
                 }
                 $newVersion = self::invalidateTenantClientCache($company_id);
+                if ($from_company_id) {
+                    self::invalidateTenantClientCache($from_company_id);
+                }
                 $clientDataCnt = $this->commonclient();
+
+                $freshRequest = new Request(['tab' => 'all', 'page' => 1, 'size' => 10, 'nocache' => 1]);
+                $freshResponse = $this->all_clients_data_ajax($freshRequest);
+                $freshData = $freshResponse->getData(true);
 
                 return Reply::dataOnly([
                     'status' => 'success',
                     'mutation_version' => $newVersion,
                     'projection_status' => 'syncing',
                     'clientDataCnt' => $clientDataCnt,
+                    'clientList' => $freshData,
                     'message' => 'Request has been Accepted.',
                 ]);
             }

@@ -53,28 +53,62 @@ jobs:
             chmod -R 777 storage bootstrap/cache || true
             chmod -R 755 public js designations skills demo || true
             chmod -R 644 public/js/*.js js/*.js || true
-            echo ">> Restarting queue workers & Horizon"
+            echo ">> Restarting queue workers, Horizon & Reverb"
             php artisan queue:restart || true
             php artisan horizon:terminate || true
+            supervisorctl restart laravel-reverb 2>/dev/null || php artisan reverb:restart || true
+            echo ">> Ensuring Octane systemd service is installed and Supervisor does not conflict"
+            if [ -f /etc/supervisor/conf.d/octane.conf ] || [ -f /etc/supervisor/conf.d/octane.conf.save ]; then
+              supervisorctl stop octane 2>/dev/null || true
+              rm -f /etc/supervisor/conf.d/octane.conf /etc/supervisor/conf.d/octane.conf.save
+              supervisorctl reread 2>/dev/null || true
+              supervisorctl update 2>/dev/null || true
+            fi
+            if [ -f scripts/octane-preflight.sh ]; then
+              cp scripts/octane-preflight.sh /usr/local/bin/jero-octane-preflight.sh
+              chmod +x /usr/local/bin/jero-octane-preflight.sh
+            fi
+            if [ -f scripts/systemd/octane-staging.service ]; then
+              cp scripts/systemd/octane-staging.service /etc/systemd/system/octane.service
+              systemctl daemon-reload
+              systemctl enable octane
+            fi
             echo ">> Full Octane restart"
             # FrankenPHP + OPcache: `octane:reload` only gracefully reloads worker threads,
             # which re-read the SAME cached bytecode — so new code silently never takes effect
             # (documented in the project's CLAUDE.md). A full process stop/start is required to
             # clear OPcache and actually load the freshly deployed code.
-            if systemctl is-active --quiet octane 2>/dev/null; then
+            if [ -f /etc/systemd/system/octane.service ]; then
               echo ">> Restarting supervised Octane systemd service"
-              systemctl restart --no-block octane 2>/dev/null || true
+              systemctl restart --no-block octane
             else
               echo ">> Restarting detached Octane background process"
               php artisan octane:stop || true
               sleep 3
-              # Relaunch detached (setsid+nohup) so the daemon survives this SSH session closing —
-              # start-octane.sh runs `octane:start` in the foreground. If the process manager
-              # (aaPanel) already auto-relaunched it after the stop, this second start simply fails
-              # to bind port 8000 and exits harmlessly; either way the site comes back up fresh and
-              # there is no window where it is left down without an attempt to restart it.
-              setsid nohup bash start-octane.sh > storage/logs/octane-start.log 2>&1 < /dev/null &
+              setsid nohup bash start-octane.sh 8010 > storage/logs/octane-start.log 2>&1 < /dev/null &
             fi
-            sleep 5
+            echo ">> Waiting for Octane health check on 127.0.0.1:8010"
+            OCTANE_UP=0
+            for i in $(seq 1 15); do
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8010 || echo "000")
+              if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+                OCTANE_UP=1
+                echo ">> Octane is UP on 127.0.0.1:8010 (HTTP $HTTP_CODE, attempt $i)"
+                break
+              fi
+              sleep 2
+            done
+            if [ "$OCTANE_UP" -ne 1 ]; then
+              echo ">> Octane did not respond within 30s — forcing clean recovery restart"
+              systemctl restart octane || true
+              sleep 5
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8010 || echo "000")
+              if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "301" ] && [ "$HTTP_CODE" != "302" ]; then
+                echo ">> Octane health check failed (HTTP $HTTP_CODE)"
+                tail -n 40 storage/logs/octane-service.log 2>/dev/null || true
+                systemctl status octane --no-pager 2>/dev/null || true
+                exit 1
+              fi
+            fi
             php artisan octane:status || true
             echo ">> Staging deploy complete"

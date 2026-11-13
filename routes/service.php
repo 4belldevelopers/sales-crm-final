@@ -623,6 +623,8 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::post('account/addIntStage', [ServiceCompanyAccountSettingsController::class, 'addIntStage'])->name('account.addIntStage');
                 Route::post('account/delIntStage', [ServiceCompanyAccountSettingsController::class, 'delIntStage'])->name('account.delIntStage');
                 Route::post('account/updatePriority', [ServiceCompanyAccountSettingsController::class, 'updatePriority'])->name('account.updatePriority');
+                Route::post('account/resetIntStages', [ServiceCompanyAccountSettingsController::class, 'resetIntStages'])->name('account.resetIntStages');
+                Route::post('account/resetGeneralSettings', [ServiceCompanyAccountSettingsController::class, 'resetGeneralSettings'])->name('account.resetGeneralSettings');
                 Route::post('account/storeDept', [ServiceCompanyAccountSettingsController::class, 'storeDept'])->name('account.storeDept');
                 Route::post('account/sendinvitation', [AdminAccountSettingsController::class, 'sendinvitation'])->name('account.sendinvitation');
                 Route::post('addressupdate', [ServiceCompanyAccountSettingsController::class, 'addressupdate'])->name('account.addressupdate');

@@ -1080,8 +1080,58 @@
 $(document).ready(function() {
 
     // ========================================================
-    // 1. Pagination & Filtering Engine (Country, Code, Name, Base)
+    // 0. Multi-Tab Sync, Idempotency & Draft Persistence (Non-UI)
     // ========================================================
+    var isMutationInFlight = false;
+    var syncChannel = null;
+    try {
+        if ('BroadcastChannel' in window) {
+            syncChannel = new BroadcastChannel('jero_currencies_sync');
+            syncChannel.onmessage = function(ev) {
+                if (ev && ev.data && ev.data.action) {
+                    if (ev.data.action === 'rates_synced' || ev.data.action === 'saved' || ev.data.action === 'deleted') {
+                        location.reload();
+                    }
+                }
+            };
+        }
+    } catch (e) {}
+
+    function generateIdempotencyKey() {
+        if (window.crypto && window.crypto.randomUUID) {
+            return window.crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    function saveDraftToStorage() {
+        try {
+            var draft = {
+                name: $('#form_currency_name').val(),
+                code: $('#form_currency_code').val(),
+                symbol: $('#form_currency_symbol').val(),
+                usd: $('#form_usd_based_rates').val(),
+                inr: $('#form_inr_based_rates').val(),
+                method: $('#formMethod').val(),
+                id: $('#currencyId').val()
+            };
+            sessionStorage.setItem('jero_currency_form_draft', JSON.stringify(draft));
+        } catch (e) {}
+    }
+
+    function clearDraftStorage() {
+        try {
+            sessionStorage.removeItem('jero_currency_form_draft');
+        } catch (e) {}
+    }
+
+    $('#form_currency_name, #form_currency_code, #form_currency_symbol, #form_usd_based_rates, #form_inr_based_rates').on('input', function() {
+        saveDraftToStorage();
+    });
+
     // ========================================================
     // 1. Pagination, Sorting & Multi-Filter Engine
     // ========================================================
@@ -1334,8 +1384,12 @@ $(document).ready(function() {
     // ========================================================
     $(document).on('click', '.updateCurrencyRates', function(e) {
         e.preventDefault();
+        if (isMutationInFlight) return;
+        isMutationInFlight = true;
+
         var $btn = $(this);
         var url = "{{ route('get.updateCurrencyRates') }}";
+        var idempotencyKey = generateIdempotencyKey();
 
         $btn.attr('data-kt-indicator', 'on').prop('disabled', true);
         $('#updateCurrencyRatesText').text('Updating...');
@@ -1343,12 +1397,22 @@ $(document).ready(function() {
         $.ajax({
             type: 'GET',
             url: url,
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
+            data: {
+                idempotency_key: idempotencyKey
+            },
             dataType: 'json',
             success: function(response) {
+                isMutationInFlight = false;
                 $btn.removeAttr('data-kt-indicator').prop('disabled', false);
                 $('#updateCurrencyRatesText').text('Sync Live FX');
 
                 if (response.status) {
+                    if (syncChannel) {
+                        try { syncChannel.postMessage({ action: 'rates_synced' }); } catch (e) {}
+                    }
                     Swal.fire({
                         icon: 'success',
                         title: 'Synchronized!',
@@ -1367,6 +1431,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
+                isMutationInFlight = false;
                 $btn.removeAttr('data-kt-indicator').prop('disabled', false);
                 $('#updateCurrencyRatesText').text('Sync Live FX');
 
@@ -1475,6 +1540,8 @@ $(document).ready(function() {
     // ========================================================
     $('#currencyForm').on('submit', function(e) {
         e.preventDefault();
+        if (isMutationInFlight) return;
+
         $('.is-invalid').removeClass('is-invalid');
         $('.invalid-feedback').text('');
 
@@ -1484,7 +1551,9 @@ $(document).ready(function() {
             ? "{{ route('superadmin.currency-settings.update', ':id') }}".replace(':id', id)
             : "{{ route('superadmin.currency-settings.store') }}";
 
+        var idempotencyKey = generateIdempotencyKey();
         var $btn = $('#btnSaveCurrency');
+        isMutationInFlight = true;
         $btn.attr('data-kt-indicator', 'on').prop('disabled', true);
 
         var data = {
@@ -1494,17 +1563,27 @@ $(document).ready(function() {
             currency_code: $('#form_currency_code').val().toUpperCase(),
             currency_symbol: $('#form_currency_symbol').val(),
             usd_based_rates: $('#form_usd_based_rates').val(),
-            inr_based_rates: $('#form_inr_based_rates').val()
+            inr_based_rates: $('#form_inr_based_rates').val(),
+            idempotency_key: idempotencyKey
         };
 
         $.ajax({
             url: url,
             type: 'POST',
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
             data: data,
             dataType: 'json',
             success: function(response) {
+                isMutationInFlight = false;
+                clearDraftStorage();
                 $btn.removeAttr('data-kt-indicator').prop('disabled', false);
                 $('#currencyModal').modal('hide');
+
+                if (syncChannel) {
+                    try { syncChannel.postMessage({ action: 'saved', id: id }); } catch (e) {}
+                }
 
                 Swal.fire({
                     icon: 'success',
@@ -1516,6 +1595,7 @@ $(document).ready(function() {
                 });
             },
             error: function(xhr) {
+                isMutationInFlight = false;
                 $btn.removeAttr('data-kt-indicator').prop('disabled', false);
                 if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                     var errors = xhr.responseJSON.errors;
@@ -1543,6 +1623,7 @@ $(document).ready(function() {
         $('#masterCurrencyPreset').val('').trigger('change');
         $('#formMethod').val('POST');
         $('#currencyId').val('');
+        clearDraftStorage();
         updateFormPreview();
     }
 
@@ -1564,16 +1645,27 @@ $(document).ready(function() {
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
+                if (isMutationInFlight) return;
+                isMutationInFlight = true;
+
                 var url = "{{ route('superadmin.currency-settings.destroy', ':id') }}".replace(':id', id);
                 var token = $('meta[name="csrf-token"]').attr('content');
+                var idempotencyKey = generateIdempotencyKey();
 
                 $.ajax({
                     type: 'POST',
                     url: url,
-                    data: { _token: token, _method: 'DELETE' },
+                    headers: {
+                        'X-Idempotency-Key': idempotencyKey
+                    },
+                    data: { _token: token, _method: 'DELETE', idempotency_key: idempotencyKey },
                     dataType: 'json',
                     success: function(response) {
+                        isMutationInFlight = false;
                         if (response.status == "success" || response.status === true) {
+                            if (syncChannel) {
+                                try { syncChannel.postMessage({ action: 'deleted', id: id }); } catch (e) {}
+                            }
                             Swal.fire({
                                 title: 'Deleted!',
                                 text: response.message || 'Currency has been deleted.',
@@ -1602,6 +1694,7 @@ $(document).ready(function() {
                         }
                     },
                     error: function(xhr) {
+                        isMutationInFlight = false;
                         var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to delete record.';
                         Swal.fire({
                             title: 'Error',

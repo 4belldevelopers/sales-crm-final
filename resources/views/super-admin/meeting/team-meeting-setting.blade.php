@@ -1074,7 +1074,9 @@
 /**
  * Isolated Client-First JavaScript Engine for Microsoft Teams Meeting Hub
  * Strictly scoped to prevent global namespace pollution. Zero full-page reload on status toggles.
- * Features 0ms instant in-memory table search, safe notification bridge, and dynamic KPI updates.
+ * Features Two-Tier Idempotency (X-Idempotency-Key), In-Flight Anti-Race Fencing,
+ * Cross-Tab Real-Time Sync (BroadcastChannel), Draft Persistence (SessionStorage),
+ * Active XHR Abort, and Safe Notification Bridge.
  */
 (function(window, document, $) {
     'use strict';
@@ -1090,6 +1092,55 @@
     };
 
     var CSRF_TOKEN = "{{ csrf_token() }}";
+    var DRAFT_KEY = 'superadmin:teams_meeting:manual_draft';
+
+    // RFC 4122 v4 UUID generator for Two-Tier Request Idempotency
+    function generateUUID() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    // Real-Time Cross-Tab Synchronization Bridge
+    var teamChannel = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+        try {
+            teamChannel = new BroadcastChannel('jero_team_meeting_channel');
+            teamChannel.onmessage = function(ev) {
+                var data = ev.data;
+                if (!data) return;
+                if (data.action === 'STATUS_TOGGLED') {
+                    var $row = $('#row-' + data.id);
+                    if ($row.length) {
+                        var isChecked = (parseInt(data.status, 10) === 1);
+                        $row.find('.status-toggle').prop('checked', isChecked);
+                        var $badge = $row.find('.status-badge-container');
+                        $badge.html(isChecked ? '<span class="badge-status-active">Active</span>' : '<span class="badge-status-inactive">Paused</span>');
+                    }
+                } else if (data.action === 'LINK_UPDATED') {
+                    var $row = $('#row-' + data.id);
+                    if ($row.length && data.data) {
+                        $row.find('.item-account-name').text(data.data.account_name);
+                        $row.find('.host-avatar').text(data.data.account_name.charAt(0).toUpperCase());
+                        $row.find('.item-meeting-link').text(data.data.meeting_link);
+                        $row.find('.meet-link-pill').attr('title', data.data.meeting_link);
+                        $row.find('.btn-copy-clipboard').attr('data-clipboard-text', data.data.meeting_link);
+                        $row.find('.btn-edit-link').attr('data-account', data.data.account_name).attr('data-link', data.data.meeting_link);
+                    }
+                } else if (data.action === 'LINKS_DELETED') {
+                    if (Array.isArray(data.ids)) {
+                        data.ids.forEach(function(delId) {
+                            $('#row-' + delId).fadeOut(300, function() { $(this).remove(); });
+                        });
+                    }
+                }
+            };
+        } catch (e) {}
+    }
 
     // Dynamic KPI Counter Helpers
     function adjustKpi(elementId, delta) {
@@ -1143,6 +1194,65 @@
         } else {
             alert(message);
         }
+    }
+
+    // Tab 2 Draft Autosave Persistence
+    function saveManualDraft() {
+        try {
+            var rows = [];
+            $('#manualRowsTbody .manual-input-row').each(function() {
+                var email = $(this).find('input[name="holder_email[]"]').val() || '';
+                var link = $(this).find('input[name="meeting_link[]"]').val() || '';
+                if (email.trim() !== '' || link.trim() !== '') {
+                    rows.push({ email: email, link: link });
+                }
+            });
+            if (rows.length > 0) {
+                sessionStorage.setItem(DRAFT_KEY, JSON.stringify(rows));
+            } else {
+                sessionStorage.removeItem(DRAFT_KEY);
+            }
+        } catch (e) {}
+    }
+
+    function restoreManualDraft() {
+        try {
+            var raw = sessionStorage.getItem(DRAFT_KEY);
+            if (raw) {
+                var rows = JSON.parse(raw);
+                if (Array.isArray(rows) && rows.length > 0) {
+                    $('#manualRowsTbody').empty();
+                    rows.forEach(function(r) {
+                        var rowHtml = `
+                            <tr class="manual-input-row">
+                                <td class="p-2">
+                                    <input type="text"
+                                           name="holder_email[]"
+                                           class="form-control form-control-sm input-holder-email"
+                                           placeholder="e.g. interviews@company.com"
+                                           value="${r.email || ''}"
+                                           required>
+                                </td>
+                                <td class="p-2">
+                                    <input type="text"
+                                           name="meeting_link[]"
+                                           class="form-control form-control-sm input-meeting-link"
+                                           placeholder="e.g. https://teams.microsoft.com/l/meetup-join/..."
+                                           value="${r.link || ''}"
+                                           required>
+                                </td>
+                                <td class="text-center p-2">
+                                    <button type="button" class="btn btn-icon btn-light-danger btn-sm btn-remove-row" title="Remove row">
+                                        <i class="fas fa-times fs-7"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        $('#manualRowsTbody').append(rowHtml);
+                    });
+                }
+            }
+        } catch (e) {}
     }
 
     $(document).ready(function() {
@@ -1241,7 +1351,7 @@
         }
 
         // =========================================================================
-        // 4. SEAMLESS AJAX STATUS TOGGLE (ZERO PAGE RELOAD)
+        // 4. SEAMLESS AJAX STATUS TOGGLE WITH TWO-TIER IDEMPOTENCY
         // =========================================================================
         $(document).on('change', '.status-toggle', function() {
             var $switch = $(this);
@@ -1250,6 +1360,8 @@
             var newStatus = isChecked ? 1 : 0;
             var $badgeContainer = $switch.closest('td').find('.status-badge-container');
 
+            $switch.prop('disabled', true);
+
             // Optimistic UI state update
             if (isChecked) {
                 $badgeContainer.html('<span class="badge-status-active">Active</span>');
@@ -1257,16 +1369,23 @@
                 $badgeContainer.html('<span class="badge-status-inactive">Paused</span>');
             }
 
+            var idempotencyKey = generateUUID();
+
             $.ajax({
                 type: 'POST',
                 url: ROUTES.toggleStatus,
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: {
                     _token: CSRF_TOKEN,
                     id: recordId,
-                    chkStatus: newStatus
+                    chkStatus: newStatus,
+                    idempotency_key: idempotencyKey
                 },
                 dataType: 'json',
                 success: function(res) {
+                    $switch.prop('disabled', false);
                     if (res && (res.status === 'success' || res.status === true)) {
                         notifySuccess('Status Updated', res.message || 'Status updated successfully.');
                         if (isChecked) {
@@ -1276,6 +1395,9 @@
                             adjustKpi('kpiActiveCount', -1);
                             adjustKpi('kpiInactiveCount', 1);
                         }
+                        if (teamChannel) {
+                            teamChannel.postMessage({ action: 'STATUS_TOGGLED', id: recordId, status: newStatus });
+                        }
                     } else {
                         // Rollback state on error
                         $switch.prop('checked', !isChecked);
@@ -1284,6 +1406,7 @@
                     }
                 },
                 error: function(xhr) {
+                    $switch.prop('disabled', false);
                     $switch.prop('checked', !isChecked);
                     $badgeContainer.html(isChecked ? '<span class="badge-status-inactive">Paused</span>' : '<span class="badge-status-active">Active</span>');
                     var msg = 'Failed to update status. Please try again.';
@@ -1330,7 +1453,7 @@
         });
 
         // =========================================================================
-        // 6. SINGLE & BULK DELETE ACTION WITH SWEETALERT2
+        // 6. SINGLE & BULK DELETE ACTION WITH IDEMPOTENCY & SWEETALERT2
         // =========================================================================
         // Single row delete
         $(document).on('click', '.btn-delete-single', function(e) {
@@ -1382,16 +1505,24 @@
         }
 
         function performDeleteAjax(ids) {
+            var idempotencyKey = generateUUID();
+            $btnBulkDelete.prop('disabled', true);
+
             $.ajax({
                 type: 'POST',
                 url: ROUTES.deleteLinks,
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: {
                     _token: CSRF_TOKEN,
                     table: 'team_meeting_lists',
-                    arr: ids
+                    arr: ids,
+                    idempotency_key: idempotencyKey
                 },
                 dataType: 'json',
                 success: function(res) {
+                    $btnBulkDelete.prop('disabled', false);
                     if (res && res.status) {
                         notifySuccess('Deleted', res.message || 'Records deleted successfully.');
 
@@ -1418,11 +1549,16 @@
                         adjustKpi('kpiInactiveCount', -inactiveRemoved);
 
                         updateBulkDeleteState();
+
+                        if (teamChannel) {
+                            teamChannel.postMessage({ action: 'LINKS_DELETED', ids: ids });
+                        }
                     } else {
                         notifyError('Delete Failed', res.message || 'Unable to delete records.');
                     }
                 },
                 error: function(xhr) {
+                    $btnBulkDelete.prop('disabled', false);
                     var msg = 'Failed to delete records. Server error.';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         msg = xhr.responseJSON.message;
@@ -1433,7 +1569,7 @@
         }
 
         // =========================================================================
-        // 7. INLINE EDIT MODAL ENGINE
+        // 7. INLINE EDIT MODAL ENGINE WITH IDEMPOTENCY FENCING
         // =========================================================================
         var $editModal = $('#modalEditMeetingLink');
         var $formEdit = $('#formEditMeetingLink');
@@ -1466,14 +1602,19 @@
             $submitBtn.attr('data-kt-indicator', 'on').prop('disabled', true);
 
             var postUrl = ROUTES.updateLinkBase + '/' + id;
+            var idempotencyKey = generateUUID();
 
             $.ajax({
                 type: 'POST',
                 url: postUrl,
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: {
                     _token: CSRF_TOKEN,
                     account_name: accountName,
-                    meeting_link: meetingLink
+                    meeting_link: meetingLink,
+                    idempotency_key: idempotencyKey
                 },
                 dataType: 'json',
                 success: function(res) {
@@ -1492,6 +1633,10 @@
                             $targetRow.find('.btn-copy-clipboard').attr('data-clipboard-text', meetingLink);
                             $targetRow.find('.btn-edit-link').attr('data-account', accountName).attr('data-link', meetingLink);
                         }
+
+                        if (teamChannel) {
+                            teamChannel.postMessage({ action: 'LINK_UPDATED', id: id, data: res.data });
+                        }
                     } else {
                         notifyError('Update Failed', res.message || 'Could not update record.');
                     }
@@ -1508,8 +1653,14 @@
         });
 
         // =========================================================================
-        // 8. DYNAMIC MULTI-ROW MANUAL LINK ENTRY (TAB 2)
+        // 8. DYNAMIC MULTI-ROW MANUAL LINK ENTRY & DRAFT PERSISTENCE (TAB 2)
         // =========================================================================
+        restoreManualDraft();
+
+        $(document).on('input', '#manualRowsTbody input', function() {
+            saveManualDraft();
+        });
+
         $('#btnAddRow').on('click', function() {
             var newRowHtml = `
                 <tr class="manual-input-row">
@@ -1536,15 +1687,23 @@
             `;
             $('#manualRowsTbody').append(newRowHtml);
             $('#manualRowsTbody tr:last-child input.input-holder-email').focus();
+            saveManualDraft();
         });
 
         $(document).on('click', '.btn-remove-row', function() {
             if ($('#manualRowsTbody tr').length > 1) {
                 $(this).closest('tr').remove();
+                saveManualDraft();
             } else {
                 // Clear inputs if it's the only row
                 $(this).closest('tr').find('input').val('');
+                saveManualDraft();
             }
+        });
+
+        $('#btnResetManualForm').on('click', function() {
+            $('#formManualAddLinks')[0].reset();
+            sessionStorage.removeItem(DRAFT_KEY);
         });
 
         $('#formManualAddLinks').on('submit', function(e) {
@@ -1552,16 +1711,21 @@
             var $submitBtn = $('#btnSubmitManualLinks');
             $submitBtn.attr('data-kt-indicator', 'on').prop('disabled', true);
 
-            var formData = $(this).serialize();
+            var idempotencyKey = generateUUID();
+            var formData = $(this).serialize() + '&idempotency_key=' + encodeURIComponent(idempotencyKey);
 
             $.ajax({
                 type: 'POST',
                 url: ROUTES.storeLinks,
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 data: formData,
                 dataType: 'json',
                 success: function(res) {
                     $submitBtn.removeAttr('data-kt-indicator').prop('disabled', false);
                     if (res && res.status) {
+                        sessionStorage.removeItem(DRAFT_KEY);
                         notifySuccess('Links Added', res.message || 'Links added successfully to the pool.');
                         setTimeout(function() {
                             window.location.href = res.url || window.location.href;
@@ -1666,11 +1830,16 @@
         });
 
         // =========================================================================
-        // 10. ACTIVE ALLOCATION & SCHEDULE MONITOR (TAB 3) AJAX FETCHER
+        // 10. ACTIVE ALLOCATION & SCHEDULE MONITOR (TAB 3) WITH ACTIVE XHR ABORT
         // =========================================================================
         var schedulesLoaded = false;
+        var activeScheduleXhr = null;
 
         function loadScheduleHistory() {
+            if (activeScheduleXhr && activeScheduleXhr.readyState !== 4) {
+                activeScheduleXhr.abort();
+            }
+
             var $tbody = $('#scheduleHistoryTbody');
             $tbody.html(`
                 <tr>
@@ -1681,7 +1850,7 @@
                 </tr>
             `);
 
-            $.ajax({
+            activeScheduleXhr = $.ajax({
                 type: 'GET',
                 url: ROUTES.scheduleHistory,
                 dataType: 'json',
@@ -1749,7 +1918,8 @@
                         `);
                     }
                 },
-                error: function() {
+                error: function(xhr) {
+                    if (xhr.statusText === 'abort') return;
                     $tbody.html(`
                         <tr>
                             <td colspan="6" class="text-center py-8 text-danger">

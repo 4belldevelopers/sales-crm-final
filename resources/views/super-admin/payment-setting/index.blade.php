@@ -1278,8 +1278,63 @@
             $(this).removeClass('is-invalid');
         });
 
-        // ─── 7. Diagnostic Test Connection Engine ───
+        // ─── 7. Two-Tier Idempotency, In-Flight Mutex & Multi-Tab Synchronization ───
+        var isMutationInFlight = false;
+        var isTestingInFlight = false;
+        var paymentSyncChannel = null;
+
+        function generateUUID() {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                paymentSyncChannel = new BroadcastChannel('jero_payment_settings_sync');
+                paymentSyncChannel.onmessage = function (e) {
+                    if (e && e.data && e.data.type === 'PAYMENT_SETTINGS_SAVED') {
+                        console.info('Payment settings synchronized across open tabs at ' + new Date(e.data.timestamp).toLocaleTimeString());
+                    }
+                };
+            }
+        } catch (bcEx) {
+            console.warn('BroadcastChannel not supported in this environment', bcEx);
+        }
+
+        // Draft autosave for non-sensitive configuration values
+        var draftAutosaveTimer = null;
+        function saveDraft() {
+            try {
+                var draft = {
+                    api_key: $('#api_key').val() || '',
+                    paypal_client_id: $('#paypal_client_id').val() || '',
+                    paypal_mode: $('#paypal_mode').val() || 'sandbox',
+                    razorpay_key: $('#razorpay_key').val() || '',
+                    paypal_status: $('#paypal_status').is(':checked'),
+                    stripe_status: $('#stripe_status').is(':checked'),
+                    razorpay_status: $('#razorpay_status').is(':checked')
+                };
+                sessionStorage.setItem('jero_superadmin_payment_settings_draft', JSON.stringify(draft));
+            } catch (err) {}
+        }
+
+        $(document).on('input change', '#api_key, #paypal_client_id, #paypal_mode, #razorpay_key, #paypal_status, #stripe_status, #razorpay_status', function () {
+            clearTimeout(draftAutosaveTimer);
+            draftAutosaveTimer = setTimeout(saveDraft, 400);
+        });
+
+        // ─── 8. Diagnostic Test Connection Engine ───
         $('.btn-test-gateway').on('click', function () {
+            if (isTestingInFlight) {
+                return;
+            }
+            isTestingInFlight = true;
+
             var btn = $(this);
             var gateway = btn.data('gateway');
             var originalHtml = btn.html();
@@ -1307,6 +1362,7 @@
                 type: 'POST',
                 data: payload,
                 success: function (res) {
+                    isTestingInFlight = false;
                     btn.prop('disabled', false).html(originalHtml);
 
                     Swal.fire({
@@ -1321,6 +1377,7 @@
                     });
                 },
                 error: function (xhr) {
+                    isTestingInFlight = false;
                     btn.prop('disabled', false).html(originalHtml);
                     var errMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Connection test failed. Check credentials.';
 
@@ -1334,23 +1391,51 @@
             });
         });
 
-        // ─── 8. Master AJAX Form Submission with Error Highlights ───
+        // ─── 9. Master AJAX Form Submission with Error Highlights & Idempotency ───
         $('#save-form').on('click', function () {
+            if (isMutationInFlight) {
+                return;
+            }
+            isMutationInFlight = true;
+
             var btn = $(this);
             btn.attr('data-kt-indicator', 'on').prop('disabled', true);
             $('.form-control, .form-select').removeClass('is-invalid');
+
+            var idempotencyKey = generateUUID();
+            var formData = $('#editPaymentSettings').serializeArray();
+            formData.push({ name: 'idempotency_key', value: idempotencyKey });
 
             $.ajax({
                 url: '{{ route('superadmin.payment-settings.update', $credentials->id ?? 1) }}',
                 container: '#editPaymentSettings',
                 type: 'POST',
-                data: $('#editPaymentSettings').serialize(),
+                data: $.param(formData),
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
                 success: function (response) {
+                    isMutationInFlight = false;
                     btn.removeAttr('data-kt-indicator').prop('disabled', false);
+
+                    // Clear draft upon successful save
+                    try {
+                        sessionStorage.removeItem('jero_superadmin_payment_settings_draft');
+                    } catch (err) {}
+
+                    // Broadcast synchronization event to other open tabs
+                    try {
+                        if (paymentSyncChannel) {
+                            paymentSyncChannel.postMessage({
+                                type: 'PAYMENT_SETTINGS_SAVED',
+                                timestamp: Date.now()
+                            });
+                        }
+                    } catch (err) {}
 
                     if (response.status === 'success') {
                         Swal.fire({
-                            title: 'Success!',
+                            title: response._replayed ? 'Success (Replayed)' : 'Success!',
                             html: response.message || 'Payment settings updated successfully.',
                             icon: 'success',
                             confirmButtonText: 'OK'
@@ -1365,6 +1450,7 @@
                     }
                 },
                 error: function (xhr) {
+                    isMutationInFlight = false;
                     btn.removeAttr('data-kt-indicator').prop('disabled', false);
 
                     if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
@@ -1397,7 +1483,7 @@
             });
         });
 
-        // ─── 9. Keyboard Shortcuts (Ctrl+S / Cmd+S to Save, Escape to Clear Search) ───
+        // ─── 10. Keyboard Shortcuts (Ctrl+S / Cmd+S to Save, Escape to Clear Search) ───
         $(document).on('keydown', function (e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();

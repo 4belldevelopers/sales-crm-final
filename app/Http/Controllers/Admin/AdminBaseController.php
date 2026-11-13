@@ -177,7 +177,7 @@ if($userCounter > 0)
             App::setLocale($this->global->locale);
             Carbon::setLocale($this->global->locale);
             setlocale(LC_TIME,$this->global->locale.'_'.strtoupper($this->global->locale));
-            $this->linkedinGlobal = LinkedInSetting::first();
+            $this->linkedinGlobal = LinkedInSetting::getGlobalSetting();
 
             $this->stickyNotes = StickyNote::where('user_id', $this->user->id)
                 ->orderBy('updated_at', 'desc')

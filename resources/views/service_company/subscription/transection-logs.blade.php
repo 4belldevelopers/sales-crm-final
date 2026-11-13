@@ -1,223 +1,594 @@
 @extends('layouts.service_company_layout')
 
 @push('head-script')
+{{--
+  JERO ATS — Service Company Coins Activity Ledger (Rule 20 Modern Card + Sub-Card Design System)
+  Intent: Replaces legacy flat timeline table with 3-Tier Enterprise Card + Sub-Card layout:
+          Tier 1 Pure White Toolbar Card with debounced Search + Clear,
+          Tier 2 Pure White Sub-Tabs Card (Operational Coins / Sales Coins) + Date/Type Filter Strip,
+          Tier 3 Primary Card Stream with 4 KPI Telemetry Sub-Cards + 6-Part Coin Activity Cards.
+  Tenancy & Business Logic: Preserves 100% of transectionLogData AJAX endpoint, URL query deep-linking,
+          LRU RAM cache, AbortController, Reverb real-time sync, and window.JWTransactionLog API.
+--}}
 <style>
-/* ==========================================================================
- * Transaction Log V2 — Professional Design
- * Metronic-compatible · Poppins · max 14px · clean icon-based · no 3D
- * ========================================================================== */
-
-/* ── Summary Stats Bar ────────────────────────────────────────────────────── */
-.txlog-stats-bar {
-    display: flex;
-    gap: 12px;
-    padding: 16px 20px 0;
-    flex-wrap: wrap;
+body {
+    overflow-x: hidden;
 }
-.txlog-stat-card {
-    flex: 1;
-    min-width: 160px;
-    background: #fff;
-    border: 1px solid #f1f1f4;
+
+/* ── ISOLATED ROOT SCOPE: .txact-wrapper ── */
+.txact-wrapper {
+    width: 100%;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #0f172a;
+    box-sizing: border-box;
+    padding: 4px 0 24px;
+}
+.txact-wrapper *, .txact-wrapper *::before, .txact-wrapper *::after {
+    box-sizing: border-box;
+}
+.txact-wrapper i, .txact-wrapper [class*="fa-"] {
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+    font-style: normal !important;
+    line-height: 1 !important;
+}
+.txact-wrapper .fas, .txact-wrapper .fa-solid { font-weight: 900 !important; }
+.txact-wrapper .far, .txact-wrapper .fa-regular { font-weight: 400 !important; }
+.txact-wrapper .txact-num { font-variant-numeric: tabular-nums; }
+
+/* ── SEMANTIC ICON & BADGE TOKENS ── */
+.txact-icon-blue { background: #eff6ff !important; color: #009ef7 !important; border: 1px solid #dbeafe !important; }
+.txact-icon-blue i { color: #009ef7 !important; }
+.txact-icon-emerald { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+.txact-icon-emerald i { color: #059669 !important; }
+.txact-icon-rose { background: #fef2f2 !important; color: #e11d48 !important; border: 1px solid #fecdd3 !important; }
+.txact-icon-rose i { color: #e11d48 !important; }
+.txact-icon-purple { background: #f5f3ff !important; color: #7c3aed !important; border: 1px solid #ddd6fe !important; }
+.txact-icon-purple i { color: #7c3aed !important; }
+.txact-icon-amber { background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important; }
+.txact-icon-amber i { color: #d97706 !important; }
+
+.txact-badge-blue { background: #eff6ff; color: #0284c7; border: 1px solid #bae6fd; }
+.txact-badge-blue i { color: #0284c7 !important; }
+.txact-badge-purple { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+.txact-badge-purple i { color: #6d28d9 !important; }
+.txact-badge-emerald { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+.txact-badge-emerald i { color: #059669 !important; }
+
+/* ── TIER 1: PURE WHITE TOOLBAR HEADER CARD ── */
+.txact-toolbar-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 10px;
     padding: 14px 18px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    flex-wrap: wrap;
+}
+.txact-toolbar-left {
     display: flex;
     align-items: center;
     gap: 14px;
-    transition: box-shadow 0.2s;
+    min-width: 0;
 }
-.txlog-stat-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.06); }
-.txlog-stat-icon {
-    width: 40px; height: 40px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
+.txact-toolbar-icon-box {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    color: #009ef7;
     flex-shrink: 0;
 }
-.txlog-stat-icon.ic-blue  { background: #eef6ff; }
-.txlog-stat-icon.ic-green { background: #e8fff3; }
-.txlog-stat-icon.ic-red   { background: #fff5f8; }
-.txlog-stat-icon.ic-amber { background: #fff8dd; }
-.txlog-stat-icon svg { width: 20px; height: 20px; }
-.txlog-stat-info .stat-val  { font-size: 18px; font-weight: 700; color: #181c32; line-height: 1.2; }
-.txlog-stat-info .stat-lbl  { font-size: 11px; color: #a1a5b7; font-weight: 500; margin-top: 2px; }
-
-/* ── Filter Bar ───────────────────────────────────────────────────────────── */
-.txlog-filter-bar {
+.txact-toolbar-icon-box i { color: #009ef7 !important; }
+.txact-toolbar-title-row {
     display: flex;
-    flex-wrap: nowrap;        /* keep all controls on ONE row */
-    gap: 10px;
-    align-items: flex-end;
-    padding: 12px 20px 12px;
-    background: #fafafa;
-    border-top: 1px solid #f1f1f4;
-    border-bottom: 1px solid #f1f1f4;
-    overflow-x: auto;         /* allow horizontal scroll on very small screens */
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
-.txlog-filter-group {
+.txact-toolbar-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.25;
+}
+.txact-count-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.txact-toolbar-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin: 3px 0 0 0;
+    line-height: 1.35;
+}
+.txact-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.txact-search-box {
+    position: relative;
+    width: 265px;
+    max-width: 100%;
+}
+.txact-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12.5px;
+    color: #94a3b8 !important;
+    pointer-events: none;
+}
+.txact-search-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 32px 0 34px;
+    font-size: 12px;
+    font-family: inherit;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #0f172a;
+    outline: none;
+    transition: all 0.2s ease;
+}
+.txact-search-input:focus {
+    background: #ffffff;
+    border-color: #009ef7;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+}
+.txact-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #94a3b8;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: none;
+    padding: 3px;
+}
+.txact-search-clear:hover i { color: #ef4444 !important; }
+
+.txact-btn-primary {
+    height: 36px;
+    padding: 0 15px;
+    background: #009ef7;
+    color: #ffffff !important;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2);
+    white-space: nowrap;
+}
+.txact-btn-primary:hover { background: #0086d4; box-shadow: 0 4px 8px rgba(0, 158, 247, 0.28); }
+.txact-btn-primary i { color: #ffffff !important; font-size: 12px; }
+
+.txact-btn-outline {
+    height: 36px;
+    padding: 0 13px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #334155 !important;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none !important;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.txact-btn-outline:hover {
+    background: #f8fafc;
+    border-color: #009ef7;
+    color: #009ef7 !important;
+}
+.txact-btn-outline i { color: #64748b !important; font-size: 12px; }
+.txact-btn-outline:hover i { color: #009ef7 !important; }
+
+/* ── TIER 2: PURE WHITE SUB-TABS & FILTER CARD ── */
+.txact-subtabs-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+.txact-subtabs-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.txact-subtabs-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.txact-subtab-pill {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569 !important;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    text-decoration: none !important;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.txact-subtab-pill i { color: #64748b !important; font-size: 12.5px; }
+.txact-subtab-pill:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a !important;
+}
+.txact-subtab-pill.active {
+    background: #009ef7 !important;
+    border-color: #009ef7 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2);
+}
+.txact-subtab-pill.active i { color: #ffffff !important; }
+
+.txact-header-telemetry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.txact-mini-stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #475569;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    padding: 5px 10px;
+}
+.txact-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.txact-dot-credit { background: #10b981; }
+.txact-dot-debit { background: #e11d48; }
+.txact-dot-total { background: #009ef7; }
+
+/* Filter sub-strip */
+.txact-filter-strip {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 10px;
+}
+.txact-filter-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.txact-filter-group {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
-.txlog-filter-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #7e8299;
-    letter-spacing: 0.04em;
+.txact-filter-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.45px;
     text-transform: uppercase;
 }
-.txlog-filter-bar .form-control,
-.txlog-filter-bar .form-select {
-    font-size: 13px;
-    border: 1.5px solid #e4e6ef;
-    border-radius: 7px;
-    background: #fff;
-    color: #3f4254;
-    height: 36px;
+.txact-input, .txact-select {
+    height: 34px;
     padding: 0 10px;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    outline: none;
-    box-shadow: none;
-}
-.txlog-filter-bar .form-control:focus,
-.txlog-filter-bar .form-select:focus {
-    border-color: #009ef7;
-    box-shadow: 0 0 0 3px rgba(0,158,247,.12);
-}
-.txlog-filter-bar .form-select { padding-right: 28px; }
-.txlog-search-wrap {
-    position: relative;
-}
-.txlog-search-wrap .search-ico {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #b5b5c3;
-    pointer-events: none;
-    display: flex;
-}
-.txlog-search-wrap .search-ico svg { width: 15px; height: 15px; }
-.txlog-search-wrap input { padding-left: 32px !important; }
-
-/* Month preset chips */
-.txlog-preset-chips {
-    display: flex;
-    gap: 6px;
-    align-items: flex-end;
-    padding-bottom: 0;
-}
-.txlog-chip {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 0 10px;
-    height: 28px;
-    border-radius: 20px;
-    border: 1.5px solid #e4e6ef;
-    background: #fff;
-    color: #7e8299;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    transition: all 0.15s;
-    white-space: nowrap;
-    margin-bottom: 4px;
-}
-.txlog-chip:hover, .txlog-chip.active-chip {
-    background: #009ef7;
-    border-color: #009ef7;
-    color: #fff;
-}
-
-.btn-txreset {
-    height: 36px;
-    padding: 0 16px;
     font-size: 12px;
-    font-weight: 600;
+    font-family: inherit;
+    font-weight: 500;
+    color: #0f172a;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
     border-radius: 7px;
-    border: 1.5px solid #e4e6ef;
-    background: #fff;
-    color: #7e8299;
-    cursor: pointer;
-    display: inline-flex;
+    outline: none;
+    transition: all 0.15s ease;
+}
+.txact-input:focus, .txact-select:focus {
+    background: #ffffff;
+    border-color: #009ef7;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+}
+.txact-preset-chips {
+    display: flex;
     align-items: center;
     gap: 5px;
-    transition: all 0.15s;
+    flex-wrap: wrap;
 }
-.btn-txreset:hover { border-color: #d1d5db; color: #3f4254; background: #f9f9f9; }
-.btn-txreset svg { width: 13px; height: 13px; }
-
-/* ── Shared CSS Grid — header + data rows share the same columns ─────────── */
-/*   icon | date  | event  | actor  | amount | balance                        */
-/*   36px | 20%   | 25%    | 20%    | 15%    | 20%                            */
-.txlog-grid {
-    display: grid;
-    grid-template-columns: 36px 20fr 25fr 20fr 15fr 20fr;
-    gap: 16px;
+.txlog-chip {
+    height: 34px;
+    padding: 0 11px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 7px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
     align-items: center;
-    padding: 0 20px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
 }
-.txlog-grid > div {
+.txlog-chip:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+.txlog-chip.active-chip {
+    background: #f1faff;
+    border-color: rgba(0, 158, 247, 0.4);
+    color: #009ef7;
+}
+.btn-txreset {
+    height: 34px;
+    padding: 0 13px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 7px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.btn-txreset:hover {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+.btn-txreset i { font-size: 11px; }
+
+/* ── TIER 3: PRIMARY CARDS STREAM ── */
+.txact-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.txact-primary-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.txact-primary-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+.txact-card-header {
+    padding: 13px 18px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.txact-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 11px;
     min-width: 0;
 }
-
-/* ── Table-style Timeline Header ─────────────────────────────────────────── */
-.txlog-table-header {
-    background: #fafafa;
-    border-bottom: 1.5px solid #f1f1f4;
-    padding-top: 8px;
-    padding-bottom: 8px;
-}
-.txlog-table-header .th {
-    font-size: 11px;
-    font-weight: 700;
-    color: #a1a5b7;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-.txlog-table-header .th-right { text-align: right; }
-
-/* ── Timeline Content ─────────────────────────────────────────────────────── */
-.txlog-timeline { min-height: 200px; }
-.txlog-item {
-    border-bottom: 1px solid #f4f4f4;
-    transition: background 0.12s;
-    animation: txfadeIn 0.22s ease;
-    padding-top: 12px;
-    padding-bottom: 12px;
-}
-.txlog-item:hover { background: #fafcff; }
-.txlog-item:last-child { border-bottom: none; }
-@keyframes txfadeIn {
-    from { opacity: 0; transform: translateY(3px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Icon cell */
-.txlog-ic-col { display: flex; align-items: center; }
-.txlog-row-icon {
-    width: 34px; height: 34px;
+.txact-cat-icon {
+    width: 34px;
+    height: 34px;
     border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
     flex-shrink: 0;
 }
-.txlog-row-icon svg { width: 15px; height: 15px; }
-.ri-credit { background: #e8fff3; }
-.ri-debit  { background: #fff5f8; }
-.ri-settle { background: #fff8dd; }
+.txact-card-title { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0; }
+.txact-card-desc { font-size: 11.5px; color: #64748b; margin: 2px 0 0 0; }
+.txact-card-body { padding: 14px 18px; }
 
-/* Data cells — column margins & padding */
-.tx-col-datetime { padding-right: 12px; min-width: 0; }
-.tx-col-event    { padding-right: 12px; min-width: 0; }
-.tx-col-actor    { padding-right: 12px; min-width: 0; }
-.tx-col-amount   { padding-right: 12px; text-align: left; min-width: 0; }
-.tx-col-bal      { padding-right: 12px; text-align: left; min-width: 0; }
+/* ── KPI TELEMETRY SUB-CARDS ── */
+.txact-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+.txact-kpi-subcard {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.txact-kpi-val {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+}
+.txact-kpi-val.is-credit { color: #059669; }
+.txact-kpi-val.is-debit { color: #e11d48; }
+.txact-kpi-val.is-blue { color: #009ef7; }
+.txact-kpi-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+    margin-top: 2px;
+}
+.txact-kpi-mini-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+}
 
-/* Cell typography */
-.cell-main { font-size: 13px; font-weight: 600; color: #181c32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cell-sub  { font-size: 11px; color: #b5b5c3; margin-top: 1px; white-space: nowrap; }
-.tx-col-event .cell-main { white-space: normal; overflow: visible; text-overflow: unset; word-break: break-word; }
+/* ── LIVE NOTICE BANNER ── */
+.txact-live-banner {
+    background: #eff6ff;
+    border: 1px solid #bae6fd;
+    border-radius: 9px;
+    padding: 10px 16px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.txact-live-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #009ef7;
+    display: inline-block;
+    animation: txPulse 1.5s infinite;
+}
+@keyframes txPulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.3); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+}
 
-/* Badges */
+/* ── LEDGER ENTRY CARDS + DISCRETE SUB-CARDS ── */
+.txact-entries-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 180px;
+}
+.txact-entry-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: 3.5px solid #cbd5e1;
+    border-radius: 9px;
+    padding: 12px 14px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    animation: txfadeIn 0.2s ease;
+}
+.txact-entry-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05);
+}
+.txact-entry-credit { border-left-color: #10b981; }
+.txact-entry-debit { border-left-color: #e11d48; }
+.txact-entry-settle { border-left-color: #f59e0b; }
+
+@keyframes txfadeIn {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.txact-entry-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 2.2fr) minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    align-items: stretch;
+}
+.txact-entry-subcard {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 7px;
+    padding: 9px 11px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.txact-micro-label {
+    display: block;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.45px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+.txact-cell-main {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+    word-break: break-word;
+}
+.txact-cell-sub {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.txact-cell-sub i { color: #94a3b8 !important; font-size: 10.5px; margin-right: 3px; }
+
+.txact-event-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 5px;
+    flex-wrap: wrap;
+}
 .tx-badge {
     display: inline-flex;
     align-items: center;
@@ -225,122 +596,160 @@
     font-size: 10px;
     font-weight: 700;
     padding: 2px 8px;
-    border-radius: 20px;
-    letter-spacing: 0.03em;
+    border-radius: 10px;
+    letter-spacing: 0.3px;
     text-transform: uppercase;
 }
-.tx-badge.credit { background: #e8fff3; color: #50cd89; }
-.tx-badge.debit  { background: #fff5f8; color: #f1416c; }
-.tx-badge.settle { background: #fff8dd; color: #f6c000; }
+.tx-badge.credit { background: #dcfce7; color: #15803d; }
+.tx-badge.debit { background: #ffe4e6; color: #be123c; }
+.tx-badge.settle { background: #fef3c7; color: #b45309; }
 .tx-badge .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
-/* Amount coloring */
-.amt-credit { color: #50cd89; font-size: 13px; font-weight: 700; }
-.amt-debit  { color: #f1416c; font-size: 13px; font-weight: 700; }
-.bal-num    { font-size: 13px; font-weight: 700; color: #009ef7; }
+.txact-delta-credit { font-size: 14px; font-weight: 800; color: #059669; }
+.txact-delta-debit { font-size: 14px; font-weight: 800; color: #e11d48; }
+.txact-bal-val { font-size: 14px; font-weight: 800; color: #009ef7; }
 
-/* ── Pagination ───────────────────────────────────────────────────────────── */
-.txlog-pagination {
+.txact-entry-bottom {
+    margin-top: 9px;
+    padding-top: 8px;
+    border-top: 1px solid #f1f5f9;
     display: flex;
-    gap: 4px;
-    justify-content: flex-end;
     align-items: center;
-    padding: 14px 20px;
-    border-top: 1px solid #f1f1f4;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: #64748b;
+}
+.txact-bottom-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     flex-wrap: wrap;
 }
-.txlog-pagination .pg-info {
-    flex: 1;
-    font-size: 12px;
-    color: #a1a5b7;
-    font-weight: 500;
-    min-width: 180px;
-}
-.txlog-pagination .page-link {
-    padding: 0 10px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #5e6278;
-    border: 1.5px solid transparent;
-    border-radius: 7px;
-    cursor: pointer;
-    text-decoration: none;
-    background: transparent;
-    transition: all 0.15s;
+.txact-bottom-left i { color: #94a3b8 !important; font-size: 11px; margin-right: 3px; }
+.txact-bottom-dot { color: #cbd5e1; }
+.txact-verified-tag {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    min-width: 32px;
-    height: 32px;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #475569;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 2px 8px;
 }
-.txlog-pagination .page-link:hover { background: #f1f3f4; color: #181c32; }
-.txlog-pagination .page-link.active { background: #009ef7; color: #fff; border-color: #009ef7; }
-.txlog-pagination .page-link.disabled { opacity: 0.35; pointer-events: none; }
+.txact-verified-tag i { color: #10b981 !important; font-size: 10.5px; }
 
-/* ── Loading & Empty ──────────────────────────────────────────────────────── */
+/* ── LOADING, EMPTY & PAGINATION ── */
 .txlog-loading {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 50px 0;
+    padding: 46px 0;
     gap: 10px;
-    color: #a1a5b7;
+    color: #64748b;
     font-size: 13px;
+    font-weight: 500;
 }
 .txlog-spinner {
-    width: 22px; height: 22px;
-    border: 2.5px solid #e4e6ef;
+    width: 22px;
+    height: 22px;
+    border: 2.5px solid #e2e8f0;
     border-top-color: #009ef7;
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes txPulse {
-    0% { transform: scale(0.95); opacity: 0.7; }
-    50% { transform: scale(1.3); opacity: 1; }
-    100% { transform: scale(0.95); opacity: 0.7; }
-}
 
-.txlog-empty {
+.txact-empty-subcard {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 9px;
+    padding: 40px 20px;
     text-align: center;
-    padding: 55px 20px;
-    color: #b5b5c3;
-    font-size: 13px;
 }
-.txlog-empty .empty-ico {
-    width: 52px; height: 52px;
-    background: #f4f4f4;
-    border-radius: 50%;
+.txact-empty-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #009ef7;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 12px;
+    font-size: 19px;
+    margin-bottom: 10px;
 }
-.txlog-empty .empty-ico svg { width: 24px; height: 24px; opacity: 0.4; }
-.txlog-empty p { margin: 0; font-weight: 500; }
-.txlog-empty .empty-sub { font-size: 11px; color: #d1d1d1; margin-top: 4px; }
+.txact-empty-icon i { color: #009ef7 !important; }
+.txact-empty-title { font-size: 14px; font-weight: 700; color: #0f172a; }
+.txact-empty-desc { font-size: 12px; color: #64748b; margin-top: 4px; }
+
+.txlog-pagination {
+    display: flex;
+    gap: 6px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-top: 1px solid #f1f5f9;
+    flex-wrap: wrap;
+}
+.txlog-pagination .pg-info {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+}
+.txlog-pagination .page-link {
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    background: #ffffff;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 30px;
+}
+.txlog-pagination .page-link:hover { background: #eff6ff; border-color: #bae6fd; color: #009ef7; }
+.txlog-pagination .page-link.active { background: #009ef7; color: #ffffff; border-color: #009ef7; }
+.txlog-pagination .page-link.disabled { opacity: 0.4; pointer-events: none; background: #f8fafc; }
+
+/* ── RESPONSIVE BREAKPOINTS (15.6" 1366x768 & 1920x1080 + MOBILE) ── */
+@media (max-width: 1366px) {
+    .txact-kpi-val { font-size: 15.5px; }
+}
+@media (max-width: 1199px) {
+    .txact-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .txact-entry-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+    .txact-toolbar-card { padding: 12px 14px; }
+    .txact-toolbar-right { width: 100%; }
+    .txact-search-box { width: 100%; }
+    .txact-kpi-grid, .txact-entry-grid { grid-template-columns: minmax(0, 1fr); }
+}
 </style>
 @endpush
 
 @section('content')
 
-{{-- Toolbar --}}
+{{-- Metronic Toolbar --}}
 <div class="toolbar" id="kt_toolbar">
     <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack px-5">
-        <div class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
+        <div class="page-title d-flex align-items-center flex-wrap me-3 mb-2 mb-lg-0">
             <div class="d-flex flex-column">
                 <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
-                    <span class="text-gray-800 mb-1">Coins Activity</span>
+                    <span class="text-gray-800 mb-0">Coins Activity</span>
                 </h5>
-                <span class="text-gray-500 fs-7">Track your operational and sales coin transactions</span>
             </div>
-        </div>
-        <div>
-            <a href="{{ url('service_company/subscribe') }}"
-               class="btn btn-sm btn-light-primary fw-bold fs-7">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                View Coin Usage Table
-            </a>
         </div>
     </div>
 </div>
@@ -348,141 +757,215 @@
 {{-- Main Content --}}
 <div class="content d-flex flex-column flex-column-fluid pt-2 pb-0" id="kt_content">
     <div class="post d-flex flex-column-fluid" id="kt_post">
-        <div id="kt_content_container" class="container-fluid px-3">
-            <div class="card shadow-sm">
+        <div id="kt_content_container" class="container-fluid px-4">
+            <div class="txact-wrapper coins-activity-card-system">
 
-                {{-- Tab Navigation --}}
-                <div class="card-header card-header-tabs-line border-bottom-0 pt-0 px-5">
-                    <div class="card-toolbar">
-                        <ul class="nav nav-tabs nav-tabs-line nav-tabs-bold nav-tabs-line-3x" role="tablist">
-                            <li class="nav-item me-3">
-                                <a class="nav-link txlog-tab active" href="#" data-pagetype="operationaltab" id="tab-operational">
-                                    <span class="nav-text fw-bold">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1" style="vertical-align:-1px"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-                                        Operational Coins
-                                    </span>
-                                </a>
-                            </li>
-                            <li class="nav-item me-3">
-                                <a class="nav-link txlog-tab" href="#" data-pagetype="salestab" id="tab-sales">
-                                    <span class="nav-text fw-bold">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1" style="vertical-align:-1px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                                        Sales Coins
-                                    </span>
-                                </a>
-                            </li>
-                        </ul>
+                {{-- ══════════════════════════════════════════════════════════════
+                     TIER 1: PURE WHITE ENTERPRISE TOOLBAR HEADER CARD
+                     ══════════════════════════════════════════════════════════════ --}}
+                <div class="txact-toolbar-card tier1-toolbar-card">
+                    <div class="txact-toolbar-left">
+                        <div class="txact-toolbar-icon-box">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div>
+                            <div class="txact-toolbar-title-row">
+                                <h1 class="txact-toolbar-title">Coins Activity Ledger</h1>
+                                <span class="txact-count-pill txact-badge-purple" id="activeLedgerBadge">
+                                    <i class="fas fa-cogs"></i> Operational Coins
+                                </span>
+                            </div>
+                            <p class="txact-toolbar-sub">Track operational and sales coin credits, debits, settlements, and running wallet balances in real time.</p>
+                        </div>
                     </div>
-                    {{-- Summary Stats (right side of header) --}}
-                    <div class="card-toolbar ms-auto" id="txlog-header-stats" style="gap:12px;display:flex;align-items:center;padding: 10px 0;">
-                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded" style="background:#f9fafb;border:1px solid #f1f1f4;">
-                            <span style="width:8px;height:8px;border-radius:50%;background:#50cd89;display:inline-block;"></span>
-                            <span class="fs-7 fw-bold text-gray-600">Credit: <span id="stat-credit" class="text-success">—</span></span>
+
+                    <div class="txact-toolbar-right">
+                        <div class="txact-search-box">
+                            <i class="fas fa-search txact-search-icon"></i>
+                            <input type="text" id="txlog-search" class="txact-search-input"
+                                placeholder="Search event or user name..." autocomplete="off">
+                            <button type="button" id="txlog-search-clear" class="txact-search-clear" title="Clear search">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
-                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded" style="background:#f9fafb;border:1px solid #f1f1f4;">
-                            <span style="width:8px;height:8px;border-radius:50%;background:#f1416c;display:inline-block;"></span>
-                            <span class="fs-7 fw-bold text-gray-600">Debit: <span id="stat-debit" class="text-danger">—</span></span>
+
+                        <a href="{{ route('service_company.subscribe.newindex') }}#tab=overview" class="txact-btn-outline">
+                            <i class="fas fa-wallet"></i> Wallet Center
+                        </a>
+
+                        <a href="{{ url('service_company/subscribe') }}" class="txact-btn-primary">
+                            <i class="fas fa-table"></i> View Coin Usage Table
+                        </a>
+                    </div>
+                </div>
+
+                {{-- ══════════════════════════════════════════════════════════════
+                     TIER 2: PURE WHITE SUB-TABS & FILTER CONTROLS CARD
+                     ══════════════════════════════════════════════════════════════ --}}
+                <div class="txact-subtabs-card tier2-subtabs-card">
+                    <div class="txact-subtabs-top">
+                        <div class="txact-subtabs-nav" role="tablist">
+                            <a class="txact-subtab-pill txlog-tab active" href="#" data-pagetype="operationaltab" id="tab-operational">
+                                <i class="fas fa-cogs"></i>
+                                <span>Operational Coins</span>
+                            </a>
+                            <a class="txact-subtab-pill txlog-tab" href="#" data-pagetype="salestab" id="tab-sales">
+                                <i class="fas fa-briefcase"></i>
+                                <span>Sales Coins</span>
+                            </a>
                         </div>
-                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded" style="background:#f9fafb;border:1px solid #f1f1f4;">
-                            <span style="width:8px;height:8px;border-radius:50%;background:#009ef7;display:inline-block;"></span>
-                            <span class="fs-7 fw-bold text-gray-600">Total: <span id="stat-total" class="text-primary">—</span></span>
+
+                        <div class="txact-header-telemetry" id="txlog-header-stats">
+                            <div class="txact-mini-stat-chip">
+                                <span class="txact-dot txact-dot-credit"></span>
+                                <span>Credit: <strong id="stat-credit" class="text-success txact-num">—</strong></span>
+                            </div>
+                            <div class="txact-mini-stat-chip">
+                                <span class="txact-dot txact-dot-debit"></span>
+                                <span>Debit: <strong id="stat-debit" class="text-danger txact-num">—</strong></span>
+                            </div>
+                            <div class="txact-mini-stat-chip">
+                                <span class="txact-dot txact-dot-total"></span>
+                                <span>Total: <strong id="stat-total" class="text-primary txact-num">—</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="txact-filter-strip">
+                        <div class="txact-filter-controls">
+                            <div class="txact-filter-group">
+                                <label class="txact-filter-label" for="txlog-date-from">From Date</label>
+                                <input type="date" id="txlog-date-from" class="txact-input" style="width:142px;">
+                            </div>
+
+                            <div class="txact-filter-group">
+                                <label class="txact-filter-label" for="txlog-date-to">To Date</label>
+                                <input type="date" id="txlog-date-to" class="txact-input" style="width:142px;">
+                            </div>
+
+                            <div class="txact-filter-group">
+                                <span class="txact-filter-label">Quick Range</span>
+                                <div class="txact-preset-chips">
+                                    <button type="button" class="txlog-chip active-chip" data-preset="this_month">This Month</button>
+                                    <button type="button" class="txlog-chip" data-preset="last_month">Last Month</button>
+                                    <button type="button" class="txlog-chip" data-preset="last_7">7 Days</button>
+                                    <button type="button" class="txlog-chip" data-preset="all">All Time</button>
+                                </div>
+                            </div>
+
+                            <div class="txact-filter-group">
+                                <label class="txact-filter-label" for="txlog-type">Type</label>
+                                <select id="txlog-type" class="txact-select" style="width:122px;">
+                                    <option value="">All Types</option>
+                                    <option value="credit">Credit</option>
+                                    <option value="debit">Debit</option>
+                                </select>
+                            </div>
+
+                            <div class="txact-filter-group">
+                                <label class="txact-filter-label" for="txlog-per-page">Rows</label>
+                                <select id="txlog-per-page" class="txact-select" style="width:82px;">
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button type="button" id="txlog-reset" class="btn-txreset">
+                                <i class="fas fa-undo"></i> Reset Filters
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                {{-- Filter Bar --}}
-                <div class="txlog-filter-bar">
+                {{-- ══════════════════════════════════════════════════════════════
+                     TIER 3: PRIMARY CARD STREAM
+                     ══════════════════════════════════════════════════════════════ --}}
+                <div class="txact-stream tier3-cards-stream">
 
-                    {{-- Search --}}
-                    <div class="txlog-filter-group">
-                        <span class="txlog-filter-label">Search</span>
-                        <div class="txlog-search-wrap">
-                            <span class="search-ico">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            </span>
-                            <input type="text" id="txlog-search" class="form-control"
-                                   placeholder="Event or user name…" style="width:230px;">
+                    {{-- Live Update Notification Banner (Phase 4: Reverb Real-Time Sync) --}}
+                    <div id="txlog-live-notice" class="txact-live-banner">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="txact-live-pulse"></span>
+                            <span class="fs-7 fw-semibold text-gray-800">New coin transactions were recorded on your account.</span>
                         </div>
-                    </div>
-
-                    {{-- Date From --}}
-                    <div class="txlog-filter-group">
-                        <span class="txlog-filter-label">From Date</span>
-                        <input type="date" id="txlog-date-from" class="form-control" style="width:148px;">
-                    </div>
-
-                    {{-- Date To --}}
-                    <div class="txlog-filter-group">
-                        <span class="txlog-filter-label">To Date</span>
-                        <input type="date" id="txlog-date-to" class="form-control" style="width:148px;">
-                    </div>
-
-                    {{-- Preset chips --}}
-                    <div class="txlog-filter-group">
-                        <span class="txlog-filter-label">Quick Range</span>
-                        <div class="txlog-preset-chips">
-                            <button class="txlog-chip active-chip" data-preset="this_month">This Month</button>
-                            <button class="txlog-chip" data-preset="last_month">Last Month</button>
-                            <button class="txlog-chip" data-preset="last_7">7 Days</button>
-                            <button class="txlog-chip" data-preset="all">All Time</button>
-                        </div>
-                    </div>
-
-                    {{-- Type --}}
-                    <div class="txlog-filter-group">
-                        <span class="txlog-filter-label">Type</span>
-                        <select id="txlog-type" class="form-select" style="width:130px;">
-                            <option value="">All Types</option>
-                            <option value="credit">Credit</option>
-                            <option value="debit">Debit</option>
-                        </select>
-                    </div>
-
-
-                    {{-- Reset --}}
-                    <div class="txlog-filter-group" style="justify-content:flex-end;">
-                        <span class="txlog-filter-label" style="visibility:hidden;">x</span>
-                        <button id="txlog-reset" class="btn-txreset">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                            Reset
+                        <button type="button" id="btn-txlog-live-reload" class="txact-btn-primary" style="height:30px;padding:0 12px;font-size:11.5px;">
+                            <i class="fas fa-sync-alt"></i> Jump to Latest (Page 1)
                         </button>
                     </div>
 
-                </div>
-
-                {{-- Live Update Notification Banner (Phase 4: Reverb Real-Time Sync) --}}
-                <div id="txlog-live-notice" class="align-items-center justify-content-between px-5 py-2 my-2 mx-4 rounded" style="display:none;background:#eef6ff;border:1px solid #c9e2ff;">
-                    <div class="d-flex align-items-center gap-2">
-                        <span style="width:8px;height:8px;border-radius:50%;background:#009ef7;display:inline-block;animation:txPulse 1.5s infinite;"></span>
-                        <span class="fs-7 fw-semibold text-gray-800">New transactions were recorded on your account.</span>
+                    {{-- Primary Card 1: Period Coin Telemetry KPI Sub-Cards --}}
+                    <div class="txact-primary-card">
+                        <div class="txact-card-body">
+                            <div class="txact-kpi-grid">
+                                <div class="txact-kpi-subcard">
+                                    <div>
+                                        <div class="txact-kpi-val is-credit txact-num" id="kpi-credit-val">—</div>
+                                        <div class="txact-kpi-label">Period Credits</div>
+                                    </div>
+                                    <span class="txact-kpi-mini-icon txact-icon-emerald"><i class="fas fa-arrow-up"></i></span>
+                                </div>
+                                <div class="txact-kpi-subcard">
+                                    <div>
+                                        <div class="txact-kpi-val is-debit txact-num" id="kpi-debit-val">—</div>
+                                        <div class="txact-kpi-label">Period Debits</div>
+                                    </div>
+                                    <span class="txact-kpi-mini-icon txact-icon-rose"><i class="fas fa-arrow-down"></i></span>
+                                </div>
+                                <div class="txact-kpi-subcard">
+                                    <div>
+                                        <div class="txact-kpi-val is-blue txact-num" id="kpi-net-val">—</div>
+                                        <div class="txact-kpi-label">Net Coin Delta</div>
+                                    </div>
+                                    <span class="txact-kpi-mini-icon txact-icon-blue"><i class="fas fa-balance-scale"></i></span>
+                                </div>
+                                <div class="txact-kpi-subcard">
+                                    <div>
+                                        <div class="txact-kpi-val txact-num" id="kpi-total-val">—</div>
+                                        <div class="txact-kpi-label">Matching Events</div>
+                                    </div>
+                                    <span class="txact-kpi-mini-icon txact-icon-amber"><i class="fas fa-list-ol"></i></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <button type="button" id="btn-txlog-live-reload" class="btn btn-sm btn-primary py-1 px-3 fs-8 fw-bold">
-                        Jump to Latest (Page 1)
-                    </button>
-                </div>
 
-                {{-- Table Column Headers --}}
-                <div class="txlog-table-header txlog-grid" id="txlog-table-header">
-                    <div></div>
-                    <div class="th tx-col-datetime">Date &amp; Time</div>
-                    <div class="th tx-col-event">Event Description</div>
-                    <div class="th tx-col-actor">Initiated By</div>
-                    <div class="th tx-col-amount">Amount</div>
-                    <div class="th tx-col-bal">Balance</div>
-                </div>
+                    {{-- Primary Card 2: Coin Activity Ledger Stream --}}
+                    <div class="txact-primary-card">
+                        <div class="txact-card-header">
+                            <div class="txact-card-header-left">
+                                <div class="txact-cat-icon txact-icon-blue">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div>
+                                    <h4 class="txact-card-title">Coin Transaction Events</h4>
+                                    <p class="txact-card-desc">Every credit, debit, and settlement event scoped to the selected wallet and date window.</p>
+                                </div>
+                            </div>
+                            <span class="txact-count-pill txact-badge-blue txact-num" id="txlog-period-pill">
+                                <i class="fas fa-calendar-alt"></i> <span id="txlog-period-label">Active Range</span>
+                            </span>
+                        </div>
 
-                {{-- Timeline Content --}}
-                <div class="txlog-timeline" id="txlog-content">
-                    <div class="txlog-loading" id="txlog-loader">
-                        <div class="txlog-spinner"></div>
-                        <span>Loading transactions…</span>
+                        <div class="txact-card-body">
+                            <div class="txact-entries-stream" id="txlog-content">
+                                <div class="txlog-loading" id="txlog-loader">
+                                    <div class="txlog-spinner"></div>
+                                    <span>Loading coin activity...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Pagination --}}
+                        <div class="txlog-pagination" id="txlog-pagination" style="display:none;"></div>
                     </div>
-                </div>
 
-                {{-- Pagination --}}
-                <div class="txlog-pagination" id="txlog-pagination" style="display:none;"></div>
+                </div>{{-- /txact-stream --}}
 
-            </div>{{-- /card --}}
+            </div>{{-- /txact-wrapper --}}
         </div>
     </div>
 </div>
@@ -492,9 +975,9 @@
 @push('footer-script')
 <script>
 /**
- * Transaction Log V2 — AJAX-driven professional timeline.
- * Defaults to current month date range on load.
- * Metronic-compatible · tenancy scoped server-side.
+ * Coins Activity Ledger V2 (Rule 20 Card + Sub-Card UI) — AJAX-driven timeline.
+ * Defaults to current month date range on load unless overridden by URL query params.
+ * Tenancy-scoped server-side with in-memory LRU cache and Reverb live updates.
  */
 (function () {
     'use strict';
@@ -512,9 +995,9 @@
     function getMonthRange(offset) {
         var now  = new Date();
         var year = now.getFullYear();
-        var mon  = now.getMonth() + offset;      // 0-based, supports negative
+        var mon  = now.getMonth() + offset;
         var first = new Date(year, mon, 1);
-        var last  = new Date(year, mon + 1, 0);  // day 0 = last day of prev month
+        var last  = new Date(year, mon + 1, 0);
         return { from: fmt(first), to: fmt(last) };
     }
 
@@ -529,8 +1012,8 @@
     }
 
     // ── State ─────────────────────────────────────────────────────────────────
-    var range  = thisMonthRange();   // default = current month
-    var state  = {
+    var range = thisMonthRange();
+    var state = {
         pagetype        : 'operationaltab',
         search          : '',
         date_from       : range.from,
@@ -540,27 +1023,30 @@
         page            : 1,
     };
     var debounceTimer     = null;
-    var currentController = null; // Controller to abort pending AJAX requests and prevent duplicate/racing responses
+    var currentController = null;
 
     // ── DOM refs ──────────────────────────────────────────────────────────────
-    var elContent    = document.getElementById('txlog-content');
-    var elLoader     = document.getElementById('txlog-loader');
-    var elPagination = document.getElementById('txlog-pagination');
-    var elSearch     = document.getElementById('txlog-search');
-    var elDateFrom   = document.getElementById('txlog-date-from');
-    var elDateTo     = document.getElementById('txlog-date-to');
-    var elType       = document.getElementById('txlog-type');
-    var elPerPage    = document.getElementById('txlog-per-page');
-    var elReset      = document.getElementById('txlog-reset');
-    var elStatCredit = document.getElementById('stat-credit');
-    var elStatDebit  = document.getElementById('stat-debit');
-    var elStatTotal  = document.getElementById('stat-total');
+    var elContent     = document.getElementById('txlog-content');
+    var elLoader      = document.getElementById('txlog-loader');
+    var elPagination  = document.getElementById('txlog-pagination');
+    var elSearch      = document.getElementById('txlog-search');
+    var elSearchClear = document.getElementById('txlog-search-clear');
+    var elDateFrom    = document.getElementById('txlog-date-from');
+    var elDateTo      = document.getElementById('txlog-date-to');
+    var elType        = document.getElementById('txlog-type');
+    var elPerPage     = document.getElementById('txlog-per-page');
+    var elReset       = document.getElementById('txlog-reset');
+    var elStatCredit  = document.getElementById('stat-credit');
+    var elStatDebit   = document.getElementById('stat-debit');
+    var elStatTotal   = document.getElementById('stat-total');
+    var elKpiCredit   = document.getElementById('kpi-credit-val');
+    var elKpiDebit    = document.getElementById('kpi-debit-val');
+    var elKpiNet      = document.getElementById('kpi-net-val');
+    var elKpiTotal    = document.getElementById('kpi-total-val');
+    var elLedgerBadge = document.getElementById('activeLedgerBadge');
+    var elPeriodLabel = document.getElementById('txlog-period-label');
 
     // ── Parse URL search parameters for direct deep-linking / page refresh ────
-    /**
-     * Parse query string parameters (pagetype, page, search, date_from, date_to, transection_type, per_page)
-     * so direct URL loads retain active state and UI controls synchronize immediately.
-     */
     var urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('pagetype')) {
         var pt = urlParams.get('pagetype');
@@ -589,17 +1075,43 @@
         if (!isNaN(pp) && pp > 0) state.per_page = pp;
     }
 
+    function syncHeaderBadges() {
+        if (elLedgerBadge) {
+            if (state.pagetype === 'salestab') {
+                elLedgerBadge.className = 'txact-count-pill txact-badge-emerald';
+                elLedgerBadge.innerHTML = '<i class="fas fa-briefcase"></i> Sales Coins';
+            } else {
+                elLedgerBadge.className = 'txact-count-pill txact-badge-purple';
+                elLedgerBadge.innerHTML = '<i class="fas fa-cogs"></i> Operational Coins';
+            }
+        }
+        if (elPeriodLabel) {
+            if (state.date_from && state.date_to) {
+                elPeriodLabel.textContent = state.date_from + ' to ' + state.date_to;
+            } else if (state.date_from) {
+                elPeriodLabel.textContent = 'From ' + state.date_from;
+            } else if (state.date_to) {
+                elPeriodLabel.textContent = 'Up to ' + state.date_to;
+            } else {
+                elPeriodLabel.textContent = 'All Time';
+            }
+        }
+    }
+
     // ── Sync UI inputs & active states with initial state ─────────────────────
     document.querySelectorAll('.txlog-tab').forEach(function(t) {
         t.classList.toggle('active', t.getAttribute('data-pagetype') === state.pagetype);
     });
-    if (elSearch) elSearch.value = state.search;
+    if (elSearch) {
+        elSearch.value = state.search;
+        if (elSearchClear) elSearchClear.style.display = state.search ? 'block' : 'none';
+    }
     if (elDateFrom) elDateFrom.value = state.date_from;
     if (elDateTo) elDateTo.value = state.date_to;
     if (elType) elType.value = state.transection_type;
-    if (elPerPage) elPerPage.value = state.per_page;
+    if (elPerPage) elPerPage.value = String(state.per_page);
+    syncHeaderBadges();
 
-    // Highlight active preset chip if dates match standard range
     var isThisMonth = state.date_from === range.from && state.date_to === range.to;
     var lastM       = lastMonthRange();
     var isLastMonth = state.date_from === lastM.from && state.date_to === lastM.to;
@@ -617,10 +1129,9 @@
     });
 
     // ── In-Memory Bounded RAM Cache (LRU, max 10 pages, 60s TTL) ───────────────
-    // Offloads rapid page turns (e.g. Page 1 <-> Page 2) with 0 network requests
     var pageCache = new Map();
     var MAX_CACHE_ENTRIES = 10;
-    var CACHE_TTL_MS = 60000; // 60 seconds
+    var CACHE_TTL_MS = 60000;
 
     function getCacheKey() {
         return JSON.stringify({
@@ -641,7 +1152,6 @@
             pageCache.delete(key);
             return null;
         }
-        // Refresh entry position in Map for LRU eviction order
         pageCache.delete(key);
         pageCache.set(key, entry);
         return entry.data;
@@ -660,7 +1170,6 @@
     }
 
     // ── URL Query String Synchronization ───────────────────────────────────────
-    // Synchronizes active tab, page, and filters with browser address bar for deep linking & back button
     function syncBrowserUrl() {
         if (typeof window.history.replaceState === 'function') {
             var url = new URL(window.location.href);
@@ -700,16 +1209,11 @@
     }
 
     // ── Fetch ─────────────────────────────────────────────────────────────────
-    /**
-     * Primary AJAX request executor for transaction logs.
-     * Reused for initial page load, tab switches, search, filters, pagination, and resets.
-     * Cancels any pending request in-flight to prevent duplicate/stale responses.
-     * Serves cached responses from RAM when available to minimize infrastructure load.
-     */
     function fetchData(forceRefresh) {
         if (state.page === 1) {
             hideLiveNotice();
         }
+        syncHeaderBadges();
         syncBrowserUrl();
 
         var cacheKey = getCacheKey();
@@ -725,7 +1229,6 @@
 
         showLoader();
 
-        // Abort previous in-flight request if present
         if (currentController) {
             currentController.abort();
         }
@@ -769,13 +1272,13 @@
         })
         .catch(function(err) {
             if (err.name === 'AbortError') {
-                return; // Suppress UI error for aborted redundant request
+                return;
             }
             showError('A network error occurred. Please refresh the page.');
         });
     }
 
-    // ── Stats mini-update ─────────────────────────────────────────────────────
+    // ── Stats & KPI Sub-Card Update ───────────────────────────────────────────
     function updateStats(json) {
         var credit = 0, debit = 0, total = json.total || 0;
         if (json.stats) {
@@ -787,12 +1290,24 @@
                 else debit += parseFloat(row.display_coins) || 0;
             });
         }
-        if (elStatCredit) elStatCredit.textContent = credit.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' C';
-        if (elStatDebit)  elStatDebit.textContent  = debit.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})  + ' C';
+        var netDelta = credit - debit;
+        var fmtOpts = { minimumFractionDigits: 0, maximumFractionDigits: 2 };
+        var creditFmt = credit.toLocaleString(undefined, fmtOpts);
+        var debitFmt  = debit.toLocaleString(undefined, fmtOpts);
+        var netPrefix = netDelta > 0 ? '+' : (netDelta < 0 ? '−' : '');
+        var netFmt    = netPrefix + Math.abs(netDelta).toLocaleString(undefined, fmtOpts) + ' Coins';
+
+        if (elStatCredit) elStatCredit.textContent = creditFmt + ' C';
+        if (elStatDebit)  elStatDebit.textContent  = debitFmt  + ' C';
         if (elStatTotal)  elStatTotal.textContent  = total + ' rows';
+
+        if (elKpiCredit) elKpiCredit.textContent = '+' + creditFmt + ' Coins';
+        if (elKpiDebit)  elKpiDebit.textContent  = '−' + debitFmt  + ' Coins';
+        if (elKpiNet)    elKpiNet.textContent    = netFmt;
+        if (elKpiTotal)  elKpiTotal.textContent  = Number(total).toLocaleString();
     }
 
-    // ── Render rows ───────────────────────────────────────────────────────────
+    // ── Render Modern Card + Sub-Card Ledger Entries ──────────────────────────
     function renderItems(items) {
         elLoader.style.display = 'none';
         if (!items || items.length === 0) {
@@ -801,10 +1316,12 @@
             return;
         }
 
+        var walletLabel = (state.pagetype === 'salestab') ? 'Sales Wallet' : 'Operational Wallet';
         var html = '';
+
         items.forEach(function(row) {
-            var dateStr   = row.formatted_date || '';
-            var timeStr   = row.formatted_time || '';
+            var dateStr = row.formatted_date || '';
+            var timeStr = row.formatted_time || '';
 
             if (!dateStr && row.created_at) {
                 var cleanIso = String(row.created_at).replace(' ', 'T');
@@ -816,51 +1333,69 @@
                     dateStr = row.created_at;
                 }
             }
-            var isCredit  = row.transection_type === 'credit';
-            var isSettle  = row.settlement_coins && parseFloat(row.settlement_coins) > 0;
 
-            var iconClass = isSettle ? 'ri-settle' : (isCredit ? 'ri-credit' : 'ri-debit');
-            var iconColor = isSettle ? '#f6c000'   : (isCredit ? '#50cd89'   : '#f1416c');
-            var iconSvg   = isCredit
-                ? '<svg viewBox="0 0 24 24" fill="none" stroke="'+iconColor+'" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>'
-                : '<svg viewBox="0 0 24 24" fill="none" stroke="'+iconColor+'" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+            var isCredit = row.transection_type === 'credit';
+            var isSettle = row.settlement_coins && parseFloat(row.settlement_coins) > 0;
+            var cardAccent = isSettle ? 'txact-entry-settle' : (isCredit ? 'txact-entry-credit' : 'txact-entry-debit');
 
-            var typeBadge = '<span class="tx-badge '+(isCredit?'credit':'debit')+'"><span class="dot"></span>'+(isCredit?'Credit':'Debit')+'</span>';
+            var typeBadge = '<span class="tx-badge ' + (isCredit ? 'credit' : 'debit') + '"><span class="dot"></span>' + (isCredit ? 'Credit' : 'Debit') + '</span>';
             var settleBdg = isSettle
-                ? ' <span class="tx-badge settle"><span class="dot"></span>Settlement</span>'
+                ? '<span class="tx-badge settle"><span class="dot"></span>Settlement</span>'
                 : '';
 
-            var amtClass  = isCredit ? 'amt-credit' : 'amt-debit';
-            var amtSign   = isCredit ? '+' : '−';
+            var amtClass   = isCredit ? 'txact-delta-credit' : 'txact-delta-debit';
+            var amtSign    = isCredit ? '+' : '−';
             var displayAmt = parseFloat(row.display_coins || 0);
             var displayBal = parseFloat(row.balance_coins || 0);
+            var settleAmt  = parseFloat(row.settlement_coins || 0);
+            var entryId    = row.id ? ('#' + String(row.id).padStart(5, '0')) : '—';
 
-            html += '<div class="txlog-item txlog-grid">' +
-                '<div class="txlog-ic-col">' +
-                    '<div class="txlog-row-icon '+iconClass+'">' + iconSvg + '</div>' +
-                '</div>' +
-                '<div class="tx-col-datetime">' +
-                    '<div class="cell-main">' + esc(dateStr) + '</div>' +
-                    '<div class="cell-sub">' + esc(timeStr) + '</div>' +
-                '</div>' +
-                '<div class="tx-col-event">' +
-                    '<div class="cell-main" style="font-size:12px;">' + esc(row.event || '—') + '</div>' +
-                    '<div class="cell-sub" style="margin-top:3px;">' + typeBadge + settleBdg + '</div>' +
-                '</div>' +
-                '<div class="tx-col-actor">' +
-                    '<div class="cell-main">' + esc(row.actor_name) + '</div>' +
-                    '<div class="cell-sub">' + esc(row.actor_company) + '</div>' +
-                '</div>' +
-                '<div class="tx-col-amount">' +
-                    '<div class="'+amtClass+'">' + amtSign + ' ' + displayAmt.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}) + '</div>' +
-                    '<div class="cell-sub">Coins</div>' +
-                '</div>' +
-                '<div class="tx-col-bal">' +
-                    '<div class="bal-num">' + displayBal.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}) + '</div>' +
-                    '<div class="cell-sub">Balance</div>' +
-                '</div>' +
-            '</div>';
+            html += '' +
+                '<div class="txact-entry-card ' + cardAccent + '">' +
+                    '<div class="txact-entry-grid">' +
+                        '<div class="txact-entry-subcard">' +
+                            '<span class="txact-micro-label">DATE &amp; TIME</span>' +
+                            '<div class="txact-cell-main txact-num">' + esc(dateStr) + '</div>' +
+                            '<div class="txact-cell-sub txact-num"><i class="far fa-clock"></i>' + esc(timeStr || '—') + '</div>' +
+                        '</div>' +
+
+                        '<div class="txact-entry-subcard">' +
+                            '<span class="txact-micro-label">EVENT DESCRIPTION</span>' +
+                            '<div class="txact-cell-main">' + esc(row.event || '—') + '</div>' +
+                            '<div class="txact-event-badges">' + typeBadge + settleBdg + '</div>' +
+                        '</div>' +
+
+                        '<div class="txact-entry-subcard">' +
+                            '<span class="txact-micro-label">INITIATED BY</span>' +
+                            '<div class="txact-cell-main">' + esc(row.actor_name || 'System') + '</div>' +
+                            '<div class="txact-cell-sub"><i class="fas fa-building"></i>' + esc(row.actor_company || 'Default') + '</div>' +
+                        '</div>' +
+
+                        '<div class="txact-entry-subcard">' +
+                            '<span class="txact-micro-label">COIN DELTA</span>' +
+                            '<div class="' + amtClass + ' txact-num">' + amtSign + ' ' + displayAmt.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + '</div>' +
+                            '<div class="txact-cell-sub">Coins</div>' +
+                        '</div>' +
+
+                        '<div class="txact-entry-subcard">' +
+                            '<span class="txact-micro-label">WALLET BALANCE</span>' +
+                            '<div class="txact-bal-val txact-num">' + displayBal.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + '</div>' +
+                            '<div class="txact-cell-sub">Remaining</div>' +
+                        '</div>' +
+                    '</div>' +
+
+                    '<div class="txact-entry-bottom">' +
+                        '<div class="txact-bottom-left">' +
+                            '<span class="txact-num"><i class="fas fa-hashtag"></i>Entry ' + esc(entryId) + '</span>' +
+                            '<span class="txact-bottom-dot">&bull;</span>' +
+                            '<span><i class="fas fa-wallet"></i>' + esc(walletLabel) + '</span>' +
+                            (isSettle ? ('<span class="txact-bottom-dot">&bull;</span><span class="txact-num"><i class="fas fa-sync"></i>Settlement: ' + settleAmt.toLocaleString() + ' Coins</span>') : '') +
+                        '</div>' +
+                        '<span class="txact-verified-tag"><i class="fas fa-shield-alt"></i> Ledger Verified</span>' +
+                    '</div>' +
+                '</div>';
         });
+
         elContent.innerHTML = html;
     }
 
@@ -873,7 +1408,7 @@
         elPagination.style.display = 'flex';
 
         var from = json.from || 0, to = json.to || 0;
-        var html = '<div class="pg-info">Showing <strong>' + from + '&ndash;' + to + '</strong> of <strong>' + json.total + '</strong> records</div><div style="display:flex;gap:3px;">';
+        var html = '<div class="pg-info txact-num">Showing <strong>' + from + '&ndash;' + to + '</strong> of <strong>' + json.total + '</strong> records</div><div style="display:flex;gap:4px;flex-wrap:wrap;">';
 
         html += pgLink('&lsaquo;', json.current_page - 1, json.current_page <= 1);
 
@@ -906,7 +1441,7 @@
     }
 
     function pgLink(label, pg, disabled, active) {
-        var cls = 'page-link' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+        var cls = 'page-link txact-num' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
         return '<a href="#" class="' + cls + '" data-pg="' + pg + '">' + label + '</a>';
     }
 
@@ -919,7 +1454,7 @@
         if (preset === 'this_month')  r = thisMonthRange();
         else if (preset === 'last_month') r = lastMonthRange();
         else if (preset === 'last_7')  r = last7Range();
-        else { r = { from: '', to: '' }; }   // all time
+        else { r = { from: '', to: '' }; }
 
         if (elDateFrom) elDateFrom.value = r.from;
         if (elDateTo) elDateTo.value   = r.to;
@@ -944,10 +1479,10 @@
     }
     function showError(msg) {
         elLoader.style.display = 'none';
-        elContent.innerHTML = '<div class="txlog-empty"><div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><p>' + esc(msg) + '</p></div>';
+        elContent.innerHTML = '<div class="txact-empty-subcard"><div class="txact-empty-icon"><i class="fas fa-exclamation-triangle"></i></div><div class="txact-empty-title">' + esc(msg) + '</div><div class="txact-empty-desc">Please retry or refresh the page.</div></div>';
     }
     function emptyState() {
-        return '<div class="txlog-empty"><div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><p>No transactions found</p><div class="empty-sub">Try adjusting your filters or date range</div></div>';
+        return '<div class="txact-empty-subcard"><div class="txact-empty-icon"><i class="fas fa-receipt"></i></div><div class="txact-empty-title">No coin transactions found</div><div class="txact-empty-desc">Try adjusting your search keyword, transaction type, or date range.</div></div>';
     }
     function esc(str) {
         return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -960,7 +1495,7 @@
             e.preventDefault();
             var targetType = tab.getAttribute('data-pagetype');
             if (state.pagetype === targetType && tab.classList.contains('active')) {
-                return; // Ignore redundant clicks on currently active tab
+                return;
             }
             document.querySelectorAll('.txlog-tab').forEach(function(t) { t.classList.remove('active'); });
             tab.classList.add('active');
@@ -972,12 +1507,21 @@
 
     if (elSearch) {
         elSearch.addEventListener('input', function() {
+            if (elSearchClear) elSearchClear.style.display = elSearch.value ? 'block' : 'none';
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(function() {
                 state.search = elSearch.value.trim();
-                // Clear preset highlight on manual search / filter change if dates modified
                 resetPage(); fetchData();
-            }, 450);
+            }, 350);
+        });
+    }
+
+    if (elSearchClear) {
+        elSearchClear.addEventListener('click', function() {
+            if (elSearch) elSearch.value = '';
+            elSearchClear.style.display = 'none';
+            state.search = '';
+            resetPage(); fetchData();
         });
     }
 
@@ -1006,24 +1550,25 @@
 
     if (elPerPage) {
         elPerPage.addEventListener('change', function() {
-            state.per_page = parseInt(elPerPage.value, 10);
+            state.per_page = parseInt(elPerPage.value, 10) || 10;
             resetPage(); fetchData();
         });
     }
 
     if (elReset) {
         elReset.addEventListener('click', function() {
-            var r        = thisMonthRange();
-            if (elSearch) elSearch.value   = '';
+            var r = thisMonthRange();
+            if (elSearch) elSearch.value = '';
+            if (elSearchClear) elSearchClear.style.display = 'none';
             if (elDateFrom) elDateFrom.value = r.from;
-            if (elDateTo) elDateTo.value   = r.to;
-            if (elType) elType.value     = '';
-            if (elPerPage) elPerPage.value  = '10';
-            state.search     = '';
-            state.date_from  = r.from;
-            state.date_to    = r.to;
+            if (elDateTo) elDateTo.value = r.to;
+            if (elType) elType.value = '';
+            if (elPerPage) elPerPage.value = '10';
+            state.search = '';
+            state.date_from = r.from;
+            state.date_to = r.to;
             state.transection_type = '';
-            state.per_page   = 10;
+            state.per_page = 10;
             document.querySelectorAll('.txlog-chip').forEach(function(c) {
                 c.classList.toggle('active-chip', c.getAttribute('data-preset') === 'this_month');
             });
@@ -1061,28 +1606,21 @@
 
     function initRealtimeSync() {
         if (typeof window.Echo === 'undefined' || !authCompanyId) {
-            return; // Gracefully degrade if WebSockets or Echo are not active
+            return;
         }
 
         try {
             window.Echo.private('company.' + authCompanyId)
                 .listen('.coin.transaction.updated', function(e) {
                     if (!e || parseInt(e.company_id, 10) !== authCompanyId) return;
-
-                    // Invalidate in-memory RAM cache to ensure next read gets authoritative server data
                     clearCache();
-
-                    // Check if event corresponds to currently active tab
                     var currentTabType = (state.pagetype === 'salestab') ? 'sales' : 'operational';
                     if (e.event_type && e.event_type !== currentTabType) {
-                        return; // Event was for the other tab; cache cleared, will fetch fresh on tab switch
+                        return;
                     }
-
-                    // If user is currently viewing Page 1 with no search filter, silently refresh Page 1
                     if (state.page === 1 && state.search === '') {
                         fetchData(true);
                     } else {
-                        // User is on Page 2+ or applying a search filter: display non-disruptive banner
                         showLiveNotice();
                     }
                 })

@@ -593,10 +593,56 @@
             });
         });
 
+        let isMutationInFlight = false;
+
+        function generateUUID() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        const syncChannel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('jero_features_sync') : null;
+
+        // Autosave and restore draft in sessionStorage
+        const standaloneTokenId = document.getElementById('tokenId') ? document.getElementById('tokenId').value : '0';
+        const DRAFT_KEY = 'jero_superadmin_feature_draft_page_' + standaloneTokenId;
+
+        try {
+            const savedDraft = sessionStorage.getItem(DRAFT_KEY);
+            if (savedDraft) {
+                const draftObj = JSON.parse(savedDraft);
+                if (draftObj && titleInput && !titleInput.value && draftObj.title) {
+                    titleInput.value = draftObj.title;
+                }
+                if (draftObj && daysInput && !daysInput.value && draftObj.days) {
+                    daysInput.value = draftObj.days;
+                }
+                updateSimulator();
+            }
+        } catch(e) {}
+
+        function saveDraft() {
+            try {
+                sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+                    title: titleInput ? titleInput.value : '',
+                    days: daysInput ? daysInput.value : '',
+                    status: statusHidden ? statusHidden.value : '1'
+                }));
+            } catch(e) {}
+        }
+        if (titleInput) titleInput.addEventListener('input', saveDraft);
+        if (daysInput) daysInput.addEventListener('input', saveDraft);
+
         // AJAX Save Submission
         if (saveBtn) {
             saveBtn.addEventListener('click', function(e) {
                 e.preventDefault();
+
+                if (isMutationInFlight) return;
 
                 const title = titleInput.value.trim();
                 const days = daysInput.value.trim();
@@ -625,6 +671,7 @@
                     return;
                 }
 
+                isMutationInFlight = true;
                 saveBtn.querySelector('.indicator-label').classList.add('d-none');
                 saveBtn.querySelector('.indicator-progress').classList.remove('d-none');
                 saveBtn.disabled = true;
@@ -632,6 +679,10 @@
                 $.ajax({
                     type: 'POST',
                     url: "{{ route('superadmin.company.addEditfeaturesListupdate') }}",
+                    headers: {
+                        'X-Idempotency-Key': generateUUID(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
                     data: {
                         _token: "{{ csrf_token() }}",
                         tokenId: tokenId,
@@ -639,12 +690,21 @@
                         days: days,
                         status_is: statusIs
                     },
-                    success: function(response) {
+                    complete: function() {
+                        isMutationInFlight = false;
                         saveBtn.querySelector('.indicator-label').classList.remove('d-none');
                         saveBtn.querySelector('.indicator-progress').classList.add('d-none');
                         saveBtn.disabled = false;
-
+                    },
+                    success: function(response) {
                         if (response.status === 'success') {
+                            try { sessionStorage.removeItem(DRAFT_KEY); } catch(e) {}
+                            if (syncChannel) {
+                                syncChannel.postMessage({
+                                    type: 'FEATURE_SAVED',
+                                    id: tokenId
+                                });
+                            }
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Policy Saved!',
@@ -664,10 +724,6 @@
                         }
                     },
                     error: function(xhr) {
-                        saveBtn.querySelector('.indicator-label').classList.remove('d-none');
-                        saveBtn.querySelector('.indicator-progress').classList.add('d-none');
-                        saveBtn.disabled = false;
-
                         let errorMsg = 'An unexpected server error occurred.';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMsg = xhr.responseJSON.message;

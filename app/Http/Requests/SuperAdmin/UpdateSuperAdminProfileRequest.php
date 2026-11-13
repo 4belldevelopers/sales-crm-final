@@ -95,6 +95,9 @@ class UpdateSuperAdminProfileRequest extends CoreRequest
             // Avatar Photo
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'remove_image' => 'nullable',
+
+            // Two-Tier Idempotency Key
+            'idempotency_key' => 'nullable|string|max:64',
         ];
     }
 

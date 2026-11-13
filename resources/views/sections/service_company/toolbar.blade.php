@@ -1,6 +1,3 @@
-<div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0" style="position: relative;">
                 @php
                     use App\Helper\GeneralMethod;
 					$company_id = auth()->user()->company_id;
@@ -93,7 +90,109 @@
                     }
 					
 
+                    $resolvedOrgClass = ! empty($hpOrgClass)
+                        ? $hpOrgClass
+                        : ($isDirectClientJob ? 'hp-org-direct' : ($selfCompVal === 1 ? 'hp-org-my' : 'hp-org-internal'));
+                    $hdrPrefix = ! empty($headerPrefix) ? $headerPrefix : 'aptk-hdr';
+                    $orgDisplayMap = [
+                        'hp-org-my'       => ['label' => 'My Organization', 'icon' => 'fa-solid fa-building'],
+                        'hp-org-internal' => ['label' => 'Internal Client', 'icon' => 'fa-solid fa-sitemap'],
+                        'hp-org-direct'   => ['label' => 'Direct Client',   'icon' => 'fa-solid fa-handshake'],
+                    ];
+                    $orgDisplayMeta = $orgDisplayMap[$resolvedOrgClass] ?? $orgDisplayMap['hp-org-internal'];
                 @endphp
+
+                @if(!empty($apptrackerHeaderCard))
+                    {{-- Opt-In Flat Light-Tinted Enterprise Header Strip (Zero Nested Sub-Cards, isolated to AppTracker & ClientAppTracker) --}}
+                    <div class="{{ $hdrPrefix }}-main {{ $resolvedOrgClass }}">
+                        {{-- Identity: Logo + Full Title (CSS ellipsis) + Client Name --}}
+                        <div class="{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--identity show-detail-open" data-id="{{ $id }}" title="{{ $jobtitle }}">
+                            @if (!empty($logo_path))
+                                <div class="{{ $hdrPrefix }}-logo-wrap">
+                                    <img src="{{ str_replace('index.php', '', @$logo_path) }}" alt="Company Logo" class="{{ $hdrPrefix }}-logo-img">
+                                </div>
+                            @else
+                                <div class="{{ $hdrPrefix }}-logo-wrap {{ $hdrPrefix }}-logo-mono">
+                                    <span>{{ strtoupper(@$strVal ?: 'J') }}</span>
+                                </div>
+                            @endif
+                            <div class="{{ $hdrPrefix }}-identity-txt">
+                                <a href="javascript:void(0);" class="{{ $hdrPrefix }}-job-title" title="{{ $jobtitle }}">
+                                    {{ strtoupper(\Illuminate\Support\Str::limit((string) @$jobtitle, 55, '...')) }}
+                                </a>
+                                <a href="javascript:void(0);" class="{{ $hdrPrefix }}-company-name" title="{{ $company_or_client }}">
+                                    <i class="fa-regular fa-building" aria-hidden="true"></i>
+                                    <span>{{ ucwords(\Illuminate\Support\Str::limit((string) @$company_or_client, 44, '...')) }}</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <span class="{{ $hdrPrefix }}-sep" aria-hidden="true"></span>
+
+                        {{-- Status & Org Identity --}}
+                        <div class="{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--status show-detail-open" data-id="{{ $id }}">
+                            <div class="{{ $hdrPrefix }}-sub-top">
+                                <span class="badge {{ @$statusClass }} {{ $hdrPrefix }}-status-badge">{{ @$statusName }}</span>
+                                <span class="{{ $hdrPrefix }}-job-id">#{{ @$id }}</span>
+                            </div>
+                            <div class="{{ $hdrPrefix }}-sub-btm">
+                                <span class="{{ $hdrPrefix }}-org-pill {{ $resolvedOrgClass }}">
+                                    <i class="{{ $orgDisplayMeta['icon'] }}" aria-hidden="true"></i>
+                                    <span>{{ $orgDisplayMeta['label'] }}</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <span class="{{ $hdrPrefix }}-sep" aria-hidden="true"></span>
+
+                        {{-- Experience & Compensation --}}
+                        <div class="{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--comp">
+                            <div class="{{ $hdrPrefix }}-sub-row">
+                                <i class="fa-solid fa-briefcase {{ $hdrPrefix }}-col-icon" aria-hidden="true"></i>
+                                <span class="{{ $hdrPrefix }}-sub-val">{{ @$job->min_exp ?? '–' }}-{{ @$job->max_exp ?? '–' }} Yrs</span>
+                            </div>
+                            <div class="{{ $hdrPrefix }}-sub-meta" title="{!! strip_tags($salaryRangeCurrency) !!} {{ $min_salary_abbr }}-{{ $max_salary_abbr }}/{{ $salaryModeWord }}">
+                                {!! $salaryRangeCurrency !!} {{ $min_salary_abbr }}-{{ $max_salary_abbr }}/{{ $salaryModeWord }}
+                            </div>
+                        </div>
+
+                        @if(empty($hideLocationDate))
+                            <span class="{{ $hdrPrefix }}-sep" aria-hidden="true"></span>
+
+                            {{-- Job Location (balanced 2-line rhythm) --}}
+                            <div class="{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--loc" data-toggle="tooltip" title="{{ $firstJobcities['tooltip'] }}">
+                                <div class="{{ $hdrPrefix }}-sub-row">
+                                    <i class="fa-solid fa-location-dot {{ $hdrPrefix }}-col-icon" aria-hidden="true"></i>
+                                    <span class="{{ $hdrPrefix }}-sub-val">
+                                        {{ !empty($locations[0]) ? ucwords(substr($locations[0], 0, 22)) : '–' }}
+                                        @if(!empty($firstJobcities['countPlus']))
+                                            <span class="{{ $hdrPrefix }}-loc-plus">{{ ucwords($firstJobcities['countPlus']) }}</span>
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="{{ $hdrPrefix }}-sub-meta">
+                                    {{ !empty($locations[1]) ? ucwords(substr($locations[1], 0, 24)) : 'Primary Location' }}
+                                </div>
+                            </div>
+
+                            <span class="{{ $hdrPrefix }}-sep" aria-hidden="true"></span>
+
+                            {{-- Posted Date & Openings --}}
+                            <div class="{{ $hdrPrefix }}-col {{ $hdrPrefix }}-col--meta">
+                                <div class="{{ $hdrPrefix }}-sub-row">
+                                    <i class="fa-regular fa-calendar {{ $hdrPrefix }}-col-icon" aria-hidden="true"></i>
+                                    <span class="{{ $hdrPrefix }}-sub-val">{{ @$created_at ?: '–' }}</span>
+                                </div>
+                                <div class="{{ $hdrPrefix }}-sub-meta">
+                                    <i class="fa-solid fa-users-line me-1" aria-hidden="true"></i>{{ (@$job->total_positions) ? @$job->total_positions.' Opening' : '–' }}
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @else
+                <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
+                    data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
+                    class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0" style="position: relative;">
                 <!--begin::Requisitions=-->
                 
 
@@ -214,3 +313,4 @@
                 <!--end::Recommend Candidates-->
 
 </div>
+                @endif

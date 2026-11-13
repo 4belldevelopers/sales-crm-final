@@ -30,6 +30,8 @@
 
     {{-- ══════════════════════════════════════════════════════════════
          TIER 1: PURE WHITE TOOLBAR HEADER CARD
+         (Search bar and Save Changes button removed per user request.
+          Dynamic Reset to Defaults action enabled)
          ══════════════════════════════════════════════════════════════ --}}
     <div class="gs-toolbar-card tier1-toolbar-card">
       <div class="gs-toolbar-left">
@@ -39,57 +41,18 @@
         <div>
           <div class="gs-toolbar-title-row">
             <h3 class="gs-toolbar-title">General Settings</h3>
-            <span class="gs-domain-pill" id="domains_counter_badge">4 Configuration Domains</span>
           </div>
-          <p class="gs-toolbar-sub">Control organization locale, duplicate detection rules, company departments, and service integrations.</p>
+          <p class="gs-toolbar-sub">Control organization locale, duplicate detection rules, and company departments.</p>
         </div>
       </div>
 
       <div class="gs-toolbar-right">
-        <div class="gs-search-box">
-          <i class="fas fa-search gs-search-icon"></i>
-          <input type="text" id="general_settings_search" class="gs-search-input" placeholder="Search settings or departments..." autocomplete="off">
-          <button type="button" id="general_search_clear_btn" class="gs-search-clear" title="Clear search"><i class="fas fa-times"></i></button>
-        </div>
-
-        @if($hasEditPerm)
-        <button class="gs-btn-save updateCompanyProfile" type="button" id="updateCompanyProfileHeader">
-          <span class="csv2-save-spinner" aria-hidden="true"></span>
-          <span class="csv2-save-label"><i class="fas fa-check"></i> Save Changes</span>
+        @if($hasEditPerm || $hasAddPerm)
+        <button type="button" class="btn gs-btn-reset" id="gsResetSettingsBtn" title="Reset general settings to default">
+          <i class="fas fa-undo-alt"></i> <span>Reset</span>
         </button>
         @endif
       </div>
-    </div>
-
-    {{-- ══════════════════════════════════════════════════════════════
-         TIER 2: PURE WHITE SUB-TABS FILTER CARD
-         ══════════════════════════════════════════════════════════════ --}}
-    <div class="gs-subtabs-card tier2-subtabs-card" id="settings_subtabs_bar">
-      <button type="button" class="gs-subtab-pill btn-subtab active" data-target="all">
-        <i class="fas fa-th-large"></i>
-        <span>All Settings</span>
-        <span class="gs-subtab-counter">4</span>
-      </button>
-      <button type="button" class="gs-subtab-pill btn-subtab" data-target="card_locale">
-        <i class="fas fa-globe"></i>
-        <span>System Locale</span>
-        <span class="gs-subtab-counter">4</span>
-      </button>
-      <button type="button" class="gs-subtab-pill btn-subtab" data-target="card_duplicates">
-        <i class="fas fa-clone"></i>
-        <span>Duplicate Rules</span>
-        <span class="gs-subtab-counter">3</span>
-      </button>
-      <button type="button" class="gs-subtab-pill btn-subtab" data-target="card_departments">
-        <i class="fas fa-building"></i>
-        <span>Departments</span>
-        <span class="gs-subtab-counter" id="dept_tab_badge">{{ $deptCount }}</span>
-      </button>
-      <button type="button" class="gs-subtab-pill btn-subtab" data-target="card_integrations">
-        <i class="fas fa-plug"></i>
-        <span>Connected Accounts</span>
-        <span class="gs-subtab-counter">3</span>
-      </button>
     </div>
 
     {{-- ══════════════════════════════════════════════════════════════
@@ -264,8 +227,14 @@
                         } elseif ($tval->id == 1 && empty($account->time_format)) {
                           $sel = 'selected="selected"'; 
                         }
+                        $timeLabel = $tval->name;
+                        if (stripos($tval->name, '12-hour') !== false) {
+                            $timeLabel = '12-Hour Format (01-12 AM/PM)';
+                        } elseif (stripos($tval->name, '24-hour') !== false) {
+                            $timeLabel = '24-Hour Format (00-23)';
+                        }
                       @endphp 
-                      {!! '<option value="'.$tval->id.'" '.$sel.'>'.$tval->name.'</option>' !!}
+                      {!! '<option value="'.$tval->id.'" '.$sel.' title="'.htmlspecialchars($tval->name).'">'.$timeLabel.'</option>' !!}
                     @endforeach
                   @endif
                 </select>
@@ -421,7 +390,7 @@
               Departments allow recruiters to filter requisitions, manage hiring managers, and structure candidate funnels.
             </div>
             @if($hasAddPerm)
-            <a href="javascript:void(0);" class="gs-btn-add-dept" data-bs-toggle="modal" data-bs-target="#add_department" data-toggle="modal" data-target="#add_department">
+            <a href="javascript:void(0);" class="gs-btn-add-dept" data-bs-toggle="modal" data-bs-target="#add_department">
               <i class="fas fa-plus"></i> Add Department
             </a>
             @endif
@@ -434,9 +403,9 @@
       </div>
 
       {{-- ────────────────────────────────────────────────────────────
-           PRIMARY CARD 4: CONNECTED ACCOUNTS & INTEGRATIONS
+           PRIMARY CARD 4: CONNECTED ACCOUNTS & INTEGRATIONS (Hidden per user request)
            ──────────────────────────────────────────────────────────── --}}
-      <div class="gs-primary-card primary-settings-card" id="card_integrations" data-search-scope="connected accounts integrations google calendar zoom video meeting microsoft teams slack">
+      <div class="gs-primary-card primary-settings-card" id="card_integrations" style="display:none;" data-search-scope="connected accounts integrations google calendar zoom video meeting microsoft teams slack">
         <div class="gs-card-header">
           <div class="gs-card-header-left">
             <div class="gs-cat-icon gs-icon-indigo">
@@ -523,32 +492,6 @@
         </div>
       </div>
 
-    </div>
-
-    {{-- ══════════════════════════════════════════════════════════════
-         BOTTOM ACTIVITY & TENANCY STRIP
-         ══════════════════════════════════════════════════════════════ --}}
-    <div class="gs-bottom-strip activity-strip-card">
-      <div class="gs-strip-left">
-        <div class="gs-tenancy-badge">
-          <i class="fas fa-shield-alt"></i>
-          <span>Tenant Context: {{ auth()->user()->company->company_name ?? 'Organization' }} (#{{ auth()->user()->company_id ?? 0 }})</span>
-        </div>
-        <div class="gs-sync-note">
-          <i class="fas fa-bolt"></i>
-          <span>Redis atomic cache invalidation triggers instantly upon save. Zero stale data across recruiters.</span>
-        </div>
-      </div>
-
-      @if($hasEditPerm)
-      <div class="gs-strip-actions">
-        <a href="{{ route('service_company.account.index') }}" class="gs-btn-discard">Discard</a>
-        <button class="gs-btn-save updateCompanyProfile" type="button" id="updateCompanyProfile">
-          <span class="csv2-save-spinner" aria-hidden="true"></span>
-          <span class="csv2-save-label"><i class="fas fa-check"></i> Save Changes</span>
-        </button>
-      </div>
-      @endif
     </div>
 
   </div>
@@ -655,15 +598,6 @@
     color: #0f172a;
     margin: 0;
   }
-  .gs-domain-pill {
-    background: #f1f5f9;
-    color: #334155;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 9px;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-  }
   .gs-toolbar-sub {
     font-size: 12.5px;
     color: #64748b;
@@ -675,137 +609,31 @@
     gap: 12px;
     flex-wrap: wrap;
   }
-  .gs-search-box {
-    position: relative;
-    min-width: 260px;
-  }
-  .gs-search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 13px;
-    color: #94a3b8 !important;
-    pointer-events: none;
-  }
-  .gs-search-input {
-    width: 100%;
+  .gs-btn-reset {
     height: 38px;
-    padding: 0 34px 0 36px;
-    font-size: 12.5px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    padding: 0 16px;
     background: #f8fafc;
-    color: #0f172a;
-    outline: none;
-    transition: all 0.2s ease;
-  }
-  .gs-search-input:focus {
-    background: #ffffff;
-    border-color: #009ef7;
-    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
-  }
-  .gs-search-clear {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 13px;
-    color: #94a3b8;
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: none;
-    padding: 2px;
-  }
-  .gs-search-clear:hover i { color: #ef4444 !important; }
-  .gs-btn-save {
-    height: 38px;
-    padding: 0 18px;
-    background: #009ef7;
-    color: #ffffff !important;
+    color: #475569 !important;
     font-size: 13px;
     font-weight: 600;
-    border: none;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2);
   }
-  .gs-btn-save:hover {
-    background: #0086d4;
-    box-shadow: 0 4px 8px rgba(0, 158, 247, 0.3);
-  }
-  .gs-btn-save i { color: #ffffff !important; margin-right: 4px; }
-  .gs-btn-save .csv2-save-spinner {
-    display: none;
-    width: 14px;
-    height: 14px;
-    border: 2px solid #ffffff;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: gsSpin 0.6s linear infinite;
-  }
-  .gs-btn-save.is-loading .csv2-save-spinner { display: inline-block; }
-  @keyframes gsSpin { to { transform: rotate(360deg); } }
-
-  /* ── TIER 2: SUB-TABS FILTER CARD ── */
-  .gs-subtabs-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 6px 10px;
-    margin-bottom: 18px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .gs-subtabs-card::-webkit-scrollbar { display: none; }
-  .gs-subtab-pill {
-    background: transparent;
-    border: none;
-    border-radius: 7px;
-    padding: 8px 16px;
-    font-size: 12.5px;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-  .gs-subtab-pill i { color: #64748b !important; font-size: 13px; }
-  .gs-subtab-pill:hover {
+  .gs-btn-reset:hover {
     background: #f1f5f9;
-    color: #1e293b;
+    color: #0f172a !important;
+    border-color: #94a3b8;
   }
-  .gs-subtab-pill:hover i { color: #1e293b !important; }
-  .gs-subtab-pill.active {
-    background: #eff6ff;
-    color: #009ef7;
-    font-weight: 600;
-    box-shadow: inset 0 0 0 1px rgba(0, 158, 247, 0.3);
+  .gs-btn-reset i {
+    color: #64748b !important;
   }
-  .gs-subtab-pill.active i { color: #009ef7 !important; }
-  .gs-subtab-counter {
-    font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 10px;
-    background: #e2e8f0;
-    color: #475569;
-    font-weight: 600;
-  }
-  .gs-subtab-pill.active .gs-subtab-counter {
-    background: #009ef7;
-    color: #ffffff;
+  .gs-btn-reset:hover i {
+    color: #0f172a !important;
   }
 
   /* ── TIER 3: PRIMARY CARDS STREAM ── */
@@ -835,6 +663,24 @@
     gap: 14px;
     background: #ffffff;
     flex-wrap: wrap;
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+  }
+  #card_locale .gs-card-header {
+    background: #eff6ff !important;
+    border-bottom: 1px solid #bfdbfe !important;
+  }
+  #card_duplicates .gs-card-header {
+    background: #f5f3ff !important;
+    border-bottom: 1px solid #ddd6fe !important;
+  }
+  #card_departments .gs-card-header {
+    background: #ecfdf5 !important;
+    border-bottom: 1px solid #a7f3d0 !important;
+  }
+  #card_integrations .gs-card-header {
+    background: #eef2ff !important;
+    border-bottom: 1px solid #e0e7ff !important;
   }
   .gs-card-header-left {
     display: flex;
@@ -931,7 +777,7 @@
     line-height: 1.4;
   }
   .gs-control-wrap { margin-top: 4px; }
-  .gs-split-selects { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gs-split-selects { display: grid; grid-template-columns: 1.45fr 1fr; gap: 10px; }
   .gs-select {
     width: 100%;
     height: 38px;
@@ -1250,52 +1096,7 @@
   .gs-switch input:checked + .gs-slider { background-color: #009ef7; }
   .gs-switch input:checked + .gs-slider:before { transform: translateX(18px); }
 
-  /* ── BOTTOM ACTIVITY & TENANCY STRIP ── */
-  .gs-bottom-strip {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 14px 20px;
-    margin-top: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-    flex-wrap: wrap;
-  }
-  .gs-strip-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .gs-tenancy-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: #475569;
-    background: #f1f5f9;
-    padding: 4px 10px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-  }
-  .gs-tenancy-badge i { color: #009ef7 !important; }
-  .gs-sync-note { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 6px; }
-  .gs-sync-note i { color: #f59e0b !important; }
-  .gs-strip-actions { display: flex; align-items: center; gap: 10px; }
-  .gs-btn-discard {
-    height: 38px;
-    padding: 0 16px;
-    background: #f1f5f9;
-    color: #475569 !important;
-    font-size: 12.5px;
-    font-weight: 600;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    transition: all 0.15s ease;
-  }
-  .gs-btn-discard:hover { background: #e2e8f0; color: #0f172a !important; }
+
 
   /* ── 15.6" SCREEN FIT RESPONSIVE BREAKPOINTS ── */
   @media (max-width: 1199px) {
@@ -1314,70 +1115,64 @@
 
 <script>
   $(document).ready(function() {
-    // ── 1. Live 300ms Debounced Search Across All Cards & Departments ──
-    var $searchInput = $('#general_settings_search');
-    var $clearBtn = $('#general_search_clear_btn');
-    var generalSearchTimer = null;
+    // ── 1. Atomic Auto-Save on Settings Change ──
+    function saveGeneralSettingsAjax(showToast) {
+      var data = new FormData();
+      var form_data = $('#setting_content').serializeArray();
+      $.each(form_data, function (key, input) {
+        data.append(input.name, input.value);
+      });
 
-    $searchInput.on('input', function() {
-      var query = $(this).val().trim().toLowerCase();
-      $clearBtn.toggle(query.length > 0);
-
-      clearTimeout(generalSearchTimer);
-      generalSearchTimer = setTimeout(function() {
-        filterSettings(query);
-      }, 300);
-    });
-
-    $clearBtn.on('click', function() {
-      $searchInput.val('');
-      $clearBtn.hide();
-      filterSettings('');
-      $searchInput.focus();
-    });
-
-    function filterSettings(query) {
-      if (!query) {
-        $('.primary-settings-card').show();
-        $('.dept-item-col').show();
-        return;
-      }
-
-      $('.primary-settings-card').each(function() {
-        var $card = $(this);
-        var scope = ($card.attr('data-search-scope') || '').toLowerCase();
-        var cardText = $card.text().toLowerCase();
-
-        if (scope.indexOf(query) !== -1 || cardText.indexOf(query) !== -1) {
-          $card.show();
-          if ($card.attr('id') === 'card_departments') {
-            $card.find('.dept-item-col').each(function() {
-              var deptName = $(this).attr('data-dept-name') || '';
-              $(this).toggle(deptName.indexOf(query) !== -1);
-            });
+      $.ajax({
+        url: '{{ route('service_company.account.update', @$account->id) }}',
+        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+        method: "POST",
+        processData: false,
+        contentType: false,
+        data: data,
+        success: function(res) {
+          if (res.status === 'success') {
+            if (showToast !== false) {
+              if (typeof Swal !== 'undefined' && Swal.mixin) {
+                const Toast = Swal.mixin({
+                  toast: true,
+                  position: 'top-end',
+                  showConfirmButton: false,
+                  timer: 2000,
+                  timerProgressBar: true
+                });
+                Toast.fire({
+                  icon: 'success',
+                  title: 'Settings updated successfully'
+                });
+              } else if (typeof toastr !== 'undefined') {
+                toastr.success('Settings updated successfully');
+              }
+            }
+            if (res.tenant_defaults && window.JeroTenantDefaults) {
+              window.JeroTenantDefaults.syncFromSettings(res.tenant_defaults);
+            }
+          } else if (res.status === 'warning') {
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                text: res.message,
+                icon: "error",
+                buttonsStyling: false,
+                confirmButtonText: "Ok, got it!",
+                customClass: { confirmButton: "btn btn-light" }
+              });
+            }
           }
-        } else {
-          $card.hide();
         }
       });
     }
 
-    // ── 2. Tier 2 Category Jump Sub-Tabs ──
-    $('#settings_subtabs_bar').on('click', '.btn-subtab', function() {
-      $('#settings_subtabs_bar .btn-subtab').removeClass('active');
-      $(this).addClass('active');
-
-      var target = $(this).attr('data-target');
-      if (target === 'all') {
-        $('.primary-settings-card').show();
-      } else {
-        $('.primary-settings-card').each(function() {
-          $(this).toggle($(this).attr('id') === target);
-        });
-      }
+    // Auto-save on select field change
+    $('#language, #timezone, #currency, #time_format, #date_format').on('change', function() {
+      saveGeneralSettingsAjax(true);
     });
 
-    // ── 3. Duplicate Rules Interactive Radio Tiles ──
+    // ── 2. Duplicate Rules Interactive Radio Tiles with Auto-Save ──
     $('body').on('click', '.duplicate-tile', function(e) {
       if ($(e.target).is('input')) return;
 
@@ -1401,14 +1196,89 @@
       } else {
         $badge.addClass('gs-badge-red').html('<i class="fas fa-exclamation-triangle"></i> Deduplication Disabled');
       }
+
+      saveGeneralSettingsAjax(true);
     });
 
-    // ── 4. Header Save Button Triggers Main Update Button ──
-    $('#updateCompanyProfileHeader').on('click', function() {
-      $('#updateCompanyProfile').click();
+    var dupDaysTimer = null;
+    $('#app_duplicate_overroll, #app_duplicate_requisition_wise').on('input', function() {
+      clearTimeout(dupDaysTimer);
+      var self = this;
+      dupDaysTimer = setTimeout(function() {
+        var $tile = $(self).closest('.duplicate-tile');
+        var val = $tile.attr('data-radio-val');
+        var $badge = $('#duplicate_status_badge');
+        if (val === '2') {
+          $badge.html('<i class="fas fa-check"></i> Global Detection Active (' + $(self).val() + ' Days)');
+        } else if (val === '1') {
+          $badge.html('<i class="fas fa-check"></i> Job-Wise Detection Active (' + $(self).val() + ' Days)');
+        }
+        saveGeneralSettingsAjax(true);
+      }, 500);
     });
 
-    // ── 5. Dynamic Department Badge Counter Synchronization ──
+    // ── 3. Reset Button: Confirm & Restore System Defaults ──
+    $('#gsResetSettingsBtn').on('click', function(e) {
+      e.preventDefault();
+
+      if (typeof Swal === 'undefined') {
+        if (confirm('Reset all general settings to system defaults? All current custom settings will be discarded.')) {
+          performReset();
+        }
+        return;
+      }
+
+      Swal.fire({
+        title: 'Reset to Default Settings?',
+        text: 'All custom locale preferences and duplicate rules will be reset to system defaults (English, Asia/Kolkata IST, INR, 12-Hour format, Global Duplicate Detection 60 Days). All current changes will be discarded or deleted.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#009ef7',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, Reset Defaults',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+      }).then(function(result) {
+        if (result.isConfirmed) {
+          performReset();
+        }
+      });
+
+      function performReset() {
+        $.ajax({
+          url: '{{ route('service_company.account.resetGeneralSettings') }}',
+          type: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+          },
+          beforeSend: function() {
+            $('#gsResetSettingsBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> <span>Resetting...</span>');
+          },
+          success: function(response) {
+            if (response.status === 'success') {
+              Swal.fire({
+                icon: 'success',
+                title: 'Settings Reset',
+                text: response.message || 'General settings have been reset to system defaults.',
+                timer: 1500,
+                showConfirmButton: false
+              }).then(function() {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire('Error', response.message || 'Failed to reset settings.', 'error');
+              $('#gsResetSettingsBtn').prop('disabled', false).html('<i class="fas fa-undo-alt"></i> <span>Reset</span>');
+            }
+          },
+          error: function() {
+            Swal.fire('Error', 'An error occurred while resetting settings.', 'error');
+            $('#gsResetSettingsBtn').prop('disabled', false).html('<i class="fas fa-undo-alt"></i> <span>Reset</span>');
+          }
+        });
+      }
+    });
+
+    // ── 4. Dynamic Department Badge Counter Synchronization ──
     function refreshDeptCounters() {
       var count = $('.dept_content').find('.dept-item-col').length;
       $('#dept_tab_badge').text(count);
