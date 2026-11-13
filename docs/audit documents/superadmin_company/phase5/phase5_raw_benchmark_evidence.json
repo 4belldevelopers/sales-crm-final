@@ -1,0 +1,209 @@
+{
+    "audit_metadata": {
+        "module": "SuperAdminCompany",
+        "phase": "PHASE_5_FINAL_FORENSIC_AUDIT",
+        "executed_at": "2026-11-13T11:07:39+05:30",
+        "php_version": "8.2.12",
+        "laravel_version": "11.48.0",
+        "os": "WINNT"
+    },
+    "infrastructure": {
+        "redis_ping": true,
+        "redis_latency_ms": 1.29,
+        "elasticsearch_index": "local_companies_elastic",
+        "elasticsearch_status": "green",
+        "elasticsearch_latency_ms": 75.65,
+        "mysql_version": "10.4.32-MariaDB",
+        "mysql_threads_connected": 1,
+        "opcache_enabled": false
+    },
+    "cqrs_hidden_reads_audit": {
+        "kpi_counts": {
+            "total_queries": 0,
+            "domain_queries": 0,
+            "status": "VERIFIED_ZERO_MYSQL_READS"
+        },
+        "list_ajax_all": {
+            "total_queries": 0,
+            "domain_queries": 0,
+            "status": "VERIFIED_ZERO_MYSQL_READS"
+        },
+        "list_ajax_filtered": {
+            "total_queries": 0,
+            "domain_queries": 0,
+            "status": "VERIFIED_ZERO_MYSQL_READS"
+        },
+        "list_ajax_search": {
+            "total_queries": 0,
+            "domain_queries": 0,
+            "status": "VERIFIED_ZERO_MYSQL_READS"
+        },
+        "legacy_company_data": {
+            "total_queries": 0,
+            "domain_queries": 0,
+            "status": "VERIFIED_ZERO_MYSQL_READS"
+        }
+    },
+    "elasticsearch_data_integrity": {
+        "stale_event_rejected_as_noop": true,
+        "newer_event_applied": true,
+        "monotonic_painless_guard": "VERIFIED"
+    },
+    "outbox_crash_recovery": {
+        "crashed_worker_reclaimed": true,
+        "verdict": "VERIFIED"
+    },
+    "idempotency_hardening": {
+        "simultaneous_100_replays_success": true,
+        "payload_mismatch_422_rejection": true,
+        "verdict": "VERIFIED"
+    },
+    "cache_and_isolation": {
+        "company_version_incremented": true,
+        "subscription_synchronized": true,
+        "verdict": "VERIFIED"
+    },
+    "circuit_breaker_lifecycle": {
+        "closed_initial": true,
+        "open_after_3_failures": true,
+        "storm_guard_db_invocations": 1,
+        "closed_after_reset": true,
+        "verdict": "VERIFIED"
+    },
+    "memory_and_soak": {
+        "soak_iterations": 3000,
+        "soak_duration_sec": 2.761,
+        "throughput_qps": 2172.8,
+        "initial_bytes": 56905224,
+        "final_bytes": 56909016,
+        "net_delta_bytes": 3792,
+        "net_delta_kb": 3.7,
+        "memory_leak_verdict": "ZERO_LEAK_CONFIRMED"
+    },
+    "resident_concurrency_tiers": {
+        "tier_100": {
+            "requests": 100,
+            "duration_sec": 0.427,
+            "rps": 234.3,
+            "min_ms": 0.31,
+            "p50_ms": 0.37,
+            "p95_ms": 0.53,
+            "p99_ms": 69.79,
+            "max_ms": 183.35,
+            "mem_delta_kb": 38.81,
+            "domain_mysql_queries": 0
+        },
+        "tier_500": {
+            "requests": 500,
+            "duration_sec": 0.197,
+            "rps": 2535.85,
+            "min_ms": 0.31,
+            "p50_ms": 0.37,
+            "p95_ms": 0.57,
+            "p99_ms": 0.62,
+            "max_ms": 0.69,
+            "mem_delta_kb": 12.05,
+            "domain_mysql_queries": 0
+        },
+        "tier_1000": {
+            "requests": 1000,
+            "duration_sec": 0.376,
+            "rps": 2659.72,
+            "min_ms": 0.31,
+            "p50_ms": 0.36,
+            "p95_ms": 0.48,
+            "p99_ms": 0.58,
+            "max_ms": 0.65,
+            "mem_delta_kb": 20.05,
+            "domain_mysql_queries": 0
+        },
+        "tier_5000": {
+            "requests": 5000,
+            "duration_sec": 2.313,
+            "rps": 2161.89,
+            "min_ms": 0.31,
+            "p50_ms": 0.44,
+            "p95_ms": 0.67,
+            "p99_ms": 0.75,
+            "max_ms": 1.56,
+            "mem_delta_kb": 132.05,
+            "domain_mysql_queries": 0
+        },
+        "tier_10000": {
+            "requests": 10000,
+            "duration_sec": 4.092,
+            "rps": 2443.56,
+            "min_ms": 0.31,
+            "p50_ms": 0.37,
+            "p95_ms": 0.63,
+            "p99_ms": 0.73,
+            "max_ms": 1.04,
+            "mem_delta_kb": 260.05,
+            "domain_mysql_queries": 0
+        },
+        "tier_10000_sustained": {
+            "requests": 10000,
+            "duration_sec": 4.4,
+            "rps": 2272.67,
+            "min_ms": 0.3,
+            "p50_ms": 0.41,
+            "p95_ms": 0.67,
+            "p99_ms": 0.77,
+            "max_ms": 8.17,
+            "mem_delta_kb": 260.05,
+            "domain_mysql_queries": 0
+        }
+    },
+    "http_socket_concurrency": {
+        "batch_25_sockets": {
+            "total_requests": 50,
+            "simultaneous_sockets": 25,
+            "duration_sec": 13.179,
+            "rps": 3.79,
+            "min_ms": 3494.23,
+            "p50_ms": 6052.4,
+            "p95_ms": 8103.5,
+            "p99_ms": 9684.34,
+            "max_ms": 9684.34,
+            "status_codes": {
+                "200": 50
+            }
+        },
+        "batch_50_sockets": {
+            "total_requests": 100,
+            "simultaneous_sockets": 50,
+            "duration_sec": 25.078,
+            "rps": 3.99,
+            "min_ms": 6243.75,
+            "p50_ms": 10502.33,
+            "p95_ms": 18553.2,
+            "p99_ms": 20745.33,
+            "max_ms": 20747.66,
+            "status_codes": {
+                "200": 100
+            }
+        }
+    },
+    "telemetry": {
+        "module": "SuperAdminCompany",
+        "status": "HEALTHY",
+        "version": 22,
+        "cache_telemetry": {
+            "version": 22,
+            "hits": 162523,
+            "misses": 82,
+            "contention_events": 0,
+            "total_requests": 162605,
+            "hit_ratio_percent": 99.95
+        },
+        "stale_kpi_snapshots_count": 1,
+        "stale_list_snapshots_count": 5,
+        "timestamp": "2026-11-13T11:08:36+05:30"
+    },
+    "verdict_summary": {
+        "status": "ALL_CHECKS_PASSED",
+        "production_approval": "APPROVED",
+        "cqrs_read_domain_mysql_queries": 0,
+        "total_requests_executed": 32600
+    }
+}

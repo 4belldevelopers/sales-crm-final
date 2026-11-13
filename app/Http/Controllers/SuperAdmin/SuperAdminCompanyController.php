@@ -62,6 +62,10 @@ use App\Services\SuperAdmin\SuperAdminJdMutationService;
 use App\Services\SuperAdmin\SuperAdminMeetingMutationService;
 use App\Services\SuperAdmin\SuperAdminNotificationMutationService;
 use App\Services\SuperAdmin\SuperAdminNotificationReadService;
+use App\Services\SuperAdmin\CompanyCircuitBreaker;
+use App\Services\SuperAdmin\SuperAdminCompanyCacheManager;
+use App\Services\SuperAdmin\SuperAdminCompanyMutationService;
+use App\Services\SuperAdmin\SuperAdminCompanyReadService;
 use App\Services\SuperAdmin\SuperAdminSubscriptionCacheManager;
 use App\Services\SuperAdmin\SuperAdminSubscriptionMutationService;
 use App\Services\SuperAdmin\SuperAdminSubscriptionReadService;
@@ -105,6 +109,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     protected $subscriptionMutationService;
 
+    protected $companyReadService;
+
+    protected $saCompanyMutationService;
+
     public function __construct(
         GoogleSheetServiceCandidate $GoogleSheetServiceCandidate,
         GoogleSheetsServiceGet $GoogleSheetsServiceGet,
@@ -112,7 +120,9 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         ElasticService $elasticService,
         CompanyMutationService $companyMutationService,
         SuperAdminSubscriptionReadService $subscriptionReadService,
-        SuperAdminSubscriptionMutationService $subscriptionMutationService
+        SuperAdminSubscriptionMutationService $subscriptionMutationService,
+        SuperAdminCompanyReadService $companyReadService,
+        SuperAdminCompanyMutationService $saCompanyMutationService
     ) {
         parent::__construct();
         $this->pageTitle = 'menu.companies';
@@ -124,6 +134,8 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $this->companyMutationService = $companyMutationService;
         $this->subscriptionReadService = $subscriptionReadService;
         $this->subscriptionMutationService = $subscriptionMutationService;
+        $this->companyReadService = $companyReadService;
+        $this->saCompanyMutationService = $saCompanyMutationService;
     }
 
     /**
@@ -177,61 +189,11 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function index()
     {
-        $this->totalCompanies = 0;
-        $this->activeCompanies = 0;
-        $this->inactiveCompanies = 0;
-        $this->locations = [];
-
-        if ($this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
-            $superAdminCompanyIds = GeneralMethod::superAdminCompanyIds();
-            $mustNot = [];
-            if (! empty($superAdminCompanyIds)) {
-                $mustNot[] = ['terms' => ['id' => $superAdminCompanyIds]];
-            }
-
-            $params = [
-                'index' => ELASTIC_COMPANIES_INDEX,
-                'body' => [
-                    'size' => 0,
-                    'track_total_hits' => true,
-                    'query' => [
-                        'bool' => [
-                            'must_not' => $mustNot,
-                        ],
-                    ],
-                    'aggs' => [
-                        'status_counts' => [
-                            'terms' => [
-                                'field' => 'status',
-                            ],
-                        ],
-                        'unique_cities' => [
-                            'terms' => [
-                                'field' => 'locations_address.locations_address.city_name.keyword',
-                                'size' => 100,
-                            ],
-                        ],
-                    ],
-                ],
-            ];
-
-            try {
-                $response = $this->elasticService->getClient()->search($params);
-                $this->totalCompanies = (int) ($response['hits']['total']['value'] ?? 0);
-                $buckets = $response['aggregations']['status_counts']['buckets'] ?? [];
-                foreach ($buckets as $b) {
-                    if (($b['key'] ?? '') === 'active') {
-                        $this->activeCompanies = (int) $b['doc_count'];
-                    } elseif (($b['key'] ?? '') === 'inactive') {
-                        $this->inactiveCompanies = (int) $b['doc_count'];
-                    }
-                }
-                $cityBuckets = $response['aggregations']['unique_cities']['buckets'] ?? [];
-                $this->locations = array_values(array_filter(array_column($cityBuckets, 'key')));
-            } catch (\Throwable $e) {
-                \Log::warning('SuperAdminCompanyController@index ES aggregation error: '.$e->getMessage());
-            }
-        }
+        $counts = $this->companyReadService->getCompanyKpiCounts();
+        $this->totalCompanies = $counts->totalCompanies;
+        $this->activeCompanies = $counts->activeCompanies;
+        $this->inactiveCompanies = $counts->inactiveCompanies;
+        $this->locations = $counts->locations;
 
         return view('super-admin.company.index', $this->data);
     }
@@ -381,22 +343,27 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function updateAccessCode(Request $request)
     {
+        $id = $request->id;
+        $row = DB::table('users')->where('id', '=', $id)->where('root_user', '=', 1)->first();
+        if (! $row) {
+            $row = DB::table('users')->where('company_id', '=', $id)->where('root_user', '=', 1)->first();
+            if (! $row) {
+                $row = DB::table('users')->where('company_id', '=', $id)->first();
+            }
+        }
 
-        $row = DB::table('users')->where('id', '=', $request->id)->where('root_user', '=', 1)->first();
+        if (! $row) {
+            return Reply::dataOnly(['status' => 'faild', 'message' => 'No active user found for access code generation.']);
+        }
 
         $code = $row->company_id.rand(1111, 9999);
-
-        // dd($row,$code);
-
-        $result = DB::table('users')->where('id', '=', $request->id)->update(['super_admin_login_code' => $code]);
+        $result = DB::table('users')->where('id', '=', $row->id)->update(['super_admin_login_code' => $code]);
 
         if ($result) {
             return Reply::dataOnly(['status' => 'success', 'access_code' => $code]);
-
         }
 
         return Reply::dataOnly(['status' => 'faild', 'access_code' => $code]);
-
     }
 
     /**
@@ -469,38 +436,14 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      */
     public function store(StoreCompany $request)
     {
-        $setting = new Company;
-        $setting->company_name = $request->input('company_name');
-        $setting->career_page_link = str_slug($request->input('company_name'), '-');
-        $setting->company_email = $request->input('company_email');
-        $setting->company_phone = $request->input('company_phone');
-        $setting->website = $request->input('website');
-        $setting->address = $request->input('address');
-        $setting->show_in_frontend = $request->input('show_in_frontend');
-        $setting->job_opening_text = 'Welcome!';
-        $setting->job_opening_title = 'We want people to thrive. We believe you do your best work when you feel your best.';
-        $setting->featured_start_date = Carbon::parse($request->start_date)->format('Y-m-d');
-        $setting->featured_end_date = Carbon::parse($request->end_date)->format('Y-m-d');
-        $setting->featured = ($request->featured == 'yes') ? 1 : 0;
-        $setting->timezone = 'Asia/Kolkata';
-        if ($request->hasFile('logo')) {
-            $setting->logo = Files::upload($request->logo, 'company-logo');
-        }
-        if (module_enabled('Subdomain')) {
-            $setting->sub_domain = $request->sub_domain;
-        }
-        $setting->save();
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $logoFile = $request->hasFile('logo') ? $request->file('logo') : null;
 
-        $user = new User;
-        $user->company_id = $setting->id;
-        $user->name = $request->full_name;
-        $user->email = $request->email;
-        $user->password = bcrypt($request->password);
-        $user->save();
-
-        // assign admin role to default user
-        $role = Role::where('company_id', $setting->id)->first();
-        $user->roles()->attach($role->id);
+        $result = $this->saCompanyMutationService->createCompany(
+            data: $request->all(),
+            idempotencyKey: $idempotencyKey,
+            logoFile: $logoFile
+        );
 
         return Reply::redirect(route('superadmin.company.index'), __('menu.companies').' '.__('messages.createdSuccessfully'));
     }
@@ -577,33 +520,16 @@ class SuperAdminCompanyController extends SuperAdminBaseController
      */
     public function update(UpdateCompany $request, $id)
     {
-        $setting = Company::withoutGlobalScope('company')->findOrFail($id);
+        $companyId = (int) $id;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
+        $logoFile = $request->hasFile('logo') ? $request->file('logo') : null;
 
-        $setting->company_name = $request->input('company_name');
-        $setting->company_email = $request->input('company_email');
-        $setting->company_phone = $request->input('company_phone');
-        $setting->website = $request->input('website');
-        $setting->address = $request->input('address');
-        $setting->show_in_frontend = $request->input('show_in_frontend');
-        $setting->featured_start_date = Carbon::parse($request->start_date)->format('Y-m-d');
-        $setting->featured_end_date = Carbon::parse($request->end_date)->format('Y-m-d');
-        $setting->featured = ($request->featured == 'yes') ? 1 : 0;
-
-        if (module_enabled('Subdomain')) {
-            $setting->sub_domain = $request->sub_domain;
-        }
-        // update company's jobs status
-        if ($setting->status != $request->input('status')) {
-            Job::where('company_id', $id)->update(['status' => $request->status]);
-        }
-
-        $setting->status = $request->input('status');
-
-        if ($request->hasFile('logo')) {
-            $setting->logo = Files::upload($request->logo, 'company-logo');
-        }
-
-        $setting->save();
+        $result = $this->saCompanyMutationService->updateBasicCompany(
+            companyId: $companyId,
+            data: $request->all(),
+            idempotencyKey: $idempotencyKey,
+            logoFile: $logoFile
+        );
 
         return Reply::redirect(route('superadmin.company.index'), __('menu.companies').' '.__('messages.updatedSuccessfully'));
     }
@@ -622,7 +548,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         }
 
         $idempotencyKey = request()->header('X-Idempotency-Key') ?: request()->input('idempotency_key');
-        $result = $this->subscriptionMutationService->destroyCompany($companyId, $idempotencyKey);
+        $result = $this->saCompanyMutationService->destroyCompany($companyId, $idempotencyKey);
 
         if (($result['status'] ?? '') === 'fail') {
             return Reply::error($result['message'] ?? 'Failed to delete company');
@@ -814,189 +740,20 @@ class SuperAdminCompanyController extends SuperAdminBaseController
 
     public function data_ajax(Request $request)
     {
-        $accountCompanyType = GeneralMethod::accountCompanyType();
-        $status = $request->input('status') ?: $request->input('sortingfilter');
-        $location = $request->input('location');
-        $searchTerms = trim((string) $request->input('search', ''));
-        $custom_search = $searchTerms;
+        $result = $this->companyReadService->getCompanyListAjax($request);
 
-        $page = max((int) $request->input('page', 1), 1);
-        $size = max((int) $request->input('size', $request->input('limit', 10)), 1);
-        $from = ($page - 1) * $size;
-
-        $must = [];
-        $mustNot = [];
-
-        // Exclude Super Admin company accounts authoritatively to match Subscription Management
-        $superAdminCompanyIds = GeneralMethod::superAdminCompanyIds();
-        if (! empty($superAdminCompanyIds)) {
-            $mustNot[] = ['terms' => ['id' => $superAdminCompanyIds]];
-        }
-
-        if (! empty($custom_search)) {
-            $must[] = [
-                'bool' => [
-                    'should' => [
-                        [
-                            'match' => [
-                                'company_name' => [
-                                    'query' => $custom_search,
-                                    'fuzziness' => 'AUTO',
-                                    'operator' => 'and',
-                                ],
-                            ],
-                        ],
-                        [
-                            'match_phrase_prefix' => [
-                                'company_name' => $custom_search,
-                            ],
-                        ],
-                        [
-                            'match_phrase_prefix' => [
-                                'locations_address.locations_address.city_name' => $custom_search,
-                            ],
-                        ],
-                        [
-                            'match_phrase_prefix' => [
-                                'locations_address.locations_address.country_name' => $custom_search,
-                            ],
-                        ],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
-            ];
-        }
-
-        // Status Filter
-        if ($status !== null && $status !== '') {
-            $must[] = [
-                'term' => [
-                    'status' => $status,
-                ],
-            ];
-        }
-
-        // Location Filter
-        if (! empty($location)) {
-            $must[] = [
-                'term' => [
-                    'locations_address.locations_address.city_name.keyword' => $location,
-                ],
-            ];
-        }
-
-        $params = [
-            'index' => ELASTIC_COMPANIES_INDEX,
-            'body' => [
-                'from' => $from,
-                'size' => $size,
-                'sort' => [
-                    ['last_login' => ['order' => 'desc', 'missing' => '_last']],
-                    ['_score' => ['order' => 'desc']],
-                    ['leadCount' => ['order' => 'asc']],
-                    ['id' => ['order' => 'desc']],
-                ],
-                'query' => [
-                    'function_score' => [
-                        'query' => [
-                            'bool' => [
-                                'must' => $must,
-                                'must_not' => $mustNot,
-                            ],
-                        ],
-                        'score_mode' => 'sum',
-                        'boost_mode' => 'sum',
-                    ],
-                ],
-            ],
-        ];
-
-        if (! $this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
-            $total = 0;
-            $data = [];
-        } else {
-            try {
-                $response = $this->elasticService->getClient()->search($params);
-                $total = $response['hits']['total']['value'] ?? 0;
-                $data = array_map(function ($hit) {
-                    return $hit['_source'];
-                }, $response['hits']['hits']);
-            } catch (\Throwable $e) {
-                \Log::error('SuperAdminCompanyController@data_ajax ES search error: '.$e->getMessage());
-                $total = 0;
-                $data = [];
-            }
-        }
-
-        // Pre-aggregate job counts in 1 batch query for visible companies (Zero N+1 ES calls)
-        $jobCountsMap = [];
-        $companyIds = array_filter(array_column($data, 'id'));
-        if (! empty($companyIds) && $this->elasticService->indexExists(ELASTIC_JOBS)) {
-            try {
-                $jobAggRes = $this->elasticService->getClient()->search([
-                    'index' => ELASTIC_JOBS,
-                    'body' => [
-                        'size' => 0,
-                        'query' => [
-                            'bool' => [
-                                'should' => [
-                                    ['terms' => ['comId' => $companyIds]],
-                                    [
-                                        'nested' => [
-                                            'path' => 'recommendation_relation',
-                                            'query' => [
-                                                'terms' => ['recommendation_relation.to_company_id' => $companyIds],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                                'minimum_should_match' => 1,
-                            ],
-                        ],
-                        'aggs' => [
-                            'by_company' => [
-                                'terms' => ['field' => 'comId', 'size' => count($companyIds) + 10],
-                                'aggs' => [
-                                    'by_status' => [
-                                        'terms' => ['field' => 'status'],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ]);
-
-                $buckets = $jobAggRes['aggregations']['by_company']['buckets'] ?? [];
-                foreach ($buckets as $b) {
-                    $cId = $b['key'];
-                    $jobCountsMap[$cId] = array_column($b['by_status']['buckets'] ?? [], 'doc_count', 'key');
-                }
-            } catch (\Throwable $e) {
-                \Log::warning('Error aggregating job counts in data_ajax: '.$e->getMessage());
-            }
-        }
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => max((int) ceil($total / $size), 1),
-            'listType' => 'allcandidate',
-        ];
-
-        $userPermissions = [];
-
-        return response()->json([
-            'html' => view('super-admin.ajax_pages.company_list_ajax', compact('data', 'userPermissions', 'accountCompanyType', 'jobCountsMap', 'page', 'size'))->render(),
-            'total' => $total,
-            'pagination' => view('super-admin.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
+        return response()->json($result);
     }
 
-    public function data()
+    public function data(Request $request)
     {
+        if ($request->ajax() && ! $request->has('draw')) {
+            return response()->json($this->companyReadService->getCompanyListAjax($request));
+        }
 
-        // $categories = Company::with('package')->withoutGlobalScope('company')->get();
-        // dd($categories->count());
+        $records = $this->companyReadService->getLegacyCompanyData();
+
+        return DataTables::of(collect($records))->make(true);
 
         $company_id = auth()->user()->company_id;
         $department = GeneralMethod::department();
@@ -2424,7 +2181,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $this->city_id = ($locInfo) ? $locInfo->city_id : '';
         $this->state_id = ($locInfo) ? $locInfo->state_id : '';
 
-        $this->phone = auth()->user()->mobile;
+        $this->phone = optional(auth()->user())->mobile ?? '';
         $this->building = '';
         $this->postal_code = '';
         $this->gstin = '';
@@ -3947,7 +3704,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
         $logoFile = $request->hasFile('logo') ? $request->file('logo') : null;
 
-        $result = $this->companyMutationService->updateCompanyDetails(
+        $result = $this->saCompanyMutationService->updateCompanyDetails(
             companyId: $companyId,
             requestData: $request->all(),
             idempotencyKey: $idempotencyKey,
@@ -3964,7 +3721,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     public function toggleAccountVerify(Request $request, $id)
     {
         $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
-        $result = $this->companyMutationService->toggleAccountVerify((int) $id, $idempotencyKey);
+        $result = $this->saCompanyMutationService->toggleAccountVerify((int) $id, $idempotencyKey);
 
         return response()->json($result);
     }
@@ -4225,7 +3982,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
     public function updateCompanyPackage(UpdatePakage $request, $companyId)
     {
         $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
-        $result = $this->companyMutationService->updateCompanyPackage((int) $companyId, $request->all(), $idempotencyKey);
+        $result = $this->saCompanyMutationService->updateCompanyPackage((int) $companyId, $request->all(), $idempotencyKey);
 
         return Reply::success(__('messages.updatedSuccessfully'));
     }
@@ -12430,7 +12187,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         }
 
         $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
-        $result = $this->subscriptionMutationService->toggleCompanyActive($companyId, $idempotencyKey);
+        $result = $this->saCompanyMutationService->toggleCompanyActive($companyId, $idempotencyKey);
 
         if (($result['status'] ?? '') === 'faild') {
             return Reply::dataOnly(['status' => 'faild', 'message' => $result['message'] ?? 'Failed to update company status']);
@@ -12450,7 +12207,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         }
 
         $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
-        $result = $this->subscriptionMutationService->toggleCoinPackStatus($companyId, 'operational', $idempotencyKey);
+        $result = $this->saCompanyMutationService->toggleCoinPackStatus($companyId, 'operational', $idempotencyKey);
 
         if (($result['status'] ?? '') === 'faild') {
             return Reply::dataOnly(['status' => 'faild', 'message' => $result['message'] ?? 'Failed to update operational status']);
@@ -12470,7 +12227,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
         }
 
         $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('idempotency_key');
-        $result = $this->subscriptionMutationService->toggleCoinPackStatus($companyId, 'sales', $idempotencyKey);
+        $result = $this->saCompanyMutationService->toggleCoinPackStatus($companyId, 'sales', $idempotencyKey);
 
         if (($result['status'] ?? '') === 'faild') {
             return Reply::dataOnly(['status' => 'faild', 'message' => $result['message'] ?? 'Failed to update sales status']);

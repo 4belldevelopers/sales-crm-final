@@ -1,0 +1,47 @@
+{
+    "timestamp": "2026-11-13T11:06:01+05:30",
+    "batches": {
+        "batch_10_sockets": {
+            "total_requests": 30,
+            "simultaneous_sockets": 10,
+            "duration_sec": 9.957,
+            "rps": 3.01,
+            "min_ms": 2467.37,
+            "p50_ms": 3100.65,
+            "p95_ms": 3956.53,
+            "p99_ms": 4017.98,
+            "max_ms": 4017.98,
+            "status_codes": {
+                "200": 30
+            }
+        },
+        "batch_25_sockets": {
+            "total_requests": 50,
+            "simultaneous_sockets": 25,
+            "duration_sec": 16.442,
+            "rps": 3.04,
+            "min_ms": 4071.87,
+            "p50_ms": 6926.55,
+            "p95_ms": 11509.07,
+            "p99_ms": 11509.11,
+            "max_ms": 11509.11,
+            "status_codes": {
+                "200": 50
+            }
+        },
+        "batch_50_sockets": {
+            "total_requests": 100,
+            "simultaneous_sockets": 50,
+            "duration_sec": 30.951,
+            "rps": 3.23,
+            "min_ms": 6548.84,
+            "p50_ms": 11084.83,
+            "p95_ms": 29838.92,
+            "p99_ms": 30835.41,
+            "max_ms": 30950.38,
+            "status_codes": {
+                "200": 100
+            }
+        }
+    }
+}

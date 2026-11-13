@@ -27,6 +27,7 @@ use App\Models\Client;
 use App\Models\Country;
 use App\Models\Job;
 use App\Models\CandidateStatus;
+use App\Services\CompanyProfileRestrictionService;
 
 use App\Models\User;
 use Carbon\Carbon;
@@ -275,20 +276,39 @@ class AdminAccountSettingsController extends AdminBaseController
 			$company_logo_path					=	'';
 			$company_id      					=	auth()->user()->company_id;
 			$company 							=	Company::findOrFail($company_id);
-			if(!empty(@$request->company_name)){
-				$company->company_name 			=	@$request->company_name;
+
+			$restrictionService = app(CompanyProfileRestrictionService::class);
+			$restrictionStatus = $restrictionService->getRestrictionStatus($company);
+
+			if ($restrictionStatus['is_locked']) {
+				$lockViolation = $restrictionService->validateModificationAttempt($company, $request->all());
+				if ($lockViolation !== null) {
+					return response()->json([
+						'status' => 'error',
+						'message' => $lockViolation,
+						'error_name' => 'company_profile_locked',
+					], 422);
+				}
 			}
-			if(!empty(@$request->website)){
-				$company->website 				=	@$request->website;
-			}
-			if(!empty(@$request->industries)){
-				$company->industries 			=	@$request->industries;
+
+			$canEditRestricted = ! $restrictionStatus['is_locked'];
+
+			if ($canEditRestricted) {
+				if(!empty(@$request->company_name)){
+					$company->company_name 			=	@$request->company_name;
+				}
+				if(!empty(@$request->website)){
+					$company->website 				=	@$request->website;
+				}
+				if(!empty(@$request->industries)){
+					$company->industries 			=	@$request->industries;
+				}
+				if(!empty(@$request->company_type)){
+					$company->company_type 			=	@$request->company_type;
+				}
 			}
 			if(!empty(@$request->company_size)){
 				$company->company_size 			=	@$request->company_size;
-			}
-			if(!empty(@$request->company_type)){
-				$company->company_type 			=	@$request->company_type;
 			}
 			if(!empty(@$request->founded)){
 				$company->founded 				=	@$request->founded;
