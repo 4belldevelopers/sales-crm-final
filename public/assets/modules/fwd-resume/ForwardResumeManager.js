@@ -821,27 +821,36 @@
                     container.html(self._shellHtml);
                     self._afterShellInjected();
                 } else {
-                    container.html(
-                        '<div class="d-flex align-items-center justify-content-center" style="min-height:240px;">' +
-                        '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading Forward Resume Engine...</div>'
-                    );
-                    fetch(self._routes.shell)
-                        .then(function (res) { return res.text(); })
-                        .then(function (html) {
-                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                                try { CKEDITOR.instances['test_editor1'].destroy(true); } catch (e) {}
-                            }
-                            self._shellHtml = html;
-                            self._editorInitialized = false;
-                            container.html(html);
-                            self._afterShellInjected();
-                        })
-                        .catch(function (err) {
-                            console.error('Failed to load shell:', err);
-                        });
+                    var existingShellEl = document.getElementById('test_form1');
+                    if (existingShellEl) {
+                        self._shellHtml = existingShellEl.outerHTML;
+                        container.html(self._shellHtml);
+                        self._afterShellInjected();
+                    } else if (self._routes && self._routes.shell) {
+                        fetch(self._routes.shell)
+                            .then(function (res) { return res.text(); })
+                            .then(function (html) {
+                                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                                    try { CKEDITOR.instances['test_editor1'].destroy(true); } catch (e) {}
+                                }
+                                self._shellHtml = html;
+                                self._editorInitialized = false;
+                                container.html(html);
+                                self._afterShellInjected();
+                                if (self._lastOpenPayload) {
+                                    self._hydrateData(self._lastOpenPayload);
+                                }
+                            })
+                            .catch(function (err) {
+                                console.error('Failed to load shell:', err);
+                            });
+                    }
                 }
             } else {
                 self._resetDrawerForm();
+                if (!self._editorInitialized) {
+                    self._initEditor();
+                }
             }
 
             // 3. Ensure WASM Engine is loaded in background
@@ -873,6 +882,7 @@
                     jobSkills: self._jobSkills || [],
                     templateData: self._canonicalTemplates || []
                 };
+                self._lastOpenPayload = instantPayload;
                 self._hydrateData(instantPayload);
                 console.info('V4.1 Forward Resume Drawer hydrated from DOM in < 2ms');
             } else {
