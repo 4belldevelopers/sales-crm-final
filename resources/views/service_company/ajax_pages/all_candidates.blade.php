@@ -1,19 +1,10 @@
 @php
     if (!class_exists(\App\Services\AppTrackerCardPresenter::class, false)) {
-<<<<<<< HEAD
         $presenterFile = app_path('Services/AppTrackerCardPresenter.php');
         if (file_exists($presenterFile)) {
             require_once $presenterFile;
         }
     }
-
-=======
-        $pPath = app_path('Services/AppTrackerCardPresenter.php');
-        if (file_exists($pPath)) {
-            require_once $pPath;
-        }
-    }
->>>>>>> b668fffd0a7bcf8f6ee0aa21cf002288fc4a6910
     use App\Helper\GeneralMethod;
     use App\Services\AppTrackerCardPresenter;
     use App\Services\CurrencyService;

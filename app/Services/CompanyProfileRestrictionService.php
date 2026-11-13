@@ -68,6 +68,34 @@ class CompanyProfileRestrictionService
     public const WARNING_TITLE = 'Editing Restricted';
 
     /**
+     * Map of internal field identifiers to their canonical user-facing names.
+     */
+    public const RESTRICTED_FIELD_LABELS = [
+        'website' => 'Company Website',
+        'company_name' => 'Company Name',
+        'name' => 'Company Name',
+        'industry' => 'Industry',
+        'industries' => 'Industry',
+        'company_type' => 'Company Type',
+        'industries_type' => 'Company Type',
+    ];
+
+    /**
+     * Build dynamic restricted warning message for a specific field or generic.
+     */
+    public static function formatFieldWarningMessage(?string $fieldName = null): string
+    {
+        $resolved = trim((string) $fieldName);
+        if ($resolved !== '' && strcasecmp($resolved, 'Company Details') !== 0) {
+            $canonical = self::RESTRICTED_FIELD_LABELS[strtolower($resolved)] ?? $resolved;
+
+            return "You can't edit {$canonical}. Please contact your Administrator for assistance.";
+        }
+
+        return self::MSG_EDITING_RESTRICTED;
+    }
+
+    /**
      * Determine if a company can edit the four restricted profile fields.
      *
      * @param  Company|int|object|null  $company
