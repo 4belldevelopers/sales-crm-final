@@ -2,28 +2,41 @@
 
 namespace App\Observers;
 
+use App\Helper\Files;
+use App\Jobs\ElasticCompanyIndex;
 use App\Models\ApplicationSetting;
 use App\Models\Company;
-use App\Helper\Files;
-use App\Models\Role;
-use Illuminate\Support\Facades\DB;
-use App\Models\Package;
 use App\Models\CompanyPackage;
-use Carbon\Carbon;
-use App\Models\ThemeSetting;
+use App\Models\Package;
 use App\Models\Permission;
+use App\Models\Role;
+use App\Models\ThemeSetting;
 use App\Support\TenantLookup;
-use App\Jobs\ElasticCompanyIndex;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CompanyObserver
 {
     /** Defer observer execution until database transaction commit success. */
     public bool $afterCommit = true;
 
-    /** Invalidate TenantLookup caches whenever a company record is saved. */
+    /** Invalidate TenantLookup caches and synchronize to Elasticsearch whenever a company record is saved/updated. */
     public function updated(Company $company): void
     {
         TenantLookup::invalidate($company->id);
+
+        try {
+            app(\App\Services\ElasticCaompanyIndex::class)->companyIndexElastic($company->id);
+            \App\Helper\GeneralMethod::cacheClean('allfindagencyversion_global');
+            \App\Services\SuperAdmin\SuperAdminCompanyCacheManager::flushCaches($company->id);
+            if (class_exists(\App\Services\SuperAdmin\SuperAdminSubscriptionCacheManager::class)) {
+                \App\Services\SuperAdmin\SuperAdminSubscriptionCacheManager::flushCaches();
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('[CompanyObserver] ES company updated indexing failed: '.$e->getMessage());
+        }
+
+        ElasticCompanyIndex::dispatch($company->id)->afterCommit();
     }
 
     public function updating(Company $company)
@@ -41,7 +54,7 @@ class CompanyObserver
             $this->createCommercialDefaults($company);
 
             // add company default role
-            $roleUser = new Role();
+            $roleUser = new Role;
             $roleUser->name = 'admin';
             $roleUser->display_name = 'Administrator';
             $roleUser->description = 'Admin is allowed to manage everything of the app.';
@@ -53,18 +66,18 @@ class CompanyObserver
             $permissions = Permission::all();
             $roleUser->syncPermissions($permissions);
 
-            //add company default job application status
+            // add company default job application status
             $data = [
                 ['status' => 'applied', 'company_id' => $company->id, 'slug' => 'applied', 'position' => '1', 'color' => '#2b2b2b'],
                 ['status' => 'phone screen', 'company_id' => $company->id, 'slug' => 'phone screen', 'position' => '2', 'color' => '#f1e52e'],
                 ['status' => 'interview', 'company_id' => $company->id, 'slug' => 'interview', 'position' => '3', 'color' => '#3d8ee8'],
                 ['status' => 'hired', 'company_id' => $company->id, 'slug' => 'hired', 'position' => '4', 'color' => '#32ac16'],
-                ['status' => 'rejected', 'company_id' => $company->id, 'slug' => 'rejected', 'position' => '5', 'color' => '#ee1127']
+                ['status' => 'rejected', 'company_id' => $company->id, 'slug' => 'rejected', 'position' => '5', 'color' => '#ee1127'],
             ];
             DB::table('application_status')->insert($data);
 
-            //add default theme settings
-            $theme = new ThemeSetting();
+            // add default theme settings
+            $theme = new ThemeSetting;
             $theme->primary_color = '#1579d0';
             $theme->company_id = $company->id;
             $theme->admin_custom_css = '/*Enter your custom css after this line*/ 
@@ -80,36 +93,36 @@ class CompanyObserver
                 'mail_setting' => [
                     '1' => [
                         'name' => 'applied',
-                        'status' => true
+                        'status' => true,
                     ],
                     '2' => [
                         'name' => 'phone screen',
-                        'status' => true
+                        'status' => true,
                     ],
                     '3' => [
                         'name' => 'interview',
-                        'status' => true
+                        'status' => true,
                     ],
                     '4' => [
                         'name' => 'hired',
-                        'status' => true
+                        'status' => true,
                     ],
                     '5' => [
                         'name' => 'rejected',
-                        'status' => true
-                    ]
-                ]
+                        'status' => true,
+                    ],
+                ],
             ];
 
             ApplicationSetting::create($application_setting_data);
 
-            //assign trial package
+            // assign trial package
             $trialPackage = Package::where('is_trial', 1)->first();
             $checkTrialPackage = CompanyPackage::where('company_id', $company->id)
                 ->where('package_id', $trialPackage->id)->first();
 
-            if (!is_null($trialPackage) && is_null($checkTrialPackage)) {
-                $companyPackage = new CompanyPackage();
+            if (! is_null($trialPackage) && is_null($checkTrialPackage)) {
+                $companyPackage = new CompanyPackage;
                 $companyPackage->company_id = $company->id;
                 $companyPackage->package_id = $trialPackage->id;
                 $companyPackage->status = 'active';
@@ -119,6 +132,43 @@ class CompanyObserver
 
                 Company::where('id', $company->id)->update(['package_id' => $trialPackage->id]);
             }
+
+            try {
+                app(\App\Services\ElasticCaompanyIndex::class)->companyIndexElastic($company->id);
+                \App\Helper\GeneralMethod::cacheClean('allfindagencyversion_global');
+                \App\Services\SuperAdmin\SuperAdminCompanyCacheManager::flushCaches($company->id);
+                if (class_exists(\App\Services\SuperAdmin\SuperAdminSubscriptionCacheManager::class)) {
+                    \App\Services\SuperAdmin\SuperAdminSubscriptionCacheManager::flushCaches();
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('[CompanyObserver] Inline ES company created indexing failed: '.$e->getMessage());
+            }
+
+            ElasticCompanyIndex::dispatch($company->id)->afterCommit();
+        }
+    }
+
+    public function deleted(Company $company): void
+    {
+        TenantLookup::invalidate($company->id);
+
+        try {
+            $es = app(\App\Services\ElasticService::class);
+            $index = config('constants.ELASTIC_COMPANIES_INDEX', defined('ELASTIC_COMPANIES_INDEX') ? ELASTIC_COMPANIES_INDEX : 'local_companies_elastic');
+            if ($es->indexExists($index) && $es->getClient()->exists(['index' => $index, 'id' => (string) $company->id])) {
+                $es->getClient()->delete([
+                    'index' => $index,
+                    'id' => (string) $company->id,
+                    'refresh' => true,
+                ]);
+            }
+            \App\Helper\GeneralMethod::cacheClean('allfindagencyversion_global');
+            \App\Services\SuperAdmin\SuperAdminCompanyCacheManager::flushCaches($company->id);
+            if (class_exists(\App\Services\SuperAdmin\SuperAdminSubscriptionCacheManager::class)) {
+                \App\Services\SuperAdmin\SuperAdminSubscriptionCacheManager::flushCaches();
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('[CompanyObserver] ES company deleted cleanup failed: '.$e->getMessage());
         }
     }
 
@@ -182,9 +232,8 @@ class CompanyObserver
             app(\App\Services\ElasticCaompanyIndex::class)->companyIndexElastic($company->id);
             \App\Helper\GeneralMethod::cacheClean('allfindagencyversion_global');
         } catch (\Throwable $e) {
-            Log::warning('[CompanyObserver] Inline ES company indexing failed: ' . $e->getMessage());
+            Log::warning('[CompanyObserver] Inline ES company indexing failed: '.$e->getMessage());
         }
         ElasticCompanyIndex::dispatch($company->id)->afterCommit();
     }
-
 }
