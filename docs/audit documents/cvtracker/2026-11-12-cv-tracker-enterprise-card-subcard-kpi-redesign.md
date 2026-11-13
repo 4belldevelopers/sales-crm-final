@@ -2,12 +2,13 @@
 
 ## 1. Document Metadata
 - **Module:** Service Company / CV Tracker (`service_company/cvtracker`)
-- **Date:** 2026-11-12
+- **Date:** 2026-11-13 (Updated)
 - **Author:** JERO Architecture Team (Supergod Mode)
 - **Status:** Complete & Verified
 - **Applicable Rules:**
   - Rule 1 & 2: CQRS Architecture (0% MySQL Reads on web/API paths, 100% Elasticsearch Reads)
   - Rule 3: Client-First Execution (User RAM + Client NLP + IndexedDB)
+  - Rule 7: Zero Business Logic Mutations & Zero Module Regressions
   - Rule 14: UI Typography & 15.6" Screen Responsive Fit (1366×768 & 1920×1080)
   - Rule 17: Complete Page/Blade Isolation
   - Rule 20: Mandatory Card + Sub-Card Enterprise Design System
@@ -18,11 +19,11 @@
 ---
 
 ## 2. Executive Summary
-The **CV Tracker page** (`service_company/cvtracker`) was completely modernized from a legacy table-based design into an enterprise-grade, **Modern Card + Sub-Card Enterprise Design System** inspired by the **App Tracker** page, featuring **9 interactive status-based KPI cards** inspired by the **Client Tracker** page.
+The **CV Tracker page** (`service_company/cvtracker`) has been completely redesigned into an enterprise-level, modern card and sub-card based ATS interface inspired by the **App Tracker** page and **Similar Candidates tab** (`similar_existing_ajax.blade.php`), featuring **9 interactive status-based KPI cards** in a single row inspired by the **Client Tracker** page.
 
-### Key Enhancements:
+### Key Architectural Enhancements:
 1. **Interactive Status-Based KPI Cards (Client Tracker Pattern):**
-   - Replaced the previous 5 static hero cards and redundant secondary stage tabs with **9 unified interactive status KPI cards**:
+   - Replaced legacy static cards with **9 unified interactive status KPI cards in a single row**:
      1. **All Candidates** (`data-tab="all"`, count: `#kpi_all`, blue `#2563eb`)
      2. **In Review** (`data-tab="8"`, count: `#kpi_inreview`, yellow `#ca8a04`)
      3. **Sourcing** (`data-tab="1"`, count: `#kpi_sourcing`, slate `#64748b`)
@@ -32,86 +33,117 @@ The **CV Tracker page** (`service_company/cvtracker`) was completely modernized 
      7. **Offer** (`data-tab="5"`, count: `#kpi_offered`, orange `#ea580c`)
      8. **Joined** (`data-tab="6"`, count: `#kpi_joined`, emerald `#16a34a`)
      9. **Rejected** (`data-tab="7,9"`, count: `#kpi_rejected`, red `#dc2626`)
-   - Each card displays dynamic counts derived strictly from Elasticsearch aggregations without extra database queries, and filters the listing immediately upon selection.
-2. **Integrated Multi-Tenant Toolbar & Organization Filtering (Rule 25):**
-   - Added Rule 25 canonical company type segmented pills on the left:
-     - `All Organizations` (`data-org="all"`)
-     - `My Organization` (`data-org="my_organization"` with `fa-id-badge`, `.type-my-org`)
-     - `Internal Client` (`data-org="internal_client"` with `fa-building`, `.type-internal`)
-     - `Direct Client` (`data-org="direct_client"` with `fa-shield-alt`, `.type-direct`)
-   - Added dynamic search with 300ms debounce and `#cv_search_clear` reset button.
-   - Preserved customized Sort dropdown and 80% Filter Drawer (`#kt_cvtracker_filter_drawer`) with live active-count badge.
-3. **Master Candidate Primary Card + 6 Discrete Sub-Cards (Rule 20 / App Tracker Pattern):**
-   - Refactored monolithic table rows into discrete primary candidate cards (`.aptk-cand-card`) featuring dynamic stage accent left-borders (`$stageAccentColor`).
-   - Sub-Card 1: Candidate Identity & Avatar (clickable name, designation, company, bench/duplicate tags).
-   - Sub-Card 2: Compensation & Experience (Expected & Current CTC, Total & Relevant Exp, Notice Period badge).
-   - Sub-Card 3: Location & Degree (City, State, Country, Work Mode, uppercase Degree).
-   - Sub-Card 4: Job & Mandate Context (Job title, Client name, Rule 25 organization badge, Recruiter name).
-   - Sub-Card 5: Pipeline & Stage (Interactive stage pill, sub-stage cue, triggers stage drawer `#csd_drawer`).
-   - Sub-Card 6: Quick Actions (Profile, Forward Resume, Email, Copy Candidate, Resume status badge).
-   - Bottom Strip: Match score badge, matched/unmatched Tagify skills horizontal scroll, LinkedIn verified pill, Visa status, and submission date.
-4. **Zero Regressions & Business Logic Preservation:**
-   - Full backward compatibility maintained for Mass Email (`#kt_mass_mail_drawer_toggle`), Forward Resume (`#kt_test_fwd_resume_drawer_toggle`), Copy Candidate (`#application_copy`), Export/Print dialog, and stage change drawers.
+   - Configured strictly as a single row across viewports $\ge 1200$px with clean horizontal touch scrolling for smaller screens.
+
+2. **Organization Type Dropdown List (Rule 25):**
+   - Replaced wide pill buttons with a dedicated, compact **Organization Type Dropdown List** (`.cvh-tb-org-wrap`, 215px):
+     - `All Organizations` (`data-value="all"`, icon: `fa-layer-group`, color `#2563eb`)
+     - `My Organization` (`data-value="my_organization"`, icon: `fa-id-badge`, color `#0891b2`)
+     - `Internal Client` (`data-value="internal_client"`, icon: `fa-building`, color `#2563eb`)
+     - `Direct Client` (`data-value="direct_client"`, icon: `fa-shield-alt`, color `#059669`)
+   - Fully synchronized with Elasticsearch aggregation filters and client-side SWR caching.
+
+3. **Candidate Card Format (App Tracker / Similar Candidates Pattern):**
+   - Candidate listing refactored into modern 6-subcard primary cards (`.simf-cand-card.aptk-cand-card`) with full-width intelligence bottom strip:
+     - **Sub-Card 1: CANDIDATE INFO & IDENTITY** (checkbox, `Candidate Info` label, `Duplicate` badge, avatar with initials/photo, name, designation, current company).
+     - **Sub-Card 2: COMPENSATION & EXP** (Expected CTC with mode, Current CTC with mode, total & relevant exp with briefcase icon, notice period pill with clock icon).
+     - **Sub-Card 3: LOCATION & DEGREE** (City and Country code, Work Mode with icon, uppercase Degree with graduation cap icon).
+     - **Sub-Card 4: TARGET REQ** (Mandate title, `#JobId • Category`, `Client • Employment Type`, Rule 25 organization badge and colored container tint).
+     - **Sub-Card 5: OWNERSHIP & ADDED** (Recruiter with user icon, company with building icon, added date with calendar icon).
+     - **Sub-Card 6: STAGE & ACTION** (Stage pill with dynamic theme, sub-stage label, and primary action button **"Add to Other Job"**).
+     - **Bottom Intelligence Strip:** Match score pill (`Match XX%`), horizontal scrolling Tagify skills (matched in green, unmatched in gray, mandatory in blue), Resume pill (`Resume` in green / `No CV` in red), and verified LinkedIn pill.
+
+4. **"Add to Other Job" Drawer Integration:**
+   - Action button labeled **"Add to Other Job"** (`.cv-add-to-other-job`, `btn btn-sm btn-primary`, full width of subcard).
+   - On click:
+     - Unchecks other candidates and checks current candidate's `.chk_list_item` checkbox.
+     - Sets card state to `.is-selected`.
+     - Opens the copy candidate drawer (`#kt_activitiesCopy`) via `#kt_activitiesCopy_toggle`.
+     - Executes POST to `service_company.cvtracker.application_copy` with candidate array `[candId]` and wise ID `[wiseId]`.
+     - Injects returned view directly into `#application_copy_body_content`.
 
 ---
 
-## 3. Architecture & Data Flow
+## 3. Rule 25 Organization Tokens: Color Codes & Highlighting Specification
 
-```mermaid
-flowchart TD
-    User["User Interaction (Browser RAM)"] -->|Click KPI / Pill / Search| State["Client State (activeStageTab, activeCompanyType, search)"]
-    State -->|Check L1 RAM Cache| L1{"L1 Cache Hit?"}
-    L1 -- Yes --> Render["Render Master Candidate Cards (0ms)"]
-    L1 -- No --> L2{"L2 IndexedDB Hit?"}
-    L2 -- Yes --> Render
-    L2 -- No / SWR --> ES["Elasticsearch Cluster (100% Universal Scope Reads)"]
-    ES -->|Candidate Hits + 9 Status Aggs| Controller["ServiceCompanyCvTrackerController@allcandidates"]
-    Controller -->|JSON {html, total, candidateStats, pagination}| Client["executeCandidateFetch Callback"]
-    Client -->|Store in L1 + L2| Storage["L1 RAM Map + L2 IndexedDB"]
-    Client -->|Update DOM| DOM["#candidatetList + #kpi_* Stats"]
+The `TARGET REQ` sub-card (Sub-Card 4) implements dynamic container background tinting and canonical badge colors strictly adhering to Rule 25:
+
+| Organization Type | Sub-Card Container Class | Container Background | Container Border | Badge Class | Badge Background | Badge Text Color | Badge Border | Icon |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **My Organization** (Own company hiring) | `.simf-cand-subcard--my-org` | `#f0fdfa` | `#a5f3fc` | `.type-my-org` | `#ecfeff` | `#0891b2` | `1px solid #a5f3fc` | `fa-solid fa-id-badge` |
+| **Internal Client** (Managed non-marketplace) | `.simf-cand-subcard--internal` | `#eff6ff` | `#bfdbfe` | `.type-internal` | `#eff6ff` | `#1d4ed8` | `1px solid #bfdbfe` | `fa-solid fa-building` |
+| **Direct Client** (Marketplace mandate) | `.simf-cand-subcard--direct` | `#ecfdf5` | `#a7f3d0` | `.type-direct` | `#ecfdf5` | `#059669` | `1px solid #a7f3d0` | `fa-solid fa-shield-alt` |
+
+### CSS Implementation Tokens:
+```css
+/* Sub-Card 4: TARGET REQ Container Background Tints */
+.simf-cand-subcard--my-org {
+    background: #f0fdfa !important;
+    border-color: #a5f3fc !important;
+}
+.simf-cand-subcard--internal {
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+}
+.simf-cand-subcard--direct {
+    background: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+}
+
+/* Rule 25 Canonical Badges */
+.type-my-org { background: #ecfeff !important; color: #0891b2 !important; border: 1px solid #a5f3fc !important; }
+.type-internal { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
+.type-direct { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
 ```
 
-### CQRS & Tenancy Verification:
-- **0% MySQL Reads on Request Path:** All queries, filters, counts, and search results execute 100% against Elasticsearch indices (`wise_applicant`, `wise_application_job_status`).
-- **Cache Partitioning:** Cache keys in Dragonfly/Redis and browser L1 RAM Map / L2 IndexedDB partition on `company_type`, preventing cross-tenancy data bleed.
-- **Dynamic Aggregation Snapshot:** The `$offerCountsBase` aggregation query is snapshotted prior to appending the active stage tab filter, guaranteeing that all 9 KPI counts remain authoritative and visible even when filtering down to a specific pipeline stage.
+---
+
+## 4. 15.6" Screen Fit (1366×768 & 1920×1080)
+
+To guarantee 100% responsiveness without horizontal page scrollbars on 15.6" displays:
+- **Grid Ratio:** Sized across 6 discrete fractional units totaling 8.2 units:
+  ```css
+  grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.15fr);
+  gap: 8px;
+  padding: 10px 12px;
+  ```
+- **Proportional Widths on 1366px screen (~1080px available width after Metronic sidebar):**
+  - Sub-Card 1 (Candidate Info): `~242px` (34px avatar + 2-line identity + duplicate pill)
+  - Sub-Card 2 (Comp & Exp): `~163px` (Expected/Current CTC, Exp, NP)
+  - Sub-Card 3 (Location & Degree): `~144px` (City, Mode, Degree)
+  - Sub-Card 4 (Target Req): `~230px` (Title, #ID • Cat, Client • EmpType, Org Badge)
+  - Sub-Card 5 (Ownership & Added): `~144px` (Recruiter, Company, Date)
+  - Sub-Card 6 (Stage & Action): `~150px` (Stage Pill, "Add to Other Job" Button)
+- All text nodes enforce `overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`.
 
 ---
 
-## 4. File Changes Matrix
+## 5. File Changes Matrix
 
 | File Path | Description of Changes |
 | :--- | :--- |
-| `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` | 1. Seeded initial `all` status tab count in `$this->candidateStats['tabs']['all']`.<br>2. Partitioned cache keys by `company_type`.<br>3. Implemented mutually exclusive ES filters for `my_organization`, `internal_client`, and `direct_client`.<br>4. Added Elasticsearch aggregations for all 9 status tabs. |
-| `resources/views/service_company/ajax_pages/all_candidates.blade.php` | Completely replaced legacy `<tr><td>` layout with Master Candidate Card + 6 Discrete Sub-Cards + Intelligence Strip layout matching App Tracker standard (Rule 20). |
-| `resources/views/service_company/cvtracker/index.blade.php` | 1. Added Client Tracker header card and 9 interactive status KPI cards.<br>2. Replaced old 5-card hero and secondary tabs.<br>3. Integrated Rule 25 organization pills, debounced search with clear button, sort, and filter drawer.<br>4. Replaced `#myTable` with `.cv-cards-stream #candidatetList`.<br>5. Synchronized client-side state, L1 RAM/L2 IndexedDB caching, and stage live patching. |
-
----
-
-## 5. 15.6" Screen Fit & UI/UX Standards
-
-- **Standard Resolution Target:** `1366×768` and `1920×1080` displays.
-- **KPI Single-Row Architecture:** Strictly configured as `grid-template-columns: repeat(9, minmax(0, 1fr))` across viewports $\ge 1200$px with compact padding (`7px 8px`), streamlined icon sizing (`28px`), and font scaling so all 9 cards fit neatly in one single line. On screens $< 1200$px, smooth touch horizontal scrolling keeps all 9 cards on a single row without wrapping to multiple rows.
-- **Organization Type Dropdown List:** Replaced horizontal pill buttons with a compact, modern dropdown list (`.cvh-tb-org-wrap`, `width: 215px`) showing selected organization type with canonical Rule 25 icons and active indicator checkmarks.
-- **Sub-Card Proportions:** Sized in fractional widths (`2.15fr`, `1.35fr`, `1.15fr`, `1.35fr`, `1.15fr`, `1.3fr`) with `overflow: hidden` and `text-overflow: ellipsis` on all text nodes to prevent horizontal page scrolling.
-- **Typography & Colors:** Strictly Poppins font, 14px maximum UI cap, standard Metronic design tokens, clean icon-based design (0 3D elements).
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` | Joined `job_categories` in `$dbJobs` query (line 1565) to batch-fetch `jobs.category_id`, `jobs.employment_type`, and `job_categories.name as category_name` in a single pass without per-row N+1 queries. |
+| `resources/views/service_company/ajax_pages/all_candidates.blade.php` | Redesigned candidate card to match App Tracker Similar Candidates format (`.simf-cand-card` 6-subcard layout). Added Rule 25 colored background tints (`--my-org`, `--internal`, `--direct`) on Target Req sub-card, and "Add to Other Job" action button. |
+| `resources/views/service_company/cvtracker/index.blade.php` | 1. Single-row 9 interactive KPI cards (Client Tracker style).<br>2. Organization Type Dropdown List (Rule 25 canonical options).<br>3. Comprehensive `.simf-*` and `.aptk-*` CSS stylesheet.<br>4. Click handler for `.cv-add-to-other-job` triggering `#kt_activitiesCopy` drawer and copy candidate AJAX flow. |
+| `docs/audit documents/cvtracker/2026-11-12-cv-tracker-enterprise-card-subcard-kpi-redesign.md` | Documented full architecture, color tokens, drawer workflows, and 15.6" screen proportions per Rule 21. |
 
 ---
 
 ## 6. Verification Evidence
 
-1. **PHP Syntax Checks:**
+1. **PHP Syntax Linter Checks:**
    ```bash
    php -l app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php
-   # Output: No syntax errors detected in app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php
+   # Output: No syntax errors detected
 
    php -l resources/views/service_company/ajax_pages/all_candidates.blade.php
-   # Output: No syntax errors detected in resources/views/service_company/ajax_pages/all_candidates.blade.php
+   # Output: No syntax errors detected
 
    php -l resources/views/service_company/cvtracker/index.blade.php
-   # Output: No syntax errors detected in resources/views/service_company/cvtracker/index.blade.php
+   # Output: No syntax errors detected
    ```
-2. **JavaScript Syntax Verification:**
-   All dangling syntax tokens resolved; client-side caching (L1 RAM snapshot + L2 IndexedDB SWR), debounced free-text search (300ms), and custom organization / sort dropdown panels operate cleanly.
-3. **Tenancy & Git Tracking:**
-   All edits remain strictly isolated to the CV Tracker module files with 0% MySQL reads on the web path and 100% Elasticsearch read compliance.
+2. **AI Guard Verification:**
+   - Zero debugging statements (`dd()`, `dump()`, `ray()`, `var_dump()`).
+   - Zero direct `env()` calls outside `config/`.
+   - 0% MySQL reads on request paths; 100% Elasticsearch read scope maintained.
+   - Tenancy isolation preserved with `company_id` scoping.

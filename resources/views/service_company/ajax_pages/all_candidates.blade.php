@@ -17,6 +17,7 @@
     $feedback_status = ReferenceDataCache::feedbackStatus();
     $currency = GeneralMethod::currency();
     $job_status_arr = GeneralMethod::job_status();
+    $empTypes = GeneralMethod::employmentType();
     $symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
     $symbolsValue = !empty($symbolsValue) ? $symbolsValue : [
         0 => "INR",
@@ -201,7 +202,7 @@
 
             // Notice Period
             $np = $cardMeta['notice_display'];
-            $npClass = 'aptk-notice-' . $cardMeta['notice_class'];
+            $npClass = 'simf-notice-' . $cardMeta['notice_class'];
 
             // Location
             $row_city_name = AppTrackerCardPresenter::cleanText(@$row->city_name ?? '');
@@ -225,18 +226,24 @@
                 $isOwnOrg = true;
             }
 
-            if ($isDirect) {
-                $orgTypeLabel = 'Direct Client';
-                $orgTypeCls   = 'type-direct';
-                $orgTypeIcon  = 'fa-shield-alt';
-            } elseif ($isOwnOrg) {
-                $orgTypeLabel = 'My Organization';
-                $orgTypeCls   = 'type-my-org';
-                $orgTypeIcon  = 'fa-id-badge';
+            if ($isOwnOrg) {
+                $targetTypeLabel = 'My Organization';
+                $targetTypeClass = 'type-my-org';
+                $targetTypeIcon  = 'fa-solid fa-id-badge';
+                $targetTypeStyle = 'background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc;';
+                $targetSubcardClass = 'simf-cand-subcard--my-org';
+            } elseif ($isDirect) {
+                $targetTypeLabel = 'Direct Client';
+                $targetTypeClass = 'type-direct';
+                $targetTypeIcon  = 'fa-solid fa-shield-alt';
+                $targetTypeStyle = 'background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;';
+                $targetSubcardClass = 'simf-cand-subcard--direct';
             } else {
-                $orgTypeLabel = 'Internal Client';
-                $orgTypeCls   = 'type-internal';
-                $orgTypeIcon  = 'fa-building';
+                $targetTypeLabel = 'Internal Client';
+                $targetTypeClass = 'type-internal';
+                $targetTypeIcon  = 'fa-solid fa-building';
+                $targetTypeStyle = 'background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;';
+                $targetSubcardClass = 'simf-cand-subcard--internal';
             }
 
             // Recruiter / Ownership
@@ -250,8 +257,12 @@
             }
             $post_company_name = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->company_name ?: ''));
 
-            // Job Title & Client Name
-            $jobTitleDisplay = !empty($row->title) ? $row->title : 'General Pool Application';
+            // Job Title, Category, Client & Employment Type
+            $jobTitleDisplay = !empty($jobDetailsMap[$rowJobId]->title) ? $jobDetailsMap[$rowJobId]->title : (!empty($row->title) ? $row->title : 'General Pool Application');
+            $jobCategoryName = !empty($jobDetailsMap[$rowJobId]->category_name) ? $jobDetailsMap[$rowJobId]->category_name : (!empty($row->category_name) ? $row->category_name : '');
+            $empTypeRaw = $jobDetailsMap[$rowJobId]->employment_type ?? (@$row->employment_type ?? 0);
+            $empTypeLabel = $empTypes[$empTypeRaw] ?? ($empTypeRaw == 1 ? 'Contract' : 'Full-Time');
+
             $client_title_name = $row->client_name ?? '';
             if (empty($client_title_name) && !empty($rowJobId)) {
                 $client_title_name = GeneralMethod::companyDetailsByClient($rowJobId) ?: '';
@@ -286,242 +297,235 @@
         @endphp
 
         <!-- Master Primary Candidate Card (Rule 20 Modern Card + Sub-Card Enterprise Standard) -->
-        <div class="aptk-cand-card"
-             data-entity="candidate"
-             data-candidate-id="{{ $candAppId }}"
-             data-wise-id="{{ $wiseId }}"
-             data-job-id="{{ $rowJobId }}"
-             data-stage-id="{{ $masterStatusId }}"
-             data-print-name="{{ e($displayFullName) }}"
-             data-print-desig="{{ e($displayDesignation) }}"
-             data-print-match="{{ $matchScore }}%"
-             data-print-exp="{{ e($printExpStr) }}"
-             data-print-salary="{{ e($printSalaryStr) }}"
-             data-print-notice="{{ e($np) }}"
-             data-print-company="{{ e($displayCurrentCompany) }}"
-             data-print-location="{{ e($locFull) }}"
-             data-print-edu="{{ e(strtoupper($displayQualification)) }}"
-             data-print-owner="{{ e($rowpostedby) }}"
-             data-print-job="{{ e($jobTitleDisplay) }}"
-             data-print-stage="{{ e($printStageStr) }}"
-             style="border-left: 3.5px solid {{ $stageAccentColor }} !important;">
+        <article class="simf-cand-card aptk-cand-card {{ $flag === 1 ? 'is-duplicate' : '' }}"
+                 data-entity="candidate"
+                 data-candidate-id="{{ $candAppId }}"
+                 data-wise-id="{{ $wiseId }}"
+                 data-job-id="{{ $rowJobId }}"
+                 data-stage-id="{{ $masterStatusId }}"
+                 data-print-name="{{ e($displayFullName) }}"
+                 data-print-desig="{{ e($displayDesignation) }}"
+                 data-print-match="{{ $matchScore }}%"
+                 data-print-exp="{{ e($printExpStr) }}"
+                 data-print-salary="{{ e($printSalaryStr) }}"
+                 data-print-notice="{{ e($np) }}"
+                 data-print-company="{{ e($displayCurrentCompany) }}"
+                 data-print-location="{{ e($locFull) }}"
+                 data-print-edu="{{ e(strtoupper($displayQualification)) }}"
+                 data-print-owner="{{ e($rowpostedby) }}"
+                 data-print-job="{{ e($jobTitleDisplay) }}"
+                 data-print-stage="{{ e($printStageStr) }}"
+                 style="border-left: 3.5px solid {{ $stageAccentColor }} !important;">
 
             <!-- Upper Discrete 6 Sub-Cards Grid -->
-            <div class="aptk-cand-grid">
+            <div class="simf-cand-grid">
 
                 <!-- SUB-CARD 1: CANDIDATE INFO & IDENTITY -->
-                <div class="aptk-cand-subcard aptk-subcard-identity">
-                    <div class="aptk-subcard-hdr">
-                        <label class="aptk-chk-wrap" title="Select candidate">
-                            <input class="form-check-input chk_list_item"
-                                   type="checkbox"
-                                   name="chk_list_item[]"
-                                   value="{{ $candAppId }}"
-                                   data-wiseId="{{ $wiseId }}"
-                                   data-Wiid="{{ $wiseId }}"
-                                   data-candidate-id="{{ $candAppId }}"
-                                   data-jobId="{{ $rowJobId }}"
-                                   data-match="{{ $matchScore }}"
-                                   data-has-resume="{{ $hasResume ? '1' : '0' }}"
-                                   data-skills="{{ e($rawSkillsStr) }}"
-                                   data-cname="{{ e($displayFullName) }}" />
-                            <span class="aptk-subcard-label">Candidate Info</span>
+                <div class="simf-cand-subcard simf-cand-subcard--info">
+                    <div class="simf-subcard-head">
+                        <label class="simf-subcard-label m-0 cursor-pointer" title="Select candidate">
+                            <span class="form-check form-check-sm form-check-custom form-check-solid me-1">
+                                <input class="form-check-input chk_list_item"
+                                       name="chk_list_item[]"
+                                       type="checkbox"
+                                       value="{{ $candAppId }}"
+                                       data-wiseId="{{ $wiseId }}"
+                                       data-Wiid="{{ $wiseId }}"
+                                       data-candidate-id="{{ $candAppId }}"
+                                       data-jobId="{{ $rowJobId }}"
+                                       data-match="{{ $matchScore }}"
+                                       data-has-resume="{{ $hasResume ? '1' : '0' }}"
+                                       data-skills="{{ e($rawSkillsStr) }}"
+                                       data-cname="{{ e($displayFullName) }}" />
+                            </span>
+                            Candidate Info
                         </label>
-                        <div class="aptk-hdr-badges">
-                            @if ($isBench)
-                                <span class="aptk-pill-bench" title="Bench Talent">Bench</span>
+                        @if ($flag === 1)
+                            <span class="simf-dup-pill" title="Duplicate candidate detected">
+                                <i class="fa-solid fa-clone me-1"></i>Duplicate
+                            </span>
+                        @endif
+                    </div>
+                    <div class="simf-cand-info-row">
+                        <a href="javascript:void(0);"
+                           data-row-id="{{ $wiseId }}"
+                           data-wise-id="{{ $candAppId }}"
+                           class="show-application-detail simf-avatar {{ $flag === 1 ? 'is-dup btn-light-danger pulse pulse-danger' : $bgTextDecore }}"
+                           title="{{ $flag === 1 ? 'Duplicate — View Profile' : 'View Candidate Profile' }}">
+                            @if (!empty($photo))
+                                <img src="{{ $photo }}" alt="{{ e($displayFullName) }}" style="width:100%; height:100%; border-radius:8px; object-fit:cover;" />
+                            @else
+                                <span>{{ strtoupper($firstChar) }}</span>
                             @endif
                             @if ($flag === 1)
-                                <span class="aptk-pill-dup" title="Duplicate candidate detected">Duplicate</span>
+                                <span class="pulse-ring"></span>
                             @endif
-                        </div>
-                    </div>
-                    <div class="aptk-subcard-body">
-                        <div class="aptk-identity-row">
+                        </a>
+                        <div class="simf-cand-info-meta">
                             <a href="javascript:void(0);"
                                data-row-id="{{ $wiseId }}"
                                data-wise-id="{{ $candAppId }}"
-                               class="aptk-avatar-box show-application-detail {{ $flag === 1 ? 'is-dup btn-light-danger pulse pulse-danger' : $bgTextDecore }}"
-                               title="{{ $flag === 1 ? 'Duplicate — View Profile' : 'View Candidate Profile' }}">
-                                @if (!empty($photo))
-                                    <img src="{{ $photo }}" alt="{{ e($displayFullName) }}" />
-                                @else
-                                    <span>{{ strtoupper($firstChar) }}</span>
-                                @endif
-                                @if ($flag === 1)
-                                    <span class="pulse-ring"></span>
-                                @endif
+                               class="show-application-detail simf-cand-name {{ $flag === 1 ? 'text-danger' : '' }}"
+                               title="{{ e($displayFullName) }}">
+                                {{ $displayFullName }}
                             </a>
-                            <div class="aptk-identity-meta">
-                                <a href="javascript:void(0);"
-                                   data-row-id="{{ $wiseId }}"
-                                   data-wise-id="{{ $candAppId }}"
-                                   class="aptk-cand-name show-application-detail {{ $flag === 1 ? 'text-danger' : '' }}"
-                                   title="{{ e($displayFullName) }}">
-                                    {{ $displayFullName }}
-                                </a>
-                                <div class="aptk-cand-desig {{ $flag === 1 ? 'text-danger' : '' }}" title="{{ $displayDesignation !== '' ? e($displayDesignation) : 'Designation: –' }}">
-                                    {{ $displayDesignation !== '' ? $displayDesignation : '–' }}
-                                </div>
-                                <div class="aptk-cand-company" title="{{ $displayCurrentCompany !== '' ? e($displayCurrentCompany) : 'Current Company: –' }}">
-                                    <i class="fas fa-building me-1"></i><span>{{ $displayCurrentCompany !== '' ? $displayCurrentCompany : '–' }}</span>
-                                </div>
+                            <div class="simf-cand-role {{ $flag === 1 ? 'text-danger' : '' }}" title="{{ $displayDesignation !== '' ? e($displayDesignation) : 'Designation: –' }}">
+                                {{ $displayDesignation !== '' ? $displayDesignation : '—' }}
+                            </div>
+                            <div class="simf-cand-company" title="{{ $displayCurrentCompany !== '' ? e($displayCurrentCompany) : 'Current Company: –' }}">
+                                <i class="fa-regular fa-building me-1 text-muted"></i><span>{{ $displayCurrentCompany !== '' ? $displayCurrentCompany : '—' }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- SUB-CARD 2: COMPENSATION & EXP -->
-                <div class="aptk-cand-subcard aptk-subcard-comp">
-                    <div class="aptk-subcard-hdr">
-                        <span class="aptk-subcard-label">Compensation &amp; Exp</span>
+                <div class="simf-cand-subcard">
+                    <div class="simf-subcard-head">
+                        <span class="simf-subcard-label">Compensation &amp; Exp</span>
                     </div>
-                    <div class="aptk-subcard-body">
+                    <div class="simf-val-salary">
                         @if ($canViewSalary)
-                            <div class="aptk-val-salary" title="Expected / Current CTC">
-                                <span class="aptk-sal-main">{{ $current_ctc_cur }}{{ $billAmountFormatted }}@if ($ectcModeSuffix !== '')<span class="aptk-sal-mode">{{ $ectcModeSuffix }}</span>@endif</span>
+                            <div class="simf-sal-main" title="Expected: {{ $current_ctc_cur }}{{ $billAmountFormatted }}{{ $ectcModeSuffix }}">
+                                {{ $current_ctc_cur }}{{ $billAmountFormatted }}@if ($ectcModeSuffix !== '')<span class="simf-sal-mode">{{ $ectcModeSuffix }}</span>@endif
+                            </div>
+                            <div class="simf-sal-sub" title="Current: {{ $current_ctc_cur }}{{ $payAmountFormatted }}{{ $ctcModeSuffix }}">
                                 @if (!$isBench)
-                                    <span class="aptk-sal-sub">Cur: {{ $current_ctc_cur }}{{ $payAmountFormatted }}{{ $ctcModeSuffix }}</span>
+                                    Cur: {{ $current_ctc_cur }}{{ $payAmountFormatted }}{{ $ctcModeSuffix }}
                                 @else
-                                    <span class="aptk-sal-sub text-primary">{{ $outsourcing_type }}</span>
+                                    <span class="text-primary">{{ $outsourcing_type }}</span>
                                 @endif
                             </div>
                         @else
-                            <div class="aptk-val-salary">
-                                <span class="aptk-sal-main text-muted">N/A</span>
-                            </div>
+                            <div class="simf-sal-main text-muted">N/A</div>
+                            <div class="simf-sal-sub text-muted">—</div>
                         @endif
-                        <div class="aptk-val-exp" title="Total: {{ $formattedExperience }} Yrs{{ $rel_formattedExperience !== '' ? ' | Relevant: ' . $rel_formattedExperience . ' Yrs' : '' }}">
-                            <i class="far fa-clock me-1"></i>
-                            <span><strong>{{ $formattedExperience }} Y</strong> Total</span>
-                            @if ($rel_formattedExperience !== '')
-                                <span class="aptk-rel-bracket">(Rel <strong>{{ $rel_formattedExperience }} Y</strong>)</span>
-                            @endif
-                        </div>
-                        <div class="aptk-val-notice" title="Notice Period: {{ $np !== '' ? e($np) : '–' }}">
-                            <i class="fas fa-hourglass-half me-1"></i>
-                            @if ($np !== '')
-                                <span class="aptk-notice-txt {{ $npClass }}">{{ $np }}</span>
-                            @else
-                                <span class="aptk-notice-txt text-muted">–</span>
-                            @endif
-                        </div>
+                    </div>
+                    <div class="simf-val-exp" title="Total: {{ $formattedExperience }} Yrs{{ $rel_formattedExperience !== '' ? ' | Relevant: ' . $rel_formattedExperience . ' Yrs' : '' }}">
+                        <i class="fa-solid fa-briefcase me-1 text-muted"></i>
+                        <span><strong>{{ $formattedExperience !== '' ? $formattedExperience : '0' }} Y</strong> Total</span>
+                        @if ($rel_formattedExperience !== '')
+                            <span class="ms-1" style="color:#64748b; font-size:10px;">(Rel <strong>{{ $rel_formattedExperience }} Y</strong>)</span>
+                        @endif
+                    </div>
+                    <div class="simf-val-notice" title="Notice Period: {{ $np !== '' ? e($np) : '–' }}">
+                        <i class="fa-regular fa-clock me-1 text-muted"></i>
+                        @if ($np !== '')
+                            <span class="simf-notice-txt {{ $npClass }}">NP: {{ $np }}</span>
+                        @else
+                            <span class="simf-notice-txt text-muted">NP: –</span>
+                        @endif
                     </div>
                 </div>
 
                 <!-- SUB-CARD 3: LOCATION & DEGREE -->
-                <div class="aptk-cand-subcard aptk-subcard-loc">
-                    <div class="aptk-subcard-hdr">
-                        <span class="aptk-subcard-label">Location &amp; Degree</span>
+                <div class="simf-cand-subcard">
+                    <div class="simf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="simf-subcard-label text-uppercase text-truncate">Location &amp; Degree</span>
                     </div>
-                    <div class="aptk-subcard-body">
-                        <div class="aptk-loc-city" title="{{ $locFull !== '' ? e($locFull) : 'Location: –' }}">
-                            <i class="fas fa-map-marker-alt me-1"></i><span>{{ $locShort !== '' ? $locShort : '–' }}</span>
+                    <div class="pt-1">
+                        <div class="simf-loc-city text-truncate d-flex align-items-center" style="font-size:11.5px; font-weight:600; line-height:1.35; min-height:18px;" title="{{ $locFull !== '' ? e($locFull) : 'Location: –' }}">
+                            <i class="fa-solid fa-location-dot me-1 text-muted" style="width:13px; text-align:center; font-size:10px;"></i>
+                            <span class="text-truncate">{{ $locShort !== '' ? $locShort : '—' }}</span>
                         </div>
                         @php
-                            $wmIcon = $cardMeta['work_mode_icon'] !== '' ? $cardMeta['work_mode_icon'] : 'fas fa-building';
-                            $wmLabel = $cardMeta['work_mode_label'] !== '' ? $cardMeta['work_mode_label'] : '–';
+                            $wmIcon = !empty($cardMeta['work_mode_icon']) ? $cardMeta['work_mode_icon'] : 'fa-solid fa-building';
+                            $wmLabel = !empty($cardMeta['work_mode_label']) ? $cardMeta['work_mode_label'] : '–';
                         @endphp
-                        <div class="aptk-loc-mode" title="{{ $cardMeta['work_mode_label'] !== '' ? e($cardMeta['work_mode_label']) : 'Work Mode: –' }}">
-                            <i class="{{ $wmIcon }} me-1"></i><span>{{ $wmLabel }}</span>
+                        <div class="simf-loc-mode text-truncate d-flex align-items-center mt-1" style="font-size:11px; font-weight:500; color:#475569; line-height:1.35; min-height:18px;" title="{{ $cardMeta['work_mode_label'] !== '' ? e($cardMeta['work_mode_label']) : 'Work Mode: –' }}">
+                            <i class="{{ $wmIcon }} me-1 text-primary" style="width:13px; text-align:center; font-size:10px;"></i>
+                            <span class="text-truncate">{{ $wmLabel }}</span>
                         </div>
-                        <div class="aptk-loc-edu" title="{{ $displayQualification !== '' ? e(strtoupper($displayQualification)) : 'Education / Degree: –' }}">
-                            <i class="fas fa-graduation-cap me-1"></i><span class="{{ $displayQualification !== '' ? 'aptk-edu-uppercase' : '' }}">{{ $displayQualification !== '' ? $displayQualification : '–' }}</span>
+                        <div class="simf-loc-edu simf-edu-uppercase text-truncate d-flex align-items-center mt-1" style="font-size:11px; font-weight:500; color:#64748b; line-height:1.35; min-height:18px;" title="{{ $displayQualification !== '' ? e(strtoupper($displayQualification)) : 'Education / Degree: –' }}">
+                            <i class="fa-solid fa-graduation-cap me-1 text-muted" style="width:13px; text-align:center; font-size:10px;"></i>
+                            <span class="text-truncate">{{ $displayQualification !== '' ? strtoupper($displayQualification) : '—' }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: JOB & ORGANIZATION CONTEXT -->
-                <div class="aptk-cand-subcard aptk-subcard-job">
-                    <div class="aptk-subcard-hdr">
-                        <span class="aptk-subcard-label">Job &amp; Mandate</span>
-                        <span class="cv-org-badge {{ $orgTypeCls }}" title="{{ $orgTypeLabel }}">
-                            <i class="fas {{ $orgTypeIcon }} me-1"></i>{{ $orgTypeLabel }}
+                <!-- SUB-CARD 4: TARGET REQ (Rule 25 Enterprise Color Tokens) -->
+                <div class="simf-cand-subcard simf-cand-subcard--target {{ $targetSubcardClass }}">
+                    <div class="simf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="simf-subcard-label text-uppercase text-truncate" title="TARGET REQ">TARGET REQ</span>
+                        <span class="simf-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:4px; text-transform:uppercase; white-space:nowrap !important; flex-shrink:0; {{ $targetTypeStyle }}">
+                            <i class="{{ $targetTypeIcon }} me-1"></i>{{ $targetTypeLabel }}
                         </span>
                     </div>
-                    <div class="aptk-subcard-body">
-                        <div class="aptk-job-title" title="{{ e($jobTitleDisplay) }}">
-                            <a href="javascript:void(0);" class="text-dark fw-bold text-hover-primary">
-                                {{ mb_substr($jobTitleDisplay, 0, 24) }}{{ mb_strlen($jobTitleDisplay) > 24 ? '...' : '' }}
-                            </a>
+                    <div class="simf-req-body pt-1">
+                        <div class="simf-req-title text-truncate fw-bold text-dark" style="font-size:12.5px; line-height:1.35; color:#0f172a;" title="{{ e($jobTitleDisplay) }}">
+                            {{ $jobTitleDisplay ?: '—' }}
                         </div>
-                        <div class="aptk-job-client" title="{{ $client_title_name !== '' ? e($client_title_name) : 'Company: –' }}">
-                            <i class="fas fa-building me-1"></i><span>{{ $client_title_name !== '' ? mb_substr($client_title_name, 0, 22) : '–' }}</span>
-                        </div>
-                        <div class="aptk-job-recruiter" title="{{ $rowpostedby !== '' ? e('Recruiter: ' . $rowpostedby) : 'Recruiter: –' }}">
-                            <i class="fas fa-user-circle me-1"></i><span>{{ $rowpostedby !== '' ? mb_substr($rowpostedby, 0, 18) : '–' }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SUB-CARD 5: PIPELINE & STAGE (Interactive Trigger) -->
-                <div class="aptk-cand-subcard aptk-subcard-stage {{ $stage_default_css }}"
-                     data-row-id="{{ $wiseId }}"
-                     {!! $stageModalAttrs !!}
-                     role="button"
-                     tabindex="0"
-                     title="Click anywhere to update candidate stage">
-                    <div class="aptk-subcard-hdr">
-                        <span class="aptk-subcard-label">Pipeline &amp; Stage</span>
-                    </div>
-                    <div class="aptk-subcard-body">
-                        <div class="aptk-stage-trigger">
-                            <span class="aptk-stage-pill {{ @$row->css_style }}" style="{{ $stagePillTheme }}">
-                                {{ ucwords(mb_substr($masterStageLabel, 0, 20)) }}
-                            </span>
-                            @if ($subStageName !== '' && $subStageName !== '—')
-                                <span class="aptk-substage-txt" title="{{ e($subStageName) }}">
-                                    Sub: <strong>{{ $subStageName }}</strong>
-                                </span>
+                        <div class="simf-req-meta-line text-truncate mt-1" style="font-size:11px; line-height:1.35;">
+                            <span class="fw-bold" style="color:#0284c7;">#{{ $rowJobId }}</span>
+                            @if (!empty($jobCategoryName))
+                                <span class="mx-1" style="color:#94a3b8;">&bull;</span>
+                                <span style="color:#64748b;">{{ $jobCategoryName }}</span>
                             @endif
-                            <span class="aptk-stage-cue">Update Stage <i class="fas fa-chevron-right ms-1"></i></span>
+                        </div>
+                        <div class="simf-req-sub-line text-truncate mt-1" style="font-size:11px; line-height:1.35; color:#475569;">
+                            <span class="fw-medium text-dark">{{ $client_title_name ?: '—' }}</span>
+                            @if (!empty($empTypeLabel))
+                                <span class="mx-1" style="color:#94a3b8;">&bull;</span>
+                                <i class="fa-solid fa-briefcase text-primary me-1" style="font-size:10px;"></i>
+                                <span style="color:#64748b;">{{ $empTypeLabel }}</span>
+                            @endif
                         </div>
                     </div>
                 </div>
 
-                <!-- SUB-CARD 6: QUICK ACTIONS & RESUME -->
-                <div class="aptk-cand-subcard aptk-subcard-actions">
-                    <div class="aptk-subcard-hdr">
-                        <span class="aptk-subcard-label">Actions</span>
-                        @if ($hasResume)
-                            <span class="badge badge-light-success fw-bold fs-9 py-1 px-2" title="Resume uploaded"><i class="fas fa-check-circle me-1 text-success"></i>Resume</span>
-                        @else
-                            <span class="badge badge-light-danger fw-bold fs-9 py-1 px-2" title="Resume missing"><i class="fas fa-exclamation-circle me-1 text-danger"></i>No CV</span>
-                        @endif
+                <!-- SUB-CARD 5: OWNERSHIP & ADDED -->
+                <div class="simf-cand-subcard">
+                    <div class="simf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="simf-subcard-label text-uppercase text-truncate">Ownership &amp; Added</span>
                     </div>
-                    <div class="aptk-subcard-body">
-                        <div class="cv-quick-actions-grid">
-                            <a href="javascript:void(0);"
-                               data-row-id="{{ $wiseId }}"
-                               data-wise-id="{{ $candAppId }}"
-                               class="btn btn-icon btn-sm btn-light-primary show-application-detail"
-                               title="View Full Profile">
-                                <i class="fas fa-eye fs-7"></i>
+                    <div class="pt-1">
+                        <div class="simf-owner-name text-truncate d-flex align-items-center" style="font-size:11.5px; font-weight:600; line-height:1.35; min-height:18px;" title="{{ e($rowpostedby) }}">
+                            <i class="fa-regular fa-circle-user me-1 text-primary" style="width:13px; text-align:center; font-size:10.5px;"></i>
+                            <a href="javascript:void(0);" data-row-id="{{ $candAppId }}" class="show-application-detail text-dark text-hover-primary text-truncate">
+                                {{ ucfirst((string) $rowpostedby) ?: '—' }}
                             </a>
-                            <a href="javascript:void(0);"
-                               class="btn btn-icon btn-sm btn-light-success test_fwd_resume"
-                               data-row-id="{{ $wiseId }}"
-                               data-toggle="modal"
-                               data-target="#test_fwd_resume"
-                               title="Forward Resume">
-                                <i class="fas fa-share-alt fs-7"></i>
-                            </a>
-                            <a href="javascript:void(0);"
-                               class="btn btn-icon btn-sm btn-light-info send_mail"
-                               data-row-id="{{ $wiseId }}"
-                               data-toggle="modal"
-                               data-target="#send_mail"
-                               title="Send Email">
-                                <i class="fas fa-envelope fs-7"></i>
-                            </a>
-                            <a href="javascript:void(0);"
-                               class="btn btn-icon btn-sm btn-light-warning application_copy"
-                               data-row-id="{{ $wiseId }}"
-                               data-toggle="modal"
-                               data-target="#application_copy"
-                               title="Copy Candidate">
-                                <i class="fas fa-copy fs-7"></i>
-                            </a>
+                        </div>
+                        <div class="simf-owner-company text-truncate d-flex align-items-center mt-1" style="font-size:11px; font-weight:500; color:#475569; line-height:1.35; min-height:18px;" title="{{ e($post_company_name) }}">
+                            <i class="fa-regular fa-building me-1 text-muted" style="width:13px; text-align:center; font-size:10px;"></i>
+                            <span class="text-truncate">{{ $post_company_name ?: '—' }}</span>
+                        </div>
+                        <div class="simf-owner-submitted text-truncate d-flex align-items-center mt-1" style="font-size:11px; font-weight:500; color:#64748b; line-height:1.35; min-height:18px;" title="Uploaded on {{ !empty($row->created_at) ? date('d M , Y', strtotime($row->created_at)) : '—' }}">
+                            <i class="fa-regular fa-calendar me-1 text-muted" style="width:13px; text-align:center; font-size:10px;"></i>
+                            <span class="text-truncate">{{ !empty($row->created_at) ? date('d M , Y', strtotime($row->created_at)) : '—' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-CARD 6: STAGE & ACTION ("Add to Other Job" Drawer Integration) -->
+                <div class="simf-cand-subcard">
+                    <div class="simf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
+                        <span class="simf-subcard-label text-uppercase text-truncate" title="STAGE &amp; ACTION">Stage &amp; Action</span>
+                    </div>
+                    <div class="simf-stage-action-wrap pt-1">
+                        <a href="javascript:void(0);"
+                           data-row-id="{{ $wiseId }}"
+                           class="simf-stage-trigger {{ $stage_default_css }}"
+                           {!! $stageModalAttrs !!}
+                           title="Click to update candidate stage">
+                            <span class="simf-stage-pill {{ @$row->css_style }}" style="{{ $stagePillTheme }}">
+                                {{ ucwords((string) $masterStageLabel) ?: '—' }}
+                            </span>
+                            @if (!empty($subStageName) && $subStageName !== '—')
+                                <span class="simf-substage-txt" title="{{ e($subStageName) }}">{{ ucwords((string) $subStageName) }}</span>
+                            @endif
+                        </a>
+                        <div class="d-flex flex-column mt-1">
+                            <button type="button"
+                                    class="btn btn-sm btn-primary cv-add-to-other-job"
+                                    style="font-size:12px; font-weight:600; padding:6px 14px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%; white-space:nowrap;"
+                                    data-candidate-id="{{ $candAppId }}"
+                                    data-wise-id="{{ $wiseId }}"
+                                    data-job-id="{{ $rowJobId }}"
+                                    data-cname="{{ e($displayFullName) }}"
+                                    data-skills="{{ e($rawSkillsStr) }}"
+                                    title="Copy candidate to another job">
+                                Add to Other Job
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -529,61 +533,67 @@
             </div>
 
             <!-- SUB-CARD 7: FULL-WIDTH INTELLIGENCE & SKILLS STRIP -->
-            <div class="aptk-cand-bottom">
-                <div class="aptk-bottom-left">
-                    <span class="jw-row-match-badge aptk-match-pill"
+            <div class="simf-cand-bottom">
+                <div class="simf-bottom-left">
+                    <span class="simf-match-pill"
                           data-candidate-id="{{ $candAppId }}"
                           data-wise-id="{{ $wiseId }}"
                           data-match-pct="{{ $matchScore }}"
                           style="background:{{ $matchBg }};color:{{ $matchColor }};">
                         Match {{ $percentage ?: '0%' }}
                     </span>
-                    <div class="aptk-skills-scroll">
+                    <div class="simf-skills-scroll">
                         @if (count($matchedSkillsArr) > 0 || count($unmatchedSkillsArr) > 0)
                             @foreach ($matchedSkillsArr as $sval)
-                                <span class="aptk-skill-pill is-matched" title="Matches a required skill">{{ ucfirst($sval) }}</span>
+                                <span class="simf-skill-pill is-matched" title="Matches a required skill">{{ ucfirst($sval) }}</span>
                             @endforeach
                             @foreach ($unmatchedSkillsArr as $sval)
-                                <span class="aptk-skill-pill">{{ ucfirst($sval) }}</span>
+                                <span class="simf-skill-pill">{{ ucfirst($sval) }}</span>
                             @endforeach
                         @else
-                            <span class="aptk-skills-empty">No skills recorded</span>
+                            <span class="simf-skills-empty">No skills listed</span>
                         @endif
                     </div>
                 </div>
-                @if ($cardMeta['linkedin_url'] !== '' || $cardMeta['visa_display'] !== '' || !empty($row->created_at))
-                    <div class="aptk-bottom-right">
-                        @if ($cardMeta['linkedin_url'] !== '')
-                            <a href="{{ e($cardMeta['linkedin_url']) }}"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="aptk-linkedin-pill"
-                               title="LinkedIn Profile Verified">
-                                <i class="fab fa-linkedin"></i><span>LinkedIn Verified</span>
-                            </a>
-                        @endif
-                        @if ($cardMeta['visa_display'] !== '')
-                            <span class="aptk-visa-pill" title="{{ e('Visa Status: ' . $cardMeta['visa_raw']) }}">
-                                <i class="fas fa-passport"></i><span>{{ $cardMeta['visa_display'] }}</span>
-                            </span>
-                        @endif
-                        @if (!empty($row->created_at))
-                            <span class="text-muted fs-8 ms-2" title="Application Added Date">
-                                <i class="far fa-calendar-alt me-1"></i>{{ date('d M Y', strtotime($row->created_at)) }}
-                            </span>
-                        @endif
-                    </div>
-                @endif
+                <div class="simf-bottom-right">
+                    @if ($hasResume)
+                        <span class="simf-resume-pill jw-open-resume-tab cursor-pointer"
+                              data-row-id="{{ $candAppId }}"
+                              data-wise-id="{{ $wiseId }}"
+                              data-open-tab="resume_cv"
+                              title="Click to view Resume / CV">
+                            <i class="fas fa-check-circle me-1"></i><span>Resume</span>
+                        </span>
+                    @else
+                        <span class="simf-nocv-pill" title="Resume missing">
+                            <i class="fas fa-exclamation-circle me-1"></i><span>No CV</span>
+                        </span>
+                    @endif
+                    @if (!empty($cardMeta['linkedin_url']))
+                        <a href="{{ e($cardMeta['linkedin_url']) }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="simf-linkedin-pill"
+                           title="LinkedIn Profile Verified">
+                            <i class="fab fa-linkedin me-1"></i><span>LinkedIn Verified</span>
+                        </a>
+                    @endif
+                    @if (!empty($cardMeta['visa_display']))
+                        <span class="simf-visa-pill" title="{{ e('Visa Status: ' . $cardMeta['visa_raw']) }}">
+                            <i class="fas fa-passport me-1"></i><span>{{ $cardMeta['visa_display'] }}</span>
+                        </span>
+                    @endif
+                </div>
             </div>
 
-        </div>
+        </article>
     @endforeach
 @else
-    <div class="aptk-empty-card">
-        <div class="aptk-empty-icon">
-            <i class="fas fa-users-slash"></i>
+    <div class="simf-empty-card text-center p-8 bg-white rounded border border-dashed border-gray-300">
+        <div class="simf-empty-icon mb-3" style="font-size:32px; color:#94a3b8;">
+            <i class="fa-solid fa-users-slash"></i>
         </div>
-        <div class="aptk-empty-title">No Candidates Found</div>
-        <div class="aptk-empty-sub">No candidates match your selected pipeline stage, company type, or search filters.</div>
+        <div class="simf-empty-title fw-bold text-dark fs-5 mb-1">No Candidates Found</div>
+        <div class="simf-empty-sub text-muted fs-7">No candidates match your selected pipeline stage, company type, or search filters.</div>
     </div>
 @endif

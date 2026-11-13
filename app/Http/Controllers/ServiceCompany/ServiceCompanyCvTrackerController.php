@@ -1561,11 +1561,21 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         ->toArray();
                 }
 
-                // 5. Batch fetch jobs (max_sal_mode, max_salary_currency, status, title) in ONE query
+                // 5. Batch fetch jobs (max_sal_mode, max_salary_currency, status, title, category, employment_type) in ONE query
                 if (! empty($jobIdsOnPage)) {
                     $dbJobs = DB::table('jobs')
-                        ->whereIn('id', $jobIdsOnPage)
-                        ->select('id', 'max_sal_mode', 'max_salary_currency', 'status', 'title')
+                        ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
+                        ->whereIn('jobs.id', $jobIdsOnPage)
+                        ->select(
+                            'jobs.id',
+                            'jobs.max_sal_mode',
+                            'jobs.max_salary_currency',
+                            'jobs.status',
+                            'jobs.title',
+                            'jobs.category_id',
+                            'jobs.employment_type',
+                            'job_categories.name as category_name'
+                        )
                         ->get();
                     foreach ($dbJobs as $dj) {
                         $jobDetailsMap[(int) $dj->id] = $dj;
@@ -4606,7 +4616,20 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 ->whereIn('id', $arr)
                 ->where(function ($q) use ($companyId) {
                     $q->where('company_id', $companyId)
-                        ->orWhere('thirdparty_company_id', $companyId);
+                        ->orWhere('thirdparty_company_id', $companyId)
+                        ->orWhereExists(function ($sub) use ($companyId) {
+                            $sub->select(DB::raw(1))
+                                ->from('add_job_wise_condidates')
+                                ->whereColumn('add_job_wise_condidates.candidate_id', 'job_applications.id')
+                                ->where('add_job_wise_condidates.company_id', $companyId);
+                        })
+                        ->orWhereExists(function ($sub) use ($companyId) {
+                            $sub->select(DB::raw(1))
+                                ->from('recommendation_relation')
+                                ->join('add_job_wise_condidates as ajwc', 'ajwc.job_id', '=', 'recommendation_relation.job_id')
+                                ->whereColumn('ajwc.candidate_id', 'job_applications.id')
+                                ->where('recommendation_relation.to_company_id', $companyId);
+                        });
                 })
                 ->get();
             foreach ($candidates as $cand) {
