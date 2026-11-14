@@ -31,7 +31,7 @@ This update refines the **Job Details sub-card** (Sub-Card 4) and **listing cont
    - Automatically determines the correct organization tag based on actual job and client relationships without manual selection or hardcoding:
      - **Direct Client:** Requisition received through the marketplace (`is_direct_client`, `is_job_request`, `recommendation_id > 0`, `ClientComID != company_id`, or `companyIdCheck != company_id`). Rendered in Emerald (`#ecfdf5` background, `#059669` text, `#a7f3d0` border, `fa-shield-alt` icon).
      - **Internal Client:** Hiring for a managed internal client such as Tesla, Stripe, etc. (`self_company === 0` or attached client entity is not own organization). Rendered in Blue (`#eff6ff` background, `#2563eb` text, `#bfdbfe` border, `fa-building` icon).
-     - **My Organization:** Job created for our own organization (`self_company === 1` or own company hiring). Rendered in Cyan (`#ecfeff` background, `#0891b2` text, `#a5f3fc` border, `fa-id-badge` icon).
+     - **My Organization:** Job created for our own organization (`self_company === 1` or own company hiring). Rendered in warm amber/gold (`#fef3c7` background, `#92400e` text, `#fcd34d` border, `fa-id-badge` icon).
 
 3. **Listing Controls Alignment & Order:**
    - Synchronized listing toolbar controls in `simf-toolbar-card` and `dsf-toolbar-card`:
@@ -77,7 +77,7 @@ This update refines the **Job Details sub-card** (Sub-Card 4) and **listing cont
 | File | Change Summary |
 |---|---|
 | `app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php` | Selected `jobs.client_id` in `wiseRows`, `extraWiseRows`, and `directJobRows` batch queries for resilient client relationship detection; bumped cache version across all endpoints to `card_v12` for atomic multi-tenant cache invalidation (Rule 6). |
-| `resources/views/service_company/ajax_pages/similar_existing_ajax.blade.php` | Neutralized Sub-Card 4 (`Job Details`) container removing full-card background and border colors; implemented dynamic organization-type classification (`Direct Client` emerald, `Internal Client` blue, `My Organization` cyan) with canonical Rule 25 tokens. |
+| `resources/views/service_company/ajax_pages/similar_existing_ajax.blade.php` | Neutralized Sub-Card 4 (`Job Details`) container removing full-card background and border colors; implemented dynamic organization-type classification (`Direct Client` emerald, `Internal Client` blue, `My Organization` warm amber/gold) with canonical Rule 25 tokens. |
 | `resources/views/service_company/ajax_pages/dsimilar_existing_ajax.blade.php` | Synchronously neutralized Sub-Card 4 for Client Similar Candidates; implemented identical dynamic organization-type classification and Rule 25 canonical tokens. |
 | `resources/views/service_company/apptracker/similar_candidates.blade.php` | Removed `.simf-cand-subcard--my-org`, `.simf-cand-subcard--internal`, and `.simf-cand-subcard--direct` container overrides and hover styles; defined `.type-my-org`, `.type-internal`, and `.type-direct` badge styles; refined toolbar flex ordering with `flex-xl-nowrap` on 15.6" screens. |
 | `resources/views/service_company/apptracker/dsimilar_candidates.blade.php` | Removed `.dsf-cand-subcard--*` container overrides; defined Rule 25 badge styles; aligned toolbar flex controls ordering. |

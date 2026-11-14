@@ -872,8 +872,9 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('My Organization', $myOrgSimHtml);
         $this->assertStringContainsString('type-my-org', $myOrgSimHtml);
         $this->assertStringNotContainsString('simf-cand-subcard--my-org', $myOrgSimHtml);
-        $this->assertStringContainsString('background:#ecfeff', $myOrgSimHtml);
-        $this->assertStringContainsString('border:1px solid #a5f3fc', $myOrgSimHtml);
+        $this->assertStringContainsString('background:#fef3c7', $myOrgSimHtml);
+        $this->assertStringContainsString('border:1px solid #fcd34d', $myOrgSimHtml);
+        $this->assertStringContainsString('color:#92400e', $myOrgSimHtml);
         $this->assertStringNotContainsString('background:#fffbeb', $myOrgSimHtml);
         $this->assertStringContainsString('fa-id-badge', $myOrgSimHtml);
         $this->assertStringContainsString('#54', $myOrgSimHtml);
@@ -883,8 +884,9 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('My Organization', $myOrgDsimHtml);
         $this->assertStringContainsString('type-my-org', $myOrgDsimHtml);
         $this->assertStringNotContainsString('dsf-cand-subcard--my-org', $myOrgDsimHtml);
-        $this->assertStringContainsString('background:#ecfeff', $myOrgDsimHtml);
-        $this->assertStringContainsString('border:1px solid #a5f3fc', $myOrgDsimHtml);
+        $this->assertStringContainsString('background:#fef3c7', $myOrgDsimHtml);
+        $this->assertStringContainsString('border:1px solid #fcd34d', $myOrgDsimHtml);
+        $this->assertStringContainsString('color:#92400e', $myOrgDsimHtml);
         $this->assertStringContainsString('fa-id-badge', $myOrgDsimHtml);
         $this->assertStringContainsString('#54', $myOrgDsimHtml);
         $this->assertStringContainsString('IT (Information Technology)', $myOrgDsimHtml);

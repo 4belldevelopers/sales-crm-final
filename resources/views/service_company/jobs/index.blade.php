@@ -952,9 +952,9 @@
 }
 
 .cd-badge-client-type.type-my-org {
-    background: #ecfeff !important;
-    color: #0891b2 !important;
-    border: 1px solid #a5f3fc !important;
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fcd34d !important;
 }
 
 .js-open-job-drawer {

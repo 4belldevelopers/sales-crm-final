@@ -387,6 +387,12 @@
     border: 1px solid #bfdbfe !important;
 }
 
+.cd-badge-client-type.type-my-org {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fcd34d !important;
+}
+
 .cd-oj-stage-outline {
     font-size: 8.5px !important;
     font-weight: 700 !important;
