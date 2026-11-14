@@ -1682,30 +1682,27 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
 
 <div id="kt_activitiesTEAM_toggle"></div>
-<div id="kt_activitiesTEAM" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'500px', 'lg': '1200px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesTEAM_toggle" data-kt-drawer-close="#kt_activitiesTEAM_close">
-  <div class="card shadow-none rounded-0 w-100">
-    <div class="card-header px-5 py-0" id="kt_activities_header">
+<div id="kt_activitiesTEAM" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'500px', 'lg': '600px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesTEAM_toggle" data-kt-drawer-close="#kt_activitiesTEAM_close">
+  <div class="card shadow-none rounded-0 w-100" style="height:100vh;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;">
+    <div class="card-header px-5 py-0" id="kt_activitiesTEAM_header" style="min-height:56px;border-bottom:1px solid #e2e8f0;background:#ffffff;display:flex;align-items:center;justify-content:space-between;">
       <div class="d-flex align-items-center py-1">
-        <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-            style="float:left"> 
-            <a href="javascript:void(0);" class="l">
-                <div class="symbol-label border-radius-5" id="light_logo_company">&nbsp;</div>
-            </a> 
+        <div class="symbol symbol-circle symbol-35px overflow-hidden me-3 border-radius-5" style="flex-shrink:0;"> 
+          <div class="symbol-label border-radius-5" id="light_logo_company" style="width:35px;height:35px;background:#2563eb;color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border-radius:6px;overflow:hidden;">
+            4B
+          </div> 
         </div>
-        <h3 class="card-title fw-bolder text-dark">Team Members</h3>
-        <span class="h-20px border-gray-200 border-start mx-4 d-none"></span> </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-dark fw-bolder fs-6" id="light_team_company_name" style="font-size:15px !important;font-weight:700 !important;color:#0f172a !important;">4Bell Technology</span>
+          <span class="text-muted" style="color:#64748b !important;font-size:13px !important;font-weight:400 !important;">(Team Member)</span>
+        </div>
+      </div>
       <div class="card-toolbar">
-        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesTEAM_close"> <span class="svg-icon svg-icon-1">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-          <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
-            <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1"></rect>
-            <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1"></rect>
-          </g>
-        </svg>
-        </span> </button>
+        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n3" id="kt_activitiesTEAM_close" style="width:32px;height:32px;border-radius:8px;border:none;background:transparent;color:#ef4444 !important;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Close Drawer">
+          <i class="la la-times fs-2" style="color:#ef4444 !important;font-size:18px !important;"></i>
+        </button>
       </div>
     </div>
-    <div class="card-body position-relative px-0 py-0" id="kt_activitiesTEAM_body"> </div>
+    <div class="card-body position-relative px-0 py-0" id="kt_activitiesTEAM_body" style="flex:1 1 auto;height:calc(100vh - 56px);max-height:calc(100vh - 56px);overflow:hidden;display:flex;flex-direction:column;background:#ffffff;"> </div>
   </div>
 </div>
 
@@ -2723,30 +2720,32 @@ $(document).on('click', '.client-hm-listing', function ()
 	
      $(document).on('click', '.team-listing', function ()
    	{
-   	
    		$('#kt_activitiesTEAM_toggle').trigger('click');		
    		var id    		= $(this).data('row-id');
    		var url   		= "{{ route('service_company.jobs.currentteamlisting',':id') }}";
    		url     		= url.replace(':id', id);
-   		 var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
+   		var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
    		$.ajax({
-   						type  : 'GET',
-   						url   : url,
-   						 beforeSend: function() {
-                                     $('#kt_activitiesTEAM_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                       	},
-   						success : function (response) {
-								$('#kt_activitiesTEAM_body').html(response.view);		
-                if(response.logo){
-                    $('#light_logo_company').removeClass('d-none');
-                    $('#light_logo_company').html('<img src="' + response.logo +
-                      '" height="35px" width="100%">');
-                  }else{
-                    $('#light_logo_company').addClass('d-none');
-                  }
-    						}
-    	  			});
-    	});
+   			type  : 'GET',
+   			url   : url,
+   			beforeSend: function() {
+   				$('#kt_activitiesTEAM_body').html('<div style="display:flex;align-items:center;justify-content:center;height:240px;"><img src="'+baseurl+'" height="35px" width="35px"></div>');
+   			},
+   			success : function (response) {
+   				$('#kt_activitiesTEAM_body').html(response.view);		
+   				if(response.company_name){
+   					$('#light_team_company_name').text(response.company_name);
+   				}
+   				if(response.logo){
+   					$('#light_logo_company').removeClass('d-none');
+   					$('#light_logo_company').html('<img src="' + response.logo + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">');
+   				}else{
+   					var compInitial = (response.company_name || '4Bell').trim().substring(0,2).toUpperCase();
+   					$('#light_logo_company').removeClass('d-none').html(compInitial);
+   				}
+   			}
+   		});
+   	});
 
     // Guard Add Team clicks on pending (unaccepted) job requests
     $(document).on('click', '.js-req-team-disabled', function (e) {
