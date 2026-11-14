@@ -136,7 +136,7 @@ The platform infrastructure is provisioned with high-performance dedicated resou
   2. **Managed Non-Marketplace Client (`self_company == 0 && !is_direct_client`):**
      - **Tag Label & Icon:** `Internal Client` (`fas fa-building`)
      - **Tag Color Combination (`.cd-badge-client-type.type-internal`):** Background `#eff6ff`, Text `#2563eb`, Border `1px solid #bfdbfe`
-     - **KPI Card Active Combination (`data-kpi="internal"`):** Background `#fff7ed`, Border `#fb923c`, Ring/Icon `#ea580c`, Count `#9a3412`, Label `#c2410c` (`Internal Client Jobs`)
+     - **KPI Card Active Combination (`data-kpi="internal"`):** Background `#eff6ff`, Border `#bfdbfe`, Ring/Icon `#2563eb`, Count `#2563eb`, Label `#2563eb` (`Internal Client Jobs`)
      - **Strict Rule:** Always keep the full phrase `Internal Client` — never abbreviate it to `"Internal"`.
   3. **Marketplace Direct Client (`is_direct_client === true`):**
      - **Tag Label & Icon:** `Direct Client` (`fas fa-shield-alt`)

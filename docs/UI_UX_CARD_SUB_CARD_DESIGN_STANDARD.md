@@ -318,7 +318,7 @@ All modules, drawers, headers, and cards across JERO **MUST** reuse the followin
 | Classification Condition | Mandatory Label | Icon | Pill Background | Pill Border | Pill Text | Card / Accent Token |
 |---|---|---|---|---|---|---|
 | Own company internal requisition (`self_company == 1`) | **`My Organization`** | `fas fa-building` | `#fef3c7` | `1px solid #fcd34d` | `#92400e` | Bg `#fffbeb`, Border `#fde68a`, Accent `#d97706` |
-| Own company client requisition (`self_company == 0`) | **`Internal Client`** *(never `"Internal"`)* | `fas fa-sitemap` | `#dbeafe` | `1px solid #93c5fd` | `#1e40af` | Bg `#eff6ff`, Border `#bfdbfe`, Accent `#2563eb` |
+| Own company client requisition (`self_company == 0`) | **`Internal Client`** *(never `"Internal"`)* | `fas fa-building` | `#eff6ff` | `1px solid #bfdbfe` | `#2563eb` | Bg `#eff6ff`, Border `#bfdbfe`, Accent `#2563eb` |
 | External shared / partner requisition (`Direct Client`) | **`Direct Client`** | `fas fa-handshake` | `#d1fae5` | `1px solid #6ee7b7` | `#166534` | Bg `#ecfdf5`, Border `#a7f3d0`, Accent `#16a34a` |
 
 ### B. Canonical Sub-Card Field Mapping Rules
