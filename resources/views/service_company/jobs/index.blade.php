@@ -3564,7 +3564,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 html += '      <div class="cd-subcard-body">';
                 html += '        <div class="cd-pipeline-track">' + pipelineTrackHtml + '</div>';
                 html += '        <div class="cd-track-summary">';
-                html += '          <span>Apps: <strong>' + (job.application_counter || 0) + '</strong></span>';
+                html += '          <span>Applications: <strong>' + (job.application_counter || 0) + '</strong></span>';
                 html += '          <span class="cd-bullet">&bull;</span>';
                 html += '          <span>Interviews: <strong>' + (job.interview_counter || 0) + '</strong></span>';
                 html += '        </div>';

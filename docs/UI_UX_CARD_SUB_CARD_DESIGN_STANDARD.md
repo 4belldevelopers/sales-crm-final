@@ -169,7 +169,7 @@ align-items: stretch !important;
 5. **Sub-Card 5: Pipeline & Stage Distribution (`.cd-subcard-pipeline`)**
    - 8 Canonical recruitment stages (`INW`, `SOU`, `SCR`, `EVA`, `NEG`, `OFF`, `JOI`, `REJ`).
    - Stage micro-badges (`18px × 15px`, bold micro-typography).
-   - Pipeline summary footer (`Apps: X • Interviews: Y`).
+   - Pipeline summary footer (`Applications: X • Interviews: Y`).
 6. **Sub-Card 6: Bottom Activity Strip (`.cd-job-card-bottom`)**
    - Clean horizontal sub-strip with top hairline border (`1px solid #f1f5f9`).
    - Posted Date with calendar icon.
