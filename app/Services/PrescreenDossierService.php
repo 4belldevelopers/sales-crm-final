@@ -149,6 +149,56 @@ class PrescreenDossierService
                 }
             }
 
+            // Resilient DB fallback if candidate object skills were blank/unprojected
+            if (empty($verifiedProfileMap)) {
+                try {
+                    $dbSkillsVal = DB::table('job_applications')->where('id', $cId)->value('skills');
+                    if (! empty($dbSkillsVal)) {
+                        foreach (self::splitCommaSkills((string) $dbSkillsVal) as $sName) {
+                            $lower = mb_strtolower($sName);
+                            if (! isset($verifiedProfileMap[$lower])) {
+                                $verifiedProfileMap[$lower] = $sName;
+                            }
+                        }
+                    }
+                } catch (\Throwable) {
+                }
+            }
+
+            // Resilient candidate_skills_value fallback
+            if (empty($verifiedProfileMap)) {
+                try {
+                    $csvRows = DB::table('candidate_skills_value')->where('candidate_id', $cId)->pluck('skill_name')->all();
+                    foreach ($csvRows as $sName) {
+                        $clean = trim((string) $sName);
+                        if ($clean !== '') {
+                            $lower = mb_strtolower($clean);
+                            if (! isset($verifiedProfileMap[$lower])) {
+                                $verifiedProfileMap[$lower] = $clean;
+                            }
+                        }
+                    }
+                } catch (\Throwable) {
+                }
+            }
+
+            // Resilient career summary skills fallback
+            if (empty($verifiedProfileMap) && ! empty($cand->careersummary)) {
+                $careerSummary = (string) $cand->careersummary;
+                if (preg_match('/(?:skills\s+in|experienced\s+in|proficient\s+in|knowledge\s+of)\s+([^.]+)/i', $careerSummary, $sm)) {
+                    $extracted = preg_split('/[,;&]|\band\b/i', $sm[1]);
+                    foreach ($extracted as $sName) {
+                        $clean = trim((string) $sName);
+                        if ($clean !== '' && strlen($clean) <= 40 && ! preg_match('/^(and|or|the|in|with)$/i', $clean)) {
+                            $lower = mb_strtolower($clean);
+                            if (! isset($verifiedProfileMap[$lower])) {
+                                $verifiedProfileMap[$lower] = ucwords($clean);
+                            }
+                        }
+                    }
+                }
+            }
+
             // Bench skills map (also counts as verified candidate profile skills)
             $benchMap = [];
             $benchRows = $benchSkillsByCand->get($cId);
@@ -337,6 +387,45 @@ class PrescreenDossierService
 
             $qaList = $qaByCand[$cId] ?? [];
 
+            $loc = GeneralMethod::resolveCandidateLocationHierarchy($cand);
+
+            $hasResume = ! empty($cand->resume) && $cand->resume !== '0' && strtolower((string) $cand->resume) !== 'null';
+            $hasEmail = ! empty($cand->email) || ! empty($cand->secondrary_email);
+            $hasPhone = ! empty($cand->phone) || ! empty($cand->secondary_mobile);
+            $hasLinkedin = ! empty($cand->linkedin) && ! in_array(strtolower(trim((string) $cand->linkedin)), ['--', '-', 'na', 'n/a', 'null', 'none'], true);
+            $hasJd = ! empty($cand->current_designation) || ! empty($cand->current_company);
+            $valArr = [
+                ['label' => 'RESUME', 'status' => $hasResume ? 'Verified' : 'Not Uploaded'],
+                ['label' => 'EMAIL ID', 'status' => $hasEmail ? 'Verified' : 'Unverified'],
+                ['label' => 'PHONE NUMBER', 'status' => $hasPhone ? 'Verified' : 'Unverified'],
+                ['label' => 'LINKEDIN ID', 'status' => $hasLinkedin ? 'Verified' : '-'],
+                ['label' => 'JOB DESCRIPTION', 'status' => $hasJd ? 'Shared with candidate' : '-'],
+            ];
+
+            $npMode = (int) ($cand->serving_notice_period_mode ?? -1);
+            $npRaw = trim((string) ($cand->np_id ?? ''));
+            $npTs = $npRaw !== '' ? strtotime($npRaw) : false;
+            $isImmediate = false;
+            $noticeText = '--';
+            if ($npMode === 2 || strtolower($npRaw) === 'immediate') {
+                $noticeText = 'Immediate';
+                $isImmediate = true;
+            } elseif ($npMode === 0 && (int) $npRaw > 0) {
+                $noticeText = (int) $npRaw.' Days';
+            } elseif ($npTs !== false && (int) date('Y', $npTs) > 1970) {
+                if (date('Y-m-d', $npTs) < date('Y-m-d')) {
+                    $noticeText = 'Immediate';
+                    $isImmediate = true;
+                } else {
+                    $noticeText = (@$cand->condidate_type === 'bench_condidate') ? ('Available '.date('d M Y', $npTs)) : ('SNP LWD '.date('d M Y', $npTs));
+                }
+            } else {
+                $noticeText = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : 'Not Specified';
+            }
+
+            $education = ! empty($cand->qualification_name) ? (string) $cand->qualification_name : (! empty($cand->qualification) ? (string) $cand->qualification : 'Not Specified');
+            $workMode = ! empty($cand->wm) ? ucwords(str_replace(['_', '-'], ' ', strtolower((string) $cand->wm))) : (! empty($cand->work_mode) ? ucwords(str_replace(['_', '-'], ' ', strtolower((string) $cand->work_mode))) : 'Hybrid');
+
             $dossiers[$cId] = [
                 'candidate_id' => $cId,
                 'job_id' => $effJobId,
@@ -348,6 +437,15 @@ class PrescreenDossierService
                 'rel_exp_display' => $relExpDisplay,
                 'rel_exp_compact' => $relExpCompact,
                 'overall_rating' => $overallRating,
+                'city' => $loc['city'],
+                'state' => $loc['state'],
+                'country' => $loc['country'],
+                'location_text' => $loc['location_text'],
+                'validation' => $valArr,
+                'notice_text' => $noticeText,
+                'is_immediate' => $isImmediate,
+                'education' => $education,
+                'work_mode' => $workMode,
                 'match' => $matchPct,
                 'screening_qa' => $qaList,
                 'fingerprint' => sha1(json_encode([
@@ -356,6 +454,7 @@ class PrescreenDossierService
                     'total_exp' => $totalExpDisplay,
                     'rel_exp' => $relExpDisplay,
                     'overall_rating' => $overallRating,
+                    'location' => $loc['location_text'],
                     'match' => $matchPct,
                     'qa' => $qaList,
                     'updated_at' => (string) ($cand->updated_at ?? ''),

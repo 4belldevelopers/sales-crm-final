@@ -2593,6 +2593,9 @@
   }
 
   async function buildRecruiterSummaryBlob(data, options) {
+    if (typeof window !== 'undefined' && window.PrescreenReportEngine && typeof window.PrescreenReportEngine.generatePdfBlob === 'function') {
+      return window.PrescreenReportEngine.generatePdfBlob(data, options);
+    }
     options = options || {};
     var ready = await Promise.all([
       ensurePdfMake(),
@@ -2633,6 +2636,9 @@
   }
 
   async function mergePreScreenedReportAndResume(reportBlob, resumeBlob, fileName, mergeOptions) {
+    if (typeof window !== 'undefined' && window.PrescreenReportEngine && typeof window.PrescreenReportEngine.mergeReportWithResume === 'function') {
+      return window.PrescreenReportEngine.mergeReportWithResume(reportBlob, resumeBlob, fileName, mergeOptions);
+    }
     await ensurePdfLib();
     mergeOptions = mergeOptions || {};
     var resumeBytes = await resumeBlob.arrayBuffer();

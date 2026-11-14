@@ -4062,6 +4062,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $stateId = (int) $request->location_state_id;
             $countryID = (int) ($request->location_country_id ?: 101);
             $location_find = (string) $request->location_canonical_label;
+            if ($cityID > 0 && $stateId <= 0) {
+                $stateId = (int) GeneralMethod::stateId($cityID);
+            }
         } else {
             $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
             if ($workLocation !== null) {
@@ -8458,6 +8461,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $stateId = (int) $request->location_state_id;
             $countryID = (int) ($request->location_country_id ?: 101);
             $location_find = (string) $request->location_canonical_label;
+            if ($cityID > 0 && $stateId <= 0) {
+                $stateId = (int) GeneralMethod::stateId($cityID);
+            }
         } else {
             $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
             if ($workLocation !== null) {
@@ -13353,6 +13359,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $cityID = (int) $request->location_city_id;
             $stateId = (int) $request->location_state_id;
             $countryID = (int) ($request->location_country_id ?: 101);
+            if ($cityID > 0 && $stateId <= 0) {
+                $stateId = (int) GeneralMethod::stateId($cityID);
+            }
         } else {
             $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
             if ($workLocation !== null) {

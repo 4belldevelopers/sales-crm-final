@@ -9045,10 +9045,20 @@ var KTAddCandidate = function () {
 
             // SSOT Primary Skills synchronization: ensure Tagify skills are explicitly serialized into formData
             try {
-                if (window.tagifyskill && Array.isArray(window.tagifyskill.value)) {
+                var allSelectedSkills = (typeof candidateGetSelectedSkills === 'function')
+                    ? candidateGetSelectedSkills()
+                    : null;
+                if (Array.isArray(allSelectedSkills) && allSelectedSkills.length) {
+                    formData.set('skills', JSON.stringify(allSelectedSkills.map(function (s) {
+                        return typeof s === 'object' ? { value: s.name || s.value } : { value: String(s) };
+                    })));
+                } else if (window.tagifyskill && Array.isArray(window.tagifyskill.value) && window.tagifyskill.value.length) {
                     formData.set('skills', JSON.stringify(window.tagifyskill.value));
                 } else if ($('#kt_tagify_2').val()) {
-                    formData.set('skills', $('#kt_tagify_2').val());
+                    var rawSk = ($('#kt_tagify_2').val() || '').trim();
+                    if (rawSk && rawSk !== '[]') {
+                        formData.set('skills', rawSk);
+                    }
                 }
             } catch (skillErr) {
                 console.warn('Failed to explicitly set skills in formData:', skillErr);
