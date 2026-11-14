@@ -148,3 +148,24 @@ The `Job Details` sub-card implements canonical badge colors strictly adhering t
    - Replaced `pt-4` on `#kt_content` with `pt-0 kt_content_cvtracker`.
    - Compacted `.cl-header-card` padding to `10px 18px` and margin to `margin-top: 0 !important; margin-bottom: 12px;`.
    - Result: Perfectly snug 10px gap between the top header and the `All Candidates Tracker` header card, with zero effect on other modules.
+
+---
+
+## 8. Canonical "My Organization" Badge Color Alignment (UI/UX Standard 6A)
+
+1. **Context & Requirement:**
+   - In `docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` (Section 6 A), the authoritative color tokens for **`My Organization`** (`self_company == 1`) are defined as:
+     * **Pill Background:** `#fef3c7` (soft warm amber / almost yellow)
+     * **Pill Border:** `1px solid #fcd34d` (amber/gold)
+     * **Pill Text:** `#92400e` (dark warm amber)
+     * **Icon:** `fa-id-badge` (accent color `#d97706`)
+   - The previously applied cyan tint (`#ecfeff` / `#0891b2` / `#a5f3fc`) was replaced with this exact warm amber/yellow specification.
+   - The subcard container remains 100% neutral (`#f8fafc` background, `#edf2f7` border), ensuring highlighting is strictly applied to the badge pill only.
+
+2. **Files Updated:**
+   - `resources/views/service_company/ajax_pages/all_candidates.blade.php`: Updated `$targetTypeStyle` to `background:#fef3c7; color:#92400e; border:1px solid #fcd34d;`.
+   - `resources/views/service_company/cvtracker/index.blade.php`: Updated `.type-my-org` CSS and toolbar organization dropdown item icon color to `#d97706`.
+   - `resources/views/service_company/ajax_pages/similar_existing_ajax.blade.php`: Updated `$targetTypeStyle` for `My Organization`.
+   - `resources/views/service_company/ajax_pages/dsimilar_existing_ajax.blade.php`: Updated `$targetTypeStyle` for `My Organization`.
+   - `resources/views/service_company/apptracker/similar_candidates.blade.php`: Updated `.type-my-org` CSS.
+   - `resources/views/service_company/apptracker/dsimilar_candidates.blade.php`: Updated `.type-my-org` CSS.

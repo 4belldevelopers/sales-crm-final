@@ -279,7 +279,7 @@
                 $targetTypeLabel = 'My Organization';
                 $targetTypeClass = 'type-my-org';
                 $targetTypeIcon  = 'fa-solid fa-id-badge';
-                $targetTypeStyle = 'background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc;';
+                $targetTypeStyle = 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;';
             }
 
             // Job Status Pill

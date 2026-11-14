@@ -1038,8 +1038,8 @@
             justify-content: space-between;
             transition: background-color 0.15s ease, border-color 0.15s ease;
         }
-        /* Sub-Card 4: Rule 25 Canonical Badges (Applied strictly to badge pill/text only, subcard remains neutral) */
-        .type-my-org { background: #ecfeff !important; color: #0891b2 !important; border: 1px solid #a5f3fc !important; }
+        /* Sub-Card 4: UI/UX Standard 6A Canonical Badges (Applied strictly to badge pill/text only, subcard remains neutral) */
+        .type-my-org { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d !important; }
         .type-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
         .type-direct { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
         .simf-target-type-badge {
