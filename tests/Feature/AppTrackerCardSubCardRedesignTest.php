@@ -775,9 +775,9 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);', $controllerFile);
         $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, '$this->hpOrgClass = self::resolveJobOrgClass($this->job, (int) $company_id);'));
 
-        // All AJAX actions pass card_v11 in $cachePayload
-        $this->assertStringContainsString("'ui_v' => 'card_v11'", $controllerFile);
-        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v11'"));
+        // All AJAX actions pass card_v12 in $cachePayload
+        $this->assertStringContainsString("'ui_v' => 'card_v12'", $controllerFile);
+        $this->assertGreaterThanOrEqual(8, substr_count($controllerFile, "'ui_v' => 'card_v12'"));
     }
 
     public function test_matched_job_subcard_and_restored_work_mode_and_add_candidate_button(): void
@@ -824,7 +824,8 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $simHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $baseParams)->render();
         $this->assertStringContainsString('Job Details', $simHtml);
         $this->assertStringContainsString('Internal Client', $simHtml);
-        $this->assertStringContainsString('simf-cand-subcard--internal', $simHtml);
+        $this->assertStringContainsString('type-internal', $simHtml);
+        $this->assertStringNotContainsString('simf-cand-subcard--internal', $simHtml);
         $this->assertStringContainsString('fa-building', $simHtml);
         $this->assertStringContainsString('simf-bottom-right', $simHtml);
         $this->assertStringNotContainsString('simf-req-icon-box', $simHtml);
@@ -840,7 +841,8 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $dsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $baseParams)->render();
         $this->assertStringContainsString('Job Details', $dsimHtml);
         $this->assertStringContainsString('Internal Client', $dsimHtml);
-        $this->assertStringContainsString('dsf-cand-subcard--internal', $dsimHtml);
+        $this->assertStringContainsString('type-internal', $dsimHtml);
+        $this->assertStringNotContainsString('dsf-cand-subcard--internal', $dsimHtml);
         $this->assertStringContainsString('fa-building', $dsimHtml);
         $this->assertStringContainsString('dsf-bottom-right', $dsimHtml);
         $this->assertStringNotContainsString('dsf-req-icon-box', $dsimHtml);
@@ -852,7 +854,7 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $this->assertStringContainsString('dsf-loc-mode', $dsimHtml);
         $this->assertStringNotContainsString('<i class="fa fa-inr"', $dsimHtml);
 
-        // 2b. Test My Organization classification highlight and icon per Document Color Standard
+        // 2b. Test My Organization classification highlight and icon per Document Color Standard (Neutral Subcard, Tag Highlight Only)
         $myOrgParams = $baseParams;
         $myOrgParams['rowMaps']['wise_job_info'][101] = (object) [
             'wise_id' => 101,
@@ -868,16 +870,21 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         ];
         $myOrgSimHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $myOrgParams)->render();
         $this->assertStringContainsString('My Organization', $myOrgSimHtml);
-        $this->assertStringContainsString('simf-cand-subcard--my-org', $myOrgSimHtml);
-        $this->assertStringContainsString('background:#fffbeb', $myOrgSimHtml);
-        $this->assertStringContainsString('border:1px solid #fde68a', $myOrgSimHtml);
+        $this->assertStringContainsString('type-my-org', $myOrgSimHtml);
+        $this->assertStringNotContainsString('simf-cand-subcard--my-org', $myOrgSimHtml);
+        $this->assertStringContainsString('background:#ecfeff', $myOrgSimHtml);
+        $this->assertStringContainsString('border:1px solid #a5f3fc', $myOrgSimHtml);
+        $this->assertStringNotContainsString('background:#fffbeb', $myOrgSimHtml);
         $this->assertStringContainsString('fa-id-badge', $myOrgSimHtml);
         $this->assertStringContainsString('#54', $myOrgSimHtml);
         $this->assertStringContainsString('IT (Information Technology)', $myOrgSimHtml);
 
         $myOrgDsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $myOrgParams)->render();
         $this->assertStringContainsString('My Organization', $myOrgDsimHtml);
-        $this->assertStringContainsString('dsf-cand-subcard--my-org', $myOrgDsimHtml);
+        $this->assertStringContainsString('type-my-org', $myOrgDsimHtml);
+        $this->assertStringNotContainsString('dsf-cand-subcard--my-org', $myOrgDsimHtml);
+        $this->assertStringContainsString('background:#ecfeff', $myOrgDsimHtml);
+        $this->assertStringContainsString('border:1px solid #a5f3fc', $myOrgDsimHtml);
         $this->assertStringContainsString('fa-id-badge', $myOrgDsimHtml);
         $this->assertStringContainsString('#54', $myOrgDsimHtml);
         $this->assertStringContainsString('IT (Information Technology)', $myOrgDsimHtml);
@@ -898,12 +905,16 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         ];
         $directSimHtml = View::make('service_company.ajax_pages.similar_existing_ajax', $directParams)->render();
         $this->assertStringContainsString('Direct Client', $directSimHtml);
-        $this->assertStringContainsString('simf-cand-subcard--direct', $directSimHtml);
+        $this->assertStringContainsString('type-direct', $directSimHtml);
+        $this->assertStringNotContainsString('simf-cand-subcard--direct', $directSimHtml);
+        $this->assertStringContainsString('background:#ecfdf5', $directSimHtml);
         $this->assertStringContainsString('fa-shield-alt', $directSimHtml);
 
         $directDsimHtml = View::make('service_company.ajax_pages.dsimilar_existing_ajax', $directParams)->render();
         $this->assertStringContainsString('Direct Client', $directDsimHtml);
-        $this->assertStringContainsString('dsf-cand-subcard--direct', $directDsimHtml);
+        $this->assertStringContainsString('type-direct', $directDsimHtml);
+        $this->assertStringNotContainsString('dsf-cand-subcard--direct', $directDsimHtml);
+        $this->assertStringContainsString('background:#ecfdf5', $directDsimHtml);
         $this->assertStringContainsString('fa-shield-alt', $directDsimHtml);
 
         // 2d. Test All AppTracker and Client App Tracker footer strip has resume/no cv
@@ -940,8 +951,8 @@ class AppTrackerCardSubCardRedesignTest extends TestCase
         $layoutContent = file_get_contents(resource_path('views/layouts/service_company_layout.blade.php'));
         $this->assertStringContainsString('function activateCandidateDrawerTab(targetTab)', $layoutContent);
         $this->assertStringContainsString('window.activateCandidateDrawerTab = activateCandidateDrawerTab;', $layoutContent);
-        $this->assertStringContainsString("window.__pendingCandidateDrawerTab = targetTab;", $layoutContent);
-        $this->assertStringContainsString("jw-open-resume-tab", $layoutContent);
+        $this->assertStringContainsString('window.__pendingCandidateDrawerTab = targetTab;', $layoutContent);
+        $this->assertStringContainsString('jw-open-resume-tab', $layoutContent);
 
         // 2. Mock candidate with resume
         $candWithResume = (object) [

@@ -727,6 +727,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'jobs.title',
                     'jobs.status as jobStatus',
                     'jobs.company_id as companyIdCheck',
+                    'jobs.client_id',
                     'jobs.employment_type',
                     'job_categories.name as category_name'
                 )
@@ -760,6 +761,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'jobs.title',
                     'jobs.status as jobStatus',
                     'jobs.company_id as companyIdCheck',
+                    'jobs.client_id',
                     'jobs.employment_type',
                     'job_categories.name as category_name'
                 )
@@ -798,6 +800,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'jobs.title',
                     'jobs.status as jobStatus',
                     'jobs.company_id as companyIdCheck',
+                    'jobs.client_id',
                     'jobs.employment_type',
                     'job_categories.name as category_name'
                 )
@@ -945,7 +948,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'q' => $searchQuery,
             // V3 Phase 3.1: HTML and JSON responses are cached under separate keys.
             'format' => $request->input('format', 'html'),
-            'ui_v' => 'card_v11',
+            'ui_v' => 'card_v12',
         ];
 
         $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
@@ -1802,7 +1805,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_notice' => $app_int_notice,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v11',
+            'ui_v' => 'card_v12',
         ];
 
         // dd($cachePayload );
@@ -3055,7 +3058,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'valCheck' => $valCheck,
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
-            'ui_v' => 'card_v11',
+            'ui_v' => 'card_v12',
         ];
 
         $versionKey = 'allclientapp_version_user_'.$this->user->id;
@@ -5083,7 +5086,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
             'country' => $country ?? [],
             'cus_search' => $cus_search,
-            'ui_v' => 'card_v11',
+            'ui_v' => 'card_v12',
         ];
 
         $versionKey = 'allcandidatesrequest_version_user_'.$this->user->id;
@@ -5975,7 +5978,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v11',
+            'ui_v' => 'card_v12',
         ];
 
         // dd($cachePayload );
@@ -7005,7 +7008,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v11',
+            'ui_v' => 'card_v12',
         ];
 
         // dd($cachePayload );
@@ -7944,7 +7947,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v11',
+            'ui_v' => 'card_v12',
         ];
 
         $versionKey = 'allpublicbench_version_user_'.$this->user->id;
@@ -9000,7 +9003,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_notice' => $app_int_notice,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v11',
+            'ui_v' => 'card_v12',
         ];
 
         // dd($cachePayload );
@@ -10168,7 +10171,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_outsource' => $app_int_outsource,
             'user_id' => $this->user->id,
             'sal_mode' => $sal_mode,
-            'ui_v' => 'card_v11',
+            'ui_v' => 'card_v12',
         ];
 
         // dd($cachePayload );

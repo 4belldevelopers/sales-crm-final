@@ -277,30 +277,46 @@
                 $client_name = $companyName;
             }
 
-            // Determine Target Req Classification per Document Color Standard (Rule 25 & UI/UX Standard 6A)
-            $isSelfCompany = !empty($wiseInfo->self_company) || (($wiseInfo->companyIdCheck ?? $company_id) == $company_id && empty($wiseInfo->client_name));
-            $isDirectClient = ($wiseInfo && ($wiseInfo->companyIdCheck ?? 0) != $company_id);
-            if ($isSelfCompany) {
-                $targetTypeLabel = 'My Organization';
-                $targetTypeClass = 'type-my-org';
-                $targetTypeIcon = 'fa-solid fa-id-badge';
-                $targetTypeStyle = 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;';
-                $targetSubcardClass = 'simf-cand-subcard--my-org';
-                $targetSubcardStyle = 'background:#fffbeb !important; border:1px solid #fde68a !important;';
-            } elseif ($isDirectClient) {
+            // Dynamic Organization-Type Classification (Rule 25 canonical tokens)
+            // 1. Direct Client: Requirement received through marketplace
+            $isDirect = false;
+            if (
+                !empty($row->is_direct_client) ||
+                !empty($row->is_job_request) ||
+                !empty($row->recommendation_id) ||
+                (!empty($row->ClientComID) && (int)$row->ClientComID !== (int)$company_id) ||
+                (!empty($row->thirdparty_company_id) && (int)$row->thirdparty_company_id !== (int)$company_id) ||
+                ($wiseInfo && !empty($wiseInfo->companyIdCheck) && (int)$wiseInfo->companyIdCheck !== (int)$company_id)
+            ) {
+                $isDirect = true;
+            }
+
+            // 2. Client relationship from actual job & client entity
+            $resolvedClientId = $wiseInfo->client_id ?? ($row->client_id ?? null);
+            $resolvedSelfCompany = isset($wiseInfo->self_company)
+                ? (int) $wiseInfo->self_company
+                : (isset($row->client_self_company) ? (int) $row->client_self_company : (isset($row->self_company) ? (int) $row->self_company : null));
+
+            $tenantCompanyName = trim((string) (auth()->user()->company->company_name ?? ''));
+
+            if ($isDirect) {
+                // Requirement received through the marketplace
                 $targetTypeLabel = 'Direct Client';
                 $targetTypeClass = 'type-direct';
-                $targetTypeIcon = 'fa-solid fa-shield-alt';
-                $targetTypeStyle = 'background:#d1fae5; color:#166534; border:1px solid #6ee7b7;';
-                $targetSubcardClass = 'simf-cand-subcard--direct';
-                $targetSubcardStyle = 'background:#ecfdf5 !important; border:1px solid #a7f3d0 !important;';
-            } else {
+                $targetTypeIcon  = 'fa-solid fa-shield-alt';
+                $targetTypeStyle = 'background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;';
+            } elseif ($resolvedSelfCompany === 0 || (!empty($resolvedClientId) && $resolvedSelfCompany !== 1 && !empty($client_name) && ($tenantCompanyName === '' || strcasecmp(trim($client_name), $tenantCompanyName) !== 0))) {
+                // Hiring for an internal client (e.g. Tesla, Stripe)
                 $targetTypeLabel = 'Internal Client';
                 $targetTypeClass = 'type-internal';
-                $targetTypeIcon = 'fa-solid fa-building';
-                $targetTypeStyle = 'background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;';
-                $targetSubcardClass = 'simf-cand-subcard--internal';
-                $targetSubcardStyle = 'background:#eff6ff !important; border:1px solid #bfdbfe !important;';
+                $targetTypeIcon  = 'fa-solid fa-building';
+                $targetTypeStyle = 'background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;';
+            } else {
+                // Job created for own organization
+                $targetTypeLabel = 'My Organization';
+                $targetTypeClass = 'type-my-org';
+                $targetTypeIcon  = 'fa-solid fa-id-badge';
+                $targetTypeStyle = 'background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc;';
             }
 
             // Job Status Pill
@@ -454,7 +470,13 @@
                     </div>
                     <div class="simf-val-notice">
                         <i class="fa-regular fa-clock"></i>
-                        <span class="simf-notice-txt {{ $npClass }}">NP: {{ $np }}</span>
+                        @php
+                            $simfDisplayNp = trim((string) $np);
+                            if ($simfDisplayNp !== '' && !str_starts_with($simfDisplayNp, 'NP:') && !str_starts_with($simfDisplayNp, 'SNP')) {
+                                $simfDisplayNp = 'NP: ' . $simfDisplayNp;
+                            }
+                        @endphp
+                        <span class="simf-notice-txt {{ $npClass }}">{{ $simfDisplayNp ?: 'NP: –' }}</span>
                     </div>
                 </div>
 
@@ -479,8 +501,8 @@
                     </div>
                 </div>
 
-                {{-- Sub-Card 4: Matched Job & Status (Job Details) --}}
-                <div class="simf-cand-subcard simf-cand-subcard--target {{ $targetSubcardClass }}" style="{{ $targetSubcardStyle }}">
+                {{-- Sub-Card 4: Matched Job & Status (Job Details - Neutral Subcard, Tag Highlight Only) --}}
+                <div class="simf-cand-subcard simf-cand-subcard--target">
                     <div class="simf-subcard-head d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
                         <span class="simf-subcard-label text-uppercase text-truncate" style="font-size:10px; font-weight:700; color:#64748b; letter-spacing:0.4px;" title="Job Details">Job Details</span>
                         <span class="simf-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:4px; text-transform:uppercase; white-space:nowrap !important; flex-shrink:0; {{ $targetTypeStyle }}">

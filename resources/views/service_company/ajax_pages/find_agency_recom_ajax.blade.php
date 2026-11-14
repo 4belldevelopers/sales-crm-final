@@ -1,13 +1,17 @@
 @php
     /**
-     * Intent: Enterprise Agency Marketplace & Direct Outreach Row Renderer.
-     * Implements strict 5-column architecture:
-     * 1. Agency & Specialization (Strong typography, verified badge, compact match badge, skill tags)
-     * 2. Matching Profiles (Count + icon + label)
-     * 3. Rates (Rate % / CTC, Full-Time/Contract, Onetime/Recurring)
-     * 4. Location & Team (Location pin + City, Country, Recruiter count)
-     * 5. Send Requirement (Individual action CTA, Request Sent, Remove)
+     * Intent: Enterprise Agency Marketplace & Direct Outreach Recommended Card Stream.
+     * Implements strict Modern Card + Sub-Card Enterprise Design System (Rule 20):
+     * Tier 3 Primary Agency Entity Card (.agency-entity-card):
+     *   - Left border accent: 3.5px solid #009ef7 (or #10b981 / #cbd5e1)
+     *   - Sub-Card 1: Agency & Specialization (Checkbox, Avatar/Logo, Title, Verified Badge, Match %, Skills)
+     *   - Sub-Card 2: Matching Profiles (Count, Tabular nums, Bench status)
+     *   - Sub-Card 3: Rates & Terms (Rate % / CTC / Hourly, Contract / Full-Time, Onetime / Recurring)
+     *   - Sub-Card 4: Location & Team (Location Pin + City, Country, Recruiter count)
+     *   - Sub-Card 5: Action CTA (Send Requirement, Request Sent, Send New Request, Remove)
+     *   - Bottom Activity Strip: Verified Partner seal + View Profile & Terms link
      * Tenant Isolation: company_id scoped. Zero N+1 queries.
+     * Fits 15.6" screen (1366x768 & 1920x1080) with zero horizontal overflow.
      */
     use App\Helper\GeneralMethod;
     use Illuminate\Support\Facades\DB;
@@ -114,203 +118,236 @@
             if (is_iterable($row->staffing_company_relation ?? null) && count($row->staffing_company_relation ?? []) > 0) {
                 $staffingRelToCompany = $row->staffing_company_relation[0]['to_company_id'] ?? 0;
             }
+
+            // Left status accent color
+            $isRequestSent = ($recommendateRow && ($jobRecomStatus === 0 || $jobRecomStatus === '' || $jobRecomStatus === null));
+            $borderAccent = $isRequestSent ? '#10b981' : ($canSelect ? '#009ef7' : '#cbd5e1');
         @endphp
 
-        <tr class="agency-table-row" id="agency_row_{{ $id }}" style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
-            {{-- Column 1: Agency & Specialization --}}
-            <td class="align-middle py-3 px-3 {{ $client_type_css }}" data-row-id="{{ $row->client_id }}" style="min-width: 240px; max-width: 280px;">
-                <div class="d-flex flex-column">
-                    {{-- Top Row: Avatar + Name & Specialization --}}
-                    <div class="d-flex align-items-center gap-2">
-                        @if($canSelect)
-                            <div class="form-check form-check-sm form-check-custom form-check-solid flex-shrink-0" onclick="event.stopPropagation();">
-                                <input class="form-check-input agency-row-checkbox" type="checkbox" value="{{ $id }}" data-agency-id="{{ $id }}" data-agency-name="{{ e($row->company_name) }}" style="width: 16px; height: 16px; cursor: pointer;">
-                            </div>
-                        @else
-                            <div class="flex-shrink-0" style="width: 16px; height: 16px;"></div>
-                        @endif
+        <!--begin::Agency Primary Card (Rule 20)-->
+        <div class="agency-entity-card" id="agency_row_{{ $id }}" data-agency-id="{{ $id }}" style="border-left: 3.5px solid {{ $borderAccent }} !important;">
+            
+            <!-- Upper Discrete Sub-Cards Grid -->
+            <div class="agency-card-grid">
 
-                        {{-- Logo / Avatar --}}
-                        <div class="symbol flex-shrink-0" style="width: 42px; height: 42px;">
+                <!-- SUB-CARD 1: Agency Identity & Specialization -->
+                <div class="ag-subcard ag-subcard-identity">
+                    <div class="d-flex align-items-center gap-2 w-100">
+                        {{-- Selection Checkbox --}}
+                        <div class="agency-checkbox-wrap flex-shrink-0" onclick="event.stopPropagation();">
+                            @if($canSelect)
+                                <div class="form-check form-check-custom form-check-solid form-check-sm">
+                                    <input class="form-check-input agency-row-checkbox" type="checkbox" value="{{ $id }}" data-agency-id="{{ $id }}" data-agency-name="{{ e($row->company_name) }}" title="Select {{ e($row->company_name) }}" style="cursor: pointer;" />
+                                </div>
+                            @else
+                                <div class="ag-check-spacer">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="#10b981"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Agency Logo / Avatar --}}
+                        <div class="ag-avatar-wrap flex-shrink-0">
                             @if(!empty($logo_path))
-                                <img src="{{ $logo_path }}" alt="{{ $row->company_name }}" class="rounded-circle object-fit-cover border" style="width: 42px; height: 42px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="rounded-circle fw-bold fs-6" style="display: none; width: 42px; height: 42px; background: {{ $chosenPalette['bg'] }}; color: {{ $chosenPalette['text'] }}; align-items: center; justify-content: center; letter-spacing: -0.5px;">
+                                <img src="{{ $logo_path }}" alt="{{ $row->company_name }}" class="ag-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                <div class="ag-avatar-initials" style="display: none; background: {{ $chosenPalette['bg'] }}; color: {{ $chosenPalette['text'] }};">
                                     {{ $strVal }}
                                 </div>
                             @else
-                                <div class="rounded-circle fw-bold fs-6 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: {{ $chosenPalette['bg'] }}; color: {{ $chosenPalette['text'] }}; letter-spacing: -0.5px;">
+                                <div class="ag-avatar-initials" style="background: {{ $chosenPalette['bg'] }}; color: {{ $chosenPalette['text'] }};">
                                     {{ $strVal }}
                                 </div>
                             @endif
                         </div>
 
-                        {{-- Name & Specialization --}}
-                        <div class="d-flex flex-column min-w-0" style="flex: 1;">
+                        {{-- Identity Info & Metadata --}}
+                        <div class="ag-identity-content min-w-0 flex-grow-1">
                             <div class="d-flex align-items-center gap-1">
-                                <span class="fw-bolder text-gray-900 text-truncate fs-6" style="max-width: 175px;" title="{{ $row->company_name }}">
-                                    {{ substr(ucwords($row->company_name), 0, 30) }}
+                                <a href="javascript:void(0);" class="ag-agency-title text-truncate show-detail-direct" data-row-id="{{ $row->client_id }}" title="{{ $row->company_name }}">
+                                    {{ substr(ucwords($row->company_name), 0, 28) }}
+                                </a>
+                                {{-- Verified Badge --}}
+                                <span class="ag-verified-badge" title="Verified JERO Agency Partner">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="10" fill="#0066ff"/>
+                                        <path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
                                 </span>
-                                {{-- Verified Checkmark --}}
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="flex-shrink-0" title="Verified Agency">
-                                    <circle cx="12" cy="12" r="10" fill="#0066ff"/>
-                                    <path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
                             </div>
-                            <div class="text-muted fs-8 fw-normal text-truncate" style="max-width: 185px; margin-top: 1px;">
-                                {{ substr(ucwords($ind_name), 0, 26) }}
+
+                            <div class="ag-agency-spec text-truncate" title="{{ $ind_name }}">
+                                {{ substr(ucwords($ind_name), 0, 32) }}
+                            </div>
+
+                            {{-- Badges & Skills Row --}}
+                            <div class="ag-badges-row d-flex align-items-center gap-1 flex-wrap mt-1">
+                                @if($percentage > 0)
+                                    <span class="ag-badge ag-badge-match-high">Match {{ $percentage }}%</span>
+                                @else
+                                    <span class="ag-badge ag-badge-match-neutral">Match 0%</span>
+                                @endif
+
+                                @if(!empty($row->_is_additional))
+                                    <span class="ag-badge ag-badge-additional" title="Additional partner agency from eligible pool">Additional Agency</span>
+                                @endif
+
+                                @php
+                                    $rawMatched = $row->matched_skills ?? [];
+                                    $matchedArray = is_array($rawMatched) ? $rawMatched : (is_iterable($rawMatched) ? iterator_to_array($rawMatched) : []);
+                                    if (empty($matchedArray) && !empty($row->job_metronics_skills)) {
+                                        $matchedArray = collect($row->job_metronics_skills)->pluck('skill_name')->filter()->unique()->values()->toArray();
+                                    }
+                                    $skillsToShow = array_slice($matchedArray, 0, 3);
+                                @endphp
+
+                                @foreach($skillsToShow as $s)
+                                    <span class="ag-badge ag-badge-skill">{{ ucfirst($s) }}</span>
+                                @endforeach
+
+                                @if(count($matchedArray) > 3)
+                                    <span class="ag-badge ag-badge-skill-more">+{{ count($matchedArray) - 3 }}</span>
+                                @endif
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {{-- Bottom Row: Match % + Compact Skill Tags starting from left edge under logo --}}
-                    <div class="d-flex align-items-center gap-1 flex-wrap mt-2">
-                        @if($percentage > 0)
-                            <span class="badge" style="background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
-                                Match {{ $percentage }}%
-                            </span>
-                        @else
-                            <span class="badge" style="background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;">
-                                Match 0%
-                            </span>
-                        @endif
-                        @if(!empty($row->_is_additional))
-                            <span class="badge text-muted fw-normal" style="background:#f8fafc; border: 1px solid #e2e8f0; font-size: 9.5px; padding: 1px 5px; border-radius: 4px;" title="Additional partner agency from eligible pool">
-                                Additional Agency
-                            </span>
-                        @endif
-                        @php
-                            $rawMatched = $row->matched_skills ?? [];
-                            $matchedArray = is_array($rawMatched) ? $rawMatched : (is_iterable($rawMatched) ? iterator_to_array($rawMatched) : []);
-                            if (empty($matchedArray) && !empty($row->job_metronics_skills)) {
-                                $matchedArray = collect($row->job_metronics_skills)->pluck('skill_name')->filter()->unique()->values()->toArray();
-                            }
-                            $skillsToShow = array_slice($matchedArray, 0, 3);
-                        @endphp
-                        @foreach($skillsToShow as $s)
-                            <span class="badge badge-light text-gray-700 fw-normal" style="background:#f1f5f9; border: 1px solid #e2e8f0; font-size: 10px; padding: 1px 5px; border-radius: 4px;">
-                                {{ ucfirst($s) }}
-                            </span>
-                        @endforeach
-                        @if(count($matchedArray) > 3)
-                            <span class="badge badge-light text-muted fw-normal" style="font-size: 9.5px; padding: 1px 4px; border: 1px solid #e2e8f0; border-radius: 4px;">
-                                +{{ count($matchedArray) - 3 }}
-                            </span>
-                        @endif
+                <!-- SUB-CARD 2: Matching Profiles -->
+                <div class="ag-subcard ag-subcard-profiles">
+                    <div class="ag-subcard-label">
+                        <i class="fas fa-users-viewfinder me-1"></i>PROFILES
+                    </div>
+                    <div class="ag-metric-row">
+                        <span class="ag-metric-num">{{ $matchingProfilesCount }}</span>
+                        <span class="ag-metric-unit">Profiles</span>
+                    </div>
+                    <div class="ag-metric-sub">
+                        <span class="ag-dot-green"></span>Bench & Active
                     </div>
                 </div>
-            </td>
 
-            {{-- Column 2: Matching Profiles --}}
-            <td class="align-middle py-3 px-2 text-nowrap" style="min-width: 105px;">
-                <div class="d-flex align-items-center gap-2">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" class="flex-shrink-0">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
-                    <div class="d-flex flex-column">
-                        <span class="fw-bolder text-gray-900 fs-6 lh-1">{{ $matchingProfilesCount }}</span>
-                        <span class="text-muted fs-8 fw-normal mt-1">Matching Profiles</span>
+                <!-- SUB-CARD 3: Commercial Rates -->
+                <div class="ag-subcard ag-subcard-rates">
+                    <div class="ag-subcard-label">
+                        <i class="fas fa-receipt me-1"></i>RATES & TERMS
                     </div>
+                    @if($isContract || ($minimumRateType && $minimumRateType->commtype == 1))
+                        <div class="ag-rate-value text-success">
+                            {!! $currSymbol !!}{{ $minimumRate ?: '25' }}/{{ $modeText }}
+                        </div>
+                        <div class="d-flex align-items-center gap-1 mt-1">
+                            <span class="ag-rate-pill ag-rate-contract">Contract</span>
+                            <span class="ag-rate-type-text">Recurring</span>
+                        </div>
+                    @else
+                        <div class="ag-rate-value text-emerald">
+                            {{ $minimumRate ? $minimumRate.'%' : '8.33%' }} CTC
+                        </div>
+                        <div class="d-flex align-items-center gap-1 mt-1">
+                            <span class="ag-rate-pill ag-rate-fulltime">Full-Time</span>
+                            <span class="ag-rate-type-text">Onetime</span>
+                        </div>
+                    @endif
                 </div>
-            </td>
 
-            {{-- Column 3: Rates --}}
-            <td class="align-middle py-3 px-2 text-nowrap" style="min-width: 100px;">
-                @if($isContract || ($minimumRateType && $minimumRateType->commtype == 1))
-                    <div class="d-flex flex-column lh-1">
-                        <span class="fw-bolder fs-7 text-success">{!! $currSymbol !!}{{ $minimumRate ?: '25' }}/{{ $modeText }}</span>
-                        <span class="badge badge-light-success px-2 py-0 my-1 align-self-start" style="font-size: 10px; font-weight: 600;">Contract</span>
-                        <span class="text-muted fs-9">Recurring Fee</span>
+                <!-- SUB-CARD 4: Location & Team -->
+                <div class="ag-subcard ag-subcard-team">
+                    <div class="ag-subcard-label">
+                        <i class="fas fa-location-dot me-1"></i>LOCATION & TEAM
                     </div>
-                @else
-                    <div class="d-flex flex-column lh-1">
-                        <span class="fw-bolder fs-7" style="color: #15803d;">{{ $minimumRate ? $minimumRate.'%' : '8.33%' }} CTC</span>
-                        <span class="badge px-2 py-0 my-1 align-self-start" style="background: #dcfce7; color: #166534; font-size: 10px; font-weight: 600; border-radius: 4px;">Full-Time</span>
-                        <span class="text-muted fs-9">Onetime</span>
+                    <div class="ag-team-row text-truncate" title="{{ $locationLabel }}">
+                        <i class="fas fa-map-marker-alt text-muted flex-shrink-0"></i>
+                        <span class="text-truncate">{{ $locationLabel }}</span>
                     </div>
-                @endif
-            </td>
-
-            {{-- Column 4: Location & Team --}}
-            <td class="align-middle py-3 px-2 text-nowrap" style="min-width: 110px;">
-                <div class="d-flex flex-column gap-1">
-                    <div class="d-flex align-items-center gap-1 text-gray-800 fs-7 fw-medium text-truncate" style="max-width: 130px;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" class="flex-shrink-0">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                        </svg>
-                        <span title="{{ $locationLabel }}">{{ $locationLabel }}</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-1 text-muted fs-8">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" class="flex-shrink-0">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                        </svg>
+                    <div class="ag-team-row mt-1">
+                        <i class="fas fa-user-tie text-muted flex-shrink-0"></i>
                         <span>{{ $Sizecount }} Recruiter{{ $Sizecount > 1 ? 's' : '' }}</span>
                     </div>
                 </div>
-            </td>
 
-            {{-- Column 5: Action (Send Requirement) --}}
-            <td class="align-middle py-3 px-3 text-end" id="agency_action_{{ $id }}" style="min-width: 150px;">
-                @if ($recommendateRow)
-                    @php
-                        $final_status = $recommendateRow->final_status ?? null;
-                        $isJobReqExpired = false;
-                        if ((int) $final_status === 3) {
-                            $isJobReqExpired = true;
-                        } elseif (! empty($recommendateRow->expires_at) && \Carbon\Carbon::parse($recommendateRow->expires_at)->isPast()) {
-                            $isJobReqExpired = true;
-                        } elseif (empty($recommendateRow->expires_at) && ! empty($recommendateRow->created_at) && \Carbon\Carbon::parse($recommendateRow->created_at)->addDays(7)->isPast()) {
-                            $isJobReqExpired = true;
-                        }
-                    @endphp
-                    @if ($isJobReqExpired || $final_status == 3)
-                        <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-row-id="{{ $id }}" data-matchcount="" data-row-jobid="{{ $jobid }}" data-row-ename="resend" class="btn btn-sm btn-primary fw-bold resend_job_recommanded_request" style="border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 600; white-space: nowrap; color: #fff; display: inline-flex; align-items: center; gap: 6px;" title="Previous request expired. Click to send a fresh job request.">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                            Send New Request
-                        </a>
-                    @elseif ($final_status == 0 || $final_status === '' || $final_status === null)
-                        <span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display: inline-flex; align-items: center; gap: 4px;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                            Request Sent
-                        </span>
-                    @elseif ($final_status == -1 || $final_status == 2)
-                        <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-row-id="{{ $id }}" data-matchcount="" data-row-jobid="{{ $jobid }}" data-row-ename="{{ $final_status == -1 ? 'ignore' : 'remove' }}" class="btn btn-sm btn-success fw-bold resend_job_recommanded_request" style="background: #10b981; border: none; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 600; white-space: nowrap; color: #fff; box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2); display: inline-flex; align-items: center; gap: 6px;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                            Send Requirement
-                        </a>
+                <!-- SUB-CARD 5: Action CTA -->
+                <div class="ag-subcard ag-subcard-action text-end" id="agency_action_{{ $id }}">
+                    @if ($recommendateRow)
+                        @php
+                            $final_status = $recommendateRow->final_status ?? null;
+                            $isJobReqExpired = false;
+                            if ((int) $final_status === 3) {
+                                $isJobReqExpired = true;
+                            } elseif (! empty($recommendateRow->expires_at) && \Carbon\Carbon::parse($recommendateRow->expires_at)->isPast()) {
+                                $isJobReqExpired = true;
+                            } elseif (empty($recommendateRow->expires_at) && ! empty($recommendateRow->created_at) && \Carbon\Carbon::parse($recommendateRow->created_at)->addDays(7)->isPast()) {
+                                $isJobReqExpired = true;
+                            }
+                        @endphp
+
+                        @if ($isJobReqExpired || $final_status == 3)
+                            <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-row-id="{{ $id }}" data-matchcount="" data-row-jobid="{{ $jobid }}" data-row-ename="resend" class="btn btn-sm ag-btn-resend resend_job_recommanded_request" title="Previous request expired. Click to send a fresh job request.">
+                                <i class="fas fa-redo-alt me-1"></i>
+                                <span>Send New Request</span>
+                            </a>
+                        @elseif ($final_status == 0 || $final_status === '' || $final_status === null)
+                            <span class="ag-badge-sent">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                <span>Request Sent</span>
+                            </span>
+                        @elseif ($final_status == -1 || $final_status == 2)
+                            <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-row-id="{{ $id }}" data-matchcount="" data-row-jobid="{{ $jobid }}" data-row-ename="{{ $final_status == -1 ? 'ignore' : 'remove' }}" class="btn btn-sm ag-btn-send resend_job_recommanded_request">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                                <span>Send Requirement</span>
+                            </a>
+                        @else
+                            <a href="javascript:void(0);" data-row-tabname="Registered" data-row-jobid="{{ $jobid }}" data-matchcount="" data-row-fromcompany="{{ $company_id }}" data-row-tocompany="{{ $staffingRelToCompany }}" class="btn btn-sm ag-btn-remove remove_job">
+                                <span>Remove</span>
+                            </a>
+                        @endif
                     @else
-                        <a href="javascript:void(0);" data-row-tabname="Registered" data-row-jobid="{{ $jobid }}" data-matchcount="" data-row-fromcompany="{{ $company_id }}" data-row-tocompany="{{ $staffingRelToCompany }}" class="btn btn-sm btn-light-danger fw-bold remove_job" style="border-radius: 6px; font-size: 11px;">
-                            Remove
-                        </a>
+                        @if ($matchFound)
+                            <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-boosterCom="" data-boost-ids="" data-row-jobid="{{ $jobid }}" data-matchcount="" data-row-fromcompany="{{ $from_company }}" data-row-tocompany="{{ $id }}" class="btn btn-sm ag-btn-send send_only_job_invitation">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                                <span>Send Requirement</span>
+                            </a>
+                        @else
+                            <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-boosterCom="" data-boost-ids="" data-row-id="{{ $id }}" data-matchcount="" data-row-jobid="{{ $jobid }}" class="btn btn-sm ag-btn-send send_job_recommanded_request">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                                <span>Send Requirement</span>
+                            </a>
+                        @endif
                     @endif
-                @else
-                    @if ($matchFound)
-                        <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-boosterCom="" data-boost-ids="" data-row-jobid="{{ $jobid }}" data-matchcount="" data-row-fromcompany="{{ $from_company }}" data-row-tocompany="{{ $id }}" class="btn btn-sm btn-success fw-bold send_only_job_invitation" style="background: #10b981; border: none; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 600; white-space: nowrap; color: #fff; box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2); display: inline-flex; align-items: center; gap: 6px;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                            Send Requirement
-                        </a>
-                    @else
-                        <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-boosterCom="" data-boost-ids="" data-row-id="{{ $id }}" data-matchcount="" data-row-jobid="{{ $jobid }}" class="btn btn-sm btn-success fw-bold send_job_recommanded_request" style="background: #10b981; border: none; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 600; white-space: nowrap; color: #fff; box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2); display: inline-flex; align-items: center; gap: 6px;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                            Send Requirement
-                        </a>
-                    @endif
-                @endif
-            </td>
-        </tr>
+                </div>
+
+            </div>
+
+            <!-- Bottom Activity Strip (Rule 20 Sub-Card 6) -->
+            <div class="ag-card-bottom-strip">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="ag-bottom-partner-tag">
+                        <i class="fas fa-shield-alt text-primary"></i>
+                        <span>Verified Marketplace Agency</span>
+                    </span>
+                    <span class="text-gray-300">•</span>
+                    <span class="ag-bottom-meta">Instant Outreach Enabled</span>
+                </div>
+                <div>
+                    <a href="javascript:void(0);" class="ag-bottom-link show-detail-direct" data-row-id="{{ $row->client_id }}" title="View agency profile and commercial terms">
+                        <span>View Profile & Terms</span>
+                        <i class="fas fa-arrow-up-right-from-square ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+        <!--end::Agency Primary Card-->
     @endforeach
 @else
-    <tr>
-        <td colspan="5" class="text-center py-5">
-            <div class="d-flex flex-column align-items-center justify-content-center py-4">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" class="mb-2">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <div class="fw-bold text-gray-700 fs-6">No matching agencies found</div>
-                <div class="text-muted fs-7">Try adjusting your skills or location filters to discover more agency partners.</div>
-            </div>
-        </td>
-    </tr>
+    <!--begin::Empty State Card-->
+    <div class="agency-empty-state-card">
+        <div class="ag-empty-icon-box">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+        </div>
+        <div class="ag-empty-title">No matching agencies found</div>
+        <div class="ag-empty-subtitle">Try adjusting your skills or location criteria in the filter to discover more verified partner agencies.</div>
+    </div>
+    <!--end::Empty State Card-->
 @endif
