@@ -118,7 +118,7 @@ class PrescreenReportDataIntegrityTest extends TestCase
         DB::table('job_applications')->delete();
     }
 
-    public function test_unpossessed_job_skills_and_empty_alignment_placeholders_are_never_injected(): void
+    public function test_prescreen_report_skills_reflect_job_requirements_and_candidate_drawer(): void
     {
         $companyId = 77;
         $jobId = 501;
@@ -136,7 +136,7 @@ class PrescreenReportDataIntegrityTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        // Job requires 3 skills; candidate only possesses PHP from profile
+        // Job requires 3 skills: PHP, Kubernetes, Rust
         $phpSkillId = DB::table('job_metronics_skills')->insertGetId([
             'company_id' => $companyId, 'job_id' => $jobId, 'skill_name' => 'PHP',
         ]);
@@ -147,7 +147,7 @@ class PrescreenReportDataIntegrityTest extends TestCase
             'company_id' => $companyId, 'job_id' => $jobId, 'skill_name' => 'Rust',
         ]);
 
-        // CandidateJobAlignmentService::alignKeySkillsClean creates (0, 0) placeholders for unpossessed job skills
+        // Candidate evaluated on PHP (4.0 Years, 5 stars); Kubernetes and Rust are unevaluated (0, 0)
         DB::table('candidate_job_skill_exp')->insert([
             ['job_skill_id' => $phpSkillId, 'skill_value' => '4.0 Years', 'job_id' => $jobId, 'candidate_id' => $candId, 'rating' => 5],
             ['job_skill_id' => $k8sSkillId, 'skill_value' => '0', 'job_id' => $jobId, 'candidate_id' => $candId, 'rating' => 0],
@@ -163,11 +163,14 @@ class PrescreenReportDataIntegrityTest extends TestCase
 
         $skillNames = array_map(fn ($s) => $s['name'], $dossier['skills']);
         $this->assertContains('PHP', $skillNames);
-        $this->assertContains('MySQL', $skillNames);
-        $this->assertNotContains('Kubernetes', $skillNames, 'Unpossessed job skill Kubernetes must NEVER appear.');
-        $this->assertNotContains('Rust', $skillNames, 'Unpossessed job skill Rust must NEVER appear.');
+        $this->assertContains('Kubernetes', $skillNames, 'Job skill Kubernetes must be present in report matching Candidate Drawer.');
+        $this->assertContains('Rust', $skillNames, 'Job skill Rust must be present in report matching Candidate Drawer.');
 
-        // Match is real profile overlap: 1 of 3 job skills = 33% (never fabricated 85%)
+        // Unevaluated skills must preserve 0 rating and not fabricate ratings
+        $k8sSkill = collect($dossier['skills'])->firstWhere('name', 'Kubernetes');
+        $this->assertSame(0, $k8sSkill['rating'], 'Unevaluated skill rating must remain 0.');
+
+        // Match is real profile/evaluation overlap: 1 of 3 job skills = 33% (never fabricated 85%)
         $this->assertSame(33, $dossier['match']);
     }
 
