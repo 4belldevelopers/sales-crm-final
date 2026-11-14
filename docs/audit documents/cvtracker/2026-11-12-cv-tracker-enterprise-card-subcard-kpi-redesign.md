@@ -2,7 +2,7 @@
 
 ## 1. Document Metadata
 - **Module:** Service Company / CV Tracker (`service_company/cvtracker`)
-- **Date:** 2026-11-13 (Updated)
+- **Date:** 2026-11-14 (Updated)
 - **Author:** JERO Architecture Team (Supergod Mode)
 - **Status:** Complete & Verified
 - **Applicable Rules:**
@@ -21,8 +21,28 @@
 ## 2. Executive Summary
 The **CV Tracker page** (`service_company/cvtracker`) has been completely redesigned into an enterprise-level, modern card and sub-card based ATS interface inspired by the **App Tracker** page and **Similar Candidates tab** (`similar_existing_ajax.blade.php`), featuring **9 interactive status-based KPI cards** in a single row inspired by the **Client Tracker** page.
 
-### Key Architectural Enhancements:
-1. **Interactive Status-Based KPI Cards (Client Tracker Pattern):**
+### Key Architectural Enhancements & Refinements:
+1. **Listing Controls Reordered to Exact Standard (Search → Sort → Organization → Filters):**
+   - Rearranged the top listing controls into the exact requested order in `cvtracker/index.blade.php`:
+     1. **Search Bar** (`.cvh-tb-search-wrap`, debounced search with clear button, expands across available space).
+     2. **Sort** (`.cvh-tb-sort-wrap`, 220px, Metronic custom dropdown).
+     3. **Organization Dropdown** (`.cvh-tb-org-wrap`, 215px, canonical Rule 25 organization categories).
+     4. **Filters** (`#kt_cvtracker_filter_toggle`, primary blue toggle button).
+   - Ensured unified height (`44px`), border radius (`10px`), neutral border (`#e4e6ef`), and responsive flex alignment across 15.6" viewports.
+
+2. **Job Details Sub-Card Neutral Layout & Badge-Only Highlighting:**
+   - Completely removed full-subcard container tinting and container border highlights.
+   - The Job Details sub-card retains the clean, standard neutral `#f8fafc` background identical to all other sub-cards.
+   - Highlight colors are strictly scoped to the organization-type badge/tag pill.
+
+3. **Dynamic Organization-Type Tags (Automatic Context Detection):**
+   - Automatically determines and displays the correct tag based on actual job and client relationship:
+     - **Direct Client:** Requirement received through the marketplace (`is_direct_client = true/1`, `is_job_request = true`, `recommendation_id > 0`, or thirdparty `ClientComID != tenant_company_id`). Tag: Emerald `#ecfdf5` bg / `#059669` text / `#a7f3d0` border (`fa-shield-alt`).
+     - **Internal Client:** Requirement created for a managed non-marketplace client such as Tesla, Stripe, etc. (`client_self_company = 0` or client attached is not own organization). Tag: Blue `#eff6ff` bg / `#2563eb` text / `#bfdbfe` border (`fa-building`).
+     - **My Organization:** Requirement created for our own organization (`client_self_company = 1`, no external client, or client is own company). Tag: Cyan `#ecfeff` bg / `#0891b2` text / `#a5f3fc` border (`fa-id-badge`).
+   - Synchronized both Elasticsearch read filters and blade card rendering.
+
+4. **Interactive Status-Based KPI Cards (Client Tracker Pattern):**
    - Replaced legacy static cards with **9 unified interactive status KPI cards in a single row**:
      1. **All Candidates** (`data-tab="all"`, count: `#kpi_all`, blue `#2563eb`)
      2. **In Review** (`data-tab="8"`, count: `#kpi_inreview`, yellow `#ca8a04`)
@@ -33,46 +53,23 @@ The **CV Tracker page** (`service_company/cvtracker`) has been completely redesi
      7. **Offer** (`data-tab="5"`, count: `#kpi_offered`, orange `#ea580c`)
      8. **Joined** (`data-tab="6"`, count: `#kpi_joined`, emerald `#16a34a`)
      9. **Rejected** (`data-tab="7,9"`, count: `#kpi_rejected`, red `#dc2626`)
-   - Configured strictly as a single row across viewports $\ge 1200$px with clean horizontal touch scrolling for smaller screens.
 
-2. **Organization Type Dropdown List (Rule 25):**
-   - Replaced wide pill buttons with a dedicated, compact **Organization Type Dropdown List** (`.cvh-tb-org-wrap`, 215px):
-     - `All Organizations` (`data-value="all"`, icon: `fa-layer-group`, color `#2563eb`)
-     - `My Organization` (`data-value="my_organization"`, icon: `fa-id-badge`, color `#0891b2`)
-     - `Internal Client` (`data-value="internal_client"`, icon: `fa-building`, color `#2563eb`)
-     - `Direct Client` (`data-value="direct_client"`, icon: `fa-shield-alt`, color `#059669`)
-   - Fully synchronized with Elasticsearch aggregation filters and client-side SWR caching.
-
-3. **Candidate Card Format (App Tracker / Similar Candidates Pattern):**
-   - Candidate listing refactored into modern 6-subcard primary cards (`.simf-cand-card.aptk-cand-card`) with full-width intelligence bottom strip:
-     - **Sub-Card 1: CANDIDATE INFO & IDENTITY** (checkbox, `Candidate Info` label, `Duplicate` badge, 36×36px avatar box with initials/photo in flex row, name, designation, current company aligned to right).
-     - **Sub-Card 2: COMPENSATION & EXP** (Expected CTC with mode, Current CTC with mode, total & relevant exp with briefcase icon, notice period pill with clock icon).
-     - **Sub-Card 3: LOCATION & DEGREE** (City and Country code, Work Mode with icon, uppercase Degree with graduation cap icon).
-     - **Sub-Card 4: JOB DETAILS** (Renamed from Target Req to `Job Details`; Mandate title, `#JobId • Category`, `Client • Employment Type`, Rule 25 canonical organization badge text/pill only, with standard neutral subcard background).
-     - **Sub-Card 5: OWNERSHIP & ADDED** (Recruiter with user icon, company with building icon, added date with calendar icon).
-     - **Sub-Card 6: STAGE & ACTION** (Stage pill with dynamic theme, sub-stage label, restored `Update Stage >` link cue, and primary action button **"Add to Other Job"**).
-     - **Bottom Intelligence Strip:** Match score pill (`Match XX%`), single-line horizontal scrolling Tagify skills (matched in green, unmatched in gray, mandatory in blue), Resume pill (`Resume` in green / `No CV` in red), and verified LinkedIn pill — strictly single-row flex layout with zero vertical line-wrapping.
-
-4. **"Add to Other Job" Drawer Integration:**
-   - Action button labeled **"Add to Other Job"** (`.cv-add-to-other-job`, `btn btn-sm btn-primary`, full width of subcard).
-   - On click:
-     - Unchecks other candidates and checks current candidate's `.chk_list_item` checkbox.
-     - Sets card state to `.is-selected`.
-     - Opens the copy candidate drawer (`#kt_activitiesCopy`) via `#kt_activitiesCopy_toggle`.
-     - Executes POST to `service_company.cvtracker.application_copy` with candidate array `[candId]` and wise ID `[wiseId]`.
-     - Injects returned view directly into `#application_copy_body_content`.
+5. **"Add to Other Job" Drawer Integration:**
+   - Action button labeled **"Add to Other Job"** (`.cv-add-to-other-job`, `btn btn-sm btn-primary`).
+   - Restored `Update Stage >` cue above action button.
+   - On click, opens `#kt_activitiesCopy` drawer and executes copy candidate workflow.
 
 ---
 
 ## 3. Rule 25 Organization Tokens: Color Codes & Highlighting Specification
 
-The `Job Details` sub-card (Sub-Card 4) implements canonical badge colors strictly adhering to Rule 25, applied exclusively to the badge pill (the subcard container retains the clean neutral `#f8fafc` background):
+The `Job Details` sub-card implements canonical badge colors strictly adhering to Rule 25, applied exclusively to the tag pill (the sub-card container retains neutral `#f8fafc` background):
 
-| Organization Type | Badge Class | Badge Background | Badge Text Color | Badge Border | Icon |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **My Organization** (Own company hiring) | `.type-my-org` | `#ecfeff` | `#0891b2` | `1px solid #a5f3fc` | `fa-solid fa-id-badge` |
-| **Internal Client** (Managed non-marketplace) | `.type-internal` | `#eff6ff` | `#2563eb` | `1px solid #bfdbfe` | `fa-solid fa-building` |
-| **Direct Client** (Marketplace mandate) | `.type-direct` | `#ecfdf5` | `#059669` | `1px solid #a7f3d0` | `fa-solid fa-shield-alt` |
+| Organization Type | Hiring Context | Badge Class | Badge Background | Badge Text Color | Badge Border | Icon |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **My Organization** | Job created for own company (`client_self_company = 1` or own company) | `.type-my-org` | `#ecfeff` | `#0891b2` | `1px solid #a5f3fc` | `fa-solid fa-id-badge` |
+| **Internal Client** | Hiring for managed client like Tesla, Stripe (`client_self_company = 0`) | `.type-internal` | `#eff6ff` | `#2563eb` | `1px solid #bfdbfe` | `fa-solid fa-building` |
+| **Direct Client** | Requirement received through marketplace (`recommendation_id > 0` / direct) | `.type-direct` | `#ecfdf5` | `#059669` | `1px solid #a7f3d0` | `fa-solid fa-shield-alt` |
 
 ### CSS Implementation Tokens:
 ```css
@@ -84,24 +81,25 @@ The `Job Details` sub-card (Sub-Card 4) implements canonical badge colors strict
 
 ---
 
-## 4. 15.6" Screen Fit (1366×768 & 1920×1080)
+## 4. 15.6" Screen Fit & Listing Controls Alignment (1366×768 & 1920×1080)
 
-To guarantee 100% responsiveness without horizontal page scrollbars on 15.6" displays:
-- **Grid Ratio:** Sized across 6 discrete fractional units totaling 8.2 units:
-  ```css
-  grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.15fr);
-  gap: 8px;
-  padding: 10px 12px;
-  ```
-- **Proportional Widths on 1366px screen (~1080px available width after Metronic sidebar):**
-  - Sub-Card 1 (Candidate Info): `~242px` (36px avatar + 2-line identity + duplicate pill)
-  - Sub-Card 2 (Comp & Exp): `~163px` (Expected/Current CTC, Exp, NP)
-  - Sub-Card 3 (Location & Degree): `~144px` (City, Mode, Degree)
-  - Sub-Card 4 (Job Details): `~230px` (Title, #ID • Cat, Client • EmpType, Org Badge)
-  - Sub-Card 5 (Ownership & Added): `~144px` (Recruiter, Company, Date)
-  - Sub-Card 6 (Stage & Action): `~150px` (Stage Pill, Update Stage cue, "Add to Other Job" Button)
-- All text nodes enforce `overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`.
-- Sub-Card 7 (Bottom Strip) enforces `white-space: nowrap; overflow-x: auto; flex-wrap: nowrap;` for skills, keeping Match % on left and Resume/LinkedIn on right.
+1. **Toolbar Layout:**
+   - Container: `.cvh-tb-card` with `py-3 px-4`.
+   - Flex Row: `d-flex align-items-center gap-3 flex-wrap flex-xl-nowrap`.
+   - Controls Order:
+     1. `Search Bar`: `flex-grow: 1; min-width: 240px; height: 44px;`.
+     2. `Sort`: `width: 220px; height: 44px; flex-shrink: 0;`.
+     3. `Organization Dropdown`: `width: 215px; height: 44px; flex-shrink: 0;`.
+     4. `Filters`: `height: 44px; padding: 0 16px; flex-shrink: 0;`.
+
+2. **Candidate Card Proportions:**
+   - Sub-Card 1 (Candidate Info): `~242px` (36px avatar + 2-line identity + duplicate pill)
+   - Sub-Card 2 (Comp & Exp): `~163px` (Expected/Current CTC, Exp, NP)
+   - Sub-Card 3 (Location & Degree): `~144px` (City, Mode, Degree)
+   - Sub-Card 4 (Job Details): `~230px` (Title, #ID • Cat, Client • EmpType, Dynamic Org Badge)
+   - Sub-Card 5 (Ownership & Added): `~144px` (Recruiter, Company, Date)
+   - Sub-Card 6 (Stage & Action): `~150px` (Stage Pill, Update Stage cue, "Add to Other Job" Button)
+   - Sub-Card 7 (Bottom Strip): `min-height: 38px; white-space: nowrap; overflow-x: auto; flex-wrap: nowrap;` for skills, keeping Match % on left and Resume/LinkedIn on right.
 
 ---
 
@@ -109,10 +107,10 @@ To guarantee 100% responsiveness without horizontal page scrollbars on 15.6" dis
 
 | File Path | Description of Changes |
 | :--- | :--- |
-| `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` | Joined `job_categories` in `$dbJobs` query (line 1565) to batch-fetch `jobs.category_id`, `jobs.employment_type`, and `job_categories.name as category_name` in a single pass without per-row N+1 queries. |
-| `resources/views/service_company/ajax_pages/all_candidates.blade.php` | Refined candidate card: 1) Renamed Target Req to `Job Details`; 2) Applied Rule 25 organization colors strictly to the badge text/pill (neutral subcard background); 3) Aligned Candidate Info avatar box and metadata into flex row; 4) Restored `Update Stage >` cue in Stage & Action; 5) Formatted bottom intelligence strip as a single-line flex row with horizontally scrolling skills. |
-| `resources/views/service_company/cvtracker/index.blade.php` | 1. Single-row 9 interactive KPI cards (Client Tracker style).<br>2. Organization Type Dropdown List (Rule 25 canonical options).<br>3. Comprehensive `.simf-*` and `.aptk-*` CSS stylesheet with `!important` guards for layout integrity.<br>4. Click handler for `.cv-add-to-other-job` triggering `#kt_activitiesCopy` drawer and copy candidate AJAX flow. |
-| `docs/audit documents/cvtracker/2026-11-12-cv-tracker-enterprise-card-subcard-kpi-redesign.md` | Documented full architecture, color tokens, drawer workflows, and 15.6" screen proportions per Rule 21. |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` | 1. Joined `clients` table in `$dbJobs` query (line 1566) to batch-fetch `clients.name` and `clients.self_company` for instant 0% N+1 resolution.<br>2. Fixed Elasticsearch queries for `my_organization`, `internal_client`, and `direct_client` filtering to accurately distinguish internal clients (`client_self_company = 0`) from own company (`client_self_company = 1`) and marketplace requirements. |
+| `resources/views/service_company/ajax_pages/all_candidates.blade.php` | 1. Dynamically resolves organization tag: `Direct Client` (marketplace), `Internal Client` (e.g. Tesla, Stripe), or `My Organization` (own company).<br>2. Removed container background tinting and borders from Sub-Card 4 (`Job Details`), preserving clean neutral `#f8fafc` sub-card background.<br>3. Applied canonical Rule 25 colors strictly to the tag pill. |
+| `resources/views/service_company/cvtracker/index.blade.php` | 1. Rearranged listing controls in exact specified order: **1. Search Bar → 2. Sort → 3. Organization Dropdown → 4. Filters**.<br>2. Removed obsolete `.simf-cand-subcard--my-org`, `--internal`, `--direct` background styles.<br>3. Unified height (`44px`), border (`#e4e6ef`), and alignment across all toolbar controls. |
+| `docs/audit documents/cvtracker/2026-11-12-cv-tracker-enterprise-card-subcard-kpi-redesign.md` | Documented dynamic organization classification logic, listing controls reordering, and 15.6" screen fit per Rule 21. |
 
 ---
 

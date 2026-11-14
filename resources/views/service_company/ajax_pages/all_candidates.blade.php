@@ -217,39 +217,6 @@
             $locFull = $locHier['location_text'] !== '--' ? $locHier['location_text'] : trim(($row_city_name !== '' ? ucwords($row_city_name) : '') . ($row_country_name !== '' ? ', ' . strtoupper($row_country_name) : ''), ', ');
             $displayQualification = $cardMeta['qualification'] !== '' ? $cardMeta['qualification'] : (trim((string)(@$row->qualification_name ?? '')) ?: '–');
 
-            // Organization & Client Classification (Rule 25 canonical tokens)
-            $isDirect = false;
-            if (!empty($row->is_direct_client) || !empty($row->recommendation_id) || (!empty($row->ClientComID) && (int)$row->ClientComID !== (int)$company_id)) {
-                $isDirect = true;
-            }
-            $isOwnOrg = false;
-            if (!$isDirect && (!empty($row->client_self_company) || (isset($row->ClientComID) && (int)$row->ClientComID === 0) || !empty($row->self_company))) {
-                $isOwnOrg = true;
-            }
-
-            if ($isOwnOrg) {
-                $targetTypeLabel = 'My Organization';
-                $targetTypeClass = 'type-my-org';
-                $targetTypeIcon  = 'fa-solid fa-id-badge';
-                $targetTypeStyle = 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;';
-                $targetSubcardClass = 'simf-cand-subcard--my-org';
-                $targetSubcardStyle = 'background:#fffbeb !important; border:1px solid #fde68a !important;';
-            } elseif ($isDirect) {
-                $targetTypeLabel = 'Direct Client';
-                $targetTypeClass = 'type-direct';
-                $targetTypeIcon  = 'fa-solid fa-shield-alt';
-                $targetTypeStyle = 'background:#d1fae5; color:#166534; border:1px solid #6ee7b7;';
-                $targetSubcardClass = 'simf-cand-subcard--direct';
-                $targetSubcardStyle = 'background:#ecfdf5 !important; border:1px solid #a7f3d0 !important;';
-            } else {
-                $targetTypeLabel = 'Internal Client';
-                $targetTypeClass = 'type-internal';
-                $targetTypeIcon  = 'fa-solid fa-building';
-                $targetTypeStyle = 'background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;';
-                $targetSubcardClass = 'simf-cand-subcard--internal';
-                $targetSubcardStyle = 'background:#eff6ff !important; border:1px solid #bfdbfe !important;';
-            }
-
             // Recruiter / Ownership
             if (!empty($row->spokperson_name)) {
                 $rowpostedby = $row->spokperson_name;
@@ -262,14 +229,50 @@
             $post_company_name = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->company_name ?: ''));
 
             // Job Title, Category, Client & Employment Type
-            $jobTitleDisplay = !empty($jobDetailsMap[$rowJobId]->title) ? $jobDetailsMap[$rowJobId]->title : (!empty($row->title) ? $row->title : 'General Pool Application');
-            $jobCategoryName = !empty($jobDetailsMap[$rowJobId]->category_name) ? $jobDetailsMap[$rowJobId]->category_name : (!empty($row->category_name) ? $row->category_name : '');
-            $empTypeRaw = $jobDetailsMap[$rowJobId]->employment_type ?? (@$row->employment_type ?? 0);
+            $jobObj = $jobDetailsMap[$rowJobId] ?? null;
+            $jobTitleDisplay = !empty($jobObj->title) ? $jobObj->title : (!empty($row->title) ? $row->title : 'General Pool Application');
+            $jobCategoryName = !empty($jobObj->category_name) ? $jobObj->category_name : (!empty($row->category_name) ? $row->category_name : '');
+            $empTypeRaw = $jobObj->employment_type ?? (@$row->employment_type ?? 0);
             $empTypeLabel = $empTypes[$empTypeRaw] ?? ($empTypeRaw == 1 ? 'Contract' : 'Full-Time');
 
-            $client_title_name = $row->client_name ?? '';
+            $client_title_name = !empty($jobObj->client_name) ? $jobObj->client_name : ($row->client_name ?? '');
             if (empty($client_title_name) && !empty($rowJobId)) {
                 $client_title_name = GeneralMethod::companyDetailsByClient($rowJobId) ?: '';
+            }
+
+            // Dynamic Organization-Type Classification (Rule 25 canonical tokens)
+            // 1. Direct Client: Requirement received through marketplace
+            $isDirect = false;
+            if (!empty($row->is_direct_client) || !empty($row->is_job_request) || !empty($row->recommendation_id) || (!empty($row->ClientComID) && (int)$row->ClientComID !== (int)$company_id)) {
+                $isDirect = true;
+            }
+
+            // 2. Client relationship from actual job & client entity
+            $resolvedClientId = $jobObj->client_id ?? ($row->client_id ?? null);
+            $resolvedSelfCompany = isset($jobObj->client_self_company)
+                ? (int) $jobObj->client_self_company
+                : (isset($row->client_self_company) ? (int) $row->client_self_company : null);
+
+            $tenantCompanyName = trim((string) (auth()->user()->company->company_name ?? ''));
+
+            if ($isDirect) {
+                // Requirement received through the marketplace
+                $targetTypeLabel = 'Direct Client';
+                $targetTypeClass = 'type-direct';
+                $targetTypeIcon  = 'fa-solid fa-shield-alt';
+                $targetTypeStyle = 'background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;';
+            } elseif ($resolvedSelfCompany === 0 || (!empty($resolvedClientId) && $resolvedSelfCompany !== 1 && !empty($client_title_name) && ($tenantCompanyName === '' || strcasecmp(trim($client_title_name), $tenantCompanyName) !== 0))) {
+                // Hiring for an internal client (e.g. Tesla, Stripe)
+                $targetTypeLabel = 'Internal Client';
+                $targetTypeClass = 'type-internal';
+                $targetTypeIcon  = 'fa-solid fa-building';
+                $targetTypeStyle = 'background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;';
+            } else {
+                // Job created for own organization
+                $targetTypeLabel = 'My Organization';
+                $targetTypeClass = 'type-my-org';
+                $targetTypeIcon  = 'fa-solid fa-id-badge';
+                $targetTypeStyle = 'background:#ecfeff; color:#0891b2; border:1px solid #a5f3fc;';
             }
 
             // Stage, Substage & Accents
@@ -428,7 +431,13 @@
                     <div class="simf-val-notice" title="Notice Period: {{ $np !== '' ? e($np) : '–' }}">
                         <i class="fa-regular fa-clock me-1 text-muted"></i>
                         @if ($np !== '')
-                            <span class="simf-notice-txt {{ $npClass }}">NP: {{ $np }}</span>
+                            @php
+                                $displayNp = trim((string) $np);
+                                if (!str_starts_with($displayNp, 'NP:') && !str_starts_with($displayNp, 'SNP')) {
+                                    $displayNp = 'NP: ' . $displayNp;
+                                }
+                            @endphp
+                            <span class="simf-notice-txt {{ $npClass }}">{{ $displayNp }}</span>
                         @else
                             <span class="simf-notice-txt text-muted">NP: –</span>
                         @endif
@@ -460,8 +469,8 @@
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: JOB DETAILS (Document Color Standard) -->
-                <div class="simf-cand-subcard aptk-cand-subcard simf-cand-subcard--target {{ $targetSubcardClass }}" style="{{ $targetSubcardStyle }}">
+                <!-- SUB-CARD 4: JOB DETAILS (Neutral Subcard, Dynamic Badge Highlight Only) -->
+                <div class="simf-cand-subcard aptk-cand-subcard simf-cand-subcard--target">
                     <div class="simf-subcard-head aptk-subcard-hdr d-flex align-items-center justify-content-between mb-1" style="min-height:18px;">
                         <span class="simf-subcard-label aptk-subcard-label text-uppercase text-truncate" title="Job Details">Job Details</span>
                         <span class="simf-target-type-badge aptk-target-type-badge {{ $targetTypeClass }}" style="font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:4px; text-transform:uppercase; white-space:nowrap !important; flex-shrink:0; {{ $targetTypeStyle }}">

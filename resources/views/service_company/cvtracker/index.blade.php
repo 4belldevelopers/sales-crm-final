@@ -422,7 +422,7 @@
         /* Rule 25 Canonical Organization Filter Dropdown (Dropdown List Only) */
         .cvh-tb-org-wrap {
             background: #ffffff;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #e4e6ef;
             border-radius: 10px;
             padding: 0 12px;
             height: 44px;
@@ -571,33 +571,10 @@
             border-color: #e2e8f0;
         }
 
-        /* Sub-Card 4: Document Color Standard Subcard Backgrounds */
-        .simf-cand-subcard--my-org {
-            background: #fffbeb !important;
-            border-color: #fde68a !important;
-        }
-        .simf-cand-subcard--internal {
-            background: #eff6ff !important;
-            border-color: #bfdbfe !important;
-        }
-        .simf-cand-subcard--direct {
-            background: #ecfdf5 !important;
-            border-color: #a7f3d0 !important;
-        }
-        .simf-cand-card:hover .simf-cand-subcard--my-org {
-            border-color: #fcd34d !important;
-        }
-        .simf-cand-card:hover .simf-cand-subcard--internal {
-            border-color: #93c5fd !important;
-        }
-        .simf-cand-card:hover .simf-cand-subcard--direct {
-            border-color: #6ee7b7 !important;
-        }
-
-        /* Sub-Card 4: Rule 25 Canonical Badges (Applied to badge pill only, not full subcard) */
-        .type-my-org { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d !important; }
-        .type-internal { background: #dbeafe !important; color: #1e40af !important; border: 1px solid #93c5fd !important; }
-        .type-direct { background: #d1fae5 !important; color: #166534 !important; border: 1px solid #6ee7b7 !important; }
+        /* Sub-Card 4: Rule 25 Canonical Badges (Applied strictly to badge pill/text only, subcard remains neutral) */
+        .type-my-org { background: #ecfeff !important; color: #0891b2 !important; border: 1px solid #a5f3fc !important; }
+        .type-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+        .type-direct { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
         .simf-target-type-badge {
             font-size: 9.5px;
             font-weight: 700;
@@ -1667,11 +1644,51 @@
                     </div>
                 </div>
 
-                <!-- ── TOOLBAR CARD: ORGANIZATION TYPE DROPDOWN + SEARCH + SORT + FILTER ── -->
+                <!-- ── TOOLBAR CARD: SEARCH + SORT + ORGANIZATION + FILTER ── -->
                 <div class="card cvh-tb-card mb-4">
                     <div class="card-body py-3 px-4">
-                        <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
-                            {{-- Left: Rule 25 Canonical Organization Filter Dropdown (Dropdown List Only) --}}
+                        <div class="d-flex align-items-center gap-3 flex-wrap flex-xl-nowrap">
+
+                            {{-- 1. Search Bar --}}
+                            <div class="cvh-tb-search-wrap position-relative flex-grow-1" style="min-width: 240px;">
+                                <span class="cvh-tb-search-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                </span>
+                                <input type="text" class="form-control cvh-tb-search-input pe-8" name="inputJobSearch"
+                                    value="" placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" autocomplete="off" />
+                                <button type="button" id="cv_search_clear" class="btn btn-icon btn-sm text-muted position-absolute" style="right: 8px; top: 50%; transform: translateY(-50%); display: none; width: 22px; height: 22px; background: transparent; border: none;" title="Clear search">
+                                    <i class="fa fa-times fs-8"></i>
+                                </button>
+                                <div style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%);">
+                                    <div id="loader_search" class="loader_search hidden_search"></div>
+                                </div>
+                            </div>
+
+                            {{-- 2. Sort Dropdown --}}
+                            <div class="cvh-tb-sort-wrap" id="cvh_sort_wrap">
+                                <span class="cvh-tb-sort-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                                </span>
+                                <button type="button" class="cvh-tb-sort-btn" id="cvh_sort_btn">
+                                    <span id="cvh_sort_label">Sort</span>
+                                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
+                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
+                                    id="sortingfilter" data-dropdown-css-class="w-150px" style="display:none;"
+                                    onchange="filtersdataget()">
+                                    <option value="Show All" selected="">Sort</option>
+                                    <option value="1">Newest to Oldest (Upload Date)</option>
+                                    <option value="2">Oldest to Newest (Upload Date)</option>
+                                    <option value="21">Notice Period (Immediate)</option>
+                                    <option value="22">Notice Period (Serving)</option>
+                                    <option value="7">High to Low (Experience)</option>
+                                    <option value="8">Low to High (Experience)</option>
+                                    <option value="30">Best Match</option>
+                                </select>
+                                <div class="cvh-tb-sort-panel d-none" id="cvh_sort_panel"></div>
+                            </div>
+
+                            {{-- 3. Organization Dropdown (Rule 25 Canonical Dropdown List) --}}
                             <div class="cvh-tb-org-wrap" id="cvh_org_wrap">
                                 <button type="button" class="cvh-tb-org-btn" id="cvh_org_btn">
                                     <span class="cvh-tb-org-icon" id="cvh_org_btn_icon">
@@ -1710,55 +1727,14 @@
                                 </div>
                             </div>
 
-                            {{-- Right: Search + Sort + Filter --}}
-                            <div class="d-flex align-items-center gap-3 flex-grow-1 justify-content-end" style="min-width: 300px;">
-                                {{-- Debounced Search Box with Clear Button --}}
-                                <div class="cvh-tb-search-wrap position-relative flex-grow-1" style="max-width: 440px;">
-                                    <span class="cvh-tb-search-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
-                                    </span>
-                                    <input type="text" class="form-control cvh-tb-search-input pe-8" name="inputJobSearch"
-                                        value="" placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" autocomplete="off" />
-                                    <button type="button" id="cv_search_clear" class="btn btn-icon btn-sm text-muted position-absolute" style="right: 8px; top: 50%; transform: translateY(-50%); display: none; width: 22px; height: 22px; background: transparent; border: none;" title="Clear search">
-                                        <i class="fa fa-times fs-8"></i>
-                                    </button>
-                                    <div style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%);">
-                                        <div id="loader_search" class="loader_search hidden_search"></div>
-                                    </div>
-                                </div>
+                            {{-- 4. Filters Button --}}
+                            <button type="button" id="kt_cvtracker_filter_toggle"
+                                class="btn cvh-tb-filter-btn position-relative flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                <span>Filter<span id="cvh_filter_count_text"></span></span>
+                                <span class="badge badge-circle badge-primary cvh-tb-count-badge d-none" id="cvh_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
+                            </button>
 
-                                {{-- Sort Dropdown --}}
-                                <div class="cvh-tb-sort-wrap" id="cvh_sort_wrap">
-                                    <span class="cvh-tb-sort-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
-                                    </span>
-                                    <button type="button" class="cvh-tb-sort-btn" id="cvh_sort_btn">
-                                        <span id="cvh_sort_label">Sort</span>
-                                        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                                    </button>
-                                    <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                        id="sortingfilter" data-dropdown-css-class="w-150px" style="display:none;"
-                                        onchange="filtersdataget()">
-                                        <option value="Show All" selected="">Sort</option>
-                                        <option value="1">Newest to Oldest (Upload Date)</option>
-                                        <option value="2">Oldest to Newest (Upload Date)</option>
-                                        <option value="21">Notice Period (Immediate)</option>
-                                        <option value="22">Notice Period (Serving)</option>
-                                        <option value="7">High to Low (Experience)</option>
-                                        <option value="8">Low to High (Experience)</option>
-                                        <option value="30">Best Match</option>
-                                    </select>
-                                    <div class="cvh-tb-sort-panel d-none" id="cvh_sort_panel"></div>
-                                </div>
-
-                                {{-- Filter Button --}}
-                                <button type="button" id="kt_cvtracker_filter_toggle"
-                                    class="btn cvh-tb-filter-btn position-relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
-                                    <span>Filter<span id="cvh_filter_count_text"></span></span>
-                                    <span class="badge badge-circle badge-primary cvh-tb-count-badge d-none" id="cvh_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
