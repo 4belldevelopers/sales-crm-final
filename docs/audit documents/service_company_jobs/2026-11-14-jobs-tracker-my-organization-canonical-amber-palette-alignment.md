@@ -50,13 +50,13 @@ This update aligns:
 
 | File Path | Description of Changes |
 |---|---|
-| `resources/views/service_company/jobs/index.blade.php` | Updated `.cd-kpi-card[data-kpi="internal"]` active state and hover styles to blue palette (`#eff6ff`, `#bfdbfe`, `#2563eb`); updated inactive icon/subtext classes (`.icon-blue.icon-internal`, `.sub-blue.sub-internal`) with `#bfdbfe` border and `#2563eb` text; updated `data-kpi="my_organization"` active/inactive styles. |
+| `resources/views/service_company/jobs/index.blade.php` | Updated `.cd-kpi-card[data-kpi="internal"]` active state and hover styles to blue palette (`#eff6ff`, `#bfdbfe`, `#2563eb`); updated inactive icon/subtext classes (`.icon-blue.icon-internal`, `.sub-blue.sub-internal`) with `#bfdbfe` border and `#2563eb` text; updated `data-kpi="my_organization"` active/inactive styles; updated Sub-Card 5 (Hiring Pipeline) summary footer label from `"Apps:"` to `"Applications:"`. |
 | `demo/css/topCard.css` | Updated `.jh-card-source-internal.jh-card-active` radio dot border and background color from orange `#EA580C` to blue `#2563EB`. |
 | `resources/views/sections/service_company/jobHeader.blade.php` | Updated `jh-icon-orange` to `jh-icon-blue`, and ensured label reads `Internal Client Jobs` (never bare `Internal Jobs`). |
 | `AGENTS.md` | Synchronized Rule 25 with blue active KPI tokens for `Internal Client`. |
 | `CLAUDE.md` | Synchronized Rule 20 with blue active KPI tokens for `Internal Client`. |
 | `docs/AI_RULES.md` | Harmonized Section 25 classification table with blue active KPI tokens for `Internal Client`. |
-| `docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` | Aligned Section 6 A classification table for `Internal Client` to `#eff6ff` / `#bfdbfe` / `#2563eb`. |
+| `docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md` | Aligned Section 6 A classification table for `Internal Client` to `#eff6ff` / `#bfdbfe` / `#2563eb`; updated Sub-Card 5 footer spec to `"Applications: X • Interviews: Y"`. |
 
 ---
 
