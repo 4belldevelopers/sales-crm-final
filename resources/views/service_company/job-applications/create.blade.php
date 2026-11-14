@@ -16,6 +16,460 @@
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926&resume_card_design=20260926&resume_card_clean=20260926&required_fields_modal=20261006_v2&candidate_header_stage_godlevel=20261008_v3" rel="stylesheet" type="text/css" />
 <style>
+/* ==========================================================================
+   AppTracker Header Consistency for Add Candidate (.aptk-job-toolbar / .aptk-hdr-*)
+   Unified Open White Strip + Soft Org Tint Wash & Matching Action Buttons
+   Supports: .hp-org-internal (Blue), .hp-org-my (Amber), .hp-org-direct (Emerald)
+   ========================================================================== */
+@media (min-width: 1181px) {
+    body#kt_body.toolbar-fixed {
+        --kt-toolbar-height: 62px !important;
+    }
+    body#kt_body.toolbar-fixed .wrapper {
+        padding-top: calc(var(--kt-header-height, 65px) + 62px) !important;
+    }
+}
+@media (max-width: 1180px) {
+    #kt_toolbar.aptk-job-toolbar {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        height: auto !important;
+    }
+    body#kt_body.toolbar-fixed .wrapper {
+        padding-top: var(--kt-header-height, 65px) !important;
+    }
+}
+#kt_toolbar.aptk-job-toolbar {
+    background: #ffffff !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    height: auto !important;
+    min-height: 60px;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+#kt_toolbar.aptk-job-toolbar #kt_toolbar_container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+}
+.aptk-hdr-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    min-height: 60px;
+    background: var(--hdr-bg, #ffffff);
+    border: none;
+    border-top: none;
+    border-right: none;
+    border-bottom: 1px solid var(--hdr-border, #bfdbfe);
+    border-left: 4px solid var(--hdr-accent, #2563eb);
+    border-radius: 0 !important;
+    padding: 10px 20px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow: hidden;
+}
+/* Org Theme Tokens — Whisper-Light Directional Tint on White + Org Actions */
+.aptk-hdr-card.hp-org-my {
+    --hdr-bg: linear-gradient(90deg, #fffbeb 0%, #fffdf7 34%, #ffffff 64%, #ffffff 100%);
+    --hdr-border: #fde68a;
+    --hdr-accent: #d97706;
+    --hdr-logo-bg: #fffbeb;
+    --hdr-logo-border: #fde68a;
+    --hdr-icon-color: #d97706;
+    --hdr-pill-bg: #fef3c7;
+    --hdr-pill-border: #fcd34d;
+    --hdr-pill-color: #92400e;
+    --hdr-btn-outline-border: #f59e0b;
+    --hdr-btn-outline-color: #b45309;
+    --hdr-btn-outline-hover-bg: #fef3c7;
+    --hdr-btn-outline-hover-color: #78350f;
+    --hdr-btn-solid-bg: linear-gradient(135deg, #fde047 0%, #eab308 100%);
+    --hdr-btn-solid-border: #eab308;
+    --hdr-btn-solid-color: #422006;
+    --hdr-btn-solid-hover: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
+    --hdr-btn-solid-hover-border: #ca8a04;
+    --hdr-btn-shadow: rgba(234, 179, 8, 0.28);
+}
+.aptk-hdr-card.hp-org-internal {
+    --hdr-bg: linear-gradient(90deg, #eff6ff 0%, #f7faff 34%, #ffffff 64%, #ffffff 100%);
+    --hdr-border: #bfdbfe;
+    --hdr-accent: #2563eb;
+    --hdr-logo-bg: #eff6ff;
+    --hdr-logo-border: #bfdbfe;
+    --hdr-icon-color: #2563eb;
+    --hdr-pill-bg: #dbeafe;
+    --hdr-pill-border: #93c5fd;
+    --hdr-pill-color: #1e40af;
+    --hdr-btn-outline-border: #60a5fa;
+    --hdr-btn-outline-color: #1d4ed8;
+    --hdr-btn-outline-hover-bg: #dbeafe;
+    --hdr-btn-outline-hover-color: #1e3a8a;
+    --hdr-btn-solid-bg: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+    --hdr-btn-solid-border: #1d4ed8;
+    --hdr-btn-solid-color: #ffffff;
+    --hdr-btn-solid-hover: linear-gradient(135deg, #1e40af 0%, #172554 100%);
+    --hdr-btn-solid-hover-border: #1e3a8a;
+    --hdr-btn-shadow: rgba(29, 78, 216, 0.30);
+}
+.aptk-hdr-card.hp-org-direct {
+    --hdr-bg: linear-gradient(90deg, #ecfdf5 0%, #f5fdf9 34%, #ffffff 64%, #ffffff 100%);
+    --hdr-border: #a7f3d0;
+    --hdr-accent: #16a34a;
+    --hdr-logo-bg: #ecfdf5;
+    --hdr-logo-border: #a7f3d0;
+    --hdr-icon-color: #16a34a;
+    --hdr-pill-bg: #d1fae5;
+    --hdr-pill-border: #6ee7b7;
+    --hdr-pill-color: #166534;
+    --hdr-btn-outline-border: #34d399;
+    --hdr-btn-outline-color: #15803d;
+    --hdr-btn-outline-hover-bg: #d1fae5;
+    --hdr-btn-outline-hover-color: #14532d;
+    --hdr-btn-solid-bg: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
+    --hdr-btn-solid-border: #34d399;
+    --hdr-btn-solid-color: #064e3b;
+    --hdr-btn-solid-hover: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
+    --hdr-btn-solid-hover-border: #10b981;
+    --hdr-btn-shadow: rgba(16, 185, 129, 0.22);
+}
+.aptk-hdr-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.aptk-hdr-sep {
+    width: 1px;
+    height: 30px;
+    background: #e2e8f0;
+    flex-shrink: 0;
+}
+.aptk-hdr-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+.aptk-hdr-col--identity {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    flex: 0 1 320px;
+    min-width: 185px;
+    max-width: clamp(220px, 26vw, 350px);
+    cursor: pointer;
+}
+.aptk-hdr-col--status {
+    gap: 3px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.aptk-hdr-col--comp,
+.aptk-hdr-col--loc,
+.aptk-hdr-col--meta {
+    gap: 2px;
+    flex-shrink: 0;
+}
+.aptk-hdr-logo-wrap {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.aptk-hdr-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.aptk-hdr-logo-mono {
+    background: var(--hdr-logo-bg, #eff6ff) !important;
+    border-color: var(--hdr-logo-border, #bfdbfe) !important;
+    color: var(--hdr-icon-color, #2563eb) !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+}
+.aptk-hdr-identity-txt {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.aptk-hdr-job-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+.aptk-hdr-col--identity:hover .aptk-hdr-job-title {
+    color: var(--hdr-accent, #2563eb);
+}
+.aptk-hdr-company-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    text-decoration: none;
+}
+.aptk-hdr-company-name i {
+    font-size: 10.5px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+.aptk-hdr-sub-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.aptk-hdr-status-badge {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 2px 8px !important;
+    border-radius: 5px !important;
+    line-height: 1.25 !important;
+}
+.aptk-hdr-job-id {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.aptk-hdr-sub-btm {
+    display: flex;
+    align-items: center;
+}
+.aptk-hdr-org-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1.5px 7px;
+    border-radius: 5px;
+    background: var(--hdr-pill-bg, #dbeafe);
+    border: 1px solid var(--hdr-pill-border, #93c5fd);
+    color: var(--hdr-pill-color, #1e40af);
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+.aptk-hdr-org-pill i {
+    font-size: 9.5px;
+    flex-shrink: 0;
+}
+.aptk-hdr-sub-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+.aptk-hdr-col-icon {
+    font-size: 11px;
+    color: var(--hdr-icon-color, #2563eb);
+    flex-shrink: 0;
+}
+.aptk-hdr-sub-val {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+}
+.aptk-hdr-loc-plus {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--hdr-icon-color, #2563eb);
+    margin-left: 2px;
+}
+.aptk-hdr-sub-meta {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+}
+.aptk-hdr-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 16px;
+    border-left: 1px solid #e2e8f0;
+    min-height: 38px;
+    white-space: nowrap;
+}
+.aptk-hdr-btn-outline {
+    background: #ffffff !important;
+    border: 1.5px solid var(--hdr-btn-outline-border, #60a5fa) !important;
+    color: var(--hdr-btn-outline-color, #1d4ed8) !important;
+    border-radius: 8px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    transition: all 0.15s ease !important;
+    text-decoration: none !important;
+}
+.aptk-hdr-btn-outline:hover,
+.aptk-hdr-btn-outline:focus {
+    background: var(--hdr-btn-outline-hover-bg, #dbeafe) !important;
+    border-color: var(--hdr-accent, #2563eb) !important;
+    color: var(--hdr-btn-outline-hover-color, #1e3a8a) !important;
+}
+.aptk-hdr-btn-outline i {
+    color: inherit !important;
+}
+.aptk-hdr-btn-solid {
+    background: var(--hdr-btn-solid-bg, linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%)) !important;
+    border: 1.5px solid var(--hdr-btn-solid-border, #1d4ed8) !important;
+    color: var(--hdr-btn-solid-color, #ffffff) !important;
+    border-radius: 8px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    box-shadow: 0 2px 5px var(--hdr-btn-shadow, rgba(29, 78, 216, 0.25)) !important;
+    transition: all 0.15s ease !important;
+}
+.aptk-hdr-btn-solid:hover,
+.aptk-hdr-btn-solid:focus {
+    background: var(--hdr-btn-solid-hover, linear-gradient(135deg, #1e40af 0%, #172554 100%)) !important;
+    border-color: var(--hdr-btn-solid-hover-border, #1e3a8a) !important;
+    color: var(--hdr-btn-solid-color, #ffffff) !important;
+    transform: translateY(-0.5px);
+}
+.aptk-hdr-btn-solid i,
+.aptk-hdr-btn-solid span {
+    color: var(--hdr-btn-solid-color, #ffffff) !important;
+}
+.aptk-hdr-btn-solid:hover i,
+.aptk-hdr-btn-solid:hover span {
+    color: var(--hdr-btn-solid-color, #ffffff) !important;
+}
+.aptk-hdr-btn-solid .svg-icon svg path {
+    fill: var(--hdr-btn-solid-color, #ffffff) !important;
+}
+@media (max-width: 1440px) {
+    .aptk-hdr-card {
+        gap: 12px;
+        padding: 9px 16px;
+    }
+    .aptk-hdr-main {
+        gap: 8px;
+    }
+    .aptk-hdr-col--identity {
+        flex: 0 1 285px;
+        max-width: 295px;
+    }
+    .aptk-hdr-actions {
+        padding-left: 12px;
+        min-height: 36px;
+    }
+    .aptk-hdr-btn-outline {
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 12px !important;
+        font-size: 12px !important;
+    }
+    .aptk-hdr-btn-solid {
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 14px !important;
+        font-size: 12px !important;
+    }
+}
+@media (max-width: 1180px) {
+    .aptk-hdr-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 10px 14px;
+    }
+    .aptk-hdr-main {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+    }
+    .aptk-hdr-sep {
+        display: none !important;
+    }
+    .aptk-hdr-col--identity {
+        max-width: 100%;
+        flex: 1 1 100%;
+    }
+    .aptk-hdr-actions {
+        width: 100%;
+        min-height: auto;
+        justify-content: flex-end;
+        border-left: none;
+        border-top: 1px solid #e2e8f0;
+        padding-left: 0;
+        padding-top: 8px;
+    }
+}
+@media (max-width: 640px) {
+    .aptk-hdr-actions > * {
+        flex: 1;
+    }
+}
+
+/* Primary Topbar Action Button fallback for non-aptk-hdr-actions */
+.talent-topbar-primary:not(.aptk-hdr-btn-solid),
+.candidate-topbar .talent-topbar-primary:not(.aptk-hdr-btn-solid) {
+    border-color: #2563eb !important;
+    background: #2563eb !important;
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.22) !important;
+}
+
 /* Scoped Enterprise Currency Select2 Dropdown on Add Candidate Page */
 .job-candidate-create .candidate-salary-header-currency {
     display: flex;
@@ -2715,24 +3169,62 @@
 @endphp 
 
 <!--begin::Toolbar-->
-<div class="toolbar candidate-top-toolbar" id="kt_toolbar">
+@php
+    $toolbarJobId = (int) (@$jobDetail->id ?? @$jobId ?? 0);
+    $currentAppMasterStatus = (int) (@$application->master_status_id ?? 8);
+    $jobClientInfo = \DB::table('jobs')
+        ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+        ->select('jobs.company_id', 'clients.self_company')
+        ->where('jobs.id', $toolbarJobId)
+        ->first();
+    $authCompId = (int) (auth()->user()->company_id ?? 0);
+    $jobCompId = (int) ($jobClientInfo->company_id ?? @$jobDetail->company_id ?? 0);
+    $selfCompVal = (int) ($jobClientInfo->self_company ?? 0);
+    if ($toolbarJobId > 0) {
+        if ($authCompId > 0 && $jobCompId > 0 && $authCompId !== $jobCompId) {
+            $resolvedHpOrgClass = 'hp-org-direct';
+            $appTrackerReturnUrl = url('/service_company/apptracker/clientapp/' . \App\Helper\GeneralMethod::value_encrypt($toolbarJobId) . '/all');
+        } elseif ($selfCompVal === 1) {
+            $resolvedHpOrgClass = 'hp-org-my';
+            $appTrackerReturnUrl = url('/service_company/apptracker/' . \App\Helper\GeneralMethod::value_encrypt($toolbarJobId) . '/all');
+        } else {
+            $resolvedHpOrgClass = 'hp-org-internal';
+            $appTrackerReturnUrl = url('/service_company/apptracker/' . \App\Helper\GeneralMethod::value_encrypt($toolbarJobId) . '/all');
+        }
+    } else {
+        $resolvedHpOrgClass = 'hp-org-internal';
+        $appTrackerReturnUrl = url('/service_company/jobs');
+    }
+@endphp
+<div class="toolbar aptk-job-toolbar {{ $resolvedHpOrgClass }}" id="kt_toolbar">
   <!--begin::Container-->
-  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack candidate-toolbar-container">
-    @php
-        $currentAppMasterStatus = (int)(@$application->master_status_id ?? 8);
-    @endphp
-    @include('sections.service_company.toolbar', [
-        'id' => @$jobDetail->id ?? 0,
-        'hideLocationDate' => true,
-        'showStage' => true,
-        'stageId' => $currentAppMasterStatus,
-    ])
-    <div class="d-flex align-items-center py-1 candidate-header-actions">
-      @if($page_event == 'EDIT')
-        <button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span></button>
-      @else
-        <button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span></button>
-      @endif
+  <div id="kt_toolbar_container" class="container-fluid">
+    <div class="aptk-hdr-card {{ $resolvedHpOrgClass }}">
+      @include('sections.service_company.toolbar', [
+          'id' => $toolbarJobId,
+          'job' => $jobDetail ?? null,
+          'jobDetail' => $jobDetail ?? null,
+          'apptrackerHeaderCard' => true,
+          'headerPrefix' => 'aptk-hdr',
+          'hpOrgClass' => $resolvedHpOrgClass,
+      ])
+      <div class="aptk-hdr-actions">
+        <a href="{{ $appTrackerReturnUrl }}"
+           class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder aptk-hdr-btn-outline"
+           id="closeAddCandidateBtn"
+           title="Close and return to App Tracker">
+            <i class="fa-solid fa-xmark me-1" aria-hidden="true"></i>Close
+        </a>
+        @if($page_event == 'EDIT')
+          <button type="button" name="update" id="update-form" value="update" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder aptk-hdr-btn-solid candidate-submit-action talent-topbar-primary">
+            <i class="fa-solid fa-pen-to-square me-1" aria-hidden="true"></i><span>Update Candidate</span>
+          </button>
+        @else
+          <button type="button" name="save" id="save-form" value="save" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder aptk-hdr-btn-solid candidate-submit-action talent-topbar-primary">
+            <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i><span>Submit Candidate</span>
+          </button>
+        @endif
+      </div>
     </div>
   </div>
   <!--end::Container-->
@@ -9707,6 +10199,14 @@ var KTAddCandidate = function () {
         // Delegated click listener for both Add (#save-form) and Edit (#update-form)
         $(document).off('click', '#save-form, #update-form').on('click', '#save-form, #update-form', function (e) {
             handleCandidateSubmit(e);
+        });
+
+        // Close button listener: gracefully return to referrer (if internal) or fallback to App Tracker link
+        $(document).off('click', '#closeAddCandidateBtn').on('click', '#closeAddCandidateBtn', function (e) {
+            if (document.referrer && document.referrer !== window.location.href && document.referrer.indexOf(window.location.host) !== -1) {
+                e.preventDefault();
+                window.location.href = document.referrer;
+            }
         });
 
         // Form submit interception
