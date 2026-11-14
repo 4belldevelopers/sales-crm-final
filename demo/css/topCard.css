@@ -121,6 +121,15 @@
 .jh-card-source-direct.jh-card-active .jh-count-link {
     color: #15803d;
 }
+.jh-card-source-my-org.jh-card-active {
+    border-color: #fcd34d;
+    background: #fef3c7;
+    box-shadow: inset 0 0 0 1px #fcd34d, 0 5px 14px rgba(217,119,6,.12);
+}
+.jh-card-source-my-org.jh-card-active .jh-lbl,
+.jh-card-source-my-org.jh-card-active .jh-count-link {
+    color: #92400e;
+}
 .jh-card-source-request.jh-card-active {
     border-color: #fed7aa;
     background: #fff7ed;
@@ -182,6 +191,12 @@
 }
 .jh-card-source-internal.jh-card-active .jh-radio-custom::after {
     background: #EA580C;
+}
+.jh-card-source-my-org.jh-card-active .jh-radio-custom {
+    border-color: #fcd34d;
+}
+.jh-card-source-my-org.jh-card-active .jh-radio-custom::after {
+    background: #92400e;
 }
 .jh-card-source-request.jh-card-active .jh-radio-custom {
     border-color: #7C3AED;
