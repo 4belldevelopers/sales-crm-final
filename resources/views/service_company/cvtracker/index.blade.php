@@ -522,8 +522,8 @@
         .cvh-tb-org-item .cvh-tb-org-check { margin-left: auto; font-size: 11px; display: none; }
         .cvh-tb-org-item.active .cvh-tb-org-check { display: inline-block; color: #1d4ed8; }
 
-        /* Organization badge tokens (matching Rule 25) */
-        .type-my-org { background: #ecfeff !important; color: #0891b2 !important; border-color: #a5f3fc !important; }
+        /* Organization badge tokens (matching Rule 25 & UI/UX Card Standard 6A) */
+        .type-my-org { background: #fef3c7 !important; color: #92400e !important; border-color: #fcd34d !important; }
         .type-internal { background: #eff6ff !important; color: #2563eb !important; border-color: #bfdbfe !important; }
         .type-direct { background: #ecfdf5 !important; color: #059669 !important; border-color: #a7f3d0 !important; }
         .type-request { background: #f5f3ff !important; color: #7c3aed !important; border-color: #ddd6fe !important; }
@@ -589,8 +589,8 @@
             border-color: #e2e8f0;
         }
 
-        /* Sub-Card 4: Rule 25 Canonical Badges (Applied strictly to badge pill/text only, subcard remains neutral) */
-        .type-my-org { background: #ecfeff !important; color: #0891b2 !important; border: 1px solid #a5f3fc !important; }
+        /* Sub-Card 4: UI/UX Standard 6A Canonical Badges (Applied strictly to badge pill/text only, subcard remains neutral) */
+        .type-my-org { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d !important; }
         .type-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
         .type-direct { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
         .simf-target-type-badge {
@@ -1727,8 +1727,8 @@
                                         <span class="cvh-tb-org-item-text">All Organizations</span>
                                         <span class="cvh-tb-org-check"><i class="fa fa-check"></i></span>
                                     </div>
-                                    <div class="cvh-tb-org-item" data-value="my_organization" data-icon="fa fa-id-badge" data-icon-color="#0891b2">
-                                        <span class="cvh-tb-org-item-icon" style="color: #0891b2; width: 16px; text-align: center;"><i class="fa fa-id-badge"></i></span>
+                                    <div class="cvh-tb-org-item" data-value="my_organization" data-icon="fa fa-id-badge" data-icon-color="#d97706">
+                                        <span class="cvh-tb-org-item-icon" style="color: #d97706; width: 16px; text-align: center;"><i class="fa fa-id-badge"></i></span>
                                         <span class="cvh-tb-org-item-text">My Organization</span>
                                         <span class="cvh-tb-org-check"><i class="fa fa-check"></i></span>
                                     </div>
