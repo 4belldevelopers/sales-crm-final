@@ -73,6 +73,10 @@ jobs:
               systemctl daemon-reload
               systemctl enable octane
             fi
+            echo ">> Ensuring Nginx 502 graceful auto-reconnect fallback is active"
+            if [ -f scripts/setup-nginx-fallback.php ]; then
+              php scripts/setup-nginx-fallback.php testing.jero.works /www/wwwroot/testing.jero.works/public || true
+            fi
             echo ">> Full Octane restart"
             # FrankenPHP + OPcache: `octane:reload` only gracefully reloads worker threads,
             # which re-read the SAME cached bytecode — so new code silently never takes effect
