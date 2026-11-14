@@ -130,8 +130,8 @@ The platform infrastructure is provisioned with high-performance dedicated resou
 - **Prohibit Bare `"Internal"` Labels:** NEVER display bare `"Internal"`, `"Internal Job"`, or `"Internal Team"` in any visible UI badge, header, button, or card sub-label. Always use the unambiguous canonical classification tag matching ownership and source:
   1. **Hiring for Own Company / Self-Organization (`self_company == 1`, `is_self_company === true`):**
      - **Tag Label & Icon:** `My Organization` (`fas fa-id-badge`)
-     - **Tag Color Combination (`.cd-badge-client-type.type-my-org`):** Background `#ecfeff`, Text `#0891b2`, Border `1px solid #a5f3fc`
-     - **KPI Card Active Combination (`data-kpi="my_organization"`):** Background `#ecfeff`, Border `#22d3ee`, Ring/Icon `#0891b2`, Count `#155e75`, Label `#0e7490`
+     - **Tag Color Combination (`.cd-badge-client-type.type-my-org`):** Background `#fef3c7`, Text `#92400e`, Border `1px solid #fcd34d`, Icon `#d97706`
+     - **KPI Card Active Combination (`data-kpi="my_organization"`):** Background `#fffbeb`, Border `#facc15`, Ring/Icon `#d97706`, Count `#92400e`, Label `#b45309`
      - **Strict Rule:** Do NOT label internal own-company hiring as `"Internal"` or `"Internal Client"`.
   2. **Managed Non-Marketplace Client (`self_company == 0 && !is_direct_client`):**
      - **Tag Label & Icon:** `Internal Client` (`fas fa-building`)
