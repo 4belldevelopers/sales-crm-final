@@ -10600,6 +10600,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->get();
 
         $this->company_name = $this->job->company_name ?? '';
+        $isSelfCompany = ((int) ($this->job->self_company ?? 0)) === 1;
+        $orgName = !empty($this->job->company_name) ? $this->job->company_name : '4Bell Technology';
+        $this->job->hiring_organization = $orgName;
+        $this->job->is_self_company = $isSelfCompany ? 1 : 0;
+        $this->job->is_internal_client = $isSelfCompany ? 0 : 1;
+        $this->job->confidentiality_message = $isSelfCompany
+            ? "Hiring directly for {$orgName}."
+            : "Client identity is confidential. Hiring is managed through {$orgName}.";
+
         $this->ind_name = '';
         $this->category_name = $this->job->cat_name ?? 'N/A';
         $this->jobLocation = '';

@@ -34,8 +34,8 @@
 }
 @media only screen and (min-width: 992px){
   #kt_activitiesRecruiter {
-    width: min(1320px, 96vw) !important;
-    max-width: 96vw !important;
+    width: min(1180px, 88vw) !important;
+    max-width: 88vw !important;
   }
 }
 @media only screen and (min-width: 1024px) and (max-width: 1440px){
@@ -1654,7 +1654,7 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
   </div>
 </div>
 <div id="kt_activitiesRecruiter_toggle"></div>
-<div id="kt_activitiesRecruiter" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'500px', 'lg': '1320px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesRecruiter_toggle" data-kt-drawer-close="#kt_activitiesRecruiter_close">
+<div id="kt_activitiesRecruiter" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'500px', 'lg': '1180px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesRecruiter_toggle" data-kt-drawer-close="#kt_activitiesRecruiter_close">
   <div class="card shadow-none rounded-0 w-100">
     <div class="card-header px-5 py-0" id="kt_activities_header">
       <div class="d-flex align-items-center py-1">

@@ -78,19 +78,25 @@
      SCOPED STYLES: MODERN CARD + SUB-CARD AGENCY DISTRIBUTION CENTER
      ========================================================================= --}}
 <style>
-    /* ── Drawer Dimensions & Overrides ────────────────────────────────────── */
+    /* ── Drawer Dimensions & Overrides (Standardized Compact Dimensions) ── */
     #kt_activitiesRecruiter {
-        width: 92vw !important;
-        max-width: 94vw !important;
-        border-top-left-radius: 16px !important;
-        border-bottom-left-radius: 16px !important;
+        width: min(1180px, 88vw) !important;
+        max-width: 88vw !important;
+        border-top-left-radius: 14px !important;
+        border-bottom-left-radius: 14px !important;
         overflow: hidden !important;
-        box-shadow: -12px 0 40px rgba(0, 0, 0, 0.12) !important;
+        box-shadow: -10px 0 32px rgba(15, 23, 42, 0.12) !important;
         background: #f8fafc !important;
     }
+    @media (max-width: 1400px) {
+        #kt_activitiesRecruiter {
+            width: min(1100px, 92vw) !important;
+            max-width: 92vw !important;
+        }
+    }
     #kt_activitiesRecruiter > .card {
-        border-top-left-radius: 16px !important;
-        border-bottom-left-radius: 16px !important;
+        border-top-left-radius: 14px !important;
+        border-bottom-left-radius: 14px !important;
         height: 100vh !important;
         max-height: 100vh !important;
         overflow: hidden !important;
@@ -105,7 +111,8 @@
     #kt_activitiesRecruiter_body {
         height: 100vh !important;
         max-height: 100vh !important;
-        overflow: hidden !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         display: flex !important;
         flex-direction: column !important;
         padding: 0 !important;
@@ -113,7 +120,7 @@
         font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     }
 
-    /* ── Sticky Header Card (Top Tier 1 Job Card - Rule 20 Header Background Standard) ── */
+    /* ── Top Sticky Header Card (Top Tier 1 Job Card - Rule 20 Header Background Standard) ── */
     .agency-drawer-header {
         background: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
@@ -126,6 +133,9 @@
         min-height: 52px !important;
         flex-shrink: 0 !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 20 !important;
     }
     .adh-job-icon {
         width: 40px;
@@ -203,10 +213,10 @@
         gap: 4px !important;
     }
 
-    /* ── Drawer Scrollable Body ───────────────────────────────────────────── */
+    /* ── Drawer Scrollable Body (Natural Drawer Scrolling) ───────────────── */
     .agency-drawer-content {
         flex: 1;
-        overflow-y: auto;
+        overflow: visible !important;
         padding: 0 16px 16px 16px;
         background: #f8fafc;
     }
@@ -214,7 +224,7 @@
     /* ── Two Column Architecture (Rule 20 Layout) ─────────────────────────── */
     .agency-distribution-grid {
         display: grid;
-        grid-template-columns: 35% 65%;
+        grid-template-columns: 340px minmax(0, 1fr);
         gap: 14px;
         align-items: start;
     }
@@ -229,7 +239,55 @@
         }
     }
 
-    /* ── Column Cards ─────────────────────────────────────────────────────── */
+    /* ── Column A: Marketplace Card (Subtle Professional Slate Background) ── */
+    .agency-col-marketplace {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 16px 18px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02) !important;
+    }
+    .agency-col-marketplace .info-panel-blue {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .agency-col-marketplace .benefits-panel {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .agency-col-marketplace .agency-input-control .input-icon-box {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    /* ── Column B: Direct Outreach Card (Crisp White Background) ─────────── */
+    .agency-col-direct {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 16px 18px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    }
+
+    /* ── Filter Card (Requirement 5) ─────────────────────────────────────── */
+    .agency-filter-card {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 9px 12px !important;
+        margin-bottom: 10px !important;
+    }
+    .agency-filter-card-label {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        color: #475569 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    /* ── Column Cards Base ───────────────────────────────────────────────── */
     .agency-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -656,7 +714,7 @@
         border-color: #94a3b8 !important;
     }
 
-    /* ── Sticky Column Header Row (Rule 20 Mandatory Header Background Standard) ── */
+    /* ── Column Header Row (Rule 20 Mandatory Header Background Standard - Non-Sticky Natural Flow) ── */
     .agency-stream-header-row {
         background: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
@@ -667,6 +725,7 @@
         grid-template-columns: minmax(0, 2.7fr) minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.35fr) !important;
         gap: 10px !important;
         align-items: center !important;
+        position: static !important;
     }
     @media (max-width: 1400px) {
         .agency-stream-header-row {
@@ -695,12 +754,10 @@
         padding-right: 4px !important;
     }
 
-    /* ── Tier 3: Primary Agency Cards Stream (Rule 20) ──────────────────── */
+    /* ── Tier 3: Primary Agency Cards Stream (Rule 20 - Natural Drawer Scrolling) ── */
     .agency-stream-container {
-        max-height: calc(100vh - 290px);
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding-right: 2px;
+        overflow: visible !important;
+        padding-right: 0 !important;
     }
     .agency-cards-stream {
         display: flex;
@@ -915,9 +972,10 @@
         font-weight: 700 !important;
         font-variant-numeric: tabular-nums !important;
         line-height: 1.1 !important;
+        color: #0f172a !important;
     }
     .text-emerald {
-        color: #15803d !important;
+        color: #0f172a !important;
     }
     .ag-rate-pill {
         font-size: 9.5px !important;
@@ -926,18 +984,18 @@
         border-radius: 4px !important;
     }
     .ag-rate-fulltime {
-        background: #dcfce7 !important;
-        color: #166534 !important;
-        border: 1px solid #bbf7d0 !important;
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+        border: 1px solid #e2e8f0 !important;
     }
     .ag-rate-contract {
-        background: #e0f2fe !important;
-        color: #0369a1 !important;
-        border: 1px solid #bae6fd !important;
+        background: #eff6ff !important;
+        color: #1e40af !important;
+        border: 1px solid #bfdbfe !important;
     }
     .ag-rate-type-text {
         font-size: 10px !important;
-        color: #94a3b8 !important;
+        color: #64748b !important;
     }
 
     /* Sub-Card 4: Location & Team */
@@ -1531,51 +1589,34 @@
                 </span>
             </div>
 
-            {{-- Compact Metadata Row --}}
+            {{-- Company / Client Name & Confidentiality Governance (Rule 20 / Enterprise ATS Standard) --}}
+            @php
+                $isSelf = (!empty($job->self_company) && (int)$job->self_company === 1) || (!empty($job->is_self_company) && (int)$job->is_self_company === 1);
+                $orgName = !empty($job->company_name) ? $job->company_name : (!empty($company_name) ? $company_name : '4Bell Technology');
+                $clientName = !empty($job->client_name) ? $job->client_name : (!empty($job->client_company) ? $job->client_company : $orgName);
+            @endphp
             <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
-                <span class="adh-meta-item">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                    {{ @$job->min_exp }}–{{ @$job->max_exp }} Years
-                </span>
-                <span class="text-gray-300">•</span>
-                <span class="adh-meta-item">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    {{ $clientLocationText }}
-                </span>
-                <span class="text-gray-300">•</span>
-                <span class="adh-meta-item">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    @php
-                        $isSalConf = (\App\Services\SalaryVisibilityPolicy::normalize(@$job->salary_visibility) === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
-                            || ((empty($job->min_salary) || (float)$job->min_salary === 0.0) && (empty($job->max_salary) || (float)$job->max_salary === 0.0) && (@$job->salary_visibility === 'confidential'));
-                    @endphp
-                    @if($isSalConf)
-                        <span style="font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-lock" style="font-size: 10px; color: #dc2626;"></i> Confidential</span>
-                    @else
-                        {!! $salary_currency !!} {{ $min_salary }}–{{ $max_salary }} / {{ $max_sal_mode }}
-                    @endif
-                </span>
-                <span class="text-gray-300">•</span>
-                <span class="adh-meta-item">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                    {{ number_format(@$job->total_positions ?: 1) }} Opening{{ (@$job->total_positions > 1) ? 's' : '' }}
-                </span>
-
-                {{-- Skill Pills --}}
-                @if(!empty($skillArrList))
+                @if($isSelf)
+                    <div class="d-inline-flex align-items-center gap-1 fs-7 fw-semibold text-gray-800">
+                        <i class="fas fa-id-badge text-warning me-1 fs-8"></i>
+                        <span>Hiring Organization:</span>
+                        <span class="fw-bold text-gray-900">{{ $orgName }}</span>
+                    </div>
                     <span class="text-gray-300">•</span>
-                    <div class="d-flex align-items-center gap-1">
-                        @foreach(array_slice($skillArrList, 0, 3) as $sk)
-                            @php
-                                $skName = is_object($sk) ? ($sk->skill_name ?? $sk->name ?? '') : (is_array($sk) ? ($sk['skill_name'] ?? $sk['name'] ?? '') : (string) $sk);
-                            @endphp
-                            @if(!empty($skName))
-                                <span class="adh-skill-badge">{{ ucfirst($skName) }}</span>
-                            @endif
-                        @endforeach
-                        @if(count($skillArrList) > 3)
-                            <span class="adh-skill-badge text-muted">+{{ count($skillArrList) - 3 }}</span>
-                        @endif
+                    <div class="d-inline-flex align-items-center gap-1" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 2px 8px; font-size: 11px; color: #1e40af; font-weight: 500;">
+                        <i class="fas fa-check-circle text-primary me-1 fs-9"></i>
+                        <span>Hiring directly for {{ $orgName }}.</span>
+                    </div>
+                @else
+                    <div class="d-inline-flex align-items-center gap-1 fs-7 fw-semibold text-gray-800">
+                        <i class="fas fa-building text-primary me-1 fs-8"></i>
+                        <span>Client:</span>
+                        <span class="fw-bold text-gray-900">{{ $clientName }}</span>
+                    </div>
+                    <span class="text-gray-300">•</span>
+                    <div class="d-inline-flex align-items-center gap-1" style="background: #fefce8; border: 1px solid #fef08a; border-radius: 6px; padding: 2px 8px; font-size: 11px; color: #854d0e; font-weight: 500;">
+                        <i class="fas fa-shield-alt text-amber-600 me-1 fs-9"></i>
+                        <span>Client identity is confidential. Hiring is managed through {{ $orgName }}.</span>
                     </div>
                 @endif
             </div>
@@ -1601,9 +1642,9 @@
     <div class="agency-distribution-grid">
 
         {{-- =================================================================
-             COLUMN 1: PUBLISH TO AGENCY MARKETPLACE (~35% Width)
+             COLUMN 1: PUBLISH TO AGENCY MARKETPLACE (Subtle Professional Slate Background)
              ================================================================= --}}
-        <div class="agency-card">
+        <div class="agency-col-marketplace">
             {{-- Header inside subtle tinted banner --}}
             <div class="agency-section-banner-blue">
                 <span class="agency-col-badge blue">1</span>
@@ -1751,37 +1792,43 @@
         </div>
 
         {{-- =================================================================
-             COLUMN 2: SEND REQUIREMENT DIRECTLY TO AGENCIES (~64% Width)
+             COLUMN 2: SEND REQUIREMENT DIRECTLY TO AGENCIES (Crisp White Background)
              Strict Modern Card + Sub-Card Enterprise Standard (Rule 20)
              ================================================================= --}}
-        <div>
-            {{-- ── TIER 1: TOP HEADER TOOLBAR CARD ── --}}
-            <div class="agency-toolbar-card">
-                <div class="agency-toolbar-left">
+        <div class="agency-col-direct">
+            {{-- Header Block --}}
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
                     <span class="agency-col-badge green">2</span>
                     <div>
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <h2 class="agency-toolbar-title">Send Requirement Directly to Agencies</h2>
-                            <div class="direct-outreach-badge" style="background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 6px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 5px;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M2.5 13.5L21.5 3.5L14.5 21.5L10.5 14.5L2.5 13.5Z" fill="#0284c7"/><path d="M10.5 14.5L21.5 3.5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/></svg>
-                                <span style="font-size: 10.5px; font-weight: 700; color: #0369a1;">Direct Outreach • Faster Responses</span>
-                            </div>
-                        </div>
-                        <p class="agency-toolbar-sub">Select verified agencies to notify and ask them to submit matching candidates for this requirement.</p>
+                        <h2 class="agency-section-heading">Send Requirement Directly to Agencies</h2>
+                        <p class="agency-section-subtitle">Notify selected verified agencies directly to submit matching candidates for this requirement.</p>
                     </div>
                 </div>
+                <div class="direct-outreach-badge" style="background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 6px; padding: 3px 8px; display: inline-flex; align-items: center; gap: 5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M2.5 13.5L21.5 3.5L14.5 21.5L10.5 14.5L2.5 13.5Z" fill="#0284c7"/><path d="M10.5 14.5L21.5 3.5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    <span style="font-size: 10.5px; font-weight: 700; color: #0369a1;">Direct Outreach</span>
+                </div>
+            </div>
 
-                {{-- Right: Search Sub-Card & Filter Trigger --}}
-                <div class="agency-toolbar-right">
-                    <div class="agency-search-subcard">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" id="agency_unified_search" class="agency-search-input" placeholder="Search by skills..." value="{{ @$default_skill }}" autocomplete="off" />
-                        <button type="button" class="agency-search-clear-btn" id="btn_agency_search_clear" title="Clear search">✕</button>
+            {{-- ── FILTER CARD: SKILLS & CRITERIA (Requirement 5) ── --}}
+            <div class="agency-filter-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="agency-filter-card-label">
+                            <i class="fas fa-filter text-primary me-1 fs-9"></i>FILTER BY SKILLS & CRITERIA
+                        </span>
+                        <span class="badge" style="background:#f1f5f9; color:#64748b; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px;">Live Match</span>
                     </div>
-                    <button type="button" class="btn-filter-trigger">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                        <span>Filter</span>
+                    <button type="button" class="btn btn-sm btn-filter-trigger d-inline-flex align-items-center gap-1" style="height:28px; padding:0 10px; font-size:11px; font-weight:600;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        <span>More Filters</span>
                     </button>
+                </div>
+                <div class="agency-search-subcard w-100">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="agency_unified_search" class="agency-search-input" placeholder="Filter agencies by skills (e.g. PHP, Laravel, Redis)..." value="{{ @$default_skill }}" autocomplete="off" />
+                    <button type="button" class="agency-search-clear-btn" id="btn_agency_search_clear" title="Clear filter">✕</button>
                 </div>
             </div>
 

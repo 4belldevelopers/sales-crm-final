@@ -175,8 +175,6 @@
                             <div class="ag-badges-row d-flex align-items-center gap-1 flex-wrap mt-1">
                                 @if($percentage > 0)
                                     <span class="ag-badge ag-badge-match-high">Match {{ $percentage }}%</span>
-                                @else
-                                    <span class="ag-badge ag-badge-additional">Additional Partner</span>
                                 @endif
 
                                 <span class="ag-badge ag-badge-registered" title="Registered with your organization">My Agency</span>
@@ -219,7 +217,7 @@
                         <i class="fas fa-receipt me-1"></i>RATES & TERMS
                     </div>
                     @if($isContract || ($minimumRateType && $minimumRateType->commtype == 1))
-                        <div class="ag-rate-value text-success">
+                        <div class="ag-rate-value text-gray-900">
                             {!! $currSymbol !!}{{ $minimumRate ?: '25' }}/{{ $modeText }}
                         </div>
                         <div class="d-flex align-items-center gap-1 mt-1">
@@ -227,7 +225,7 @@
                             <span class="ag-rate-type-text">Recurring</span>
                         </div>
                     @else
-                        <div class="ag-rate-value text-emerald">
+                        <div class="ag-rate-value text-gray-900">
                             {{ $minimumRate ? $minimumRate.'%' : '8.33%' }} CTC
                         </div>
                         <div class="d-flex align-items-center gap-1 mt-1">
