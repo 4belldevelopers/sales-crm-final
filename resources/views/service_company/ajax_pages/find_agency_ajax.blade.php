@@ -1,5 +1,6 @@
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\CurrencyService;
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
 
@@ -101,19 +102,48 @@
             // Dual Commercials: Full-Time + Contract Staffing
             $commFulltime = $row->_commercials_fulltime ?? null;
             $ftMinRate = $row->_minimum_rate_fulltime ?? ($commFulltime ? $commFulltime->minimum_rate : null);
-            if ($ftMinRate === null || $ftMinRate <= 0) {
-                $ftMinRate = '8.33';
+            $ftTypeObj = $row->_minimum_rate_fulltime_type ?? ($commFulltime ? $commFulltime->minimum_rate_type : null);
+            $ftRateType = @$ftTypeObj->rateType ?: 2;
+            $ftCurrency = @$ftTypeObj->salary_currency ?: 0;
+            $ftCurSymbol = CurrencyService::resolvePlainSymbolFromLegacy($ftCurrency, $currencySymbole, '₹');
+
+            if ($ftRateType == 1 && $ftMinRate > 100) {
+                // Fixed Price Fulltime
+                $fulltimeFormatted = $ftCurSymbol . number_format($ftMinRate) . ' Flat';
+            } else {
+                if ($ftMinRate === null || $ftMinRate <= 0) {
+                    $ftMinRate = '8.33';
+                } else {
+                    $ftMinRate = rtrim(rtrim(number_format((float)$ftMinRate, 2), '0'), '.');
+                }
+                $fulltimeFormatted = $ftMinRate . '% * CTC';
             }
-            $fulltimeFormatted = $ftMinRate . '% * CTC';
 
             $commContract = $row->_commercials_contract ?? null;
             $ctMinRate = $row->_minimum_rate_contract ?? ($commContract ? $commContract->minimum_rate : null);
             $ctTypeObj = $row->_minimum_rate_contract_type ?? ($commContract ? $commContract->minimum_rate_type : null);
-            $ctCurrency = @$ctTypeObj->salary_currency ?: 0;
-            $ctSalMode = @$ctTypeObj->sal_mode ?: 0;
-            $ctCurSymbol = $currencySymbole[$ctCurrency] ?? '₹';
-            $ctModeText = $salaryMode[$ctSalMode] ?? 'Hr';
-            $contractFormatted = ($ctMinRate && $ctMinRate > 0) ? ($ctCurSymbol . number_format($ctMinRate) . ' / ' . $ctModeText) : ($ctCurSymbol . '500 / Hr');
+            $ctCurrency = @$ctTypeObj->salary_currency ?? null;
+            $ctSalMode = @$ctTypeObj->sal_mode ?? null;
+            $ctCurSymbol = CurrencyService::resolvePlainSymbolFromLegacy($ctCurrency, $currencySymbole, '₹');
+
+            $ctModeText = 'Hr';
+            if ($ctSalMode === 1 || strtolower((string)($salaryMode[$ctSalMode] ?? '')) === 'monthly') {
+                $ctModeText = 'Mo';
+            } elseif ($ctSalMode === 2 || strtolower((string)($salaryMode[$ctSalMode] ?? '')) === 'hourly') {
+                $ctModeText = 'Hr';
+            } elseif ($ctSalMode === 0 || strtolower((string)($salaryMode[$ctSalMode] ?? '')) === 'annual') {
+                $ctModeText = ($ctMinRate && $ctMinRate > 1000) ? 'Mo' : 'Hr';
+            } else {
+                $ctModeText = 'Hr';
+            }
+
+            if ($ctMinRate !== null && (float)$ctMinRate > 0) {
+                $numRate = (float)$ctMinRate;
+                $rateValStr = ($numRate >= 1000) ? number_format($numRate) : rtrim(rtrim(number_format($numRate, 2), '0'), '.');
+                $contractFormatted = $ctCurSymbol . $rateValStr . ' / ' . $ctModeText;
+            } else {
+                $contractFormatted = ($ctCurSymbol === '$') ? '$35 / Hr' : '₹500 / Hr';
+            }
 
             // Timezone formatted Last Active (Rule 24)
             if (!empty($row->last_login)) {
@@ -270,7 +300,7 @@
                         <div class="cl-rate-box contract">
                             <div class="rate-box-tag ct">Contract</div>
                             <div class="rate-box-val">{{ $contractFormatted }}</div>
-                            <div class="rate-box-desc">Monthly Net-15 Bill</div>
+                            <div class="rate-box-desc">{{ $ctModeText === 'Hr' ? 'Hourly Billed' : 'Monthly Net-15' }}</div>
                         </div>
                     </div>
                     <div class="cl-rates-footer">
