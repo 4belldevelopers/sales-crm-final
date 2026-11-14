@@ -207,9 +207,9 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 10px 14px;
-            border-bottom: 1px solid #f1f5f9;
-            background: #ffffff;
+            padding: 10px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
             flex-wrap: wrap;
         }
         .csd-card-head-left {
@@ -235,16 +235,17 @@
             background: #009ef7;
             color: #ffffff;
             font-size: 11.5px;
-            font-weight: 600;
+            font-weight: 700;
             font-variant-numeric: tabular-nums;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            box-shadow: 0 1px 2px rgba(0, 158, 247, 0.25);
         }
         .csd-card-title {
             font-size: 13.5px;
-            font-weight: 600;
+            font-weight: 700;
             color: #0f172a;
             line-height: 1.3;
         }
@@ -262,7 +263,7 @@
             flex-wrap: wrap;
         }
         .csd-card-body {
-            padding: 12px 14px;
+            padding: 14px 16px;
         }
 
         /* Status & Legend Pills */
@@ -276,9 +277,10 @@
             font-weight: 600;
             line-height: 1.2;
             font-variant-numeric: tabular-nums;
-            background: #f1f5f9;
+            background: #ffffff;
             color: #475569;
             border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
         }
         .csd-status-pill.is-advance { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
         .csd-status-pill.is-back    { background: #fffbeb; color: #d97706; border-color: #fde68a; }
