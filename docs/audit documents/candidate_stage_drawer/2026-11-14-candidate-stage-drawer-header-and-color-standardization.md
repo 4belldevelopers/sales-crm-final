@@ -38,13 +38,24 @@ In response to UI feedback on the **Candidate Stage Drawer** (`#csd_drawer`) and
 | **Joined** | 6 | Step 7 | `#10b981` | `#15803d` | `#dcfce7` | `#bbf7d0` | `#10b981` | `#ffffff` | `fa-check-circle` |
 | **Rejected** | 7 / 9 | Exit | `#ef4444` | `#b91c1c` | `#fee2e2` | `#fecaca` | `#ef4444` | `#ffffff` | `fa-times-circle` |
 
-### 2.2 Topbar Header Architecture (`.sd-topbar`)
+### 2.2 Header Architecture (`.sd-topbar` & `.csd-card-head`)
 
 ```
 +---------------------------------------------------------------------------------------------------------+
 | [fa-random Icon] Change Candidate Stage                                    [ Cancel ] [ Submit CTA -> ] |
 |                  Candidate Name • Job Title (ID) • Company Name                                    [X]  |
 |                  Background: #f8fafc | Border-Bottom: 1px solid #e2e8f0 | Sticky Top: 0 | Z-Index: 20   |
++---------------------------------------------------------------------------------------------------------+
+
+Card Headers (.csd-card-head):
++---------------------------------------------------------------------------------------------------------+
+| (1) Choose New Stage                                                       • Current Stage  • Moving To |
+|     Select the target stage to move this candidate to                                                   |
+|     Background: #f8fafc | Border-Bottom: 1px solid #e2e8f0 | Padding: 10px 16px                         |
++---------------------------------------------------------------------------------------------------------+
+| (2) Comments                                                                                   Optional |
+|     Add context or notes for this stage change                                                          |
+|     Background: #f8fafc | Border-Bottom: 1px solid #e2e8f0 | Padding: 10px 16px                         |
 +---------------------------------------------------------------------------------------------------------+
 ```
 
@@ -55,8 +66,8 @@ In response to UI feedback on the **Candidate Stage Drawer** (`#csd_drawer`) and
 | File Path | Scope | Changes Applied |
 |:---|:---|:---|
 | `app/Helper/GeneralMethod.php` | Shared Helper | Added `GeneralMethod::pipelineStageTokens($stageKey = null)` defining canonical stage tokens, CSS styles, and accessibility attributes. Updated `candidateStatusColorCode()` to synchronize with the new color tokens. |
-| `resources/views/service_company/job-applications/stage_body_content.blade.php` | Drawer Body | Replaced hardcoded `$csdStageMeta` with `GeneralMethod::pipelineStageTokens()`. Added `.sd-topbar` sticky background `#f8fafc` and `#e2e8f0` border. Added dynamic `data-stage-btn-text` / `--csd-pill-btn-text` to support `#713f12` contrast text on yellow InReview buttons. |
-| `resources/views/service_company/job-applications/client_stage_body_content.blade.php` | Client Drawer Body | Exact parity with `stage_body_content.blade.php` with centralized token integration and header background enforcement. |
+| `resources/views/service_company/job-applications/stage_body_content.blade.php` | Drawer Body | Replaced hardcoded `$csdStageMeta` with `GeneralMethod::pipelineStageTokens()`. Added `.sd-topbar` sticky background `#f8fafc` and `#e2e8f0` border. Standardized `.csd-card-head` with dedicated background `#f8fafc`, border-bottom `#e2e8f0`, elevated step badges, and styled status pills across Choose New Stage, Sub-Stage, and Comments. Added dynamic `data-stage-btn-text` / `--csd-pill-btn-text` to support `#713f12` contrast text on yellow InReview buttons. |
+| `resources/views/service_company/job-applications/client_stage_body_content.blade.php` | Client Drawer Body | Exact parity with `stage_body_content.blade.php` with centralized token integration, header background enforcement (`#f8fafc` on topbar and `.csd-card-head`), and step number elevation. |
 | `resources/views/service_company/apptracker/index.blade.php` | Host Page (AppTracker) | Updated `$hpStages` Offered color to `#f97316` / `#fff7ed`. Enforced `#csd_drawer .sd-topbar` background `#f8fafc` and border `#e2e8f0`. |
 | `resources/views/service_company/apptracker/clientapp.blade.php` | Host Page (Client AppTracker) | Updated `$hpStages` Offered color to `#f97316` / `#fff7ed`. Enforced `#csd_drawer .sd-topbar` background `#f8fafc` and border `#e2e8f0`. |
 | `resources/views/service_company/cvtracker/index.blade.php` | Host Page (CV Tracker) | Enforced `#csd_drawer .sd-topbar` background `#f8fafc` and border `#e2e8f0`. |
