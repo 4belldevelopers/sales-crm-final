@@ -16,16 +16,7 @@
     $csdCurrentSubName = trim((string) (@$child_status_name ?? ''));
     $csdHasCurrentSub = ($csdCurrentSubName !== '' && strtoupper($csdCurrentSubName) !== 'N/A');
 
-    $csdStageMeta = [
-        'inreview'   => ['label' => 'InReview',   'order' => 1, 'step' => 'Step 1', 'color' => '#d97706', 'accent' => '#f59e0b', 'bg' => '#fffbeb', 'icon' => 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-1-8-11-8Z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z'],
-        'sourcing'   => ['label' => 'Sourcing',   'order' => 2, 'step' => 'Step 2', 'color' => '#0891b2', 'accent' => '#0891b2', 'bg' => '#ecfeff', 'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
-        'screening'  => ['label' => 'Screening',  'order' => 3, 'step' => 'Step 3', 'color' => '#9333ea', 'accent' => '#9333ea', 'bg' => '#faf5ff', 'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
-        'evaluation' => ['label' => 'Evaluation', 'order' => 4, 'step' => 'Step 4', 'color' => '#2563eb', 'accent' => '#2563eb', 'bg' => '#eff6ff', 'icon' => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
-        'negotation' => ['label' => 'Negotiation','order' => 5, 'step' => 'Step 5', 'color' => '#db2777', 'accent' => '#db2777', 'bg' => '#fdf2f8', 'icon' => 'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
-        'offer'      => ['label' => 'Offer',      'order' => 6, 'step' => 'Step 6', 'color' => '#d97706', 'accent' => '#d97706', 'bg' => '#fffbeb', 'icon' => 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
-        'joined'     => ['label' => 'Joined',     'order' => 7, 'step' => 'Step 7', 'color' => '#059669', 'accent' => '#16a34a', 'bg' => '#ecfdf5', 'icon' => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
-        'rejected'   => ['label' => 'Rejected',   'order' => 8, 'step' => 'Exit',   'color' => '#dc2626', 'accent' => '#dc2626', 'bg' => '#fef2f2', 'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
-    ];
+    $csdStageMeta = App\Helper\GeneralMethod::pipelineStageTokens();
 
     $csdQuickNotes = [
         'inreview'   => [
@@ -101,10 +92,61 @@
      data-current-sub-name="{{ $csdHasCurrentSub ? $csdCurrentSubName : '' }}">
 
     <style>
+        /* Enterprise Drawer Header Background (Rule 20 / Mandatory Dedicated Header Background) */
+        #csd_drawer .sd-topbar {
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 20 !important;
+        }
+        #csd_drawer .sd-topbar-ico {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08) !important;
+        }
+        #csd_drawer .sd-topbar-title {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        #csd_drawer .sd-topbar-sub {
+            color: #64748b !important;
+        }
+        #csd_drawer .sd-btn-cancel {
+            border: 1px solid #cbd5e1 !important;
+            background: #ffffff !important;
+            color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+            transition: all 0.15s ease !important;
+        }
+        #csd_drawer .sd-btn-cancel:hover {
+            background: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
+        }
+        #csd_drawer .sd-divider {
+            background: #e2e8f0 !important;
+        }
+        #csd_drawer .sd-close {
+            color: #64748b !important;
+            border-radius: 8px !important;
+            transition: all 0.15s ease !important;
+        }
+        #csd_drawer .sd-close:hover {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+        }
+
         /* Enterprise Slate Canvas for Drawer Body & Modal */
         #csd_drawer > .d-flex > .flex-grow-1 {
-            background: #eef2f7 !important;
+            background: #f1f5f9 !important;
             padding: 16px 20px !important;
+        }
+        #stage_sub_stage .modal-header {
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
         }
         .csd-wrap {
             font-family: 'Poppins', sans-serif;
@@ -458,7 +500,7 @@
         }
         .csd-pill.is-selected:not(.is-current) .csd-badge-step { display: none; }
         .csd-pill.is-selected:not(.is-current) .csd-badge-moveto { display: inline-block; background: var(--csd-pill-color, currentColor); }
-        .csd-pill.is-selected:not(.is-current) .csd-badge-moveto span { color: #ffffff; }
+        .csd-pill.is-selected:not(.is-current) .csd-badge-moveto span { color: var(--csd-pill-btn-text, #ffffff); }
 
         .csd-pill .chk {
             width: 16px;
@@ -474,7 +516,7 @@
         }
         .csd-pill .chk svg { width: 9px; height: 9px; stroke: transparent; }
         .csd-pill.is-selected .chk { background: currentColor; border-color: currentColor; }
-        .csd-pill.is-selected .chk svg { stroke: #ffffff; }
+        .csd-pill.is-selected .chk svg { stroke: var(--csd-pill-btn-text, #ffffff); }
 
         .csd-pill .ic {
             width: 32px;
@@ -827,7 +869,8 @@
                                  data-stage-color="{{ $csdMeta['accent'] }}"
                                  data-stage-text-color="{{ $csdMeta['color'] }}"
                                  data-stage-bg="{{ $csdMeta['bg'] }}"
-                                 style="--csd-pill-color:{{ $csdMeta['accent'] }};color:{{ $csdMeta['accent'] }};"
+                                 data-stage-btn-text="{{ $csdMeta['btn_text'] ?? '#ffffff' }}"
+                                 style="--csd-pill-color:{{ $csdMeta['accent'] }};--csd-pill-btn-text:{{ $csdMeta['btn_text'] ?? '#ffffff' }};color:{{ $csdMeta['accent'] }};"
                                  onclick="csdSelectStage(this)">
                                 <input type="radio" class="d-none master_status" name="master_status" value="{{ @$mstatus->id }}" {{ $csdChk }} id="{{ @$mstatus->text_name }}">
                                 <div class="csd-pill-top">
@@ -1084,7 +1127,12 @@
     function csdUpdateSubmitButton(textName) {
         var meta = textName && window.CSD_STAGE_META[textName];
         if (!meta) { return; }
-        $('#custom_stage_submit').css('background', meta.accent || meta.color);
+        var btnBg = meta.btn_bg || meta.accent || meta.color;
+        var btnText = meta.btn_text || '#ffffff';
+        $('#custom_stage_submit').css({
+            'background': btnBg,
+            'color': btnText
+        });
         $('#custom_stage_submit .csdChangeLabel').text('Update Stage to ' + meta.label);
     }
 

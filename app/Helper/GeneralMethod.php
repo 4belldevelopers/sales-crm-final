@@ -368,6 +368,197 @@ END:VCALENDAR";
     }
 
     /**
+     * Canonical Centralized Pipeline Stage Design Tokens & Colors
+     * Single source of truth for candidate stages across JERO:
+     * - InReview: Clean, professional Yellow (#eab308 / #854d0e / #fefce8 / border #fef08a)
+     * - Sourcing: Modern Cyan (#0891b2 / #0e7490 / #ecfeff / border #a5f3fc)
+     * - Screening: Rich Purple (#9333ea / #7e22ce / #faf5ff / border #e9d5ff)
+     * - Evaluation: Crisp Blue (#2563eb / #1d4ed8 / #eff6ff / border #bfdbfe)
+     * - Negotiation: Elegant Pink (#db2777 / #be185d / #fdf2f8 / border #fbcfe8)
+     * - Offer: Bright, professional Orange (#f97316 / #c2410c / #fff7ed / border #fed7aa) — NOT maroon/reddish
+     * - Joined: Vibrant Emerald Green (#16a34a / #15803d / #ecfdf5 / border #bbf7d0)
+     * - Rejected: Semantic Ruby Red (#dc2626 / #b91c1c / #fef2f2 / border #fecaca)
+     *
+     * @param string|int|null $stageKey Optional stage key or master_status id
+     * @return array
+     */
+    public static function pipelineStageTokens($stageKey = null)
+    {
+        $tokens = [
+            'inreview' => [
+                'id'         => 8,
+                'key'        => 'inreview',
+                'label'      => 'InReview',
+                'short'      => 'INW',
+                'order'      => 1,
+                'step'       => 'Step 1',
+                'color'      => '#854d0e', // Yellow-800 text for high-contrast readability
+                'accent'     => '#eab308', // Yellow-500 distinct clean yellow
+                'bg'         => '#fefce8', // Yellow-50 light tint
+                'bg_subtle'  => '#fef9c3', // Yellow-100
+                'border'     => '#fef08a', // Yellow-200 border
+                'btn_bg'     => '#eab308',
+                'btn_text'   => '#713f12', // High-contrast dark bronze text on yellow button (8:1 AAA)
+                'badge_style'=> 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;',
+                'icon'       => 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-1-8-11-8Z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+            ],
+            'sourcing' => [
+                'id'         => 1,
+                'key'        => 'sourcing',
+                'label'      => 'Sourcing',
+                'short'      => 'SOU',
+                'order'      => 2,
+                'step'       => 'Step 2',
+                'color'      => '#0e7490', // Cyan-700
+                'accent'     => '#0891b2', // Cyan-600
+                'bg'         => '#ecfeff', // Cyan-50
+                'bg_subtle'  => '#cffafe', // Cyan-100
+                'border'     => '#a5f3fc', // Cyan-200
+                'btn_bg'     => '#0891b2',
+                'btn_text'   => '#ffffff',
+                'badge_style'=> 'background:#ecfeff;color:#0e7490;border:1px solid #a5f3fc;',
+                'icon'       => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z',
+            ],
+            'screening' => [
+                'id'         => 2,
+                'key'        => 'screening',
+                'label'      => 'Screening',
+                'short'      => 'SCR',
+                'order'      => 3,
+                'step'       => 'Step 3',
+                'color'      => '#7e22ce', // Purple-700
+                'accent'     => '#9333ea', // Purple-600
+                'bg'         => '#faf5ff', // Purple-50
+                'bg_subtle'  => '#f3e8ff', // Purple-100
+                'border'     => '#e9d5ff', // Purple-200
+                'btn_bg'     => '#9333ea',
+                'btn_text'   => '#ffffff',
+                'badge_style'=> 'background:#faf5ff;color:#7e22ce;border:1px solid #e9d5ff;',
+                'icon'       => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4',
+            ],
+            'evaluation' => [
+                'id'         => 3,
+                'key'        => 'evaluation',
+                'label'      => 'Evaluation',
+                'short'      => 'EVA',
+                'order'      => 4,
+                'step'       => 'Step 4',
+                'color'      => '#1d4ed8', // Blue-700
+                'accent'     => '#2563eb', // Blue-600
+                'bg'         => '#eff6ff', // Blue-50
+                'bg_subtle'  => '#dbeafe', // Blue-100
+                'border'     => '#bfdbfe', // Blue-200
+                'btn_bg'     => '#2563eb',
+                'btn_text'   => '#ffffff',
+                'badge_style'=> 'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;',
+                'icon'       => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z',
+            ],
+            'negotation' => [
+                'id'         => 4,
+                'key'        => 'negotation',
+                'label'      => 'Negotiation',
+                'short'      => 'NEG',
+                'order'      => 5,
+                'step'       => 'Step 5',
+                'color'      => '#be185d', // Pink-700
+                'accent'     => '#db2777', // Pink-600
+                'bg'         => '#fdf2f8', // Pink-50
+                'bg_subtle'  => '#fce7f3', // Pink-100
+                'border'     => '#fbcfe8', // Pink-200
+                'btn_bg'     => '#db2777',
+                'btn_text'   => '#ffffff',
+                'badge_style'=> 'background:#fdf2f8;color:#be185d;border:1px solid #fbcfe8;',
+                'icon'       => 'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7',
+            ],
+            'offer' => [
+                'id'         => 5,
+                'key'        => 'offer',
+                'label'      => 'Offer',
+                'short'      => 'OFF',
+                'order'      => 6,
+                'step'       => 'Step 6',
+                'color'      => '#c2410c', // Orange-700
+                'accent'     => '#f97316', // Orange-500 bright professional orange (NOT maroon/reddish)
+                'bg'         => '#fff7ed', // Orange-50
+                'bg_subtle'  => '#ffedd5', // Orange-100
+                'border'     => '#fed7aa', // Orange-200
+                'btn_bg'     => '#f97316',
+                'btn_text'   => '#ffffff',
+                'badge_style'=> 'background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;',
+                'icon'       => 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15',
+            ],
+            'joined' => [
+                'id'         => 6,
+                'key'        => 'joined',
+                'label'      => 'Joined',
+                'short'      => 'JOI',
+                'order'      => 7,
+                'step'       => 'Step 7',
+                'color'      => '#15803d', // Green-700
+                'accent'     => '#16a34a', // Green-600
+                'bg'         => '#ecfdf5', // Green-50
+                'bg_subtle'  => '#dcfce7', // Green-100
+                'border'     => '#bbf7d0', // Green-200
+                'btn_bg'     => '#16a34a',
+                'btn_text'   => '#ffffff',
+                'badge_style'=> 'background:#ecfdf5;color:#15803d;border:1px solid #bbf7d0;',
+                'icon'       => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z',
+            ],
+            'rejected' => [
+                'id'         => 7,
+                'key'        => 'rejected',
+                'label'      => 'Rejected',
+                'short'      => 'REJ',
+                'order'      => 8,
+                'step'       => 'Exit',
+                'color'      => '#b91c1c', // Red-700
+                'accent'     => '#dc2626', // Red-600
+                'bg'         => '#fef2f2', // Red-50
+                'bg_subtle'  => '#fee2e2', // Red-100
+                'border'     => '#fecaca', // Red-200
+                'btn_bg'     => '#dc2626',
+                'btn_text'   => '#ffffff',
+                'badge_style'=> 'background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;',
+                'icon'       => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+            ],
+        ];
+
+        // Also alias numerical status IDs and common variants
+        $idAliases = [
+            8 => 'inreview',
+            1 => 'sourcing',
+            2 => 'screening',
+            3 => 'evaluation',
+            4 => 'negotation',
+            5 => 'offer',
+            6 => 'joined',
+            7 => 'rejected',
+            9 => 'rejected',
+        ];
+        $keyAliases = [
+            'interview'  => 'evaluation',
+            'negotiation'=> 'negotation',
+            'offered'    => 'offer',
+            'joining'    => 'joined',
+            'onboarded'  => 'joined',
+        ];
+
+        if ($stageKey !== null) {
+            $normKey = is_numeric($stageKey)
+                ? ($idAliases[(int) $stageKey] ?? null)
+                : strtolower(trim((string) $stageKey));
+
+            if ($normKey && isset($keyAliases[$normKey])) {
+                $normKey = $keyAliases[$normKey];
+            }
+
+            return $normKey && isset($tokens[$normKey]) ? $tokens[$normKey] : null;
+        }
+
+        return $tokens;
+    }
+
+    /**
      * Human-friendly display label for a permission group_name on the Roles & Permissions
      * screens. Display-only remap agreed with the product owner — the underlying DB
      * group_name is unchanged, so permissions/saving are unaffected. Used by both the
@@ -550,74 +741,81 @@ END:VCALENDAR";
         $array['all']['bg_class'] = 'bg-total-active';
 
         $array['Sourcing']['Index'] = 'Sourcing';
-        $array['Sourcing']['color'] = '#000000';
-        $array['Sourcing']['bg'] = '#efefef';
+        $array['Sourcing']['color'] = '#0e7490';
+        $array['Sourcing']['bg'] = '#ecfeff';
         $array['Sourcing']['bg_class'] = 'bg-Asourcing';
         $array['Sourcing']['nav_text'] = 'text-Asourcing';
         $array['Sourcing']['tiles_bg'] = 'sourcing-bg';
 
         $array['Screening']['Index'] = 'Screening';
-        $array['Screening']['color'] = '#ffab00';
-        $array['Screening']['bg'] = '#fff9ed';
+        $array['Screening']['color'] = '#7e22ce';
+        $array['Screening']['bg'] = '#faf5ff';
         $array['Screening']['bg_class'] = 'bg-Ascreening';
         $array['Screening']['nav_text'] = 'text-Ascreening';
         $array['Screening']['tiles_bg'] = 'screening-bg';
 
         $array['Interview']['Index'] = 'Interview';
-        $array['Interview']['color'] = '#2896ff';
-        $array['Interview']['bg'] = '#f0f8ff';
+        $array['Interview']['color'] = '#1d4ed8';
+        $array['Interview']['bg'] = '#eff6ff';
         $array['Interview']['bg_class'] = 'bg-Ainterview';
         $array['Interview']['nav_text'] = 'text-Ainterview';
         $array['Interview']['tiles_bg'] = 'interview';
 
         $array['Evaluation']['Index'] = 'Interview';
-        $array['Evaluation']['color'] = '#2896ff';
-        $array['Evaluation']['bg'] = '#f0f8ff';
+        $array['Evaluation']['color'] = '#1d4ed8';
+        $array['Evaluation']['bg'] = '#eff6ff';
         $array['Evaluation']['bg_class'] = 'bg-Ainterview';
         $array['Evaluation']['nav_text'] = 'text-Ainterview';
         $array['Evaluation']['tiles_bg'] = 'interview';
 
         $array['Negotiation']['Index'] = 'Negotiation';
-        $array['Negotiation']['color'] = '#ff4098';
-        $array['Negotiation']['bg'] = '#ffe6f2';
+        $array['Negotiation']['color'] = '#be185d';
+        $array['Negotiation']['bg'] = '#fdf2f8';
         $array['Negotiation']['bg_class'] = 'bg-Anegotation';
         $array['Negotiation']['nav_text'] = 'text-Anegotation';
         $array['Negotiation']['tiles_bg'] = 'negotation-bg';
 
         $array['Offered']['Index'] = 'Offered';
-        $array['Offered']['color'] = '#06c732';
-        $array['Offered']['bg'] = '#d4ffde';
+        $array['Offered']['color'] = '#c2410c';
+        $array['Offered']['bg'] = '#fff7ed';
         $array['Offered']['bg_class'] = 'bg-Aoffer';
         $array['Offered']['nav_text'] = 'text-Aoffer';
         $array['Offered']['tiles_bg'] = 'offer-bg';
 
+        $array['Offer']['Index'] = 'Offered';
+        $array['Offer']['color'] = '#c2410c';
+        $array['Offer']['bg'] = '#fff7ed';
+        $array['Offer']['bg_class'] = 'bg-Aoffer';
+        $array['Offer']['nav_text'] = 'text-Aoffer';
+        $array['Offer']['tiles_bg'] = 'offer-bg';
+
         $array['Onboarded']['Index'] = 'Joined';
-        $array['Onboarded']['color'] = '#06c732';
-        $array['Onboarded']['bg'] = '#d4ffde';
-        $array['Onboarded']['bg_class'] = 'bg-Aoffer';
-        $array['Onboarded']['nav_text'] = 'text-Aoffer';
-        $array['Onboarded']['tiles_bg'] = 'offer-bg';
+        $array['Onboarded']['color'] = '#15803d';
+        $array['Onboarded']['bg'] = '#ecfdf5';
+        $array['Onboarded']['bg_class'] = 'bg-Ajoiner';
+        $array['Onboarded']['nav_text'] = 'text-Ajoiner';
+        $array['Onboarded']['tiles_bg'] = 'joined-bg';
 
         $array['Joined']['Index'] = 'Joined';
-        $array['Joined']['color'] = '#c000ff';
-        $array['Joined']['bg'] = '#f7deff';
+        $array['Joined']['color'] = '#15803d';
+        $array['Joined']['bg'] = '#ecfdf5';
         $array['Joined']['bg_class'] = 'bg-Ajoiner';
         $array['Joined']['nav_text'] = 'text-Ajoiner';
         $array['Joined']['tiles_bg'] = 'joined-bg';
 
         $array['Rejected']['Index'] = 'Rejected';
-        $array['Rejected']['color'] = '#ff0202';
-        $array['Rejected']['bg'] = '#ffe2e5';
+        $array['Rejected']['color'] = '#b91c1c';
+        $array['Rejected']['bg'] = '#fef2f2';
         $array['Rejected']['bg_class'] = 'bg-Arejected';
         $array['Rejected']['nav_text'] = 'text-Arejected';
         $array['Rejected']['tiles_bg'] = 'rejected-bg';
 
-        $array['InReview']['Index'] = 'Sourcing';
-        $array['InReview']['color'] = '#000000';
-        $array['InReview']['bg'] = '#efefef';
-        $array['InReview']['bg_class'] = 'bg-Asourcing';
-        $array['InReview']['nav_text'] = 'text-Asourcing';
-        $array['InReview']['tiles_bg'] = 'sourcing-bg';
+        $array['InReview']['Index'] = 'InReview';
+        $array['InReview']['color'] = '#854d0e';
+        $array['InReview']['bg'] = '#fefce8';
+        $array['InReview']['bg_class'] = 'bg-Ainreview';
+        $array['InReview']['nav_text'] = 'text-Ainreview';
+        $array['InReview']['tiles_bg'] = 'inreview-bg';
 
         $array['SendMail']['Index'] = 'Sourcing';
         $array['SendMail']['color'] = '#000000';
