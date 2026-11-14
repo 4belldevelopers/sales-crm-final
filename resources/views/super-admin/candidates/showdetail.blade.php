@@ -7076,11 +7076,12 @@ setTimeout(() => {
   if($rsNotice===''||$rsNotice==='Available '||$rsNotice==='SNP LWD '||str_contains($rsNotice,'01 Jan 1970')) $rsNotice='Not Specified';
   $rsIsImmediate=($rsNpMode===2||strtolower($rsNpRaw)==='immediate'||stripos($rsNotice,'Immediate')!==false);
 
-  $candCurLoc = (!empty(@$application->current_location) && !preg_match('/^\d+$/', trim((string) @$application->current_location))) ? trim((string) @$application->current_location) : '';
-  $rsLoc=trim(trim($city_name??'',', ').' '.trim($state_name??'',', '));
-  if($rsLoc==='' || $rsLoc==='--') $rsLoc=$candCurLoc;
-  if($rsLoc==='' || $rsLoc==='--') $rsLoc=trim($country_name??'',', ');
-  if($rsLoc==='') $rsLoc='Not Specified';
+  $locHierarchy = \App\Helper\GeneralMethod::resolveCandidateLocationHierarchy($application);
+  $rsLoc = $locHierarchy['location_text'];
+  if ($rsLoc === '' || $rsLoc === '--') {
+      $candCurLoc = (!empty(@$application->current_location) && !preg_match('/^\d+$/', trim((string) @$application->current_location))) ? trim((string) @$application->current_location) : '';
+      $rsLoc = $candCurLoc ?: 'Not Specified';
+  }
 
   $rsTotalExp=trim((string)(@$application->total_exp??''));
   $rsTotalExp=trim($rsTotalExp," \t\n\r\0\x0B.");

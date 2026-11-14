@@ -8902,8 +8902,10 @@ END:VCALENDAR";
             ->leftjoin('documents', 'documents.documentable_id', 'job_applications.id')
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
             ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
-            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+            ->leftJoin('state_list', function ($join) {
+                $join->on('state_list.id', '=', DB::raw('COALESCE(NULLIF(job_applications.state, 0), city_list.state_id)'));
+            })
             ->where('add_job_wise_condidates.id', $id)
             ->orderByDesc('documents.id')->get();
 
@@ -9445,8 +9447,10 @@ END:VCALENDAR";
             ->leftjoin('companies', 'companies.id', 'job_applications.company_id')
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
             ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
-            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+            ->leftJoin('state_list', function ($join) {
+                $join->on('state_list.id', '=', DB::raw('COALESCE(NULLIF(job_applications.state, 0), city_list.state_id)'));
+            })
             ->where('condidate_type', '=', 'bench_condidate')
             ->where('job_applications.id', $id)
             ->get();
@@ -12976,8 +12980,10 @@ END:VCALENDAR";
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
             // ->leftJoin('master_status', 'master_status.id', '=', 'job_applications.master_status_id')
             ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
-            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+            ->leftJoin('state_list', function ($join) {
+                $join->on('state_list.id', '=', DB::raw('COALESCE(NULLIF(job_applications.state, 0), city_list.state_id)'));
+            })
             ->where('job_applications.id', $id)->get();
 
         // dd($applications);

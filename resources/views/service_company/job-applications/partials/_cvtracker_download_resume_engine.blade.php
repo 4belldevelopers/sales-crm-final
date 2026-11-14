@@ -1919,6 +1919,9 @@ async function buildRecruiterSummary(options){
 }
 async function buildRecruiterSummaryBlob(data,options){
   data=data||readData();
+  if (typeof window !== 'undefined' && window.PrescreenReportEngine && typeof window.PrescreenReportEngine.generatePdfBlob === 'function') {
+    return window.PrescreenReportEngine.generatePdfBlob(data, options);
+  }
   options=options||{};
   var ready=await Promise.all([rsEnsurePdfMake(),options.noBranding ? Promise.resolve(null) : rsLogoDataUri(data.reportCompanyLogo, data.reportCompanyLogoRaw)]);
   return new Promise(function(resolve,reject){

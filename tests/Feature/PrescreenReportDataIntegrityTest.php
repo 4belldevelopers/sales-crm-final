@@ -331,4 +331,114 @@ class PrescreenReportDataIntegrityTest extends TestCase
         $matchWithJob = $authSvc->computeAuthoritativeMatch(9301, 0, ['Figma', 'Sketch'], ['Figma', 'React', 'NextJS', 'CSS'], 4);
         $this->assertSame(25, $matchWithJob, 'Match must be computed from actual profile skill intersection (1/4 = 25%).');
     }
+
+    public function test_prescreen_report_location_hierarchy_and_state_resolution(): void
+    {
+        $companyId = 2;
+        $jobId = 117;
+        $candId = 9401;
+
+        // Ensure city_list, state_list, countries tables exist
+        if (! Schema::hasTable('city_list')) {
+            Schema::create('city_list', function (Blueprint $table) {
+                $table->id('city_id');
+                $table->string('city');
+                $table->unsignedBigInteger('state_id');
+            });
+        }
+        if (! Schema::hasTable('state_list')) {
+            Schema::create('state_list', function (Blueprint $table) {
+                $table->id();
+                $table->string('state');
+                $table->unsignedBigInteger('country_id');
+            });
+        }
+        if (! Schema::hasTable('countries')) {
+            Schema::create('countries', function (Blueprint $table) {
+                $table->id();
+                $table->string('country_name');
+            });
+        }
+
+        DB::table('countries')->updateOrInsert(['id' => 101], ['country_name' => 'India']);
+        DB::table('state_list')->updateOrInsert(['id' => 4030], ['state' => 'Gujarat', 'country_id' => 101]);
+        DB::table('city_list')->updateOrInsert(['city_id' => 57695], ['city' => 'Anand', 'state_id' => 4030]);
+
+        // Candidate with city_id = 57695 and state = 0 (reproducing the exact reported issue)
+        $cand = (object) [
+            'id' => $candId,
+            'company_id' => $companyId,
+            'job_id' => $jobId,
+            'full_name' => 'Shekhar Anand',
+            'city_id' => 57695,
+            'state' => 0,
+            'country' => 101,
+            'skills' => 'HR Operations, Recruitment',
+            'total_exp' => '2.0',
+            'rel_exp' => '1.0',
+            'rating' => 0,
+        ];
+
+        $service = new PrescreenDossierService;
+        $dossiers = $service->resolveCandidateDossiers([$cand], $jobId, $companyId);
+
+        $this->assertArrayHasKey($candId, $dossiers);
+        $d = $dossiers[$candId];
+
+        // State MUST NOT be empty, Location Text MUST include city, state, country
+        $this->assertSame('Anand', $d['city']);
+        $this->assertSame('Gujarat', $d['state']);
+        $this->assertSame('India', $d['country']);
+        $this->assertSame('Anand, Gujarat, India', $d['location_text']);
+        $this->assertSame('2.0 Years', $d['total_exp_display']);
+        $this->assertSame('1.0 Year', $d['rel_exp_display']);
+    }
+
+    public function test_prescreen_report_skills_fallback_and_decoupled_contract(): void
+    {
+        $companyId = 2;
+        $jobId = 117;
+        $candId = 9402;
+
+        // Candidate with empty skills string but careersummary describing skills
+        $cand = (object) [
+            'id' => $candId,
+            'company_id' => $companyId,
+            'job_id' => $jobId,
+            'full_name' => 'Candidate Fallback Test',
+            'city_id' => 57695,
+            'state' => 4030,
+            'country' => 101,
+            'skills' => '', // empty
+            'careersummary' => 'Seeking role to enhance my skills in recruitment, employee engagement, and HR operations.',
+            'total_exp' => '0', // fresher
+            'rel_exp' => '0',
+            'rating' => 4,
+            'resume' => 'https://file.jero.works/test.pdf',
+            'email' => 'candidate@example.com',
+            'phone' => '9876543210',
+            'linkedin' => 'https://linkedin.com/in/test',
+            'current_designation' => 'HR Associate',
+        ];
+
+        $service = new PrescreenDossierService;
+        $dossiers = $service->resolveCandidateDossiers([$cand], $jobId, $companyId);
+
+        $this->assertArrayHasKey($candId, $dossiers);
+        $d = $dossiers[$candId];
+
+        // Skills recovered via resilient fallback
+        $this->assertNotEmpty($d['skills'], 'Skills must be recovered via resilient fallback, never left empty.');
+        $skillNames = array_map(fn ($s) => strtolower($s['name']), $d['skills']);
+        $this->assertTrue(collect($skillNames)->contains(fn ($n) => str_contains($n, 'recruitment') || str_contains($n, 'hr operations')));
+
+        // Decoupled contract verification
+        $this->assertSame('Fresher', $d['total_exp_display']);
+        $this->assertSame(4, $d['overall_rating']);
+        $this->assertIsArray($d['validation']);
+        $this->assertCount(5, $d['validation']);
+        $this->assertSame('Verified', collect($d['validation'])->firstWhere('label', 'RESUME')['status']);
+        $this->assertSame('Verified', collect($d['validation'])->firstWhere('label', 'EMAIL ID')['status']);
+        $this->assertSame('Verified', collect($d['validation'])->firstWhere('label', 'LINKEDIN ID')['status']);
+    }
 }

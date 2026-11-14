@@ -123,9 +123,19 @@
   function formatLocation(val) {
     var s = cleanString(val);
     if (!s || isNumericId(s)) return 'Not Specified';
-    var parts = s.split(',').map(function (p) { return p.trim(); }).filter(Boolean);
-    var filtered = parts.filter(function (p) { return !/^india$/i.test(p); });
-    return filtered.length ? filtered.slice(0, 2).join(', ') : (parts[0] || 'Not Specified');
+    var parts = s.split(',').map(function (p) { return p.trim(); }).filter(function (p) {
+      return p && p !== '--' && !isNumericId(p);
+    });
+    var seen = new Set();
+    var uniqueParts = [];
+    parts.forEach(function (p) {
+      var k = p.toLowerCase();
+      if (!seen.has(k)) {
+        seen.add(k);
+        uniqueParts.push(p);
+      }
+    });
+    return uniqueParts.length ? uniqueParts.join(', ') : 'Not Specified';
   }
 
   function formatWorkMode(val) {
@@ -378,8 +388,13 @@
       { name: 'live_modified_form', type: 'editable_state',           trust: 'user_modified', getter: function () { return getModifiedFormVal('input[name="current_location"]'); } },
       { name: 'semantic_dom',       type: 'presentation_state',       trust: 'view_derived',  getter: function () { return getSemantic('location'); } },
       { name: 'server_payload',     type: 'authoritative_projection', trust: 'server_authoritative', getter: function () {
-        if (cleanString(rawData.current_location) && !isNumericId(rawData.current_location)) return rawData.current_location;
-        var p = [cleanString(rawData.city_name || rawData.city), cleanString(rawData.state_name || rawData.state)].filter(function (x) { return x && !isNumericId(x); });
+        if (cleanString(rawData.location_text) && !isNumericId(rawData.location_text) && rawData.location_text !== '--') return rawData.location_text;
+        if (cleanString(rawData.current_location) && !isNumericId(rawData.current_location) && rawData.current_location !== '--') return rawData.current_location;
+        var p = [
+          cleanString(rawData.city_name || rawData.city),
+          cleanString(rawData.state_name || rawData.state),
+          cleanString(rawData.country_name || rawData.country)
+        ].filter(function (x) { return x && !isNumericId(x) && x !== '--'; });
         return p.length ? p.join(', ') : (rawData.location || '');
       }}
     ], FIELD_VALIDATORS.location, formatLocation);

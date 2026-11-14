@@ -1702,6 +1702,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     $cityID = $subCityId;
                     $stateId = (int) $request->location_state_id;
                     $countryID = (int) $request->location_country_id;
+                    if ($cityID > 0 && $stateId <= 0) {
+                        $stateId = (int) GeneralMethod::stateId($cityID);
+                    }
                 }
             }
 

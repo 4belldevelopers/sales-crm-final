@@ -9420,9 +9420,21 @@ var KTAddCandidate = function () {
                 if (formData.delete) { formData.delete('resume'); }
             }
 
-            // SSOT Guarantee: explicitly serialize latest Tagify skills into the payload
-            if (window.tagifyskill && Array.isArray(window.tagifyskill.value)) {
+            // SSOT Guarantee: explicitly serialize all selected primary skills into the payload
+            var allSelectedSkills = (typeof candidateGetSelectedSkills === 'function')
+                ? candidateGetSelectedSkills()
+                : null;
+            if (Array.isArray(allSelectedSkills) && allSelectedSkills.length) {
+                formData.set('skills', JSON.stringify(allSelectedSkills.map(function (s) {
+                    return typeof s === 'object' ? { value: s.name || s.value } : { value: String(s) };
+                })));
+            } else if (window.tagifyskill && Array.isArray(window.tagifyskill.value) && window.tagifyskill.value.length) {
                 formData.set('skills', JSON.stringify(window.tagifyskill.value));
+            } else {
+                var rawSkVal = ($('#kt_tagify_2').val() || '').trim();
+                if (rawSkVal && rawSkVal !== '[]') {
+                    formData.set('skills', rawSkVal);
+                }
             }
 
             var candidateEditId = '{{ @$application->id ?: @$appId }}';

@@ -2593,6 +2593,9 @@
   }
 
   async function buildRecruiterSummaryBlob(data, options) {
+    if (typeof window !== 'undefined' && window.PrescreenReportEngine && typeof window.PrescreenReportEngine.generatePdfBlob === 'function') {
+      return window.PrescreenReportEngine.generatePdfBlob(data, options);
+    }
     options = options || {};
     var ready = await Promise.all([
       ensurePdfMake(),
