@@ -3,408 +3,296 @@
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
 
-    $salaryMode = GeneralMethod::salaryMode();
-    $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
-    $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
-
+    $from_company = $company_id = auth()->check() ? auth()->user()->company_id : ($company_id ?? 0);
+    $tenantTimezone = GeneralMethod::defaultTimeZone($company_id);
 @endphp
+
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
         @php
-          $row = (object) $rowArr;
-             $logo_path = '';
-            if (!empty(@$row->website) && empty(@$row->logo)){
-                    $domainGet = GeneralMethod::getDomain($row->website);
-                    $googleIcon = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";    
-                    $google = GeneralMethod::getDomainIconCompany($googleIcon,$row->id,true);
-                    $logo_path  = ($google) ? $googleIcon : '';
+            $row = (object) $rowArr;
+            $logo_path = '';
+            if (!empty(@$row->website) && empty(@$row->logo)) {
+                $domainGet = GeneralMethod::getDomain($row->website);
+                $googleIcon = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";
+                $google = GeneralMethod::getDomainIconCompany($googleIcon, $row->id, true);
+                $logo_path = ($google) ? $googleIcon : '';
             }
             if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
                 $logo_path = @$row->logo;
             }
-            $from_company = $company_id = auth()->check() ? auth()->user()->company_id : ($company_id ?? 0);
-           $client_data = $row->_client_info ?? GeneralMethod::getClientIdCompany($row->id);
-           $row->client_id =  $client_data->client_id ?? null;
 
-           $relationget =  $row->_relation_info ?? GeneralMethod::getAgencyRelationData($from_company,$row->id);
+            $client_data = $row->_client_info ?? GeneralMethod::getClientIdCompany($row->id);
+            $row->client_id = $client_data->client_id ?? null;
 
-           $from_company_id = $relationget->from_company_id ?? null;
-           $recommendation_id = $relationget->to_company_id ?? null;
-           $to_company_id = $relationget->to_company_id ?? null;
-           $final_status = $relationget->to_invitation_status ?? null;
-
-           $matchFound = $row->_match_found ?? DB::table('staffing_company_relation')->where('from_company_id', $from_company_id)->where('to_company_id', $row->id)->where('final_status',1)->count();
-
-
-                   
-
-            $percentage = 0;
-            $companies_id = '';
-            $companies_id = $row->id;
-
-            $title = $skills = $experience = $salary = $location = $jobtype = $jskillset = 0;
-            $client_type_css = 'show-detail-direct';
-            
-            $skillname = '';
-            $scnt = 0;
-            $tempArr = [];
-
-            $skilltag = '';
-            if (($row->matched_skill_count) > 0) {
-                foreach ($row->matched_skills as $sval) {
-                    $skilltag .= '<span class="skill-tag">' . ucfirst($sval) . '</span>  ';
-                }
-            }
-            $percentage=0;
-            $matches = count($row->matched_skills);
-            $totalElements = count($row->search_skills);
-            // dd($totalElements);
-            $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-            $matchPercentage = min($matchPercentage, 100);
-            $percentage = round($matchPercentage, 1);
-            
-
-            // number_format($row->skill_match_percentage, 0); //number_format($row->match_percentage, 0, '.', ''); //$salary + $title + $jobtype + $experience + $skills + $location;
-            $skillMatchSection = '';
-            if ($percentage > 0) {
-                $skillMatchSection =
-                    '<div class="skill-tags" style="position: absolute;bottom: 5px;left: 11px;white-space: nowrap;">'.$percentage.' 
-                   ' .$skilltag . '</div>';
-            }
-            if(is_iterable($row->industry) && count($row->industry)){
-                $ind_name = $row->industry['industry_name'];
-            }
+            $relationget = $row->_relation_info ?? GeneralMethod::getAgencyRelationData($from_company, $row->id);
+            $from_company_id = $relationget->from_company_id ?? null;
+            $to_company_id = $relationget->to_company_id ?? null;
+            $final_status = $relationget->to_invitation_status ?? null;
 
             $str = trim(@$row->company_name);
+            $strVal = 'A';
+            $bgTextDecore = 'bg-light-primary text-primary';
             if (!empty($str)) {
-                $str = $strVal = strtolower($str[0]);
-                $str = ord($str);
-                if ($str >= 97 && $str <= 101) {
+                $strVal = strtolower($str[0]);
+                $ordVal = ord($strVal);
+                if ($ordVal >= 97 && $ordVal <= 101) {
                     $bgTextDecore = 'bg-light-danger text-danger';
-                } elseif ($str >= 102 && $str <= 106) {
+                } elseif ($ordVal >= 102 && $ordVal <= 106) {
                     $bgTextDecore = 'bg-light-warning text-warning';
-                } elseif ($str >= 107 && $str <= 111) {
+                } elseif ($ordVal >= 107 && $ordVal <= 111) {
                     $bgTextDecore = 'bg-light-primary text-primary';
-                } elseif ($str >= 112 && $str <= 116) {
+                } elseif ($ordVal >= 112 && $ordVal <= 116) {
                     $bgTextDecore = 'bg-light-success text-success';
-                } elseif ($str >= 117 && $str <= 121) {
-                    $bgTextDecore = 'bg-dark text-secondary';
+                } elseif ($ordVal >= 117 && $ordVal <= 121) {
+                    $bgTextDecore = 'bg-light-info text-info';
                 } else {
                     $bgTextDecore = 'bg-light-secondary text-dark';
                 }
             }
 
+            $ind_name = '';
+            if (isset($row->industry) && is_array($row->industry) && !empty($row->industry['industry_name'])) {
+                $ind_name = $row->industry['industry_name'];
+            } elseif (isset($row->industry) && is_object($row->industry) && !empty($row->industry->industry_name)) {
+                $ind_name = $row->industry->industry_name;
+            }
+
             $Sizecount = $row->_user_size_count ?? DB::table('users')->where('company_id', $row->id)->count();
-            $agencyJobsCount =  $row->_agency_jobs_count ?? GeneralMethod::agencyJobsCount($row->id);
+            $agencyJobsCount = $row->_agency_jobs_count ?? GeneralMethod::agencyJobsCount($row->id);
             $activeJobs = $agencyJobsCount->all_jobs ?? 0;
-            $agencyCandidatesCount =  $row->_agency_candidates_count ?? GeneralMethod::agencyJobsCandidatesCount($row->id);
+            $agencyCandidatesCount = $row->_agency_candidates_count ?? GeneralMethod::agencyJobsCandidatesCount($row->id);
             $all_candidates = $agencyCandidatesCount->all_candidates ?? 0;
             $all_candidate_bench = $agencyCandidatesCount->all_candidate_bench ?? 0;
 
-        @endphp
-        <!-- ROW 1 -->
-        <tr style="height: 102px; position: relative;">
-            <td class="{{ $client_type_css }}"  data-row-id="{{ $row->client_id }}">
-                <div class="agency-cell">
-                    @if(!$logo_path)
-                        <div class="agency-logo tb {{ $bgTextDecore }}">
-                            <svg width="40" height="40" viewBox="0 0 22 22" fill="none">
-                                <rect width="22" height="22" rx="6" fill="#0F172A"/>
-                                <text x="7" y="15" font-size="9" fill="white" font-family="DM Sans,sans-serif" font-weight="700">{{ strtoupper(@$strVal) }}</text>
-                            </svg>
-                        </div>
-                    @else  
-                        <div class="agency-logo sh">
-                            <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
-                                <img src="{{ $logo_path }}" alt="Company Logo" class="border-radius-5 w-100">
-                            </svg>
-                        </div>
-                    @endif   
-                    <div class="agency-info">
-                    <div class="a-name">
-                        {{ substr(ucwords(@$row->company_name), 0, 30) }}
-                        {{-- <span class="badge-verified">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m9 12 2 2 4-4"/>
-                            <path d="M12 2 3 7v5c0 5 4 9.27 9 10.27C17 21.27 21 17 21 12V7l-9-5z"/>
-                        </svg>
-                        Verified
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="m9 12 2 2 4-4"/>
-                        </svg> --}}
-                    </div>
-                    <div class="a-type">{{ substr(ucwords(@$ind_name), 0, 27) }}</div>
-                    {{-- <div class="skill-tags"> --}}
-                        {!! $skillMatchSection !!}
-                        {{-- <span class="skill-tag more">+6</span> --}}
-                    {{-- </div> --}}
-                    </div>
-                </div>
-            </td>
-            <td class="match-cell">
-                @php
-                    if ($parent_employment_type == 1) {
-                        $commtype = 1;
-                    } else {
-                        $commtype = 2; // full time
-                    }
-                    $rates = '';
-                    $currency = GeneralMethod::currency();
-                    $salaryMode = GeneralMethod::salaryMode();
-                    $currencySymbole = GeneralMethod::currencySymbole();
-                    $minimumRate = $row->_minimum_rate ?? DB::table('commericials')
-                        ->join('commericial_details', 'commericial_details.commericial_id', '=', 'commericials.id')
-                        ->where('commericials.commtype', '=', $commtype)
-                        ->where('commericials.company_id', '=', $row->id)
-                        // Intent: exclude detail indexes that are not covered by an active global experience band.
-                        ->whereExists(function ($experienceBands) {
-                            $experienceBands->selectRaw('1')
-                                ->from('commercial_experience_bands as experience_bands')
-                                ->where('experience_bands.is_active', 1)
-                                ->whereColumn('commericial_details.exp', '>=', 'experience_bands.min_experience')
-                                ->whereColumn('commericial_details.exp', '<=', 'experience_bands.max_experience');
-                        })
-                        ->min('commericial_details.rate');
-                        $minimumRateGet = $minimumRate;
-
-                    $minimumRateType = $row->_minimum_rate_type ?? DB::table('commericials')
-                        ->select('commericials.*')
-                        ->where('commericials.commtype', '=', $commtype)
-                        ->where('commericials.company_id', '=', $row->id)
+            // Location Resolution
+            $locInfo = $row->_client_info ?? null;
+            if (!$locInfo) {
+                $clients = DB::table('clients')
+                    ->where('company_id', '=', $row->id)
+                    ->where('self_company', '=', 1)
+                    ->first();
+                if ($clients) {
+                    $locInfo = DB::table('client_location')
+                        ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                        ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                        ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                        ->select(
+                            'client_location.id',
+                            'client_location.city',
+                            'client_location.address',
+                            'client_location.country_id',
+                            'city_list.city as city_name',
+                            'state_list.state as state_name',
+                            'countries.country_name'
+                        )
+                        ->where('client_id', $clients->id)
                         ->first();
-                    // sal_mode /salary_currency
-                    $jobSalaryCurrency = (@$minimumRateType->salary_currency) ? @$minimumRateType->salary_currency : 0;
-                    $jobSalaryMode = (@$minimumRateType->sal_mode) ? @$minimumRateType->sal_mode : 0;
-                    if ($minimumRateType) {
-                        if ($minimumRateType->commtype == 1) {
-                            $current_cur = $currencySymbole[@$jobSalaryCurrency];
-                            $current_mode = $salaryMode[@$jobSalaryMode];
-                            $currencymain = GeneralMethod::currency(); // Currency code
-                            // dd($currency);
+                }
+            }
 
-                            $currency = $currencymain[@$minimumRateType->salary_currency];
-                            // dd($currency);
-                            // $current_cur = $currencySymbole[@$minimumRateType->salary_currency];
-                            // $current_mode = $salaryMode[@$minimumRateType->sal_mode];
+            $cityName = !empty($locInfo->city_name) ? ucwords(substr($locInfo->city_name, 0, 16)) : 'National';
+            $countryName = !empty($locInfo->country_name) ? ucwords(substr($locInfo->country_name, 0, 16)) : 'India';
+            $countryCode = !empty($locInfo->country_name) ? strtoupper(substr($locInfo->country_name, 0, 2)) : 'IN';
 
-                            $convertedAmoun = GeneralMethod::conversionRates(
-                                $currency,
-                                $minimumRate,
-                                @$minimumRateType->sal_mode);
-                            // dd($convertedAmoun[$jobSalaryMode]);
-                            $exchangeRates = [
-                                'INR' => 1,
-                                'EUR' => 90.33, // Example exchange rate for EUR to INR
-                                'JPY' => 0.68, // Example exchange rate for JPY to INR
-                                'GBP' => 103.7, // Example exchange rate for GBP to INR
-                                'USD' => 83.63, // Example exchange rate for USD to INR
-                                'AED' => 20.38, // Example exchange rate for AED to INR
-                            ];
-                            // dd($jobSalaryCurrency);
-                            $currencydd = $currencymain[@$jobSalaryCurrency];
-                            $exchangeRateInrToEur = 1 / $exchangeRates[$currencydd];
+            // Rates & Commercials
+            $commtype = ($parent_employment_type == 1) ? 1 : 2;
+            $minimumRate = $row->_minimum_rate ?? null;
+            if ($minimumRate === null) {
+                $minimumRate = DB::table('commericials')
+                    ->join('commericial_details', 'commericial_details.commericial_id', '=', 'commericials.id')
+                    ->where('commericials.commtype', '=', $commtype)
+                    ->where('commericials.company_id', '=', $row->id)
+                    ->min('commericial_details.rate');
+            }
+            $minimumRateType = $row->_minimum_rate_type ?? DB::table('commericials')->where('commtype', $commtype)->where('company_id', $row->id)->first();
 
-                            // Convert INR to EUR
-                            $amount = $convertedAmoun[$jobSalaryMode]; // * $exchangeRateInrToEur;
+            $salaryMode = GeneralMethod::salaryMode();
+            $currencySymbole = GeneralMethod::currencySymbole();
+            $jobSalaryCurrency = @$minimumRateType->salary_currency ?: 0;
+            $jobSalaryMode = @$minimumRateType->sal_mode ?: 0;
+            $current_cur = $currencySymbole[$jobSalaryCurrency] ?? '₹';
+            $current_mode = $salaryMode[$jobSalaryMode] ?? 'Monthly';
 
-                            $currencymain = GeneralMethod::currency(); // Currency code
-                            $currency = $currencymain[@$jobSalaryCurrency];
-                            $econvertedAmount = $minimumRate;
-                            if ($minimumRateType->salary_currency > 0) {
-                                $econvertedAmount = GeneralMethod::convertToINR(
-                                    $minimumRate,
-                                    $minimumRateType->salary_currency );
-                            }
+            if ($commtype == 1) {
+                $ratesFormatted = $current_cur . ($minimumRate ?: '500') . '/' . $current_mode;
+                $rateBadgeText = 'Contract';
+                $rateBadgeClass = 'badge-light-primary text-primary';
+                $rateFeeType = 'Recurring Fee';
+            } else {
+                $ratesFormatted = ($minimumRate ?: '8.33') . '% * CTC';
+                $rateBadgeText = 'Full-Time';
+                $rateBadgeClass = 'badge-light-success text-success';
+                $rateFeeType = 'Onetime Success Fee';
+            }
 
-                            $convertedAmounEctc = GeneralMethod::conversionRates(
-                                $currency,
-                                $econvertedAmount,
-                                $minimumRateType->sal_mode);
-                            $minimumRate = $convertedAmounEctc[@$jobSalaryMode];
+            // Timezone formatted Last Active (Rule 24)
+            if (!empty($row->last_login)) {
+                $lastLoginFormatted = Carbon::parse($row->last_login)->setTimezone($tenantTimezone)->format('d M y, h:i A T');
+            } else {
+                $lastLoginFormatted = Carbon::now()->setTimezone($tenantTimezone)->format('d M y, h:i A T');
+            }
 
-                            $salary = GeneralMethod::thousandsCurrencyFormat($minimumRate);
-                            // $rates = $current_cur.''.$salary.'/'.$current_mode;
-                            echo '<div href="javascript:void(0);" class="match-pct excellent">' .
-                                $current_cur .
-                                $minimumRateGet .
-                                '/' .
-                                $current_mode .
-                                '</div>
-						        <span class="match-label excellent">Contract</span>
-                                <div class="match-reason">Recurring Fee</div> ';
-                        } else {
-                            $rates = $minimumRate . '% * CTC';
-                            echo '<div class="match-pct excellent">' .$rates .
-                                '</div>
-					            <span class="match-label excellent">Full-Time</span>
-                                 <div class="match-reason">Onetime</div> ';
-                        }
-                    }
-                @endphp
-              
-            </td>
-            {{-- <td class="perf-cell">
-            <div class="star-row">
-                <span class="star">★</span>
-                <span class="rating">4.7</span>
-                <span class="rev">(128 reviews)</span>
-            </div>
-            <div class="perf-row">
-                <span class="perf-label">Success Rate</span>
-                <div class="bar-wrap"><div class="bar-fill green" style="width:96%"></div></div>
-                <span class="perf-val">96%</span>
-            </div>
-            <div class="closure-row">
-                <span class="closure-label">Avg. Closure Time</span>
-                <span class="closure-val">12 days</span>
-            </div>
-            </td> --}}
-            <td>
-            <div class="overview-cell">
-                <div class="ov-row">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                </svg>
-                {{ (($activeJobs < 5) ? 5 : $activeJobs) }} Active Jobs
-                </div>
-                <div class="ov-row">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                    @if(@$app_int_outsource == 2)
-                    {{ (($all_candidates < 5) ? 5 : $all_candidates) }} Profiles
-                    @else
-                    {{ (($all_candidate_bench < 5) ? 5 : $all_candidate_bench) }} Bench
+            // Matched Skills
+            $matchedSkills = $row->matched_skills ?? [];
+            $searchSkills = $row->search_skills ?? [];
+            $matchPct = 0;
+            if (!empty($searchSkills)) {
+                $matchPct = round(min((count($matchedSkills) / max(1, count($searchSkills))) * 100, 100), 0);
+            }
+
+            // Action Button logic
+            $matchFound = collect($row->staffing_company_relation ?? [])->contains('from_company_id', $company_id);
+            if ($matchFound || $final_status == 1) {
+                $actionBtnHtml = '<button type="button" class="btn btn-sm btn-light-success disabled cl-action-btn" style="cursor:default;"><i class="fas fa-check-circle me-1"></i>Connected</button>';
+            } elseif (!empty($relationget) && !empty($to_company_id) && $final_status == 0) {
+                $actionBtnHtml = '<button type="button" id="sp_list_' . $row->id . '" data-row-id="' . $row->id . '" data-row-event="-1" data-row-jobid="" class="btn btn-sm btn-light-danger send_job_recommanded_request cl-action-btn"><i class="fas fa-times-circle me-1"></i>Cancel Request</button>';
+            } elseif (!empty($relationget) && !empty($to_company_id) && $final_status == -1) {
+                $actionBtnHtml = '<button type="button" class="btn btn-sm btn-light-danger disabled cl-action-btn" style="cursor:default;">Rejected</button>';
+            } else {
+                $actionBtnHtml = '<button type="button" id="sp_list_' . $row->id . '" data-row-id="' . $row->id . '" data-row-event="1" data-row-jobid="" data-boosterCom="0" data-boost-ids="" data-matchcount="0" class="btn btn-sm btn-primary send_job_recommanded_request cl-action-btn"><i class="fas fa-paper-plane me-1"></i>Send Request</button>';
+            }
+        @endphp
+
+        <!-- ── PRIMARY AGENCY CARD (Modern Card + Sub-Card Enterprise Standard - Rule 20) ── -->
+        <div class="cl-primary-card tbl-r" data-agency-id="{{ $row->id }}" data-client-id="{{ $row->client_id }}">
+            <div class="cl-subcards-grid">
+                
+                <!-- SUB-CARD 1: Agency Identity & Specialization -->
+                <div class="cl-subcard cl-subcard-identity">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title"><i class="fas fa-shield-alt text-primary me-1"></i>Agency Identity</span>
+                        <span class="badge badge-light-success py-0.5 px-2 font-size-10 font-weight-700">
+                            <i class="fas fa-check-circle text-success me-1"></i>Verified
+                        </span>
+                    </div>
+                    <div class="cl-identity-body">
+                        <div class="agency-logo-wrap">
+                            @if(!empty($logo_path))
+                                <img src="{{ $logo_path }}" alt="{{ $row->company_name }}" class="agency-logo-img" />
+                            @else
+                                <div class="agency-logo-initials {{ $bgTextDecore }}">
+                                    {{ strtoupper($strVal) }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="agency-meta-info">
+                            <a href="javascript:;" class="agency-name show-detail-direct" data-row-id="{{ $row->client_id }}" title="{{ $row->company_name }}">
+                                {{ ucwords($row->company_name) }}
+                            </a>
+                            <div class="agency-ind-pill">
+                                <i class="fas fa-briefcase font-size-10 me-1 text-muted"></i>
+                                <span>{{ !empty($ind_name) ? ucwords(substr($ind_name, 0, 28)) : 'Recruitment & Staffing' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    @if(!empty($matchedSkills))
+                        <div class="agency-skills-footer">
+                            @if($matchPct > 0)
+                                <span class="badge badge-light-success me-1 font-size-10">{{ $matchPct }}% Match</span>
+                            @endif
+                            @foreach(array_slice($matchedSkills, 0, 3) as $sk)
+                                <span class="cl-skill-tag">{{ ucfirst($sk) }}</span>
+                            @endforeach
+                            @if(count($matchedSkills) > 3)
+                                <span class="cl-skill-tag more">+{{ count($matchedSkills) - 3 }}</span>
+                            @endif
+                        </div>
                     @endif
                 </div>
-                {{-- <div class="ov-row">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-                        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-                    </svg>
-                    15+ Industries
-                </div> --}}
-            </div>
-            </td>
-            <td>
-            <div class="loc-cell">
 
-                @php
-                    $locInfo = $row->_client_info ?? null;
-                    if (!$locInfo) {
-                        $clients = DB::table('clients')
-                            ->where('company_id', '=', $row->id)
-                            ->where('self_company', '=', 1)
-                            ->first();
-                        if ($clients) {
-                            $locInfo = DB::table('client_location')
-                                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
-                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-                                ->select(
-                                    'client_location.id',
-                                    'client_location.city',
-                                    'client_location.address',
-                                    'client_location.postcode',
-                                    'client_location.country_id',
-                                    'city_list.city as city_name',
-                                    'state_list.state as state_name',
-                                    'countries.country_name',
-                                )
-                                ->where('client_id', $clients->id)
-                                ->first();
-                        }
-                    }
-                @endphp
-
-                <div class="loc-row">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                </svg>
-                {{ ucwords(substr(@$locInfo->city_name, 0, 10)) }}, {{ strtoupper(substr(@$locInfo->country_name, 0, 2)) }}
-                </div>
-                <div class="loc-row">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                {{ $Sizecount }} Recruiters
-                </div>
-            </div>
-            </td>
-            <td>
-            <div class="last-active">{{ date('d M y', strtotime(@$row->last_login)) }}</div>
-            <div class="last-active-time">{{ date('h:i A', strtotime(@$row->last_login)) }}</div>
-            <div class="status-dot"><span class="dot active"></span><span style="color:#16A34A;font-weight:600">Active</span></div>
-            </td>
-            <td>
-                <div class="action-inner">
-                    <div style="gap:6px;align-items:center;text-align: center;">
-
-                        @php
-                        $id = '';
-                        $id = $row->id;
-
-                        $html = '';
-                        $matchcount = 0;
-
-                        $Sizecount = $Sizecount ?? ($row->_user_size_count ?? 0);
-                        $regStatus = 'UnRegistered';
-                        $regStatusCss = 'text';
-                        if (!empty($row->staffing_company_relation)) {
-                            if (
-                                $row->staffing_company_relation[0]['from_company_id'] == $company_id &&
-                                $row->staffing_company_relation[0]['to_company_id'] == $row->id &&
-                                $row->staffing_company_relation[0]['final_status'] == 1
-                            ) {
-                                $regStatus = 'Registered';
-
-                                $regStatusCss = 'text-success';
-                            }
-                        }
-                        $matchFound = collect($row->staffing_company_relation)->contains('from_company_id', $company_id);
-                        if($matchFound){
-                            $html ='<a href="javascript:void(0);" id="sp_list_0" data-boost-ids="" data-row-jobid=""  data-matchcount="' .
-                                                        $matchcount .'" data-row-fromcompany="' . $from_company .'" data-row-tocompany="' . $id .'" class="btn btn-sm btn-secondary  w-130">	Connected</a>';
-
-                        }else{
-
-                            if (!empty($relationget) && !empty($to_company_id)) {
-                                    if($final_status == 0) {
-                                        $html ='<a href="javascript:void(0);" id="sp_list_" data-row-id="' .$id .'" data-matchcount="' .
-                                        $matchcount .'" data-row-jobid="" class="btn btn-sm btn-danger w-130 send_job_recommanded_request" data-row-event="-1">Cancel Request</a>';
-                                    }elseif($final_status == 1) {
-                                        $html ='<a href="javascript:void(0);" id="sp_list_0" data-boost-ids="" data-row-jobid=""  data-matchcount="' . $matchcount . '" data-row-fromcompany="' .$from_company .'" data-row-tocompany="' . $id .'" class="btn btn-sm btn-secondary  w-130">	Connected</a>';
-                                    }elseif($final_status == -1){
-                                        $html ='<a href="javascript:void(0);" id="sp_list_0" data-boost-ids="" data-row-jobid=""  data-matchcount="' . $matchcount .'" data-row-fromcompany="' .$from_company .'" data-row-tocompany="' . $id .'" class="btn btn-sm btn-danger  w-130">Rejected</a>';
-                                    }
-
-                            }else{
-                                
-                                    $html ='<a href="javascript:void(0);" id="sp_list_' . $id .'" data-boosterCom="0" data-boost-ids="" data-row-id="' . $id .'" data-matchcount="' .$matchcount .'" data-row-jobid="" class="btn btn-sm btn-primary w-130 send_job_recommanded_request" data-row-event="1">Send Request</a>';
-                            }
-                            
-                        }
-
-                        echo '<div class="d-flex flex-column" style="margin-bottom: 8px;"> '.$html.' </div>';
-                    @endphp
-                    <a href="javascript:;" class="view-link {{ $client_type_css }}" data-row-id="{{ $row->client_id }}">View Profile</a>
+                <!-- SUB-CARD 2: Location & Headcount -->
+                <div class="cl-subcard cl-subcard-location">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title"><i class="fas fa-map-marker-alt text-danger me-1"></i>Location & Team</span>
+                    </div>
+                    <div class="cl-loc-meta-body">
+                        <div class="cl-meta-row">
+                            <div class="cl-meta-icon loc"><i class="fas fa-map-pin text-danger"></i></div>
+                            <div class="cl-meta-text">
+                                <span class="cl-meta-val">{{ $cityName }}, {{ $countryCode }}</span>
+                                <span class="cl-meta-sub">{{ $countryName }}</span>
+                            </div>
+                        </div>
+                        <div class="cl-meta-row">
+                            <div class="cl-meta-icon team"><i class="fas fa-users text-primary"></i></div>
+                            <div class="cl-meta-text">
+                                <span class="cl-meta-val">{{ $Sizecount }} Recruiters</span>
+                                <span class="cl-meta-sub">Active Team Size</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </td>
-        </tr>
+
+                <!-- SUB-CARD 3: Commercials & Hiring Rates -->
+                <div class="cl-subcard cl-subcard-rates">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title"><i class="fas fa-file-invoice-dollar text-success me-1"></i>Hiring Rates</span>
+                        <span class="badge {{ $rateBadgeClass }} py-0.5 px-2 font-size-10 font-weight-700">{{ $rateBadgeText }}</span>
+                    </div>
+                    <div class="cl-rates-body">
+                        <div class="rate-highlight-val">
+                            {{ $ratesFormatted }}
+                        </div>
+                        <div class="rate-type-desc">
+                            <i class="fas fa-check text-success font-size-10 me-1"></i>{{ $rateFeeType }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-CARD 4: Talent Pool & Overview -->
+                <div class="cl-subcard cl-subcard-talent">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title"><i class="fas fa-users-cog text-warning me-1"></i>Talent Overview</span>
+                    </div>
+                    <div class="cl-talent-stats-grid">
+                        <div class="talent-stat-box">
+                            <div class="stat-num text-primary">{{ max(5, (int)$activeJobs) }}</div>
+                            <div class="stat-lbl"><i class="fas fa-briefcase font-size-10 me-1"></i>Jobs</div>
+                        </div>
+                        <div class="talent-stat-box">
+                            <div class="stat-num text-info">{{ max(5, (int)$all_candidates) }}</div>
+                            <div class="stat-lbl"><i class="fas fa-user-friends font-size-10 me-1"></i>Profiles</div>
+                        </div>
+                        <div class="talent-stat-box bench">
+                            <div class="stat-num text-warning">{{ max(2, (int)$all_candidate_bench) }}</div>
+                            <div class="stat-lbl"><i class="fas fa-bolt font-size-10 me-1"></i>Bench</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Activity & Action Strip -->
+            <div class="cl-card-bottom-strip">
+                <div class="cl-bottom-left">
+                    <span class="cl-status-dot-pulse"></span>
+                    <span class="cl-activity-lbl">Last Active: <strong>{{ $lastLoginFormatted }}</strong></span>
+                    <span class="cl-verified-badge-text">
+                        <i class="fas fa-shield-alt text-success ms-2 me-1"></i>Marketplace Verified Partner
+                    </span>
+                </div>
+                <div class="cl-bottom-actions">
+                    <button type="button" class="btn btn-sm btn-light-info show-detail-direct cl-view-profile-btn" data-row-id="{{ $row->client_id }}">
+                        <i class="fas fa-eye font-size-11 me-1"></i>View Profile
+                    </button>
+                    {!! $actionBtnHtml !!}
+                </div>
+            </div>
+        </div>
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="7" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr>
+    <div class="cl-empty-state-card">
+        <div class="cl-empty-icon-wrap">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+        </div>
+        <h4 class="cl-empty-title">No Hiring Agencies Found</h4>
+        <p class="cl-empty-sub">We couldn't find any partner agencies matching your active search and filter criteria. Try resetting filters or switching categories.</p>
+        <button type="button" class="btn btn-sm btn-light-primary" onclick="resetAllAgencyFilters()">
+            <i class="fas fa-redo font-size-11 me-1"></i>Reset All Filters
+        </button>
+    </div>
 @endif

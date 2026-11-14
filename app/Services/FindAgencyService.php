@@ -49,7 +49,6 @@ class FindAgencyService
         GeneralMethod::cacheClean('allfindagencyversion_global');
     }
 
-
     /**
      * Retrieve paginated agency discovery list with batch enrichment and L3 cache.
      * Tenancy: Scoped to current authenticated user's company_id.
@@ -57,17 +56,21 @@ class FindAgencyService
     public function getAgencyData(Request $request, $user): JsonResponse|Response
     {
         $company_id = (int) $user->company_id;
+        $tab = $request->input('tab', 'all');
+
         $searchTerms = $request->input('cus_search');
         $custom_search = json_decode($searchTerms, true);
 
-        $searchTermsLocation = $request->input('kt_tagify_location');
+        $searchTermsLocation = $request->input('kt_tagify_location') ?? $request->input('country') ?? $request->input('location') ?? '';
         $custom_search_location = json_decode($searchTermsLocation, true);
 
         $parent_employment_type = $request->input('app_int_outsource');
-        if (empty($parent_employment_type) && $parent_employment_type !== '0') {
-            $parent_employment_type = '2'; // Default Full-Time
+        if ($tab === 'contract') {
+            $parent_employment_type = '1';
+        } elseif ($tab === 'fulltime') {
+            $parent_employment_type = '2';
         }
-        $commtype = (int) $parent_employment_type;
+        $commtype = ! empty($parent_employment_type) ? (int) $parent_employment_type : 2;
 
         $currentJobSkill = ['skill'];
         if (is_array($custom_search) && ! empty($searchTerms)) {
@@ -81,22 +84,23 @@ class FindAgencyService
         $experience = $request->input('experience');
         $industry = $request->input('industry');
         $globalSearch = trim($request->input('search', ''));
+        $sortingfilter = $request->input('sortingfilter') ?? $request->input('sort') ?? 'best';
 
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
 
         // 1. Resolve country filter with cached lookup
-        $country_id_job = 101;
+        $country_id_job = null;
         $locTarget = '';
         if (is_array($custom_search_location) && ! empty($searchTermsLocation)) {
             $currentJobLocation = array_column($custom_search_location, 'value');
             $locTarget = $currentJobLocation[0] ?? '';
         } elseif (! empty($searchTermsLocation)) {
-            $locTarget = is_string($searchTermsLocation) ? $searchTermsLocation : '';
+            $locTarget = is_string($searchTermsLocation) ? trim($searchTermsLocation) : '';
         }
 
-        if (! empty($locTarget)) {
+        if (! empty($locTarget) && strtolower($locTarget) !== 'all locations' && strtolower($locTarget) !== 'all' && strtolower($locTarget) !== 'location') {
             $country_id_job = Cache::remember('ref:country_id_name:'.md5($locTarget), 3600, function () use ($locTarget) {
                 $cId = DB::table('countries')->where('country_name', '=', $locTarget)->value('id');
 
@@ -109,6 +113,7 @@ class FindAgencyService
         $version = Cache::get($versionKey, 1);
 
         $cachePayload = [
+            'tab' => $tab,
             'page' => $page,
             'size' => $size,
             'q' => $searchQuery,
@@ -120,6 +125,7 @@ class FindAgencyService
             'industry' => $industry,
             'skillsList' => $skillsList,
             'country_id_job' => $country_id_job,
+            'sortingfilter' => $sortingfilter,
         ];
 
         $cacheKey = "ats:v2:findagency:{$company_id}:{$version}:".GeneralMethod::canonicalHash($cachePayload);
@@ -137,7 +143,6 @@ class FindAgencyService
                 ->header('ETag', $etag)
                 ->header('Cache-Control', 'private, no-cache');
         }
-
 
         if (! $forceRefresh && Cache::has($cacheKey)) {
             return response()->json(Cache::get($cacheKey))
@@ -228,7 +233,6 @@ class FindAgencyService
         // 4. Step 2: Build dynamic function score boosts
         // Note: Preserving all matching companies without artificial truncation to guarantee 100% ranking equivalence
 
-
         $functions = [];
         foreach ($companySkillMatchCount as $matchedCompanyId => $matchedSkillCount) {
             $functions[] = [
@@ -266,8 +270,36 @@ class FindAgencyService
             ];
         }
 
+        $countryFilter = [];
+        if (! empty($country_id_job)) {
+            $countryFilter[] = ['term' => ['commericial_countries.country_id' => $country_id_job]];
+        } elseif ($tab === 'india') {
+            $countryFilter[] = ['term' => ['commericial_countries.country_id' => 101]];
+        } elseif ($tab === 'global') {
+            $countryFilter[] = [
+                'bool' => [
+                    'must_not' => [
+                        ['term' => ['commericial_countries.country_id' => 101]],
+                    ],
+                ],
+            ];
+        }
+
+        $benchFilter = [];
+        if ($tab === 'bench') {
+            $benchFilter[] = [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['commericials.commtype' => 1]],
+                        ['range' => ['bench_candidates.id' => ['gt' => 0]]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
+
         $commercialFilter = [];
-        if (! empty($parent_employment_type)) {
+        if (! empty($parent_employment_type) && ($tab === 'contract' || $tab === 'fulltime' || $parent_employment_type == '1' || $parent_employment_type == '2')) {
             $commercialFilter[] = [
                 'term' => [
                     'commericials.commtype' => (int) $parent_employment_type,
@@ -277,6 +309,50 @@ class FindAgencyService
                 'term' => [
                     'commericials.status' => 1,
                 ],
+            ];
+        }
+
+        $textSearchFilter = [];
+        $searchVal = ! empty($globalSearch) ? $globalSearch : $searchQuery;
+        if (! empty($searchVal)) {
+            $searchValLower = strtolower($searchVal);
+            $textSearchFilter[] = [
+                'bool' => [
+                    'should' => [
+                        ['match_phrase_prefix' => ['company_name' => $searchVal]],
+                        ['wildcard' => ['company_name' => '*'.$searchValLower.'*']],
+                        ['match' => ['description' => $searchVal]],
+                        ['match' => ['industry.industry_name' => $searchVal]],
+                        ['match' => ['job_metronics_skills.skill_name' => $searchVal]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
+
+        $sortArray = [];
+        if ($sortingfilter === 'recent') {
+            $sortArray = [
+                ['last_login' => ['order' => 'desc', 'missing' => '_last']],
+                ['_score' => ['order' => 'desc']],
+            ];
+        } elseif ($sortingfilter === 'oldest') {
+            $sortArray = [
+                ['created_at' => ['order' => 'asc', 'missing' => '_last']],
+            ];
+        } elseif ($sortingfilter === 'name_asc') {
+            $sortArray = [
+                ['company_name.keyword' => ['order' => 'asc']],
+                ['company_name' => ['order' => 'asc']],
+            ];
+        } elseif ($sortingfilter === 'name_desc') {
+            $sortArray = [
+                ['company_name.keyword' => ['order' => 'desc']],
+                ['company_name' => ['order' => 'desc']],
+            ];
+        } else {
+            $sortArray = [
+                ['_score' => ['order' => 'desc']],
             ];
         }
 
@@ -296,7 +372,6 @@ class FindAgencyService
                                     [
                                         ['term' => ['status' => 'active']],
                                         ['terms' => ['company_type' => [1, 2]]],
-                                        ['term' => ['commericial_countries.country_id' => $country_id_job]],
                                         [
                                             'nested' => [
                                                 'path' => 'company_coins',
@@ -311,9 +386,12 @@ class FindAgencyService
                                             ],
                                         ],
                                     ],
+                                    $countryFilter,
+                                    $benchFilter,
                                     $commercialFilter,
                                     $experienceFilter,
-                                    $industryFilter
+                                    $industryFilter,
+                                    $textSearchFilter
                                 ),
                                 'must_not' => array_merge(
                                     [['term' => ['id' => $company_id]]],
@@ -326,8 +404,37 @@ class FindAgencyService
                         'boost_mode' => 'sum',
                     ],
                 ],
-                'sort' => [
-                    ['_score' => ['order' => 'desc']],
+                'sort' => $sortArray,
+                'aggs' => [
+                    'total' => ['value_count' => ['field' => 'id']],
+                    'contract' => [
+                        'filter' => ['term' => ['commericials.commtype' => 1]],
+                    ],
+                    'fulltime' => [
+                        'filter' => ['term' => ['commericials.commtype' => 2]],
+                    ],
+                    'indian' => [
+                        'filter' => ['term' => ['commericial_countries.country_id' => 101]],
+                    ],
+                    'global' => [
+                        'filter' => [
+                            'bool' => [
+                                'must_not' => [
+                                    ['term' => ['commericial_countries.country_id' => 101]],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'bench' => [
+                        'filter' => [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['commericials.commtype' => 1]],
+                                    ['range' => ['bench_candidates.id' => ['gt' => 0]]],
+                                ],
+                            ],
+                        ],
+                    ],
                 ],
             ],
         ];
@@ -410,6 +517,15 @@ class FindAgencyService
         $hiringtype = $app_int_outsource;
         $jobid = '';
 
+        $kpiCounts = [
+            'total_agencies' => $companyResponse['aggregations']['total']['value'] ?? $total,
+            'contract_staffing' => $companyResponse['aggregations']['contract']['doc_count'] ?? 0,
+            'fulltime_hiring' => $companyResponse['aggregations']['fulltime']['doc_count'] ?? 0,
+            'indian_agencies' => $companyResponse['aggregations']['indian']['doc_count'] ?? 0,
+            'global_agencies' => $companyResponse['aggregations']['global']['doc_count'] ?? 0,
+            'bench_agencies' => $companyResponse['aggregations']['bench']['doc_count'] ?? 0,
+        ];
+
         $responseData = [
             'html' => view('service_company.ajax_pages.find_agency_ajax', compact(
                 'data', 'userPermissions', 'app_int_outsource', 'jobid', 'currentJobSkill',
@@ -418,6 +534,7 @@ class FindAgencyService
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'version' => $version,
+            'kpi_counts' => $kpiCounts,
         ];
 
         // Store in Redis cache for 30 minutes
@@ -613,7 +730,7 @@ class FindAgencyService
                         }
 
                         // Queue email notification with scanner-safe link
-                        if (!empty($targetEmail)) {
+                        if (! empty($targetEmail)) {
                             try {
                                 $employerCompany = Company::withoutGlobalScopes()->find($from_company_id);
                                 $reqdate = date('d M Y');
