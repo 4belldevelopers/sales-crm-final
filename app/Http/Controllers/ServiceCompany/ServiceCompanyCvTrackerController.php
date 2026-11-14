@@ -1193,13 +1193,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         'bool' => [
                             'should' => [
                                 ['term' => ['client_self_company' => 1]],
-                                ['term' => ['ClientComID' => 0]],
                                 ['term' => ['self_company' => 1]],
+                                ['term' => ['client_id' => 0]],
+                                ['bool' => ['must_not' => [['exists' => ['field' => 'client_id']]]]],
                             ],
                             'minimum_should_match' => 1,
                             'must_not' => [
+                                ['term' => ['client_self_company' => 0]],
                                 ['term' => ['is_direct_client' => true]],
                                 ['term' => ['is_direct_client' => 1]],
+                                ['range' => ['recommendation_id' => ['gt' => 0]]],
                             ],
                         ],
                     ];
@@ -1228,7 +1231,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $boolQuery['bool']['filter'][] = [
                         'bool' => [
                             'must' => [
-                                ['range' => ['ClientComID' => ['gt' => 0]]],
+                                ['term' => ['client_self_company' => 0]],
                             ],
                             'must_not' => [
                                 ['term' => ['client_self_company' => 1]],
@@ -1561,20 +1564,25 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         ->toArray();
                 }
 
-                // 5. Batch fetch jobs (max_sal_mode, max_salary_currency, status, title, category, employment_type) in ONE query
+                // 5. Batch fetch jobs (max_sal_mode, max_salary_currency, status, title, category, employment_type, client info) in ONE query
                 if (! empty($jobIdsOnPage)) {
                     $dbJobs = DB::table('jobs')
                         ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
+                        ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                         ->whereIn('jobs.id', $jobIdsOnPage)
                         ->select(
                             'jobs.id',
+                            'jobs.company_id as job_company_id',
+                            'jobs.client_id',
                             'jobs.max_sal_mode',
                             'jobs.max_salary_currency',
                             'jobs.status',
                             'jobs.title',
                             'jobs.category_id',
                             'jobs.employment_type',
-                            'job_categories.name as category_name'
+                            'job_categories.name as category_name',
+                            'clients.name as client_name',
+                            'clients.self_company as client_self_company'
                         )
                         ->get();
                     foreach ($dbJobs as $dj) {
