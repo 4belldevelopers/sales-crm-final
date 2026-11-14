@@ -184,7 +184,7 @@
                                 @if($percentage > 0)
                                     <span class="ag-badge ag-badge-match-high">Match {{ $percentage }}%</span>
                                 @else
-                                    <span class="ag-badge ag-badge-match-neutral">Match 0%</span>
+                                    <span class="ag-badge ag-badge-additional">Additional Partner</span>
                                 @endif
 
                                 @if(!empty($row->_is_additional))
@@ -303,12 +303,12 @@
                     @else
                         @if ($matchFound)
                             <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-boosterCom="" data-boost-ids="" data-row-jobid="{{ $jobid }}" data-matchcount="" data-row-fromcompany="{{ $from_company }}" data-row-tocompany="{{ $id }}" class="btn btn-sm ag-btn-send send_only_job_invitation">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M2.5 13.5L21.5 3.5L14.5 21.5L10.5 14.5L2.5 13.5Z" fill="currentColor"/><path d="M10.5 14.5L21.5 3.5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/></svg>
                                 <span>Send Requirement</span>
                             </a>
                         @else
                             <a href="javascript:void(0);" id="sp_list_{{ $id }}" data-boosterCom="" data-boost-ids="" data-row-id="{{ $id }}" data-matchcount="" data-row-jobid="{{ $jobid }}" class="btn btn-sm ag-btn-send send_job_recommanded_request">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M2.5 13.5L21.5 3.5L14.5 21.5L10.5 14.5L2.5 13.5Z" fill="currentColor"/><path d="M10.5 14.5L21.5 3.5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/></svg>
                                 <span>Send Requirement</span>
                             </a>
                         @endif

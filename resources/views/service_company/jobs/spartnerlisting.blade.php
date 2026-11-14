@@ -113,19 +113,19 @@
         font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     }
 
-    /* ── Sticky Header Card (Top Tier 1 Job Card) ────────────────────────── */
+    /* ── Sticky Header Card (Top Tier 1 Job Card - Rule 20 Header Background Standard) ── */
     .agency-drawer-header {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 12px 18px;
-        margin: 12px 16px 10px 16px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        min-height: 60px;
-        flex-shrink: 0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 10px 16px !important;
+        margin: 10px 16px 8px 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        min-height: 52px !important;
+        flex-shrink: 0 !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
     }
     .adh-job-icon {
         width: 40px;
@@ -433,18 +433,18 @@
         display: none !important;
     }
 
-    /* ── Tier 1: Toolbar Header Card (Rule 20) ────────────────────────────── */
+    /* ── Tier 1: Toolbar Header Card (Rule 20 Header Background Standard) ── */
     .agency-toolbar-card {
-        background: #ffffff !important;
+        background: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 10px !important;
-        padding: 10px 16px !important;
-        margin-bottom: 10px !important;
+        padding: 9px 14px !important;
+        margin-bottom: 8px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
         flex-wrap: wrap !important;
-        gap: 12px !important;
+        gap: 10px !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     }
     .agency-toolbar-left {
@@ -523,12 +523,15 @@
         color: #0f172a !important;
     }
 
-    /* Tagify support inside search subcard */
+    /* Tagify support inside search subcard with 15.6" height constraint */
     .agency-search-subcard .tagify {
         min-height: 36px !important;
+        max-height: 38px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 8px !important;
-        background: #f8fafc !important;
+        background: #ffffff !important;
         padding: 2px 8px 2px 30px !important;
         display: flex !important;
         align-items: center !important;
@@ -561,7 +564,7 @@
 
     .btn-filter-trigger {
         height: 36px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #cbd5e1;
         background: #ffffff;
         border-radius: 8px;
         padding: 0 12px;
@@ -576,7 +579,7 @@
     }
     .btn-filter-trigger:hover {
         background: #f8fafc;
-        border-color: #cbd5e1;
+        border-color: #94a3b8;
     }
 
     /* ── Tier 2: Sub-Tabs Card (Rule 20) ─────────────────────────────────── */
@@ -584,8 +587,8 @@
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 10px !important;
-        padding: 8px 12px !important;
-        margin-bottom: 10px !important;
+        padding: 7px 12px !important;
+        margin-bottom: 8px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
@@ -629,18 +632,70 @@
         font-weight: 700 !important;
         font-variant-numeric: tabular-nums !important;
         color: #64748b !important;
+        background: #f1f5f9 !important;
+        border-radius: 10px !important;
+        padding: 1px 6px !important;
     }
     .agency-tab-btn.active .agency-tab-badge {
         color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.25) !important;
+        margin-left: 3px !important;
     }
     .agency-select-all-subcard {
         display: flex !important;
         align-items: center !important;
         gap: 6px !important;
-        padding: 5px 10px !important;
+        padding: 4px 10px !important;
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        transition: all 0.15s ease !important;
+    }
+    .agency-select-all-subcard:hover {
+        background: #f8fafc !important;
+        border-color: #94a3b8 !important;
+    }
+
+    /* ── Sticky Column Header Row (Rule 20 Mandatory Header Background Standard) ── */
+    .agency-stream-header-row {
         background: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
+        padding: 7px 14px !important;
+        margin-bottom: 6px !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 2.7fr) minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.35fr) !important;
+        gap: 10px !important;
+        align-items: center !important;
+    }
+    @media (max-width: 1400px) {
+        .agency-stream-header-row {
+            grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 1.3fr) !important;
+            gap: 8px !important;
+            padding: 6px 12px !important;
+        }
+    }
+    .ash-col {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.4px !important;
+    }
+    .ash-col-agency {
+        padding-left: 28px !important;
+    }
+    .ash-col-action {
+        text-align: right !important;
+        padding-right: 4px !important;
+    }
+    @media (min-width: 992px) {
+        .ag-subcard-label {
+            display: none !important;
+        }
+        .agency-card-grid {
+            padding: 8px 14px !important;
+        }
     }
 
     /* ── Tier 3: Primary Agency Cards Stream (Rule 20) ──────────────────── */
@@ -887,25 +942,25 @@
         gap: 5px !important;
     }
 
-    /* Sub-Card 5: Actions */
+    /* Sub-Card 5: Actions - Canonical Primary Blue CTA */
     .ag-btn-send {
-        background: #10b981 !important;
+        background: #0066ff !important;
         color: #ffffff !important;
         border: none !important;
-        border-radius: 8px !important;
-        padding: 7px 14px !important;
-        font-size: 12px !important;
+        border-radius: 7px !important;
+        padding: 6px 13px !important;
+        font-size: 11.5px !important;
         font-weight: 600 !important;
         display: inline-flex !important;
         align-items: center !important;
-        gap: 6px !important;
-        box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25) !important;
+        gap: 5px !important;
+        box-shadow: 0 1px 3px rgba(0, 102, 255, 0.22) !important;
         cursor: pointer !important;
         white-space: nowrap !important;
         transition: background-color 0.15s ease, transform 0.1s ease !important;
     }
     .ag-btn-send:hover {
-        background: #059669 !important;
+        background: #0052cc !important;
         color: #ffffff !important;
         transform: translateY(-1px) !important;
     }
@@ -1522,9 +1577,9 @@
 
     {{-- Right: Close Button --}}
     <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-sm d-flex align-items-center gap-2 drawer-close-trigger" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; color: #1e293b; cursor: pointer; transition: background-color 0.15s ease;">
+        <button type="button" class="btn btn-sm d-flex align-items-center gap-2 drawer-close-trigger" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 13px; font-size: 11.5px; font-weight: 600; color: #334155; cursor: pointer; transition: all 0.15s ease;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#94a3b8';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1';">
             <span>Close</span>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -1556,10 +1611,13 @@
                 <div class="info-panel-blue">
                     <div class="d-flex align-items-center gap-3">
                         <div class="panel-icon-circle blue">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                         </div>
-                        <div style="flex: 1; padding-right: 20px;">
-                            <div style="font-size: 13px; font-weight: 700; color: #2563eb;">Open to Agency Applications</div>
+                        <div style="flex: 1;">
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="font-size: 12.5px; font-weight: 700; color: #0f172a;">Open to Agency Applications</span>
+                                <span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:6px; font-size:9.5px; font-weight:700; padding:1px 6px;">Unpublished</span>
+                            </div>
                             <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">Any verified agency can discover this job and submit suitable candidates.</div>
                         </div>
                     </div>
@@ -1667,7 +1725,7 @@
 
             {{-- Action CTAs: Mutually exclusive display --}}
             <button type="button" id="sp_list_one" class="btn-publish-primary post_to_public {{ $isPublished ? 'd-none' : '' }}" style="{{ $isPublished ? 'display: none !important;' : 'display: flex;' }}" data-c="0" data-row-id="0" data-matchcount="0" data-row-jobid="{{ @$job->id }}">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
                 <span>Publish to Agency Marketplace</span>
             </button>
 
@@ -1742,12 +1800,10 @@
 
                 {{-- Right Sub-Card: Select All Agencies Toggle --}}
                 <div class="agency-select-all-subcard">
-                    <div class="form-check form-check-custom form-check-solid form-check-sm">
-                        <input class="form-check-input select-all-agencies-checkbox" type="checkbox" id="select_all_agencies_active" title="Select All Visible Agencies" style="cursor: pointer;" />
-                        <label class="form-check-label fs-8 fw-semibold text-gray-700 ms-1" for="select_all_agencies_active" style="cursor: pointer; user-select: none;">
-                            Select All
-                        </label>
-                    </div>
+                    <label class="d-flex align-items-center gap-2 m-0 ag-select-all-pill" for="select_all_agencies_active">
+                        <input class="form-check-input select-all-agencies-checkbox m-0" type="checkbox" id="select_all_agencies_active" title="Select All Visible Agencies" style="cursor: pointer; width: 15px; height: 15px;" />
+                        <span class="fs-8 fw-bold text-gray-700" style="cursor: pointer; user-select: none;">Select All</span>
+                    </label>
                 </div>
             </div>
 
@@ -1756,6 +1812,14 @@
 
                 {{-- ── TAB 1: RECOMMENDED AGENCIES ── --}}
                 <div class="tab-pane active show" id="tab_recommended" role="tabpanel" style="display: block;">
+                    {{-- Sticky Column Header Row (Rule 20 Mandatory Header Background Standard) --}}
+                    <div class="agency-stream-header-row d-none d-md-grid">
+                        <div class="ash-col ash-col-agency">Agency & Specialization</div>
+                        <div class="ash-col text-center">Profiles</div>
+                        <div class="ash-col text-center">Rates & Terms</div>
+                        <div class="ash-col text-center">Location & Team</div>
+                        <div class="ash-col text-end">Action</div>
+                    </div>
                     <div class="agency-stream-container">
                         <div id="recommendedlistBody" class="agency-cards-stream">
                             {{-- Loaded dynamically via tableLoad(1) --}}
@@ -1770,6 +1834,14 @@
 
                 {{-- ── TAB 2: MY AGENCIES ── --}}
                 <div class="tab-pane" id="tab_registered" role="tabpanel" style="display: none;">
+                    {{-- Sticky Column Header Row (Rule 20 Mandatory Header Background Standard) --}}
+                    <div class="agency-stream-header-row d-none d-md-grid">
+                        <div class="ash-col ash-col-agency">Agency & Specialization</div>
+                        <div class="ash-col text-center">Profiles</div>
+                        <div class="ash-col text-center">Rates & Terms</div>
+                        <div class="ash-col text-center">Location & Team</div>
+                        <div class="ash-col text-end">Action</div>
+                    </div>
                     <div class="agency-stream-container">
                         <div id="allregisteragency" class="agency-cards-stream">
                             {{-- Loaded dynamically via staffingPartnersRegister(1) --}}
@@ -1780,6 +1852,14 @@
 
                 {{-- ── TAB 3: ASSIGNED AGENCIES ── --}}
                 <div class="tab-pane" id="tab_assigned" role="tabpanel" style="display: none;">
+                    {{-- Sticky Column Header Row (Rule 20 Mandatory Header Background Standard) --}}
+                    <div class="agency-stream-header-row d-none d-md-grid">
+                        <div class="ash-col ash-col-agency">Agency & Specialization</div>
+                        <div class="ash-col text-center">Contact Person</div>
+                        <div class="ash-col text-center">Performance Pipeline</div>
+                        <div class="ash-col text-center">Shared Date</div>
+                        <div class="ash-col text-end">Status & Actions</div>
+                    </div>
                     <div class="agency-stream-container">
                         <div id="allAssignListagency" class="agency-cards-stream">
                             {{-- Loaded dynamically via recommendedAssignList(1) --}}

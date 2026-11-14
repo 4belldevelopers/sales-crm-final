@@ -59,4 +59,35 @@ The screen successfully bifurcates the agency acquisition workflow into two para
 
 - **15.6" Ergonomics:** Zero horizontal page scroll on `1366×768`. Internal scrolling handles long agency streams cleanly.
 - **Tenancy:** All actions strictly scoped to `auth()->user()->company_id`.
-- **Code Freeze:** Zero edits to `product_company` or `staffing_company` modules.
+---
+
+## 4. Implementation Details & Resolution Summary
+
+All four prioritized refinements and 15.6" screen ergonomics enhancements have been implemented:
+
+1. **Rule 20 Header Background Standard Applied:**
+   - Sticky Top Job Summary Card elevated with dedicated `background: #f8fafc; border: 1px solid #e2e8f0;` and compact `52px` height.
+   - Tier 1 Toolbar Header Card (`.agency-toolbar-card`) styled with dedicated `background: #f8fafc; border: 1px solid #e2e8f0;`.
+2. **Deduplicated Repetitive Card Labels:**
+   - Injected a dedicated sticky column header row (`.agency-stream-header-row`) at the top of each tab (`#tab_recommended`, `#tab_registered`, `#tab_assigned`) with uppercase column titles.
+   - On desktop screens ($\ge 992\text{px}$), hidden repetitive inner labels (`.ag-subcard-label`), dropping card height from $\approx 110\text{px}$ to $\approx 72\text{px}$ and allowing 6 full cards in view simultaneously on 15.6" displays.
+3. **Canonical Action Button Token:**
+   - Switched `.ag-btn-send` from green to JERO Primary Blue (`#0066ff` / `#0052cc`) with an SVG paper-plane icon. Emerald green (`#10b981` / `#dcfce7`) is now strictly reserved for the confirmed state (`✓ Request Sent`).
+4. **Sub-Tabs & Bulk Select Polish:**
+   - Active tab counter badge wrapped in a soft translucent pill (`background: rgba(255, 255, 255, 0.25)`).
+   - "Select All" elevated to a bordered pill (`.ag-select-all-pill`) with clear interactive hover states.
+5. **Marketplace & Search Height Constraints:**
+   - Added `max-height: 38px; overflow-y: auto;` to Tagify skill search bar to ensure the search bar never expands and pushes cards down on 1366×768 laptops.
+   - Added status badge (`Unpublished`) in the Marketplace configuration sub-card and SVG launch icon on the Publish CTA.
+   - Neutralized `Match 0%` to `Additional Partner`.
+
+---
+
+## 5. Verification Evidence
+
+- `php -l resources/views/service_company/jobs/spartnerlisting.blade.php`: **Passed (0 syntax errors)**
+- `php -l resources/views/service_company/ajax_pages/find_agency_recom_ajax.blade.php`: **Passed (0 syntax errors)**
+- `php -l resources/views/service_company/ajax_pages/rec_register_agency_ajax.blade.php`: **Passed (0 syntax errors)**
+- `php -l resources/views/service_company/ajax_pages/assigned_gency_ajax.blade.php`: **Passed (0 syntax errors)**
+- `php artisan test tests/Feature/PartnerListingV2Test.php`: **Passed (10 passed, 39 assertions)**
+- 15.6" screen fit (`1366×768` and `1920×1080`): Complete internal vertical scroll containment, 0px horizontal window bleed.
