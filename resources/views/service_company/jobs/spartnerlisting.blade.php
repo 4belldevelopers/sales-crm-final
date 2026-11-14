@@ -69,7 +69,8 @@
     }
 
     // Canonical Classification Resolution (Rule 25)
-    $isSelfCompany = (@$job->self_company == 1 || @$job->is_self_company == 1 || (empty(@$job->client_id) && @$job->company_id == auth()->user()->company_id));
+    $authCompanyId = auth()->check() ? auth()->user()->company_id : 0;
+    $isSelfCompany = (@$job->self_company == 1 || @$job->is_self_company == 1 || (empty(@$job->client_id) && $authCompanyId && @$job->company_id == $authCompanyId));
     $isDirectClient = (@$job->is_direct_client == 1 || @$job->direct_client == 1);
 @endphp
 
@@ -1503,7 +1504,12 @@
                     <span class="text-gray-300">•</span>
                     <div class="d-flex align-items-center gap-1">
                         @foreach(array_slice($skillArrList, 0, 3) as $sk)
-                            <span class="adh-skill-badge">{{ ucfirst($sk->skill_name) }}</span>
+                            @php
+                                $skName = is_object($sk) ? ($sk->skill_name ?? $sk->name ?? '') : (is_array($sk) ? ($sk['skill_name'] ?? $sk['name'] ?? '') : (string) $sk);
+                            @endphp
+                            @if(!empty($skName))
+                                <span class="adh-skill-badge">{{ ucfirst($skName) }}</span>
+                            @endif
                         @endforeach
                         @if(count($skillArrList) > 3)
                             <span class="adh-skill-badge text-muted">+{{ count($skillArrList) - 3 }}</span>

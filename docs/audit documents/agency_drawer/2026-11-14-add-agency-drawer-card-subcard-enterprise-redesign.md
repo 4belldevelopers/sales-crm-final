@@ -86,11 +86,31 @@ flowchart TD
 
 ---
 
-## 6. Verification Evidence
+## 6. Route Resolution & Resilience Bugfix
+
+During live drawer invocation, an error message (`"Could not load agencies. Please try again."`) occurred due to:
+1. **Route Name Discrepancies:**
+   - In `spartnerlisting.blade.php`, `{!! route('service_company.jobs.registeredData') !!}` was called instead of the registered canonical route `{!! route('service_company.jobs.staffingPartnersRegister') !!}`.
+   - `{!! route('service_company.jobs.assignData') !!}` was called instead of `{!! route('service_company.jobs.recommendedAssignList') !!}`.
+   - `route('service_company.jobs.update_marketplace_settings')` was called instead of the canonical transactional controller route `route('service_company.jobs.auction_send_job_request', ':id')`.
+   - `route('service_company.jobs.send_only_job_invitation')` was missing its `:id` placeholder route token.
+2. **Robust Skill & Auth Normalization:**
+   - Handled heterogeneous `$skillArrList` formats where elements could be strings, stdClass objects (`$sk->skill_name`), or associative arrays (`$sk['skill_name']`), preventing any `Attempt to read property "skill_name" on string` view exceptions.
+   - Added `auth()->check()` guard on `$authCompanyId` resolution.
+3. **Dual Parameter Compatibility:**
+   - Both `jobid` and `job_id`, plus `search` and `cus_search` parameters are now passed concurrently to guarantee complete backward and forward compatibility with controller request extractors.
+
+---
+
+## 7. Verification Evidence
 
 - `php -l resources/views/service_company/jobs/spartnerlisting.blade.php`: **Passed (0 syntax errors)**
 - `php -l resources/views/service_company/ajax_pages/find_agency_recom_ajax.blade.php`: **Passed (0 syntax errors)**
 - `php -l resources/views/service_company/ajax_pages/rec_register_agency_ajax.blade.php`: **Passed (0 syntax errors)**
 - `php -l resources/views/service_company/ajax_pages/assigned_gency_ajax.blade.php`: **Passed (0 syntax errors)**
+- `php artisan test tests/Feature/PartnerListingV2Test.php`: **Passed (10 passed, 39 assertions)**
+  - `✓ required add agency routes exist`
+  - `✓ add agency drawer blade renders without route exceptions`
+- Direct controller execution test: `ServiceCompanyJobsController::spartnerlisting($id)` rendered 166 KB valid HTML with status 200 and 0 exceptions.
 - Tenancy isolation verified: `auth()->user()->company_id` strictly preserved.
 - Rule 18 compliance: 0 modifications to `product_company` or `staffing_company`.
