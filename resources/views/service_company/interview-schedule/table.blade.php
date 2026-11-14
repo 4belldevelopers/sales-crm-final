@@ -481,16 +481,16 @@
 .it-stat-card.it-kpi-active[data-kpi-filter="internal_client"] .it-stat-lbl { color: #1e40af !important; font-weight: 700 !important; }
 
 .it-stat-card.it-kpi-active[data-kpi-filter="my_organization"] {
-    background: #fffbeb !important;
-    border-color: #fbbf24 !important;
-    box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.14) !important;
+    background: #fef3c7 !important;
+    border-color: #fcd34d !important;
+    box-shadow: 0 0 0 1.5px #fcd34d, 0 4px 14px rgba(217, 119, 6, 0.14) !important;
 }
 .it-stat-card.it-kpi-active[data-kpi-filter="my_organization"] .it-stat-icon {
     background: #ffffff !important;
-    color: #d97706 !important;
+    color: #92400e !important;
     box-shadow: 0 1px 3px rgba(217, 119, 6, 0.16) !important;
 }
-.it-stat-card.it-kpi-active[data-kpi-filter="my_organization"] .it-stat-num { color: #78350f !important; }
+.it-stat-card.it-kpi-active[data-kpi-filter="my_organization"] .it-stat-num { color: #92400e !important; }
 .it-stat-card.it-kpi-active[data-kpi-filter="my_organization"] .it-stat-lbl { color: #92400e !important; font-weight: 700 !important; }
 
 /* ==========================================================================

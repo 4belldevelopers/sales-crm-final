@@ -333,7 +333,8 @@
 .cd-kpi-icon.icon-cyan,
 .cd-kpi-icon.icon-my-org {
     background: #fef3c7 !important;
-    color: #d97706 !important;
+    color: #92400e !important;
+    border: 1px solid #fcd34d !important;
 }
 
 .cd-kpi-icon.icon-purple {
@@ -670,7 +671,7 @@
 .cd-kpi-icon.icon-emerald { background: #ecfdf5 !important; color: #16a34a !important; }
 .cd-kpi-icon.icon-amber { background: #fff7ed !important; color: #ea580c !important; }
 .cd-kpi-icon.icon-cyan,
-.cd-kpi-icon.icon-my-org { background: #fef3c7 !important; color: #d97706 !important; }
+.cd-kpi-icon.icon-my-org { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d !important; }
 .cd-kpi-icon.icon-purple { background: #faf5ff !important; color: #9333ea !important; }
 
 .cd-kpi-info {
@@ -754,7 +755,7 @@
 .cd-kpi-sub.sub-green { color: #16a34a !important; }
 .cd-kpi-sub.sub-orange { color: #ea580c !important; }
 .cd-kpi-sub.sub-cyan,
-.cd-kpi-sub.sub-my-org { color: #d97706 !important; }
+.cd-kpi-sub.sub-my-org { color: #92400e !important; font-weight: 600 !important; }
 .cd-kpi-sub.sub-purple { color: #9333ea !important; }
 
 /* Color-Coded Active KPI Card Highlighting (Inspired by Clients Tracker) */
@@ -798,21 +799,36 @@
 .cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-label { color: #c2410c !important; font-weight: 700 !important; }
 
 .cd-kpi-card.cd-kpi-active[data-kpi="my_organization"],
-.cd-kpi-card.jh-card-active[data-kpi="my_organization"] {
-    background: #fffbeb !important;
-    border-color: #facc15 !important;
-    box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.12) !important;
+.cd-kpi-card.jh-card-active[data-kpi="my_organization"],
+.jh-card.jh-card-active.jh-card-source-my-org,
+.jh-card.jh-card-source-my-org.jh-card-active {
+    background: #fef3c7 !important;
+    border: 1px solid #fcd34d !important;
+    border-color: #fcd34d !important;
+    box-shadow: 0 0 0 1.5px #fcd34d, 0 4px 14px rgba(217, 119, 6, 0.12) !important;
 }
 .cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-icon,
-.cd-kpi-card.jh-card-active[data-kpi="my_organization"] .cd-kpi-icon {
+.cd-kpi-card.jh-card-active[data-kpi="my_organization"] .cd-kpi-icon,
+.jh-card.jh-card-active.jh-card-source-my-org .cd-kpi-icon {
     background: #ffffff !important;
-    color: #d97706 !important;
+    color: #92400e !important;
+    border: 1px solid #fcd34d !important;
     box-shadow: 0 1px 3px rgba(217, 119, 6, 0.15) !important;
 }
 .cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-num,
-.cd-kpi-card.jh-card-active[data-kpi="my_organization"] .cd-kpi-num { color: #92400e !important; }
+.cd-kpi-card.jh-card-active[data-kpi="my_organization"] .cd-kpi-num,
+.jh-card.jh-card-active.jh-card-source-my-org .cd-kpi-num { color: #92400e !important; }
 .cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-label,
-.cd-kpi-card.jh-card-active[data-kpi="my_organization"] .cd-kpi-label { color: #b45309 !important; font-weight: 700 !important; }
+.cd-kpi-card.jh-card-active[data-kpi="my_organization"] .cd-kpi-label,
+.jh-card.jh-card-active.jh-card-source-my-org .cd-kpi-label { color: #92400e !important; font-weight: 700 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-sub,
+.cd-kpi-card.jh-card-active[data-kpi="my_organization"] .cd-kpi-sub,
+.jh-card.jh-card-active.jh-card-source-my-org .cd-kpi-sub { color: #92400e !important; font-weight: 600 !important; }
+.cd-kpi-card[data-kpi="my_organization"]:hover,
+.jh-card.jh-card-source-my-org:hover {
+    border-color: #fcd34d !important;
+    background: #fffdf5 !important;
+}
 
 .cd-kpi-card.cd-kpi-active[data-kpi="job_request"] {
     background: #faf5ff !important;
