@@ -272,7 +272,7 @@ class PrescreenDossierService
             $seenSkills = [];
             $verifiedSkillNamesForMatch = [];
 
-            // A. Prioritize matched job skills ONLY IF verified in candidate's profile OR explicitly evaluated (>0)
+            // A. Prioritize matched job skills that are in the candidate's profile, bench, OR available in candidate_job_skill_exp
             foreach ($jobSkills as $jsName) {
                 $jsLower = mb_strtolower($jsName);
                 if (isset($seenSkills[$jsLower])) {
@@ -282,22 +282,19 @@ class PrescreenDossierService
                 $inProfile = isset($verifiedProfileMap[$jsLower]);
                 $inBench = isset($benchMap[$jsLower]);
                 $evalRow = $cjseMap[$jsLower] ?? null;
-                $isEvaluated = $evalRow && $evalRow['evaluated'];
+                $hasCjseEntry = ($evalRow !== null);
 
-                if (! $inProfile && ! $inBench && ! $isEvaluated) {
-                    // CRITICAL ANTI-HALLUCINATION GUARD:
-                    // Do NOT inject required job skills that the candidate does not possess!
+                // Anti-hallucination guard: only include job skills that the candidate has in profile, bench, or drawer evaluation (CJSE)
+                if (! $inProfile && ! $inBench && ! $hasCjseEntry) {
                     continue;
                 }
 
                 $seenSkills[$jsLower] = true;
-                $verifiedSkillNamesForMatch[] = $verifiedProfileMap[$jsLower] ?? $jsName;
-
                 $expText = '--';
                 $expFloat = 0.0;
                 $rating = 0;
 
-                if ($evalRow && ($evalRow['has_duration'] || $evalRow['rating'] > 0)) {
+                if ($evalRow) {
                     $expText = $evalRow['expText'];
                     $expFloat = $evalRow['exp'];
                     $rating = $evalRow['rating'];
@@ -305,6 +302,11 @@ class PrescreenDossierService
                     $expText = $benchMap[$jsLower]['expText'];
                     $expFloat = $benchMap[$jsLower]['exp'];
                     $rating = $benchMap[$jsLower]['rating'];
+                }
+
+                // Candidate only counts as matched for match % if verified in profile or evaluated with positive duration/rating
+                if ($inProfile || $inBench || ($evalRow && ($evalRow['evaluated'] || $evalRow['rating'] > 0 || $evalRow['exp'] > 0))) {
+                    $verifiedSkillNamesForMatch[] = $verifiedProfileMap[$jsLower] ?? $jsName;
                 }
 
                 $skillsArr[] = [
@@ -316,13 +318,15 @@ class PrescreenDossierService
                 ];
             }
 
-            // B. Append remaining explicitly evaluated skills for this job (that aren't already listed)
+            // B. Append remaining evaluated CJSE skills
             foreach ($cjseMap as $lower => $evalRow) {
-                if (isset($seenSkills[$lower]) || ! $evalRow['evaluated']) {
+                if (isset($seenSkills[$lower])) {
                     continue;
                 }
                 $seenSkills[$lower] = true;
-                $verifiedSkillNamesForMatch[] = $verifiedProfileMap[$lower] ?? $evalRow['name'];
+                if ($evalRow['evaluated'] || $evalRow['rating'] > 0 || $evalRow['exp'] > 0) {
+                    $verifiedSkillNamesForMatch[] = $verifiedProfileMap[$lower] ?? $evalRow['name'];
+                }
 
                 $skillsArr[] = [
                     'name' => self::formatSkillDisplayName($verifiedProfileMap[$lower] ?? $evalRow['name']),
@@ -333,7 +337,7 @@ class PrescreenDossierService
                 ];
             }
 
-            // C. Append remaining bench skill evaluations
+            // C. Append remaining bench skills
             foreach ($benchMap as $lower => $bRow) {
                 if (isset($seenSkills[$lower])) {
                     continue;
@@ -350,21 +354,24 @@ class PrescreenDossierService
                 ];
             }
 
-            // D. Append remaining verified profile skills (`job_applications.skills` / `job_application_skills`)
-            foreach ($verifiedProfileMap as $lower => $displayName) {
-                if (isset($seenSkills[$lower])) {
-                    continue;
-                }
-                $seenSkills[$lower] = true;
-                $verifiedSkillNamesForMatch[] = $displayName;
+            // D. Append remaining verified profile skills ONLY IF no job/evaluated skills exist
+            // (prevents polluting job-specific evaluations with unrelated career profile skills)
+            if (empty($skillsArr)) {
+                foreach ($verifiedProfileMap as $lower => $displayName) {
+                    if (isset($seenSkills[$lower])) {
+                        continue;
+                    }
+                    $seenSkills[$lower] = true;
+                    $verifiedSkillNamesForMatch[] = $displayName;
 
-                $skillsArr[] = [
-                    'name' => self::formatSkillDisplayName($displayName),
-                    'expText' => '--',
-                    'exp' => 0.0,
-                    'rating' => 0,
-                    'matched_job_skill' => false,
-                ];
+                    $skillsArr[] = [
+                        'name' => self::formatSkillDisplayName($displayName),
+                        'expText' => '--',
+                        'exp' => 0.0,
+                        'rating' => 0,
+                        'matched_job_skill' => false,
+                    ];
+                }
             }
 
             $skillsArr = array_slice($skillsArr, 0, 12);

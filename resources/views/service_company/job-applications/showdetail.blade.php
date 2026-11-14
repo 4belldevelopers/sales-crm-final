@@ -7055,27 +7055,24 @@ setTimeout(() => {
       if ($__normSk !== '') $rsVerifiedSkillsSet[$__normSk] = true;
     }
   }
-  if(empty($rsSkills)&&!empty($jobSkill)){
+  if(empty($rsSkills) && !empty($jobSkill)){
     foreach($jobSkill as $sv){
       $sv=(object)$sv; $sn=trim((string)($sv->skill_name??'')); if(!$sn) continue;
       $normKey = $rsSkillNormalize($sn);
       if(isset($rsSeenSkillKeys[$normKey])) continue;
+      $rsSeenSkillKeys[$normKey] = true;
       $expData=$rsParseSkillExperience($sv->skill_value??'');
       $resolvedRating = $rsResolveSkillRating($sv,$sn);
-      $hasExpOrRating = ($expData['value'] > 0 || $resolvedRating > 0);
-      if (!isset($rsVerifiedSkillsSet[$normKey]) && !$hasExpOrRating) {
-        continue; // Never inject unpossessed, unevaluated job skills into candidate report
-      }
-      $rsSeenSkillKeys[$normKey] = true;
+      $displayExp = $expData['value'] > 0 ? $expData['text'] : (!empty($sv->skill_value) ? trim((string)$sv->skill_value) : '--');
       $rsSkills[]=[
         'name'=>$sn,
-        'expText'=>$expData['value'] > 0 ? $expData['text'] : '--',
+        'expText'=>$displayExp,
         'exp'=>$expData['value'],
         'rating'=>$resolvedRating
       ];
     }
   }
-  if(!empty($application->skills)){
+  if(empty($rsSkills) && !empty($application->skills)){
     foreach(array_slice(array_values(array_filter(array_map('trim',explode(',', $application->skills)))),0,12) as $sn){
       $normKey = $rsSkillNormalize($sn);
       if($sn && !isset($rsSeenSkillKeys[$normKey])) {

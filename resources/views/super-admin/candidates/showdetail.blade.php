@@ -7030,9 +7030,10 @@ setTimeout(() => {
       if(isset($rsSeenSkillKeys[$normKey])) continue;
       $rsSeenSkillKeys[$normKey] = true;
       $expData=$rsParseSkillExperience($sv->skill_value??'');
+      $displayExp = $expData['value'] > 0 ? $expData['text'] : (!empty($sv->skill_value) ? trim((string)$sv->skill_value) : '--');
       $rsSkills[]=[
         'name'=>$sn,
-        'expText'=>$expData['text'],
+        'expText'=>$displayExp,
         'exp'=>$expData['value'],
         'rating'=>$rsResolveSkillRating($sv,$sn)
       ];

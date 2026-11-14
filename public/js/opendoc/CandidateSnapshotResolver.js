@@ -212,15 +212,10 @@
       var match = expText.match(STRICT_EXP_REGEX);
       if (match) expNum = parseFloat(match[1]);
 
-      // Guard: Skip un-evaluated job skill placeholder rows (no experience & 0 stars)
-      var isEmptyPlaceholderExp = (!expText || expText === '--' || expNum <= 0);
-      if (isEmptyPlaceholderExp && rating <= 0) {
-        continue;
-      }
-
+      var displayExp = expText || (expNum > 0 ? (expNum.toFixed(1) + ' Years') : '--');
       harvested.push({
         name: sName,
-        expText: expNum > 0 ? expText : '--',
+        expText: displayExp,
         exp: expNum,
         rating: rating
       });

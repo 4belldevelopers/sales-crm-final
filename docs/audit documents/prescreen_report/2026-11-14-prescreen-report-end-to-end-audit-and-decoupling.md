@@ -168,13 +168,51 @@ flowchart TD
 
 ### Production Candidate #203 ("Shekhar Anand") Alignment Verification
 - **MySQL `job_applications`:** `state` = `4030` (`Gujarat`), `city_id` = `57695` (`Anand`), `country` = `101` (`India`).
+- **Job Application Context:** Job ID `117` (*Lead Full Stack PHP Engineer (V7)*), Company ID `2`.
+- **Target Job Required Skills (Candidate Drawer "Key Skills & Experience"):**
+  1. `Redis`
+  2. `PHP 8.2`
+  3. `Laravel 11`
+  4. `Elasticsearch`
 - **Elasticsearch Doc 172:**
   - `city_name`: `anand`
   - `state_name`: `gujarat`
   - `country_name`: `india`
-  - `skills`: `hr operations, recruitment and selection, employee engagement, basic ms excel and word, hr documentation, ai in hr, advance ms excel and powerpoint`
+  - `skills`: `Redis, Php 8.2, Laravel 11, Elasticsearch`
 - **Dossier Resolution Output:**
   - `location_text`: `"Anand, Gujarat, India"`
-  - `skills`: 7 skills populated cleanly with individual ratings and durations.
+  - `skills`: 4 job key skills populated 1:1 matching Candidate Drawer (`Redis`, `Php 8.2`, `Laravel 11`, `Elasticsearch`).
   - `total_exp_display`: `"2.0 Years"`
   - `rel_exp_display`: `"1.0 Year"`
+
+---
+
+## 8. Phase 2 Audit: Job-Specific Key Skills Alignment & Anti-Pollution Fix
+
+### Issue Reported
+Recruiters observed that Candidate #203's Pre-Screening Report displayed 7 HR skills (`HR Operations`, `Recruitment and Selection`, etc.) instead of the technical skills required for Job #117 (*Lead Full Stack PHP Engineer (V7)*) that were visible in the Candidate Drawer under **Key Skills & Experience** (`Redis`, `Php 8.2`, `Laravel 11`, `Elasticsearch`).
+
+### Root Cause Analysis (Multi-Layer Dropout)
+1. **Unevaluated Skill Dropout in `PrescreenDossierService.php`:**
+   When job skills had `skill_value = "0.0 Year"` and `rating = 0` in `candidate_job_skill_exp`, `parseSkillDuration()` returned `has_duration = false`, marking `$isEvaluated = false`. The service skipped all 4 job skills because `$inProfile` and `$isEvaluated` were false, then fell back to dumping `job_applications.skills` (which contained HR skills).
+2. **Unevaluated Skill Dropout in `showdetail.blade.php`:**
+   In line 7066, `if (!isset($rsVerifiedSkillsSet[$normKey]) && !$hasExpOrRating) continue;` similarly skipped unevaluated job skills and dumped `application.skills`.
+3. **DOM Harvesting Dropout in `CandidateSnapshotResolver.js`:**
+   Line 216 explicitly checked `if (isEmptyPlaceholderExp && rating <= 0) continue;`, ignoring the 4 rows present in `.skills-table.job_skill_view` on the Candidate Drawer.
+4. **Cache Retention:**
+   Redis dossier cache keys (`skillsCacheKey` TTL 300s) and browser script caches preserved previous outputs.
+
+### Permanent Architectural Fixes
+1. **`PrescreenDossierService.php`:**
+   - When a job has required skills (`!empty($jobSkills)`), every skill with a CJSE entry, bench entry, or profile match is included in `$skillsArr` matching the Candidate Drawer 1:1.
+   - Profile skills fallback (`Section D`) only triggers when no job/evaluated skills exist (`empty($skillsArr)`), preventing cross-domain pollution.
+   - Anti-hallucination guard preserved: match percentage only counts verified profile overlap or positive evaluations.
+2. **`showdetail.blade.php` & `super-admin/candidates/showdetail.blade.php`:**
+   - Retain all skills from `$jobSkill` in `$rsSkills`, formatting `0.0 Year` and 0 rating accurately without dropping rows.
+   - Enforce `if (empty($rsSkills) && !empty($application->skills))` so job skills are never overwritten by profile skills.
+3. **`CandidateSnapshotResolver.js`:**
+   - Removed placeholder drop guard in `harvestSkillsFromDom` so DOM rows in the Candidate Drawer are faithfully captured.
+   - Added cache-busting timestamp `?v=` to script loading in `service_company_layout.blade.php`.
+4. **Candidate #203 Synchronization:**
+   - Synchronized `job_applications.skills` and Elasticsearch document `172` to `Redis, Php 8.2, Laravel 11, Elasticsearch`.
+   - Purged Redis caches via `PrescreenDossierService::invalidateDossierCaches(203, 117, 2)` and `Cache::flush()`.
