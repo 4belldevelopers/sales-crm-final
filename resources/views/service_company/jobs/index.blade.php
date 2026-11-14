@@ -330,9 +330,10 @@
     color: #d97706 !important;
 }
 
-.cd-kpi-icon.icon-cyan {
-    background: #ecfeff !important;
-    color: #0891b2 !important;
+.cd-kpi-icon.icon-cyan,
+.cd-kpi-icon.icon-my-org {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
 }
 
 .cd-kpi-icon.icon-purple {
@@ -668,7 +669,8 @@
 .cd-kpi-icon.icon-blue { background: #eff6ff !important; color: #2563eb !important; }
 .cd-kpi-icon.icon-emerald { background: #ecfdf5 !important; color: #16a34a !important; }
 .cd-kpi-icon.icon-amber { background: #fff7ed !important; color: #ea580c !important; }
-.cd-kpi-icon.icon-cyan { background: #ecfeff !important; color: #0891b2 !important; }
+.cd-kpi-icon.icon-cyan,
+.cd-kpi-icon.icon-my-org { background: #fef3c7 !important; color: #d97706 !important; }
 .cd-kpi-icon.icon-purple { background: #faf5ff !important; color: #9333ea !important; }
 
 .cd-kpi-info {
@@ -751,7 +753,8 @@
 .cd-kpi-sub.sub-blue { color: #2563eb !important; }
 .cd-kpi-sub.sub-green { color: #16a34a !important; }
 .cd-kpi-sub.sub-orange { color: #ea580c !important; }
-.cd-kpi-sub.sub-cyan { color: #0891b2 !important; }
+.cd-kpi-sub.sub-cyan,
+.cd-kpi-sub.sub-my-org { color: #d97706 !important; }
 .cd-kpi-sub.sub-purple { color: #9333ea !important; }
 
 /* Color-Coded Active KPI Card Highlighting (Inspired by Clients Tracker) */
@@ -794,18 +797,22 @@
 .cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-num { color: #9a3412 !important; }
 .cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-label { color: #c2410c !important; font-weight: 700 !important; }
 
-.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] {
-    background: #ecfeff !important;
-    border-color: #22d3ee !important;
-    box-shadow: 0 0 0 1.5px #0891b2, 0 4px 14px rgba(8, 145, 178, 0.12) !important;
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"],
+.cd-kpi-card.jh-card-active[data-kpi="my_organization"] {
+    background: #fffbeb !important;
+    border-color: #facc15 !important;
+    box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.12) !important;
 }
-.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-icon {
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-icon,
+.cd-kpi-card.jh-card-active[data-kpi="my_organization"] .cd-kpi-icon {
     background: #ffffff !important;
-    color: #0891b2 !important;
-    box-shadow: 0 1px 3px rgba(8, 145, 178, 0.15) !important;
+    color: #d97706 !important;
+    box-shadow: 0 1px 3px rgba(217, 119, 6, 0.15) !important;
 }
-.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-num { color: #155e75 !important; }
-.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-label { color: #0e7490 !important; font-weight: 700 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-num,
+.cd-kpi-card.jh-card-active[data-kpi="my_organization"] .cd-kpi-num { color: #92400e !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="my_organization"] .cd-kpi-label,
+.cd-kpi-card.jh-card-active[data-kpi="my_organization"] .cd-kpi-label { color: #b45309 !important; font-weight: 700 !important; }
 
 .cd-kpi-card.cd-kpi-active[data-kpi="job_request"] {
     background: #faf5ff !important;
@@ -951,10 +958,18 @@
     background: #0891b2 !important;
 }
 
-.cd-badge-client-type.type-my-org {
+.cd-badge-client-type.type-my-org,
+.type-my-org,
+.scope-pill-myorg {
     background: #fef3c7 !important;
     color: #92400e !important;
     border: 1px solid #fcd34d !important;
+}
+
+.cd-badge-client-type.type-my-org i,
+.type-my-org i,
+.scope-pill-myorg i {
+    color: #d97706 !important;
 }
 
 .js-open-job-drawer {
@@ -1384,7 +1399,7 @@
 
             <a href="javascript:void(0);" data-kpi="my_organization" onclick="filterJobsByKpi('my_organization'); return false;" class="cd-kpi-card jh-card jh-card-source-my-org {{ ($currentKpi === 'my_organization') ? 'cd-kpi-active jh-card-active' : '' }}">
               <div class="cd-kpi-top">
-                <div class="cd-kpi-icon icon-cyan">
+                <div class="cd-kpi-icon icon-cyan icon-my-org">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                     <polyline points="9 22 9 12 15 12 15 22"/>
@@ -1397,7 +1412,7 @@
                   <span class="cd-kpi-label">My Organization Jobs</span>
                 </div>
               </div>
-              <div class="cd-kpi-sub sub-cyan">
+              <div class="cd-kpi-sub sub-cyan sub-my-org">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                   <circle cx="9" cy="7" r="4"/>

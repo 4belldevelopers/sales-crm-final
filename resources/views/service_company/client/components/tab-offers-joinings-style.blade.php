@@ -387,10 +387,18 @@
     border: 1px solid #bfdbfe !important;
 }
 
-.cd-badge-client-type.type-my-org {
+.cd-badge-client-type.type-my-org,
+.type-my-org,
+.scope-pill-myorg {
     background: #fef3c7 !important;
     color: #92400e !important;
     border: 1px solid #fcd34d !important;
+}
+
+.cd-badge-client-type.type-my-org i,
+.type-my-org i,
+.scope-pill-myorg i {
+    color: #d97706 !important;
 }
 
 .cd-oj-stage-outline {
