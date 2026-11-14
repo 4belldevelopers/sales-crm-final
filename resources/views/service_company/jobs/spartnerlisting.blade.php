@@ -714,44 +714,9 @@
         border-color: #94a3b8 !important;
     }
 
-    /* ── Column Header Row (Rule 20 Mandatory Header Background Standard - Non-Sticky Natural Flow) ── */
+    /* ── Column Header Row (Subcards carry self-documenting headers per Rule 20) ── */
     .agency-stream-header-row {
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 7px 14px !important;
-        margin-bottom: 6px !important;
-        display: grid !important;
-        grid-template-columns: minmax(0, 2.7fr) minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.35fr) !important;
-        gap: 10px !important;
-        align-items: center !important;
-        position: static !important;
-    }
-    @media (max-width: 1400px) {
-        .agency-stream-header-row {
-            grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 1.3fr) !important;
-            gap: 8px !important;
-            padding: 6px 12px !important;
-        }
-    }
-    .ash-col {
-        font-size: 10px !important;
-        font-weight: 700 !important;
-        color: #64748b !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.4px !important;
-    }
-    .ash-col-agency {
-        padding-left: 74px !important;
-    }
-    @media (max-width: 1400px) {
-        .ash-col-agency {
-            padding-left: 68px !important;
-        }
-    }
-    .ash-col-action {
-        text-align: right !important;
-        padding-right: 4px !important;
+        display: none !important;
     }
 
     /* ── Tier 3: Primary Agency Cards Stream (Rule 20 - Natural Drawer Scrolling) ── */
@@ -786,48 +751,65 @@
     .agency-card-grid {
         display: grid !important;
         grid-template-columns: minmax(0, 2.7fr) minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.35fr) !important;
-        gap: 10px !important;
-        align-items: center !important;
-        padding: 10px 14px !important;
+        gap: 8px !important;
+        align-items: stretch !important;
+        padding: 8px !important;
         width: 100% !important;
     }
     @media (max-width: 1400px) {
         .agency-card-grid {
             grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 1.3fr) !important;
-            gap: 8px !important;
-            padding: 8px 12px !important;
+            gap: 6px !important;
+            padding: 8px !important;
         }
     }
     @media (max-width: 1100px) {
         .agency-card-grid {
             grid-template-columns: 1fr 1fr !important;
-            gap: 10px !important;
+            gap: 8px !important;
         }
     }
 
+    /* Discrete Sub-Cards Base Structure (Rule 20 Standard) */
     .ag-subcard {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
         min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
     }
-    .ag-subcard-label {
+    .ag-subcard:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    }
+    .ag-subcard-head {
+        background: #f8fafc !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        padding: 5px 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        min-height: 25px !important;
+    }
+    .ag-subcard-title {
         font-size: 9.5px !important;
         font-weight: 700 !important;
-        color: #94a3b8 !important;
+        color: #475569 !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.3px !important;
-        margin-bottom: 2px !important;
-        display: flex !important;
+        letter-spacing: 0.35px !important;
+        display: inline-flex !important;
         align-items: center !important;
         white-space: nowrap !important;
     }
-    @media (min-width: 992px) {
-        .agency-entity-card .ag-subcard-label,
-        .ag-subcard .ag-subcard-label,
-        .ag-subcard-label {
-            display: none !important;
-        }
-        .agency-card-grid {
-            padding: 8px 14px !important;
-        }
+    .ag-subcard-body {
+        padding: 8px 10px !important;
+        flex: 1 1 auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
     }
 
     /* Sub-Card 1: Identity */
@@ -1594,26 +1576,20 @@
                 $isSelf = (!empty($job->self_company) && (int)$job->self_company === 1) || (!empty($job->is_self_company) && (int)$job->is_self_company === 1);
                 $orgName = !empty($job->company_name) ? $job->company_name : (!empty($company_name) ? $company_name : '4Bell Technology');
                 $clientName = !empty($job->client_name) ? $job->client_name : (!empty($job->client_company) ? $job->client_company : $orgName);
+                $displayEntityName = $isSelf ? $orgName : $clientName;
             @endphp
             <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                <div class="d-inline-flex align-items-center gap-1 fs-7 text-gray-900" title="{{ $displayEntityName }}">
+                    <i class="fas fa-building text-primary me-1 fs-8"></i>
+                    <span class="fw-bold fs-7 text-gray-900">{{ $displayEntityName }}</span>
+                </div>
+                <span class="text-gray-300">•</span>
                 @if($isSelf)
-                    <div class="d-inline-flex align-items-center gap-1 fs-7 fw-semibold text-gray-800">
-                        <i class="fas fa-id-badge text-warning me-1 fs-8"></i>
-                        <span>Hiring Organization:</span>
-                        <span class="fw-bold text-gray-900">{{ $orgName }}</span>
-                    </div>
-                    <span class="text-gray-300">•</span>
                     <div class="d-inline-flex align-items-center gap-1" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 2px 8px; font-size: 11px; color: #1e40af; font-weight: 500;">
                         <i class="fas fa-check-circle text-primary me-1 fs-9"></i>
                         <span>Hiring directly for {{ $orgName }}.</span>
                     </div>
                 @else
-                    <div class="d-inline-flex align-items-center gap-1 fs-7 fw-semibold text-gray-800">
-                        <i class="fas fa-building text-primary me-1 fs-8"></i>
-                        <span>Client:</span>
-                        <span class="fw-bold text-gray-900">{{ $clientName }}</span>
-                    </div>
-                    <span class="text-gray-300">•</span>
                     <div class="d-inline-flex align-items-center gap-1" style="background: #fefce8; border: 1px solid #fef08a; border-radius: 6px; padding: 2px 8px; font-size: 11px; color: #854d0e; font-weight: 500;">
                         <i class="fas fa-shield-alt text-amber-600 me-1 fs-9"></i>
                         <span>Client identity is confidential. Hiring is managed through {{ $orgName }}.</span>

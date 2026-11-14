@@ -88,7 +88,24 @@ This engineering audit addresses the 9 core UI/UX and architectural enhancements
   - `resources/views/service_company/jobs/spartnerlisting.blade.php`: Passed (0 errors)
   - `resources/views/service_company/ajax_pages/find_agency_recom_ajax.blade.php`: Passed (0 errors)
   - `resources/views/service_company/ajax_pages/rec_register_agency_ajax.blade.php`: Passed (0 errors)
+  - `resources/views/service_company/ajax_pages/assigned_gency_ajax.blade.php`: Passed (0 errors)
 
 - **Automated Feature Tests (`php artisan test tests/Feature/PartnerListingV2Test.php`):**
   - 10 passed, 0 failed, 2 skipped (SQLite schema mocks).
   - All route definitions, blade render sanity, caching version bumps, and tenant isolation tests passed cleanly.
+
+---
+
+## 6. Tier 1 Header Refinement & Discrete Sub-Card Modularization
+
+1. **Header Text Cleanup:**
+   - Removed the literal text prefix `"Hiring Organization:"` and `"Client:"`.
+   - Prominently displays the resolved entity name (`4Bell Technology` / internal client name) in bold slate typography with a building icon (`fa-building`), adjacent to the direct hiring/confidentiality governance pill.
+2. **Column 2 Sub-Card Modularization (Rule 20):**
+   - Transformed each agency stream entity card from a flat, table-like layout into 5 discrete, boxed sub-cards:
+     - **Sub-Card 1: Agency & Specialization** (Header with checkbox + title, Body with logo, name, verified check, specialization, match % and skills).
+     - **Sub-Card 2: Matching Profiles** (Header with title, Body with count and bench status).
+     - **Sub-Card 3: Rates & Terms** (Header with title, Body with rate and terms pill).
+     - **Sub-Card 4: Location & Team** (Header with title, Body with location pin and recruiter count).
+     - **Sub-Card 5: Action CTA** (Header with title, Body with full-width action button or status badge).
+   - Hid redundant external floating table header (`.agency-stream-header-row`) in favor of self-documenting sub-card headers, maximizing vertical screen real estate.
