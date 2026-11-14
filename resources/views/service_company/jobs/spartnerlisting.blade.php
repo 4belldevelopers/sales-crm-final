@@ -1,21 +1,19 @@
 @php
     /**
-     * Intent: GOD-LEVEL UI/UX Redesign for "Connect With Agencies" (Agency Distribution Center).
-     * Architecture: Isolated Drawer experience for Service Company Jobs.
-     * Features:
+     * Intent: GOD-LEVEL UI/UX Redesign for "Add Agency Drawer" (Agency Distribution Center).
+     * Architecture: Isolated Drawer experience for Service Company Jobs Tracker.
+     * Enforces Modern Card + Sub-Card Enterprise Design System (Rule 20):
      * - Fixed right-side drawer (92–94vw on desktop, 15.6" screen optimized).
-     * - Sticky compact header with Job Title, Metadata & Close controls.
+     * - Sticky Tier 1 Job Header Card with Canonical Classification (Rule 25), Metadata & Close controls.
      * - Two-Column independent architecture:
-     *     Column 1: Publish to Agency Marketplace (Discovery / Broadcast) with Live vs Unpublished states.
-     *     Column 2: Send Requirement Directly to Agencies (Proactive Engagement) with Recommended, My Agencies, Assigned tabs.
-     * - Strict 5-Column Agency Table:
-     *     1. Agency & Specialization (strong title, verified badge, match %, skill tags)
-     *     2. Matching Profiles (count + label)
-     *     3. Rates (Rate % / CTC, Full-Time/Contract, Onetime/Recurring)
-     *     4. Location & Team (Location pin + City, Country, Recruiter count)
-     *     5. Send Requirement (Individual CTA)
-     * - Zero row checkboxes, zero N+1 database queries, safe HTTP 304 representation caching in RAM.
-     * TENANT ISOLATION: Scoped strictly to auth()->user()->company_id.
+     *     Column 1: Publish to Agency Marketplace (~35% Width) with Live vs Unpublished sub-cards & Settings.
+     *     Column 2: Send Requirement Directly to Agencies (~64% Width) with 3-Tier Card + Sub-Card Standard:
+     *         Tier 1: Top Toolbar Header Card with Dynamic Search Sub-Card & Filter CTA.
+     *         Tier 2: Sub-Tabs Card (White #ffffff, single active blue highlight #009ef7, Select-All toggle).
+     *         Tier 3: Primary Agency Cards Stream (No raw <table>, discrete Sub-Cards 1–5, bottom activity strip).
+     * - Multi-Agency Outreach Action Card at bottom with real-time selection counter.
+     * - Slide-Over Filter Drawer for comprehensive agency discovery.
+     * TENANT ISOLATION: Scoped strictly to auth()->user()->company_id. Zero N+1 queries.
      */
     use App\Helper\GeneralMethod;
     use Illuminate\Support\Facades\DB;
@@ -69,10 +67,14 @@
     } else {
         $skillArrList = [];
     }
+
+    // Canonical Classification Resolution (Rule 25)
+    $isSelfCompany = (@$job->self_company == 1 || @$job->is_self_company == 1 || (empty(@$job->client_id) && @$job->company_id == auth()->user()->company_id));
+    $isDirectClient = (@$job->is_direct_client == 1 || @$job->direct_client == 1);
 @endphp
 
 {{-- =========================================================================
-     SCOPED STYLES: AGENCY DISTRIBUTION CENTER DRAWER
+     SCOPED STYLES: MODERN CARD + SUB-CARD AGENCY DISTRIBUTION CENTER
      ========================================================================= --}}
 <style>
     /* ── Drawer Dimensions & Overrides ────────────────────────────────────── */
@@ -110,36 +112,36 @@
         font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     }
 
-    /* ── Sticky Header Card ──────────────────────────────────────────────── */
+    /* ── Sticky Header Card (Top Tier 1 Job Card) ────────────────────────── */
     .agency-drawer-header {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 12px 20px;
-        margin: 14px 18px 12px 18px;
+        border-radius: 10px;
+        padding: 12px 18px;
+        margin: 12px 16px 10px 16px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        min-height: 62px;
+        min-height: 60px;
         flex-shrink: 0;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
     }
     .adh-job-icon {
-        width: 42px;
-        height: 42px;
+        width: 40px;
+        height: 40px;
         border-radius: 10px;
-        background: #ffedd5;
-        border: 1px solid #fed7aa;
-        color: #ea580c;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #2563eb;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 16px;
+        font-size: 15px;
         flex-shrink: 0;
     }
     .adh-title {
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 700;
         color: #0f172a;
         line-height: 1.25;
@@ -148,33 +150,71 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        font-size: 12px;
+        font-size: 11.5px;
         color: #64748b;
         font-weight: 500;
     }
     .adh-skill-badge {
         background: #f1f5f9;
         color: #475569;
-        font-size: 11px;
+        font-size: 10.5px;
         font-weight: 500;
-        padding: 2px 8px;
-        border-radius: 6px;
+        padding: 1px 7px;
+        border-radius: 4px;
         border: 1px solid #e2e8f0;
+    }
+
+    /* Scope pills (Rule 25) */
+    .scope-pill-myorg {
+        background: #ecfeff !important;
+        color: #0891b2 !important;
+        border: 1px solid #a5f3fc !important;
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        padding: 2px 8px !important;
+        border-radius: 6px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    .scope-pill-internal {
+        background: #eff6ff !important;
+        color: #2563eb !important;
+        border: 1px solid #bfdbfe !important;
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        padding: 2px 8px !important;
+        border-radius: 6px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    .scope-pill-direct {
+        background: #ecfdf5 !important;
+        color: #059669 !important;
+        border: 1px solid #a7f3d0 !important;
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        padding: 2px 8px !important;
+        border-radius: 6px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
     }
 
     /* ── Drawer Scrollable Body ───────────────────────────────────────────── */
     .agency-drawer-content {
         flex: 1;
         overflow-y: auto;
-        padding: 0 18px 18px 18px;
+        padding: 0 16px 16px 16px;
         background: #f8fafc;
     }
 
-    /* ── Two Column Architecture ─────────────────────────────────────────── */
+    /* ── Two Column Architecture (Rule 20 Layout) ─────────────────────────── */
     .agency-distribution-grid {
         display: grid;
         grid-template-columns: 35% 65%;
-        gap: 16px;
+        gap: 14px;
         align-items: start;
     }
     @media (max-width: 1200px) {
@@ -192,37 +232,27 @@
     .agency-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px 22px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        border-radius: 10px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
     }
     .agency-section-banner-blue {
         background: #f0f7ff;
         border: 1px solid #dbeafe;
-        border-radius: 10px;
-        padding: 12px 14px;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    .agency-section-banner-green {
-        background: #f0fdf9;
-        border: 1px solid #ccfbf1;
-        border-radius: 10px;
-        padding: 12px 16px;
-        margin-bottom: 16px;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 14px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        gap: 10px;
     }
     .agency-col-badge {
-        width: 30px;
-        height: 30px;
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
         color: #ffffff;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -232,42 +262,42 @@
     .agency-col-badge.green { background: #10b981; }
 
     .agency-section-heading {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 700;
         color: #0f172a;
         line-height: 1.25;
         margin: 0;
     }
     .agency-section-subtitle {
-        font-size: 11.5px;
+        font-size: 11px;
         color: #64748b;
-        margin: 3px 0 0 0;
-        line-height: 1.4;
+        margin: 2px 0 0 0;
+        line-height: 1.35;
     }
 
-    /* ── Column 1 Panels ──────────────────────────────────────────────────── */
+    /* ── Column 1 Sub-Cards ───────────────────────────────────────────────── */
     .info-panel-blue {
-        background: #f0f7ff;
-        border: 1px solid #dbeafe;
-        border-radius: 10px;
-        padding: 14px 16px;
-        margin-bottom: 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 14px;
         position: relative;
         overflow: hidden;
     }
     .live-panel-green {
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
-        border-radius: 10px;
-        padding: 14px 16px;
-        margin-bottom: 16px;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 14px;
         position: relative;
         overflow: hidden;
     }
     .panel-icon-circle {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -275,8 +305,8 @@
     }
     .panel-icon-circle.blue {
         background: #ffffff;
-        border: 1px solid #dbeafe;
-        color: #0066ff;
+        border: 1px solid #bfdbfe;
+        color: #2563eb;
     }
     .panel-icon-circle.green {
         border-radius: 50%;
@@ -288,16 +318,16 @@
     .agency-input-control {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         margin-top: 6px;
     }
     .input-icon-box {
-        width: 42px;
-        height: 42px;
+        width: 38px;
+        height: 38px;
         border-radius: 8px;
-        background: #f0f7ff;
-        border: 1px solid #dbeafe;
-        color: #0066ff;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #2563eb;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -305,44 +335,44 @@
     }
     .agency-select {
         flex: 1;
-        height: 42px;
+        height: 38px;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
-        font-size: 13px;
+        font-size: 12.5px;
         font-weight: 600;
         color: #1e293b;
-        padding: 0 14px;
+        padding: 0 12px;
         background-color: #ffffff;
         outline: none;
         cursor: pointer;
         transition: border-color 0.15s ease;
     }
     .agency-select:focus {
-        border-color: #0066ff;
+        border-color: #009ef7;
     }
     .agency-helper-text {
-        font-size: 11px;
-        color: #64748b;
-        margin-top: 4px;
+        font-size: 10.5px;
+        color: #94a3b8;
+        margin-top: 3px;
     }
 
     /* Benefits card */
     .benefits-panel {
-        background: #f0fdf9;
-        border: 1px solid #ccfbf1;
-        border-radius: 10px;
-        padding: 14px 16px;
-        margin-top: 16px;
-        margin-bottom: 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-top: 14px;
+        margin-bottom: 14px;
     }
     .benefit-item {
         display: flex;
         align-items: center;
-        gap: 10px;
-        font-size: 12px;
+        gap: 8px;
+        font-size: 11.5px;
         color: #334155;
         font-weight: 500;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
     .benefit-item:last-child {
         margin-bottom: 0;
@@ -350,40 +380,40 @@
 
     /* Action buttons: display flex with NO !important so .d-none wins */
     .btn-publish-primary {
-        background: #0066ff;
+        background: #009ef7;
         color: #ffffff;
         border: none;
         border-radius: 8px;
-        padding: 12px 18px;
+        padding: 10px 16px;
         width: 100%;
-        font-size: 13.5px;
+        font-size: 13px;
         font-weight: 600;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        margin-top: 16px;
+        margin-top: 14px;
         cursor: pointer;
-        box-shadow: 0 4px 14px rgba(0, 102, 255, 0.25);
+        box-shadow: 0 2px 6px rgba(0, 158, 247, 0.25);
         transition: background-color 0.15s ease, transform 0.1s ease;
     }
     .btn-publish-primary:hover {
-        background: #0052cc;
+        background: #0088d4;
     }
     .btn-unpublish-destructive {
         background: #ffffff;
         color: #dc2626;
         border: 1.5px solid #fca5a5;
         border-radius: 8px;
-        padding: 12px 18px;
+        padding: 10px 16px;
         width: 100%;
-        font-size: 13.5px;
+        font-size: 13px;
         font-weight: 700;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        margin-top: 16px;
+        margin-top: 14px;
         cursor: pointer;
         transition: background-color 0.15s ease, color 0.15s ease;
     }
@@ -402,215 +432,139 @@
         display: none !important;
     }
 
-    /* ── Column 2 Tabs & Table ────────────────────────────────────────────── */
-    .agency-tabs-nav {
-        display: flex;
-        gap: 22px;
-        border-bottom: 1.5px solid #e2e8f0;
-        margin-top: 14px;
-        padding-bottom: 0;
+    /* ── Tier 1: Toolbar Header Card (Rule 20) ────────────────────────────── */
+    .agency-toolbar-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 10px 16px !important;
+        margin-bottom: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     }
-    .agency-tab-link {
-        font-size: 13px;
-        font-weight: 600;
-        color: #64748b;
-        padding: 8px 4px 11px;
-        text-decoration: none;
-        border-bottom: 2.5px solid transparent;
-        margin-bottom: -1.5px;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        cursor: pointer;
-        transition: all 0.15s ease;
+    .agency-toolbar-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
     }
-    .agency-tab-link:hover {
-        color: #0066ff;
+    .agency-toolbar-title {
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.25 !important;
+        margin: 0 !important;
     }
-    .agency-tab-link.active {
-        color: #0066ff;
-        border-bottom-color: #0066ff;
+    .agency-toolbar-sub {
+        font-size: 11px !important;
+        color: #64748b !important;
+        margin: 2px 0 0 0 !important;
+        line-height: 1.35 !important;
     }
-
-    /* Agency Search and Filter row */
-    .agency-search-filter-row {
-        display: flex;
-        gap: 10px;
-        margin-top: 14px;
-        margin-bottom: 12px;
+    .agency-toolbar-right {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
     }
-    .agency-search-input-wrap {
-        flex: 1;
-        position: relative;
+    .agency-search-subcard {
+        position: relative !important;
+        min-width: 240px !important;
     }
-    .agency-search-input-wrap svg {
+    .agency-search-subcard svg {
         position: absolute;
-        left: 12px;
-        top: 13px;
+        left: 10px;
+        top: 11px;
         color: #94a3b8;
-        z-index: 5;
         pointer-events: none;
+        z-index: 2;
     }
-    .agency-search-input {
+    .agency-search-subcard .agency-search-input {
         width: 100%;
-        min-height: 40px;
+        height: 36px;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
-        padding-left: 36px;
-        padding-right: 12px;
+        padding-left: 32px;
+        padding-right: 28px;
         font-size: 12px;
-        background: #ffffff;
+        background: #f8fafc;
         color: #1e293b;
         outline: none;
-        transition: border-color 0.15s ease;
+        transition: border-color 0.15s ease, background 0.15s ease;
     }
-    .agency-search-input:focus {
-        border-color: #2563eb;
+    .agency-search-subcard .agency-search-input:focus {
+        border-color: #009ef7;
+        background: #ffffff;
+    }
+    .agency-search-clear-btn {
+        position: absolute !important;
+        right: 8px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        background: #e2e8f0 !important;
+        border: none !important;
+        border-radius: 50% !important;
+        width: 18px !important;
+        height: 18px !important;
+        font-size: 10px !important;
+        line-height: 18px !important;
+        text-align: center !important;
+        color: #64748b !important;
+        cursor: pointer !important;
+        display: none;
+        padding: 0 !important;
+        z-index: 3;
+    }
+    .agency-search-clear-btn:hover {
+        background: #cbd5e1 !important;
+        color: #0f172a !important;
     }
 
-    /* ── Tagify Skill Tags in Search Bar ── */
-    .agency-search-input-wrap .tagify {
-        min-height: 38px !important;
+    /* Tagify support inside search subcard */
+    .agency-search-subcard .tagify {
+        min-height: 36px !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 8px !important;
-        background: #ffffff !important;
-        padding: 2px 10px 2px 36px !important;
+        background: #f8fafc !important;
+        padding: 2px 8px 2px 30px !important;
         display: flex !important;
         align-items: center !important;
         flex-wrap: wrap !important;
-        box-shadow: none !important;
-        cursor: text !important;
         font-family: 'Poppins', sans-serif !important;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
     }
-    .agency-search-input-wrap .tagify:hover {
-        border-color: #cbd5e1 !important;
+    .agency-search-subcard .tagify.tagify--focus {
+        border-color: #009ef7 !important;
+        background: #ffffff !important;
     }
-    .agency-search-input-wrap .tagify.tagify--focus {
-        border-color: #6366f1 !important;
-        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15) !important;
-    }
-    .agency-search-input-wrap .tagify ~ #agency_unified_search {
+    .agency-search-subcard .tagify ~ #agency_unified_search {
         display: none !important;
     }
-    .agency-search-input-wrap .tagify__tag {
-        display: inline-flex !important;
-        align-items: center !important;
+    .agency-search-subcard .tagify__tag {
         background: #eef2ff !important;
         border: 1px solid #e0e7ff !important;
         border-radius: 9999px !important;
-        padding: 3px 7px 3px 12px !important;
-        margin: 2px 4px 2px 0 !important;
-        line-height: 1.3 !important;
-        vertical-align: middle !important;
-        box-shadow: 0 1px 2px rgba(67, 56, 202, 0.04) !important;
-        transition: background 0.15s ease, border-color 0.15s ease !important;
+        padding: 2px 6px 2px 10px !important;
+        margin: 2px 3px 2px 0 !important;
     }
-    .agency-search-input-wrap .tagify__tag:hover {
-        background: #e0e7ff !important;
-        border-color: #c7d2fe !important;
-    }
-    .agency-search-input-wrap .tagify__tag > div {
-        padding: 0 !important;
-        margin: 0 !important;
+    .agency-search-subcard .tagify__tag > div {
         color: #4338ca !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 500 !important;
-        font-family: 'Poppins', sans-serif !important;
-        order: 1 !important;
-        display: inline-flex !important;
-        align-items: center !important;
     }
-    .agency-search-input-wrap .tagify__tag > div::before {
-        display: none !important;
+    .agency-search-subcard .tagify__input {
+        font-size: 11.5px !important;
+        line-height: 20px !important;
     }
-    .agency-search-input-wrap .tagify__tag-text {
-        color: #4338ca !important;
-        font-size: 12px !important;
-        font-weight: 500 !important;
-        font-family: 'Poppins', sans-serif !important;
-    }
-    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn::before,
-    .agency-search-input-wrap .tagify__tag__removeBtn::before,
-    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn::after,
-    .agency-search-input-wrap .tagify__tag__removeBtn::after,
-    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn:hover::before,
-    .agency-search-input-wrap .tagify__tag__removeBtn:hover::before,
-    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn:hover::after,
-    .agency-search-input-wrap .tagify__tag__removeBtn:hover::after {
-        display: none !important;
-        content: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        border: none !important;
-        transform: none !important;
-    }
-    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn,
-    .agency-search-input-wrap .tagify:not(.form-control-sm):not(.form-control-lg) .tagify__tag .tagify__tag__removeBtn,
-    .agency-search-input-wrap .tagify__tag__removeBtn {
-        width: 14px !important;
-        height: 14px !important;
-        min-width: 14px !important;
-        max-width: 14px !important;
-        margin: 0px 0.1rem 0px 5px !important;
-        padding: 0 !important;
-        background-color: #818cf8 !important;
-        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHBhdGggZmlsbD0nbm9uZScgc3Ryb2tlPScjZmZmZmZmJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcgZD0nTTQgNGw4IDhtMC04bC04IDgnLz48L3N2Zz4=") !important;
-        background-repeat: no-repeat !important;
-        background-position: center center !important;
-        background-size: 7px 7px !important;
-        border-radius: 50% !important;
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        order: 2 !important;
-        cursor: pointer !important;
-        position: relative !important;
-        transition: background-color 0.15s ease, transform 0.15s ease !important;
-        font-size: 0 !important;
-        line-height: 0 !important;
-        color: transparent !important;
-        overflow: hidden !important;
-    }
-    .agency-search-input-wrap .tagify .tagify__tag .tagify__tag__removeBtn:hover,
-    .agency-search-input-wrap .tagify:not(.form-control-sm):not(.form-control-lg) .tagify__tag .tagify__tag__removeBtn:hover,
-    .agency-search-input-wrap .tagify__tag__removeBtn:hover {
-        background-color: #ef4444 !important;
-        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHBhdGggZmlsbD0nbm9uZScgc3Ryb2tlPScjZmZmZmZmJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcgZD0nTTQgNGw4IDhtMC04bC04IDgnLz48L3N2Zz4=") !important;
-        transform: scale(1.12) !important;
-    }
-    .agency-search-input-wrap .tagify__input {
-        font-size: 12px !important;
-        color: #1e293b !important;
-        font-family: 'Poppins', sans-serif !important;
-        margin: 2px 0 !important;
-        padding: 0 4px !important;
-        line-height: 22px !important;
-        min-width: 90px !important;
-    }
-    .agency-search-input-wrap .tagify__input::before {
-        font-size: 12px !important;
-        color: #94a3b8 !important;
-        font-weight: 400 !important;
-        font-family: 'Poppins', sans-serif !important;
-        line-height: 22px !important;
-    }
-    .agency-search-input-wrap .tagify__input:empty::before {
-        display: inline-block !important;
-        opacity: 1 !important;
-    }
+
     .btn-filter-trigger {
-        height: 38px;
+        height: 36px;
         border: 1px solid #e2e8f0;
         background: #ffffff;
         border-radius: 8px;
-        padding: 0 14px;
-        font-size: 12px;
+        padding: 0 12px;
+        font-size: 11.5px;
         font-weight: 600;
         color: #334155;
         display: flex;
@@ -624,357 +578,422 @@
         border-color: #cbd5e1;
     }
 
-    /* ── Agency Filter Slide-Over Drawer ── */
-    .agency-filter-drawer-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(15, 23, 42, 0.45);
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
-        z-index: 1098;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.25s ease, visibility 0.25s ease;
-    }
-    .agency-filter-drawer-overlay.open {
-        opacity: 1;
-        visibility: visible;
-    }
-
-    .agency-filter-drawer {
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 50vw !important;
-        max-width: 50vw !important;
-        height: 100vh;
-        max-height: 100vh;
-        background: #ffffff;
-        z-index: 1099;
-        box-shadow: -10px 0 40px rgba(0, 0, 0, 0.16);
-        display: flex;
-        flex-direction: column;
-        transform: translateX(100%);
-        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s ease;
-        visibility: hidden;
-        overflow: hidden;
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-    .agency-filter-drawer.open {
-        transform: translateX(0);
-        visibility: visible;
-    }
-    @media (max-width: 991px) {
-        .agency-filter-drawer {
-            width: 85vw !important;
-            max-width: 95vw !important;
-        }
-    }
-    @media (max-width: 576px) {
-        .agency-filter-drawer {
-            width: 96vw !important;
-            max-width: 98vw !important;
-        }
-    }
-
-    .agency-filter-drawer-header {
-        padding: 16px 20px;
-        border-bottom: 1px solid #e2e8f0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #ffffff;
-        flex-shrink: 0;
-    }
-    .afd-header-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        background: #eff6ff;
-        border: 1px solid #dbeafe;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-    .afd-title {
-        font-size: 15px;
-        font-weight: 700;
-        color: #0f172a;
-        margin: 0;
-        line-height: 1.25;
-    }
-    .afd-subtitle {
-        font-size: 11px;
-        color: #64748b;
-        margin: 2px 0 0 0;
-        line-height: 1.25;
-    }
-    .afd-close-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #64748b;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    .afd-close-btn:hover {
-        background: #fee2e2;
-        color: #ef4444;
-        border-color: #fca5a5;
-    }
-
-    .agency-filter-drawer-body {
-        padding: 18px 20px;
-        overflow-y: auto;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-        background: #ffffff;
-    }
-    .afd-trust-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        padding: 9px 12px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        flex-wrap: wrap;
-    }
-    .afd-trust-item {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 11px;
-        font-weight: 500;
-        color: #475569;
-    }
-    .afd-form-group {
-        display: flex;
-        flex-direction: column;
-    }
-    .afd-form-label {
-        font-size: 12px;
-        font-weight: 700;
-        color: #0f172a;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .afd-label-num {
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: #eff6ff;
-        color: #2563eb;
-        font-size: 10px;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .agency-filter-drawer-footer {
-        padding: 14px 20px;
-        border-top: 1px solid #e2e8f0;
-        background: #f8fafc;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        flex-shrink: 0;
-    }
-    .afd-reset-btn {
-        height: 36px;
-        padding: 0 14px;
-        font-size: 12px;
-        font-weight: 600;
-        border-radius: 8px;
-        color: #64748b;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    .afd-reset-btn:hover {
-        background: #f1f5f9;
-        color: #0f172a;
-    }
-    .afd-cancel-btn {
-        height: 36px;
-        padding: 0 14px;
-        font-size: 12px;
-        font-weight: 600;
-        border-radius: 8px;
-    }
-    .afd-apply-btn {
-        height: 36px;
-        padding: 0 18px;
-        font-size: 12px;
-        font-weight: 600;
-        border-radius: 8px;
-        background: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        transition: background 0.15s ease;
-    }
-    .afd-apply-btn:hover {
-        background: #1d4ed8;
-        border-color: #1d4ed8;
-        color: #ffffff;
-    }
-
-    /* Drawer Tagify specific overrides */
-    .agency-filter-drawer .tagify {
-        min-height: 40px !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
+    /* ── Tier 2: Sub-Tabs Card (Rule 20) ─────────────────────────────────── */
+    .agency-tabs-card {
         background: #ffffff !important;
-        padding: 2px 8px !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 8px 12px !important;
+        margin-bottom: 10px !important;
         display: flex !important;
         align-items: center !important;
+        justify-content: space-between !important;
         flex-wrap: wrap !important;
-        box-shadow: none !important;
-        cursor: text !important;
-        font-family: 'Poppins', sans-serif !important;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+        gap: 8px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     }
-    .agency-filter-drawer .tagify:hover {
-        border-color: #cbd5e1 !important;
+    .agency-tabs-group {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
     }
-    .agency-filter-drawer .tagify.tagify--focus {
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
-    }
-    .agency-filter-drawer .tagify__tag {
+    .agency-tab-btn {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 6px 14px !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        cursor: pointer !important;
         display: inline-flex !important;
         align-items: center !important;
-        background: #eef2ff !important;
-        border: 1px solid #e0e7ff !important;
-        border-radius: 9999px !important;
-        padding: 3px 6px 3px 12px !important;
-        margin: 2px 4px 2px 0 !important;
-        line-height: 1.3 !important;
-        vertical-align: middle !important;
+        gap: 6px !important;
+        transition: all 0.15s ease !important;
+        text-decoration: none !important;
     }
-    .agency-filter-drawer .tagify__tag > div {
-        padding: 0 !important;
-        margin: 0 !important;
-        color: #4338ca !important;
-        font-size: 12px !important;
-        font-weight: 500 !important;
-        font-family: 'Poppins', sans-serif !important;
-        order: 1 !important;
+    .agency-tab-btn:hover {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
     }
-    .agency-filter-drawer .tagify__tag > div::before {
-        display: none !important;
+    .agency-tab-btn.active {
+        background: #009ef7 !important;
+        border-color: #009ef7 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 4px rgba(0, 158, 247, 0.25) !important;
     }
-    .agency-filter-drawer .tagify__tag-text {
-        color: #4338ca !important;
-        font-size: 12px !important;
-        font-weight: 500 !important;
-        font-family: 'Poppins', sans-serif !important;
+    .agency-tab-badge {
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        font-variant-numeric: tabular-nums !important;
+        color: #64748b !important;
     }
-    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn::before,
-    .agency-filter-drawer .tagify__tag__removeBtn::before,
-    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn::after,
-    .agency-filter-drawer .tagify__tag__removeBtn::after,
-    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn:hover::before,
-    .agency-filter-drawer .tagify__tag__removeBtn:hover::before,
-    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn:hover::after,
-    .agency-filter-drawer .tagify__tag__removeBtn:hover::after {
-        display: none !important;
-        content: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        border: none !important;
-        transform: none !important;
+    .agency-tab-btn.active .agency-tab-badge {
+        color: #ffffff !important;
     }
-    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn,
-    .agency-filter-drawer .tagify__tag__removeBtn {
-        width: 14px !important;
-        height: 14px !important;
-        min-width: 14px !important;
-        max-width: 14px !important;
-        margin: 0px 0.1rem 0px 5px !important;
-        padding: 0 !important;
-        background-color: #818cf8 !important;
-        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHBhdGggZmlsbD0nbm9uZScgc3Ryb2tlPScjZmZmZmZmJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcgZD0nTTQgNGw4IDhtMC04bC04IDgnLz48L3N2Zz4=") !important;
-        background-repeat: no-repeat !important;
-        background-position: center center !important;
-        background-size: 7px 7px !important;
+    .agency-select-all-subcard {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 5px 10px !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+    }
+
+    /* ── Tier 3: Primary Agency Cards Stream (Rule 20) ──────────────────── */
+    .agency-stream-container {
+        max-height: calc(100vh - 290px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 2px;
+    }
+    .agency-cards-stream {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-bottom: 8px;
+    }
+    .agency-entity-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        margin-bottom: 4px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
+        position: relative !important;
+        overflow: hidden !important;
+        width: 100% !important;
+    }
+    .agency-entity-card:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Discrete Sub-Cards Grid */
+    .agency-card-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 2.7fr) minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.35fr) !important;
+        gap: 10px !important;
+        align-items: center !important;
+        padding: 10px 14px !important;
+        width: 100% !important;
+    }
+    @media (max-width: 1400px) {
+        .agency-card-grid {
+            grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 1.3fr) !important;
+            gap: 8px !important;
+            padding: 8px 12px !important;
+        }
+    }
+    @media (max-width: 1100px) {
+        .agency-card-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+        }
+    }
+
+    .ag-subcard {
+        min-width: 0 !important;
+    }
+    .ag-subcard-label {
+        font-size: 9.5px !important;
+        font-weight: 700 !important;
+        color: #94a3b8 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
+        margin-bottom: 2px !important;
+        display: flex !important;
+        align-items: center !important;
+        white-space: nowrap !important;
+    }
+
+    /* Sub-Card 1: Identity */
+    .ag-avatar-wrap {
+        width: 40px !important;
+        height: 40px !important;
         border-radius: 50% !important;
-        border: none !important;
-        display: inline-flex !important;
+        overflow: hidden !important;
+        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        order: 2 !important;
+        border: 1.5px solid #f1f5f9 !important;
+        flex-shrink: 0 !important;
+    }
+    .ag-avatar-img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+    .ag-avatar-initials {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.5px !important;
+    }
+    .ag-agency-title {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        text-decoration: none !important;
+        line-height: 1.25 !important;
         cursor: pointer !important;
-        font-size: 0 !important;
-        line-height: 0 !important;
-        color: transparent !important;
-        overflow: hidden !important;
     }
-    .agency-filter-drawer .tagify .tagify__tag .tagify__tag__removeBtn:hover,
-    .agency-filter-drawer .tagify__tag__removeBtn:hover {
-        background-color: #ef4444 !important;
+    .ag-agency-title:hover {
+        color: #0066ff !important;
     }
-    .agency-filter-drawer .tagify__input {
+    .ag-agency-spec {
+        font-size: 11px !important;
+        color: #64748b !important;
+        margin-top: 1px !important;
+    }
+    .ag-verified-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        flex-shrink: 0 !important;
+    }
+    .ag-check-spacer {
+        width: 18px !important;
+        height: 18px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* Badges */
+    .ag-badge {
+        font-size: 9.5px !important;
+        padding: 1px 6px !important;
+        border-radius: 4px !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+        line-height: 1.3 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+    .ag-badge-match-high {
+        background: #ecfdf5 !important;
+        color: #059669 !important;
+        border: 1px solid #a7f3d0 !important;
+        font-weight: 700 !important;
+    }
+    .ag-badge-match-neutral {
+        background: #f1f5f9 !important;
+        color: #64748b !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    .ag-badge-additional {
+        background: #f8fafc !important;
+        color: #64748b !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .ag-badge-registered {
+        background: #eff6ff !important;
+        color: #2563eb !important;
+        border: 1px solid #bfdbfe !important;
+    }
+    .ag-badge-skill {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid #e2e8f0 !important;
+        font-weight: 500 !important;
+    }
+    .ag-badge-skill-more {
+        background: #ffffff !important;
+        color: #94a3b8 !important;
+        border: 1px solid #e2e8f0 !important;
+        font-size: 9px !important;
+        padding: 1px 4px !important;
+    }
+
+    /* Sub-Card 2: Profiles */
+    .ag-metric-row {
+        display: flex !important;
+        align-items: baseline !important;
+        gap: 4px !important;
+    }
+    .ag-metric-num {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        font-variant-numeric: tabular-nums !important;
+        line-height: 1.1 !important;
+    }
+    .ag-metric-unit {
+        font-size: 11.5px !important;
+        color: #475569 !important;
+        font-weight: 500 !important;
+    }
+    .ag-metric-sub {
+        font-size: 10px !important;
+        color: #64748b !important;
+        margin-top: 2px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    .ag-dot-green {
+        width: 6px !important;
+        height: 6px !important;
+        border-radius: 50% !important;
+        background: #10b981 !important;
+        display: inline-block !important;
+    }
+
+    /* Sub-Card 3: Rates */
+    .ag-rate-value {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        font-variant-numeric: tabular-nums !important;
+        line-height: 1.1 !important;
+    }
+    .text-emerald {
+        color: #15803d !important;
+    }
+    .ag-rate-pill {
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+        padding: 1px 5px !important;
+        border-radius: 4px !important;
+    }
+    .ag-rate-fulltime {
+        background: #dcfce7 !important;
+        color: #166534 !important;
+        border: 1px solid #bbf7d0 !important;
+    }
+    .ag-rate-contract {
+        background: #e0f2fe !important;
+        color: #0369a1 !important;
+        border: 1px solid #bae6fd !important;
+    }
+    .ag-rate-type-text {
+        font-size: 10px !important;
+        color: #94a3b8 !important;
+    }
+
+    /* Sub-Card 4: Location & Team */
+    .ag-team-row {
+        font-size: 11.5px !important;
+        color: #334155 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+    }
+
+    /* Sub-Card 5: Actions */
+    .ag-btn-send {
+        background: #10b981 !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 7px 14px !important;
         font-size: 12px !important;
-        color: #1e293b !important;
-        font-family: 'Poppins', sans-serif !important;
+        font-weight: 600 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25) !important;
+        cursor: pointer !important;
+        white-space: nowrap !important;
+        transition: background-color 0.15s ease, transform 0.1s ease !important;
+    }
+    .ag-btn-send:hover {
+        background: #059669 !important;
+        color: #ffffff !important;
+        transform: translateY(-1px) !important;
+    }
+    .ag-badge-sent {
+        background: #dcfce7 !important;
+        color: #15803d !important;
+        border: 1px solid #bbf7d0 !important;
+        border-radius: 8px !important;
+        font-size: 11.5px !important;
+        font-weight: 700 !important;
+        padding: 6px 12px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        white-space: nowrap !important;
+    }
+    .ag-btn-resend {
+        background: #009ef7 !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 7px 12px !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        cursor: pointer !important;
+        white-space: nowrap !important;
+    }
+    .ag-btn-resend:hover {
+        background: #0088d4 !important;
+        color: #ffffff !important;
+    }
+    .ag-btn-remove {
+        background: #fee2e2 !important;
+        color: #dc2626 !important;
+        border: 1px solid #fecaca !important;
+        border-radius: 8px !important;
+        padding: 5px 10px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
     }
 
-    /* Table headers */
-    .agency-data-table {
-        width: 100%;
-        border-collapse: collapse;
+    /* Bottom Activity Strip (Rule 20 Sub-Card 6) */
+    .ag-card-bottom-strip {
+        border-top: 1px solid #f8fafc !important;
+        padding: 6px 14px !important;
+        background: #fafbfc !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        font-size: 11px !important;
     }
-    .agency-data-table th {
-        font-size: 10.5px;
-        font-weight: 600;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        padding: 9px 12px;
-        border-bottom: 1.5px solid #e2e8f0;
-        background: #f8fafc;
+    .ag-bottom-partner-tag {
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
     }
-    .agency-data-table td {
-        vertical-align: middle;
+    .ag-bottom-meta {
+        font-size: 10.5px !important;
+        color: #94a3b8 !important;
+    }
+    .ag-bottom-link {
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        color: #0066ff !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+    .ag-bottom-link:hover {
+        text-decoration: underline !important;
     }
 
-    /* Multiple Agencies Bottom Banner */
+    /* Multiple Agencies Bottom Action Card */
     .bottom-multi-agency-banner {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 12px 16px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        margin-top: 14px;
+        padding: 10px 16px;
+        background: #f0f7ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        margin-top: 10px;
     }
 
     /* Loader styling */
@@ -988,218 +1007,82 @@
     }
 
     /* ── Assigned Agencies Tab Styles ────────────────────────────────── */
-    .aa-header-row {
+    .aa-grid {
+        grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.3fr) minmax(0, 2.2fr) minmax(0, 1.1fr) minmax(0, 1.4fr) !important;
+    }
+    .ag-pipeline-strip {
         display: flex !important;
         align-items: center !important;
+        justify-content: space-between !important;
+        gap: 4px !important;
         background: #f8fafc !important;
-        border-bottom: 1.5px solid #e2e8f0 !important;
-        padding: 9px 14px !important;
-        margin-bottom: 6px !important;
-        border-radius: 8px !important;
-        font-family: 'Poppins', sans-serif !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        padding: 4px 6px !important;
     }
-    .aa-hcol-agency     { flex: 0 0 22% !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; }
-    .aa-hcol-contact    { flex: 0 0 15% !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; }
-    .aa-hcol-perf       { flex: 0 0 29% !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; text-align: center !important; }
-    .aa-hcol-shared     { flex: 0 0 11% !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; }
-    .aa-hcol-status     { flex: 0 0 9% !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; text-align: center !important; }
-    .aa-hcol-actions    { flex: 1 1 auto !important; font-size: 10.5px !important; font-weight: 600 !important; color: #64748b !important; text-transform: uppercase !important; text-align: right !important; }
-
-    .aa-row {
+    .ag-pipe-kpi {
         display: flex !important;
+        flex-direction: column !important;
         align-items: center !important;
-        background: #ffffff !important;
-        border: 1px solid #e8ecf1 !important;
-        border-radius: 10px !important;
-        padding: 10px 14px !important;
-        margin-bottom: 6px !important;
-        transition: box-shadow 0.15s ease, border-color 0.15s ease !important;
-        gap: 0 !important;
-        min-height: 56px !important;
-        font-family: 'Poppins', sans-serif !important;
-        width: 100% !important;
+        flex: 1 !important;
     }
-    .aa-row:hover {
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05) !important;
-        border-color: #cbd5e1 !important;
-    }
-
-    .aa-col-agency {
-        flex: 0 0 22% !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-        min-width: 0 !important;
-        padding-right: 8px !important;
-    }
-    .aa-col-contact {
-        flex: 0 0 15% !important;
-        min-width: 0 !important;
-        padding-right: 8px !important;
-    }
-    .aa-col-perf {
-        flex: 0 0 29% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0 !important;
-        flex-wrap: nowrap !important;
-    }
-    .aa-col-shared {
-        flex: 0 0 11% !important;
-        min-width: 0 !important;
-        padding-right: 6px !important;
-    }
-    .aa-col-status {
-        flex: 0 0 9% !important;
-        text-align: center !important;
-    }
-    .aa-col-actions {
-        flex: 1 1 auto !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        gap: 6px !important;
-        position: relative !important;
-        min-width: 120px !important;
-    }
-
-    /* Agency logo */
-    .aa-logo {
-        width: 38px !important;
-        height: 38px !important;
-        min-width: 38px !important;
-        min-height: 38px !important;
-        max-width: 38px !important;
-        max-height: 38px !important;
-        border-radius: 50% !important;
-        flex-shrink: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-weight: 700 !important;
-        font-size: 14px !important;
-        color: #ffffff !important;
-        overflow: hidden !important;
-        border: 1.5px solid #f1f5f9 !important;
-    }
-    .aa-logo img {
-        width: 100% !important;
-        height: 100% !important;
-        max-width: 38px !important;
-        max-height: 38px !important;
-        object-fit: cover !important;
-        border-radius: 50% !important;
-        display: block !important;
-    }
-    .aa-name {
-        font-weight: 600 !important;
+    .ag-pipe-num {
         font-size: 12px !important;
+        font-weight: 700 !important;
+        font-variant-numeric: tabular-nums !important;
         color: #0f172a !important;
-        line-height: 1.3 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        line-height: 1.1 !important;
     }
-    .aa-cat {
-        font-size: 10.5px !important;
+    .ag-pipe-lbl {
+        font-size: 8.5px !important;
         color: #64748b !important;
-        margin-top: 1px !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
     }
-
-    /* Contact details */
-    .aa-cnt-name {
+    .ag-contact-name {
         font-size: 11.5px !important;
         font-weight: 600 !important;
         color: #0f172a !important;
         line-height: 1.25 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
     }
-    .aa-cnt-btns {
+    .ag-contact-btns {
         display: flex !important;
         align-items: center !important;
-        gap: 5px !important;
-        margin-top: 3px !important;
+        gap: 4px !important;
     }
-    .aa-cnt-btn {
-        width: 24px !important;
-        height: 24px !important;
-        border-radius: 6px !important;
+    .ag-contact-icon-btn {
+        width: 22px !important;
+        height: 22px !important;
+        border-radius: 5px !important;
         border: 1px solid #e2e8f0 !important;
         background: #f8fafc !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         color: #64748b !important;
         cursor: pointer !important;
-        transition: background 0.12s, color 0.12s, border-color 0.12s !important;
     }
-    .aa-cnt-btn:hover {
+    .ag-contact-icon-btn:hover {
         background: #e2e8f0 !important;
         color: #0f172a !important;
-        border-color: #cbd5e1 !important;
     }
-    .aa-cnt-dash {
-        color: #94a3b8 !important;
-        font-size: 13px !important;
-    }
-
-    /* Performance KPIs */
-    .aa-kpi {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 1px !important;
-        flex: 1 1 0 !important;
-        min-width: 0 !important;
-        padding: 0 2px !important;
-        border-right: 1px solid #f1f5f9 !important;
-    }
-    .aa-kpi:last-child {
-        border-right: none !important;
-    }
-    .aa-kpi-num {
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        line-height: 1.1 !important;
-    }
-    .aa-kpi-label {
-        font-size: 8.5px !important;
-        color: #64748b !important;
-        font-weight: 600 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.2px !important;
-        white-space: nowrap !important;
-    }
-
-    /* Shared date */
-    .aa-shared-rel {
+    .ag-shared-rel {
         font-size: 11.5px !important;
         font-weight: 600 !important;
         color: #0f172a !important;
-        line-height: 1.2 !important;
     }
-    .aa-shared-abs {
+    .ag-shared-abs {
         font-size: 10px !important;
-        color: #64748b !important;
-        margin-top: 1px !important;
+        color: #94a3b8 !important;
     }
-
-    /* Status badges */
     .aa-badge {
         display: inline-flex !important;
         align-items: center !important;
         gap: 4px !important;
-        padding: 3px 8px !important;
+        padding: 2px 7px !important;
         border-radius: 6px !important;
-        font-size: 11px !important;
+        font-size: 10.5px !important;
         font-weight: 600 !important;
     }
     .aa-badge-dot {
@@ -1213,44 +1096,40 @@
     .aa-badge-paused  { background: #fef3c7 !important; color: #d97706 !important; }
     .aa-badge-expired { background: #fee2e2 !important; color: #dc2626 !important; }
 
-    /* Actions */
-    .aa-terms-btn {
+    .ag-terms-btn {
         display: inline-flex !important;
         align-items: center !important;
         gap: 4px !important;
-        padding: 5px 10px !important;
-        border-radius: 7px !important;
+        padding: 5px 8px !important;
+        border-radius: 6px !important;
         border: 1px solid #e2e8f0 !important;
         background: #ffffff !important;
-        font-size: 11.5px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
         color: #475569 !important;
         cursor: pointer !important;
         white-space: nowrap !important;
-        transition: border-color 0.12s, color 0.12s, background 0.12s !important;
     }
-    .aa-terms-btn:hover {
-        border-color: #0066ff !important;
-        color: #0066ff !important;
+    .ag-terms-btn:hover {
+        border-color: #009ef7 !important;
+        color: #009ef7 !important;
         background: #eff6ff !important;
     }
-    .aa-dots-btn {
+    .ag-dots-btn {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 28px !important;
-        height: 28px !important;
-        border-radius: 7px !important;
+        width: 26px !important;
+        height: 26px !important;
+        border-radius: 6px !important;
         border: 1px solid #e2e8f0 !important;
         background: #ffffff !important;
         cursor: pointer !important;
         color: #64748b !important;
-        font-size: 13px !important;
-        transition: background 0.12s, border-color 0.12s !important;
+        font-size: 12px !important;
     }
-    .aa-dots-btn:hover {
+    .ag-dots-btn:hover {
         background: #f8fafc !important;
-        border-color: #cbd5e1 !important;
         color: #1e293b !important;
     }
     .aa-ddmenu {
@@ -1282,44 +1161,245 @@
         width: 100% !important;
         text-align: left !important;
         white-space: nowrap !important;
-        transition: background 0.1s !important;
     }
     .aa-ddi:hover {
         background: #fef2f2 !important;
     }
 
     /* Empty state */
-    .aa-empty {
+    .agency-empty-state-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 48px 20px !important;
+        text-align: center !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        padding: 48px 20px !important;
-        text-align: center !important;
     }
-    .aa-empty-icon {
-        width: 56px !important;
-        height: 56px !important;
+    .ag-empty-icon-box {
+        width: 52px !important;
+        height: 52px !important;
         border-radius: 50% !important;
-        background: #f1f5f9 !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         margin-bottom: 12px !important;
-        font-size: 22px !important;
         color: #94a3b8 !important;
     }
-    .aa-empty-title {
-        font-size: 13.5px !important;
-        font-weight: 600 !important;
+    .ag-empty-title {
+        font-size: 14px !important;
+        font-weight: 700 !important;
         color: #1e293b !important;
         margin-bottom: 4px !important;
     }
-    .aa-empty-sub {
-        font-size: 12px !important;
-        color: #94a3b8 !important;
-        max-width: 280px !important;
-        line-height: 1.5 !important;
+    .ag-empty-subtitle {
+        font-size: 11.5px !important;
+        color: #64748b !important;
+        max-width: 320px !important;
+        line-height: 1.45 !important;
+    }
+
+    /* ── Filter Slide-Over Drawer ── */
+    .agency-filter-drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        z-index: 1098;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    .agency-filter-drawer-overlay.open {
+        opacity: 1;
+        visibility: visible;
+    }
+    .agency-filter-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 45vw !important;
+        max-width: 45vw !important;
+        height: 100vh;
+        max-height: 100vh;
+        background: #ffffff;
+        z-index: 1099;
+        box-shadow: -10px 0 40px rgba(0, 0, 0, 0.16);
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s ease;
+        visibility: hidden;
+        overflow: hidden;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .agency-filter-drawer.open {
+        transform: translateX(0);
+        visibility: visible;
+    }
+    @media (max-width: 991px) {
+        .agency-filter-drawer {
+            width: 85vw !important;
+            max-width: 95vw !important;
+        }
+    }
+    .agency-filter-drawer-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        flex-shrink: 0;
+    }
+    .afd-header-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .afd-title {
+        font-size: 14.5px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+    .afd-subtitle {
+        font-size: 11px;
+        color: #64748b;
+        margin: 2px 0 0 0;
+    }
+    .afd-close-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        cursor: pointer;
+    }
+    .afd-close-btn:hover {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+    .agency-filter-drawer-body {
+        padding: 16px 18px;
+        overflow-y: auto;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        background: #ffffff;
+    }
+    .afd-trust-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+    .afd-trust-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #334155;
+    }
+    .afd-form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .afd-form-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .afd-label-num {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .agency-filter-drawer-footer {
+        padding: 12px 18px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f8fafc;
+        flex-shrink: 0;
+    }
+    .afd-reset-btn {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+    }
+    .afd-reset-btn:hover {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+    .afd-cancel-btn {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: #475569;
+        cursor: pointer;
+    }
+    .afd-apply-btn {
+        background: #009ef7;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 16px;
+        font-size: 11.5px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+    }
+    .afd-apply-btn:hover {
+        background: #0088d4;
     }
 </style>
 
@@ -1343,43 +1423,65 @@
 <input type="hidden" name="kt_tagify_location" id="kt_tagify_location" value="" />
 
 {{-- =========================================================================
-     STICKY DRAWER HEADER: JERO AGENCY DISTRIBUTION CENTER
+     STICKY DRAWER HEADER: TIER 1 JOB OVERVIEW CARD
      ========================================================================= --}}
 <div class="agency-drawer-header">
     <div class="d-flex align-items-center gap-3">
         {{-- Job Icon Badge --}}
         <div class="adh-job-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="16 18 22 12 16 6"></polyline>
                 <polyline points="8 6 2 12 8 18"></polyline>
             </svg>
         </div>
 
-        {{-- Job Title & Metadata --}}
+        {{-- Job Title & Canonical Badges --}}
         <div class="d-flex flex-column">
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="adh-title text-truncate" style="max-width: 320px;" title="{{ @$job->title }}">
                     {{ ucwords(@$job->title ?: 'Requirement') }}
                 </span>
-                <span class="badge" style="background:#dcfce7; color:#15803d; border: 1px solid #bbf7d0; border-radius: 12px; font-size: 11px; font-weight: 600; padding: 2px 9px;">
+
+                {{-- Canonical Scope Pill (Rule 25) --}}
+                @if($isSelfCompany)
+                    <span class="scope-pill-myorg" title="Own company requirement">
+                        <i class="fa-solid fa-id-badge fs-9"></i> My Organization
+                    </span>
+                @elseif($isDirectClient)
+                    <span class="scope-pill-direct" title="Marketplace client mandate">
+                        <i class="fa-solid fa-shield-alt fs-9"></i> Direct Client
+                    </span>
+                @else
+                    <span class="scope-pill-internal" title="Managed client requirement">
+                        <i class="fa-solid fa-building fs-9"></i> Internal Client
+                    </span>
+                @endif
+
+                {{-- Employment Type Pill --}}
+                <span class="badge" style="background:#eff6ff; color:#2563eb; border: 1px solid #bfdbfe; border-radius: 6px; font-size: 10.5px; font-weight: 600; padding: 2px 7px;">
                     {{ @$job->employment_type == 1 ? 'Contract' : 'Full-time' }}
+                </span>
+
+                {{-- Status Badge --}}
+                <span class="badge" style="background:#dcfce7; color:#15803d; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 10.5px; font-weight: 700; padding: 2px 7px;">
+                    HIRING
                 </span>
             </div>
 
             {{-- Compact Metadata Row --}}
-            <div class="d-flex align-items-center gap-3 flex-wrap mt-1">
+            <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
                 <span class="adh-meta-item">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
                     {{ @$job->min_exp }}–{{ @$job->max_exp }} Years
                 </span>
                 <span class="text-gray-300">•</span>
                 <span class="adh-meta-item">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     {{ $clientLocationText }}
                 </span>
                 <span class="text-gray-300">•</span>
                 <span class="adh-meta-item">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                     @php
                         $isSalConf = (\App\Services\SalaryVisibilityPolicy::normalize(@$job->salary_visibility) === \App\Services\SalaryVisibilityPolicy::FULLY_CONFIDENTIAL)
                             || ((empty($job->min_salary) || (float)$job->min_salary === 0.0) && (empty($job->max_salary) || (float)$job->max_salary === 0.0) && (@$job->salary_visibility === 'confidential'));
@@ -1392,7 +1494,7 @@
                 </span>
                 <span class="text-gray-300">•</span>
                 <span class="adh-meta-item">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                     {{ number_format(@$job->total_positions ?: 1) }} Opening{{ (@$job->total_positions > 1) ? 's' : '' }}
                 </span>
 
@@ -1414,9 +1516,9 @@
 
     {{-- Right: Close Button --}}
     <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-sm d-flex align-items-center gap-2 drawer-close-trigger" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; color: #1e293b; cursor: pointer; transition: background-color 0.15s ease;">
+        <button type="button" class="btn btn-sm d-flex align-items-center gap-2 drawer-close-trigger" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; color: #1e293b; cursor: pointer; transition: background-color 0.15s ease;">
             <span>Close</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -1439,7 +1541,7 @@
                 <span class="agency-col-badge blue">1</span>
                 <div>
                     <h2 class="agency-section-heading">Publish to Agency Marketplace</h2>
-                    <p class="agency-section-subtitle">Make this job visible to verified recruitment agencies on Jero Agency Marketplace.</p>
+                    <p class="agency-section-subtitle">Make this job visible to verified recruitment agencies on Jero Marketplace.</p>
                 </div>
             </div>
 
@@ -1448,15 +1550,12 @@
                 <div class="info-panel-blue">
                     <div class="d-flex align-items-center gap-3">
                         <div class="panel-icon-circle blue">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0066ff" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                         </div>
-                        <div style="flex: 1; padding-right: 30px;">
-                            <div style="font-size: 13.5px; font-weight: 700; color: #0066ff;">Open to Agency Applications</div>
-                            <div style="font-size: 11.5px; color: #475569; margin-top: 2px; line-height: 1.4;">Any verified agency can discover this job and submit suitable candidates.</div>
+                        <div style="flex: 1; padding-right: 20px;">
+                            <div style="font-size: 13px; font-weight: 700; color: #2563eb;">Open to Agency Applications</div>
+                            <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.35;">Any verified agency can discover this job and submit suitable candidates.</div>
                         </div>
-                    </div>
-                    <div style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); opacity: 0.18; pointer-events: none;">
-                        <svg width="55" height="55" viewBox="0 0 24 24" fill="#93c5fd"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     </div>
                 </div>
             </div>
@@ -1466,16 +1565,16 @@
                 <div class="live-panel-green">
                     <div class="d-flex align-items-center gap-3">
                         <div class="panel-icon-circle green">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#16a34a"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#16a34a"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                         </div>
                         <div style="flex: 1;">
                             <div class="d-flex align-items-center gap-2">
-                                <span style="font-size: 13px; font-weight: 800; color: #15803d; letter-spacing: 0.3px;">LIVE ON AGENCY MARKETPLACE</span>
-                                <span class="badge" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; border-radius: 12px; font-size: 10.5px; font-weight: 700; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px;">
-                                    <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#16a34a;"></span>Live
+                                <span style="font-size: 12.5px; font-weight: 800; color: #15803d; letter-spacing: 0.3px;">LIVE ON AGENCY MARKETPLACE</span>
+                                <span class="badge" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; border-radius: 10px; font-size: 10px; font-weight: 700; padding: 1px 7px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span style="display:inline-block; width:5px; height:5px; border-radius:50%; background:#16a34a;"></span>Live
                                 </span>
                             </div>
-                            <div style="font-size: 11.5px; color: #166534; margin-top: 3px; line-height: 1.4;">This job is now visible to verified agencies on Jero. They can discover and submit suitable candidates.</div>
+                            <div style="font-size: 11px; color: #166534; margin-top: 2px; line-height: 1.35;">This job is active on Jero Marketplace. Verified agencies can discover and submit candidates.</div>
                         </div>
                     </div>
                 </div>
@@ -1505,15 +1604,15 @@
                 }
             @endphp
 
-            {{-- Agency Acceptance Limit (Maximum agencies that can accept/work on this job) --}}
-            <div class="mt-4">
+            {{-- Agency Acceptance Limit --}}
+            <div class="mt-3">
                 <div class="d-flex align-items-center gap-1">
                     <label class="fw-bold fs-7 text-gray-900 mb-0">Agency Acceptance Limit</label>
-                    <i class="fa-regular fa-circle-question ms-1" style="font-size:12px;color:#94a3b8;cursor:help;" title="Maximum agencies that can accept and work on this job requirement."></i>
+                    <i class="fa-regular fa-circle-question ms-1" style="font-size:11px;color:#94a3b8;cursor:help;" title="Maximum agencies that can accept and work on this job requirement."></i>
                 </div>
                 <div class="agency-input-control">
                     <div class="input-icon-box">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     </div>
                     <select class="agency-select" id="marketplace_vendor_limit" data-current="{{ $currentVendorLimit }}">
                         <option value="5" {{ $currentVendorLimit === 5 ? 'selected' : '' }}>5 agencies</option>
@@ -1526,14 +1625,14 @@
             </div>
 
             {{-- Auto-expire --}}
-            <div class="mt-4">
+            <div class="mt-3">
                 <div class="d-flex align-items-center gap-1">
                     <label class="fw-bold fs-7 text-gray-900 mb-0">Auto-expire</label>
-                    <i class="fa-regular fa-circle-question ms-1" style="font-size:12px;color:#94a3b8;cursor:help;" title="The marketplace listing will automatically close on this date."></i>
+                    <i class="fa-regular fa-circle-question ms-1" style="font-size:11px;color:#94a3b8;cursor:help;" title="The marketplace listing will automatically close on this date."></i>
                 </div>
                 <div class="agency-input-control">
                     <div class="input-icon-box">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     </div>
                     <select class="agency-select" id="marketplace_auto_expire" data-current="{{ $currentAutoExpire }}">
                         <option value="7" {{ $currentAutoExpire === 7 ? 'selected' : '' }}>7 Days ({{ now()->addDays(7)->format('d M Y') }})</option>
@@ -1547,34 +1646,34 @@
             {{-- Benefit Checklist Panel --}}
             <div class="benefits-panel">
                 <div class="benefit-item">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10b981" class="flex-shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#10b981" class="flex-shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                     <span>Any verified agency can apply for this job.</span>
                 </div>
                 <div class="benefit-item">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10b981" class="flex-shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#10b981" class="flex-shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                     <span>You will review and accept candidate submissions.</span>
                 </div>
                 <div class="benefit-item">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10b981" class="flex-shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#10b981" class="flex-shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                     <span>You can unpublish the requirement anytime.</span>
                 </div>
             </div>
 
-            {{-- Action CTAs: Mutually exclusive display guaranteed --}}
+            {{-- Action CTAs: Mutually exclusive display --}}
             <button type="button" id="sp_list_one" class="btn-publish-primary post_to_public {{ $isPublished ? 'd-none' : '' }}" style="{{ $isPublished ? 'display: none !important;' : 'display: flex;' }}" data-c="0" data-row-id="0" data-matchcount="0" data-row-jobid="{{ @$job->id }}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                 <span>Publish to Agency Marketplace</span>
             </button>
 
             <button type="button" id="sp_list_two" class="btn-unpublish-destructive post_to_public {{ $isPublished ? '' : 'd-none' }}" style="{{ $isPublished ? 'display: flex;' : 'display: none !important;' }}" data-c="1" data-row-id="0" data-matchcount="0" data-row-jobid="{{ @$job->id }}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                 <span>Unpublish from Marketplace</span>
             </button>
 
             {{-- Terms Secondary Link --}}
             <div class="text-center mt-3">
-                <a href="javascript:void(0);" data-row-id="{{ @$job->id }}" data-row-recommendation_relation_id="" class="client-terms-listing d-inline-flex align-items-center gap-2" style="font-size: 12px; color: #0066ff; font-weight: 500; text-decoration: none;">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0066ff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <a href="javascript:void(0);" data-row-id="{{ @$job->id }}" data-row-recommendation_relation_id="" class="client-terms-listing d-inline-flex align-items-center gap-1" style="font-size: 11.5px; color: #0066ff; font-weight: 500; text-decoration: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0066ff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     <span>View Agency Marketplace Terms</span>
                 </a>
             </div>
@@ -1582,92 +1681,79 @@
 
         {{-- =================================================================
              COLUMN 2: SEND REQUIREMENT DIRECTLY TO AGENCIES (~64% Width)
+             Strict Modern Card + Sub-Card Enterprise Standard (Rule 20)
              ================================================================= --}}
-        <div class="agency-card">
-            {{-- Header inside subtle light-mint banner --}}
-            <div class="agency-section-banner-green">
-                <div class="d-flex align-items-start gap-3">
+        <div>
+            {{-- ── TIER 1: TOP HEADER TOOLBAR CARD ── --}}
+            <div class="agency-toolbar-card">
+                <div class="agency-toolbar-left">
                     <span class="agency-col-badge green">2</span>
                     <div>
-                        <h2 class="agency-section-heading">Send Requirement Directly to Agencies</h2>
-                        <p class="agency-section-subtitle">Select agencies you want to notify and ask them to work on this requirement.</p>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h2 class="agency-toolbar-title">Send Requirement Directly to Agencies</h2>
+                            <div class="direct-outreach-badge" style="background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 6px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 5px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M2.5 13.5L21.5 3.5L14.5 21.5L10.5 14.5L2.5 13.5Z" fill="#0284c7"/><path d="M10.5 14.5L21.5 3.5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/></svg>
+                                <span style="font-size: 10.5px; font-weight: 700; color: #0369a1;">Direct Outreach • Faster Responses</span>
+                            </div>
+                        </div>
+                        <p class="agency-toolbar-sub">Select verified agencies to notify and ask them to submit matching candidates for this requirement.</p>
                     </div>
                 </div>
 
-                {{-- Direct Outreach Badge --}}
-                <div class="direct-outreach-badge" style="background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 10px; padding: 7px 14px; display: flex !important; align-items: center; gap: 10px; flex-shrink: 0;">
-                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                            <path d="M2.5 13.5L21.5 3.5L14.5 21.5L10.5 14.5L2.5 13.5Z" fill="#0284c7"/>
-                            <path d="M10.5 14.5L21.5 3.5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
-                            <path d="M16 4C19 3.5 22 5.5 22.5 7" stroke="#0284c7" stroke-width="1.6" stroke-linecap="round"/>
-                            <line x1="2" y1="16" x2="3.5" y2="17.5" stroke="#0284c7" stroke-width="1.5" stroke-linecap="round"/>
-                            <line x1="1" y1="13.5" x2="2.5" y2="13.5" stroke="#0284c7" stroke-width="1.5" stroke-linecap="round"/>
-                            <line x1="4.5" y1="18.5" x2="4.5" y2="20" stroke="#0284c7" stroke-width="1.5" stroke-linecap="round"/>
-                        </svg>
+                {{-- Right: Search Sub-Card & Filter Trigger --}}
+                <div class="agency-toolbar-right">
+                    <div class="agency-search-subcard">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="agency_unified_search" class="agency-search-input" placeholder="Search by skills..." value="{{ @$default_skill }}" autocomplete="off" />
+                        <button type="button" class="agency-search-clear-btn" id="btn_agency_search_clear" title="Clear search">✕</button>
                     </div>
-                    <div style="line-height: 1.2;">
-                        <div style="font-size: 11.5px; font-weight: 700; color: #0369a1;">Direct Outreach</div>
-                        <div style="font-size: 10px; color: #64748b; margin-top: 1px;">Get faster responses</div>
+                    <button type="button" class="btn-filter-trigger">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        <span>Filter</span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- ── TIER 2: SUB-TABS CARD WITH WHITE BACKGROUND (Rule 20) ── --}}
+            <div class="agency-tabs-card">
+                <div class="agency-tabs-group" role="tablist">
+                    <button type="button" class="agency-tab-btn agency-tab-link active" data-tab="recommended" href="#tab_recommended">
+                        <i class="fas fa-sparkles me-1"></i>
+                        <span>Recommended</span>
+                        <span class="agency-tab-badge" id="recommendedTotal"></span>
+                    </button>
+                    <button type="button" class="agency-tab-btn agency-tab-link" data-tab="registered" href="#tab_registered">
+                        <i class="fas fa-building me-1"></i>
+                        <span>My Agencies</span>
+                        <span class="agency-tab-badge" id="registeredTotal">({{ @$registeredTotalCount ?: 0 }})</span>
+                    </button>
+                    <button type="button" class="agency-tab-btn agency-tab-link" data-tab="assigned" href="#tab_assigned">
+                        <i class="fas fa-user-check me-1"></i>
+                        <span>Assigned</span>
+                        <span class="agency-tab-badge" id="assignedTotal">({{ @$assignedTotalCount ?: 0 }})</span>
+                    </button>
+                </div>
+
+                {{-- Right Sub-Card: Select All Agencies Toggle --}}
+                <div class="agency-select-all-subcard">
+                    <div class="form-check form-check-custom form-check-solid form-check-sm">
+                        <input class="form-check-input select-all-agencies-checkbox" type="checkbox" id="select_all_agencies_active" title="Select All Visible Agencies" style="cursor: pointer;" />
+                        <label class="form-check-label fs-8 fw-semibold text-gray-700 ms-1" for="select_all_agencies_active" style="cursor: pointer; user-select: none;">
+                            Select All
+                        </label>
                     </div>
                 </div>
             </div>
 
-            {{-- Tabs --}}
-            <div class="agency-tabs-nav" role="tablist">
-                <a class="agency-tab-link active" data-tab="recommended" href="#tab_recommended">
-                    <span>Recommended</span>
-                    <span id="recommendedTotal"></span>
-                </a>
-                <a class="agency-tab-link" data-tab="registered" href="#tab_registered">
-                    <span>My Agencies</span>
-                    <span id="registeredTotal">({{ @$registeredTotalCount ?: 0 }})</span>
-                </a>
-                <a class="agency-tab-link" data-tab="assigned" href="#tab_assigned">
-                    <span>Assigned</span>
-                    <span id="assignedTotal">({{ @$assignedTotalCount ?: 0 }})</span>
-                </a>
-            </div>
-
-            {{-- Search & Filter Bar --}}
-            <div class="agency-search-filter-row">
-                <div class="agency-search-input-wrap">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="agency_unified_search" class="agency-search-input" placeholder="Search by skills..." value="{{ @$default_skill }}" />
-                </div>
-                <button type="button" class="btn-filter-trigger">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                    <span>Filter</span>
-                </button>
-            </div>
-
-            {{-- Tab Contents --}}
-            <div class="tab-content mt-2">
+            {{-- ── TIER 3: PRIMARY AGENCY CARDS STREAM CONTAINER ── --}}
+            <div class="tab-content mt-1">
 
                 {{-- ── TAB 1: RECOMMENDED AGENCIES ── --}}
                 <div class="tab-pane active show" id="tab_recommended" role="tabpanel" style="display: block;">
-                    <div class="table-responsive" style="max-height: calc(100vh - 280px); overflow-y: auto;">
-                        <table class="agency-data-table" id="recommendedlist">
-                            <thead>
-                                <tr>
-                                    <th style="width: 32%;">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="form-check form-check-custom form-check-solid form-check-sm flex-shrink-0">
-                                                <input class="form-check-input select-all-agencies-checkbox" type="checkbox" id="select_all_agencies_recom" title="Select All Agencies" style="cursor: pointer;" />
-                                            </div>
-                                            <span>Agency & Specialization</span>
-                                        </div>
-                                    </th>
-                                    <th style="width: 17%;">Matching Profiles</th>
-                                    <th style="width: 15%;">Rates</th>
-                                    <th style="width: 18%;">Location & Team</th>
-                                    <th style="width: 18%; text-align: right;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recommendedlistBody">
-                                {{-- Loaded dynamically via tableLoad(1) --}}
-                            </tbody>
-                        </table>
+                    <div class="agency-stream-container">
+                        <div id="recommendedlistBody" class="agency-cards-stream">
+                            {{-- Loaded dynamically via tableLoad(1) --}}
+                        </div>
                         <div id="recommended_loader" class="table-loader-wrap">
                             <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
                             <span class="ms-2 fs-7 text-muted">Loading recommended agencies...</span>
@@ -1678,65 +1764,40 @@
 
                 {{-- ── TAB 2: MY AGENCIES ── --}}
                 <div class="tab-pane" id="tab_registered" role="tabpanel" style="display: none;">
-                    <div class="table-responsive" style="max-height: calc(100vh - 280px); overflow-y: auto;">
-                        <table class="agency-data-table" id="staffingPartnersRegister">
-                            <thead>
-                                <tr>
-                                    <th style="width: 32%;">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="form-check form-check-custom form-check-solid form-check-sm flex-shrink-0">
-                                                <input class="form-check-input select-all-agencies-checkbox" type="checkbox" id="select_all_agencies_reg" title="Select All Agencies" style="cursor: pointer;" />
-                                            </div>
-                                            <span>Agency & Specialization</span>
-                                        </div>
-                                    </th>
-                                    <th style="width: 17%;">Matching Profiles</th>
-                                    <th style="width: 15%;">Rates</th>
-                                    <th style="width: 18%;">Location & Team</th>
-                                    <th style="width: 18%; text-align: right;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="allregisteragency">
-                                {{-- Loaded dynamically via staffingPartnersRegister(1) --}}
-                            </tbody>
-                        </table>
+                    <div class="agency-stream-container">
+                        <div id="allregisteragency" class="agency-cards-stream">
+                            {{-- Loaded dynamically via staffingPartnersRegister(1) --}}
+                        </div>
                         <div id="paginationregisteragency" class="mt-2"></div>
                     </div>
                 </div>
 
                 {{-- ── TAB 3: ASSIGNED AGENCIES ── --}}
                 <div class="tab-pane" id="tab_assigned" role="tabpanel" style="display: none;">
-                    <div class="table-responsive" style="max-height: calc(100vh - 280px); overflow-y: auto;">
-                        <div class="aa-header-row d-none d-lg-flex" style="background:#f8fafc; border-bottom:1.5px solid #e2e8f0; padding:8px 12px; margin-bottom:8px;">
-                            <div class="aa-hcol-agency" style="flex:0 0 20%; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase;">Agency</div>
-                            <div class="aa-hcol-contact" style="flex:0 0 15%; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase;">Contact</div>
-                            <div class="aa-hcol-perf" style="flex:0 0 32%; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase; text-align:center;">Performance</div>
-                            <div class="aa-hcol-shared" style="flex:0 0 12%; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase;">Shared</div>
-                            <div class="aa-hcol-status" style="flex:0 0 10%; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase; text-align:center;">Status</div>
-                            <div class="aa-hcol-actions" style="flex:1; font-size:10.5px; font-weight:600; color:#64748b; text-transform:uppercase; text-align:right;">Actions</div>
-                        </div>
-                        <div id="allAssignListagency">
+                    <div class="agency-stream-container">
+                        <div id="allAssignListagency" class="agency-cards-stream">
                             {{-- Loaded dynamically via recommendedAssignList(1) --}}
                         </div>
                         <div id="paginationAssignListagency" class="mt-2"></div>
                     </div>
                 </div>
+
             </div>
 
-            {{-- Bottom Banner: Send to Multiple Agencies --}}
-            <div class="bottom-multi-agency-banner" style="background: #f0f7ff; border: 1px solid #dbeafe; border-radius: 10px; padding: 12px 18px; margin-top: 16px; display: flex; align-items: center; justify-content: space-between;">
+            {{-- ── MULTI-SEND REQUIREMENT ACTION CARD ── --}}
+            <div class="bottom-multi-agency-banner">
                 <div class="d-flex align-items-center gap-3">
-                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #ffffff; border: 1px solid #bfdbfe; color: #0066ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <div style="width: 34px; height: 34px; border-radius: 8px; background: #ffffff; border: 1px solid #bfdbfe; color: #0066ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     </div>
                     <div>
-                        <div style="font-weight: 700; font-size: 12.5px; color: #0f172a;">Send to multiple agencies</div>
-                        <div style="font-size: 11px; color: #64748b;">You can select and send this requirement to multiple agencies at once.</div>
+                        <div style="font-weight: 700; font-size: 12px; color: #0f172a;">Send to multiple agencies</div>
+                        <div style="font-size: 10.5px; color: #64748b;">Select checkboxes above to dispatch this requirement to multiple agencies simultaneously.</div>
                     </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-send-multi-agencies" id="btn_send_multi_agencies" disabled style="background: #dbeafe; color: #2563eb; font-size: 12px; font-weight: 600; border-radius: 6px; padding: 7px 16px; border: none; cursor: default; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                <button type="button" class="btn btn-sm btn-send-multi-agencies" id="btn_send_multi_agencies" disabled style="background: #dbeafe; color: #2563eb; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 7px 16px; border: none; cursor: not-allowed; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                    <span id="btn_send_multi_text">Send to 0 Agencies</span>
+                    <span id="btn_send_multi_text">Send to Multiple Agencies</span>
                 </button>
             </div>
 
@@ -2017,18 +2078,18 @@
 
         if (count > 0) {
             $txt.text('Send Requirement to ' + count + ' Agenc' + (count > 1 ? 'ies' : 'y'));
-            $btn.prop('disabled', false).removeClass('disabled').css({ 'opacity': '1', 'cursor': 'pointer' });
+            $btn.prop('disabled', false).removeClass('disabled').css({ 'opacity': '1', 'cursor': 'pointer', 'background': '#009ef7', 'color': '#ffffff' });
         } else {
             $txt.text('Send to Multiple Agencies');
-            $btn.prop('disabled', true).addClass('disabled').css({ 'opacity': '0.65', 'cursor': 'not-allowed' });
+            $btn.prop('disabled', true).addClass('disabled').css({ 'opacity': '0.65', 'cursor': 'not-allowed', 'background': '#dbeafe', 'color': '#2563eb' });
         }
 
-        // Update Select-All checkbox state in the visible tab
+        // Update Select-All checkbox state in Tier 2
         var $activePane = $('#kt_activitiesRecruiter .tab-pane.active');
         var $visibleCheckboxes = $activePane.find('.agency-row-checkbox');
         var totalVisible = $visibleCheckboxes.length;
         var checkedVisible = $visibleCheckboxes.filter(':checked').length;
-        var $selectAll = $activePane.find('.select-all-agencies-checkbox');
+        var $selectAll = $('#kt_activitiesRecruiter .select-all-agencies-checkbox');
 
         if (totalVisible > 0 && checkedVisible === totalVisible) {
             $selectAll.prop('checked', true).prop('indeterminate', false);
@@ -2051,8 +2112,7 @@
     }
 
     /**
-     * Recommended Agencies Table Loader:
-     * Two-Tier Safe Representation: Client RAM cache + X-Has-Representation + _force=1 Recovery
+     * Recommended Agencies Loader
      */
     function tableLoad(page) {
         if (page === 'load' || !page) { page = 1; }
@@ -2117,7 +2177,6 @@
                     }
                     syncCheckboxSelectionState();
                 } else {
-                    // Safe representation recovery: _force=1 guarantees fresh HTML from Redis
                     var fallbackParams = $.extend({}, params, { _force: 1 });
                     $.getJSON(`{!! route('service_company.jobs.recommendedData') !!}?page=${page}`, fallbackParams, function(fresh) {
                         if (fresh && fresh.html) {
@@ -2158,23 +2217,24 @@
     /**
      * My Agencies (Registered) Loader
      */
-    function staffingPartnersRegister(page = 1, search = null) {
+    function staffingPartnersRegister(page, curSearch) {
         if (page === 'load' || !page) { page = 1; }
-        var jobid = $('#current_job_id').val();
-        var cus_search = (search !== null && search !== undefined) ? search : (getUnifiedSearchTerms() || '');
+
+        var currentJobId = $('#current_job_id').val();
+        var searchTerms = (curSearch !== undefined) ? curSearch : (getUnifiedSearchTerms() || $('#kt_tagify_4').val() || '');
 
         var params = {
-            page: page,
-            jobid: jobid,
-            hiringtype: $('#hiringtype4').val() || '',
-            country: $('#country4').val() || '',
-            cus_search: cus_search
+            job_id: currentJobId,
+            search: searchTerms,
+            hiringtype: $('#workhiringtype').val() || '',
+            country: $('#country4').val() || 'Show All'
         };
-        var ramCacheKey = 'registered_' + jobid + '_p' + page + '_' + getAgencyParamsKey(params);
+
+        var ramCacheKey = 'reg_' + currentJobId + '_p' + page + '_' + getAgencyParamsKey(params);
         var hasRep = !!(window.agencyTableCache && window.agencyTableCache[ramCacheKey]);
 
         var jqXHR = $.ajax({
-            url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
+            url: `{!! route('service_company.jobs.registeredData') !!}?page=${page}`,
             type: 'GET',
             cache: false,
             headers: {
@@ -2190,6 +2250,8 @@
                     }
                     if (response.pagination) {
                         $('#paginationregisteragency').html(response.pagination);
+                    } else {
+                        $('#paginationregisteragency').html('');
                     }
                     syncCheckboxSelectionState();
                 } else if (hasRep && window.agencyTableCache[ramCacheKey]) {
@@ -2200,11 +2262,13 @@
                     }
                     if (cached.pagination) {
                         $('#paginationregisteragency').html(cached.pagination);
+                    } else {
+                        $('#paginationregisteragency').html('');
                     }
                     syncCheckboxSelectionState();
                 } else {
                     var fallbackParams = $.extend({}, params, { _force: 1 });
-                    $.getJSON(`{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`, fallbackParams, function(fresh) {
+                    $.getJSON(`{!! route('service_company.jobs.registeredData') !!}?page=${page}`, fallbackParams, function(fresh) {
                         if (fresh && fresh.html) {
                             setAgencyTableCache(ramCacheKey, fresh);
                             $('#allregisteragency').html(fresh.html);
@@ -2230,21 +2294,23 @@
     /**
      * Assigned Agencies Loader
      */
-    function recommendedAssignList(page = 1, search = null) {
+    function recommendedAssignList(page, curSearch) {
         if (page === 'load' || !page) { page = 1; }
-        var jobid = $('#current_job_id').val();
-        var cus_search = (search !== null && search !== undefined) ? search : (getUnifiedSearchTerms() || '');
+
+        var currentJobId = $('#current_job_id').val();
+        var searchTerms = (curSearch !== undefined) ? curSearch : (getUnifiedSearchTerms() || $('#kt_tagify_5').val() || '');
 
         var params = {
-            page: page,
-            jobid: jobid,
-            cus_search: cus_search
+            job_id: currentJobId,
+            search: searchTerms,
+            hiringtype: $('#hiringtype4').val() || '0'
         };
-        var ramCacheKey = 'assigned_' + jobid + '_p' + page + '_' + getAgencyParamsKey(params);
+
+        var ramCacheKey = 'assign_' + currentJobId + '_p' + page + '_' + getAgencyParamsKey(params);
         var hasRep = !!(window.agencyTableCache && window.agencyTableCache[ramCacheKey]);
 
         var jqXHR = $.ajax({
-            url: `{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`,
+            url: `{!! route('service_company.jobs.assignData') !!}?page=${page}`,
             type: 'GET',
             cache: false,
             headers: {
@@ -2260,6 +2326,8 @@
                     }
                     if (response.pagination) {
                         $('#paginationAssignListagency').html(response.pagination);
+                    } else {
+                        $('#paginationAssignListagency').html('');
                     }
                 } else if (hasRep && window.agencyTableCache[ramCacheKey]) {
                     var cached = window.agencyTableCache[ramCacheKey];
@@ -2272,7 +2340,7 @@
                     }
                 } else {
                     var fallbackParams = $.extend({}, params, { _force: 1 });
-                    $.getJSON(`{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`, fallbackParams, function(fresh) {
+                    $.getJSON(`{!! route('service_company.jobs.assignData') !!}?page=${page}`, fallbackParams, function(fresh) {
                         if (fresh && fresh.html) {
                             setAgencyTableCache(ramCacheKey, fresh);
                             $('#allAssignListagency').html(fresh.html);
@@ -2366,13 +2434,20 @@
         var initialIsLive = {{ $isPublished ? 'true' : 'false' }};
         setMarketplaceUiState(initialIsLive);
 
-        // Initialize Tab Manager and Load Initial Data
+        // Initialize Tab Manager
         AgencyMarketplaceTabManager.init();
 
         // Unified Search Input with Tagify & Debounce (300ms)
         var searchTimeout = null;
         function triggerUnifiedSearch() {
             clearTimeout(searchTimeout);
+            var searchVal = getUnifiedSearchTerms();
+            if (searchVal.length > 0) {
+                $('#btn_agency_search_clear').show();
+            } else {
+                $('#btn_agency_search_clear').hide();
+            }
+
             searchTimeout = setTimeout(function() {
                 var terms = getUnifiedSearchTerms();
                 var activeTab = $('#kt_activitiesRecruiter .agency-tab-link.active').data('tab') || 'recommended';
@@ -2413,6 +2488,17 @@
 
         // Trigger initial data load
         tableLoad(1);
+
+        // Clear search button trigger
+        $(document).off('click.agencySearchClear', '#btn_agency_search_clear').on('click.agencySearchClear', '#btn_agency_search_clear', function(e) {
+            e.preventDefault();
+            if (window.agencySearchTagify) {
+                window.agencySearchTagify.removeAllTags();
+            }
+            $('#agency_unified_search').val('');
+            $(this).hide();
+            triggerUnifiedSearch();
+        });
 
         // Tab Switching Click Listeners (Strictly scoped within #kt_activitiesRecruiter)
         $(document).off('click.agencyTabs', '#kt_activitiesRecruiter .agency-tab-link').on('click.agencyTabs', '#kt_activitiesRecruiter .agency-tab-link', function(e) {
@@ -2504,10 +2590,9 @@
                             var successfulIds = response.invited_agencies || agencyIds;
                             successfulIds.forEach(function(agId) {
                                 $('#agency_action_' + agId).html(
-                                    '<span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">' +
-                                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Request Sent</span>'
+                                    '<span class="ag-badge-sent"><svg width="13" height="13" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> <span>Request Sent</span></span>'
                                 );
-                                $('#agency_row_' + agId + ' .agency-row-checkbox').parent().replaceWith('<div class="flex-shrink-0" style="width: 16px; height: 16px;"></div>');
+                                $('#agency_row_' + agId + ' .agency-row-checkbox').parent().replaceWith('<div class="ag-check-spacer"><svg width="15" height="15" viewBox="0 0 24 24" fill="#10b981"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>');
                             });
 
                             window.selectedAgencyIds.clear();
@@ -2649,204 +2734,127 @@
 
             Swal.fire({
                 title: job_cancel == 1 ? 'Unpublish from Marketplace?' : 'Publish to Agency Marketplace?',
-                text: job_cancel == 1 
-                    ? 'This job will no longer be visible to agencies on Jero Agency Marketplace.'
-                    : 'This job will become LIVE on Jero Agency Marketplace. Verified agencies can discover and submit candidates.',
-                icon: job_cancel == 1 ? 'warning' : 'info',
+                text: job_cancel == 1
+                    ? 'This requirement will no longer be visible to agencies on Jero Marketplace.'
+                    : 'This requirement will become visible to all verified recruitment agencies on Jero Marketplace.',
+                icon: job_cancel == 1 ? 'warning' : 'question',
                 showCancelButton: true,
-                confirmButtonText: job_cancel == 1 ? 'Yes, unpublish' : 'Yes, publish now',
+                confirmButtonText: job_cancel == 1 ? 'Yes, Unpublish' : 'Yes, Publish Job',
                 cancelButtonText: 'Cancel',
-                confirmButtonColor: job_cancel == 1 ? '#ef4444' : '#2563eb',
+                confirmButtonColor: job_cancel == 1 ? '#dc2626' : '#009ef7',
                 cancelButtonColor: '#64748b'
             }).then((result) => {
                 if (!result.isConfirmed) return;
 
-                // Immediate loading feedback & lock both buttons
+                $this.data('in-flight', true).prop('disabled', true);
                 $('#kt_activitiesRecruiter').data('market-action-running', true);
-                var $btnOne = $('#sp_list_one');
-                var $btnTwo = $('#sp_list_two');
-                $btnOne.prop('disabled', true).addClass('disabled');
-                $btnTwo.prop('disabled', true).addClass('disabled');
 
-                var originalHtml = $this.html();
-                var loadingLabel = (job_cancel == 1) ? 'Unpublishing...' : 'Publishing...';
-                $this.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" style="width: 14px; height: 14px; border-width: 2px;"></span><span>' + loadingLabel + '</span>');
-
-                var idempotencyKey = 'pub_' + current_jobid + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-                var postData = {
-                    'current_jobid': current_jobid,
-                    'job_cancel': job_cancel,
-                    'vendor_limit': $('#marketplace_vendor_limit').val() || 20,
-                    'auto_expire': $('#marketplace_auto_expire').val() || 7,
-                    'idempotency_key': idempotencyKey,
-                    '_token': '{{ csrf_token() }}'
-                };
+                var vendorLimit = $('#marketplace_vendor_limit').val() || 20;
+                var autoExpire = $('#marketplace_auto_expire').val() || 7;
 
                 $.ajax({
-                    type: 'POST',
+                    type: 'GET',
                     url: url,
-                    data: postData,
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-Idempotency-Key': idempotencyKey
+                    data: {
+                        'current_jobid': current_jobid,
+                        'job_cancel': job_cancel,
+                        'vendor_limit': vendorLimit,
+                        'auto_expire': autoExpire
                     },
-                    timeout: 10000,
                     success: function(response) {
-                        if (response && response.status === 'closeJob' && job_cancel != 1) {
-                            Swal.fire("Notice", response.message || "Please update the job status from 'Closed/Hold' to 'Hiring' to enable posting.", "warning");
-                            return;
-                        }
+                        if (response.status === 'success' || response.status === true) {
+                            if (job_cancel === 0) {
+                                setMarketplaceUiState(true);
+                            } else {
+                                setMarketplaceUiState(false);
+                            }
 
-                        var isLive = (job_cancel != 1 && (response.is_published !== false));
+                            window.agencyTableCache = {};
+                            if (window.jobDrawerCache) {
+                                delete window.jobDrawerCache['spartner_' + current_jobid];
+                            }
 
-                        if (job_cancel == 1 || response.is_published === false) {
-                            setMarketplaceUiState(false);
-                            Swal.fire("Unpublished", response.message || "This job requirement is no longer live on the marketplace.", "success");
+                            Swal.fire({
+                                title: "Success!",
+                                text: response.message || (job_cancel == 1 ? "Job successfully unpublished from marketplace." : "Job successfully published to Agency Marketplace."),
+                                icon: "success",
+                                confirmButtonColor: "#009ef7"
+                            });
                         } else {
-                            setMarketplaceUiState(true);
-                            Swal.fire("Published Live!", response.message || "This job is now live on Jero Agency Marketplace.", "success");
-                        }
-
-                        // Atomic RAM and Client Cache Invalidation
-                        window.agencyTableCache = {};
-                        if (window.jobDrawerCache) {
-                            delete window.jobDrawerCache['spartner_' + current_jobid];
+                            Swal.fire("Notice", response.message || "Failed to update marketplace status.", "warning");
                         }
                     },
-                    error: function(xhr) {
-                        var errMessage = 'Something went wrong. Please try again.';
-                        if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
-                            errMessage = xhr.responseJSON.message;
-                        } else if (xhr && xhr.status === 403) {
-                            errMessage = 'Unauthorized access to job requisition.';
-                        } else if (xhr && xhr.status === 419) {
-                            errMessage = 'Session expired. Please refresh the page.';
-                        }
-                        Swal.fire('Error', errMessage, 'error');
+                    error: function() {
+                        Swal.fire("Error", "Server error while updating marketplace status. Please try again.", "error");
                     },
                     complete: function() {
+                        $this.data('in-flight', false).prop('disabled', false);
                         $('#kt_activitiesRecruiter').data('market-action-running', false);
-                        $this.html(originalHtml);
-                        $btnOne.prop('disabled', false).removeClass('disabled');
-                        $btnTwo.prop('disabled', false).removeClass('disabled');
                     }
                 });
             });
         });
 
-        // ── AGENCY ACCEPTANCE LIMIT & AUTO-EXPIRE DROPDOWN CHANGE HANDLERS ──
-        var marketplaceSettingXhr = null;
-        var marketplaceSettingToast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2500,
-            timerProgressBar: true
-        });
+        // ── VENDOR LIMIT & AUTO-EXPIRE PERSISTENCE ON CHANGE ──────────────────
+        $(document).off('change.vendorLimit', '#marketplace_vendor_limit').on('change.vendorLimit', '#marketplace_vendor_limit', function() {
+            var $sel = $(this);
+            var limitVal = $sel.val();
+            var current_jobid = $('#current_job_id').val();
+            if (!current_jobid) return;
 
-        function updateMarketplaceSetting($select, settingType, settingVal) {
-            var previousVal = $select.data('current') !== undefined ? $select.data('current') : ($select.data('previous-val') || $select.val());
-            var current_jobid = $('#current_job_id').val() || '{{ @$job->id ?: @$job_id }}';
-            var id = 0;
-            var url = "{{ route('service_company.jobs.auction_send_job_request', ':id') }}".replace(':id', id);
-
-            // Cancel any in-flight settings update request to prevent out-of-order race conditions
-            if (marketplaceSettingXhr && typeof marketplaceSettingXhr.abort === 'function') {
-                try { marketplaceSettingXhr.abort(); } catch(e) {}
-            }
-
-            $select.prop('disabled', true);
-
-            var postData = {
-                'current_jobid': current_jobid,
-                'action': 'update_settings',
-                'setting_type': settingType,
-                '_token': '{{ csrf_token() }}'
-            };
-            postData[settingType] = settingVal;
-
-            marketplaceSettingXhr = $.ajax({
+            $.ajax({
                 type: 'POST',
-                url: url,
-                data: postData,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'X-Requested-With': 'XMLHttpRequest'
+                url: "{{ route('service_company.jobs.update_marketplace_settings') }}",
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                data: {
+                    job_id: current_jobid,
+                    vendor_limit: limitVal
                 },
-                timeout: 10000,
-                success: function(response) {
-                    if (response && response.status === 'success') {
-                        $select.data('current', settingVal);
-                        $select.data('previous-val', settingVal);
-
-                        // Invalidate Client RAM Cache so reopening drawer fetches fresh authoritative representation
-                        if (window.jobDrawerCache) {
-                            delete window.jobDrawerCache['spartner_' + current_jobid];
-                        }
-
-                        marketplaceSettingToast.fire({
-                            icon: 'success',
-                            title: response.message || 'Setting saved successfully.'
-                        });
-                    } else if (response && response.status === 'closeJob') {
-                        $select.val(previousVal);
-                        Swal.fire("Notice", response.message || "Please update the job status from 'Closed/Hold' to 'Hiring' to enable setting changes.", "warning");
-                    } else {
-                        $select.val(previousVal);
-                        var errMsg = (response && response.message) ? response.message : 'Could not save setting. Reverted to previous value.';
-                        Swal.fire('Notice', errMsg, 'warning');
+                success: function(resp) {
+                    if (resp && resp.status === 'success') {
+                        $sel.data('current', limitVal);
                     }
-                },
-                error: function(xhr, status) {
-                    if (status === 'abort') return;
-                    $select.val(previousVal);
-                    var errMsg = 'Failed to update setting. Please try again.';
-                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
-                        errMsg = xhr.responseJSON.message;
-                    } else if (xhr && xhr.status === 403) {
-                        errMsg = 'Unauthorized access to job requisition.';
-                    } else if (xhr && xhr.status === 419) {
-                        errMsg = 'Session expired. Please refresh the page.';
-                    }
-                    Swal.fire('Error', errMsg, 'error');
-                },
-                complete: function() {
-                    $select.prop('disabled', false);
-                    marketplaceSettingXhr = null;
                 }
             });
-        }
-
-        $('body').off('change.vendorLimit', '#marketplace_vendor_limit').on('change.vendorLimit', '#marketplace_vendor_limit', function(e) {
-            e.preventDefault();
-            var $this = $(this);
-            var newVal = parseInt($this.val(), 10);
-            updateMarketplaceSetting($this, 'vendor_limit', newVal);
         });
 
-        $('body').off('change.autoExpire', '#marketplace_auto_expire').on('change.autoExpire', '#marketplace_auto_expire', function(e) {
-            e.preventDefault();
-            var $this = $(this);
-            var newVal = parseInt($this.val(), 10);
-            updateMarketplaceSetting($this, 'auto_expire', newVal);
+        $(document).off('change.autoExpire', '#marketplace_auto_expire').on('change.autoExpire', '#marketplace_auto_expire', function() {
+            var $sel = $(this);
+            var expireVal = $sel.val();
+            var current_jobid = $('#current_job_id').val();
+            if (!current_jobid) return;
+
+            $.ajax({
+                type: 'POST',
+                url: "{{ route('service_company.jobs.update_marketplace_settings') }}",
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                data: {
+                    job_id: current_jobid,
+                    auto_expire: expireVal
+                },
+                success: function(resp) {
+                    if (resp && resp.status === 'success') {
+                        $sel.data('current', expireVal);
+                    }
+                }
+            });
         });
 
-        // ── SEND REQUIREMENT (INVITATION) ACTIONS ────────────────────────────
-        $('body').off('click.sendOnlyInvite', '.send_only_job_invitation').on('click.sendOnlyInvite', '.send_only_job_invitation', function(e) {
+        // ── SINGLE AGENCY SEND / RESEND / REMOVE ─────────────────────────────
+        $('body').off('click.sendJobInvitation', '.send_only_job_invitation').on('click.sendJobInvitation', '.send_only_job_invitation', function(e) {
             e.preventDefault();
             var ele = $(this);
             if (ele.data('in-flight')) return false;
             ele.data('in-flight', true).prop('disabled', true).addClass('disabled');
 
-            var id = ele.data('row-jobid') || $('#current_job_id').val();
             var fromcompany = ele.data('row-fromcompany');
             var tocompany = ele.data('row-tocompany');
-            var url = "{{ route('service_company.jobs.send_only_job_invitation', ':id') }}".replace(':id', id);
+            var id = ele.data('row-jobid') || $('#current_job_id').val();
 
             $.ajax({
-                type: 'GET',
-                url: url,
+                type: 'POST',
+                url: "{{ route('service_company.jobs.send_only_job_invitation') }}",
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 data: {
                     'jobid': id,
                     'fromcompany': fromcompany,
@@ -2860,10 +2868,10 @@
                         }
                         if (window.selectedAgencyIds && tocompany) {
                             window.selectedAgencyIds.delete(String(tocompany));
-                            $('#agency_row_' + tocompany + ' .agency-row-checkbox').parent().replaceWith('<div class="flex-shrink-0" style="width: 16px; height: 16px;"></div>');
+                            $('#agency_row_' + tocompany + ' .agency-row-checkbox').parent().replaceWith('<div class="ag-check-spacer"><svg width="15" height="15" viewBox="0 0 24 24" fill="#10b981"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>');
                             updateMultiSendButtonState();
                         }
-                        ele.replaceWith('<span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Request Sent</span>');
+                        ele.replaceWith('<span class="ag-badge-sent"><svg width="13" height="13" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> <span>Request Sent</span></span>');
                         Swal.fire("Success", response.message || "Requirement sent to agency successfully.", "success");
                     } else {
                         Swal.fire("Notice", response.message || "Could not send requirement.", "warning");
@@ -2903,10 +2911,10 @@
                         }
                         if (window.selectedAgencyIds && from_company_id) {
                             window.selectedAgencyIds.delete(String(from_company_id));
-                            $('#agency_row_' + from_company_id + ' .agency-row-checkbox').parent().replaceWith('<div class="flex-shrink-0" style="width: 16px; height: 16px;"></div>');
+                            $('#agency_row_' + from_company_id + ' .agency-row-checkbox').parent().replaceWith('<div class="ag-check-spacer"><svg width="15" height="15" viewBox="0 0 24 24" fill="#10b981"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>');
                             updateMultiSendButtonState();
                         }
-                        $this.replaceWith('<span class="badge py-2 px-3 fw-bold fs-7" style="background:#dcfce7; color:#15803d; border-radius:6px; display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Request Sent</span>');
+                        $this.replaceWith('<span class="ag-badge-sent"><svg width="13" height="13" viewBox="0 0 24 24" fill="#15803d"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> <span>Request Sent</span></span>');
                         Swal.fire("Success", response.message || "Requirement sent to agency successfully.", "success");
                     } else {
                         Swal.fire("Notice", response.message || "Could not send requirement.", "warning");
@@ -3052,33 +3060,6 @@
                     }
                 });
             });
-        });
-
-        // Pagination handlers for Recommended tab
-        $(document).off('click.pagiRecommended', '#paginationrecommendedagency .pagi-page, #paginationrecommendedagency .pagi-arrow')
-                   .on('click.pagiRecommended', '#paginationrecommendedagency .pagi-page, #paginationrecommendedagency .pagi-arrow', function(e) {
-            e.preventDefault();
-            var page = $(this).attr('data-page') || $(this).data('page');
-            if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
-            tableLoad(page);
-        });
-
-        // Pagination handlers for Assigned tab
-        $(document).off('click.pagiAssign', '#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow')
-                   .on('click.pagiAssign', '#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow', function(e) {
-            e.preventDefault();
-            var page = $(this).attr('data-page') || $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
-            recommendedAssignList(page);
-        });
-
-        // Pagination handlers for Registered tab
-        $(document).off('click.pagiRegister', '#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow')
-                   .on('click.pagiRegister', '#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow', function(e) {
-            e.preventDefault();
-            var page = $(this).attr('data-page') || $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
-            staffingPartnersRegister(page);
         });
     })();
 </script>

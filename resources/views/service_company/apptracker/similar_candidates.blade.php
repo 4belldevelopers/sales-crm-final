@@ -1038,33 +1038,16 @@
             justify-content: space-between;
             transition: background-color 0.15s ease, border-color 0.15s ease;
         }
-        .simf-cand-subcard--my-org {
-            background: #fffbeb !important;
-            border-color: #fde68a !important;
-        }
-        .simf-cand-subcard--internal {
-            background: #eff6ff !important;
-            border-color: #bfdbfe !important;
-        }
-        .simf-cand-subcard--direct {
-            background: #ecfdf5 !important;
-            border-color: #a7f3d0 !important;
-        }
+        /* Sub-Card 4: Rule 25 Canonical Badges (Applied strictly to badge pill/text only, subcard remains neutral) */
+        .type-my-org { background: #ecfeff !important; color: #0891b2 !important; border: 1px solid #a5f3fc !important; }
+        .type-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+        .type-direct { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
         .simf-target-type-badge {
             white-space: nowrap !important;
             flex-shrink: 0;
         }
         .simf-cand-card:hover .simf-cand-subcard {
             border-color: #e2e8f0;
-        }
-        .simf-cand-card:hover .simf-cand-subcard--my-org {
-            border-color: #fcd34d !important;
-        }
-        .simf-cand-card:hover .simf-cand-subcard--internal {
-            border-color: #93c5fd !important;
-        }
-        .simf-cand-card:hover .simf-cand-subcard--direct {
-            border-color: #6ee7b7 !important;
         }
         .simf-subcard-head {
             display: flex;
@@ -1940,18 +1923,20 @@
 
                 <div class="card mb-4 simf-toolbar-card">
                     <div class="card-body py-3">
-                        <div class="d-flex align-items-center gap-3 flex-wrap">
-                            <div class="simf-search-wrap" style="position: relative;">
+                        <div class="d-flex align-items-center gap-3 flex-wrap flex-xl-nowrap">
+                            {{-- 1. Search Bar --}}
+                            <div class="simf-search-wrap position-relative flex-grow-1" style="min-width: 240px;">
                                 <span class="simf-search-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
                                 </span>
-                                <input type="text" class="form-control simf-search-input" name="inputJobSearch"
+                                <input type="text" class="form-control simf-search-input pe-8" name="inputJobSearch"
                                     placeholder="Search by candidate name, company or recruiter..." id="kt_tagify_2" autocomplete="off" />
                                 <button type="button" class="simf-search-clear d-none" id="btnSimfSearchClear" title="Clear search">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                 </button>
                             </div>
-                            <div class="simf-sort-wrap" id="simf_sort_wrap">
+                            {{-- 2. Sort Dropdown --}}
+                            <div class="simf-sort-wrap flex-shrink-0" id="simf_sort_wrap">
                                 <span class="simf-sort-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
                                 </span>
@@ -1972,13 +1957,15 @@
                                 </select>
                                 <div class="simf-sort-panel d-none" id="simf_sort_panel"></div>
                             </div>
+                            {{-- 3. Filter Button --}}
                             <button type="button" id="kt_similar_filter_toggle"
-                                class="btn simf-filter-btn position-relative">
+                                class="btn simf-filter-btn position-relative flex-shrink-0">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
                                 <span>Filter<span id="simf_filter_count_text"></span></span>
                                 <span class="badge badge-circle badge-primary simf-count-badge d-none" id="simf_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
                             </button>
-                            <button type="button" id="btnSimfRefreshList" class="btn simf-refresh-btn" title="Refresh candidates">
+                            {{-- 4. Refresh Button --}}
+                            <button type="button" id="btnSimfRefreshList" class="btn simf-refresh-btn flex-shrink-0" title="Refresh candidates">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
                                 <span>Refresh</span>
                             </button>
