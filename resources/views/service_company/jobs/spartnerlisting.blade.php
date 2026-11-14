@@ -2231,7 +2231,7 @@
             sal_mode: $('#sal_mode').val() || ''
         };
 
-        var ramCacheKey = 'recom_' + currentJobId + '_p' + page + '_' + getAgencyParamsKey(params);
+        var ramCacheKey = 'recom_v4_' + currentJobId + '_p' + page + '_' + getAgencyParamsKey(params);
         var hasRep = !!(window.agencyTableCache && window.agencyTableCache[ramCacheKey]);
 
         var jqXHR = $.ajax({
@@ -2325,7 +2325,7 @@
             country: $('#country4').val() || 'Show All'
         };
 
-        var ramCacheKey = 'reg_' + currentJobId + '_p' + page + '_' + getAgencyParamsKey(params);
+        var ramCacheKey = 'reg_v4_' + currentJobId + '_p' + page + '_' + getAgencyParamsKey(params);
         var hasRep = !!(window.agencyTableCache && window.agencyTableCache[ramCacheKey]);
 
         var jqXHR = $.ajax({
@@ -2403,7 +2403,7 @@
             hiringtype: $('#hiringtype4').val() || '0'
         };
 
-        var ramCacheKey = 'assign_' + currentJobId + '_p' + page + '_' + getAgencyParamsKey(params);
+        var ramCacheKey = 'assign_v4_' + currentJobId + '_p' + page + '_' + getAgencyParamsKey(params);
         var hasRep = !!(window.agencyTableCache && window.agencyTableCache[ramCacheKey]);
 
         var jqXHR = $.ajax({
