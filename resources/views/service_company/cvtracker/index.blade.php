@@ -2420,21 +2420,21 @@
     <style>
       /* Must render above #kt_activitiesApplication when opened from showdetail */
       #csd_drawer { z-index: 1000000 !important; }
-      #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
+      #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); flex-wrap: wrap; position: sticky; top: 0; z-index: 20; }
       #csd_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-      #csd_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
-      #csd_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
-      #csd_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
+      #csd_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08); }
+      #csd_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.3; }
+      #csd_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #64748b; margin-top: 1px; }
       #csd_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
-      #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
-      #csd_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
-      #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 20px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: filter .15s; }
+      #csd_drawer .sd-btn-cancel { border: 1px solid #cbd5e1; background: #ffffff; color: #334155; border-radius: 8px; padding: 8px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); transition: all .15s ease; }
+      #csd_drawer .sd-btn-cancel:hover { background: #f1f5f9; border-color: #94a3b8; color: #0f172a; }
+      #csd_drawer .sd-btn-confirm { border: none; background: #2563eb; color: #fff; border-radius: 8px; padding: 9px 20px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: filter .15s; }
       #csd_drawer .sd-btn-confirm:hover { filter: brightness(0.94); }
       #csd_drawer .sd-btn-confirm:disabled { background: #c2c9d6 !important; cursor: not-allowed; }
       #csd_drawer .sd-btn-confirm .indicator-progress { display: none; }
-      #csd_drawer .sd-divider { width: 1px; height: 22px; background: #e4e6ef; }
-      #csd_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
-      #csd_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
+      #csd_drawer .sd-divider { width: 1px; height: 22px; background: #e2e8f0; }
+      #csd_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b; border: 1px solid transparent; cursor: pointer; flex-shrink: 0; transition: all .15s ease; }
+      #csd_drawer .sd-close:hover { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
     </style>
     <div id="csd_drawer_toggle" style="display:none;"></div>
     <div id="csd_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="candidate-stage"

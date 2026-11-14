@@ -28,18 +28,18 @@
     ];
 
     $stageRailColors = [
-        8 => '#f59e0b', // InReview
+        8 => '#eab308', // InReview (standardized yellow)
         1 => '#0891b2', // Sourcing (Client Tracker cyan)
         2 => '#a855f7', // Screening
         3 => '#009ef7', // Evaluation / Interview
         4 => '#ec4899', // Negotiation
-        5 => '#f97316', // Offered
+        5 => '#f97316', // Offered (standardized orange)
         6 => '#10b981', // Joined
         7 => '#ef4444', // Rejected
         9 => '#ef4444', // Rejected / Archived
     ];
     $stageBadgeThemes = [
-        8 => 'background:#fef3c7;color:#92400e;border-color:#fde68a;',
+        8 => 'background:#fefce8;color:#854d0e;border-color:#fef08a;',
         1 => 'background:#ecfeff;color:#0e7490;border-color:#a5f3fc;',
         2 => 'background:#faf5ff;color:#7e22ce;border-color:#e9d5ff;',
         3 => 'background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;',
