@@ -222,6 +222,15 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
         $allCompanies = 0;
         $activeCompanies = 0;
         $superAdminCompanyIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
+        $kpiCounts = [
+            'total_agencies' => 0,
+            'bench_agencies' => 0,
+            'contract_staffing' => 0,
+            'fulltime_hiring' => 0,
+            'indian_agencies' => 0,
+            'global_agencies' => 0,
+        ];
+
         try {
             $mustNotTerms = array_merge(
                 [['term' => ['id' => $company_id]]],
@@ -234,19 +243,53 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
                     'size' => 0,
                     'query' => [
                         'bool' => [
+                            'must' => [
+                                ['term' => ['status' => 'active']],
+                                ['terms' => ['company_type' => [1, 2]]],
+                                [
+                                    'nested' => [
+                                        'path' => 'company_coins',
+                                        'query' => [
+                                            'bool' => [
+                                                'must' => [
+                                                    ['term' => ['company_coins.event_type' => 'sales']],
+                                                    ['range' => ['company_coins.coins' => ['gt' => 0]]],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                             'must_not' => $mustNotTerms,
                         ],
                     ],
                     'aggs' => [
-                        'all_companies' => [
-                            'value_count' => [
-                                'field' => 'id',
+                        'total' => ['value_count' => ['field' => 'id']],
+                        'contract' => [
+                            'filter' => ['term' => ['commericials.commtype' => 1]],
+                        ],
+                        'fulltime' => [
+                            'filter' => ['term' => ['commericials.commtype' => 2]],
+                        ],
+                        'indian' => [
+                            'filter' => ['term' => ['commericial_countries.country_id' => 101]],
+                        ],
+                        'global' => [
+                            'filter' => [
+                                'bool' => [
+                                    'must_not' => [
+                                        ['term' => ['commericial_countries.country_id' => 101]],
+                                    ],
+                                ],
                             ],
                         ],
-                        'active_companies' => [
+                        'bench' => [
                             'filter' => [
-                                'term' => [
-                                    'status' => 'active',
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['commericials.commtype' => 1]],
+                                        ['range' => ['bench_candidates.id' => ['gt' => 0]]],
+                                    ],
                                 ],
                             ],
                         ],
@@ -255,16 +298,34 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
             ];
 
             $response = $this->elasticService->getClient()->search($params);
-            $allCompanies = $response['aggregations']['all_companies']['value'] ?? 0;
-            $activeCompanies = $response['aggregations']['active_companies']['doc_count'] ?? 0;
+            $kpiCounts['total_agencies'] = $response['aggregations']['total']['value'] ?? 0;
+            $kpiCounts['contract_staffing'] = $response['aggregations']['contract']['doc_count'] ?? 0;
+            $kpiCounts['fulltime_hiring'] = $response['aggregations']['fulltime']['doc_count'] ?? 0;
+            $kpiCounts['indian_agencies'] = $response['aggregations']['indian']['doc_count'] ?? 0;
+            $kpiCounts['global_agencies'] = $response['aggregations']['global']['doc_count'] ?? 0;
+            $kpiCounts['bench_agencies'] = $response['aggregations']['bench']['doc_count'] ?? 0;
         } catch (\Throwable $e) {
             // Intent: Gracefully fallback to database counts if ElasticSearch cluster or index is unavailable
-            $allCompanies = DB::table('companies')->where('id', '!=', $company_id)->whereNotIn('id', $superAdminCompanyIds)->count();
-            $activeCompanies = DB::table('companies')->where('id', '!=', $company_id)->whereNotIn('id', $superAdminCompanyIds)->where('status', 'active')->count();
+            $baseQuery = DB::table('companies')
+                ->where('id', '!=', $company_id)
+                ->whereNotIn('id', $superAdminCompanyIds)
+                ->where('status', 'active')
+                ->whereIn('company_type', [1, 2]);
+
+            $total = (clone $baseQuery)->count();
+            $kpiCounts['total_agencies'] = $total;
+            $kpiCounts['contract_staffing'] = $total;
+            $kpiCounts['fulltime_hiring'] = $total;
+            $kpiCounts['bench_agencies'] = $total;
+            $kpiCounts['indian_agencies'] = (clone $baseQuery)->whereExists(function ($q) {
+                $q->selectRaw('1')->from('commericial_countries')->whereColumn('commericial_countries.company_id', 'companies.id')->where('country_id', 101);
+            })->count();
+            $kpiCounts['global_agencies'] = max(0, $total - $kpiCounts['indian_agencies']);
         }
 
-        $this->allCompanies = $allCompanies;
-        $this->activeCompanies = $activeCompanies;
+        $this->kpiCounts = $kpiCounts;
+        $this->allCompanies = $kpiCounts['total_agencies'];
+        $this->activeCompanies = $kpiCounts['total_agencies'];
 
         return view('service_company.common.find-agency', $this->data);
     }
