@@ -683,19 +683,16 @@
         letter-spacing: 0.4px !important;
     }
     .ash-col-agency {
-        padding-left: 28px !important;
+        padding-left: 74px !important;
+    }
+    @media (max-width: 1400px) {
+        .ash-col-agency {
+            padding-left: 68px !important;
+        }
     }
     .ash-col-action {
         text-align: right !important;
         padding-right: 4px !important;
-    }
-    @media (min-width: 992px) {
-        .ag-subcard-label {
-            display: none !important;
-        }
-        .agency-card-grid {
-            padding: 8px 14px !important;
-        }
     }
 
     /* ── Tier 3: Primary Agency Cards Stream (Rule 20) ──────────────────── */
@@ -764,6 +761,16 @@
         display: flex !important;
         align-items: center !important;
         white-space: nowrap !important;
+    }
+    @media (min-width: 992px) {
+        .agency-entity-card .ag-subcard-label,
+        .ag-subcard .ag-subcard-label,
+        .ag-subcard-label {
+            display: none !important;
+        }
+        .agency-card-grid {
+            padding: 8px 14px !important;
+        }
     }
 
     /* Sub-Card 1: Identity */
@@ -1815,9 +1822,9 @@
                     {{-- Sticky Column Header Row (Rule 20 Mandatory Header Background Standard) --}}
                     <div class="agency-stream-header-row d-none d-md-grid">
                         <div class="ash-col ash-col-agency">Agency & Specialization</div>
-                        <div class="ash-col text-center">Profiles</div>
-                        <div class="ash-col text-center">Rates & Terms</div>
-                        <div class="ash-col text-center">Location & Team</div>
+                        <div class="ash-col">Profiles</div>
+                        <div class="ash-col">Rates & Terms</div>
+                        <div class="ash-col">Location & Team</div>
                         <div class="ash-col text-end">Action</div>
                     </div>
                     <div class="agency-stream-container">
@@ -1837,9 +1844,9 @@
                     {{-- Sticky Column Header Row (Rule 20 Mandatory Header Background Standard) --}}
                     <div class="agency-stream-header-row d-none d-md-grid">
                         <div class="ash-col ash-col-agency">Agency & Specialization</div>
-                        <div class="ash-col text-center">Profiles</div>
-                        <div class="ash-col text-center">Rates & Terms</div>
-                        <div class="ash-col text-center">Location & Team</div>
+                        <div class="ash-col">Profiles</div>
+                        <div class="ash-col">Rates & Terms</div>
+                        <div class="ash-col">Location & Team</div>
                         <div class="ash-col text-end">Action</div>
                     </div>
                     <div class="agency-stream-container">
@@ -1855,9 +1862,9 @@
                     {{-- Sticky Column Header Row (Rule 20 Mandatory Header Background Standard) --}}
                     <div class="agency-stream-header-row d-none d-md-grid">
                         <div class="ash-col ash-col-agency">Agency & Specialization</div>
-                        <div class="ash-col text-center">Contact Person</div>
+                        <div class="ash-col">Contact Person</div>
                         <div class="ash-col text-center">Performance Pipeline</div>
-                        <div class="ash-col text-center">Shared Date</div>
+                        <div class="ash-col">Shared Date</div>
                         <div class="ash-col text-end">Status & Actions</div>
                     </div>
                     <div class="agency-stream-container">
