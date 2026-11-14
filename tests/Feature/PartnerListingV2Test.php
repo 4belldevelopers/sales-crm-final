@@ -149,7 +149,7 @@ class PartnerListingV2Test extends TestCase
         \Illuminate\Support\Facades\Cache::put($userKey, 1, 3600);
 
         // Simulate invalidateAgencyDrawerCaches logic
-        $user = new \App\Models\User();
+        $user = new \App\Models\User;
         $user->id = $userId;
         $user->company_id = $companyId;
         $this->actingAs($user);
@@ -164,5 +164,88 @@ class PartnerListingV2Test extends TestCase
 
         $this->assertGreaterThan(1, $newTenantVersion);
         $this->assertGreaterThan(1, $newUserVersion);
+    }
+
+    /**
+     * Test that all critical named routes required by the Add Agency Drawer are properly registered.
+     */
+    public function test_required_add_agency_routes_exist(): void
+    {
+        $router = app('router');
+
+        $this->assertTrue($router->has('service_company.jobs.spartnerlisting'), 'Route service_company.jobs.spartnerlisting must exist');
+        $this->assertTrue($router->has('service_company.jobs.recommendedData'), 'Route service_company.jobs.recommendedData must exist');
+        $this->assertTrue($router->has('service_company.jobs.staffingPartnersRegister'), 'Route service_company.jobs.staffingPartnersRegister must exist');
+        $this->assertTrue($router->has('service_company.jobs.recommendedAssignList'), 'Route service_company.jobs.recommendedAssignList must exist');
+        $this->assertTrue($router->has('service_company.jobs.auction_send_job_request'), 'Route service_company.jobs.auction_send_job_request must exist');
+        $this->assertTrue($router->has('service_company.jobs.send_only_job_invitation'), 'Route service_company.jobs.send_only_job_invitation must exist');
+        $this->assertTrue($router->has('service_company.jobs.send_multiple_job_invitations'), 'Route service_company.jobs.send_multiple_job_invitations must exist');
+    }
+
+    /**
+     * Test that the spartnerlisting Blade view compiles and renders without RouteNotFoundException.
+     */
+    public function test_add_agency_drawer_blade_renders_without_route_exceptions(): void
+    {
+        $mockJob = (object) [
+            'id' => 101,
+            'company_id' => 1,
+            'title' => 'Senior Laravel Engineer',
+            'min_exp' => 3,
+            'max_exp' => 8,
+            'min_salary' => 50000,
+            'max_salary' => 100000,
+            'min_salary_currency' => 'INR',
+            'max_salary_currency' => 'INR',
+            'min_sal_mode' => 'per_month',
+            'max_sal_mode' => 'per_month',
+            'job_type' => 'full_time',
+            'job_opening' => 3,
+            'is_direct_client' => 0,
+            'self_company' => 1,
+            'is_job_request' => 0,
+            'recommendation_id' => 0,
+            'is_agency_work' => 0,
+            'marketplace_channel' => null,
+            'status' => 'active',
+            'meta_details' => json_encode(['vendor_limit' => 20, 'auto_expire' => 30]),
+        ];
+
+        $viewData = [
+            'job' => $mockJob,
+            'job_id' => 101,
+            'skillArr' => ['Laravel', 'PHP', 'Elasticsearch'],
+            'company_name' => 'Acme Corp',
+            'ind_name' => 'Information Technology',
+            'jobLocation' => ['Bengaluru, India'],
+            'jobLocationCount' => 1,
+            'assignTeam' => ['Team Alpha'],
+            'assignTeamCount' => 1,
+            'min_exp' => 3,
+            'max_exp' => 8,
+            'min_salary' => 50000,
+            'max_salary' => 100000,
+            'currencySymbole' => '₹',
+            'salaryMode' => 'per_month',
+            'employmentType' => 'Full-time',
+            'isPublishedToMarketplace' => false,
+            'agencyAcceptanceLimit' => 20,
+            'autoExpireDays' => 30,
+            'autoExpireDateFormatted' => '14 Dec 2026',
+            'registeredTotalCount' => 5,
+            'assignedTotalCount' => 2,
+            'filter_type' => [],
+            'industries' => [],
+            'countries' => [],
+            'skills' => [],
+        ];
+
+        $html = view('service_company.jobs.spartnerlisting', $viewData)->render();
+
+        $this->assertNotEmpty($html);
+        $this->assertStringContainsString('Publish to Agency Marketplace', $html);
+        $this->assertStringContainsString('Send Requirement Directly to Agencies', $html);
+        $this->assertStringContainsString('staffingPartnersRegister', $html);
+        $this->assertStringContainsString('recommendedAssignList', $html);
     }
 }

@@ -1693,19 +1693,131 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
      where 80% would leave too little room for the two-column layout. Same trigger class
      (.status_stage) and same AJAX endpoints as before — only the chrome changed. -->
 <style>
-  #status_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
-  #status_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  #status_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
-  #status_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
-  #status_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
-  #status_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
-  #status_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 16px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
-  #status_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
-  #status_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; }
-  #status_drawer .sd-btn-confirm:hover { background: #2f7fe0; }
-  #status_drawer .sd-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
-  #status_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
-  #status_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
+  #status_drawer {
+    font-family: 'Poppins', sans-serif;
+  }
+  #status_drawer .sd-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 28px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  #status_drawer .sd-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+  #status_drawer .sd-topbar-ico {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08);
+  }
+  #status_drawer .sd-topbar-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.3;
+  }
+  #status_drawer .sd-topbar-sub {
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  #status_drawer .sd-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #status_drawer .sd-btn-cancel {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: all 0.15s ease;
+  }
+  #status_drawer .sd-btn-cancel:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+  #status_drawer .sd-btn-confirm {
+    border: none;
+    background: #009ef7;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.25);
+    transition: all 0.15s ease;
+  }
+  #status_drawer .sd-btn-confirm:hover {
+    background: #008be3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 158, 247, 0.35);
+  }
+  #status_drawer .sd-btn-confirm:disabled {
+    background: #cbd5e1 !important;
+    color: #94a3b8 !important;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+  #status_drawer .sd-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: all 0.15s ease;
+  }
+  #status_drawer .sd-close:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #ef4444;
+  }
+  #status_drawer .status_body_content {
+    background: #f8fafc;
+  }
 </style>
 <div id="status_drawer_toggle" style="display:none;"></div>
 <div id="status_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="job-status"

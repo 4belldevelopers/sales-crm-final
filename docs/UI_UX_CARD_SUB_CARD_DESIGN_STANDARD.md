@@ -48,7 +48,7 @@ Raw, sprawling HTML tables, generic unstyled card heads, and unstructured flat l
 A unified, high-density toolbar card that encapsulates the section's identity, dynamic full-text search, and primary call-to-action.
 
 1. **Card Container:**
-   - Background: Pure White (`#ffffff !important`)
+   - Background: Dedicated Header Background Color (`#f8fafc !important` or soft slate `#f1f5f9 !important`)
    - Border: `1px solid #e2e8f0 !important`
    - Border-Radius: `10px !important`
    - Padding: `12px 18px !important`
@@ -62,12 +62,34 @@ A unified, high-density toolbar card that encapsulates the section's identity, d
 3. **Right Action Area:**
    - **Search Sub-Card (`.cd-*-search-subcard`):**
      - Dimensions: `height: 36px; width: 280px; max-width: 100%;`
-     - Background: Light neutral (`#f8fafc`), transitions to `#ffffff` on focus.
+     - Background: Light neutral (`#ffffff`), transitions to `#ffffff` on focus.
      - Border: `1px solid #e2e8f0`, transitions to `#009ef7` with `box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12)`.
      - Border-Radius: `8px`.
      - Elements: Embedded `<i class="fas fa-search"></i>`, borderless `<input>` (12px Poppins), and interactive clear button `<button type="button" class="cd-*-search-clear">✕</button>`.
    - **Action Button (`.cd-*-add-btn`):**
      - Height: `36px`, Metronic primary blue (`btn-primary`), border-radius `8px`, font-size `12px`, font-weight `600`.
+
+---
+
+### Mandatory Header Background Color Standard (Universal Law)
+All headers across drawers, cards, sub-card sections, and tables **MUST ALWAYS** carry a dedicated background color to establish visual hierarchy, create crisp boundaries, and eliminate flat/unanchored floating text:
+1. **Drawer Headers (`.sd-topbar`, modal headers):**
+   - Background: `#f8fafc !important`
+   - Border-Bottom: `1px solid #e2e8f0 !important`
+   - Box-Shadow: `0 1px 3px rgba(15, 23, 42, 0.04) !important`
+   - Action buttons sit on white pill backgrounds with subtle shadows.
+2. **Card Headers (`.card-header`, `.jsd-card-header`):**
+   - Background: `#f8fafc !important`
+   - Border-Bottom: `1px solid #e2e8f0 !important`
+   - Padding: `12px 18px !important`
+   - Contrasts sharply against card body `#ffffff !important` to immediately communicate section intent.
+3. **Sub-Card Section Headers:**
+   - Background: `#f8fafc !important` or `#f1f5f9 !important` (or soft semantic tint: `#ecfdf5` for active, `#fffbeb` for warning).
+   - Border-Bottom: `1px solid #e2e8f0 !important`
+4. **Table & Capability Matrix Headers (`thead tr th`):**
+   - Background: `#f1f5f9 !important`
+   - Border-Bottom: `1px solid #e2e8f0 !important`
+   - Typography: Uppercase, bold, `11px`, `#475569`, tracking `0.5px`.
 
 ---
 
@@ -283,6 +305,7 @@ $(document).on('click', '.js-job-filter-btn', function() {
 6. **NO Artificial Matching Badges:** Do not inject placeholder badges like "15 Matching" or "7 Matching" in Team or Agency sub-cards. Show real metrics or clean em-dashes (`—`).
 7. **Strict CQRS Compliance:** The read pipeline for cards must execute with **0% MySQL reads**, drawing 100% of data from Elasticsearch read projections.
 8. **Dynamic Client Name & Full-Time Placement:** In the Primary Details sub-card, always display the dynamically populated Client Name (never hardcode company names) with Employment Type (e.g. `Full-Time` / `Full-time` / `Contract`) placed in the same row immediately next to the client name.
+9. **Mandatory Background Color for All Headers:** All drawer headers (`.sd-topbar`), Tier 1 toolbar cards, card headers (`.card-header`, `.jsd-card-header`), sub-card section headers, and comparison matrix / table header rows (`thead tr`) **MUST ALWAYS** have a dedicated background color (e.g., `#f8fafc` or `#f1f5f9` with border `#e2e8f0`). Never leave headers transparent, pure white, or unanchored floating text.
 
 ---
 

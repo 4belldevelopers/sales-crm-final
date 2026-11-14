@@ -10,13 +10,20 @@ This skill enforces the Modern Card + Sub-Card enterprise layout across all enti
 ## Core Hierarchy & Dimensions
 
 ### Tier 1: Toolbar Header Card
-- Background: `#ffffff`, Border: `1px solid #e2e8f0`, Border-radius: `10px`.
+- Background: Dedicated Header Background Color `#f8fafc` (or soft slate `#f1f5f9`), Border: `1px solid #e2e8f0`, Border-radius: `10px`.
 - Box Shadow: `0 1px 3px rgba(0, 0, 0, 0.05)`.
 - Left Side: Entity title, live count pill badge, refresh button.
 - Right Side: Dynamic live search bar (300ms debounce + clear 'X' button) and primary CTA button.
 
+### Mandatory Header Background Color Standard (Universal Across All Views & Drawers)
+- **Drawer Headers (`.sd-topbar`, modal topbars)**: MUST have `background: #f8fafc; border-bottom: 1px solid #e2e8f0;` — never transparent or plain white.
+- **Card Headers (`.card-header`, `.jsd-card-header`)**: MUST have `background: #f8fafc; border-bottom: 1px solid #e2e8f0;` to clearly demarcate the controls/metadata from the card body `#ffffff`.
+- **Sub-Card Section Headers**: MUST have a distinct background color (`#f8fafc` or `#f1f5f9` with border `#e2e8f0`, or soft semantic tint) for visual anchoring.
+- **Table / Comparison Matrix Headers (`thead tr th`)**: MUST have `background: #f1f5f9; border-bottom: 1px solid #e2e8f0;` with high-contrast text `#475569`.
+- **Purpose**: Prevents flat, unanchored floating text, establishes crisp visual boundaries between controls and contents, and ensures best enterprise UI/UX implementation across 15.6" screens.
+
 ### Tier 2: Dedicated Sub-Tabs Card
-- Background: `#ffffff`, Border: `1px solid #e2e8f0`, Border-radius: `10px`.
+- Background: `#ffffff` (or soft `#f8fafc`), Border: `1px solid #e2e8f0`, Border-radius: `10px`.
 - Active Tab Highlight: Single primary blue accent (`#009ef7`), soft background tint (`#f1faff`), font-weight 600.
 - Counter Badges: Crisp secondary badges for tab items.
 - Live Status: Real-time sync indicator where applicable.
