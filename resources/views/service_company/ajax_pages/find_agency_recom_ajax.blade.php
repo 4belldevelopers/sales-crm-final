@@ -184,11 +184,7 @@
                                 @if($percentage > 0)
                                     <span class="ag-badge ag-badge-match-high">Match {{ $percentage }}%</span>
                                 @else
-                                    <span class="ag-badge ag-badge-additional">Additional Partner</span>
-                                @endif
-
-                                @if(!empty($row->_is_additional))
-                                    <span class="ag-badge ag-badge-additional" title="Additional partner agency from eligible pool">Additional Agency</span>
+                                    <span class="ag-badge ag-badge-additional" title="Additional partner agency from eligible pool">Additional Partner</span>
                                 @endif
 
                                 @php
