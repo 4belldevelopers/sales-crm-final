@@ -15927,6 +15927,21 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->recruiter = [];
         $company_id = auth()->user()->company_id;
         $clientCompanyId = DB::table('jobs')->select('jobs.company_id')->where('jobs.id', '=', $this->currentJobId)->first();
+        $this->company_details = DB::table('companies')->where('id', $company_id)->first();
+        $this->company_name = $this->company_details->company_name ?? '4Bell Technology';
+        $this->client_types = DB::table('clients')->where('company_id', $company_id)->first();
+        $this->logo = $this->client_types->logo ?? ($this->company_details->logo ?? null);
+
+        // Pre-aggregate active jobs count per user in a single query (0% N+1 overhead)
+        $this->activeJobsCounts = DB::table('job_assign')
+            ->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
+            ->where('jobs.status', '=', 'active')
+            ->where('job_assign.company_id', '=', $company_id)
+            ->groupBy('job_assign.user_id')
+            ->select('job_assign.user_id', DB::raw('count(distinct job_assign.job_id) as total'))
+            ->pluck('total', 'job_assign.user_id')
+            ->toArray();
+
         $this->team = DB::table('users')
             ->leftJoin('job_assign', function ($join) use ($id, $company_id) {
                 $join->on('job_assign.user_id', '=', 'users.id');
@@ -15952,10 +15967,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->groupBy('users.id')
             ->get();
         $view = view('service_company.jobs.currentteamlisting', $this->data)->render();
-        $this->client_types = DB::table('clients')->where('company_id', $company_id)->first();
-        $this->logo = $this->client_types->logo ?? null;
 
-        return Reply::dataOnly(['status' => 'success', 'view' => $view, 'logo' => $this->logo]);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'view' => $view,
+            'logo' => $this->logo,
+            'company_name' => $this->company_name,
+        ]);
     }
 
     /**

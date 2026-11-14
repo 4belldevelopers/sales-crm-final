@@ -1,615 +1,1073 @@
-<style>
-.form-check.form-check-custom .form-check-label { margin-left: 2.55rem; }
-
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
-#kt_activities_body, #kt_activities_scroll, .card-custom, .table, .btn,
-.form-control, .form-select, .badge, .symbol-label, .card-title, .card-label,
-.assigned-card, .alert, .input-group-text, .empty-state-text, .section-title {
-    font-family: 'Poppins', sans-serif;
+@php
+/**
+ * Modern Hiring Team Drawer — God-Level Diamond Standard (Rule 20)
+ *
+ * Implements the drawer-based Add/View Team interface for the Team sub-card on Jobs Tracker.
+ * Architecture: 100% Client-First reactive state, Poppins font, 15.6" screen responsiveness.
+ * Tenancy: tenant-scoped by company_id, synchronizes with service_company.jobs.hmlistingupdate.
+ */
+$activeJobsMap = !empty($activeJobsCounts) ? $activeJobsCounts : [];
+if (empty($activeJobsMap)) {
+    try {
+        $activeJobsMap = \Illuminate\Support\Facades\DB::table('job_assign')
+            ->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
+            ->where('jobs.status', '=', 'active')
+            ->where('job_assign.company_id', '=', auth()->user()->company_id)
+            ->groupBy('job_assign.user_id')
+            ->select('job_assign.user_id', \Illuminate\Support\Facades\DB::raw('count(distinct job_assign.job_id) as total'))
+            ->pluck('total', 'job_assign.user_id')
+            ->toArray();
+    } catch (\Exception $e) {
+        $activeJobsMap = [];
+    }
 }
 
-.card-custom { border: 0; box-shadow: 0 0 20px rgba(76,87,125,0.02); border-radius: 12px; }
+$teamRoster = [];
+$assignedList = [];
+$captainId = null;
 
-/* Selected member cards */
-.assigned-card { border: 1px solid #eff2f5; border-radius: 12px; background: #fff; transition: all .2s ease; padding: 18px 20px; }
-.assigned-card:hover { box-shadow: 0 0 15px rgba(76,87,125,0.04); border-color: #e4e6ef; }
-.assigned-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-.assigned-card.h-100 { display: flex; flex-direction: column; }
-.assigned-card.h-100 .ac-actions { margin-top: auto; padding-top: 6px; }
-.ac-actions { gap: 10px !important; }
+foreach ($team as $m) {
+    $mId = (int)$m->id;
+    $isAssigned = ($m->job_assign_id > 0 && (string)$m->job_id === (string)$currentJobId);
+    $isCaptain = ($isAssigned && $m->spok_user_id && (int)$m->spok_user_id === $mId);
+    if ($isCaptain) {
+        $captainId = $mId;
+    }
+    $activeJobs = (int)($activeJobsMap[$mId] ?? 0);
 
-.hm-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
+    $memberData = [
+        'id' => $mId,
+        'name' => (string)($m->name ?? 'Team Member'),
+        'role' => (string)($m->designation ?: ($m->display_name ?: 'Recruiter')),
+        'email' => (string)($m->email ?? ''),
+        'activeJobs' => $activeJobs,
+        'isAssigned' => $isAssigned,
+        'isCaptain' => $isCaptain,
+    ];
+    $teamRoster[] = $memberData;
+    if ($isAssigned) {
+        $assignedList[] = $memberData;
+    }
+}
 
-/* Contact icons */
-.btn-icon-circle { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; padding: 0; border: 1px solid #eaecf0; background: #f8fafc; color: #667085; font-size: 12px; }
-.btn-icon-circle:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+// Fallback: If members assigned but no spokesperson recorded, earliest assigned is Captain
+if ($captainId === null && count($assignedList) > 0) {
+    $captainId = $assignedList[0]['id'];
+    foreach ($teamRoster as &$r) {
+        if ($r['id'] === $captainId) {
+            $r['isCaptain'] = true;
+        }
+    }
+    unset($r);
+    $assignedList[0]['isCaptain'] = true;
+}
+@endphp
 
-/* Clean full-width search */
-.hm-search { position: relative; width: 100%; }
-.hm-search > i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #a1a5b7; font-size: 17px; pointer-events: none; }
-.hm-search input { width: 100%; height: 46px; border: 1px solid #eef2f6; background: #f5f8fa; border-radius: 10px; padding: 0 16px 0 42px; font-size: 13px; color: #181c32; outline: none; transition: all .15s ease; }
-.hm-search input::placeholder { color: #a1a5b7; }
-.hm-search input:focus { background: #fff; border-color: #bfdbfe; box-shadow: 0 0 0 3px rgba(37,99,235,.08); }
+<style>
+/* ==========================================================================
+   Modern Hiring Team Drawer (v7.2 Diamond Standard - 15.6" Screen Fit)
+   ========================================================================== */
+#kt_activitiesTEAM.drawer, #kt_activitiesTEAM {
+    width: 600px !important;
+    max-width: 100vw !important;
+    font-family: 'Poppins', sans-serif !important;
+    box-shadow: -4px 0 28px rgba(0, 0, 0, 0.16) !important;
+    background: #ffffff !important;
+    z-index: 10050 !important;
+}
+@media (min-width: 992px) {
+    #kt_activitiesTEAM.drawer, #kt_activitiesTEAM {
+        width: 600px !important;
+        min-width: 560px !important;
+        max-width: 640px !important;
+    }
+}
+@media (min-width: 576px) and (max-width: 991.98px) {
+    #kt_activitiesTEAM.drawer, #kt_activitiesTEAM {
+        width: min(600px, 92vw) !important;
+    }
+}
+@media (max-width: 575.98px) {
+    #kt_activitiesTEAM.drawer, #kt_activitiesTEAM {
+        width: 100vw !important;
+    }
+}
 
-/* Status dot */
-.status-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; }
-.status-dot::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
-.status-dot.active::before { background-color: #50cd89; }
-.status-dot.active { color: #50cd89; }
-.status-dot.inactive::before { background-color: #f1416c; }
-.status-dot.inactive { color: #f1416c; }
+.hiring-team-drawer-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #0f172a !important;
+}
 
-.badge.badge-light-primary { background-color: #f1faff; color: #009ef7; }
-.jobs-badge { font-size: 12px; font-weight: 600; }
+/* --- Top Assigned Section --- */
+.ht-drawer-assigned-section {
+    background: #f8fafc !important;
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    flex-shrink: 0 !important;
+    max-height: 32vh !important;
+    overflow-y: auto !important;
+}
+.ht-assigned-header {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    margin-bottom: 8px !important;
+}
+.ht-assigned-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    color: #475569 !important;
+}
+.ht-assigned-sub {
+    font-size: 11px !important;
+    color: #94a3b8 !important;
+    font-weight: 400 !important;
+}
+.ht-assigned-empty {
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+    font-style: italic !important;
+    padding: 6px 0 !important;
+}
+.ht-assigned-cards-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+    gap: 8px !important;
+}
+.ht-assigned-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 7px 10px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.2s ease !important;
+}
+.ht-assigned-card:hover {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+}
+.ht-assigned-card.is-captain {
+    border-color: #fde68a !important;
+    background: #fffdf5 !important;
+}
+.ht-assigned-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    color: #ffffff !important;
+    flex-shrink: 0 !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+.ht-assigned-info {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+.ht-assigned-name {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+}
+.ht-assigned-role {
+    font-size: 10px !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+}
+.ht-assigned-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+}
+.ht-captain-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    border-radius: 12px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+.ht-captain-badge i {
+    color: #f59e0b !important;
+    font-size: 10px !important;
+}
+.ht-make-captain-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: #ffffff !important;
+    color: #64748b !important;
+    border: 1px solid #cbd5e1 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    padding: 2px 7px !important;
+    border-radius: 12px !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all 0.15s ease !important;
+}
+.ht-make-captain-btn:hover {
+    background: #fffbeb !important;
+    color: #b45309 !important;
+    border-color: #fde68a !important;
+}
+.ht-card-remove-btn {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    transition: all 0.15s ease !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+}
+.ht-card-remove-btn:hover {
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
+}
 
-.section-title { font-weight: 600; color: #181c32; margin-bottom: 2px; font-size: 15px; }
-.section-subtitle { color: #a1a5b7; display: block; font-size: 12px; }
+/* --- Search & Filter Bar --- */
+.ht-drawer-search-bar {
+    padding: 12px 20px !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    flex-shrink: 0 !important;
+}
+.ht-search-input-wrap {
+    position: relative !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+}
+.ht-search-icon {
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #94a3b8 !important;
+    font-size: 16px !important;
+    pointer-events: none !important;
+    line-height: 1 !important;
+}
+.ht-search-input {
+    width: 100% !important;
+    height: 40px !important;
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+    padding: 0 36px 0 38px !important;
+    font-size: 13px !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #0f172a !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+}
+.ht-search-input:focus {
+    background: #ffffff !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+.ht-search-input::placeholder {
+    color: #94a3b8 !important;
+}
+.ht-search-clear {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    background: #cbd5e1 !important;
+    color: #ffffff !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 10px !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    transition: background 0.15s ease !important;
+}
+.ht-search-clear:hover {
+    background: #94a3b8 !important;
+}
+.ht-filter-pills {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+}
+.ht-pill {
+    padding: 5px 12px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    font-family: 'Poppins', sans-serif !important;
+    border-radius: 20px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    line-height: 1.3 !important;
+}
+.ht-pill:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+.ht-pill.active {
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #2563eb !important;
+    font-weight: 600 !important;
+}
 
-.empty-state-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.4rem 1.25rem; text-align: center; }
-.empty-state-icon { width: 50px; height: 50px; border-radius: 50%; background-color: #f3f6f9; display: inline-flex; align-items: center; justify-content: center; margin-bottom: .65rem; color: #a1a5b7; font-size: 20px; }
-.empty-state-text .empty-title { font-size: 14px; font-weight: 600; color: #181c32; margin-bottom: .15rem; }
-.empty-state-text .empty-subtitle { color: #a1a5b7; margin-bottom: .85rem; font-size: 12px; }
+/* --- List Header & Hints --- */
+.ht-drawer-list-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 20px !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    flex-shrink: 0 !important;
+}
+.ht-list-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.6px !important;
+    color: #475569 !important;
+}
+.ht-list-hint {
+    font-size: 10px !important;
+    color: #94a3b8 !important;
+}
+.ht-list-hint kbd {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 3px !important;
+    padding: 1px 4px !important;
+    font-size: 9px !important;
+    margin: 0 2px !important;
+    color: #475569 !important;
+}
 
-/* Drawer header (logo + intro) */
-.hm-drawer-header { display: flex; align-items: center; gap: 14px; padding: 6px 4px 2px; }
-.hm-logo { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, #2f6bff, #1f9cf0); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; box-shadow: 0 6px 16px rgba(37,99,235,.25); overflow: hidden; }
-.hm-logo img { width: 100%; height: 100%; object-fit: cover; }
-.hm-head-title { font-size: 18px; font-weight: 700; color: #181c32; line-height: 1.2; }
-.hm-head-sub { font-size: 12px; color: #a1a5b7; margin-top: 2px; }
+/* --- Viewport & Rows --- */
+.ht-virtual-viewport {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background: #ffffff !important;
+    position: relative !important;
+    outline: none !important;
+}
+.ht-virtual-viewport::-webkit-scrollbar,
+.ht-drawer-assigned-section::-webkit-scrollbar {
+    width: 6px !important;
+}
+.ht-virtual-viewport::-webkit-scrollbar-track,
+.ht-drawer-assigned-section::-webkit-scrollbar-track {
+    background: #f8fafc !important;
+}
+.ht-virtual-viewport::-webkit-scrollbar-thumb,
+.ht-drawer-assigned-section::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 3px !important;
+}
+.ht-virtual-viewport::-webkit-scrollbar-thumb:hover,
+.ht-drawer-assigned-section::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+}
 
-.info-banner { background-color: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px 16px; font-size: 12px; display: flex; align-items: center; gap: 10px; }
-.info-banner i { font-size: 16px; flex-shrink: 0; color: #2563eb; }
+.ht-virtual-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    max-height: 64px !important;
+    padding: 0 20px !important;
+    box-sizing: border-box !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+    background: #ffffff !important;
+}
+.ht-virtual-row:hover {
+    background: #f8fafc !important;
+}
+.ht-virtual-row.focused {
+    background: #eff6ff !important;
+    outline: none !important;
+}
+.ht-virtual-row.assigned {
+    background: #f0fdf4 !important;
+}
+.ht-virtual-row.assigned:hover {
+    background: #dcfce7 !important;
+}
+.ht-virtual-row.focused.assigned {
+    background: #dcfce7 !important;
+}
 
-.card-header-compact { padding: 1.25rem 1.5rem .5rem 1.5rem; border-bottom: 0; background: transparent; }
-.card-body-compact { padding: 0 1.5rem 1.5rem 1.5rem; }
+.ht-row-avatar {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    flex-shrink: 0 !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+.ht-row-info {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    margin-left: 14px !important;
+}
+.ht-row-name {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+}
+.ht-row-role {
+    font-size: 11px !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    margin-top: 1px !important;
+}
+.ht-row-workload {
+    flex-shrink: 0 !important;
+    margin: 0 14px !important;
+}
+.ht-workload-tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    padding: 3px 9px !important;
+    border-radius: 12px !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+}
+.ht-workload-tag i {
+    font-size: 12px !important;
+}
+.ht-workload-tag.low {
+    color: #10b981 !important;
+    background: #ecfdf5 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+.ht-workload-tag.high {
+    color: #ef4444 !important;
+    background: #fee2e2 !important;
+    border: 1px solid #fecaca !important;
+}
 
-#Iteam_Table111 { margin-bottom: 0; }
-#Iteam_Table111 thead th { background-color: #f3f6f9; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; padding: 10px 12px; border-bottom: 1px solid #e4e6ef; color: #a1a5b7; font-size: 11px; white-space: nowrap; }
-#Iteam_Table111 tbody tr { border-bottom: 1px dashed #e4e6ef; }
-#Iteam_Table111 tbody tr:last-child { border-bottom: 0; }
-#Iteam_Table111 tbody td { padding: 12px; font-size: 13px; vertical-align: middle; }
-.highlight { background-color: #fff8dd !important; transition: background-color .15s ease; }
-.w-100px { width: 100px !important; text-align: center; justify-content: center; }
-.member-name { font-size: 13px; font-weight: 600; color: #181c32; }
-.member-role { font-size: 11px; color: #a1a5b7; }
+.ht-row-action {
+    flex-shrink: 0 !important;
+}
+.ht-assign-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+    height: 30px !important;
+    padding: 0 12px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all 0.15s ease !important;
+    line-height: 1 !important;
+}
+.ht-virtual-row:not(.assigned) .ht-assign-btn {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border: 1px solid #bfdbfe !important;
+}
+.ht-virtual-row:not(.assigned) .ht-assign-btn:hover {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+}
+.ht-virtual-row.assigned .ht-assign-btn {
+    background: #ffffff !important;
+    color: #16a34a !important;
+    border: 1px solid #86efac !important;
+}
+.ht-virtual-row.assigned .ht-assign-btn:hover {
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
+    border-color: #fca5a5 !important;
+}
 
-/* Pills */
-.pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 20px; white-space: nowrap; line-height: 1; }
-.pill-captain { background: #fff8e6; color: #d99100; }
-.pill-captain .la { color: #e0a400; }
-.pill-assigned { background: #e8fff3; color: #17b26a; }
-.pill-assigned .la { color: #17b26a; }
-
-/* Kebab */
-.ac-kebab-wrap { position: relative; }
-.ac-kebab-btn { width: 26px; height: 26px; border-radius: 6px; border: 0; background: transparent; color: #98a2b3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; transition: all .15s ease; }
-.ac-kebab-btn:hover { background: #f2f4f7; color: #475569; }
-.ac-kebab-menu { position: absolute; right: 0; top: 30px; z-index: 30; background: #fff; border: 1px solid #eaecf0; border-radius: 8px; box-shadow: 0 8px 24px rgba(16,24,40,.12); padding: 6px; min-width: 152px; display: none; }
-.ac-kebab-menu.show { display: block; }
-.ac-kebab-menu a { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; font-size: 12px; color: #475569 !important; text-decoration: none; }
-.ac-kebab-menu a:hover { background: #f8fafc; color: #2563eb !important; }
-.ac-kebab-menu a .la { font-size: 14px; width: 16px; text-align: center; }
-
-.ac-actions .btn { flex: 1 1 0; padding: 7px 10px !important; font-size: 11px !important; }
-/* The card "Make Captain" keeps the .hidden-button class (to trigger the original handler),
-   but a global rule hides .hidden-button — force it visible & normally-positioned here. */
-#kt_activities_body .ac-actions .hidden-button { display: inline-flex !important; position: static !important; transform: none !important; bottom: auto !important; left: auto !important; align-items: center; justify-content: center; }
-
-/* Royal-blue palette scoped to this drawer */
-#kt_activities_body .btn-light.btn-active-light-primary, #kt_activities_body .btn-light-primary { border: 1px solid #d6e4ff !important; color: #2563eb !important; background-color: #fff !important; font-weight: 500; }
-#kt_activities_body .btn-light.btn-active-light-primary:hover, #kt_activities_body .btn-light-primary:hover { background-color: #eef4ff !important; border-color: #2563eb !important; color: #1d4ed8 !important; }
-#kt_activities_body .btn-light-danger { border: 1px solid #fbd5de !important; color: #ef4444 !important; background-color: #fff !important; font-weight: 500; }
-#kt_activities_body .btn-light-danger:hover { background-color: #fff1f4 !important; border-color: #ef4444 !important; }
-#kt_activities_body .btn-primary { background-color: #2563eb !important; border-color: #2563eb !important; }
-#kt_activities_body .btn-primary:hover { background-color: #1d4ed8 !important; border-color: #1d4ed8 !important; }
-
-/* Contact popup (email / call / whatsapp) */
-.cm-overlay { position: fixed; inset: 0; background: rgba(16,24,40,.45); z-index: 10050; display: none; align-items: center; justify-content: center; padding: 20px; }
-.cm-overlay.show { display: flex; }
-.cm-box { background: #fff; border-radius: 16px; width: 380px; max-width: 92vw; padding: 28px 26px; text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,.22); font-family: 'Poppins', sans-serif; animation: cmpop .15s ease; }
-@keyframes cmpop { from { transform: scale(.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.cm-icon { width: 56px; height: 56px; border-radius: 50%; background: #eaf4ff; color: #2f9bff; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px; }
-.cm-title { font-size: 17px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
-.cm-sub { font-size: 12px; color: #98a2b3; margin-bottom: 18px; }
-.cm-value { background: #f5f8fb; border-radius: 10px; padding: 13px 12px; font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 18px; word-break: break-all; }
-.cm-actions { display: flex; gap: 12px; }
-.cm-btn { flex: 1; padding: 11px 14px; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; text-decoration: none; border: 1px solid transparent; }
-.cm-btn.cm-cancel { background: #fff; border-color: #e4e6ef; color: #475569; }
-.cm-btn.cm-cancel:hover { background: #f8fafc; }
-.cm-btn.cm-go { background: #1f9cf0; border-color: #1f9cf0; color: #fff !important; }
-.cm-btn.cm-go:hover { background: #1481cf; border-color: #1481cf; }
-
-/* Drawer fit */
-#kt_activitiesTEAM.drawer, #kt_activitiesTEAM { width: min(1160px, 96vw) !important; max-width: 96vw !important; }
-#kt_activities_body { max-width: 1180px; margin: 0 auto; }
-@media only screen and (max-width: 1199.98px){ #kt_activitiesTEAM { width: min(960px, 96vw) !important; } }
-@media (max-width: 767.98px){ .filter-bar { flex-direction: column; width: 100%; } }
-@media (max-width: 575.98px){ .assigned-grid { grid-template-columns: 1fr; } .ac-actions { flex-wrap: wrap; } }
+/* Empty state */
+.ht-empty-state {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 40px 20px !important;
+    text-align: center !important;
+}
+.ht-empty-icon {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    background: #f1f5f9 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 22px !important;
+    color: #94a3b8 !important;
+    margin-bottom: 10px !important;
+}
+.ht-empty-title {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    margin-bottom: 4px !important;
+}
+.ht-empty-sub {
+    font-size: 11px !important;
+    color: #94a3b8 !important;
+}
 </style>
 
-<?php
-/* Captain id (spokesperson) for the current job */
-$captainId = null;
-foreach($team as $teamVal){
-    if(@$teamVal->id == @$teamVal->spok_user_id){ $captainId = $teamVal->id; break; }
-}
-?>
+<div class="hiring-team-drawer-wrapper">
+    <!-- 1. Top Assigned Team Section -->
+    <div class="ht-drawer-assigned-section" id="recDrawerAssignedContainer"></div>
 
-<form>
-  <div class="card-body position-relative px-0 py-0" id="kt_activities_body">
-    <div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_activities_body" data-kt-scroll-dependencies="#kt_activities_header, #kt_activities_footer" data-kt-scroll-offset="5px" style="">
-
-    <!--begin::Drawer Header (logo + intro) — optional, off to match the reference design-->
-    {{-- <div class="hm-drawer-header mx-2 mb-3">
-      <div class="hm-logo"><i class="la la-users"></i></div>
-      <div>
-        <div class="hm-head-title">Assign Team Members</div>
-        <div class="hm-head-sub">Add team members who will work on this position</div>
-      </div>
-    </div> --}}
-    <!--end::Drawer Header-->
-
-    <!--begin::Assigned Team Members-->
-    <div class="card card-custom mx-2 mb-3" id="assignedSection">
-      <div class="card-header card-header-compact">
-        <div class="card-title flex-column align-items-start m-0">
-          <h3 class="section-title mb-0">1. Assigned Team Members <span class="text-muted" id="assignedCountDisplay" style="font-weight:400;">(0)</span></h3>
-          <span class="section-subtitle mt-1">These members are working on this position</span>
+    <!-- 2. Search & Filter Bar -->
+    <div class="ht-drawer-search-bar">
+        <div class="ht-search-input-wrap">
+            <i class="la la-search ht-search-icon"></i>
+            <input type="text" id="recDrawerSearchInput" class="ht-search-input" placeholder="Search team members by name, role..." autocomplete="off" spellcheck="false">
+            <button type="button" id="recDrawerSearchClear" class="ht-search-clear" style="display:none !important;" title="Clear Search">
+                <i class="la la-times"></i>
+            </button>
         </div>
-      </div>
-      <div class="card-body card-body-compact">
-        <div class="assigned-grid" id="assignedGrid" style="display:none;"></div>
-        <div id="teamEmptyState">
-          <div class="empty-state-container">
-            <div class="empty-state-icon"><i class="la la-user-friends"></i></div>
-            <div class="empty-state-text">
-              <div class="empty-title">No team members assigned</div>
-              <div class="empty-subtitle">Assign members below to start building your team for this position.</div>
-            </div>
-            <button type="button" class="btn btn-sm btn-light btn-active-light-primary" id="scrollToTableBtn"><i class="la la-plus me-1"></i>Add Team Members</button>
-          </div>
+        <div class="ht-filter-pills" role="tablist">
+            <button type="button" class="ht-pill active" data-filter="all" id="pillAll">All ({{ count($teamRoster) }})</button>
+            <button type="button" class="ht-pill" data-filter="available" id="pillAvailable">Available (≤ 3 jobs)</button>
+            <button type="button" class="ht-pill" data-filter="busy" id="pillBusy">High Load (> 3 jobs)</button>
         </div>
-      </div>
     </div>
-    <!--end::Assigned Team Members-->
 
-    <!--begin::Info Alert-->
-    <div class="mx-2 mb-3">
-      <div class="info-banner">
-        <i class="la la-info-circle"></i>
-        <span>Only assigned members can be made captain. There can be only one captain for a position.</span>
-      </div>
+    <!-- 3. Section Header -->
+    <div class="ht-drawer-list-header">
+        <span class="ht-list-title" id="recDrawerAvailableCount">AVAILABLE RECRUITERS ({{ count($teamRoster) }})</span>
+        <span class="ht-list-hint"><kbd>↑</kbd><kbd>↓</kbd> navigate, <kbd>Enter</kbd> toggle</span>
     </div>
-    <!--end::Info Alert-->
 
-    <!--begin::Add More Team Members-->
-    <div class="card card-custom mx-2 mb-3" id="addMoreTeamSection">
-      <div class="card-header card-header-compact">
-        <div class="card-title flex-column align-items-start m-0">
-          <h3 class="section-title mb-0">2. Add Team Members</h3>
-          <span class="section-subtitle mt-1">Search and select members to assign to this position</span>
+    <!-- 4. Recruiter Roster List -->
+    <div class="ht-virtual-viewport" id="recVirtualViewport" role="listbox" aria-label="Recruiter roster" tabindex="0">
+        <div id="recVirtualItems"></div>
+        <div id="recVirtualEmpty" class="ht-empty-state" style="display:none !important;">
+            <div class="ht-empty-icon"><i class="la la-user-slash"></i></div>
+            <div class="ht-empty-title">No team members found</div>
+            <div class="ht-empty-sub" id="recVirtualEmptySub">Try searching with a different name or clear the filter.</div>
         </div>
-      </div>
-      <div class="card-body card-body-compact">
+    </div>
+</div>
 
-        <!--begin::Filter (full width, aligned)-->
-        <div class="filter-bar mb-4">
-          <div class="hm-search">
-            <i class="la la-search"></i>
-            <input type="text" id="searchInput" placeholder="Search for team members...">
-          </div>
-        </div>
-        <!--end::Filter-->
+<script>
+(function() {
+    var roster = @json($teamRoster);
+    var currentJobId = "{{ $currentJobId }}";
+    var captainId = {{ $captainId !== null ? json_encode($captainId) : 'null' }};
+    var filterTab = 'all';
+    var searchQuery = '';
+    var focusedIndex = 0;
+    var csrfToken = "{{ csrf_token() }}";
+    var updateUrlTemplate = "{{ route('service_company.jobs.hmlistingupdate', ':id') }}";
+    var isProcessing = false;
 
-        <!--begin::Table-->
-        <div class="table-responsive">
-          <table class="table align-middle table-row-dashed fs-6 gy-5 mb-0" id="Iteam_Table111">
-            <thead>
-              <tr class="fw-bolder text-muted bg-light">
-                <th class="min-w-200px">Team Member</th>
-                <th class="min-w-100px">Jobs</th>
-                <th class="min-w-120px">Role</th>
-                <th class="min-w-100px">Status</th>
-                <th class="min-w-140px">Contact</th>
-                <th class="min-w-120px text-end">Action</th>
-              </tr>
-            </thead>
-            <tbody class="text-gray-600 fw-bold">
-<?php
-            foreach($team as $teamVal)
-            {
-                $activeJobs = DB::table('job_assign')->join('jobs','jobs.id','=','job_assign.job_id')->where('jobs.status','=','active')->where('job_assign.user_id', $teamVal->id)->distinct('job_assign.job_id')->count('job_assign.job_id');
+    // Harmonized avatar color palette (Metronic Enterprise Diamond Standard)
+    var AVATAR_COLORS = ['#3E97FF', '#7239EA', '#50CD89', '#F6C000', '#F1416C', '#009EF7'];
+    function getAvatarColor(str) {
+        if (!str) return AVATAR_COLORS[0];
+        var hash = 0;
+        for (var i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+    }
 
-                $bgTextDecore = $strVal = '';
-                $str = trim(@$teamVal->name);
-                $str = $strVal = strtolower($str[0]);
-                $str = ord($str);
-                if ($str >= 97 && $str <= 101) { $bgTextDecore = 'fs-3 bg-light-danger text-danger'; }
-                else if ($str >= 102 && $str <= 106) { $bgTextDecore = 'fs-3 bg-light-warning text-warning'; }
-                else if ($str >= 107 && $str <= 111) { $bgTextDecore = 'fs-3 bg-light-primary text-primary'; }
-                else if ($str >= 112 && $str <= 116) { $bgTextDecore = 'fs-3 bg-light-success text-success'; }
-                else if ($str >= 117 && $str <= 121) { $bgTextDecore = 'fs-3 bg-dark text-secondary'; }
-                else { $bgTextDecore = 'fs-3 bg-light-secondary text-dark'; }
+    function getInitialLetter(name) {
+        if (!name) return 'T';
+        var trimmed = name.trim();
+        return trimmed.charAt(0).toUpperCase();
+    }
 
-                $btn_text = $btn_class = '';
-                $btn_assign = 0;
-                if(@$teamVal->job_assign_id > 0 && ($currentJobId == $teamVal->job_id)){
-                    $btn_text   = 'Remove';
-                    $btn_class  = 'btn-light-danger';
-                    $btn_assign = 1;
-                }else{
-                    $btn_text   = 'Add';
-                    $btn_class  = 'btn-light-primary';
-                    $btn_assign = 0;
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    // Get current filtered list
+    function getFilteredList() {
+        var query = searchQuery.trim().toLowerCase();
+        return roster.filter(function(m) {
+            // Filter pill constraint
+            if (filterTab === 'available' && m.activeJobs > 3) return false;
+            if (filterTab === 'busy' && m.activeJobs <= 3) return false;
+
+            // Search query constraint
+            if (query !== '') {
+                var nameMatch = (m.name || '').toLowerCase().indexOf(query) !== -1;
+                var roleMatch = (m.role || '').toLowerCase().indexOf(query) !== -1;
+                if (!nameMatch && !roleMatch) return false;
+            }
+            return true;
+        });
+    }
+
+    // Render Assigned Team Section
+    function renderAssigned() {
+        var container = document.getElementById('recDrawerAssignedContainer');
+        if (!container) return;
+
+        var assigned = roster.filter(function(m) { return m.isAssigned; });
+
+        // Sort so the Captain is always first
+        assigned.sort(function(a, b) {
+            if (a.id === captainId) return -1;
+            if (b.id === captainId) return 1;
+            return a.name.localeCompare(b.name);
+        });
+
+        if (assigned.length === 0) {
+            container.innerHTML =
+                '<div class="ht-assigned-header">' +
+                    '<span class="ht-assigned-title">ASSIGNED TEAM (0)</span>' +
+                    '<span class="ht-assigned-sub">Earliest assigned member acts as Job Captain</span>' +
+                '</div>' +
+                '<div class="ht-assigned-empty">No recruiters assigned yet. Select from the roster below.</div>';
+            return;
+        }
+
+        var cardsHtml = assigned.map(function(m) {
+            var isCap = (m.id === captainId);
+            var initial = getInitialLetter(m.name);
+            var avatarColor = getAvatarColor(m.name);
+
+            var captainBadge = isCap
+                ? '<span class="ht-captain-badge"><i class="fa fa-star"></i> Captain</span>'
+                : '<button type="button" class="ht-make-captain-btn js-make-captain" data-user-id="' + m.id + '" title="Promote to Job Captain"><i class="fa fa-star-o"></i> Make Captain</button>';
+
+            return '' +
+                '<div class="ht-assigned-card ' + (isCap ? 'is-captain' : '') + '">' +
+                    '<div class="ht-assigned-avatar" style="background:' + avatarColor + '">' + escapeHtml(initial) + '</div>' +
+                    '<div class="ht-assigned-info">' +
+                        '<div class="ht-assigned-name" title="' + escapeHtml(m.name) + '">' + escapeHtml(m.name) + '</div>' +
+                        '<div class="ht-assigned-role" title="' + escapeHtml(m.role) + '">' + escapeHtml(m.role) + '</div>' +
+                    '</div>' +
+                    '<div class="ht-assigned-actions">' +
+                        captainBadge +
+                        '<button type="button" class="ht-card-remove-btn js-remove-assigned" data-user-id="' + m.id + '" title="Remove Recruiter">' +
+                            '<i class="la la-times"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+        }).join('');
+
+        container.innerHTML =
+            '<div class="ht-assigned-header">' +
+                '<span class="ht-assigned-title">ASSIGNED TEAM (' + assigned.length + ')</span>' +
+                '<span class="ht-assigned-sub">Earliest assigned member acts as Job Captain</span>' +
+            '</div>' +
+            '<div class="ht-assigned-cards-grid">' + cardsHtml + '</div>';
+    }
+
+    // Render Available Recruiters Roster
+    function renderRoster() {
+        var itemsContainer = document.getElementById('recVirtualItems');
+        var emptyEl = document.getElementById('recVirtualEmpty');
+        var emptySub = document.getElementById('recVirtualEmptySub');
+        var countEl = document.getElementById('recDrawerAvailableCount');
+
+        if (!itemsContainer) return;
+
+        var filtered = getFilteredList();
+
+        if (countEl) {
+            countEl.textContent = 'AVAILABLE RECRUITERS (' + filtered.length + ')';
+        }
+
+        if (filtered.length === 0) {
+            itemsContainer.innerHTML = '';
+            if (emptyEl) emptyEl.style.setProperty('display', 'flex', 'important');
+            if (emptySub) {
+                if (roster.length === 0) {
+                    emptySub.textContent = 'No recruiters are configured for this organization.';
+                } else if (searchQuery.trim() !== '') {
+                    emptySub.textContent = 'No team members match your search criteria. Try a different name.';
+                } else {
+                    emptySub.textContent = 'No team members match the selected filter. Try switching tabs.';
                 }
+            }
+            return;
+        }
 
-                $rName  = htmlspecialchars((string) @$teamVal->name, ENT_QUOTES);
-                $rEmail = htmlspecialchars((string) @$teamVal->email, ENT_QUOTES);
-                $rPhone = htmlspecialchars((string) (@$teamVal->phone ?: (@$teamVal->mobile ?: (@$teamVal->contact_number ?: ''))), ENT_QUOTES);
-                $rCode  = htmlspecialchars((string) (@$teamVal->calling_code ?: 'in'), ENT_QUOTES);
-?>
-              <tr>
-                <td>
-                  <div class="d-flex align-items-center">
-                    <div class="symbol symbol-circle symbol-40px overflow-hidden me-3 border-radius-5">
-                      <div class="symbol-label <?php echo @$bgTextDecore; ?> border-radius-5"><?php echo strtoupper(@$strVal); ?></div>
-                    </div>
-                    <div class="d-flex flex-column {{ @$teamVal->id==@$teamVal->spok_user_id ? '' : 'show_hidden' }}" style="position:relative;">
-                      <span class="member-name"><?php echo ucwords(substr(@$teamVal->name, 0, 30)); ?>
-                        <?php if(@$teamVal->id == @$teamVal->spok_user_id): ?><sup style="color:#d99100;font-weight:600;">(Captain)</sup><?php endif; ?>
-                      </span>
-                      <span class="member-role"><?php echo ucwords(@$teamVal->designation); ?></span>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <span class="jobs-badge <?php echo ($activeJobs >= 1) ? 'text-success' : 'text-muted'; ?>"><?php echo $activeJobs; ?> Active</span>
-                </td>
-                <td><span class="text-muted" style="font-size:12px;"><?php echo ucwords(substr(@$teamVal->display_name, 0, 15)); ?></span></td>
-                <td>
-                  <?php if(@$teamVal->working_status == 1): ?>
-                  <span class="status-dot active">Active</span>
-                  <?php else: ?>
-                  <span class="status-dot inactive">Inactive</span>
-                  <?php endif; ?>
-                </td>
-                <td>
-                  <div class="d-flex align-items-center gap-1">
-                    <button type="button" class="btn-icon-circle contact-action" data-type="email" data-name="<?php echo $rName; ?>" data-email="<?php echo $rEmail; ?>" title="Email"><i class="la la-envelope"></i></button>
-                    <button type="button" class="btn-icon-circle contact-action" data-type="call" data-name="<?php echo $rName; ?>" data-phone="<?php echo $rPhone; ?>" data-code="<?php echo $rCode; ?>" title="Call"><i class="la la-phone"></i></button>
-                    <button type="button" class="btn-icon-circle contact-action" data-type="whatsapp" data-name="<?php echo $rName; ?>" data-phone="<?php echo $rPhone; ?>" data-code="<?php echo $rCode; ?>" title="WhatsApp"><i class="la la-whatsapp"></i></button>
-                  </div>
-                </td>
-                <td class="text-end">
-                  {{-- Original assign/remove button — handler, id and data attributes preserved exactly --}}
-                  <a id="btn_<?php echo @$teamVal->id ?>" href="javascript:void(0);" class="team_event cp_select btn btn-sm <?php echo $btn_class; ?> w-100px"
-                     rel="<?php echo @$currentJobId ?>" data-assign="<?php echo $btn_assign; ?>" data-userid="<?php echo @$teamVal->id ?>"><?php echo ($btn_text == 'Add' ? 'Assign' : $btn_text); ?></a>
-                </td>
-              </tr>
-<?php } ?>
-            </tbody>
-          </table>
-        </div>
-        <!--end::Table-->
+        if (emptyEl) emptyEl.style.setProperty('display', 'none', 'important');
 
-      </div>
-    </div>
-    <!--end::Add More Team Members-->
+        // Bound focusedIndex
+        if (focusedIndex >= filtered.length) {
+            focusedIndex = Math.max(0, filtered.length - 1);
+        }
 
-    </div>
-  </div>
-</form>
+        var html = filtered.map(function(m, idx) {
+            var isAssigned = !!m.isAssigned;
+            var isFocused = (idx === focusedIndex);
+            var initial = getInitialLetter(m.name);
+            var avatarColor = getAvatarColor(m.name);
+            var isLowLoad = (m.activeJobs <= 3);
 
+            var workloadClass = isLowLoad ? 'low' : 'high';
+            var workloadText = m.activeJobs + ' active';
 
-<script>
-	$(document).ready(function(){
+            var actionBtn = isAssigned
+                ? '<button type="button" class="btn btn-sm ht-assign-btn assigned js-toggle-assign" data-user-id="' + m.id + '" title="Click to unassign"><i class="la la-check"></i> Assigned</button>'
+                : '<button type="button" class="btn btn-sm ht-assign-btn js-toggle-assign" data-user-id="' + m.id + '" title="Click to assign">+ Assign</button>';
 
-		            $(document).on('click', '.team_event', function(e){
-									e.preventDefault();
+            return '' +
+                '<div class="ht-virtual-row ' + (isAssigned ? 'assigned' : '') + ' ' + (isFocused ? 'focused' : '') + '" ' +
+                     'data-user-id="' + m.id + '" data-index="' + idx + '" role="option" aria-selected="' + (isAssigned ? 'true' : 'false') + '">' +
+                    '<div class="d-flex align-items-center" style="min-width:0; flex:1 1 auto;">' +
+                        '<div class="ht-row-avatar" style="background:' + avatarColor + '">' + escapeHtml(initial) + '</div>' +
+                        '<div class="ht-row-info">' +
+                            '<div class="ht-row-name">' + escapeHtml(m.name) + '</div>' +
+                            '<div class="ht-row-role">' + escapeHtml(m.role) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="ht-row-workload">' +
+                        '<span class="ht-workload-tag ' + workloadClass + '">' +
+                            '<i class="la la-briefcase"></i> ' + workloadText +
+                        '</span>' +
+                    '</div>' +
+                    '<div class="ht-row-action">' +
+                        actionBtn +
+                    '</div>' +
+                '</div>';
+        }).join('');
 
-									    var $btn = $(this);
-										if ($btn.data('processing')) return; // prevent double click
-										$btn.data('processing', true);
-												fetchCandidates();
+        itemsContainer.innerHTML = html;
+    }
 
-														var currentJobId    		=	$(this).attr('rel');
-														var currentUserId    		=	$(this).data('userid');
-														var assignStatus    		=	$(this).data('assign');
-														var id    					=	currentUserId;
-														setTimeout(() => {
+    // Toggle Assignment (Assign or Remove)
+    function toggleAssignment(userId) {
+        if (isProcessing) return;
+        var member = roster.find(function(m) { return m.id === userId; });
+        if (!member) return;
 
+        isProcessing = true;
+        var wasAssigned = !!member.isAssigned;
+        var willAssign = !wasAssigned;
 
-														if(assignStatus == 0){
-																$('#btn_'+currentUserId).addClass("btn-light-danger");
-																$('#btn_'+currentUserId).removeClass("btn-light-primary");
-																$('#btn_'+currentUserId).text('Remove');
-																$(this).data('assign',1);
-														}else if(assignStatus == 1){
-																$('#btn_'+currentUserId).addClass("btn-light-primary");
-																$('#btn_'+currentUserId).removeClass("btn-light-danger");
-																$('#btn_'+currentUserId).text('Add');
-																$(this).data('assign',0);
-														}
-														var makespokesperson	=	false;
-														var token 					=	"{{ csrf_token() }}";
-														var url   					=	"{{ route('service_company.jobs.hmlistingupdate',':id') }}";
-														url     					=	url.replace(':id', id);
-														var baseurl    				=	"{{ asset('assets/images/Loading2.gif') }}";
-														$.ajax({
-																	type  		:	'GET',
-																	url   		:	url,
-																	data		:	{'_token': token, 'currentJobId' : currentJobId, 'currentUserId' : currentUserId, 'assignStatus' : assignStatus,'makespokesperson':makespokesperson },
-																	success 	:	function (response) {
-																						if(response.status=='success'){
-																							if(assignStatus == 0){
+        // Optimistic State Mutation
+        member.isAssigned = willAssign;
 
-																									$('#btn_'+currentUserId).addClass("btn-light-danger");
-																									$('#btn_'+currentUserId).removeClass("btn-light-primary");
-																									// $('#btn_'+currentUserId).text('Remove');
-																							}else if(assignStatus == 1){
+        var currentlyAssigned = roster.filter(function(m) { return m.isAssigned; });
 
-																									$('#btn_'+currentUserId).addClass("btn-light-primary");
-																									$('#btn_'+currentUserId).removeClass("btn-light-danger");
-																									// $('#btn_'+currentUserId).text('Add');
-																							}
-																						}
-
-																						fetchCandidates();
-
-																	},
-																	complete: function() {
-																		$btn.data('processing', false); // unlock after AJAX completes
-																	}
-															});
-															}, 500);
-
-					});
-
-
-					$(document).on('click', '.hidden-button', function(e){
-							e.preventDefault();
-							var ele = $(this);
-
-							 // Prevent multiple clicks
-							if (ele.hasClass('processing')) {
-								return false; // Exit if the button is already processing
-							}
-							ele.addClass('processing'); // Mark as processing
-
-
-														var currentJobId    		=	$(this).attr('rel');
-														var currentUserId    		=	$(this).data('userid');
-														var assignStatus    		=	$(this).data('assign');
-
-
-														var id    					=	currentUserId;
-														var token 					=	"{{ csrf_token() }}";
-														var makespokesperson    					=	true;
-														ele.text('Captain Changing...')
-														var url   					=	"{{ route('service_company.jobs.hmlistingupdate',':id') }}";
-														url     					=	url.replace(':id', id);
-														var baseurl    				=	"{{ asset('assets/images/Loading2.gif') }}";
-														$.ajax({
-																	type  		:	'GET',
-																	url   		:	url,
-																	data		:	{'_token': token, 'currentJobId' : currentJobId, 'currentUserId' : currentUserId, 'assignStatus' : assignStatus,'makespokesperson':makespokesperson },
-
-										success 	:	function (response)
-										                {
-															if(response.status=='success'){
-																ele.text('Captain Assigned Successfully');
-																setTimeout(() => {
-																	 $('#kt_activitiesTEAM_close').click();
-																	 fetchCandidates();
-																}, 2000);
-
-
-														}
-
-
-
-
-										},
-										complete: function () {
-											ele.removeClass('processing'); // Allow clicks again after the process
-										}
-															});
-
-
-					});
-
-
-
-
-});
-</script>
-
-<!--begin::New UI: real-time assigned cards + contact popups (additive, no backend logic changed)-->
-<script>
-var __teamData = <?php echo json_encode(array_map(function($t){ return ['id'=>@$t->id,'name'=>@$t->name,'designation'=>@$t->designation,'email'=>@$t->email,'number'=>(@$t->phone ?: (@$t->mobile ?: (@$t->contact_number ?: ''))),'code'=>(@$t->calling_code ?: 'in')]; }, (is_array($team) ? $team : (method_exists($team,'all') ? $team->all() : (array) $team)))); ?>;
-var __captainId = <?php echo $captainId !== null ? json_encode((string)$captainId) : 'null'; ?>;
-var __currentJobId = "<?php echo @$currentJobId; ?>";
-var __assignedSet = {};
-
-function tmColor(ch){ var c=(ch||'a').toLowerCase().charCodeAt(0); if(c>=97&&c<=101)return '#ef4444'; if(c>=102&&c<=106)return '#f59e0b'; if(c>=107&&c<=111)return '#2563eb'; if(c>=112&&c<=116)return '#10b981'; if(c>=117&&c<=121)return '#334155'; return '#64748b'; }
-function tmInitials(n){ n=(n||'').trim(); var p=n.split(/\s+/); var s=(p[0]?p[0].charAt(0):'')+(p[1]?p[1].charAt(0):''); return (s||n.charAt(0)||'?').toUpperCase(); }
-function tmEsc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function tmTitle(s){ return (s||'').toString().replace(/\b\w/g,function(c){return c.toUpperCase();}); }
-function tmFind(id){ for(var i=0;i<__teamData.length;i++){ if(String(__teamData[i].id)===String(id)) return __teamData[i]; } return null; }
-
-function tmCardHtml(m){
-    var isCaptain = (String(m.id) === String(__captainId));
-    var role = m.designation ? m.designation : 'Team Member';
-    var pill = isCaptain
-        ? '<span class="pill pill-captain"><i class="la la-crown me-1"></i>Captain</span>'
-        : '<span class="pill pill-assigned"><i class="la la-check-circle me-1"></i>Assigned</span>';
-    // Captain: only Remove. Every other selected member: Make Captain (real) + Remove.
-    var actions = isCaptain
-        ? '<button type="button" class="btn btn-sm btn-light-danger tm-remove" data-userid="'+m.id+'">Remove</button>'
-        : '<a href="javascript:void(0);" class="btn btn-sm btn-light btn-active-light-primary hidden-button" rel="'+tmEsc(__currentJobId)+'" data-assign="3" data-userid="'+m.id+'">Make Captain</a>'
-          + '<button type="button" class="btn btn-sm btn-light-danger tm-remove" data-userid="'+m.id+'">Remove</button>';
-    return '<div class="assigned-card h-100" id="assigned_card_'+m.id+'">'
-        + '<div class="d-flex align-items-start justify-content-between mb-3">'
-        +   '<div class="d-flex align-items-center" style="min-width:0;">'
-        +     '<div class="hm-avatar me-3" style="background:'+tmColor((m.name||'').charAt(0))+'">'+tmEsc(tmInitials(m.name))+'</div>'
-        +     '<div style="min-width:0;">'
-        +       '<div class="fw-bolder text-dark text-truncate" style="font-size:13px;">'+tmEsc(tmTitle((m.name||'').substring(0,22)))+'</div>'
-        +       '<div class="text-muted text-truncate" style="font-size:11px;">'+tmEsc(tmTitle((role||'').substring(0,22)))+'</div>'
-        +     '</div>'
-        +   '</div>'
-        +   '<div class="d-flex align-items-center gap-2 flex-shrink-0">'+pill
-        +     '<div class="ac-kebab-wrap"><button type="button" class="ac-kebab-btn" title="More"><i class="la la-ellipsis-v"></i></button>'
-        +       '<div class="ac-kebab-menu">'
-        +         '<a href="javascript:void(0);" class="contact-action" data-type="email" data-name="'+tmEsc(m.name)+'" data-email="'+tmEsc(m.email)+'"><i class="la la-envelope"></i> Email</a>'
-        +         '<a href="javascript:void(0);" class="contact-action" data-type="call" data-name="'+tmEsc(m.name)+'" data-phone="'+tmEsc(m.number)+'" data-code="'+tmEsc(m.code)+'"><i class="la la-phone"></i> Call</a>'
-        +         '<a href="javascript:void(0);" class="contact-action" data-type="whatsapp" data-name="'+tmEsc(m.name)+'" data-phone="'+tmEsc(m.number)+'" data-code="'+tmEsc(m.code)+'"><i class="la la-whatsapp"></i> WhatsApp</a>'
-        +       '</div>'
-        +     '</div>'
-        +   '</div>'
-        + '</div>'
-        + '<div class="d-flex gap-2 ac-actions">'+actions+'</div>'
-        + '</div>';
-}
-
-// Single, debounced render (one DOM pass per frame — no flicker / double load)
-var __renderQueued = false;
-function renderAssignedTeam(){
-    if(__renderQueued) return;
-    __renderQueued = true;
-    requestAnimationFrame(function(){
-        __renderQueued = false;
-        var assigned = Object.keys(__assignedSet).map(tmFind).filter(function(m){ return m; });
-        assigned.sort(function(a,b){ return (String(b.id)===String(__captainId)?1:0) - (String(a.id)===String(__captainId)?1:0); });
-        if(assigned.length === 0){
-            $('#assignedGrid').hide().empty();
-            $('#teamEmptyState').show();
+        if (willAssign) {
+            // If this is the only assigned member, automatically make Captain
+            if (currentlyAssigned.length === 1 || !captainId) {
+                captainId = member.id;
+                member.isCaptain = true;
+            }
         } else {
-            var html=''; assigned.forEach(function(m){ html += tmCardHtml(m); });
-            $('#assignedGrid').html(html).show();
-            $('#teamEmptyState').hide();
-        }
-        $('#assignedCountDisplay').text('('+assigned.length+')');
-    });
-}
-
-$(document).ready(function() {
-    // Seed assigned set from the server-rendered button states, then render once
-    __teamData.forEach(function(m){
-        var $b = $('#btn_'+m.id);
-        if($b.length && String($b.attr('data-assign')) === '1'){ __assignedSet[m.id] = true; }
-    });
-    renderAssignedTeam();
-
-    // Real-time, instant: when a table Assign/Remove is clicked, update the cards immediately
-    $(document).on('click', '#Iteam_Table111 .cp_select', function(){
-        var id = $(this).data('userid');
-        var willAssign = (String($(this).data('assign')) === '0');
-        if(willAssign){ __assignedSet[id] = true; } else { delete __assignedSet[id]; }
-        renderAssignedTeam();
-    });
-
-    // Always show "Assign" (never "Add") on the table buttons — normalize whenever they change
-    function tmNormalizeLabels(){ $('#Iteam_Table111 .cp_select').each(function(){ if($(this).text().trim()==='Add'){ $(this).text('Assign'); } }); }
-    tmNormalizeLabels();
-    var __tbl = document.getElementById('Iteam_Table111');
-    if(__tbl){ try { new MutationObserver(tmNormalizeLabels).observe(__tbl, {subtree:true, childList:true, characterData:true}); } catch(e){} }
-
-    // Search/filter the table rows
-    var $rows = $('#Iteam_Table111').find('tbody tr');
-    $('#searchInput').on('keyup', function() {
-        var value = $(this).val().toLowerCase();
-        $rows.find('td').removeClass('highlight');
-        $rows.each(function() {
-            var $row = $(this), rowText = '';
-            $row.find('td').each(function() { rowText += $(this).text().toLowerCase() + ' '; });
-            if (rowText.indexOf(value) > -1) {
-                $row.show();
-                if (value.trim() !== '') {
-                    $row.find('td').each(function() { if ($(this).text().toLowerCase().indexOf(value) > -1) { $(this).addClass('highlight'); } });
+            // Member was removed
+            member.isCaptain = false;
+            if (captainId === member.id) {
+                // Promote earliest remaining assigned member
+                if (currentlyAssigned.length > 0) {
+                    captainId = currentlyAssigned[0].id;
+                    currentlyAssigned[0].isCaptain = true;
+                } else {
+                    captainId = null;
                 }
-            } else { $row.hide(); }
+            }
+        }
+
+        renderAssigned();
+        renderRoster();
+
+        var assignStatus = willAssign ? 0 : 1; // 0 = insert, 1 = delete
+        var url = updateUrlTemplate.replace(':id', userId);
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            data: {
+                '_token': csrfToken,
+                'currentJobId': currentJobId,
+                'currentUserId': userId,
+                'assignStatus': assignStatus,
+                'makespokesperson': (willAssign && member.isCaptain)
+            },
+            success: function(response) {
+                if (typeof window.fetchCandidates === 'function') {
+                    window.fetchCandidates();
+                }
+            },
+            error: function(xhr) {
+                // Rollback on network/server error
+                member.isAssigned = wasAssigned;
+                renderAssigned();
+                renderRoster();
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ text: 'Failed to update team assignment. Please try again.', icon: 'error' });
+                }
+            },
+            complete: function() {
+                isProcessing = false;
+            }
         });
-    });
-
-    // Empty-state scroll to table
-    $(document).on('click', '#scrollToTableBtn', function(e){ e.preventDefault(); $('html,body').animate({scrollTop:$('#addMoreTeamSection').offset().top-20},400); setTimeout(function(){ $('#searchInput').focus(); },450); });
-
-    // Card Remove → update cards instantly + fire the real table Remove (server AJAX)
-    $(document).on('click', '.tm-remove', function(e){
-        e.preventDefault();
-        var userid = $(this).data('userid');
-        delete __assignedSet[userid];
-        renderAssignedTeam();
-        var $tableBtn = $('#btn_' + userid);
-        if ($tableBtn.length && $tableBtn.text().trim().toLowerCase() === 'remove') {
-            $tableBtn.trigger('click');
-        }
-    });
-
-    // Kebab dropdown
-    $(document).on('click', '.ac-kebab-btn', function(e){ e.preventDefault(); e.stopPropagation(); var $m=$(this).siblings('.ac-kebab-menu'); $('.ac-kebab-menu').not($m).removeClass('show'); $m.toggleClass('show'); });
-    $(document).on('click', '.ac-kebab-menu', function(e){ e.stopPropagation(); });
-    $(document).on('click', function(){ $('.ac-kebab-menu').removeClass('show'); });
-
-    // ---- Contact popup (Email / Call / WhatsApp) ----
-    if(!document.getElementById('contactModalOverlay')){
-        $('body').append(
-            '<div class="cm-overlay" id="contactModalOverlay">'
-          + '  <div class="cm-box">'
-          + '    <div class="cm-icon"><i class="la" id="cmIcon"></i></div>'
-          + '    <div class="cm-title" id="cmTitle"></div>'
-          + '    <div class="cm-sub" id="cmSub"></div>'
-          + '    <div class="cm-value" id="cmValue"></div>'
-          + '    <div class="cm-actions">'
-          + '      <button type="button" class="cm-btn cm-cancel" id="cmCancel">Cancel</button>'
-          + '      <a class="cm-btn cm-go" id="cmGo" href="#"><i class="la" id="cmGoIcon"></i> <span id="cmGoText"></span></a>'
-          + '    </div>'
-          + '  </div>'
-          + '</div>'
-        );
-    }
-    function cmDigits(s){ return (s||'').toString().replace(/[^0-9]/g,''); }
-    function cmDial(code){ try { if(typeof countryDialCodes !== 'undefined' && code && countryDialCodes[code]){ return countryDialCodes[code].toString(); } } catch(e){} return ''; }
-    function cmPhoneDisplay(code, number){ number=(number||'').toString().trim(); if(!number) return ''; var d=cmDial(code); if(d){ if(d.charAt(0)!=='+') d='+'+d; return d+' '+number; } return number; }
-    function cmPhoneE164(code, number){ return cmDigits(cmDial(code)) + cmDigits(number); }
-
-    function openContactModal(opts){
-        var type = opts.type, name = opts.name || 'this member';
-        var $go = $('#cmGo'); $go.removeAttr('target');
-        if(type === 'email'){
-            var email = opts.email || '';
-            $('#cmIcon').attr('class','la la-envelope'); $('#cmTitle').text('Send Email to '+name); $('#cmSub').text('Click below to open your email client');
-            $('#cmValue').text(email || 'No email available'); $('#cmGoIcon').attr('class','la la-external-link-alt'); $('#cmGoText').text('Open Email');
-            $go.attr('href', email ? ('mailto:'+email) : '#');
-        } else if(type === 'call'){
-            var disp = cmPhoneDisplay(opts.code, opts.phone), e164 = cmPhoneE164(opts.code, opts.phone);
-            $('#cmIcon').attr('class','la la-phone'); $('#cmTitle').text('Call '+name); $('#cmSub').text('Click below to initiate the call');
-            $('#cmValue').text(disp || 'No number available'); $('#cmGoIcon').attr('class','la la-phone'); $('#cmGoText').text('Call Now');
-            $go.attr('href', e164 ? ('tel:+'+e164) : '#');
-        } else if(type === 'whatsapp'){
-            var wdisp = cmPhoneDisplay(opts.code, opts.phone), we164 = cmPhoneE164(opts.code, opts.phone);
-            $('#cmIcon').attr('class','la la-whatsapp'); $('#cmTitle').text('Message '+name+' on WhatsApp'); $('#cmSub').text('Click below to open WhatsApp');
-            $('#cmValue').text(wdisp || 'No number available'); $('#cmGoIcon').attr('class','la la-whatsapp'); $('#cmGoText').text('Open WhatsApp');
-            $go.attr('href', we164 ? ('https://wa.me/'+we164) : '#').attr('target','_blank');
-        }
-        $('#contactModalOverlay').addClass('show');
     }
 
-    $(document).on('click', '.contact-action', function(e){
-        e.preventDefault(); e.stopPropagation();
-        $('.ac-kebab-menu').removeClass('show');
-        openContactModal({
-            type:  $(this).data('type'),
-            name:  $(this).data('name') ? String($(this).data('name')) : '',
-            email: $(this).data('email') ? String($(this).data('email')) : '',
-            phone: $(this).data('phone') !== undefined ? String($(this).data('phone')) : '',
-            code:  $(this).data('code') ? String($(this).data('code')) : 'in'
+    // Make Captain (Set spokesperson)
+    function makeCaptain(userId) {
+        if (isProcessing) return;
+        var target = roster.find(function(m) { return m.id === userId; });
+        if (!target || !target.isAssigned) return;
+
+        isProcessing = true;
+        var prevCaptainId = captainId;
+        captainId = userId;
+
+        roster.forEach(function(m) {
+            m.isCaptain = (m.id === userId);
         });
-    });
-    $(document).on('click', '#cmCancel', function(){ $('#contactModalOverlay').removeClass('show'); });
-    $(document).on('click', '#contactModalOverlay', function(e){ if(e.target === this){ $(this).removeClass('show'); } });
-    $(document).on('click', '#cmGo', function(){ var h=$(this).attr('href'); setTimeout(function(){ $('#contactModalOverlay').removeClass('show'); },100); if(!h || h==='#'){ return false; } });
-});
+
+        renderAssigned();
+        renderRoster();
+
+        var url = updateUrlTemplate.replace(':id', userId);
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            data: {
+                '_token': csrfToken,
+                'currentJobId': currentJobId,
+                'currentUserId': userId,
+                'assignStatus': 3,
+                'makespokesperson': true
+            },
+            success: function(response) {
+                if (typeof window.fetchCandidates === 'function') {
+                    window.fetchCandidates();
+                }
+            },
+            error: function(xhr) {
+                // Rollback
+                captainId = prevCaptainId;
+                roster.forEach(function(m) {
+                    m.isCaptain = (m.id === prevCaptainId);
+                });
+                renderAssigned();
+                renderRoster();
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ text: 'Failed to promote captain. Please try again.', icon: 'error' });
+                }
+            },
+            complete: function() {
+                isProcessing = false;
+            }
+        });
+    }
+
+    // Bind Event Listeners
+    function bindEvents() {
+        // Search Input
+        var searchInput = document.getElementById('recDrawerSearchInput');
+        var clearBtn = document.getElementById('recDrawerSearchClear');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                searchQuery = this.value;
+                if (clearBtn) {
+                    clearBtn.style.setProperty('display', searchQuery ? 'flex' : 'none', 'important');
+                }
+                focusedIndex = 0;
+                renderRoster();
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                searchQuery = '';
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.focus();
+                }
+                clearBtn.style.setProperty('display', 'none', 'important');
+                focusedIndex = 0;
+                renderRoster();
+            });
+        }
+
+        // Filter Pills
+        var pills = document.querySelectorAll('.ht-pill');
+        pills.forEach(function(pill) {
+            pill.addEventListener('click', function() {
+                pills.forEach(function(p) { p.classList.remove('active'); });
+                this.classList.add('active');
+                filterTab = this.getAttribute('data-filter') || 'all';
+                focusedIndex = 0;
+                renderRoster();
+            });
+        });
+
+        // Click on assigned card Remove button
+        $(document).off('click', '.js-remove-assigned').on('click', '.js-remove-assigned', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var userId = parseInt($(this).attr('data-user-id'), 10);
+            toggleAssignment(userId);
+        });
+
+        // Click on Make Captain button
+        $(document).off('click', '.js-make-captain').on('click', '.js-make-captain', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var userId = parseInt($(this).attr('data-user-id'), 10);
+            makeCaptain(userId);
+        });
+
+        // Click on Assign / Assigned button or row
+        $(document).off('click', '.js-toggle-assign').on('click', '.js-toggle-assign', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var userId = parseInt($(this).attr('data-user-id'), 10);
+            toggleAssignment(userId);
+        });
+
+        $(document).off('click', '.ht-virtual-row').on('click', '.ht-virtual-row', function(e) {
+            if ($(e.target).closest('.js-toggle-assign').length) return;
+            var userId = parseInt($(this).attr('data-user-id'), 10);
+            toggleAssignment(userId);
+        });
+
+        // Keyboard Navigation in Viewport
+        var viewport = document.getElementById('recVirtualViewport');
+        if (viewport) {
+            viewport.addEventListener('keydown', function(e) {
+                var filtered = getFilteredList();
+                if (filtered.length === 0) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (focusedIndex < filtered.length - 1) {
+                        focusedIndex++;
+                        renderRoster();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (focusedIndex > 0) {
+                        focusedIndex--;
+                        renderRoster();
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (filtered[focusedIndex]) {
+                        toggleAssignment(filtered[focusedIndex].id);
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    $('#kt_activitiesTEAM_close').click();
+                }
+            });
+        }
+    }
+
+    // Initialize Drawer
+    renderAssigned();
+    renderRoster();
+    bindEvents();
+
+    // Auto-focus search input after drawer slides out
+    setTimeout(function() {
+        var el = document.getElementById('recDrawerSearchInput');
+        if (el) el.focus();
+    }, 120);
+})();
 </script>
-<!--end::New UI-->
