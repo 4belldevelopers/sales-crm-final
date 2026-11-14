@@ -164,11 +164,11 @@
         border: 1px solid #e2e8f0;
     }
 
-    /* Scope pills (Rule 25) */
+    /* Scope pills (Rule 25 & UI/UX Standard 6A) */
     .scope-pill-myorg {
-        background: #ecfeff !important;
-        color: #0891b2 !important;
-        border: 1px solid #a5f3fc !important;
+        background: #fef3c7 !important;
+        color: #92400e !important;
+        border: 1px solid #fcd34d !important;
         font-size: 10.5px !important;
         font-weight: 700 !important;
         padding: 2px 8px !important;
@@ -2224,8 +2224,10 @@
         var searchTerms = (curSearch !== undefined) ? curSearch : (getUnifiedSearchTerms() || $('#kt_tagify_4').val() || '');
 
         var params = {
+            jobid: currentJobId,
             job_id: currentJobId,
             search: searchTerms,
+            cus_search: searchTerms,
             hiringtype: $('#workhiringtype').val() || '',
             country: $('#country4').val() || 'Show All'
         };
@@ -2234,7 +2236,7 @@
         var hasRep = !!(window.agencyTableCache && window.agencyTableCache[ramCacheKey]);
 
         var jqXHR = $.ajax({
-            url: `{!! route('service_company.jobs.registeredData') !!}?page=${page}`,
+            url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
             type: 'GET',
             cache: false,
             headers: {
@@ -2268,7 +2270,7 @@
                     syncCheckboxSelectionState();
                 } else {
                     var fallbackParams = $.extend({}, params, { _force: 1 });
-                    $.getJSON(`{!! route('service_company.jobs.registeredData') !!}?page=${page}`, fallbackParams, function(fresh) {
+                    $.getJSON(`{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`, fallbackParams, function(fresh) {
                         if (fresh && fresh.html) {
                             setAgencyTableCache(ramCacheKey, fresh);
                             $('#allregisteragency').html(fresh.html);
@@ -2301,8 +2303,10 @@
         var searchTerms = (curSearch !== undefined) ? curSearch : (getUnifiedSearchTerms() || $('#kt_tagify_5').val() || '');
 
         var params = {
+            jobid: currentJobId,
             job_id: currentJobId,
             search: searchTerms,
+            cus_search: searchTerms,
             hiringtype: $('#hiringtype4').val() || '0'
         };
 
@@ -2310,7 +2314,7 @@
         var hasRep = !!(window.agencyTableCache && window.agencyTableCache[ramCacheKey]);
 
         var jqXHR = $.ajax({
-            url: `{!! route('service_company.jobs.assignData') !!}?page=${page}`,
+            url: `{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`,
             type: 'GET',
             cache: false,
             headers: {
@@ -2340,7 +2344,7 @@
                     }
                 } else {
                     var fallbackParams = $.extend({}, params, { _force: 1 });
-                    $.getJSON(`{!! route('service_company.jobs.assignData') !!}?page=${page}`, fallbackParams, function(fresh) {
+                    $.getJSON(`{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`, fallbackParams, function(fresh) {
                         if (fresh && fresh.html) {
                             setAgencyTableCache(ramCacheKey, fresh);
                             $('#allAssignListagency').html(fresh.html);
@@ -2802,13 +2806,16 @@
             var current_jobid = $('#current_job_id').val();
             if (!current_jobid) return;
 
+            var url = "{{ route('service_company.jobs.auction_send_job_request', ':id') }}".replace(':id', 0);
             $.ajax({
                 type: 'POST',
-                url: "{{ route('service_company.jobs.update_marketplace_settings') }}",
+                url: url,
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 data: {
-                    job_id: current_jobid,
-                    vendor_limit: limitVal
+                    current_jobid: current_jobid,
+                    action: 'update_settings',
+                    vendor_limit: limitVal,
+                    _token: '{{ csrf_token() }}'
                 },
                 success: function(resp) {
                     if (resp && resp.status === 'success') {
@@ -2824,13 +2831,16 @@
             var current_jobid = $('#current_job_id').val();
             if (!current_jobid) return;
 
+            var url = "{{ route('service_company.jobs.auction_send_job_request', ':id') }}".replace(':id', 0);
             $.ajax({
                 type: 'POST',
-                url: "{{ route('service_company.jobs.update_marketplace_settings') }}",
+                url: url,
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 data: {
-                    job_id: current_jobid,
-                    auto_expire: expireVal
+                    current_jobid: current_jobid,
+                    action: 'update_settings',
+                    auto_expire: expireVal,
+                    _token: '{{ csrf_token() }}'
                 },
                 success: function(resp) {
                     if (resp && resp.status === 'success') {
@@ -2850,11 +2860,11 @@
             var fromcompany = ele.data('row-fromcompany');
             var tocompany = ele.data('row-tocompany');
             var id = ele.data('row-jobid') || $('#current_job_id').val();
+            var url = "{{ route('service_company.jobs.send_only_job_invitation', ':id') }}".replace(':id', id);
 
             $.ajax({
-                type: 'POST',
-                url: "{{ route('service_company.jobs.send_only_job_invitation') }}",
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                type: 'GET',
+                url: url,
                 data: {
                     'jobid': id,
                     'fromcompany': fromcompany,
