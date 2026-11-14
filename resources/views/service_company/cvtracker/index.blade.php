@@ -145,6 +145,23 @@
         }
 
         /* ============================================================
+           CV Tracker — Page-Isolated Compact Header Spacing
+           Removes excessive ghost toolbar whitespace above All Candidates Tracker
+        ============================================================ */
+        .kt_content_cvtracker,
+        #kt_content.kt_content_cvtracker {
+            margin-top: -65px !important;
+            padding-top: 10px !important;
+        }
+        @media (max-width: 991.98px) {
+            .kt_content_cvtracker,
+            #kt_content.kt_content_cvtracker {
+                margin-top: -55px !important;
+                padding-top: 8px !important;
+            }
+        }
+
+        /* ============================================================
            CV Tracker — Enterprise Header Card (.cl-header-card)
            Client Tracker Design System
         ============================================================ */
@@ -152,8 +169,9 @@
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
-            padding: 14px 20px;
-            margin-bottom: 14px;
+            padding: 10px 18px;
+            margin-top: 0 !important;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -1432,7 +1450,7 @@
     <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" value="" />
     <span class="d-none" id="total_record"></span>
 
-    <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+    <div class="content d-flex flex-column flex-column-fluid pt-0 kt_content_cvtracker" id="kt_content">
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-3">
 

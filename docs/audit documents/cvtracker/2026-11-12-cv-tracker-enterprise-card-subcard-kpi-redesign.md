@@ -109,8 +109,8 @@ The `Job Details` sub-card implements canonical badge colors strictly adhering t
 | :--- | :--- |
 | `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` | 1. Joined `clients` table in `$dbJobs` query (line 1566) to batch-fetch `clients.name` and `clients.self_company` for instant 0% N+1 resolution.<br>2. Fixed Elasticsearch queries for `my_organization`, `internal_client`, and `direct_client` filtering to accurately distinguish internal clients (`client_self_company = 0`) from own company (`client_self_company = 1`) and marketplace requirements. |
 | `resources/views/service_company/ajax_pages/all_candidates.blade.php` | 1. Dynamically resolves organization tag: `Direct Client` (marketplace), `Internal Client` (e.g. Tesla, Stripe), or `My Organization` (own company).<br>2. Removed container background tinting and borders from Sub-Card 4 (`Job Details`), preserving clean neutral `#f8fafc` sub-card background.<br>3. Applied canonical Rule 25 colors strictly to the tag pill. |
-| `resources/views/service_company/cvtracker/index.blade.php` | 1. Rearranged listing controls in exact specified order: **1. Search Bar → 2. Sort → 3. Organization Dropdown → 4. Filters**.<br>2. Removed obsolete `.simf-cand-subcard--my-org`, `--internal`, `--direct` background styles.<br>3. Unified height (`44px`), border (`#e4e6ef`), and alignment across all toolbar controls. |
-| `docs/audit documents/cvtracker/2026-11-12-cv-tracker-enterprise-card-subcard-kpi-redesign.md` | Documented dynamic organization classification logic, listing controls reordering, and 15.6" screen fit per Rule 21. |
+| `resources/views/service_company/cvtracker/index.blade.php` | 1. Rearranged listing controls in exact specified order: **1. Search Bar → 2. Sort → 3. Organization Dropdown → 4. Filters**.<br>2. Removed obsolete `.simf-cand-subcard--my-org`, `--internal`, `--direct` background styles.<br>3. Unified height (`44px`), border (`#e4e6ef`), and alignment across all toolbar controls.<br>4. Eliminated excessive ~79px ghost toolbar whitespace between fixed top header and All Candidates Tracker card via `.kt_content_cvtracker` (`margin-top: -65px !important; padding-top: 10px !important;`). |
+| `docs/audit documents/cvtracker/2026-11-12-cv-tracker-enterprise-card-subcard-kpi-redesign.md` | Documented dynamic organization classification logic, listing controls reordering, header vertical whitespace elimination, and 15.6" screen fit per Rule 21. |
 
 ---
 
@@ -132,3 +132,19 @@ The `Job Details` sub-card implements canonical badge colors strictly adhering t
    - Zero direct `env()` calls outside `config/`.
    - 0% MySQL reads on request paths; 100% Elasticsearch read scope maintained.
    - Tenancy isolation preserved with `company_id` scoping.
+
+---
+
+## 7. Compact Vertical Header Spacing Optimization
+
+1. **Root Cause Analysis of Excessive Header Whitespace:**
+   - Metronic layout defaults assume a secondary `#kt_toolbar` is present beneath `#kt_header`, injecting `~55px` to `~60px` of padding-top into `#kt_wrapper`.
+   - Because CV Tracker uses an internal card-based header (`.cl-header-card`), no `#kt_toolbar` exists, leaving empty ghost whitespace.
+   - In addition, `#kt_content` had Bootstrap `pt-4` (padding-top 24px) with no negative offset.
+   - Combined, this produced an excessive `~79px` gap between the top nav bar (`Find Jobs / Find Talent / Find Agency`) and the `All Candidates Tracker` card.
+
+2. **Resolution Applied:**
+   - Added page-isolated `.kt_content_cvtracker` styling with `margin-top: -65px !important; padding-top: 10px !important;` (and `margin-top: -55px !important; padding-top: 8px !important;` on `<992px` viewports).
+   - Replaced `pt-4` on `#kt_content` with `pt-0 kt_content_cvtracker`.
+   - Compacted `.cl-header-card` padding to `10px 18px` and margin to `margin-top: 0 !important; margin-bottom: 12px;`.
+   - Result: Perfectly snug 10px gap between the top header and the `All Candidates Tracker` header card, with zero effect on other modules.
