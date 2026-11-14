@@ -667,7 +667,8 @@
     transition: all 0.15s ease !important;
 }
 
-.cd-kpi-icon.icon-blue { background: #eff6ff !important; color: #2563eb !important; }
+.cd-kpi-icon.icon-blue,
+.cd-kpi-icon.icon-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
 .cd-kpi-icon.icon-emerald { background: #ecfdf5 !important; color: #16a34a !important; }
 .cd-kpi-icon.icon-amber { background: #fff7ed !important; color: #ea580c !important; }
 .cd-kpi-icon.icon-cyan,
@@ -751,7 +752,8 @@
     font-size: 10px !important;
 }
 
-.cd-kpi-sub.sub-blue { color: #2563eb !important; }
+.cd-kpi-sub.sub-blue,
+.cd-kpi-sub.sub-internal { color: #2563eb !important; font-weight: 600 !important; }
 .cd-kpi-sub.sub-green { color: #16a34a !important; }
 .cd-kpi-sub.sub-orange { color: #ea580c !important; }
 .cd-kpi-sub.sub-cyan,
@@ -785,18 +787,37 @@
 .cd-kpi-card.cd-kpi-active[data-kpi="direct"] .cd-kpi-num { color: #065f46 !important; }
 .cd-kpi-card.cd-kpi-active[data-kpi="direct"] .cd-kpi-label { color: #047857 !important; font-weight: 700 !important; }
 
-.cd-kpi-card.cd-kpi-active[data-kpi="internal"] {
-    background: #fff7ed !important;
-    border-color: #fb923c !important;
-    box-shadow: 0 0 0 1.5px #ea580c, 0 4px 14px rgba(234, 88, 12, 0.12) !important;
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"],
+.cd-kpi-card.jh-card-active[data-kpi="internal"],
+.jh-card.jh-card-active.jh-card-source-internal,
+.jh-card.jh-card-source-internal.jh-card-active {
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    border-color: #bfdbfe !important;
+    box-shadow: 0 0 0 1.5px #bfdbfe, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
 }
-.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-icon {
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-icon,
+.cd-kpi-card.jh-card-active[data-kpi="internal"] .cd-kpi-icon,
+.jh-card.jh-card-active.jh-card-source-internal .cd-kpi-icon {
     background: #ffffff !important;
-    color: #ea580c !important;
-    box-shadow: 0 1px 3px rgba(234, 88, 12, 0.15) !important;
+    color: #2563eb !important;
+    border: 1px solid #bfdbfe !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
 }
-.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-num { color: #9a3412 !important; }
-.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-label { color: #c2410c !important; font-weight: 700 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-num,
+.cd-kpi-card.jh-card-active[data-kpi="internal"] .cd-kpi-num,
+.jh-card.jh-card-active.jh-card-source-internal .cd-kpi-num { color: #2563eb !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-label,
+.cd-kpi-card.jh-card-active[data-kpi="internal"] .cd-kpi-label,
+.jh-card.jh-card-active.jh-card-source-internal .cd-kpi-label { color: #2563eb !important; font-weight: 700 !important; }
+.cd-kpi-card.cd-kpi-active[data-kpi="internal"] .cd-kpi-sub,
+.cd-kpi-card.jh-card-active[data-kpi="internal"] .cd-kpi-sub,
+.jh-card.jh-card-active.jh-card-source-internal .cd-kpi-sub { color: #2563eb !important; font-weight: 600 !important; }
+.cd-kpi-card[data-kpi="internal"]:hover,
+.jh-card.jh-card-source-internal:hover {
+    border-color: #bfdbfe !important;
+    background: #f8fbff !important;
+}
 
 .cd-kpi-card.cd-kpi-active[data-kpi="my_organization"],
 .cd-kpi-card.jh-card-active[data-kpi="my_organization"],
@@ -1391,7 +1412,7 @@
 
             <a href="javascript:void(0);" data-kpi="internal" onclick="filterJobsByKpi('internal'); return false;" class="cd-kpi-card jh-card jh-card-source-internal {{ ($currentKpi === 'internal') ? 'cd-kpi-active jh-card-active' : '' }}">
               <div class="cd-kpi-top">
-                <div class="cd-kpi-icon icon-amber">
+                <div class="cd-kpi-icon icon-blue icon-internal">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
                     <path d="M9 22v-4h6v4"/>
@@ -1405,7 +1426,7 @@
                   <span class="cd-kpi-label">Internal Client Jobs</span>
                 </div>
               </div>
-              <div class="cd-kpi-sub sub-orange">
+              <div class="cd-kpi-sub sub-blue sub-internal">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="m18 15-6-6-6 6"/>
                 </svg>

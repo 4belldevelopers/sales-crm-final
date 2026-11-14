@@ -187,10 +187,10 @@
     background: #16A34A;
 }
 .jh-card-source-internal.jh-card-active .jh-radio-custom {
-    border-color: #EA580C;
+    border-color: #2563EB;
 }
 .jh-card-source-internal.jh-card-active .jh-radio-custom::after {
-    background: #EA580C;
+    background: #2563EB;
 }
 .jh-card-source-my-org.jh-card-active .jh-radio-custom {
     border-color: #fcd34d;

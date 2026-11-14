@@ -83,13 +83,13 @@
                 <input type="radio" name="kpi_filter_radio" value="internal" class="jh-radio-input" {{ !empty($tabactive['customRequisition_active']) ? 'checked' : '' }}>
                 <span class="jh-radio-custom"></span>
             </div>
-            <div class="jh-icon jh-icon-orange">
+            <div class="jh-icon jh-icon-blue">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                 </svg>
             </div>
             <div class="jh-card-body">
-                <div class="jh-lbl">Internal Jobs</div>
+                <div class="jh-lbl">Internal Client Jobs</div>
                 <div class="jh-count-row">
                     <div class="jh-num" id="{{ $tabactive['customRequisition_id'] }}">{{ $tabactive['customRequisition'] }}</div>
                     <span class="jh-count-link">View Jobs List</span>
