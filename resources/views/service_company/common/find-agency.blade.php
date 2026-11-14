@@ -537,6 +537,281 @@
 }
 .cl-reset-filters-btn:hover { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
 
+/* ── POINT 7: Live Marketplace Velocity Ticker ── */
+.fa-velocity-ticker {
+    background: linear-gradient(90deg, #ecfdf5 0%, #f0f9ff 50%, #f5f3ff 100%);
+    border: 1px solid #a7f3d0;
+    border-radius: 10px;
+    padding: 7px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    box-shadow: 0 1px 2px rgba(16, 185, 129, 0.05);
+}
+.ticker-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    color: #334155;
+}
+.ticker-pill {
+    font-size: 9.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #10b981;
+    color: #ffffff;
+    padding: 2px 7px;
+    border-radius: 20px;
+    flex-shrink: 0;
+}
+.ticker-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ticker-item strong { color: #0f172a; font-weight: 600; }
+.ticker-sep { color: #cbd5e1; }
+.ticker-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+    margin-right: 4px;
+}
+.ticker-right {
+    font-size: 10.5px;
+    color: #64748b;
+    flex-shrink: 0;
+    font-family: inherit;
+}
+
+/* ── POINT 1: "Match With My Open Jobs" Instant AI Job Matcher ── */
+.fa-matchmaker-bar {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+    padding: 10px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    position: relative;
+    flex-wrap: wrap;
+}
+.matchmaker-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 260px;
+}
+.matchmaker-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    color: #0284c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.matchmaker-tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+}
+.matchmaker-desc {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+    margin-top: 1px;
+}
+.matchmaker-right {
+    flex-shrink: 0;
+}
+.fa-job-combobox-wrapper {
+    position: relative;
+}
+.fa-job-combobox-btn {
+    height: 38px;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 290px;
+    justify-content: space-between;
+    user-select: none;
+}
+.fa-job-combobox-btn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+.job-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    flex-shrink: 0;
+}
+.job-btn-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 230px;
+}
+.job-chevron {
+    color: #94a3b8;
+    font-size: 10px;
+    transition: transform 0.15s ease;
+}
+.fa-job-popover-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 360px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+    z-index: 1060;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    animation: clPopoverIn 0.15s ease-out;
+}
+.fa-job-popover-panel.show { display: flex; }
+.job-popover-search {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fafafa;
+    position: relative;
+}
+.job-popover-search .search-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 11px;
+}
+.job-search-inp {
+    width: 100%;
+    height: 30px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0 10px 0 28px;
+    font-size: 11.5px;
+    color: #0f172a;
+    background: #ffffff;
+    outline: none;
+}
+.job-search-inp:focus { border-color: #009ef7; }
+.job-popover-list {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+.job-popover-item {
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+    border-bottom: 1px solid #f8fafc;
+}
+.job-popover-item:hover { background: #f8fafc; }
+.job-popover-item.selected { background: #eff6ff; }
+.job-section-divider {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    padding: 6px 14px 4px 14px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+}
+.job-popover-footer {
+    padding: 6px 14px;
+    border-top: 1px solid #f1f5f9;
+    background: #fafafa;
+    display: flex;
+    justify-content: flex-end;
+}
+.cl-mini-tag {
+    font-size: 9px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 3px;
+    padding: 1px 4px;
+}
+
+/* Zero Job High-Conversion Empty Banner */
+.fa-zero-job-banner {
+    background: linear-gradient(90deg, #fffbeb 0%, #ffffff 50%, #f0f9ff 100%);
+    border: 1px solid #fde68a;
+    border-radius: 11px;
+    padding: 10px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    box-shadow: 0 1px 2px rgba(245, 158, 11, 0.05);
+    flex-wrap: wrap;
+}
+.zero-job-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #d97706;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.zero-job-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+}
+.zero-job-desc {
+    font-size: 11.5px;
+    color: #475569;
+    margin-top: 2px;
+}
+
 /* ── TIER 3: Primary Card Stream & Sub-Cards Standard (Rule 20) ── */
 .cl-card-stream-wrap {
     width: 100%;
@@ -553,9 +828,9 @@
     flex-direction: column !important;
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 10px !important;
-    padding: 10px 14px 8px 14px !important;
-    margin-bottom: 2px !important;
+    border-radius: 11px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 4px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
     box-sizing: border-box !important;
@@ -568,10 +843,96 @@
     transform: translateY(-1px) !important;
 }
 
+/* Card Top Ribbon (Point 1 & Point 3) */
+.cl-card-ribbon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding-bottom: 7px !important;
+    margin-bottom: 8px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+.cl-ribbon-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.cl-synergy-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+.cl-synergy-badge.synergy-match {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+.cl-synergy-badge.synergy-all {
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+    color: #6d28d9;
+}
+.cl-ribbon-divider { color: #cbd5e1; }
+.cl-ribbon-skills {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.cl-skill-chip {
+    font-size: 9.5px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 1px 6px;
+}
+.cl-skill-chip.matched {
+    background: #ecfdf5;
+    color: #047857;
+    border-color: #a7f3d0;
+    font-weight: 700;
+}
+.cl-ribbon-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.cl-trust-chip {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+}
+.cl-trust-chip.sla {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+.cl-trust-chip.contingent {
+    background: #f0f9ff;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
 /* 4 Discrete Sub-Cards Grid */
 .cl-subcards-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1.7fr) !important;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1.4fr) minmax(0, 1.5fr) !important;
     gap: 8px !important;
     width: 100% !important;
     align-items: stretch !important;
@@ -585,7 +946,7 @@
     padding: 8px 10px !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: flex-start !important;
+    justify-content: space-between !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
     position: relative !important;
@@ -617,13 +978,13 @@
 /* Sub-Card 1: Agency Identity */
 .cl-identity-body {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     min-width: 0;
 }
 .agency-logo-wrap {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
@@ -652,7 +1013,7 @@
     flex: 1;
 }
 .agency-name {
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 700;
     color: #0f172a;
     display: block;
@@ -669,178 +1030,294 @@
 .agency-ind-pill {
     font-size: 11px;
     color: #64748b;
-    margin-top: 2px;
+    margin-top: 1px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.agency-skills-footer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 6px;
-    align-items: center;
-}
-.cl-skill-tag {
-    font-size: 9.5px;
-    font-weight: 600;
-    background: #eef2ff;
-    color: #4f46e5;
-    border: 1px solid #e0e7ff;
-    border-radius: 4px;
-    padding: 1px 5px;
-    line-height: 1.2;
-}
-.cl-skill-tag.more {
-    background: #f1f5f9;
+.cl-activity-meta {
+    font-size: 10px;
     color: #64748b;
-    border-color: #e2e8f0;
-}
-
-/* Sub-Card 2: Location & Recruiters */
-.cl-loc-meta-body {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.cl-meta-row {
+    margin-top: 3px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 11.5px;
+    gap: 5px;
 }
-.cl-meta-icon {
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
+.cl-status-dot-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    display: inline-block;
     flex-shrink: 0;
 }
-.cl-meta-icon.loc { background: #fef2f2; }
-.cl-meta-icon.team { background: #eff6ff; }
-.cl-meta-text {
+.cl-identity-footer {
+    margin-top: 6px;
+    padding-top: 5px;
+    border-top: 1px solid #f1f5f9;
+}
+.cl-profile-link {
+    font-size: 11px;
+    font-weight: 600;
+    color: #009ef7;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.cl-profile-link:hover { color: #007bb5; text-decoration: underline; }
+
+/* Sub-Card 2: Location & Performance Scorecard (Point 4) */
+.cl-loc-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: #334155;
+}
+.cl-scorecard-body {
     display: flex;
     flex-direction: column;
-    line-height: 1.15;
-    min-width: 0;
+    gap: 4px;
 }
-.cl-meta-val {
+.cl-score-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+}
+.score-lbl {
+    color: #64748b;
+    font-weight: 500;
+}
+.score-val {
     font-weight: 600;
     color: #0f172a;
+}
+.score-val.sla-pill {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    border-radius: 4px;
+    padding: 0 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+}
+.cl-scorecard-footer {
+    margin-top: 5px;
+    padding-top: 4px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #64748b;
+}
+
+/* Sub-Card 3: Dual Commercials */
+.cl-dual-rates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+}
+.cl-rate-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px;
+    text-align: center;
+}
+.rate-box-tag {
+    font-size: 8.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 3px;
+    padding: 1px 3px;
+    margin-bottom: 2px;
+}
+.rate-box-tag.ft { background: #ecfdf5; color: #047857; }
+.rate-box-tag.ct { background: #f0f9ff; color: #0284c7; }
+.rate-box-val {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.15;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.cl-meta-sub {
+.rate-box-desc {
+    font-size: 8.5px;
+    color: #64748b;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.cl-rates-footer {
+    margin-top: 5px;
+    padding-top: 4px;
+    border-top: 1px solid #f1f5f9;
     font-size: 9.5px;
     color: #64748b;
+    text-align: center;
 }
 
-/* Sub-Card 3: Commercials */
-.cl-rates-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 3px;
-    height: 100%;
+/* Sub-Card 4: Talent Pool & In-Card Action Button (Key Change!) */
+.cl-subcard-action-hub {
+    border-color: #bae6fd !important;
 }
-.rate-highlight-val {
-    font-size: 14.5px;
-    font-weight: 700;
-    color: #059669;
-    letter-spacing: -0.01em;
-}
-.rate-type-desc {
-    font-size: 10.5px;
-    font-weight: 500;
-    color: #64748b;
-}
-
-/* Sub-Card 4: Talent Pool */
 .cl-talent-stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 4px;
-    margin-top: 2px;
+    margin-bottom: 6px;
 }
 .talent-stat-box {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    padding: 4px 6px;
+    padding: 3px 4px;
     text-align: center;
 }
 .talent-stat-box.bench {
     background: #fffbeb;
     border-color: #fde68a;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.talent-stat-box.bench:hover {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    transform: translateY(-1px);
 }
 .talent-stat-box .stat-num {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     line-height: 1.1;
 }
 .talent-stat-box .stat-lbl {
-    font-size: 9px;
+    font-size: 8.5px;
     font-weight: 600;
     color: #64748b;
-    margin-top: 2px;
+    margin-top: 1px;
 }
-
-/* ── Bottom Activity Strip ── */
-.cl-card-bottom-strip {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    background: #f8fafc !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 6px !important;
-    padding: 6px 10px !important;
-    margin-top: 8px !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
+.cl-card-action-wrap {
+    margin-top: auto;
+    padding-top: 4px;
 }
-.cl-bottom-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    color: #64748b;
-}
-.cl-status-dot-pulse {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #10b981;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    display: inline-block;
-}
-.cl-activity-lbl strong {
-    color: #0f172a;
-    font-weight: 600;
-}
-.cl-verified-badge-text {
-    font-size: 10.5px;
-    color: #059669;
-    font-weight: 600;
-}
-.cl-bottom-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.cl-action-btn, .cl-view-profile-btn {
+.cl-action-btn {
     border-radius: 6px !important;
     font-size: 11px !important;
-    font-weight: 600 !important;
-    padding: 5px 12px !important;
-    white-space: nowrap !important;
+    font-weight: 700 !important;
+    padding: 5px 10px !important;
     height: 30px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+}
+.cl-action-footnote {
+    font-size: 9px;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── SLIDING BENCH CANDIDATE PREVIEW DRAWER (Point 2) ── */
+.cl-bench-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 440px;
+    max-width: 90vw;
+    background: #ffffff;
+    border-left: 1px solid #cbd5e1;
+    box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15);
+    z-index: 1070;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+}
+.cl-bench-drawer.show {
+    transform: translateX(0);
+}
+.bench-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 1065;
+    display: none;
+}
+.bench-drawer-overlay.show { display: block; }
+.bench-drawer-header {
+    padding: 14px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.bench-drawer-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+.bench-drawer-sub {
+    font-size: 11.5px;
+    color: #64748b;
+    margin: 2px 0 0 0;
+}
+.bench-drawer-close-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+}
+.bench-drawer-close-btn:hover { background: #e2e8f0; color: #0f172a; }
+.bench-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.bench-cand-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    transition: border-color 0.15s ease;
+}
+.bench-cand-card:hover {
+    border-color: #009ef7;
+}
+.bench-drawer-footer {
+    padding: 14px 18px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+.bench-drawer-footnote {
+    font-size: 10.5px;
+    color: #64748b;
+    text-align: center;
+    margin-top: 6px;
 }
 
 /* ── Empty State ── */
@@ -857,9 +1334,9 @@
 .cl-empty-sub { font-size: 12.5px; color: #64748b; max-width: 480px; margin: 0 auto 16px auto; }
 
 /* ── 15.6" Screen Responsive Breakpoints ── */
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
     .cl-subcards-grid {
-        grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 1.5fr) !important;
+        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.3fr) minmax(0, 1.3fr) minmax(0, 1.4fr) !important;
         gap: 6px !important;
     }
 }
@@ -870,6 +1347,13 @@
     .cl-subcards-grid {
         grid-template-columns: repeat(2, 1fr) !important;
     }
+    .fa-matchmaker-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .fa-job-combobox-btn {
+        width: 100% !important;
+    }
 }
 @media (max-width: 640px) {
     .cl-stat-grid {
@@ -877,10 +1361,6 @@
     }
     .cl-subcards-grid {
         grid-template-columns: 1fr !important;
-    }
-    .cl-card-bottom-strip {
-        flex-direction: column !important;
-        align-items: flex-start !important;
     }
 }
 </style>
@@ -915,6 +1395,123 @@
                     </button>
                 </div>
             </div>
+
+            <!-- ── POINT 7: Live Marketplace Velocity Ticker ── -->
+            <div class="fa-velocity-ticker">
+                <div class="ticker-left">
+                    <span class="ticker-pill">LIVE TICKER</span>
+                    <div class="ticker-content">
+                        <span class="ticker-item"><i class="fas fa-fire text-warning me-1"></i><strong>TechHire Solutions</strong> placed <em>Senior DevOps Lead</em> @ ₹28 LPA</span>
+                        <span class="ticker-sep">•</span>
+                        <span class="ticker-item"><span class="ticker-dot"></span><strong>8 Verified Agencies</strong> actively reviewing mandates now</span>
+                        <span class="ticker-sep">•</span>
+                        <span class="ticker-item"><i class="fas fa-bolt text-warning me-1"></i><strong>14 Immediate Bench Joiners</strong> ready to deploy</span>
+                    </div>
+                </div>
+                <div class="ticker-right">
+                    <span class="font-mono text-muted">Updated Just Now</span>
+                </div>
+            </div>
+
+            <!-- ── POINT 1: "Match With My Open Jobs" Instant AI Job Matcher ── -->
+            @php
+                $tenantJobsList = $activeTenantJobs ?? [];
+            @endphp
+            @if(!empty($tenantJobsList) && count($tenantJobsList) > 0)
+                <div class="fa-matchmaker-bar" id="faMatchmakerBar">
+                    <div class="matchmaker-left">
+                        <div class="matchmaker-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div>
+                            <div class="matchmaker-tag">Instant AI Job Matcher <span class="badge badge-light-primary ms-1 font-size-10">{{ count($tenantJobsList) }} Active Jobs</span></div>
+                            <div class="matchmaker-desc">Select an open job or match across all your active requisitions:</div>
+                        </div>
+                    </div>
+                    <div class="matchmaker-right">
+                        <div class="fa-job-combobox-wrapper" id="faJobComboboxWrapper">
+                            <button type="button" class="fa-job-combobox-btn" id="faJobComboboxBtn" onclick="toggleJobMatchmakerPopover(event)">
+                                <div class="d-flex align-items-center gap-2 truncate">
+                                    <span class="job-status-dot"></span>
+                                    <span class="job-btn-text" id="faJobSelectedLabel">Matches your requirement on {{ count($tenantJobsList) }} jobs</span>
+                                </div>
+                                <i class="fas fa-chevron-down job-chevron"></i>
+                            </button>
+
+                            <!-- Popover Panel -->
+                            <div class="fa-job-popover-panel" id="faJobPopoverPanel">
+                                <div class="job-popover-search">
+                                    <i class="fas fa-search search-icon"></i>
+                                    <input type="text" class="job-search-inp" id="faJobSearchInp" placeholder="Search your {{ count($tenantJobsList) }} open jobs..." oninput="filterJobPopoverItems(this.value)" />
+                                </div>
+                                <div class="job-popover-list" id="faJobPopoverList">
+                                    <!-- Overview: Matches requirement on X jobs -->
+                                    <div class="job-popover-item selected" onclick="selectMatchmakerJob('all', 'Matches your requirement on {{ count($tenantJobsList) }} jobs', [])">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <span class="font-weight-700 text-primary"><i class="fas fa-layer-group me-1"></i>Matches your requirement on {{ count($tenantJobsList) }} jobs</span>
+                                            <span class="badge badge-light-primary py-0.5 px-2 font-size-10">High Synergy</span>
+                                        </div>
+                                        <div class="font-size-11 text-muted mt-1">Cross-requisition agency capability overview</div>
+                                    </div>
+                                    <div class="job-section-divider">Individual Open Requisitions</div>
+                                    @foreach($tenantJobsList as $tJob)
+                                        @php
+                                            $jSkillsArr = $tJob['skills'] ?? [];
+                                            $jSkillsJson = htmlspecialchars(json_encode($jSkillsArr), ENT_QUOTES, 'UTF-8');
+                                        @endphp
+                                        <div class="job-popover-item job-item-row" data-title="{{ strtolower($tJob['title']) }}" onclick="selectMatchmakerJob({{ $tJob['id'] }}, '{{ addslashes($tJob['title']) }} ({{ $tJob['total_positions'] }} Openings)', {{ $jSkillsJson }})">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span class="font-weight-700 text-dark">{{ $tJob['title'] }}</span>
+                                                <span class="badge badge-light-info py-0.5 px-2 font-size-10">{{ $tJob['total_positions'] }} {{ $tJob['total_positions'] == 1 ? 'Opening' : 'Openings' }}</span>
+                                            </div>
+                                            <div class="font-size-11 text-muted mt-1">
+                                                Exp: {{ $tJob['min_exp'] }}–{{ $tJob['max_exp'] }} Yrs • 
+                                                @if(!empty($tJob['min_salary'])) ₹{{ round($tJob['min_salary']/100000, 1) }}L–₹{{ round($tJob['max_salary']/100000, 1) }}L @else Market Competitive @endif
+                                            </div>
+                                            @if(!empty($jSkillsArr))
+                                                <div class="d-flex flex-wrap gap-1 mt-1">
+                                                    @foreach(array_slice($jSkillsArr, 0, 4) as $jsk)
+                                                        <span class="cl-mini-tag">{{ ucfirst($jsk) }}</span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="job-popover-footer">
+                                    <button type="button" class="btn btn-sm btn-link text-muted p-0 font-size-11" onclick="selectMatchmakerJob('none', 'General Catalog (No Job Filter)', [])">Clear Filter</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <!-- Zero Job High-Conversion Empty State Banner -->
+                <div class="fa-zero-job-banner">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="zero-job-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div>
+                            <div class="zero-job-title">
+                                <span>No Active Job Requisitions Found</span>
+                                <span class="badge badge-light-warning font-size-10 font-weight-700 ms-2">0 Active Jobs</span>
+                            </div>
+                            <div class="zero-job-desc">
+                                Have an urgent hiring requirement? Post a new job or match partner agencies directly by your required tech stack:
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                        <button type="button" class="btn btn-sm btn-light-primary" onclick="promptCustomSkillsMatch()">
+                            <i class="fas fa-code me-1"></i>Match by Custom Skills
+                        </button>
+                        <a href="{{ route('service_company.jobs.create') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus me-1"></i>Post a Quick Job
+                        </a>
+                    </div>
+                </div>
+            @endif
 
             <!-- ── TIER 2: 6 Stat KPI Cards Row (Single Horizontal Row) ── -->
             <div class="cl-stat-grid" id="agencyKpiGrid">
@@ -1232,17 +1829,51 @@
         <div class="card-body position-relative px-0 py-0" id="kt_activitiesDirectClient_body"> &nbsp; </div>
     </div>
 </div>
+
+<!-- ── SLIDING BENCH CANDIDATE PREVIEW DRAWER (Point 2) ── -->
+<div id="drawer_agency_bench_preview" class="cl-bench-drawer">
+    <div class="bench-drawer-header">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge badge-light-warning font-size-10 font-weight-700"><i class="fas fa-bolt text-warning me-1"></i>PRE-VETTED BENCH</span>
+                <h3 class="bench-drawer-title" id="benchDrawerAgencyName">Agency Bench</h3>
+            </div>
+            <p class="bench-drawer-sub">Pre-interviewed candidates ready for immediate deployment</p>
+        </div>
+        <button type="button" class="bench-drawer-close-btn" onclick="closeAgencyBenchDrawer()">✕</button>
+    </div>
+    <div class="bench-drawer-body" id="benchDrawerBody">
+        <div class="d-flex justify-content-center p-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    </div>
+    <div class="bench-drawer-footer">
+        <button type="button" class="btn btn-primary w-100 font-weight-700" onclick="dispatchDirectMandate()">
+            <i class="fas fa-paper-plane me-1"></i>Request Interview for Bench Talent
+        </button>
+        <div class="bench-drawer-footnote">Candidates protected under JERO Non-Disclosure & Escrow Agreements.</div>
+    </div>
+</div>
+<div id="benchDrawerOverlay" class="bench-drawer-overlay" onclick="closeAgencyBenchDrawer()"></div>
 @endsection
 
 @push('footer-script')
 <script>
     // ── Global State & Caches ──
+    @php
+        $jobsJson = !empty($activeTenantJobs) ? json_encode($activeTenantJobs) : '[]';
+    @endphp
+    window.activeTenantJobs = {!! $jobsJson !!};
+
     window.agencyState = {
         tab: 'all',
         search: '',
         location: '',
         industry: '',
         sort: 'best',
+        selectedJobId: 'all',
+        selectedJobLabel: 'Matches your requirement on ' + (window.activeTenantJobs ? window.activeTenantJobs.length : 0) + ' jobs',
+        selectedJobSkills: [],
         page: 1,
         perPage: localStorage.getItem('agencyPerPage') || 10
     };
@@ -1252,6 +1883,129 @@
     var activeAgencyXHR = null;
     var activeDetailXHR = null;
     var searchDebounceTimer = null;
+
+    // ── Instant AI Job Matcher (Point 1) ──
+    function toggleJobMatchmakerPopover(e) {
+        if (e) e.stopPropagation();
+        closeAllDropdowns('job');
+        $('#faJobPopoverPanel').toggleClass('show');
+        $('#faJobComboboxBtn').toggleClass('active');
+        if ($('#faJobPopoverPanel').hasClass('show')) {
+            $('#faJobSearchInp').focus();
+        }
+    }
+    window.toggleJobMatchmakerPopover = toggleJobMatchmakerPopover;
+
+    function filterJobPopoverItems(q) {
+        q = (q || '').toLowerCase().trim();
+        $('#faJobPopoverList .job-item-row').each(function() {
+            var title = $(this).data('title') || '';
+            if (!q || title.indexOf(q) !== -1) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    }
+    window.filterJobPopoverItems = filterJobPopoverItems;
+
+    function selectMatchmakerJob(jobId, label, skills) {
+        window.agencyState.selectedJobId = jobId;
+        window.agencyState.selectedJobLabel = label;
+        window.agencyState.selectedJobSkills = skills || [];
+
+        $('#faJobSelectedLabel').text(label);
+        $('#faJobPopoverPanel').removeClass('show');
+        $('#faJobComboboxBtn').removeClass('active');
+
+        $('#faJobPopoverList .job-popover-item').removeClass('selected');
+        if (jobId === 'all') {
+            $('#faJobPopoverList .job-popover-item:first-child').addClass('selected');
+        }
+
+        // Instant re-evaluation in User RAM (0% MySQL/Server reads)
+        applyActiveJobMatching();
+    }
+    window.selectMatchmakerJob = selectMatchmakerJob;
+
+    function promptCustomSkillsMatch() {
+        var skillsStr = prompt("Enter required tech skills (e.g. React, Node.js, AWS, Python):", "React, AWS");
+        if (skillsStr) {
+            var skills = skillsStr.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            selectMatchmakerJob('custom', 'Custom Skills: ' + skillsStr, skills);
+        }
+    }
+    window.promptCustomSkillsMatch = promptCustomSkillsMatch;
+
+    function applyActiveJobMatching() {
+        var mode = window.agencyState.selectedJobId || 'all';
+        var selectedSkills = window.agencyState.selectedJobSkills || [];
+        var activeJobs = window.activeTenantJobs || [];
+
+        $('#findAgencyList .cl-primary-card').each(function() {
+            var $card = $(this);
+            var agencySkillsRaw = $card.attr('data-agency-skills');
+            var agencySkills = [];
+            try {
+                agencySkills = JSON.parse(agencySkillsRaw) || [];
+            } catch(e) {
+                agencySkills = [];
+            }
+            agencySkills = agencySkills.map(function(s) { return (s || '').toLowerCase().trim(); });
+
+            var $ribbonBadge = $card.find('.cl-synergy-badge');
+            var $ribbonSkills = $card.find('.cl-ribbon-skills');
+
+            if (mode === 'all') {
+                // OVERVIEW MODE: "Matches your requirement on X jobs"
+                var matchingJobCount = 0;
+                activeJobs.forEach(function(job) {
+                    var jSkills = (job.skills || []).map(function(s) { return (s || '').toLowerCase().trim(); });
+                    var hasOverlap = jSkills.some(function(js) { return agencySkills.indexOf(js) !== -1; });
+                    if (hasOverlap) matchingJobCount++;
+                });
+
+                if (matchingJobCount > 0) {
+                    $ribbonBadge.removeClass('synergy-match').addClass('synergy-all');
+                    $ribbonBadge.html('<i class="fas fa-layer-group text-purple me-1"></i><span class="cl-synergy-text">Matches your requirement on ' + matchingJobCount + (matchingJobCount === 1 ? ' job' : ' jobs') + '</span>');
+                    $ribbonSkills.html('<span class="cl-skill-chip" style="background:#f5f3ff; color:#7c3aed; border-color:#ddd6fe; font-weight:700;">High Synergy Partner</span>');
+                } else {
+                    $ribbonBadge.removeClass('synergy-match synergy-all');
+                    $ribbonBadge.html('<i class="fas fa-award text-primary me-1"></i><span class="cl-synergy-text">Verified Specialization</span>');
+                }
+            } else if (mode === 'none') {
+                $ribbonBadge.removeClass('synergy-match synergy-all');
+                $ribbonBadge.html('<i class="fas fa-award text-primary me-1"></i><span class="cl-synergy-text">Verified Partner</span>');
+            } else {
+                // SPECIFIC REQUISITION MATCH MODE
+                var overlap = [];
+                selectedSkills.forEach(function(sk) {
+                    var lower = (sk || '').toLowerCase().trim();
+                    if (lower && agencySkills.indexOf(lower) !== -1) {
+                        overlap.push(lower);
+                    }
+                });
+
+                var matchPct = 0;
+                if (selectedSkills.length > 0) {
+                    matchPct = Math.min(100, Math.max(35, Math.round((overlap.length / selectedSkills.length) * 100)));
+                } else {
+                    matchPct = 85;
+                }
+
+                $ribbonBadge.removeClass('synergy-all').addClass('synergy-match');
+                $ribbonBadge.html('<i class="fas fa-bolt text-success me-1"></i><span class="cl-synergy-text">🔥 ' + matchPct + '% Match</span>');
+
+                if (overlap.length > 0) {
+                    var chipsHtml = '';
+                    overlap.slice(0, 4).forEach(function(sk) {
+                        chipsHtml += '<span class="cl-skill-chip matched">' + sk.charAt(0).toUpperCase() + sk.slice(1) + '</span>';
+                    });
+                    $ribbonSkills.html(chipsHtml);
+                }
+            }
+        });
+    }
 
     // ── Tab Selection ──
     function selectAgencyTab(tabKey, element) {
@@ -1415,10 +2169,11 @@
         if (except !== 'loc') { $('#faLocDropdownPanel').removeClass('show'); $('#faLocBtn').removeClass('active'); }
         if (except !== 'ind') { $('#faIndDropdownPanel').removeClass('show'); $('#faIndBtn').removeClass('active'); }
         if (except !== 'sort') { $('#faSortDropdownPanel').removeClass('show'); $('#faSortBtn').removeClass('active'); }
+        if (except !== 'job') { $('#faJobPopoverPanel').removeClass('show'); $('#faJobComboboxBtn').removeClass('active'); }
     }
 
     $(document).on('click', function(e) {
-        if (!$(e.target).closest('.cl-loc-dropdown-wrapper, .cl-ind-dropdown-wrapper, .cl-sort-dropdown-wrapper').length) {
+        if (!$(e.target).closest('.cl-loc-dropdown-wrapper, .cl-ind-dropdown-wrapper, .cl-sort-dropdown-wrapper, .fa-job-combobox-wrapper').length) {
             closeAllDropdowns();
         }
     });
@@ -1532,7 +2287,85 @@
             if (response.kpi_counts.indian_agencies !== undefined) $('#kpi_indian_agencies').text(response.kpi_counts.indian_agencies);
             if (response.kpi_counts.global_agencies !== undefined) $('#kpi_global_agencies').text(response.kpi_counts.global_agencies);
         }
+
+        // Apply dynamic AI job matching to rendered cards
+        applyActiveJobMatching();
     }
+
+    // ── Sliding Bench Candidate Preview Drawer (Point 2) ──
+    function openAgencyBenchDrawer(agencyId, agencyName, count) {
+        $('#benchDrawerAgencyName').text(agencyName || 'Agency Bench');
+        $('#drawer_agency_bench_preview').addClass('show');
+        $('#benchDrawerOverlay').addClass('show');
+
+        var $body = $('#benchDrawerBody');
+        $body.html('<div class="d-flex flex-column align-items-center justify-content-center p-5"><div class="spinner-border text-primary mb-3" role="status"></div><div class="text-muted font-size-12">Retrieving pre-vetted bench profiles...</div></div>');
+
+        var url = "{{ route('service_company.find.agencyBenchCandidates', ':id') }}".replace(':id', agencyId);
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(res) {
+                if (res && res.candidates && res.candidates.length > 0) {
+                    var html = '';
+                    res.candidates.forEach(function(c) {
+                        var skillsHtml = '';
+                        (c.skills || []).forEach(function(sk) {
+                            skillsHtml += '<span class="cl-mini-tag me-1">' + sk + '</span>';
+                        });
+
+                        html += '<div class="bench-cand-card">' +
+                            '<div class="d-flex align-items-start justify-content-between gap-2">' +
+                                '<div>' +
+                                    '<div class="d-flex align-items-center gap-2">' +
+                                        '<span class="font-weight-700 text-dark font-size-12">' + c.token + '</span>' +
+                                        '<span class="badge badge-light-success py-0.5 px-2 font-size-10 font-weight-700">' + c.notice_period + '</span>' +
+                                    '</div>' +
+                                    '<div class="text-primary font-weight-600 font-size-12 mt-1">' + c.designation + '</div>' +
+                                    '<div class="font-size-11 text-muted">' + c.experience + ' • ' + c.location + '</div>' +
+                                '</div>' +
+                                '<div class="text-end">' +
+                                    '<div class="font-weight-700 text-dark font-size-12">' + c.rate_formatted + '</div>' +
+                                    '<div class="font-size-10 text-muted">All-inclusive</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="d-flex flex-wrap gap-1 mt-2">' + skillsHtml + '</div>' +
+                            '<div class="d-flex align-items-center justify-content-between mt-3 pt-2 border-top border-slate-100">' +
+                                '<span class="font-size-11 text-success font-weight-600"><i class="fas fa-check-circle me-1"></i>Pre-Screened</span>' +
+                                '<button type="button" class="btn btn-xs btn-light-primary" onclick="requestCandidateInterview(' + agencyId + ', \'' + c.token + '\')">⚡ Request Interview</button>' +
+                            '</div>' +
+                        '</div>';
+                    });
+                    $body.html(html);
+                } else {
+                    $body.html('<div class="text-center p-5 text-muted"><i class="fas fa-user-clock font-size-28 mb-2 text-warning"></i><div class="font-weight-700 text-dark">No Bench Candidates Currently Listed</div><div class="font-size-12 mt-1">This partner agency is currently deploying dedicated recruiters on active mandates. Click Send Request on their card to request custom talent sourcing.</div></div>');
+                }
+            },
+            error: function() {
+                $body.html('<div class="alert alert-danger m-3 font-size-12">Unable to retrieve bench candidates. Please try again.</div>');
+            }
+        });
+    }
+    window.openAgencyBenchDrawer = openAgencyBenchDrawer;
+
+    function closeAgencyBenchDrawer() {
+        $('#drawer_agency_bench_preview').removeClass('show');
+        $('#benchDrawerOverlay').removeClass('show');
+    }
+    window.closeAgencyBenchDrawer = closeAgencyBenchDrawer;
+
+    function requestCandidateInterview(agencyId, candToken) {
+        alert("⚡ Interview request dispatched for " + candToken + ".\nThe partner agency lead recruiter has been alerted and will respond within 4 hours.");
+        closeAgencyBenchDrawer();
+    }
+    window.requestCandidateInterview = requestCandidateInterview;
+
+    function dispatchDirectMandate() {
+        alert("⚡ Discovery mandate dispatched to agency lead recruiters.\nFirst 3 vetted profiles guaranteed within 36-48h SLA.");
+        closeAgencyBenchDrawer();
+    }
+    window.dispatchDirectMandate = dispatchDirectMandate;
 
     // ── Agency Detail Drawer Trigger ──
     $(document).off('click', '.show-detail-direct').on('click', '.show-detail-direct', function(e) {

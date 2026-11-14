@@ -453,13 +453,14 @@ class FindAgencyService
         }
         $agencyIds = array_values(array_unique(array_filter($agencyIds)));
 
-        // Pre-flight batch data retrieval
+        // Pre-flight batch data retrieval with Dual Commercials (Full-Time + Contract)
         $batchClientsMap = ! empty($agencyIds) ? GeneralMethod::batchGetClientIdCompany($agencyIds) : [];
         $batchRelationsMap = ! empty($agencyIds) ? GeneralMethod::batchGetAgencyRelationData($company_id, $agencyIds) : [];
         $batchMatchFoundMap = ! empty($agencyIds) ? GeneralMethod::batchGetMatchFoundMap($company_id, $agencyIds) : [];
         $batchJobsCountMap = ! empty($agencyIds) ? GeneralMethod::batchAgencyJobsCount($agencyIds) : [];
         $batchCandidatesCountMap = ! empty($agencyIds) ? GeneralMethod::batchAgencyJobsCandidatesCount($agencyIds) : [];
-        $batchCommercialsMap = ! empty($agencyIds) ? GeneralMethod::batchGetCommercialsData($agencyIds, $commtype) : [];
+        $batchCommercialsContractMap = ! empty($agencyIds) ? GeneralMethod::batchGetCommercialsData($agencyIds, 1) : [];
+        $batchCommercialsFulltimeMap = ! empty($agencyIds) ? GeneralMethod::batchGetCommercialsData($agencyIds, 2) : [];
 
         // Batch recruiter user counts
         $batchUserCounts = [];
@@ -497,9 +498,15 @@ class FindAgencyService
             $source['_agency_jobs_count'] = $batchJobsCountMap[$matchedCompanyId] ?? (object) ['all_jobs' => 0];
             $source['_agency_candidates_count'] = $batchCandidatesCountMap[$matchedCompanyId] ?? (object) ['all_candidates' => 0, 'all_candidate_bench' => 0];
 
-            $commData = $batchCommercialsMap[$matchedCompanyId] ?? null;
-            $source['_minimum_rate'] = $commData ? $commData->minimum_rate : null;
-            $source['_minimum_rate_type'] = $commData ? $commData->minimum_rate_type : null;
+            $commContract = $batchCommercialsContractMap[$matchedCompanyId] ?? null;
+            $commFulltime = $batchCommercialsFulltimeMap[$matchedCompanyId] ?? null;
+
+            $source['_commercials_contract'] = $commContract;
+            $source['_commercials_fulltime'] = $commFulltime;
+            $source['_minimum_rate_contract'] = $commContract ? $commContract->minimum_rate : null;
+            $source['_minimum_rate_contract_type'] = $commContract ? $commContract->minimum_rate_type : null;
+            $source['_minimum_rate_fulltime'] = $commFulltime ? $commFulltime->minimum_rate : null;
+            $source['_minimum_rate_fulltime_type'] = $commFulltime ? $commFulltime->minimum_rate_type : null;
 
             $data[] = $source;
         }
