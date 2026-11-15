@@ -1297,17 +1297,17 @@
     text-decoration: none !important;
 }
 
-/* ── SLIDING AGENCY TERMS DRAWER ── */
+/* ── SLIDING AGENCY TERMS DRAWER (Rule 20 Enterprise Standard) ── */
 .cl-terms-drawer {
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
-    width: 480px;
-    max-width: 92vw;
-    background: #ffffff;
+    width: 500px;
+    max-width: 94vw;
+    background: #f8fafc;
     border-left: 1px solid #cbd5e1;
-    box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15);
+    box-shadow: -10px 0 35px rgba(15, 23, 42, 0.16);
     z-index: 1075;
     transform: translateX(100%);
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1329,70 +1329,155 @@
     display: block;
 }
 .terms-drawer-header {
-    padding: 14px 18px;
-    background: #f8fafc;
+    padding: 16px 20px;
+    background: #ffffff;
     border-bottom: 1px solid #e2e8f0;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 14px;
+    flex-shrink: 0;
+}
+.terms-header-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 9px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.terms-header-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.terms-header-avatar-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    background: #eff6ff;
+    color: #2563eb;
 }
 .terms-drawer-title {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     color: #0f172a;
     margin: 0;
+    line-height: 1.25;
 }
 .terms-drawer-sub {
-    font-size: 11px;
+    font-size: 11.5px;
     color: #64748b;
+    line-height: 1.35;
+    margin-top: 2px;
+}
+.terms-drawer-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+.terms-drawer-close-btn:hover {
+    background: #fee2e2;
+    border-color: #fecaca;
+    color: #ef4444;
 }
 .terms-drawer-body {
     flex: 1;
     overflow-y: auto;
-    padding: 18px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 .terms-drawer-footer {
-    padding: 12px 18px;
-    background: #f8fafc;
+    padding: 14px 20px;
+    background: #ffffff;
     border-top: 1px solid #e2e8f0;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 10px;
+    flex-shrink: 0;
 }
 .terms-policy-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 11px 13px;
-    margin-bottom: 12px;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 13px 15px !important;
+    margin-bottom: 0 !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
 }
 .terms-policy-title {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin-bottom: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+.terms-spec-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    font-size: 11.5px !important;
+    padding: 6px 0 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+.terms-spec-row:last-child {
+    border-bottom: none !important;
+}
+.terms-spec-lbl {
+    color: #64748b !important;
+    font-weight: 500 !important;
+}
+.terms-spec-val {
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    text-align: right !important;
+}
+.terms-gov-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+.terms-gov-item {
+    background: #f8fafc;
+    border: 1px solid #eef2f6;
+    border-radius: 8px;
+    padding: 9px 12px;
+}
+.terms-gov-title {
     font-size: 11.5px;
     font-weight: 700;
     color: #0f172a;
-    margin-bottom: 6px;
+    margin-bottom: 3px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
 }
-.terms-spec-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.terms-gov-desc {
     font-size: 11px;
-    padding: 4px 0;
-    border-bottom: 1px dashed #e2e8f0;
-}
-.terms-spec-row:last-child {
-    border-bottom: none;
-}
-.terms-spec-lbl {
-    color: #64748b;
-}
-.terms-spec-val {
-    font-weight: 700;
-    color: #0f172a;
+    color: #475569;
+    line-height: 1.5;
 }
 
 /* ── SLIDING BENCH CANDIDATE PREVIEW DRAWER (Point 2) ── */
@@ -1934,23 +2019,33 @@
 <!-- ── SLIDING AGENCY TERMS & COMMERCIALS DRAWER ── -->
 <div id="drawer_agency_terms_view" class="cl-terms-drawer">
     <div class="terms-drawer-header">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge badge-light-primary font-size-10 font-weight-700"><i class="fas fa-file-contract text-primary me-1"></i>COMMERCIAL TERMS</span>
-                <span id="termsDrawerVerifiedBadge"></span>
+        <div class="d-flex align-items-center gap-3 min-w-0">
+            <div class="terms-header-avatar" id="termsDrawerAvatarBox">
+                <!-- Avatar image or fallback letter -->
             </div>
-            <h3 class="terms-drawer-title mt-1" id="termsDrawerAgencyName">Agency Commercial Terms</h3>
-            <p class="terms-drawer-sub mb-0" id="termsDrawerAgencyMeta">Pre-agreed SLA & Hiring Terms of Engagement</p>
+            <div class="min-w-0">
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                    <span class="badge badge-light-primary font-size-10 font-weight-700"><i class="fas fa-file-contract text-primary me-1"></i>COMMERCIAL TERMS</span>
+                    <span id="termsDrawerVerifiedBadge"></span>
+                </div>
+                <h3 class="terms-drawer-title text-truncate" id="termsDrawerAgencyName">Agency Commercial Terms</h3>
+                <p class="terms-drawer-sub mb-0 text-truncate" id="termsDrawerAgencyMeta">Pre-agreed SLA & Hiring Terms of Engagement</p>
+            </div>
         </div>
-        <button type="button" class="bench-drawer-close-btn" onclick="closeAgencyTermsDrawer()">✕</button>
+        <button type="button" class="terms-drawer-close-btn" onclick="closeAgencyTermsDrawer()" title="Close Drawer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
     </div>
     <div class="terms-drawer-body" id="termsDrawerBody">
         <!-- Content will be populated dynamically from card data-agency-terms -->
     </div>
     <div class="terms-drawer-footer">
-        <button type="button" class="btn btn-sm btn-light" onclick="closeAgencyTermsDrawer()">Close</button>
-        <button type="button" class="btn btn-sm btn-primary font-weight-700" id="termsDrawerActionBtn" onclick="dispatchMandateFromTerms()">
-            <i class="fas fa-paper-plane me-1"></i>Send Mandate Request
+        <button type="button" class="btn btn-sm btn-light" onclick="closeAgencyTermsDrawer()" style="font-size:12px; font-weight:600; padding:7px 16px; border-radius:8px;">Close</button>
+        <button type="button" class="btn btn-sm btn-primary font-weight-700" id="termsDrawerActionBtn" onclick="dispatchMandateFromTerms()" style="font-size:12px; padding:7px 18px; border-radius:8px;">
+            <i class="fas fa-paper-plane me-1.5"></i>Send Mandate Request
         </button>
     </div>
 </div>
@@ -2481,39 +2576,53 @@
             }
         }
 
-        $('#termsDrawerAgencyName').text(terms.agency_name || 'Agency Commercial Terms');
+        var agencyName = terms.agency_name || 'Agency Commercial Terms';
+        $('#termsDrawerAgencyName').text(agencyName);
         $('#termsDrawerAgencyMeta').text((terms.location || 'India') + ' • ' + (terms.industry || 'Staffing & IT'));
 
-        if (terms.is_verified) {
-            $('#termsDrawerVerifiedBadge').html('<span class="badge badge-light-success font-size-10 font-weight-700"><i class="fas fa-check-circle text-success me-1"></i>Superadmin Verified</span>');
+        // Populate avatar in drawer header
+        var initialLetter = (agencyName.trim()[0] || 'A').toUpperCase();
+        if (terms.logo && terms.logo.length > 10) {
+            $('#termsDrawerAvatarBox').html('<img src="' + terms.logo + '" alt="' + agencyName + '" class="terms-header-avatar-img" />');
         } else {
-            $('#termsDrawerVerifiedBadge').html('<span class="badge badge-light-secondary font-size-10 font-weight-600 text-muted"><i class="fas fa-clock text-warning me-1"></i>Pending Verify</span>');
+            $('#termsDrawerAvatarBox').html('<div class="terms-header-avatar-fallback">' + initialLetter + '</div>');
+        }
+
+        if (terms.is_verified) {
+            $('#termsDrawerVerifiedBadge').html('<span class="badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2"><i class="fas fa-check-circle text-success me-1"></i>Marketplace Verified</span>');
+        } else {
+            $('#termsDrawerVerifiedBadge').html('<span class="badge badge-light-secondary font-size-10 font-weight-600 text-muted py-0.5 px-2"><i class="fas fa-clock text-warning me-1"></i>Onboarding Partner</span>');
         }
 
         var servingCountries = terms.serving_countries || [];
-        var servingHtml = servingCountries.map(function(c) {
-            return '<span class="badge badge-light-primary py-0.5 px-2 me-1 mb-1 font-size-10 font-weight-600">' + c + '</span>';
-        }).join(' ');
+        var servingHtml = '';
+        if (servingCountries.length > 0) {
+            servingHtml = servingCountries.map(function(c) {
+                return '<span class="badge badge-light-primary py-1 px-2.5 me-1.5 mb-1.5 font-size-11 font-weight-600" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;"><i class="fas fa-map-marker-alt text-primary me-1 font-size-10"></i>' + c + '</span>';
+            }).join(' ');
+        } else {
+            servingHtml = '<span class="badge badge-light-secondary py-1 px-2.5 font-size-11 font-weight-600 text-muted">India (Domestic Scope)</span>';
+        }
 
         var bodyHtml = '';
 
         // Section 1: Pre-Agreed Commercial Rates
         bodyHtml += '<div class="terms-policy-card">' +
             '<div class="terms-policy-title">' +
-                '<span><i class="fas fa-file-invoice-dollar text-success me-1"></i>Pre-Agreed Commercial Structure</span>' +
-                '<span class="badge badge-light-success font-size-10">100% Contingent</span>' +
+                '<span><i class="fas fa-file-invoice-dollar text-success me-1.5"></i>Pre-Agreed Commercial Structure</span>' +
+                '<span class="badge badge-light-success font-size-10 font-weight-700" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;">100% Contingent</span>' +
             '</div>';
 
         if (terms.has_fulltime) {
             bodyHtml += '<div class="terms-spec-row">' +
                 '<span class="terms-spec-lbl">Full-Time (Direct Hire):</span>' +
-                '<span class="terms-spec-val text-primary">' + (terms.fulltime_rate || '8.33% * CTC') + '</span>' +
+                '<span class="terms-spec-val text-primary font-weight-700">' + (terms.fulltime_rate || '8.33% * CTC') + '</span>' +
             '</div>';
         }
         if (terms.has_contract) {
             bodyHtml += '<div class="terms-spec-row">' +
                 '<span class="terms-spec-lbl">Contract Staffing:</span>' +
-                '<span class="terms-spec-val text-info">' + (terms.contract_rate || '$35 / Hr') + '</span>' +
+                '<span class="terms-spec-val font-weight-700" style="color:#7c3aed;">' + (terms.contract_rate || '$35 / Hr') + '</span>' +
             '</div>';
         }
         bodyHtml += '</div>';
@@ -2521,8 +2630,8 @@
         // Section 2: Replacement Guarantees & SLAs
         bodyHtml += '<div class="terms-policy-card">' +
             '<div class="terms-policy-title">' +
-                '<span><i class="fas fa-shield-alt text-primary me-1"></i>Replacement Guarantee & SLA</span>' +
-                '<span class="badge badge-light-warning font-size-10">Risk-Reversal</span>' +
+                '<span><i class="fas fa-shield-alt text-primary me-1.5"></i>Replacement Guarantee & SLA</span>' +
+                '<span class="badge badge-light-warning font-size-10 font-weight-700" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a;">Company Terms</span>' +
             '</div>' +
             '<div class="terms-spec-row">' +
                 '<span class="terms-spec-lbl">Full-Time Replacement Window:</span>' +
@@ -2538,59 +2647,68 @@
             '</div>' +
             '<div class="terms-spec-row">' +
                 '<span class="terms-spec-lbl">Shortlist Turnaround SLA:</span>' +
-                '<span class="terms-spec-val">First 3 Vetted CVs within 36–48h</span>' +
+                '<span class="terms-spec-val font-weight-600">First 3 Vetted CVs within 36–48h</span>' +
             '</div>' +
         '</div>';
 
         // Section 3: Invoicing & Payment Terms
         bodyHtml += '<div class="terms-policy-card">' +
             '<div class="terms-policy-title">' +
-                '<span><i class="fas fa-credit-card text-info me-1"></i>Billing & Payment Terms</span>' +
+                '<span><i class="fas fa-credit-card text-info me-1.5"></i>Billing & Payment Terms</span>' +
+                '<span class="badge badge-light-info font-size-10 font-weight-600" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">Direct Settlement</span>' +
             '</div>' +
             '<div class="terms-spec-row">' +
                 '<span class="terms-spec-lbl">Full-Time Fee Trigger:</span>' +
-                '<span class="terms-spec-val">Candidate Joining Date (0 Upfront)</span>' +
+                '<span class="terms-spec-val font-weight-600">Candidate Joining Date (0 Upfront)</span>' +
             '</div>' +
             '<div class="terms-spec-row">' +
                 '<span class="terms-spec-lbl">Full-Time Payment Terms:</span>' +
-                '<span class="terms-spec-val">Net-' + (terms.ft_payment_days || 30) + ' Days Post-Joining</span>' +
+                '<span class="terms-spec-val font-weight-700 text-dark">Net-' + (terms.ft_payment_days || 30) + ' Days Post-Joining</span>' +
             '</div>' +
             '<div class="terms-spec-row">' +
                 '<span class="terms-spec-lbl">Contract Billing Frequency:</span>' +
-                '<span class="terms-spec-val">Monthly Approved Timesheets</span>' +
+                '<span class="terms-spec-val font-weight-600">Monthly Approved Timesheets</span>' +
             '</div>' +
             '<div class="terms-spec-row">' +
                 '<span class="terms-spec-lbl">Contract Payment Due:</span>' +
-                '<span class="terms-spec-val">Net-' + (terms.ct_payment_days || 15) + ' Days</span>' +
+                '<span class="terms-spec-val font-weight-700 text-dark">Net-' + (terms.ct_payment_days || 15) + ' Days</span>' +
             '</div>' +
         '</div>';
 
         // Section 4: Operating Geography & Global Coverage
         bodyHtml += '<div class="terms-policy-card">' +
             '<div class="terms-policy-title">' +
-                '<span><i class="fas fa-globe text-primary me-1"></i>Serving Countries & Geographical Scope</span>' +
+                '<span><i class="fas fa-globe-americas text-primary me-1.5"></i>Serving Countries & Geographical Scope</span>' +
+                '<span class="badge badge-light-info font-size-10 font-weight-600">' + (servingCountries.length || 1) + ' ' + (servingCountries.length === 1 ? 'Region' : 'Regions') + '</span>' +
             '</div>' +
-            '<div class="mt-2">' + servingHtml + '</div>' +
+            '<div class="d-flex flex-wrap gap-1 mt-1">' + servingHtml + '</div>' +
         '</div>';
 
-        // Section 5: Governance & Non-Circumvention
+        // Section 5: Standard Marketplace Governance & Platform Neutrality (User Mandate)
         bodyHtml += '<div class="terms-policy-card">' +
             '<div class="terms-policy-title">' +
-                '<span><i class="fas fa-balance-scale text-secondary me-1"></i>Standard Marketplace Governance</span>' +
+                '<span><i class="fas fa-balance-scale text-primary me-1.5"></i>Standard Marketplace Governance</span>' +
+                '<span class="badge badge-light-secondary font-size-10 font-weight-700" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;">Direct Bilateral Terms</span>' +
             '</div>' +
-            '<div class="font-size-11 text-muted" style="line-height:1.45;">' +
-                '• <strong>12-Month Ownership:</strong> Candidate profiles submitted through JERO ATS remain attributed to this partner for 12 months.<br>' +
-                '• <strong>Immutable Verification:</strong> Direct ATS submission timestamps establish authoritative presentation primacy.<br>' +
-                '• <strong>Credential Pre-screening:</strong> Partner validates technical background and identity prior to shortlisting.' +
+            '<div class="terms-gov-box">' +
+                '<div class="terms-gov-item">' +
+                    '<div class="terms-gov-title"><i class="fas fa-handshake text-primary me-1.5 font-size-10"></i>Company-Direct Terms & Mandatory Agreement</div>' +
+                    '<div class="terms-gov-desc">All terms, conditions, commercial structures, billing cycles, payment timelines, candidate duplicate rules, profile validity, replacement guarantees, and regulatory compliances applied to agencies are established directly by the hiring company. Any agency wishing to work with a company must review, discuss, and mutually agree to all terms set by that company before commencing work or submitting candidates.</div>' +
+                '</div>' +
+                '<div class="terms-gov-item">' +
+                    '<div class="terms-gov-title"><i class="fas fa-shield-alt text-muted me-1.5 font-size-10"></i>Platform Role Disclaimer (JERO.works)</div>' +
+                    '<div class="terms-gov-desc">JERO.works operates strictly as an independent technology platform provider and has zero role, responsibility, or liability in setting, negotiating, or enforcing any terms between hiring companies and agencies. JERO.works does not participate in payments, contractual enforcement, or bilateral dispute resolution. All agreements, payments, deliverables, and liabilities remain 100% direct and bilateral between the hiring company and the partner agency.</div>' +
+                '</div>' +
             '</div>' +
         '</div>';
 
         if (terms.custom_terms && terms.custom_terms.length > 5) {
             bodyHtml += '<div class="terms-policy-card">' +
                 '<div class="terms-policy-title">' +
-                    '<span><i class="fas fa-sticky-note text-warning me-1"></i>Partner Specific Clauses</span>' +
+                    '<span><i class="fas fa-sticky-note text-warning me-1.5"></i>Company Specific Custom Clauses</span>' +
+                    '<span class="badge badge-light-warning font-size-10 font-weight-600">Custom Terms</span>' +
                 '</div>' +
-                '<div class="font-size-11 text-dark">' + terms.custom_terms + '</div>' +
+                '<div class="font-size-11 text-dark" style="background:#fefce8; border:1px solid #fef08a; border-radius:6px; padding:10px 12px; line-height:1.5;">' + terms.custom_terms + '</div>' +
             '</div>';
         }
 
