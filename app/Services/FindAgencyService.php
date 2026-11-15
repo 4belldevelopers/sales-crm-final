@@ -80,6 +80,31 @@ class FindAgencyService
         $skillsList = array_filter($currentJobSkill, fn ($s) => $s !== 'skill');
         $skillsList = array_values(array_map('strtolower', $skillsList));
 
+        // Resolve target job requirement context (100% CQRS via Elasticsearch / Session)
+        $jobId = (int) ($request->input('job_id') ?? session()->get('job_id') ?? 0);
+        $jobContext = null;
+        if ($jobId > 0) {
+            $jobContext = Cache::remember("ref:job_context_es:{$jobId}", 1800, function () use ($jobId) {
+                try {
+                    $indexJobs = defined('ELASTIC_JOBS') ? ELASTIC_JOBS : 'ats_jobs_elastic';
+                    $res = $this->elasticService->getClient()->get([
+                        'index' => $indexJobs,
+                        'id' => (string) $jobId,
+                    ]);
+
+                    return $res['_source'] ?? null;
+                } catch (\Throwable $e) {
+                    return null;
+                }
+            });
+        }
+
+        // If no explicit skills were searched, inherit required skills from active job context
+        if (empty($skillsList) && ! empty($jobContext['job_metronics_skills'])) {
+            $jobSkills = array_column($jobContext['job_metronics_skills'], 'skill_name');
+            $skillsList = array_values(array_unique(array_filter(array_map('strtolower', $jobSkills))));
+        }
+
         $searchQuery = trim($request->input('q', ''));
         $experience = $request->input('experience');
         $industry = $request->input('industry');
@@ -108,6 +133,11 @@ class FindAgencyService
             });
         }
 
+        // Resolve Job Context Geography & Hiring Model Parameters
+        $jobCountryId = $country_id_job ?? ($jobContext['client_location'][0]['country_id'] ?? ($jobContext['client_city_jobs'][0]['country_id'] ?? 101));
+        $jobHiringType = $commtype ?? ((int) ($jobContext['employment_type'] ?? 2) ?: 2);
+        $jobIndustryId = ! empty($industry) ? $industry : ($jobContext['category_id'] ?? null);
+
         // 2. Check L3 Multi-Tenant Redis Cache first
         $versionKey = "ats:v2:findagency:version:{$company_id}";
         $version = Cache::get($versionKey, 1);
@@ -116,6 +146,7 @@ class FindAgencyService
             'tab' => $tab,
             'page' => $page,
             'size' => $size,
+            'job_id' => $jobId,
             'q' => $searchQuery,
             'search' => $globalSearch,
             'company' => $company_id,
@@ -230,20 +261,89 @@ class FindAgencyService
             }
         }
 
-        // 4. Step 2: Build dynamic function score boosts
-        // Note: Preserving all matching companies without artificial truncation to guarantee 100% ranking equivalence
-
+        // 4. Step 2: Build dynamic 5-Tier Recommendation Function Score Boosts (Smart Ranking Engine)
         $functions = [];
+        $highSkillCompanyIds = [];
         foreach ($companySkillMatchCount as $matchedCompanyId => $matchedSkillCount) {
+            // Tier 2: Strong Skill & Technology Match (+1000 per skill, bonus +1500 for 2+ skills)
+            $skillWeight = $matchedSkillCount * 1000;
+            if ($matchedSkillCount >= 2) {
+                $skillWeight += 1500;
+                $highSkillCompanyIds[] = (int) $matchedCompanyId;
+            }
+
             $functions[] = [
                 'filter' => [
                     'term' => [
                         'id' => $matchedCompanyId,
                     ],
                 ],
-                'weight' => ($matchedSkillCount * 100),
+                'weight' => $skillWeight,
             ];
         }
+
+        // Tier 1: Exact Job Match Boost (+5000 points)
+        // High skill match + target location + target commercial model
+        if (! empty($highSkillCompanyIds) && ! empty($jobCountryId)) {
+            $functions[] = [
+                'filter' => [
+                    'bool' => [
+                        'must' => [
+                            ['terms' => ['id' => $highSkillCompanyIds]],
+                            ['term' => ['commericial_countries.country_id' => (int) $jobCountryId]],
+                            ['term' => ['commericials.commtype' => (int) $jobHiringType]],
+                        ],
+                    ],
+                ],
+                'weight' => 5000,
+            ];
+        }
+
+        // Tier 3: Industry Match (+500 points)
+        if (! empty($jobIndustryId)) {
+            $functions[] = [
+                'filter' => [
+                    'terms' => [
+                        'industry.ind_id' => (array) $jobIndustryId,
+                    ],
+                ],
+                'weight' => 500,
+            ];
+        }
+
+        // Tier 4: Location-Based Match (+300 points)
+        if (! empty($jobCountryId)) {
+            $functions[] = [
+                'filter' => [
+                    'term' => [
+                        'commericial_countries.country_id' => (int) $jobCountryId,
+                    ],
+                ],
+                'weight' => 300,
+            ];
+        }
+
+        // Tier 5: Similar Hiring Category Agencies (+200 points)
+        if (! empty($jobHiringType)) {
+            $functions[] = [
+                'filter' => [
+                    'term' => [
+                        'commericials.commtype' => (int) $jobHiringType,
+                    ],
+                ],
+                'weight' => 200,
+            ];
+        }
+
+        // Bench Strength & Talent Availability (+150 points)
+        $functions[] = [
+            'filter' => [
+                'range' => [
+                    'bench_candidates.id' => ['gt' => 0],
+                ],
+            ],
+            'weight' => 150,
+        ];
 
         // 5. Step 3: Filter criteria for experience and industry
         $experienceFilter = [];
@@ -443,6 +543,47 @@ class FindAgencyService
         $companyResponse = $this->elasticService->getClient()->search($companySearchParams);
         $total = $companyResponse['hits']['total']['value'] ?? 0;
         $hits = $companyResponse['hits']['hits'] ?? [];
+        $isFallback = false;
+        $fallbackNotice = '';
+
+        // Fallback Recommendation Engine (Never Leave Listing Empty per Rule 4)
+        if ($total === 0 && (! empty($searchVal) || ! empty($industryFilter) || ! empty($experienceFilter) || ! empty($countryFilter))) {
+            $fallbackSearchParams = $companySearchParams;
+            $fallbackSearchParams['body']['query']['function_score']['query']['bool']['must'] = [
+                ['term' => ['status' => 'active']],
+                ['terms' => ['company_type' => [1, 2]]],
+                [
+                    'nested' => [
+                        'path' => 'company_coins',
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['company_coins.event_type' => 'sales']],
+                                    ['range' => ['company_coins.coins' => ['gt' => 0]]],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+            if (! empty($countryFilter)) {
+                $fallbackSearchParams['body']['query']['function_score']['query']['bool']['should'] = $countryFilter;
+            }
+
+            try {
+                $fallbackResponse = $this->elasticService->getClient()->search($fallbackSearchParams);
+                $fallbackTotal = $fallbackResponse['hits']['total']['value'] ?? 0;
+                if ($fallbackTotal > 0) {
+                    $companyResponse = $fallbackResponse;
+                    $total = $fallbackTotal;
+                    $hits = $fallbackResponse['hits']['hits'] ?? [];
+                    $isFallback = true;
+                    $fallbackNotice = 'No exact matches found for your filter. Showing recommended partner agencies based on location, industry, and hiring specialization.';
+                }
+            } catch (\Throwable $e) {
+                Log::warning('FindAgencyService: Fallback search warning: '.$e->getMessage());
+            }
+        }
 
         // 7. Extract agency IDs for Batch Pre-enrichment (N+1 Elimination)
         $agencyIds = [];
@@ -515,7 +656,82 @@ class FindAgencyService
             $source['matched_skills'] = $commonSkills;
             $source['search_skills'] = $skillsList;
             $source['match_score'] = $hit['_score'];
-            $source['matched_skill_count'] = $hit['_score'];
+            $source['matched_skill_count'] = count($commonSkills);
+
+            // Recommendation Tier Classification (User Specification Priority Hierarchy)
+            $matchedSkillCount = count($commonSkills);
+            $hasLocationMatch = ! empty($jobCountryId) && in_array((int) $jobCountryId, array_column($source['commericial_countries'] ?? [], 'country_id'));
+            $hasCommMatch = in_array((int) $jobHiringType, array_column($source['commericials'] ?? [], 'commtype'));
+            $benchCount = count($source['bench_candidates'] ?? []);
+
+            $recTier = 'marketplace';
+            $isDirectMatch = false;
+            $recLabel = 'Recommended Partner';
+            $recReason = 'Verified marketplace partner with active recruitment capacity';
+            $matchPct = 0;
+
+            if ($matchedSkillCount >= 2 && $hasLocationMatch && $hasCommMatch) {
+                // Tier 1: Exact Job Match Agencies
+                $recTier = 'exact';
+                $isDirectMatch = true;
+                $recLabel = 'Exact Job Match';
+                $recReason = 'Matches skills ('.implode(', ', array_slice($commonSkills, 0, 3)).'), location & '.($jobHiringType == 1 ? 'Contract' : 'Full-Time').' hiring';
+                $matchPct = 95;
+            } elseif ($matchedSkillCount >= 2) {
+                // Tier 2: Strong Skill & Technology Match
+                $recTier = 'strong_skill';
+                $isDirectMatch = true;
+                $recLabel = 'Strong Skill Match';
+                $recReason = 'Strong technology match in '.implode(', ', array_slice($commonSkills, 0, 3));
+                $matchPct = min(90, max(75, round(($matchedSkillCount / max(1, count($skillsList))) * 100)));
+            } elseif ($matchedSkillCount === 1) {
+                // Tier 2: Skill Match
+                $recTier = 'skill';
+                $isDirectMatch = true;
+                $recLabel = 'Skill Match';
+                $recReason = 'Skill overlap in '.implode(', ', array_slice($commonSkills, 0, 2));
+                $matchPct = min(74, max(50, round(($matchedSkillCount / max(1, count($skillsList))) * 100)));
+            } elseif (! empty($source['industry']) && ! empty($source['industry']['industry_name'])) {
+                // Tier 3: Industry Match
+                $recTier = 'industry';
+                $isDirectMatch = false;
+                $recLabel = 'Industry Match';
+                $recReason = 'Industry specialist in '.$source['industry']['industry_name'];
+                $matchPct = 45;
+            } elseif ($hasLocationMatch) {
+                // Tier 4: Location-Based Match
+                $recTier = 'location';
+                $isDirectMatch = false;
+                $recLabel = 'Location Match';
+                $recReason = 'Active partner operating in '.($locTarget ?: 'target region');
+                $matchPct = 40;
+            } elseif ($hasCommMatch && $jobHiringType == 1) {
+                // Tier 5: Similar Hiring Category Agencies
+                $recTier = 'hiring_category';
+                $isDirectMatch = false;
+                $recLabel = 'C2H & Contract Specialist';
+                $recReason = 'Specializes in C2H, C2C & Contract Staffing';
+                $matchPct = 35;
+            } elseif ($benchCount > 0) {
+                // Bench Strength Recommendation
+                $recTier = 'bench';
+                $isDirectMatch = false;
+                $recLabel = 'Bench Talent Partner';
+                $recReason = "Has {$benchCount} pre-vetted bench candidates ready for deployment";
+                $matchPct = 35;
+            } else {
+                $recTier = 'marketplace';
+                $isDirectMatch = false;
+                $recLabel = 'Recommended Partner';
+                $recReason = 'Verified marketplace partner with active recruitment capacity';
+                $matchPct = 0;
+            }
+
+            $source['recommendation_tier'] = $recTier;
+            $source['is_direct_match'] = $isDirectMatch;
+            $source['recommendation_label'] = $recLabel;
+            $source['recommendation_reason'] = $recReason;
+            $source['match_pct'] = $matchPct;
 
             // Attach enriched batch metrics to avoid Blade template N+1 queries
             $clientObj = $batchClientsMap[$matchedCompanyId] ?? null;
@@ -570,12 +786,14 @@ class FindAgencyService
         $responseData = [
             'html' => view('service_company.ajax_pages.find_agency_ajax', compact(
                 'data', 'userPermissions', 'app_int_outsource', 'jobid', 'currentJobSkill',
-                'hiringtype', 'parent_employment_type', 'company_id'
+                'hiringtype', 'parent_employment_type', 'company_id', 'isFallback', 'fallbackNotice'
             ))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'version' => $version,
             'kpi_counts' => $kpiCounts,
+            'is_fallback' => $isFallback,
+            'fallback_notice' => $fallbackNotice,
         ];
 
         // Store in Redis cache for 30 minutes

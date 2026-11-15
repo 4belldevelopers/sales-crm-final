@@ -592,6 +592,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 }
             }
             unset($row);
+
+            $benchRecomCounts = [];
+            foreach ($data as $candRow) {
+                $cid = $candRow['id'] ?? null;
+                if ($cid) {
+                    $benchRecomCounts[$cid] = $this->benchjobAndRecomCount($cid, (object) $candRow);
+                }
+            }
+        } else {
+            $benchRecomCounts = [];
         }
 
         $pagination = [
@@ -604,7 +614,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $userPermissions = $this->userPermissions;
         $responseData = [
-            'html' => view('service_company.ajax_pages.bench-candidate-list-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'viewCounts', 'downloadCounts', 'companyCurrencyBenchshowMode', 'benchExploreCounters', 'benchManagersMap'))->render(),
+            'html' => view('service_company.ajax_pages.bench-candidate-list-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'viewCounts', 'downloadCounts', 'companyCurrencyBenchshowMode', 'benchExploreCounters', 'benchManagersMap', 'benchRecomCounts'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'counts' => $this->getBenchStatusCounts((int) $company_id),

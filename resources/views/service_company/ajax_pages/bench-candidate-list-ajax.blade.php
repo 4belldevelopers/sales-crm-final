@@ -93,6 +93,11 @@
             $viewCount = $viewCounts[$row->id] ?? $row->viewCount ?? 0;
             $downloadCount = $downloadCounts[$row->id] ?? $row->downloadCount ?? 0;
 
+            // Similar clients count pre-fetched via controller (0% MySQL reads)
+            $recomInfo = $benchRecomCounts[$row->id] ?? null;
+            $recomDirectCount = (int) ($recomInfo['recommend_req_counter'] ?? 0);
+            $recomInternalCount = (int) ($recomInfo['recommend_internal_req_counter'] ?? 0);
+
             // Experience formatting
             $experience = trim((string) @$row->total_exp);
             if (strpos($experience, '.') !== false) {
@@ -264,15 +269,9 @@
                         <div class="cd-val-exp text-dark fw-bold fs-7">
                             <i class="far fa-clock text-muted me-1"></i>{{ $formattedExperience }} Yrs Total
                         </div>
-                        @if ($benchDaysCount !== null)
-                            <div class="cd-val-aging {{ $benchDaysClass }} fw-bold fs-8">
-                                <i class="far fa-hourglass me-1"></i>{{ $benchDaysCount }} Days on Bench
-                            </div>
-                        @else
-                            <div class="text-muted fs-8">
-                                <i class="far fa-circle-check text-success me-1"></i>{{ $subS ?: 'In-House Active' }}
-                            </div>
-                        @endif
+                        <div class="text-muted fs-8">
+                            <i class="far fa-circle-check text-success me-1"></i>{{ $subS ?: 'In-House Active' }}
+                        </div>
                     </div>
                 </div>
 
@@ -311,7 +310,56 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 5: Clients Pipeline Activity -->
+                <!-- Sub-Card 5: Similar Clients (Direct & Internal Clients) -->
+                <div class="cd-talent-subcard cd-subcard-similar-clients">
+                    <div class="cd-subcard-header">
+                        <span class="cd-subcard-label"><i class="fa fa-handshake me-1 text-primary"></i>Similar Clients</span>
+                    </div>
+                    <div class="cd-subcard-body">
+                        <!-- Direct Client Mandates -->
+                        <div class="d-flex align-items-center justify-content-between mb-1.5">
+                            <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center gap-1"
+                                data-bench-id="{{ $row->id }}"
+                                data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
+                                data-bench-role="{{ e($row->current_designation ?? '') }}"
+                                data-client-type="direct"
+                                title="View Potential Direct Clients">
+                                <span class="badge badge-light-success py-1 px-1.5 fs-9 fw-bold border border-success-subtle d-inline-flex align-items-center">
+                                    <i class="fa fa-shield-alt text-success me-1" style="font-size: 8.5px;"></i>Direct Client
+                                </span>
+                            </a>
+                            <a href="javascript:void(0);" class="btn-similar-clients fs-8 fw-bolder text-dark text-hover-primary"
+                                data-bench-id="{{ $row->id }}"
+                                data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
+                                data-bench-role="{{ e($row->current_designation ?? '') }}"
+                                data-client-type="direct">
+                                {{ $recomDirectCount }} <i class="fa fa-chevron-right text-muted fs-9 ms-0.5"></i>
+                            </a>
+                        </div>
+                        <!-- Internal Client Mandates -->
+                        <div class="d-flex align-items-center justify-content-between">
+                            <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center gap-1"
+                                data-bench-id="{{ $row->id }}"
+                                data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
+                                data-bench-role="{{ e($row->current_designation ?? '') }}"
+                                data-client-type="internal"
+                                title="View Potential Internal Clients">
+                                <span class="badge badge-light-primary py-1 px-1.5 fs-9 fw-bold border border-primary-subtle d-inline-flex align-items-center">
+                                    <i class="fa fa-building text-primary me-1" style="font-size: 8.5px;"></i>Internal Client
+                                </span>
+                            </a>
+                            <a href="javascript:void(0);" class="btn-similar-clients fs-8 fw-bolder text-dark text-hover-primary"
+                                data-bench-id="{{ $row->id }}"
+                                data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
+                                data-bench-role="{{ e($row->current_designation ?? '') }}"
+                                data-client-type="internal">
+                                {{ $recomInternalCount }} <i class="fa fa-chevron-right text-muted fs-9 ms-0.5"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-Card 6: Clients Pipeline Activity -->
                 <div class="cd-talent-subcard cd-subcard-pipeline">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label">Clients Pipeline Activity</span>
@@ -330,19 +378,24 @@
                         <div class="cd-pipe-summary d-flex align-items-center justify-content-between mt-2 pt-1 border-top border-gray-200">
                             <span class="pipe-stat text-primary fw-bold" style="font-size: 10px;">Interviews: <strong data-bench-pipe-interview="{{ $row->id }}" class="ms-1">{{ $row->InReview }}</strong></span>
                             <span class="pipe-stat text-muted" style="font-size: 10px;">Views: <strong class="ms-1 text-dark">{{ $viewCount }}</strong></span>
-                            <span class="pipe-stat text-muted" style="font-size: 10px;">Downloads: <strong class="ms-1 text-dark">{{ $downloadCount }}</strong></span>
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <!-- Sub-Card 6 / Bottom Activity Strip -->
+            <!-- Sub-Card 7 / Bottom Activity Strip -->
             <div class="cd-talent-card-bottom">
                 <div class="cd-bottom-left d-flex align-items-center gap-2 flex-wrap">
                     @if ($stageDateLabel)
                         <span class="cd-bottom-date text-dark fw-bold">
                             <i class="far fa-calendar-alt text-muted me-1"></i>Added: <strong>{{ $stageDateLabel }}</strong>
+                        </span>
+                        <span class="text-muted">&bull;</span>
+                    @endif
+                    @if ($benchDaysCount !== null)
+                        <span class="badge badge-light-warning {{ $benchDaysClass }} fw-bold fs-8 py-1 px-2" title="Days on Bench">
+                            <i class="far fa-hourglass me-1"></i>{{ $benchDaysCount }} Days on Bench
                         </span>
                         <span class="text-muted">&bull;</span>
                     @endif
@@ -359,6 +412,13 @@
                     </div>
                 </div>
                 <div class="cd-bottom-actions d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-light-info py-1 px-2.5 fs-8 fw-bold btn-similar-clients"
+                        data-bench-id="{{ $row->id }}"
+                        data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
+                        data-bench-role="{{ e($row->current_designation ?? '') }}"
+                        data-client-type="direct">
+                        <i class="fa fa-handshake me-1"></i>Similar Clients
+                    </button>
                     <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8 fw-bold {{ $profile_sidebar_css }}" data-row-id="{{ $row->id }}">
                         <i class="fa fa-user me-1"></i>View Profile
                     </button>
