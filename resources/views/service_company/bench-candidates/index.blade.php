@@ -84,176 +84,234 @@
         .bench-dash .hero-more-menu a { display: block; padding: 8px 12px; color: #263b67; font-size: 12px !important; text-decoration: none; border-radius: 6px; }
         .bench-dash .hero-more-menu a:hover { background: #f4f8ff; color: #006ae6; }
 
-        /* ===== Rule 20: Hiring Pipeline Flow (Client Tracker Design Language) ===== */
-        .hp-card {
+        /* ===== Rule 20: 6 Stat Cards Row — Client Tracker .cl-stat-grid Enterprise Standard ===== */
+        .cl-stat-grid {
+            display: grid !important;
+            grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin-bottom: 12px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            font-family: 'Poppins', sans-serif !important;
+        }
+        .cl-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-radius: 10px !important;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-            margin-bottom: 12px !important;
+            border-radius: 11px !important;
+            padding: 10px 11px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            text-decoration: none !important;
+            color: inherit !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease !important;
+            cursor: pointer !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+            outline: none !important;
         }
-        .hp-card .card-body {
-            padding: 14px 18px !important;
-        }
-        .hp-flow {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            width: 100%;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            padding-bottom: 2px;
-            font-family: 'Poppins', sans-serif;
-        }
-        .hp-total-link {
-            text-decoration: none;
-            flex-shrink: 0;
-        }
-        .hp-total {
-            width: 82px;
-            height: 82px;
-            border-radius: 14px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            transition: all .15s ease;
-            cursor: pointer;
-        }
-        .hp-total.bg-total-active {
-            background-color: #1d4ed8 !important;
-            background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25) !important;
-        }
-        .hp-total.bg-gray {
-            background: #f1f5f9 !important;
-            border: 1.5px solid #e2e8f0 !important;
-        }
-        .hp-total.bg-gray:hover {
-            background: #e2e8f0 !important;
+        .cl-card:hover {
+            transform: translateY(-1px) !important;
             border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+            text-decoration: none !important;
         }
-        .hp-total-icon {
-            color: #ffffff;
-            display: flex;
+        .cl-card-top {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin-bottom: 6px !important;
+            min-width: 0 !important;
         }
-        .hp-total.bg-gray .hp-total-icon {
-            color: #64748b;
+        .cl-card-icon {
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+            transition: all 0.15s ease !important;
         }
-        .hp-total-icon svg {
-            width: 18px;
-            height: 18px;
+        .cl-card-icon svg {
+            width: 17px !important;
+            height: 17px !important;
         }
-        .hp-total-count {
-            font-size: 16px;
-            font-weight: 700;
-            color: #ffffff;
-            line-height: 1.2;
+        .cl-card-icon.blue   { background: #eff6ff !important; color: #2563eb !important; }
+        .cl-card-icon.cyan   { background: #f0f9ff !important; color: #0284c7 !important; }
+        .cl-card-icon.amber  { background: #fffbeb !important; color: #d97706 !important; }
+        .cl-card-icon.slate  { background: #f1f5f9 !important; color: #64748b !important; }
+        .cl-card-icon.green  { background: #ecfdf5 !important; color: #16a34a !important; }
+        .cl-card-icon.red    { background: #fef2f2 !important; color: #dc2626 !important; }
+
+        .cl-card-meta {
+            min-width: 0 !important;
+            flex: 1 1 0% !important;
+            overflow: hidden !important;
         }
-        .hp-total.bg-gray .hp-total-count {
-            color: #1e293b;
+        .cl-card-num {
+            font-size: 19px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.1 !important;
+            white-space: nowrap !important;
+            font-variant-numeric: tabular-nums !important;
+            transition: color 0.15s ease !important;
         }
-        .hp-total-label {
-            font-size: 9.5px;
-            font-weight: 600;
-            color: #dbeafe;
-            text-align: center;
-            line-height: 1.2;
-            padding: 0 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+        .cl-card-lbl {
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.2 !important;
+            transition: color 0.15s ease !important;
         }
-        .hp-total.bg-gray .hp-total-label {
-            color: #64748b;
+        .cl-card-sub {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            margin-top: 2px !important;
+            padding-top: 4px !important;
+            border-top: 1px dashed #f1f5f9 !important;
+            transition: color 0.15s ease !important;
         }
-        .hp-eq {
-            font-size: 18px;
-            font-weight: 600;
-            color: #94a3b8;
-            flex-shrink: 0;
+        .cl-card-sub svg {
+            flex-shrink: 0 !important;
+            width: 11px !important;
+            height: 11px !important;
         }
-        .hp-chevron {
-            display: flex;
-            color: #cbd5e1;
-            flex-shrink: 0;
+        .cl-card-sub.blue  { color: #2563eb !important; }
+        .cl-card-sub.cyan  { color: #0284c7 !important; }
+        .cl-card-sub.amber { color: #d97706 !important; }
+        .cl-card-sub.slate { color: #64748b !important; }
+        .cl-card-sub.green { color: #16a34a !important; }
+        .cl-card-sub.red   { color: #dc2626 !important; }
+
+        /* ── KPI Selected States (Client Tracker Standard) ── */
+        /* 1. All Talents (Blue) */
+        .cl-card.active[data-tab="all"] {
+            background: #eff6ff !important;
+            border-color: #60a5fa !important;
+            box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
         }
-        .hp-chevron svg {
-            width: 16px;
-            height: 16px;
+        .cl-card.active[data-tab="all"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #2563eb !important;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
         }
-        .hp-divider {
-            width: 1px;
-            height: 44px;
-            background: #e2e8f0;
-            flex-shrink: 0;
-            margin: 0 4px;
+        .cl-card.active[data-tab="all"] .cl-card-num { color: #1d4ed8 !important; }
+        .cl-card.active[data-tab="all"] .cl-card-lbl { color: #1e40af !important; font-weight: 700 !important; }
+
+        /* 2. On Pool (Cyan) */
+        .cl-card.active[data-tab="1"],
+        .cl-card.active[data-tab="pool"] {
+            background: #f0f9ff !important;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 0 1.5px #0284c7, 0 4px 14px rgba(2, 132, 199, 0.12) !important;
         }
-        .hp-stage {
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
-            cursor: pointer;
+        .cl-card.active[data-tab="1"] .cl-card-icon,
+        .cl-card.active[data-tab="pool"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #0284c7 !important;
+            box-shadow: 0 1px 3px rgba(2, 132, 199, 0.15) !important;
         }
-        .hp-circle {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 1px;
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            transition: border-color .15s, background-color .15s, transform .15s;
+        .cl-card.active[data-tab="1"] .cl-card-num,
+        .cl-card.active[data-tab="pool"] .cl-card-num { color: #0369a1 !important; }
+        .cl-card.active[data-tab="1"] .cl-card-lbl,
+        .cl-card.active[data-tab="pool"] .cl-card-lbl { color: #075985 !important; font-weight: 700 !important; }
+
+        /* 3. Bench (Amber) */
+        .cl-card.active[data-tab="2"],
+        .cl-card.active[data-tab="bench"] {
+            background: #fffbeb !important;
+            border-color: #fbbf24 !important;
+            box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.12) !important;
         }
-        .hp-circle:hover {
-            transform: translateY(-2px);
-            border-color: var(--hp-color);
+        .cl-card.active[data-tab="2"] .cl-card-icon,
+        .cl-card.active[data-tab="bench"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #d97706 !important;
+            box-shadow: 0 1px 3px rgba(217, 119, 6, 0.15) !important;
         }
-        .hp-circle .hp-icon {
-            display: flex;
-            color: #94a3b8;
-            transition: color .15s;
+        .cl-card.active[data-tab="2"] .cl-card-num,
+        .cl-card.active[data-tab="bench"] .cl-card-num { color: #b45309 !important; }
+        .cl-card.active[data-tab="2"] .cl-card-lbl,
+        .cl-card.active[data-tab="bench"] .cl-card-lbl { color: #92400e !important; font-weight: 700 !important; }
+
+        /* 4. On Hold (Slate) */
+        .cl-card.active[data-tab="4"],
+        .cl-card.active[data-tab="hold"] {
+            background: #f8fafc !important;
+            border-color: #94a3b8 !important;
+            box-shadow: 0 0 0 1.5px #64748b, 0 4px 14px rgba(100, 116, 139, 0.12) !important;
         }
-        .hp-circle .hp-icon svg {
-            width: 15px;
-            height: 15px;
+        .cl-card.active[data-tab="4"] .cl-card-icon,
+        .cl-card.active[data-tab="hold"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #475569 !important;
+            box-shadow: 0 1px 3px rgba(100, 116, 139, 0.15) !important;
         }
-        .hp-circle .hp-count {
-            font-size: 13.5px;
-            font-weight: 700;
-            color: #334155;
-            line-height: 1.2;
-            transition: color .15s;
+        .cl-card.active[data-tab="4"] .cl-card-num,
+        .cl-card.active[data-tab="hold"] .cl-card-num { color: #334155 !important; }
+        .cl-card.active[data-tab="4"] .cl-card-lbl,
+        .cl-card.active[data-tab="hold"] .cl-card-lbl { color: #1e293b !important; font-weight: 700 !important; }
+
+        /* 5. Placed (Green) */
+        .cl-card.active[data-tab="3"],
+        .cl-card.active[data-tab="placed"] {
+            background: #ecfdf5 !important;
+            border-color: #34d399 !important;
+            box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
         }
-        .hp-circle.active {
-            border-color: var(--hp-color) !important;
-            background: var(--hp-bg) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+        .cl-card.active[data-tab="3"] .cl-card-icon,
+        .cl-card.active[data-tab="placed"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #059669 !important;
+            box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
         }
-        .hp-circle.active .hp-icon {
-            color: var(--hp-color) !important;
+        .cl-card.active[data-tab="3"] .cl-card-num,
+        .cl-card.active[data-tab="placed"] .cl-card-num { color: #065f46 !important; }
+        .cl-card.active[data-tab="3"] .cl-card-lbl,
+        .cl-card.active[data-tab="placed"] .cl-card-lbl { color: #047857 !important; font-weight: 700 !important; }
+
+        /* 6. Exited (Red) */
+        .cl-card.active[data-tab="5"],
+        .cl-card.active[data-tab="exited"] {
+            background: #fef2f2 !important;
+            border-color: #f87171 !important;
+            box-shadow: 0 0 0 1.5px #dc2626, 0 4px 14px rgba(220, 38, 38, 0.12) !important;
         }
-        .hp-circle.active .hp-count {
-            color: var(--hp-color) !important;
+        .cl-card.active[data-tab="5"] .cl-card-icon,
+        .cl-card.active[data-tab="exited"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #dc2626 !important;
+            box-shadow: 0 1px 3px rgba(220, 38, 38, 0.15) !important;
         }
-        .hp-label {
-            font-size: 11px;
-            font-weight: 500;
-            color: #64748b;
-            text-align: center;
-            white-space: nowrap;
-            transition: color .15s, font-weight .15s;
+        .cl-card.active[data-tab="5"] .cl-card-num,
+        .cl-card.active[data-tab="exited"] .cl-card-num { color: #b91c1c !important; }
+        .cl-card.active[data-tab="5"] .cl-card-lbl,
+        .cl-card.active[data-tab="exited"] .cl-card-lbl { color: #991b1b !important; font-weight: 700 !important; }
+
+        @media (max-width: 1200px) {
+            .cl-stat-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            }
         }
-        .hp-label.active {
-            font-weight: 700;
-            color: #0f172a;
+        @media (max-width: 768px) {
+            .cl-stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
         }
 
         /* Toolbar Card (Rule 20 Sharp White Card Surface from ClientAppTracker) */
@@ -1271,119 +1329,154 @@
                 </div>
 
                 @if (in_array('view_bench', $userPermissions))
-                    <!-- Hiring Pipeline Flow Card (Client App Tracker Design Standard) -->
-                    <div class="card mb-3 hp-card">
-                        <div class="card-body">
-                            <div class="hp-flow">
-                                <!-- Total / All Talents -->
-                                <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
-                                    <div class="bg-total-active text-center hp-total" id="bg_all">
-                                        <span class="hp-total-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-                                            </svg>
-                                        </span>
-                                        <span class="hp-total-count" id="bg_all_count">{{ $counts->all_records ?? 0 }}</span>
-                                        <span class="hp-total-label">All Talents</span>
-                                    </div>
-                                </a>
-                                <span class="hp-eq">=</span>
-
-                                <!-- Stage 1: On Pool -->
-                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="1">
-                                    <div class="hp-circle" data-hp="1" style="--hp-color: #0284c7; --hp-bg: #f0f9ff;">
-                                        <span class="hp-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                                <circle cx="9" cy="7" r="4" />
-                                                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                                            </svg>
-                                        </span>
-                                        <span class="hp-count" id="bg_1">{{ $counts->pool ?? 0 }}</span>
-                                    </div>
-                                    <div class="hp-label" id="tx_1">On Pool</div>
-                                </a>
-                                <span class="hp-chevron">
+                    <!-- ── 6 KPI STAT CARDS (Client Tracker Design Standard) ── -->
+                    <div class="cl-stat-grid" id="benchKpiGrid">
+                        {{-- Card 1: All Talents --}}
+                        <a href="javascript:void(0);" class="cl-card application_sttus_nav active" rel="all" data-tab="all" title="View All Talents">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon blue">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="m9 6 6 6-6 6" />
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                                     </svg>
-                                </span>
-
-                                <!-- Stage 2: Bench -->
-                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="2">
-                                    <div class="hp-circle" data-hp="2" style="--hp-color: #d97706; --hp-bg: #fffbeb;">
-                                        <span class="hp-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
-                                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                                            </svg>
-                                        </span>
-                                        <span class="hp-count" id="bg_2">{{ $counts->bench ?? 0 }}</span>
-                                    </div>
-                                    <div class="hp-label" id="tx_2">Bench</div>
-                                </a>
-                                <span class="hp-chevron">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="m9 6 6 6-6 6" />
-                                    </svg>
-                                </span>
-
-                                <!-- Stage 4: On Hold -->
-                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="4">
-                                    <div class="hp-circle" data-hp="4" style="--hp-color: #64748b; --hp-bg: #f1f5f9;">
-                                        <span class="hp-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <circle cx="12" cy="12" r="10" />
-                                                <line x1="10" x2="10" y1="15" y2="9" />
-                                                <line x1="14" x2="14" y1="15" y2="9" />
-                                            </svg>
-                                        </span>
-                                        <span class="hp-count" id="bg_4">{{ $counts->paused ?? 0 }}</span>
-                                    </div>
-                                    <div class="hp-label" id="tx_4">On Hold</div>
-                                </a>
-                                <span class="hp-chevron">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="m9 6 6 6-6 6" />
-                                    </svg>
-                                </span>
-
-                                <!-- Stage 3: Placed -->
-                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="3">
-                                    <div class="hp-circle" data-hp="3" style="--hp-color: #16a34a; --hp-bg: #f0fdf4;">
-                                        <span class="hp-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                                                <path d="M4 22h16" />
-                                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                                            </svg>
-                                        </span>
-                                        <span class="hp-count" id="bg_3">{{ $counts->placed ?? 0 }}</span>
-                                    </div>
-                                    <div class="hp-label" id="tx_3">Placed</div>
-                                </a>
-                                <span class="hp-divider"></span>
-
-                                <!-- Stage 5: Exited -->
-                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="5">
-                                    <div class="hp-circle" data-hp="5" style="--hp-color: #dc2626; --hp-bg: #fef2f2;">
-                                        <span class="hp-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                                                <polyline points="16 17 21 12 16 7" />
-                                                <line x1="21" x2="9" y1="12" y2="12" />
-                                            </svg>
-                                        </span>
-                                        <span class="hp-count" id="bg_5">{{ $counts->exited ?? 0 }}</span>
-                                    </div>
-                                    <div class="hp-label" id="tx_5">Exited</div>
-                                </a>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="bg_all_count">{{ $counts->all_records ?? 0 }}</div>
+                                    <div class="cl-card-lbl">All Talents</div>
+                                </div>
                             </div>
-                        </div>
+                            <div class="cl-card-sub blue">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                                </svg>
+                                <span>Total Talent Roster</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 2: On Pool --}}
+                        <a href="javascript:void(0);" class="cl-card application_sttus_nav" rel="1" data-tab="1" title="View Pool Talents">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon cyan">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <polyline points="16 11 18 13 22 9" />
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="bg_1">{{ $counts->pool ?? 0 }}</div>
+                                    <div class="cl-card-lbl">On Pool</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub cyan">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 14 14"/>
+                                </svg>
+                                <span>Available in Pool</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 3: Bench --}}
+                        <a href="javascript:void(0);" class="cl-card application_sttus_nav" rel="2" data-tab="2" title="View Bench Talents">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon amber">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+                                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="bg_2">{{ $counts->bench ?? 0 }}</div>
+                                    <div class="cl-card-lbl">Bench</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub amber">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="12"/>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                <span>Active on Bench</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 4: On Hold --}}
+                        <a href="javascript:void(0);" class="cl-card application_sttus_nav" rel="4" data-tab="4" title="View On Hold Talents">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon slate">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="10" x2="10" y1="15" y2="9" />
+                                        <line x1="14" x2="14" y1="15" y2="9" />
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="bg_4">{{ $counts->paused ?? 0 }}</div>
+                                    <div class="cl-card-lbl">On Hold</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub slate">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="8" y1="12" x2="16" y2="12"/>
+                                </svg>
+                                <span>Temporarily Paused</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 5: Placed --}}
+                        <a href="javascript:void(0);" class="cl-card application_sttus_nav" rel="3" data-tab="3" title="View Placed Talents">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon green">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                                        <path d="M4 22h16" />
+                                        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                                        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                                        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="bg_3">{{ $counts->placed ?? 0 }}</div>
+                                    <div class="cl-card-lbl">Placed</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub green">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Successfully Placed</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 6: Exited --}}
+                        <a href="javascript:void(0);" class="cl-card application_sttus_nav" rel="5" data-tab="5" title="View Exited Talents">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon red">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                        <polyline points="16 17 21 12 16 7" />
+                                        <line x1="21" x2="9" y1="12" y2="12" />
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="bg_5">{{ $counts->exited ?? 0 }}</div>
+                                    <div class="cl-card-lbl">Exited</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub red">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="15" y1="9" x2="9" y2="15"/>
+                                    <line x1="9" y1="9" x2="15" y2="15"/>
+                                </svg>
+                                <span>Archived / Exited</span>
+                            </div>
+                        </a>
                     </div>
 
                     <!-- Tier 1: Toolbar Card with Search, Sort & Refresh (Client App Tracker Standard) -->
@@ -1763,18 +1856,14 @@
 
         // ---- Status tab / KPI flow filter (drives existing fetch pipeline) ----
         $(document).on('click', '.application_sttus_nav', function() {
-            var page = $(this).attr('rel');
+            var page = $(this).attr('rel') || 'all';
 
-            $('.hp-circle').removeClass('active');
-            $('.hp-label').removeClass('active');
-            $('#bg_all').removeClass('bg-total-active').addClass('bg-gray');
+            $('.cl-card.application_sttus_nav').removeClass('active');
+            $('.cl-card.application_sttus_nav[rel="' + page + '"]').addClass('active');
 
             if (page === 'all' || !page) {
-                $('#bg_all').addClass('bg-total-active').removeClass('bg-gray');
                 $('#all_talents').prop('checked', true).trigger('change');
             } else {
-                $('.hp-circle[data-hp="' + page + '"]').addClass('active');
-                $('#tx_' + page).addClass('active');
                 if (page == 1)      { $('#talent_Pool').prop('checked', true).trigger('change'); }
                 else if (page == 2) { $('#bench_live').prop('checked', true).trigger('change'); }
                 else if (page == 3) { $('#bench_placed').prop('checked', true).trigger('change'); }
