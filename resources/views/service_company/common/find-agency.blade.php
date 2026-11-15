@@ -1402,7 +1402,7 @@
 .terms-drawer-body {
     flex: 1;
     overflow-y: auto;
-    padding: 16px 20px;
+    padding: 18px 20px 24px 20px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -2024,29 +2024,13 @@
                 <!-- Avatar image or fallback letter -->
             </div>
             <div class="min-w-0">
-                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                    <span class="badge badge-light-primary font-size-10 font-weight-700"><i class="fas fa-file-contract text-primary me-1"></i>COMMERCIAL TERMS</span>
-                    <span id="termsDrawerVerifiedBadge"></span>
-                </div>
                 <h3 class="terms-drawer-title text-truncate" id="termsDrawerAgencyName">Agency Commercial Terms</h3>
                 <p class="terms-drawer-sub mb-0 text-truncate" id="termsDrawerAgencyMeta">Pre-agreed SLA & Hiring Terms of Engagement</p>
             </div>
         </div>
-        <button type="button" class="terms-drawer-close-btn" onclick="closeAgencyTermsDrawer()" title="Close Drawer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        </button>
     </div>
     <div class="terms-drawer-body" id="termsDrawerBody">
         <!-- Content will be populated dynamically from card data-agency-terms -->
-    </div>
-    <div class="terms-drawer-footer">
-        <button type="button" class="btn btn-sm btn-light" onclick="closeAgencyTermsDrawer()" style="font-size:12px; font-weight:600; padding:7px 16px; border-radius:8px;">Close</button>
-        <button type="button" class="btn btn-sm btn-primary font-weight-700" id="termsDrawerActionBtn" onclick="dispatchMandateFromTerms()" style="font-size:12px; padding:7px 18px; border-radius:8px;">
-            <i class="fas fa-paper-plane me-1.5"></i>Send Mandate Request
-        </button>
     </div>
 </div>
 <div id="termsDrawerOverlay" class="terms-drawer-overlay" onclick="closeAgencyTermsDrawer()"></div>
@@ -2588,12 +2572,6 @@
             $('#termsDrawerAvatarBox').html('<div class="terms-header-avatar-fallback">' + initialLetter + '</div>');
         }
 
-        if (terms.is_verified) {
-            $('#termsDrawerVerifiedBadge').html('<span class="badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2"><i class="fas fa-check-circle text-success me-1"></i>Marketplace Verified</span>');
-        } else {
-            $('#termsDrawerVerifiedBadge').html('<span class="badge badge-light-secondary font-size-10 font-weight-600 text-muted py-0.5 px-2"><i class="fas fa-clock text-warning me-1"></i>Onboarding Partner</span>');
-        }
-
         var servingCountries = terms.serving_countries || [];
         var servingHtml = '';
         if (servingCountries.length > 0) {
@@ -2924,6 +2902,8 @@
                 }
             } else if (e.key === 'Escape') {
                 closeAllDropdowns();
+                closeAgencyTermsDrawer();
+                closeAgencyBenchDrawer();
             }
         });
     });
