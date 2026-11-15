@@ -57,7 +57,7 @@ Following **Rule 20** (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`), **Rule 25
    - **Sub-Card 7 (Bottom Footer Strip):** Contains Added/Stage date, **Bench Aging ("28 Days on Bench" warning badge moved here)**, skill chips, `Similar Clients` action button, and profile view actions.
 5. **Similar Potential Clients Drawer (`#kt_activitiesSimilarClients`):**
    - Mandatory `#f8fafc` header background per Rule 20.
-   - Tabbed switching between Direct Client Mandates (`recommend.all_data_ajax`) and Internal Client Mandates (`recommend.all_internal_data_ajax`).
+   - Tabbed switching between Direct Client Mandates (`service_company.recommend.all_data_ajax`) and Internal Client Mandates (`service_company.recommend.all_internal_data_ajax`).
    - Direct links to full recommendations views.
 
 ---
@@ -145,6 +145,10 @@ Under Rule 20, all drawer headers, card headers, sub-card section headers, and t
 - **CSS Grid:** Sub-cards grid uses fractional units with `minmax(0, ...)` (`minmax(0, 2.3fr) minmax(0, 1.4fr) minmax(0, 1.5fr) minmax(0, 1.2fr) minmax(0, 2.4fr)`).
 - **Overflow Protection:** Skills pills use a scroll-safe wrapper with hidden scrollbars (`scrollbar-width: none; -ms-overflow-style: none;`). Name, role, location, and RM use `-webkit-line-clamp` truncation to prevent row blow-outs.
 - **Horizontal Overflow:** `overflow-x: hidden` is guaranteed across all viewports.
+
+### Phase 5: Similar Clients Endpoint Route Prefix Correction
+- Fixed `Symfony\Component\Routing\Exception\RouteNotFoundException` caused by unqualified route names `recommend.all_internal_data_ajax` and `recommend.all_data_ajax`.
+- Updated to their fully qualified route names `service_company.recommend.all_internal_data_ajax` and `service_company.recommend.all_data_ajax` as defined within `routes/service.php` under the `service_company.` prefix group.
 
 ---
 
