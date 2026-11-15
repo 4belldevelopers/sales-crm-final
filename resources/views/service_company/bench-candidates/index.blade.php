@@ -462,25 +462,25 @@
 
         /* Table */
         .bench-dash .table-responsive { overflow-x: hidden; }
-        .bench-dash #benchListingTable { width: 100% !important; min-width: 0; margin: 0; table-layout: fixed; }
-        .bench-dash #benchListingTable .col-select { width: 3%; }
-        .bench-dash #benchListingTable .col-talent-name { width: 21.5%; }
-        .bench-dash #benchListingTable .col-experience { width: 8.5%; }
-        .bench-dash #benchListingTable .col-availability { width: 9%; }
-        .bench-dash #benchListingTable .col-location { width: 9.5%; }
-        .bench-dash #benchListingTable .col-salary { width: 10.5%; }
-        .bench-dash #benchListingTable .col-status { width: 8.5%; }
-        .bench-dash #benchListingTable .col-manager-name { width: 11%; }
-        .bench-dash #benchListingTable .col-pipeline-activity { width: 18.5%; }
-        .bench-dash #benchListingTable thead th { font-size: 10px !important; text-transform: uppercase; letter-spacing: .2px; color: #a1a5b7; font-weight: 600; border-bottom: 1px solid #eef0f4; padding: 7px 6px !important; white-space: normal; line-height: 1.2; background: #fff; }
-        .bench-dash #benchListingTable tbody td { font-size: 12px !important; border-bottom: 1px solid #f4f5f8; padding: 7px 6px !important; vertical-align: middle; min-width: 0; overflow: hidden; }
-        .bench-dash #benchListingTable tbody tr:hover td { background: #fafbfc; }
-        .bench-dash #benchListingTable a { font-size: 12px !important; }
-        .bench-dash #benchListingTable .fs-6 { font-size: 12px !important; }
-        .bench-dash #benchListingTable .fs-7 { font-size: 11px !important; }
-        .bench-dash #benchListingTable .fs-3 { font-size: 13px !important; }
-        .bench-dash #benchListingTable .symbol-40px { width: 32px !important; height: 32px !important; }
-        .bench-dash #benchListingTable .symbol-label { line-height: 1; }
+        .bench-dash table#benchListingTable { width: 100% !important; min-width: 0; margin: 0; table-layout: fixed; }
+        .bench-dash table#benchListingTable .col-select { width: 3%; }
+        .bench-dash table#benchListingTable .col-talent-name { width: 21.5%; }
+        .bench-dash table#benchListingTable .col-experience { width: 8.5%; }
+        .bench-dash table#benchListingTable .col-availability { width: 9%; }
+        .bench-dash table#benchListingTable .col-location { width: 9.5%; }
+        .bench-dash table#benchListingTable .col-salary { width: 10.5%; }
+        .bench-dash table#benchListingTable .col-status { width: 8.5%; }
+        .bench-dash table#benchListingTable .col-manager-name { width: 11%; }
+        .bench-dash table#benchListingTable .col-pipeline-activity { width: 18.5%; }
+        .bench-dash table#benchListingTable thead th { font-size: 10px !important; text-transform: uppercase; letter-spacing: .2px; color: #a1a5b7; font-weight: 600; border-bottom: 1px solid #eef0f4; padding: 7px 6px !important; white-space: normal; line-height: 1.2; background: #fff; }
+        .bench-dash table#benchListingTable tbody td { font-size: 12px !important; border-bottom: 1px solid #f4f5f8; padding: 7px 6px !important; vertical-align: middle; min-width: 0; overflow: hidden; }
+        .bench-dash table#benchListingTable tbody tr:hover td { background: #fafbfc; }
+        .bench-dash table#benchListingTable a { font-size: 12px !important; }
+        .bench-dash table#benchListingTable .fs-6 { font-size: 12px !important; }
+        .bench-dash table#benchListingTable .fs-7 { font-size: 11px !important; }
+        .bench-dash table#benchListingTable .fs-3 { font-size: 13px !important; }
+        .bench-dash table#benchListingTable .symbol-40px { width: 32px !important; height: 32px !important; }
+        .bench-dash table#benchListingTable .symbol-label { line-height: 1; }
         .bench-dash .badge { font-size: 10px !important; padding: 2px 5px; }
         .bench-dash .talent-name-main,
         .bench-dash .talent-name-role,
@@ -527,11 +527,11 @@
         .loadingMessagebenchCandidateBenchCandidatesAjax { font-size: 12px !important; }
 
         /* Job Tracker style meta strip: date first, then compact skill chips on the same row */
-        .bench-dash #benchListingTable tbody td.col-talent-name { position: relative; padding-bottom: 24px !important; }
-        .bench-dash #benchListingTable .job-meta-strip { position: absolute; bottom: 4px; left: 6px; right: 6px; overflow: hidden; }
-        .bench-dash #benchListingTable .job-meta-line { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; }
-        .bench-dash #benchListingTable .job-date-tag,
-        .bench-dash #benchListingTable .skill-tag {
+        .bench-dash table#benchListingTable tbody td.col-talent-name { position: relative; padding-bottom: 24px !important; }
+        .bench-dash table#benchListingTable .job-meta-strip { position: absolute; bottom: 4px; left: 6px; right: 6px; overflow: hidden; }
+        .bench-dash table#benchListingTable .job-meta-line { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; }
+        .bench-dash table#benchListingTable .job-date-tag,
+        .bench-dash table#benchListingTable .skill-tag {
             display: inline-flex;
             align-items: center;
             min-height: 17px;
@@ -544,9 +544,9 @@
             color: #5e6278;
             flex-shrink: 0;
         }
-        .bench-dash #benchListingTable .job-date-tag { color: #181c32; font-weight: 500; }
-        .bench-dash #benchListingTable .job-date-tag svg { width: 11px; height: 11px; margin-right: 3px; color: #3f4254; flex-shrink: 0; }
-        .bench-dash #benchListingTable .skill-tag { color: #7e8299; font-weight: 500; }
+        .bench-dash table#benchListingTable .job-date-tag { color: #181c32; font-weight: 500; }
+        .bench-dash table#benchListingTable .job-date-tag svg { width: 11px; height: 11px; margin-right: 3px; color: #3f4254; flex-shrink: 0; }
+        .bench-dash table#benchListingTable .skill-tag { color: #7e8299; font-weight: 500; }
 
         /* Fit smaller / 15.6" laptops */
         @media only screen and (max-width: 1440px) {
@@ -558,10 +558,10 @@
             .overview-kpi-card .kpi-circle-icon i { font-size: 10.5px !important; }
             .bench-dash .num { font-size: 16px !important; }
             .bench-dash .money { font-size: 14px !important; }
-            .bench-dash #benchListingTable tbody td, .bench-dash #benchListingTable a { font-size: 11px !important; }
-            .bench-dash #benchListingTable thead th { font-size: 9.5px !important; padding-left: 5px !important; padding-right: 5px !important; }
-            .bench-dash #benchListingTable tbody td { padding-left: 5px !important; padding-right: 5px !important; }
-            .bench-dash #benchListingTable .symbol-40px { width: 30px !important; height: 30px !important; }
+            .bench-dash table#benchListingTable tbody td, .bench-dash table#benchListingTable a { font-size: 11px !important; }
+            .bench-dash table#benchListingTable thead th { font-size: 9.5px !important; padding-left: 5px !important; padding-right: 5px !important; }
+            .bench-dash table#benchListingTable tbody td { padding-left: 5px !important; padding-right: 5px !important; }
+            .bench-dash table#benchListingTable .symbol-40px { width: 30px !important; height: 30px !important; }
             .bench-dash .pipe-grid .h { font-size: 8px !important; }
             .bench-dash .pipe-grid .v,
             .bench-dash .pipe-grid a { font-size: 9.5px !important; }
@@ -1007,11 +1007,16 @@
         }
         .cd-talent-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.4fr) minmax(0, 1.5fr) minmax(0, 1.2fr) minmax(0, 2.4fr) !important;
+            grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 1.15fr) minmax(0, 2.85fr) !important;
             gap: 8px !important;
             padding: 10px 12px !important;
             width: 100% !important;
             align-items: stretch !important;
+        }
+        .cd-subcard-pipeline {
+            width: 100% !important;
+            min-width: 0 !important;
+            flex-grow: 1 !important;
         }
         .cd-talent-subcard {
             background: #ffffff;
@@ -1102,7 +1107,7 @@
         /* Clients Pipeline Micro Grid */
         .cd-pipe-grid {
             display: grid !important;
-            grid-template-columns: repeat(8, 1fr) !important;
+            grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
             gap: 3px !important;
             width: 100% !important;
         }
@@ -1110,10 +1115,17 @@
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
+            justify-content: center !important;
             background: #f8fafc !important;
             border: 1px solid #eef2f6 !important;
             border-radius: 4px !important;
             padding: 3px 1px !important;
+            min-width: 0 !important;
+            transition: all 0.15s ease-in-out;
+        }
+        .cd-pipe-col:hover {
+            background: #eef3ff !important;
+            border-color: #009ef7 !important;
         }
         .cd-pipe-col .h {
             font-size: 8px !important;
@@ -1131,9 +1143,20 @@
         .cd-pipe-col .v a {
             color: #0f172a !important;
             text-decoration: none !important;
+            display: inline-block !important;
         }
         .cd-pipe-col .v a:hover {
             color: #009ef7 !important;
+        }
+        .cd-pipe-summary {
+            font-size: 9.5px !important;
+            line-height: 1.2 !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        .cd-pipe-summary .pipe-stat {
+            font-size: 9.5px !important;
+            white-space: nowrap !important;
         }
 
         /* Sub-Card 6 / Bottom Activity Strip */
@@ -1201,7 +1224,7 @@
         /* 15.6" Screen responsiveness */
         @media only screen and (max-width: 1440px) {
             .cd-talent-card-grid {
-                grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 1.15fr) minmax(0, 2.35fr) !important;
+                grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.3fr) minmax(0, 1.4fr) minmax(0, 1.1fr) minmax(0, 2.8fr) !important;
                 gap: 6px !important;
                 padding: 8px 10px !important;
             }
