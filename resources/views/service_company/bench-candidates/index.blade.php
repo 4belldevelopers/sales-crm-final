@@ -1241,259 +1241,179 @@
                 </div>
 
                 @if (in_array('view_bench', $userPermissions))
-                    <div class="jw-card talent-overview-card" id="talentOverviewCard">
-                        <!-- Top Header Row of Hero Card -->
-                        <div class="overview-header-row">
-                            <div class="overview-title-group">
-                                <div class="overview-icon-box" aria-hidden="true">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="18" y1="20" x2="18" y2="10"></line>
-                                        <line x1="12" y1="20" x2="12" y2="4"></line>
-                                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    <!-- Hiring Pipeline Flow Card (Client App Tracker Design Standard) -->
+                    <div class="card mb-3 hp-card">
+                        <div class="card-body">
+                            <div class="hp-flow">
+                                <!-- Total / All Talents -->
+                                <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
+                                    <div class="bg-total-active text-center hp-total" id="bg_all">
+                                        <span class="hp-total-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                                            </svg>
+                                        </span>
+                                        <span class="hp-total-count" id="bg_all_count">{{ $counts->all_records ?? 0 }}</span>
+                                        <span class="hp-total-label">All Talents</span>
+                                    </div>
+                                </a>
+                                <span class="hp-eq">=</span>
+
+                                <!-- Stage 1: On Pool -->
+                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="1">
+                                    <div class="hp-circle" data-hp="1" style="--hp-color: #0284c7; --hp-bg: #f0f9ff;">
+                                        <span class="hp-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                                <circle cx="9" cy="7" r="4" />
+                                                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                            </svg>
+                                        </span>
+                                        <span class="hp-count" id="bg_1">{{ $counts->pool ?? 0 }}</span>
+                                    </div>
+                                    <div class="hp-label" id="tx_1">On Pool</div>
+                                </a>
+                                <span class="hp-chevron">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m9 6 6 6-6 6" />
                                     </svg>
-                                </div>
-                                <div>
-                                    <h2 class="overview-title">Talent &amp; Marketplace Overview</h2>
-                                    <p class="overview-subtitle">Track your in-house talent from bench availability to marketplace engagement.</p>
-                                </div>
+                                </span>
+
+                                <!-- Stage 2: Bench -->
+                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="2">
+                                    <div class="hp-circle" data-hp="2" style="--hp-color: #d97706; --hp-bg: #fffbeb;">
+                                        <span class="hp-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+                                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                                            </svg>
+                                        </span>
+                                        <span class="hp-count" id="bg_2">{{ $counts->bench ?? 0 }}</span>
+                                    </div>
+                                    <div class="hp-label" id="tx_2">Bench</div>
+                                </a>
+                                <span class="hp-chevron">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m9 6 6 6-6 6" />
+                                    </svg>
+                                </span>
+
+                                <!-- Stage 4: On Hold -->
+                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="4">
+                                    <div class="hp-circle" data-hp="4" style="--hp-color: #64748b; --hp-bg: #f1f5f9;">
+                                        <span class="hp-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10" />
+                                                <line x1="10" x2="10" y1="15" y2="9" />
+                                                <line x1="14" x2="14" y1="15" y2="9" />
+                                            </svg>
+                                        </span>
+                                        <span class="hp-count" id="bg_4">{{ $counts->paused ?? 0 }}</span>
+                                    </div>
+                                    <div class="hp-label" id="tx_4">On Hold</div>
+                                </a>
+                                <span class="hp-chevron">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m9 6 6 6-6 6" />
+                                    </svg>
+                                </span>
+
+                                <!-- Stage 3: Placed -->
+                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="3">
+                                    <div class="hp-circle" data-hp="3" style="--hp-color: #16a34a; --hp-bg: #f0fdf4;">
+                                        <span class="hp-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                                                <path d="M4 22h16" />
+                                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                                            </svg>
+                                        </span>
+                                        <span class="hp-count" id="bg_3">{{ $counts->placed ?? 0 }}</span>
+                                    </div>
+                                    <div class="hp-label" id="tx_3">Placed</div>
+                                </a>
+                                <span class="hp-divider"></span>
+
+                                <!-- Stage 5: Exited -->
+                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="5">
+                                    <div class="hp-circle" data-hp="5" style="--hp-color: #dc2626; --hp-bg: #fef2f2;">
+                                        <span class="hp-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                                <polyline points="16 17 21 12 16 7" />
+                                                <line x1="21" x2="9" y1="12" y2="12" />
+                                            </svg>
+                                        </span>
+                                        <span class="hp-count" id="bg_5">{{ $counts->exited ?? 0 }}</span>
+                                    </div>
+                                    <div class="hp-label" id="tx_5">Exited</div>
+                                </a>
                             </div>
-                            <div class="overview-controls">
-                                <form method="get" action="{{ route('service_company.bench-candidates.index') }}" id="heroAnalyticsForm" class="d-inline-flex align-items-center overview-month-picker">
-                                    <i class="fa fa-calendar me-2" aria-hidden="true"></i>
-                                    <select name="hero_month" id="hero_month_select" class="overview-month-select" aria-label="Performance ending month">
-                                        @foreach ($heroMonths as $monthOption)
-                                            <option value="{{ $monthOption['value'] }}" @selected($heroMonth === $monthOption['value'])>{{ $monthOption['label'] }}</option>
-                                        @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Tier 1: Toolbar Card with Search, Sort & Refresh (Client App Tracker Standard) -->
+                    <div class="card mb-3 caf-toolbar-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <div class="caf-search-wrap" style="position: relative;">
+                                    <span class="caf-search-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                    </span>
+                                    <input type="text" class="form-control caf-search-input" name="inputJobSearch"
+                                        placeholder="Search by name, skills, role, experience, location..."
+                                        id="kt_tagify_2" onkeyup="debouncedBenchSearch(event)" autocomplete="off" />
+                                    <button type="button" class="caf-search-clear" id="btnCafSearchClear" title="Clear search">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="caf-sort-wrap" id="caf_sort_wrap">
+                                    <span class="caf-sort-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                                    </span>
+                                    <button type="button" class="caf-sort-btn" id="caf_sort_btn">
+                                        <span id="caf_sort_label">Sort</span>
+                                        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                    </button>
+                                    <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
+                                        <option value="Show All" selected="">Sort by</option>
+                                        <option value="1">Newest to Oldest (Upload Date)</option>
+                                        <option value="2">Oldest to Newest (Upload Date)</option>
+                                        <option value="9">Notice Period (Immediate)</option>
+                                        <option value="5">Low to High (Notice Period)</option>
+                                        <option value="6">High to Low (Notice Period)</option>
+                                        <option value="7">High to Low (Experience)</option>
+                                        <option value="8">Low to High (Experience)</option>
                                     </select>
-                                    <i class="fa fa-chevron-down ms-1 text-muted" style="font-size: 10px !important;" aria-hidden="true"></i>
-                                    <input type="hidden" name="performance_window" id="performanceWindow" value="{{ $performanceWindow ?? 'monthly' }}">
-                                    <noscript><button type="submit">Apply</button></noscript>
-                                </form>
-                                <button type="button" class="btn-overview-action" id="shareTalentListBtn" title="Share list">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="18" cy="5" r="3"></circle>
-                                        <circle cx="6" cy="12" r="3"></circle>
-                                        <circle cx="18" cy="19" r="3"></circle>
-                                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                                    </svg>
-                                    <span>Share list</span>
+                                    <div class="caf-sort-panel d-none" id="caf_sort_panel"></div>
+                                </div>
+                                <button type="button" class="btn btn-sm caf-refresh-btn" id="btnCafRefreshList" title="Refresh List">
+                                    <i class="fa fa-rotate"></i> Refresh
                                 </button>
-                                <button type="button" class="btn-overview-action" id="viewTalentListBtn" title="View list">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="8" y1="6" x2="21" y2="6"></line>
-                                        <line x1="8" y1="12" x2="21" y2="12"></line>
-                                        <line x1="8" y1="18" x2="21" y2="18"></line>
-                                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                                    </svg>
-                                    <span>View list</span>
+                                <button type="button" class="btn btn-sm btn-primary fw-bold flex-shrink-0" id="exportTalents" title="Export talent records to CSV">
+                                    <i class="fa fa-file-export me-1"></i> Export
                                 </button>
-                            </div>
-                        </div>
-
-                        <!-- 3 Sections Grid -->
-                        <div class="overview-sections-grid">
-                            <!-- Section 1: TALENT POOL -->
-                            <div class="overview-section">
-                                <div class="overview-section-header banner-blue">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="fa fa-users text-blue"></i>
-                                        <span class="banner-title text-blue">TALENT POOL</span>
-                                    </div>
-                                </div>
-                                <div class="overview-cards-grid grid-2">
-                                    <!-- Total Talent -->
-                                    <div class="overview-kpi-card kpi-bg-blue kpi-filter active" data-rel="all" id="kpi_all" title="Filter to All Talents">
-                                        <div class="kpi-row-top">
-                                            <div class="kpi-circle-icon circle-blue">
-                                                <i class="fa fa-users"></i>
-                                            </div>
-                                            <span class="kpi-num" data-pipeline-stage="talent" id="kpival_all">{{ $heroStages['talent']['available'] ? number_format($heroStages['talent']['value']) : '—' }}</span>
-                                        </div>
-                                        <div class="kpi-row-bottom">
-                                            <span class="kpi-label">Total Talent</span>
-                                        </div>
-                                    </div>
-                                    <!-- Marketplace Listed -->
-                                    <div class="overview-kpi-card kpi-bg-amber kpi-filter" data-rel="2" id="kpi_2" title="Filter to Marketplace Listed">
-                                        <div class="kpi-row-top">
-                                            <div class="kpi-circle-icon circle-amber">
-                                                <i class="fa fa-briefcase"></i>
-                                            </div>
-                                            <span class="kpi-num" data-pipeline-stage="bench" id="kpival_2">{{ $heroStages['bench']['available'] ? number_format($heroStages['bench']['value']) : '—' }}</span>
-                                        </div>
-                                        <div class="kpi-row-bottom">
-                                            <span class="kpi-label">Marketplace Listed</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Section 2: MARKETPLACE ACTIVITY -->
-                            <div class="overview-section">
-                                <div class="overview-section-header banner-purple">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="fa fa-paper-plane text-purple"></i>
-                                        <span class="banner-title text-purple">MARKETPLACE ACTIVITY</span>
-                                    </div>
-                                    <span class="banner-subtext">Your engagement on the marketplace</span>
-                                </div>
-                                <div class="overview-cards-grid grid-4">
-                                    <!-- Requests Sent -->
-                                    <div class="overview-kpi-card kpi-bg-sky" title="Requests Sent">
-                                        <div class="kpi-row-top">
-                                            <div class="kpi-circle-icon circle-sky">
-                                                <i class="fa fa-paper-plane"></i>
-                                            </div>
-                                            <span class="kpi-num" data-pipeline-stage="sent">{{ $heroStages['sent']['available'] ? number_format($heroStages['sent']['value']) : '—' }}</span>
-                                        </div>
-                                        <div class="kpi-row-bottom">
-                                            <span class="kpi-label">Requests Sent</span>
-                                        </div>
-                                    </div>
-                                    <!-- Requests Accepted -->
-                                    <div class="overview-kpi-card kpi-bg-green" title="Requests Accepted">
-                                        <div class="kpi-row-top">
-                                            <div class="kpi-circle-icon circle-green">
-                                                <i class="fa fa-circle-check"></i>
-                                            </div>
-                                            <span class="kpi-num" data-pipeline-stage="accepted">{{ $heroStages['accepted']['available'] ? number_format($heroStages['accepted']['value']) : '—' }}</span>
-                                        </div>
-                                        <div class="kpi-row-bottom">
-                                            <span class="kpi-label">Requests Accepted</span>
-                                        </div>
-                                    </div>
-                                    <!-- Requests Expired -->
-                                    <div class="overview-kpi-card kpi-bg-red" title="Requests Expired">
-                                        <div class="kpi-row-top">
-                                            <div class="kpi-circle-icon circle-red">
-                                                <i class="fa fa-clock"></i>
-                                            </div>
-                                            <span class="kpi-num" data-pipeline-stage="expired">{{ $heroStages['expired']['available'] ? number_format($heroStages['expired']['value']) : '—' }}</span>
-                                        </div>
-                                        <div class="kpi-row-bottom">
-                                            <span class="kpi-label">Requests Expired</span>
-                                        </div>
-                                    </div>
-                                    <!-- Profile Views -->
-                                    <div class="overview-kpi-card kpi-bg-violet" title="All-time Profile Views">
-                                        <div class="kpi-row-top">
-                                            <div class="kpi-circle-icon circle-violet">
-                                                <i class="fa fa-eye"></i>
-                                            </div>
-                                            <span class="kpi-num" data-pipeline-stage="views">{{ $heroStages['views']['available'] ? number_format($heroStages['views']['value']) : '—' }}</span>
-                                        </div>
-                                        <div class="kpi-row-bottom">
-                                            <span class="kpi-label">Profile Views</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Section 3: HIRING OUTCOMES -->
-                            <div class="overview-section">
-                                <div class="overview-section-header banner-emerald">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="fa fa-trophy text-green"></i>
-                                        <span class="banner-title text-green">HIRING OUTCOMES</span>
-                                    </div>
-                                </div>
-                                <div class="overview-cards-grid grid-2">
-                                    <!-- Interviews -->
-                                    <div class="overview-kpi-card kpi-bg-indigo" title="Interviews">
-                                        <div class="kpi-row-top">
-                                            <div class="kpi-circle-icon circle-indigo">
-                                                <i class="fa fa-user-tie"></i>
-                                            </div>
-                                            <span class="kpi-num" data-pipeline-stage="interviews">{{ $heroStages['interviews']['available'] ? number_format($heroStages['interviews']['value']) : '—' }}</span>
-                                        </div>
-                                        <div class="kpi-row-bottom">
-                                            <span class="kpi-label">Interviews</span>
-                                        </div>
-                                    </div>
-                                    <!-- Placed -->
-                                    <div class="overview-kpi-card kpi-bg-amber kpi-filter" data-rel="3" id="kpi_3" title="Filter to Placed">
-                                        <div class="kpi-row-top">
-                                            <div class="kpi-circle-icon circle-gold">
-                                                <i class="fa fa-trophy"></i>
-                                            </div>
-                                            <span class="kpi-num" data-pipeline-stage="placed" id="kpival_3">{{ $heroStages['placed']['available'] ? number_format($heroStages['placed']['value']) : '—' }}</span>
-                                        </div>
-                                        <div class="kpi-row-bottom">
-                                            <span class="kpi-label">Placed</span>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tier 1: Toolbar Card with Dynamic Search (Rule 20 Standard) -->
-                    <div class="cd-bench-toolbar-card">
-                        <div class="cd-bench-search-subcard">
-                            <i class="fa fa-search text-muted"></i>
-                            <input type="text" name="inputJobSearch" placeholder="Search by name, skills, role, experience, location..."
-                                id="kt_tagify_2" onkeyup="debouncedBenchSearch(event)" autocomplete="off" />
-                            <button type="button" class="cd-bench-search-clear" id="btnBenchSearchClear" title="Clear search">
-                                <i class="fa fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="cd-bench-toolbar-actions">
-                            <select class="form-select cd-bench-sort-select flex-shrink-0" id="sortingfilter" data-placeholder="Sort" onchange="filtersdataget()">
-                                <option value="Show All" selected>Sort by</option>
-                                <option value="1">Newest to Oldest (Upload Date)</option>
-                                <option value="2">Oldest to Newest (Upload Date)</option>
-                                <option value="9">Notice Period (Immediate)</option>
-                                <option value="5">Low to High (Notice Period)</option>
-                                <option value="6">High to Low (Notice Period)</option>
-                                <option value="7">High to Low (Experience)</option>
-                                <option value="8">Low to High (Experience)</option>
-                            </select>
-                            <button type="button" class="btn btn-sm btn-primary fw-bold cd-bench-export-btn flex-shrink-0" id="exportTalents" title="Export talent records to CSV">
-                                <i class="fa fa-download me-1"></i> Export
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Tier 2: Sub-Tabs Card with White Background (Rule 20 Standard) -->
-                    <div class="cd-bench-tabs-card">
-                        <div class="cd-bench-tabs-group">
-                            <a href="Javascript:void(0);" rel="all" for="all_talents" class="cd-bench-tab-btn tab-pill tab-all application_sttus_nav active" id="tab_all">
-                                <i class="fa fa-users"></i><span>All Talents</span><span class="cd-tab-badge" id="bg_all">{{ $counts->all_records ?? 0 }}</span>
-                            </a>
-                            <a href="Javascript:void(0);" rel="1" for="talent_Pool" class="cd-bench-tab-btn tab-pill tab-pool application_sttus_nav">
-                                <i class="fa fa-user-group"></i><span>On Pool</span><span class="cd-tab-badge" id="bg_1">{{ $counts->pool ?? 0 }}</span>
-                            </a>
-                            <a href="Javascript:void(0);" rel="2" for="bench_live" class="cd-bench-tab-btn tab-pill tab-bench application_sttus_nav">
-                                <i class="fa fa-briefcase"></i><span>Bench</span><span class="cd-tab-badge" id="bg_2">{{ $counts->bench ?? 0 }}</span>
-                            </a>
-                            <a href="Javascript:void(0);" rel="4" for="bench_pause" class="cd-bench-tab-btn tab-pill tab-hold application_sttus_nav">
-                                <i class="fa fa-circle-pause"></i><span>On Hold</span><span class="cd-tab-badge" id="bg_4">{{ $counts->paused ?? 0 }}</span>
-                            </a>
-                            <a href="Javascript:void(0);" rel="3" for="bench_placed" class="cd-bench-tab-btn tab-pill tab-placed application_sttus_nav">
-                                <i class="fa fa-calendar-check"></i><span>Placed</span><span class="cd-tab-badge" id="bg_3">{{ $counts->placed ?? 0 }}</span>
-                            </a>
-                            <a href="Javascript:void(0);" rel="5" for="bench_left" class="cd-bench-tab-btn tab-pill tab-exited application_sttus_nav">
-                                <i class="fa fa-right-from-bracket"></i><span>Exited</span><span class="cd-tab-badge" id="bg_5">{{ $counts->exited ?? 0 }}</span>
-                            </a>
-                        </div>
-                        <!-- Hidden inputs preserved for existing fetch logic -->
-                        <input type="hidden" id="filter_status" value="" />
-                        <input type="hidden" id="country" value="" />
-                        <input type="hidden" id="mstatus_id" value="all" />
-                        <input type="hidden" id="jobid" value="" />
-                        {{-- Radios that drive fetchBenchBenchCandidatesCandidateList (kept off-screen) --}}
-                        <div class="d-none">
-                            <input class="rating-input" name="status_manage" checked value="all" type="radio" id="all_talents">
-                            <input class="rating-input" name="status_manage" value="1" type="radio" id="talent_Pool">
-                            <input class="rating-input" name="status_manage" value="2" type="radio" id="bench_live">
-                            <input class="rating-input" name="status_manage" value="4" type="radio" id="bench_pause">
-                            <input class="rating-input" name="status_manage" value="3" type="radio" id="bench_placed">
-                            <input class="rating-input" name="status_manage" value="5" type="radio" id="bench_left">
-                            <span class="nav_status"></span>
-                        </div>
+                    <!-- Hidden inputs & radios preserved for existing filter & fetch engine -->
+                    <input type="hidden" id="filter_status" value="" />
+                    <input type="hidden" id="country" value="" />
+                    <input type="hidden" id="mstatus_id" value="all" />
+                    <input type="hidden" id="jobid" value="" />
+                    <div class="d-none">
+                        <input class="rating-input" name="status_manage" checked value="all" type="radio" id="all_talents">
+                        <input class="rating-input" name="status_manage" value="1" type="radio" id="talent_Pool">
+                        <input class="rating-input" name="status_manage" value="2" type="radio" id="bench_live">
+                        <input class="rating-input" name="status_manage" value="4" type="radio" id="bench_pause">
+                        <input class="rating-input" name="status_manage" value="3" type="radio" id="bench_placed">
+                        <input class="rating-input" name="status_manage" value="5" type="radio" id="bench_left">
+                        <span class="nav_status"></span>
                     </div>
 
                     <!-- Multi-Selection Action Bar (Visible when any candidate is selected) -->
@@ -1596,6 +1516,57 @@
                 </div>
             </div>
             <div class="card-body position-relative px-0 py-0" id="kt_activitiesHMB_body"></div>
+        </div>
+    </div>
+
+    <!-- Similar Clients Drawer (Rule 20 Modern Card + Sub-Card Enterprise Standard) -->
+    <div id="kt_activitiesSimilarClients_toggle" class="d-none"></div>
+    <div id="kt_activitiesSimilarClients" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="similar_clients"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'95%', 'sm': '650px', 'lg': '880px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_activitiesSimilarClients_toggle" data-kt-drawer-close="#kt_activitiesSimilarClients_close">
+        <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column" style="font-family: 'Poppins', sans-serif;">
+            <!-- Header (Mandatory #f8fafc Background per Rule 20) -->
+            <div class="card-header px-6 py-3 d-flex align-items-center justify-content-between" style="background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; min-height: 60px;">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+                        <i class="fa fa-handshake"></i>
+                    </div>
+                    <div>
+                        <h3 class="card-title fw-bolder text-dark m-0" style="font-size: 15px !important; letter-spacing: -0.2px;">Similar Potential Clients</h3>
+                        <p class="text-muted m-0" style="font-size: 11px !important;" id="sc_drawer_subtitle">Matching direct client mandates and internal client requisitions</p>
+                    </div>
+                </div>
+                <div class="card-toolbar d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_activitiesSimilarClients_close">
+                        <i class="fa fa-times fs-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Navigation for Direct vs Internal Clients (Rule 25 Canonical Tagging) -->
+            <div class="px-6 py-2 border-bottom" style="background: #ffffff; border-color: #e2e8f0 !important;">
+                <ul class="nav nav-pills nav-pills-custom gap-2" id="similarClientsTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active sc-tab-pill" id="tab_similar_direct" data-type="direct" href="javascript:void(0);" style="padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #e2e8f0; color: #475569;">
+                            <i class="fa fa-shield-alt text-success me-1"></i> Direct Clients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link sc-tab-pill" id="tab_similar_internal" data-type="internal" href="javascript:void(0);" style="padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #e2e8f0; color: #475569;">
+                            <i class="fa fa-building text-primary me-1"></i> Internal Clients
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Drawer Body -->
+            <div class="card-body position-relative p-6 flex-grow-1 overflow-auto" id="kt_activitiesSimilarClients_body">
+                <div class="text-center py-20 text-muted">
+                    <i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                    <div>Loading similar client opportunities...</div>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -1760,30 +1731,29 @@
             });
         })();
 
-        // ---- Status tab / KPI filter (drives existing fetch pipeline) ----
+        // ---- Status tab / KPI flow filter (drives existing fetch pipeline) ----
         $(document).on('click', '.application_sttus_nav', function() {
             var page = $(this).attr('rel');
 
-            $('.tab-pill, .cd-bench-tab-btn').removeClass('active');
-            $(this).addClass('active');
-            $('.kpi-filter').removeClass('active');
-            $('#kpi_' + page).addClass('active');
+            $('.hp-circle').removeClass('active');
+            $('.hp-label').removeClass('active');
+            $('#bg_all').removeClass('bg-total-active').addClass('bg-gray');
 
-            if (page == 1)      { $('#talent_Pool').prop('checked', true).trigger('change'); }
-            else if (page == 2) { $('#bench_live').prop('checked', true).trigger('change'); }
-            else if (page == 3) { $('#bench_placed').prop('checked', true).trigger('change'); }
-            else if (page == 4) { $('#bench_pause').prop('checked', true).trigger('change'); }
-            else if (page == 5) { $('#bench_left').prop('checked', true).trigger('change'); }
-            else                { $('#all_talents').prop('checked', true).trigger('change'); }
+            if (page === 'all' || !page) {
+                $('#bg_all').addClass('bg-total-active').removeClass('bg-gray');
+                $('#all_talents').prop('checked', true).trigger('change');
+            } else {
+                $('.hp-circle[data-hp="' + page + '"]').addClass('active');
+                $('#tx_' + page).addClass('active');
+                if (page == 1)      { $('#talent_Pool').prop('checked', true).trigger('change'); }
+                else if (page == 2) { $('#bench_live').prop('checked', true).trigger('change'); }
+                else if (page == 3) { $('#bench_placed').prop('checked', true).trigger('change'); }
+                else if (page == 4) { $('#bench_pause').prop('checked', true).trigger('change'); }
+                else if (page == 5) { $('#bench_left').prop('checked', true).trigger('change'); }
+            }
 
             $('#mstatus_id').val(page);
             fetchBenchBenchCandidatesCandidateList(1);
-        });
-
-        // KPI stat cards mirror the tab strip
-        $(document).on('click', '.kpi-filter', function() {
-            var rel = $(this).data('rel');
-            $(".application_sttus_nav[rel='" + rel + "']").trigger('click');
         });
 
         // ---- Add Talent (package gate) ----
@@ -1807,31 +1777,164 @@
             });
         });
 
-        // Phase 1 Optimization: 250ms debounce for free-text search input (#kt_tagify_2)
-        // Prevents 10-character typing from triggering 20 sequential AJAX calls.
+        // Search input with 250ms debounce and clear button (Rule 17)
         var _benchSearchTimer = null;
         function debouncedBenchSearch(e) {
-            if (_benchSearchTimer) {
-                clearTimeout(_benchSearchTimer);
-            }
-            if ($('#kt_tagify_2').val().trim().length > 0) {
-                $('#btnBenchSearchClear').show();
+            var val = $('#kt_tagify_2').val().trim();
+            if (val.length > 0) {
+                $('#btnCafSearchClear, #btnBenchSearchClear').show();
             } else {
-                $('#btnBenchSearchClear').hide();
+                $('#btnCafSearchClear, #btnBenchSearchClear').hide();
             }
             if (e && (e.key === 'Enter' || e.keyCode === 13)) {
+                if (_benchSearchTimer) clearTimeout(_benchSearchTimer);
                 filtersdataget();
                 return;
             }
+            if (_benchSearchTimer) clearTimeout(_benchSearchTimer);
             _benchSearchTimer = setTimeout(function() {
                 filtersdataget();
             }, 250);
         }
 
-        $(document).on('click', '#btnBenchSearchClear', function() {
+        $(document).on('input keyup', '#kt_tagify_2', debouncedBenchSearch);
+
+        $(document).on('click', '#btnCafSearchClear, #btnBenchSearchClear', function() {
             $('#kt_tagify_2').val('');
             $(this).hide();
             filtersdataget();
+        });
+
+        // Custom Sort Panel (Rule 20 Standard from Client App Tracker)
+        function cafRenderSortPanel() {
+            var $panel = $('#caf_sort_panel').empty();
+            var current = $('#sortingfilter').val();
+            $('#sortingfilter option').each(function() {
+                var $opt = $(this);
+                var val = $opt.attr('value');
+                var label = $opt.text();
+                $('<div class="caf-sort-item"></div>').text(label)
+                    .toggleClass('active', val === current)
+                    .on('click', function() {
+                        $('#sortingfilter').val(val);
+                        $('#caf_sort_label').text(label);
+                        cafCloseSortPanel();
+                        filtersdataget();
+                    })
+                    .appendTo($panel);
+            });
+        }
+        function cafOpenSortPanel() {
+            cafRenderSortPanel();
+            $('#caf_sort_panel').removeClass('d-none');
+            $('#caf_sort_btn').addClass('open');
+        }
+        function cafCloseSortPanel() {
+            $('#caf_sort_panel').addClass('d-none');
+            $('#caf_sort_btn').removeClass('open');
+        }
+        $(document).on('click', '#caf_sort_btn', function(e) {
+            e.stopPropagation();
+            if ($('#caf_sort_panel').hasClass('d-none')) cafOpenSortPanel();
+            else cafCloseSortPanel();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#caf_sort_wrap').length) cafCloseSortPanel();
+        });
+
+        // Refresh List Button
+        $(document).on('click', '#btnCafRefreshList', function() {
+            if (typeof BenchPageRamStore !== 'undefined') { BenchPageRamStore.invalidate(); }
+            filtersdataget();
+        });
+
+        // Similar Clients Drawer AJAX Handler (Direct & Internal Client Tabs)
+        var _activeSimilarCandidateId = null;
+        var _activeSimilarType = 'direct';
+
+        function loadSimilarClients(candidateId, type) {
+            _activeSimilarCandidateId = candidateId;
+            _activeSimilarType = type || 'direct';
+
+            $('.sc-tab-pill').removeClass('active');
+            if (_activeSimilarType === 'internal') {
+                $('#tab_similar_internal').addClass('active');
+            } else {
+                $('#tab_similar_direct').addClass('active');
+            }
+
+            var $body = $('#kt_activitiesSimilarClients_body');
+            $body.html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"></i><div>Loading opportunities...</div></div>');
+
+            var endpoint = (_activeSimilarType === 'internal') 
+                ? "{{ route('recommend.all_internal_data_ajax') }}" 
+                : "{{ route('recommend.all_data_ajax') }}";
+
+            var fullPageUrl = (_activeSimilarType === 'internal')
+                ? "{{ url('service_company/bench-candidates/recommend_internal_req') }}/" + candidateId
+                : "{{ url('service_company/bench-candidates/recommend_req') }}/" + candidateId;
+
+            $.ajax({
+                type: 'GET',
+                url: endpoint,
+                data: { condidate_id: candidateId, page: 1, limit: 10 },
+                dataType: 'json',
+                success: function(res) {
+                    var html = '';
+                    if (res && res.html) {
+                        html += '<div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">';
+                        html += '  <span class="text-muted fs-7">Found <strong>' + (res.total || 0) + '</strong> matching ' + (_activeSimilarType === 'internal' ? 'Internal Client' : 'Direct Client') + ' mandates</span>';
+                        html += '  <a href="' + fullPageUrl + '" target="_blank" class="btn btn-sm btn-light-primary fw-bold fs-8">';
+                        html += '    <i class="fa fa-arrow-up-right-from-square me-1"></i> Open Full View';
+                        html += '  </a>';
+                        html += '</div>';
+                        html += '<div class="similar-clients-content">' + res.html + '</div>';
+                        if (res.pagination) {
+                            html += '<div class="mt-4">' + res.pagination + '</div>';
+                        }
+                    } else {
+                        html = '<div class="text-center py-20 text-muted"><i class="fa fa-briefcase fa-3x mb-3 text-gray-300"></i><p class="fs-6 fw-bold">No similar client mandates found</p><p class="fs-7">We couldn\'t find any active matching client requisitions for this candidate\'s primary skills.</p></div>';
+                    }
+                    $body.html(html);
+                },
+                error: function(xhr) {
+                    $body.html('<div class="text-center py-20 text-danger"><i class="fa fa-triangle-exclamation fa-2x mb-2"></i><div>Failed to load client opportunities. Please try again.</div></div>');
+                }
+            });
+        }
+
+        $(document).on('click', '.btn-similar-clients', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var candidateId = $(this).data('bench-id') || $(this).data('candidate-id');
+            var candidateName = $(this).data('bench-name') || '';
+            var candidateRole = $(this).data('bench-role') || '';
+            var clientType = $(this).data('client-type') || 'direct';
+
+            if (candidateName) {
+                $('#sc_drawer_subtitle').html('Matching opportunities for <strong>' + candidateName + '</strong>' + (candidateRole ? ' (' + candidateRole + ')' : ''));
+            }
+
+            var drawerEl = document.querySelector('#kt_activitiesSimilarClients');
+            if (typeof KTDrawer !== 'undefined' && drawerEl) {
+                var drawer = KTDrawer.getInstance(drawerEl);
+                if (!drawer) {
+                    drawer = new KTDrawer(drawerEl);
+                }
+                drawer.show();
+            } else {
+                $('#kt_activitiesSimilarClients_toggle').trigger('click');
+            }
+
+            loadSimilarClients(candidateId, clientType);
+        });
+
+        $(document).on('click', '.sc-tab-pill', function(e) {
+            e.preventDefault();
+            var type = $(this).data('type');
+            if (_activeSimilarCandidateId) {
+                loadSimilarClients(_activeSimilarCandidateId, type);
+            }
         });
 
         $(document).on('click', '#AddInternalPoolEmpty', function() {
@@ -2452,15 +2555,13 @@
 
         function applyBenchCounts(counts) {
             if (!counts) return;
-            $('#bg_all').text(counts.all_records || 0);
+            $('#bg_all_count').text(counts.all_records || 0);
             $('#bg_1').text(counts.pool || 0);
             $('#bg_2').text(counts.bench || 0);
             $('#bg_4').text(counts.paused || 0);
             $('#bg_3').text(counts.placed || 0);
             $('#bg_5').text(counts.exited || 0);
             $('#headerTotalTalentCount').text(counts.all_records || 0);
-            $('#kpival_all').text(Number(counts.all_records || 0).toLocaleString());
-            $('#kpival_2').text(Number(counts.bench || 0).toLocaleString());
         }
 
         function countDataGetBenchList() {
