@@ -846,7 +846,7 @@
 /* 5 Discrete Sub-Cards Grid (Rule 20 Enterprise Standard - Compact & Identical Spacing) */
 .cl-subcards-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.05fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 1.15fr) !important;
+    grid-template-columns: minmax(0, 1.48fr) minmax(0, 1.02fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 1.1fr) !important;
     gap: 7px !important;
     width: 100% !important;
     align-items: stretch !important;
@@ -882,10 +882,10 @@
     height: 18px !important;
 }
 .cl-subcard-title {
-    font-size: 10px !important;
+    font-size: 9.5px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.03em !important;
+    letter-spacing: 0.02em !important;
     color: #64748b !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -895,12 +895,12 @@
 .cl-subcard-badges {
     display: flex !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: 3.5px !important;
 }
 .cl-scope-pill {
-    font-size: 8.5px !important;
+    font-size: 8px !important;
     font-weight: 700 !important;
-    padding: 1px 5px !important;
+    padding: 1px 4px !important;
     border-radius: 4px !important;
     text-transform: uppercase !important;
     line-height: 1.2 !important;
@@ -911,10 +911,10 @@
 .cl-status-pill {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 3.5px !important;
-    font-size: 8.5px !important;
+    gap: 3px !important;
+    font-size: 8px !important;
     font-weight: 700 !important;
-    padding: 1px 5px !important;
+    padding: 1px 4px !important;
     border-radius: 4px !important;
     text-transform: uppercase !important;
     line-height: 1.2 !important;
@@ -1125,7 +1125,7 @@
     text-overflow: ellipsis !important;
 }
 
-/* Sub-Card 4: Talent Supply (Vertical Listings matching Location Rhythm) */
+/* Sub-Card 4: Talent Supply (High-Contrast Vertical Rhythm) */
 .cl-talent-body {
     display: flex !important;
     flex-direction: column !important;
@@ -1140,16 +1140,42 @@
     white-space: nowrap !important;
     min-width: 0 !important;
 }
-.cl-talent-line strong {
+.cl-talent-icon {
+    width: 14px !important;
+    text-align: center !important;
+    margin-right: 5px !important;
+    font-size: 10px !important;
+    flex-shrink: 0 !important;
+}
+.cl-talent-num {
     font-weight: 700 !important;
     font-size: 11.5px !important;
+    color: #0f172a !important;
+    margin-right: 4px !important;
+    line-height: 1 !important;
 }
-.cl-talent-line.cl-bench-trigger {
+.cl-talent-lbl {
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    color: #334155 !important; /* Crisp dark slate - WCAG AA compliant */
+    line-height: 1 !important;
+}
+.cl-talent-line.bench-active {
     cursor: pointer !important;
 }
-.cl-talent-line.cl-bench-trigger:hover strong,
-.cl-talent-line.cl-bench-trigger:hover span {
+.cl-talent-line.bench-active .cl-talent-num,
+.cl-talent-line.bench-active .cl-talent-lbl {
     color: #d97706 !important;
+    font-weight: 700 !important;
+}
+.cl-talent-line.bench-active:hover .cl-talent-lbl {
+    color: #b45309 !important;
+}
+.cl-talent-line.bench-zero .cl-talent-num {
+    color: #94a3b8 !important;
+}
+.cl-talent-line.bench-zero .cl-talent-lbl {
+    color: #64748b !important;
 }
 
 /* Sub-Card 5: Separate Partnership & Action Hub */
@@ -1189,7 +1215,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 6px 12px !important;
+    padding: 5px 12px !important;
     margin: 6px -10px 0 -10px !important;
     background: #f8fafc !important;
     border-top: 1px solid #e2e8f0 !important;
@@ -1225,19 +1251,19 @@
 .cl-footer-strip-right {
     display: flex !important;
     align-items: center !important;
-    gap: 3px !important;
+    gap: 5px !important;
 }
 .cl-footer-strip-right .cl-terms-link {
-    font-size: 10.5px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
     color: #334155 !important;
     text-decoration: none !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 3px !important;
-    padding: 2px 6px !important;
-    border-radius: 4px !important;
-    background: #f1f5f9 !important;
+    padding: 2.5px 7px !important;
+    border-radius: 5px !important;
+    background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     transition: all 0.15s ease !important;
     white-space: nowrap !important;
@@ -1245,26 +1271,29 @@
 }
 .cl-footer-strip-right .cl-terms-link:hover {
     color: #009ef7 !important;
-    background: #eff6ff !important;
-    border-color: #bfdbfe !important;
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
     text-decoration: none !important;
 }
 .cl-footer-strip-right .cl-profile-link {
-    font-size: 10.5px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
     color: #009ef7 !important;
     text-decoration: none !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 4px !important;
-    padding: 2px 6px !important;
-    border-radius: 4px !important;
+    padding: 2.5px 7px !important;
+    border-radius: 5px !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
     transition: all 0.15s ease !important;
     white-space: nowrap !important;
 }
 .cl-footer-strip-right .cl-profile-link:hover {
     color: #007bb5 !important;
-    background: #e0f2fe !important;
+    background: #dbeafe !important;
+    border-color: #93c5fd !important;
     text-decoration: none !important;
 }
 
