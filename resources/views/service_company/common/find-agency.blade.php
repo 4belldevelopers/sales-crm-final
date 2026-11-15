@@ -26,48 +26,29 @@
     color: #1e293b;
 }
 
-/* ── TIER 1: Top Header Toolbar Card (Rule 20 Modern Card + Sub-Card) ── */
-.fa-header-card {
+/* ── TIER 1: Top Header Toolbar Card (Inspiration from Client Tracker Header) ── */
+.fa-header-card, .cl-header-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 12px !important;
-    padding: 8px 10px !important;
+    padding: 14px 20px !important;
     margin-bottom: 14px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 10px !important;
-    flex-wrap: wrap !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    gap: 16px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
 }
-.fa-header-subcard {
-    background: #f8fafc !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 9px !important;
-    padding: 8px 12px !important;
+.fa-header-left, .cl-header-left {
     display: flex !important;
     align-items: center !important;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
-}
-.fa-header-subcard-identity {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    gap: 12px !important;
-}
-.fa-header-subcard-actions {
-    flex-shrink: 0 !important;
-    gap: 8px !important;
-}
-.fa-header-left {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
+    gap: 14px !important;
     min-width: 0 !important;
 }
 .fa-header-text-wrap {
     min-width: 0 !important;
 }
-.fa-header-icon-box {
+.fa-header-icon-box, .cl-header-icon-box {
     width: 44px !important;
     height: 44px !important;
     border-radius: 10px !important;
@@ -77,35 +58,27 @@
     align-items: center !important;
     justify-content: center !important;
     color: #2563eb !important;
-    font-size: 18px !important;
+    font-size: 20px !important;
     flex-shrink: 0 !important;
     box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06) !important;
 }
-.fa-header-title-row {
+.fa-header-icon-box svg, .cl-header-icon-box svg {
+    color: #2563eb !important;
+    stroke: #2563eb !important;
+}
+.fa-header-title-row, .cl-header-title-row {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
 }
-.fa-header-title {
-    font-size: 18px !important;
+.fa-header-title, .cl-header-title {
+    font-size: 20px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     letter-spacing: -0.015em !important;
     margin: 0 !important;
     line-height: 1.2 !important;
-}
-.fa-header-subtitle {
-    font-size: 12px !important;
-    font-weight: 400 !important;
-    color: #64748b !important;
-    margin-top: 3px !important;
-    line-height: 1.35 !important;
-}
-.fa-header-actions {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    flex-shrink: 0 !important;
 }
 .fa-trust-pill {
     display: inline-flex !important;
@@ -115,9 +88,26 @@
     border: 1px solid #a7f3d0 !important;
     color: #065f46 !important;
     border-radius: 20px !important;
-    padding: 4px 10px !important;
-    font-size: 11px !important;
+    padding: 3px 10px !important;
+    font-size: 11.5px !important;
     font-weight: 600 !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.01em !important;
+}
+.fa-trust-pill svg {
+    color: #059669 !important;
+    stroke: #059669 !important;
+}
+.fa-trust-pill i {
+    font-size: 11px !important;
+    color: #059669 !important;
+}
+.fa-header-subtitle, .cl-header-subtitle {
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    color: #64748b !important;
+    margin-top: 3px !important;
+    line-height: 1.35 !important;
 }
 
 /* ── TIER 2: 6 Stat Cards Row (Strictly 1 Single Horizontal Row) ── */
@@ -1724,28 +1714,32 @@
     <div class="post d-flex flex-column-fluid" id="kt_post">
         <div id="kt_content_container" class="container-fluid px-3">
 
-            <!-- ── TIER 1: Header Toolbar Card (Rule 20 Modern Card + Sub-Card) ── -->
-            <div class="fa-header-card">
-                <div class="fa-header-subcard fa-header-subcard-identity">
-                    <div class="fa-header-icon-box">
-                        <i class="fas fa-handshake"></i>
+            <!-- ── TIER 1: Header Card (Inspired by Client Tracker Header Design) ── -->
+            <div class="fa-header-card cl-header-card">
+                <div class="fa-header-left cl-header-left">
+                    <div class="fa-header-icon-box cl-header-icon-box">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
                     </div>
                     <div class="fa-header-text-wrap">
-                        <div class="fa-header-title-row">
-                            <h1 class="fa-header-title">Find Trusted Hiring Agencies</h1>
-                            <span class="fa-trust-pill">
-                                <i class="fas fa-shield-alt text-success"></i> Verified agencies
+                        <div class="fa-header-title-row cl-header-title-row">
+                            <h1 class="fa-header-title cl-header-title">Find Trusted Hiring Agencies</h1>
+                            <span class="fa-trust-pill" title="Verified ATS Agencies">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    <path d="m9 12 2 2 4-4"/>
+                                </svg>
+                                <span>Verified agencies</span>
                             </span>
                         </div>
-                        <div class="fa-header-subtitle">
+                        <div class="fa-header-subtitle cl-header-subtitle">
                             Discover & collaborate with verified recruitment partners tailored to your exact hiring mandates.
                         </div>
                     </div>
-                </div>
-                <div class="fa-header-subcard fa-header-subcard-actions">
-                    <button type="button" class="btn btn-sm btn-light-primary" onclick="resetAllAgencyFilters()">
-                        <i class="fas fa-redo me-1"></i>Refresh Catalog
-                    </button>
                 </div>
             </div>
 
