@@ -27,12 +27,38 @@
 
 ## 2. Executive Summary
 
-The In-House Talent page was previously rendered as an outdated, sprawling HTML table (`<table id="benchListingTable">`) with flat unanchored headers and high visual clutter. 
+The In-House Talent page was previously rendered with an outdated, sprawling HTML table and a bulky "Talent & Marketplace Overview" hero card that added visual noise and took up significant screen real estate.
 
-Following **Rule 20** (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`) and user-provided feedback/inspiration, the module was refactored into the 3-Tier Layered Architecture:
-1. **Tier 1 (Top Header Toolbar Card):** A unified, single-row card (`#ffffff`, border `#e2e8f0`, radius 10px) with dynamic full-width search (`#kt_tagify_2`, 250ms debounce, clear button `#btnBenchSearchClear`), compact sort dropdown (`#sortingfilter`), and action button (`#exportTalents`). All controls sit side-by-side on a single clean horizontal row without vertical stacking.
-2. **Tier 2 (Sub-Tabs Card):** Dedicated white card container (`#ffffff`, border `#e2e8f0`, radius 10px) housing discrete status buttons with single active primary blue highlight (`#009ef7`), white text, and dynamic count badges.
-3. **Tier 3 (Primary Talent Card Stream):** Every candidate is rendered as an isolated primary card (`.cd-talent-card`) with a status-themed border-left accent (`#10b981` Bench, `#7c3aed` Pool, `#f59e0b` On Hold, `#009ef7` Placed, `#94a3b8` Exited), containing **5 spacious discrete sub-cards** with **Mandatory Header Backgrounds** (`#f8fafc`, border `#e2e8f0`) plus a horizontal bottom activity strip (`.cd-talent-card-bottom`).
+Following **Rule 20** (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`), **Rule 25** (Canonical Job Classification Tags), and user design directives, the page was refactored into an ultra-modern 3-Tier Enterprise Architecture inspired by the Client App Tracker:
+1. **Talent & Marketplace Overview Card Removed:** Completely removed `#talentOverviewCard` and its analytics widget to eliminate clutter and provide maximum vertical viewing space for active candidate records.
+2. **Hiring Pipeline Flow Card (Client Tracker Standard):** Replaced static tabs with an interactive Hiring Pipeline Flow (`.hp-card` + `.hp-flow`):
+   - **Total / All Talents:** Pill (`.hp-total`, `.bg-total-active`) displaying icon, total count (`#bg_all_count`), and label.
+   - **Formula Separator:** Flow indicator (`.hp-eq` `=`).
+   - **Active Pipeline Stages:** Interactive circular badges (`.hp-circle` + `.hp-label`):
+     - `On Pool` (Sky `#0284c7`, bg `#f0f9ff`)
+     - `Bench` (Amber `#d97706`, bg `#fffbeb`)
+     - `On Hold` (Slate `#64748b`, bg `#f1f5f9`)
+     - `Placed` (Emerald `#16a34a`, bg `#f0fdf4`)
+     - Flow divider (`.hp-divider`)
+     - `Exited` (Rose `#dc2626`, bg `#fef2f2`)
+3. **Tier 1 (Client Tracker Toolbar Card):** A unified toolbar (`.caf-toolbar-card`) with:
+   - Dynamic search input (`#kt_tagify_2`, 250ms debounce, clear button `#btnCafSearchClear`).
+   - Custom styled sort combobox (`.caf-sort-wrap`, `#caf_sort_btn`, `#caf_sort_panel`).
+   - Refresh list button (`#btnCafRefreshList`) that invalidates client RAM cache and fetches fresh records.
+   - Dedicated CSV Export button (`#exportTalents`).
+4. **Tier 3 (Primary Talent Card Stream):** Every candidate is rendered as an isolated primary card (`.cd-talent-card`) with:
+   - **6 Discrete Upper Sub-Cards:**
+     - Sub-Card 1: Talent Profile (Avatar, Name, Role, Outsourcing type, Status badge)
+     - Sub-Card 2: Comp & Exp (Salary, Service type, Total experience)
+     - Sub-Card 3: Availability & Location (Notice period, Work mode, City & Country)
+     - Sub-Card 4: Relationship Manager (Assigned RM, Change trigger)
+     - **Sub-Card 5 (NEW): Similar Clients** (Direct Client Emerald pill & Internal Client Blue pill per Rule 25 with counts and drawer triggers)
+     - Sub-Card 6: Clients Pipeline Activity (8 micro-cells, Interviews count, Views count; **Downloads removed** per request)
+   - **Sub-Card 7 (Bottom Footer Strip):** Contains Added/Stage date, **Bench Aging ("28 Days on Bench" warning badge moved here)**, skill chips, `Similar Clients` action button, and profile view actions.
+5. **Similar Potential Clients Drawer (`#kt_activitiesSimilarClients`):**
+   - Mandatory `#f8fafc` header background per Rule 20.
+   - Tabbed switching between Direct Client Mandates (`recommend.all_data_ajax`) and Internal Client Mandates (`recommend.all_internal_data_ajax`).
+   - Direct links to full recommendations views.
 
 ---
 
@@ -40,13 +66,13 @@ Following **Rule 20** (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`) and user-p
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Tier 1: Toolbar Card (.cd-bench-toolbar-card)                                        │
-│  [Search Input Sub-Card 🔍 ....................................] [Sort by ⌄] [Export]  │
+│  Hiring Pipeline Flow Card (.hp-card) — Inspired by Client App Tracker                 │
+│  [All Talents (1) Active] = (Pool: 0) > (Bench: 1) > (Hold: 0) > (Placed: 0) | (Exited)│
 └────────────────────────────────────────────────────────────────────────────────────────┘
                                             ▼
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Tier 2: Sub-Tabs Card (.cd-bench-tabs-card)                                          │
-│  [All Talents (1) Active Blue]  [On Pool (0)]  [Bench (1)]  [On Hold (0)]  [Placed (0)]│
+│  Tier 1: Toolbar Card (.caf-toolbar-card)                                             │
+│  [Search Input Sub-Card 🔍 .......................] [Sort ⌄] [Refresh 🔄] [Export 📥]  │
 └────────────────────────────────────────────────────────────────────────────────────────┘
                                             ▼
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -58,16 +84,15 @@ Following **Rule 20** (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`) and user-p
 │  Tier 3: Primary Talent Card Stream (#benchCandidateBenchCandidatesAjax)              │
 │  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
 │  │ .cd-talent-card (Left border: Emerald #10b981 / Purple #7c3aed / Amber #f59e0b)  │  │
-│  │ ┌──────────────┬──────────────┬──────────────┬──────────────┬──────────────────┐ │  │
-│  │ │ Sub-Card 1   │ Sub-Card 2   │ Sub-Card 3   │ Sub-Card 4   │ Sub-Card 5       │ │  │
-│  │ │ Talent       │ Comp & Exp   │ Availability │ Relationship │ Clients Pipeline │ │  │
-│  │ │ Avatar, Name,│ Salary /hr,  │ & Location   │ Manager Name │ 8 Stage Grid     │ │  │
-│  │ │ Role, Status │ Service type,│ Immediate,   │ & Change link│ INW SOU SCR EVA  │ │  │
-│  │ │ Pill, Chkbox │ Total exp    │ Work Mode,   │              │ NEG OFF JOI REJ  │ │  │
-│  │ │ Full-time/Edu│ Bench aging  │ Location     │              │ Int, Views, Dls  │ │  │
-│  │ └──────────────┴──────────────┴──────────────┴──────────────┴──────────────────┘ │  │
+│  │ ┌──────────┬──────────┬──────────┬──────────┬────────────────┬─────────────────┐ │  │
+│  │ │Sub-Card 1│Sub-Card 2│Sub-Card 3│Sub-Card 4│Sub-Card 5 (NEW)│Sub-Card 6       │ │  │
+│  │ │Talent    │Comp & Exp│Avail &   │Relationsh│Similar Clients │Clients Pipeline │ │  │
+│  │ │Avatar,   │Salary,   │Location  │Manager   │Direct Client   │8 Stage Grid     │ │  │
+│  │ │Name, Role│Service,  │Immediate,│Recruiter │Internal Client │Interviews, Views│ │  │
+│  │ │Status    │Total Exp │Office/WFH│Change    │Drawer Trigger  │(No Downloads)   │ │  │
+│  │ └──────────┴──────────┴──────────┴──────────┴────────────────┴─────────────────┘ │  │
 │  │ ┌──────────────────────────────────────────────────────────────────────────────┐ │  │
-│  │ │ Sub-Card 6 (Bottom Strip): Added: 13 Nov 26 • [Skills Chips] • [Profile] [RM]│ │  │
+│  │ │ Sub-Card 7 (Footer): Added • [28 Days on Bench] • [Skills] • [Similar] [Prof]│ │  │
 │  │ └──────────────────────────────────────────────────────────────────────────────┘ │  │
 │  └──────────────────────────────────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────────────────────────────┘
@@ -80,18 +105,19 @@ Following **Rule 20** (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`) and user-p
 
 ---
 
-## 4. Sub-Card Anatomical Breakdown (5 Discrete Sub-Cards)
+## 4. Sub-Card Anatomical Breakdown (6 Discrete Sub-Cards + Footer Strip)
 
-Each candidate card (`.cd-talent-card`) contains 5 spacious upper sub-cards plus a bottom activity strip:
+Each candidate card (`.cd-talent-card`) contains 6 spacious upper sub-cards plus a bottom activity strip:
 
 | Sub-Card | Label / CSS Class | Contents & Visual Tokens | Mandatory Header Background |
 |---|---|---|---|
 | **Sub-Card 1** | **Talent Profile** (`.cd-subcard-talent`) | • Checkbox `.chk_list_item`<br>• Avatar with deterministic initial color mapping<br>• Candidate Full Name (links to Profile Drawer `.bench_show_application_detail`)<br>• Designation / Role<br>• Outsourcing badge (`Full-time` / `Contract`) & Degree pill (`B.TECH/B.E`)<br>• Status badge (`Bench`, `Pool`, `On Hold`, `Placed`, `Exited`) with click to status drawer `.stage_sub_stage`<br>• Ads badge (if active) | `#f8fafc !important`, border `#e2e8f0` |
-| **Sub-Card 2** | **Comp & Exp** (`.cd-subcard-comp-exp`) | • Expected salary / bill rate (`$1 /H`, tabular digits)<br>• Service type with checkmark icon (`Paid Services` / `Free Services`)<br>• Total experience (`5 Yrs Total`)<br>• Bench aging indicator (`28 Days on Bench` - warning amber, danger red if >30 days) | `#f8fafc !important`, border `#e2e8f0` |
+| **Sub-Card 2** | **Comp & Exp** (`.cd-subcard-comp-exp`) | • Expected salary / bill rate (`$1 /H`, tabular digits)<br>• Service type with checkmark icon (`Paid Services` / `Free Services`)<br>• Total experience (`5 Yrs Total`) | `#f8fafc !important`, border `#e2e8f0` |
 | **Sub-Card 3** | **Availability & Location** (`.cd-subcard-avail-loc`) | • Notice status with calendar icon (`Immediate`, `30 Days`, etc.)<br>• Standardized Work Mode (`Work from office`, `Remote`, `Hybrid`)<br>• City & Country with map marker icon (`Hyderabad, India`) | `#f8fafc !important`, border `#e2e8f0` |
 | **Sub-Card 4** | **Relationship Mgr** (`.cd-subcard-manager`) | • Assigned Manager name with tooltip (`Secondary Recruiter`)<br>• Interactive Change trigger (`.manager-change`, `.hmb-listing`) opening RM Drawer | `#f8fafc !important`, border `#e2e8f0` |
-| **Sub-Card 5** | **Clients Pipeline Activity** (`.cd-subcard-pipeline`) | • 8-stage recruitment pipeline matrix (`INW`, `SOU`, `SCR`, `EVA`, `NEG`, `OFF`, `JOI`, `REJ`) with micro-cells<br>• Summary counters: Interviews (`data-bench-pipe-interview`), Views, Downloads | `#f8fafc !important`, border `#e2e8f0` |
-| **Bottom Strip** | **Activity & Actions** (`.cd-talent-card-bottom`) | • Added / Stage Date with calendar icon<br>• Horizontal scroll-safe `.cd-skill-pill` chips<br>• Quick Action Buttons: `View Profile` (`.bench_show_application_detail`) & `Change Status` (`.stage_sub_stage`) | Soft neutral `#fafbfc`, border-top `#f1f5f9` |
+| **Sub-Card 5 (NEW)** | **Similar Clients** (`.cd-subcard-similar-clients`) | • Direct Client Mandates chip (Rule 25 Emerald badge `#ecfdf5` / `#059669` with `fa-shield-alt` & count)<br>• Internal Client Mandates chip (Rule 25 Blue badge `#eff6ff` / `#2563eb` with `fa-building` & count)<br>• Interactive triggers `.btn-similar-clients` opening `#kt_activitiesSimilarClients` drawer | `#f8fafc !important`, border `#e2e8f0` |
+| **Sub-Card 6** | **Clients Pipeline Activity** (`.cd-subcard-pipeline`) | • 8-stage recruitment pipeline matrix (`INW`, `SOU`, `SCR`, `EVA`, `NEG`, `OFF`, `JOI`, `REJ`) with micro-cells<br>• Summary counters: Interviews (`data-bench-pipe-interview`), Views (**Downloads removed**) | `#f8fafc !important`, border `#e2e8f0` |
+| **Bottom Strip (Sub-Card 7)** | **Activity & Actions** (`.cd-talent-card-bottom`) | • Added / Stage Date with calendar icon<br>• **Bench aging indicator** (`28 Days on Bench` - warning badge moved here)<br>• Horizontal scroll-safe `.cd-skill-pill` chips<br>• Quick Action Buttons: `Similar Clients` trigger, `View Profile` (`.bench_show_application_detail`), and `Change Status` (`.stage_sub_stage`) | Soft neutral `#fafbfc`, border-top `#f1f5f9` |
 
 ---
 
