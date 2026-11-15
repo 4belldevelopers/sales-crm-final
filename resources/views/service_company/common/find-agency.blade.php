@@ -929,10 +929,10 @@
     border: 1px solid #bae6fd;
 }
 
-/* 4 Discrete Sub-Cards Grid */
+/* 5 Discrete Sub-Cards Grid (Rule 20 Enterprise Standard) */
 .cl-subcards-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1.4fr) minmax(0, 1.5fr) !important;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.15fr) !important;
     gap: 8px !important;
     width: 100% !important;
     align-items: stretch !important;
@@ -1035,6 +1035,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.cl-identity-tagline {
+    display: flex;
+    align-items: center;
+}
 .cl-activity-meta {
     font-size: 10px;
     color: #64748b;
@@ -1052,18 +1056,40 @@
     display: inline-block;
     flex-shrink: 0;
 }
-/* Identity Sub-card Location & Serving Countries */
-.cl-identity-location {
-    font-size: 11px;
-    color: #334155;
+
+/* Sub-Card 2: Dedicated Location & Coverage */
+.cl-subcard-location {
+    border-color: #fecdd3 !important;
+}
+.cl-location-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+}
+.cl-loc-primary-row {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
     line-height: 1.25;
+    color: #0f172a;
+    min-width: 0;
+}
+.cl-loc-city {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.cl-identity-serving {
-    display: flex;
-    align-items: center;
+.cl-loc-secondary-row {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #64748b;
+    line-height: 1.2;
+}
+.cl-loc-serving-row {
+    margin-top: auto;
+    padding-top: 6px;
 }
 .cl-serving-pill {
     display: inline-flex;
@@ -1084,7 +1110,7 @@
     color: #1d4ed8;
 }
 
-/* Sub-Card 2: Adaptive Commercials (Dual / Single) */
+/* Sub-Card 3: Adaptive Commercials (Dual / Single) */
 .cl-rates-content-wrap {
     display: flex;
     flex-direction: column;
@@ -1153,60 +1179,72 @@
     height: 26px !important;
 }
 
-/* Sub-Card 3: Separate Jobs & Talent Supply */
+/* Sub-Card 4: Jobs & Talent Supply (Vertical Listings) */
 .cl-subcard-talent {
     border-color: #fde68a !important;
 }
-.cl-talent-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+.cl-talent-vertical-list {
+    display: flex;
+    flex-direction: column;
     gap: 4px;
+    margin-bottom: auto;
 }
-.talent-stat-box {
+.cl-talent-vrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    padding: 4px 3px;
-    text-align: center;
+    padding: 3px 6px;
+    font-size: 11px;
+    min-height: 24px;
+    transition: all 0.15s ease;
 }
-.talent-stat-box.bench {
+.cl-talent-vrow .vrow-left {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+.cl-talent-vrow .vrow-lbl {
+    font-size: 10px;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+}
+.cl-talent-vrow .vrow-val {
+    font-size: 11px;
+    line-height: 1.1;
+    white-space: nowrap;
+    margin-left: 4px;
+}
+.cl-talent-vrow.bench {
     background: #fffbeb;
     border-color: #fde68a;
     cursor: pointer;
-    transition: all 0.15s ease;
 }
-.talent-stat-box.bench:hover {
+.cl-talent-vrow.bench:hover {
     background: #fef3c7;
     border-color: #f59e0b;
-    transform: translateY(-1px);
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.15);
 }
-.talent-stat-box.disabled {
+.cl-talent-vrow.disabled {
     background: #f8fafc;
     border-color: #e2e8f0;
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-.talent-stat-box .stat-num {
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.1;
-}
-.talent-stat-box .stat-lbl {
-    font-size: 8.5px;
-    font-weight: 600;
-    color: #64748b;
-    margin-top: 1px;
+    opacity: 0.75;
+    cursor: default;
 }
 .cl-talent-supply-note {
-    font-size: 9.5px;
+    font-size: 9px;
     color: #64748b;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-top: 4px;
 }
 
-/* Sub-Card 4: Separate Partnership & Action Hub */
+/* Sub-Card 5: Separate Partnership & Action Hub */
 .cl-subcard-action-hub {
     border-color: #bae6fd !important;
 }
@@ -1491,11 +1529,17 @@
 .cl-empty-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
 .cl-empty-sub { font-size: 12.5px; color: #64748b; max-width: 480px; margin: 0 auto 16px auto; }
 
-/* ── 15.6" Screen Responsive Breakpoints ── */
-@media (max-width: 1280px) {
+/* ── 15.6" Screen Responsive Breakpoints (Rule 14 & Rule 20) ── */
+@media (max-width: 1400px) {
     .cl-subcards-grid {
-        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.3fr) minmax(0, 1.3fr) minmax(0, 1.4fr) !important;
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.1fr) !important;
         gap: 6px !important;
+    }
+}
+@media (max-width: 1200px) {
+    .cl-subcards-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
     }
 }
 @media (max-width: 992px) {
