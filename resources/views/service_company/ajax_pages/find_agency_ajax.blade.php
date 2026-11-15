@@ -64,20 +64,32 @@
             $Sizecount = $row->_user_size_count ?? DB::table('users')->where('company_id', $row->id)->count();
             $Sizecount = max(1, (int)$Sizecount);
             $agencyJobsCount = $row->_agency_jobs_count ?? GeneralMethod::agencyJobsCount($row->id);
-            $activeJobs = max(5, (int)($agencyJobsCount->all_jobs ?? 0));
+            $activeJobs = (int)($agencyJobsCount->all_jobs ?? 0);
+            $activeJobs = $activeJobs > 0 ? $activeJobs : 5;
             $agencyCandidatesCount = $row->_agency_candidates_count ?? GeneralMethod::agencyJobsCandidatesCount($row->id);
-            $all_candidates = max(8, (int)($agencyCandidatesCount->all_candidates ?? 0));
-            $all_candidate_bench = max(2, (int)($agencyCandidatesCount->all_candidate_bench ?? 0));
+            $all_candidates = (int)($agencyCandidatesCount->all_candidates ?? 0);
+            $all_candidates = $all_candidates > 0 ? $all_candidates : 8;
+            $all_candidate_bench = (int)($agencyCandidatesCount->all_candidate_bench ?? 0);
 
-            // Location Resolution
+            // Superadmin Verification Guard (Point 5)
+            $isSuperAdminVerified = ((int)($row->_account_verify ?? ($row->accountVerify ?? 0))) === 1;
+
+            // Location Resolution (City, State, Country)
             $locInfo = $row->_client_info ?? null;
-            if (!$locInfo) {
+            $cLocArray = $locInfo->client_location ?? [];
+            $cLocFirst = !empty($cLocArray[0]) ? (object)$cLocArray[0] : null;
+
+            if ($cLocFirst && !empty($cLocFirst->city_name)) {
+                $cityName = ucwords($cLocFirst->city_name);
+                $stateName = !empty($cLocFirst->state_name) ? ucwords($cLocFirst->state_name) : 'Uttar Pradesh';
+                $countryName = !empty($cLocFirst->country_name) ? ucwords($cLocFirst->country_name) : 'India';
+            } elseif (!$locInfo || empty($locInfo->city_name)) {
                 $clients = DB::table('clients')
                     ->where('company_id', '=', $row->id)
                     ->where('self_company', '=', 1)
                     ->first();
                 if ($clients) {
-                    $locInfo = DB::table('client_location')
+                    $dbLoc = DB::table('client_location')
                         ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
                         ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
                         ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
@@ -92,12 +104,25 @@
                         )
                         ->where('client_id', $clients->id)
                         ->first();
+                    $cityName = !empty($dbLoc->city_name) ? ucwords($dbLoc->city_name) : (!empty($dbLoc->city) ? ucwords($dbLoc->city) : 'Noida');
+                    $stateName = !empty($dbLoc->state_name) ? ucwords($dbLoc->state_name) : 'Uttar Pradesh';
+                    $countryName = !empty($dbLoc->country_name) ? ucwords($dbLoc->country_name) : 'India';
+                } else {
+                    $cityName = 'Noida';
+                    $stateName = 'Uttar Pradesh';
+                    $countryName = 'India';
                 }
+            } else {
+                $cityName = !empty($locInfo->city_name) ? ucwords($locInfo->city_name) : 'Noida';
+                $stateName = !empty($locInfo->state_name) ? ucwords($locInfo->state_name) : 'Uttar Pradesh';
+                $countryName = !empty($locInfo->country_name) ? ucwords($locInfo->country_name) : 'India';
             }
+            $countryCode = strtoupper(substr($countryName, 0, 2));
 
-            $cityName = !empty($locInfo->city_name) ? ucwords(substr($locInfo->city_name, 0, 16)) : 'National';
-            $countryName = !empty($locInfo->country_name) ? ucwords(substr($locInfo->country_name, 0, 16)) : 'India';
-            $countryCode = !empty($locInfo->country_name) ? strtoupper(substr($locInfo->country_name, 0, 2)) : 'IN';
+            // Serving Countries & Hover Tooltip
+            $servingCountries = !empty($row->_serving_countries) ? $row->_serving_countries : [$countryName];
+            $servingCount = count($servingCountries);
+            $servingCountriesList = htmlspecialchars(implode(', ', $servingCountries), ENT_QUOTES, 'UTF-8');
 
             // Dual Commercials: Full-Time + Contract Staffing
             $commFulltime = $row->_commercials_fulltime ?? null;
@@ -145,6 +170,34 @@
                 $contractFormatted = ($ctCurSymbol === '$') ? '$35 / Hr' : '₹500 / Hr';
             }
 
+            // Commercial Models Availability (Point 3)
+            $hasFulltime = ($ftMinRate !== null && (float)$ftMinRate > 0) || !empty($commFulltime);
+            $hasContract = ($ctMinRate !== null && (float)$ctMinRate > 0) || !empty($commContract);
+            if (!$hasFulltime && !$hasContract) {
+                $hasFulltime = true;
+            }
+
+            // Agency Terms Payload for Terms Drawer
+            $termsPayload = [
+                'agency_id' => $row->id,
+                'agency_name' => $row->company_name,
+                'logo' => $logo_path,
+                'is_verified' => $isSuperAdminVerified,
+                'has_fulltime' => $hasFulltime,
+                'fulltime_rate' => $fulltimeFormatted,
+                'has_contract' => $hasContract,
+                'contract_rate' => $contractFormatted,
+                'ft_replacement_days' => @$commFulltime->minimum_rate_type->replacement_period_days ?: 90,
+                'ft_payment_days' => @$commFulltime->minimum_rate_type->payment_terms_days ?: 30,
+                'ct_replacement_days' => @$commContract->minimum_rate_type->replacement_period_days ?: 30,
+                'ct_payment_days' => @$commContract->minimum_rate_type->payment_terms_days ?: 15,
+                'industry' => !empty($ind_name) ? $ind_name : 'Staffing & IT',
+                'location' => "{$cityName}, {$stateName}, {$countryName}",
+                'serving_countries' => $servingCountries,
+                'custom_terms' => $row->_company_terms->agency_offer_terms ?? ($row->_company_terms->terms ?? ''),
+            ];
+            $termsJsonAttr = htmlspecialchars(json_encode($termsPayload), ENT_QUOTES, 'UTF-8');
+
             // Timezone formatted Last Active (Rule 24)
             if (!empty($row->last_login)) {
                 $lastLoginFormatted = Carbon::parse($row->last_login)->setTimezone($tenantTimezone)->format('d M y, h:i A T');
@@ -188,7 +241,7 @@
         @endphp
 
         <!-- ── PRIMARY AGENCY CARD (Modern Card + Sub-Card Enterprise Standard - Rule 20) ── -->
-        <div class="cl-primary-card tbl-r" data-agency-id="{{ $row->id }}" data-client-id="{{ $row->client_id }}" data-agency-skills="{{ $skillsJsonAttr }}" data-agency-name="{{ $row->company_name }}">
+        <div class="cl-primary-card tbl-r" data-agency-id="{{ $row->id }}" data-client-id="{{ $row->client_id }}" data-agency-skills="{!! $skillsJsonAttr !!}" data-agency-name="{{ $row->company_name }}" data-agency-terms="{!! $termsJsonAttr !!}">
             
             <!-- TOP CARD SYNERGY & TRUST RIBBON -->
             <div class="cl-card-ribbon">
@@ -217,13 +270,19 @@
             <!-- 4 SUB-CARDS GRID (RULE 20) -->
             <div class="cl-subcards-grid">
                 
-                <!-- SUB-CARD 1: Agency Identity & Domain -->
+                <!-- SUB-CARD 1: Agency Identity & Full Location Hierarchy -->
                 <div class="cl-subcard cl-subcard-identity">
                     <div class="cl-subcard-head">
-                        <span class="cl-subcard-title"><i class="fas fa-shield-alt text-primary me-1"></i>Agency Identity</span>
-                        <span class="badge badge-light-success py-0.5 px-2 font-size-10 font-weight-700">
-                            <i class="fas fa-check-circle text-success me-1"></i>Verified
-                        </span>
+                        <span class="cl-subcard-title"><i class="fas fa-shield-alt text-primary me-1"></i>Identity & Location</span>
+                        @if($isSuperAdminVerified)
+                            <span class="badge badge-light-success py-0.5 px-2 font-size-10 font-weight-700" title="Accredited & Verified by Superadmin">
+                                <i class="fas fa-check-circle text-success me-1"></i>Verified
+                            </span>
+                        @else
+                            <span class="badge badge-light-secondary py-0.5 px-2 font-size-10 font-weight-600 text-muted" title="Account verification pending review">
+                                <i class="fas fa-clock text-warning me-1"></i>Pending Verify
+                            </span>
+                        @endif
                     </div>
                     <div class="cl-identity-body">
                         <div class="agency-logo-wrap">
@@ -243,75 +302,81 @@
                                 <i class="fas fa-briefcase font-size-10 me-1 text-muted"></i>
                                 <span>{{ !empty($ind_name) ? ucwords(substr($ind_name, 0, 24)) : 'Staffing & IT' }}</span>
                             </div>
-                            <div class="cl-activity-meta">
-                                <span class="cl-status-dot-pulse"></span>
-                                <span class="cl-activity-lbl">Active {{ $lastLoginFormatted }}</span>
+                            
+                            <!-- Location: City, State, Country -->
+                            <div class="cl-identity-location mt-1" title="{{ $cityName }}, {{ $stateName }}, {{ $countryName }}">
+                                <i class="fas fa-map-marker-alt text-danger font-size-11 me-1"></i>
+                                <span class="font-weight-700 text-dark">{{ $cityName }}</span>, 
+                                <span class="text-secondary font-size-11">{{ $stateName }}</span>, 
+                                <span class="text-muted font-size-11">{{ $countryName }}</span>
+                            </div>
+
+                            <!-- Serving Countries with Mouse Hover Tooltip -->
+                            <div class="cl-identity-serving mt-1">
+                                <span class="cl-serving-pill" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $servingCountriesList }}">
+                                    <i class="fas fa-globe-americas text-primary me-1 font-size-10"></i>
+                                    Serving <strong>{{ $servingCount }}</strong> {{ $servingCount > 1 ? 'Countries' : 'Country' }}
+                                    <i class="fas fa-info-circle ms-0.5 text-muted font-size-9"></i>
+                                </span>
                             </div>
                         </div>
                     </div>
-                    <div class="cl-identity-footer">
-                        <a href="javascript:;" class="cl-profile-link show-detail-direct" data-row-id="{{ $row->client_id }}">
-                            <span>View Full Profile</span>
-                            <i class="fas fa-arrow-right font-size-10 ms-1"></i>
-                        </a>
-                    </div>
                 </div>
 
-                <!-- SUB-CARD 2: Location & Performance Scorecard (Point 4) -->
-                <div class="cl-subcard cl-subcard-location">
-                    <div class="cl-subcard-head">
-                        <span class="cl-subcard-title"><i class="fas fa-map-marker-alt text-danger me-1"></i>Location & SLA</span>
-                        <span class="cl-loc-badge">{{ $cityName }}, {{ $countryCode }}</span>
-                    </div>
-                    <div class="cl-scorecard-body">
-                        <div class="cl-score-row">
-                            <span class="score-lbl"><i class="fas fa-clock text-amber-500 font-size-10 me-1"></i>Shortlist SLA:</span>
-                            <span class="score-val sla-pill">⚡ 36h First TAT</span>
-                        </div>
-                        <div class="cl-score-row">
-                            <span class="score-lbl"><i class="fas fa-bullseye text-emerald-500 font-size-10 me-1"></i>Quality Ratio:</span>
-                            <span class="score-val">1 : 3 Submissions</span>
-                        </div>
-                        <div class="cl-score-row">
-                            <span class="score-lbl"><i class="fas fa-user-check text-primary font-size-10 me-1"></i>Joiner Rate:</span>
-                            <span class="score-val text-success font-weight-700">94% Accepted</span>
-                        </div>
-                    </div>
-                    <div class="cl-scorecard-footer">
-                        <span>Recruiters: <strong>{{ $Sizecount }} Active</strong></span>
-                        <span class="text-amber-600 font-weight-600">★ 4.9 (24 Reviews)</span>
-                    </div>
-                </div>
-
-                <!-- SUB-CARD 3: Dual Commercials (Full-Time + Contract Staffing) -->
+                <!-- SUB-CARD 2: Adaptive Commercials & Agency Terms Drawer Trigger -->
                 <div class="cl-subcard cl-subcard-rates">
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title"><i class="fas fa-file-invoice-dollar text-success me-1"></i>Commercials</span>
                         <span class="badge badge-light-success py-0.5 px-2 font-size-10 font-weight-700">Pre-Agreed</span>
                     </div>
-                    <div class="cl-dual-rates-grid">
-                        <!-- Full-Time Box -->
-                        <div class="cl-rate-box fulltime">
-                            <div class="rate-box-tag ft">Full-Time</div>
-                            <div class="rate-box-val">{{ $fulltimeFormatted }}</div>
-                            <div class="rate-box-desc">Onetime Success Fee</div>
-                        </div>
-                        <!-- Contract Staffing Box -->
-                        <div class="cl-rate-box contract">
-                            <div class="rate-box-tag ct">Contract</div>
-                            <div class="rate-box-val">{{ $contractFormatted }}</div>
-                            <div class="rate-box-desc">{{ $ctModeText === 'Hr' ? 'Hourly Billed' : 'Monthly Net-15' }}</div>
-                        </div>
-                    </div>
-                    <div class="cl-rates-footer">
-                        <span>Zero Upfront • Contingency Model</span>
+                    <div class="cl-rates-content-wrap">
+                        @if($hasFulltime && $hasContract)
+                            <!-- Dual Mode: Both Fulltime & Contract -->
+                            <div class="cl-dual-rates-grid">
+                                <div class="cl-rate-box fulltime">
+                                    <div class="rate-box-tag ft">Full-Time</div>
+                                    <div class="rate-box-val">{{ $fulltimeFormatted }}</div>
+                                    <div class="rate-box-desc">Onetime Success Fee</div>
+                                </div>
+                                <div class="cl-rate-box contract">
+                                    <div class="rate-box-tag ct">Contract</div>
+                                    <div class="rate-box-val">{{ $contractFormatted }}</div>
+                                    <div class="rate-box-desc">{{ $ctModeText === 'Hr' ? 'Hourly Billed' : 'Monthly Net-15' }}</div>
+                                </div>
+                            </div>
+                        @elseif($hasFulltime)
+                            <!-- Permanent Only Mode -->
+                            <div class="cl-single-rate-box fulltime">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="rate-box-tag ft">Permanent Only</span>
+                                    <span class="font-size-10 text-muted font-weight-600">Direct Hire</span>
+                                </div>
+                                <div class="rate-box-val font-size-14">{{ $fulltimeFormatted }}</div>
+                                <div class="rate-box-desc">Onetime Contingent Success Fee • 90-Day Free Replacement</div>
+                            </div>
+                        @else
+                            <!-- Contract Only Mode -->
+                            <div class="cl-single-rate-box contract">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="rate-box-tag ct">Contract Only</span>
+                                    <span class="font-size-10 text-muted font-weight-600">Staff Augmentation</span>
+                                </div>
+                                <div class="rate-box-val font-size-14">{{ $contractFormatted }}</div>
+                                <div class="rate-box-desc">{{ $ctModeText === 'Hr' ? 'Hourly Billed' : 'Monthly Net-15' }} • Pre-Vetted Talent</div>
+                            </div>
+                        @endif
+
+                        <!-- Agency Terms Drawer Button -->
+                        <button type="button" class="btn btn-xs btn-light-primary w-100 mt-2 cl-view-terms-btn" onclick="openAgencyTermsDrawer({{ $row->id }})">
+                            <i class="fas fa-file-contract me-1"></i>View Agency Terms →
+                        </button>
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: Talent Supply & In-Card Action Hub (Key Change!) -->
-                <div class="cl-subcard cl-subcard-talent cl-subcard-action-hub">
+                <!-- SUB-CARD 3: Separate Jobs & Talent Supply Sub-Card -->
+                <div class="cl-subcard cl-subcard-talent">
                     <div class="cl-subcard-head">
-                        <span class="cl-subcard-title"><i class="fas fa-users-cog text-warning me-1"></i>Talent Supply</span>
+                        <span class="cl-subcard-title"><i class="fas fa-users-cog text-warning me-1"></i>Jobs & Talent Supply</span>
                         <span class="font-size-10 text-muted font-weight-600">Live Pool</span>
                     </div>
                     <div class="cl-talent-stats-grid">
@@ -323,23 +388,81 @@
                             <div class="stat-num text-info">{{ $all_candidates }}</div>
                             <div class="stat-lbl"><i class="fas fa-user-friends font-size-10 me-1"></i>Profiles</div>
                         </div>
-                        <!-- Point 2: Clickable Bench Candidate Preview Drawer -->
-                        <div class="talent-stat-box bench cl-bench-trigger" onclick="openAgencyBenchDrawer({{ $row->id }}, '{{ addslashes($row->company_name) }}', {{ $all_candidate_bench }})" title="Click to preview pre-vetted bench profiles">
-                            <div class="stat-num text-warning">⚡ {{ $all_candidate_bench }}</div>
-                            <div class="stat-lbl text-warning font-weight-700"><u>Bench 👁️</u></div>
-                        </div>
+                        <!-- Bench Box (Context-Aware: Clickable only if Bench > 0) -->
+                        @if($all_candidate_bench > 0)
+                            <div class="talent-stat-box bench cl-bench-trigger" onclick="openAgencyBenchDrawer({{ $row->id }}, '{{ addslashes($row->company_name) }}', {{ $all_candidate_bench }})" title="Click to preview pre-vetted bench profiles">
+                                <div class="stat-num text-warning">⚡ {{ $all_candidate_bench }}</div>
+                                <div class="stat-lbl text-warning font-weight-700"><u>Bench 👁️</u></div>
+                            </div>
+                        @else
+                            <div class="talent-stat-box disabled" title="No bench candidates currently listed">
+                                <div class="stat-num text-muted">0</div>
+                                <div class="stat-lbl text-muted">Bench</div>
+                            </div>
+                        @endif
                     </div>
+                    <div class="cl-talent-supply-note mt-2">
+                        <i class="fas fa-check-circle text-success font-size-10 me-1"></i>
+                        <span>Domain verified candidate pipeline</span>
+                    </div>
+                </div>
 
-                    <!-- PRIMARY ACTION BUTTON RIGHT INSIDE SUB-CARD 4! -->
-                    <div class="cl-card-action-wrap">
-                        {!! $actionBtnHtml !!}
-                        <div class="cl-action-footnote">
+                <!-- SUB-CARD 4: Separate Partnership & Action Hub Sub-Card -->
+                <div class="cl-subcard cl-subcard-action-hub">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title"><i class="fas fa-handshake text-info me-1"></i>Partnership & Action</span>
+                        <span class="badge badge-light-primary py-0.5 px-2 font-size-10 font-weight-700">Connect</span>
+                    </div>
+                    <div class="cl-action-hub-body">
+                        <div class="cl-action-team-meta">
+                            <i class="fas fa-user-tie text-primary font-size-11 me-1"></i>
+                            <span class="font-size-11 text-muted">Capacity: <strong>{{ $Sizecount }} Active Recruiters</strong></span>
+                        </div>
+
+                        <!-- Action Button (Send / Cancel / Connected) -->
+                        <div class="cl-card-action-wrap mt-2">
+                            {!! $actionBtnHtml !!}
+                        </div>
+
+                        <div class="cl-action-footnote mt-2">
                             <i class="fas fa-bolt text-warning font-size-10 me-1"></i>Instant SLA Alert to Lead Partner
                         </div>
                     </div>
                 </div>
 
             </div>
+
+            <!-- ── BOTTOM FOOTER ACTIVITY STRIP (Rule 20 Enterprise Standard) ── -->
+            <div class="cl-card-footer-strip">
+                <div class="cl-footer-strip-left">
+                    <div class="cl-footer-item">
+                        <span class="cl-status-dot-pulse"></span>
+                        <span class="cl-activity-lbl">Active {{ $lastLoginFormatted }}</span>
+                    </div>
+                    <span class="cl-footer-divider">•</span>
+                    <div class="cl-footer-item">
+                        <i class="fas fa-clock text-amber-500 font-size-10 me-1"></i>
+                        <span>Avg SLA: <strong>~36-48h First TAT</strong></span>
+                    </div>
+                    <span class="cl-footer-divider">•</span>
+                    <div class="cl-footer-item">
+                        @if($isSuperAdminVerified)
+                            <i class="fas fa-shield-alt text-success font-size-10 me-1"></i>
+                            <span class="text-success font-weight-600">Marketplace Accredited</span>
+                        @else
+                            <i class="fas fa-info-circle text-muted font-size-10 me-1"></i>
+                            <span class="text-muted">Onboarding Partner</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="cl-footer-strip-right">
+                    <a href="javascript:;" class="cl-profile-link show-detail-direct" data-row-id="{{ $row->client_id }}">
+                        <span>View Full Profile</span>
+                        <i class="fas fa-arrow-right font-size-10 ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
         </div>
     @endforeach
 @else

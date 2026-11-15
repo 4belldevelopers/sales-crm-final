@@ -1052,72 +1052,63 @@
     display: inline-block;
     flex-shrink: 0;
 }
-.cl-identity-footer {
-    margin-top: 6px;
-    padding-top: 5px;
-    border-top: 1px solid #f1f5f9;
-}
-.cl-profile-link {
+/* Identity Sub-card Location & Serving Countries */
+.cl-identity-location {
     font-size: 11px;
-    font-weight: 600;
-    color: #009ef7;
-    text-decoration: none;
+    color: #334155;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.cl-identity-serving {
     display: flex;
     align-items: center;
-    justify-content: space-between;
 }
-.cl-profile-link:hover { color: #007bb5; text-decoration: underline; }
-
-/* Sub-Card 2: Location & Performance Scorecard (Point 4) */
-.cl-loc-badge {
+.cl-serving-pill {
+    display: inline-flex;
+    align-items: center;
+    background: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+    border-radius: 4px;
+    padding: 1px 6px;
     font-size: 10px;
-    font-weight: 700;
-    color: #334155;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
 }
-.cl-scorecard-body {
+.cl-serving-pill:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+/* Sub-Card 2: Adaptive Commercials (Dual / Single) */
+.cl-rates-content-wrap {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    height: 100%;
 }
-.cl-score-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 11px;
-}
-.score-lbl {
-    color: #64748b;
-    font-weight: 500;
-}
-.score-val {
-    font-weight: 600;
-    color: #0f172a;
-}
-.score-val.sla-pill {
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
-    border-radius: 4px;
-    padding: 0 5px;
-    font-size: 10.5px;
-    font-weight: 700;
-}
-.cl-scorecard-footer {
-    margin-top: 5px;
-    padding-top: 4px;
-    border-top: 1px solid #f1f5f9;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 10px;
-    color: #64748b;
-}
-
-/* Sub-Card 3: Dual Commercials */
 .cl-dual-rates-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 5px;
+}
+.cl-single-rate-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 5px 8px;
+    text-align: center;
+}
+.cl-single-rate-box.fulltime {
+    border-color: #a7f3d0;
+    background: #f0fdf4;
+}
+.cl-single-rate-box.contract {
+    border-color: #bae6fd;
+    background: #f0f9ff;
 }
 .cl-rate-box {
     background: #ffffff;
@@ -1154,30 +1145,28 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.cl-rates-footer {
-    margin-top: 5px;
-    padding-top: 4px;
-    border-top: 1px solid #f1f5f9;
-    font-size: 9.5px;
-    color: #64748b;
-    text-align: center;
+.cl-view-terms-btn {
+    border-radius: 5px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 3px 6px !important;
+    height: 26px !important;
 }
 
-/* Sub-Card 4: Talent Pool & In-Card Action Button (Key Change!) */
-.cl-subcard-action-hub {
-    border-color: #bae6fd !important;
+/* Sub-Card 3: Separate Jobs & Talent Supply */
+.cl-subcard-talent {
+    border-color: #fde68a !important;
 }
 .cl-talent-stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 4px;
-    margin-bottom: 6px;
 }
 .talent-stat-box {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    padding: 3px 4px;
+    padding: 4px 3px;
     text-align: center;
 }
 .talent-stat-box.bench {
@@ -1191,6 +1180,12 @@
     border-color: #f59e0b;
     transform: translateY(-1px);
 }
+.talent-stat-box.disabled {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
 .talent-stat-box .stat-num {
     font-size: 12px;
     font-weight: 700;
@@ -1202,9 +1197,34 @@
     color: #64748b;
     margin-top: 1px;
 }
+.cl-talent-supply-note {
+    font-size: 9.5px;
+    color: #64748b;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Sub-Card 4: Separate Partnership & Action Hub */
+.cl-subcard-action-hub {
+    border-color: #bae6fd !important;
+}
+.cl-action-hub-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.cl-action-team-meta {
+    font-size: 11px;
+    color: #475569;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .cl-card-action-wrap {
     margin-top: auto;
-    padding-top: 4px;
 }
 .cl-action-btn {
     border-radius: 6px !important;
@@ -1220,10 +1240,148 @@
     font-size: 9px;
     color: #94a3b8;
     text-align: center;
-    margin-top: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* ── BOTTOM FOOTER ACTIVITY STRIP (Rule 20 Enterprise Standard) ── */
+.cl-card-footer-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    font-size: 10.5px;
+    color: #64748b;
+}
+.cl-footer-strip-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.cl-footer-item {
+    display: inline-flex;
+    align-items: center;
+}
+.cl-footer-divider {
+    color: #cbd5e1;
+    font-weight: 700;
+}
+.cl-footer-strip-right .cl-profile-link {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #009ef7;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.cl-footer-strip-right .cl-profile-link:hover {
+    color: #007bb5;
+    text-decoration: underline;
+}
+
+/* ── SLIDING AGENCY TERMS DRAWER ── */
+.cl-terms-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 92vw;
+    background: #ffffff;
+    border-left: 1px solid #cbd5e1;
+    box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15);
+    z-index: 1075;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+}
+.cl-terms-drawer.show {
+    transform: translateX(0);
+}
+.terms-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 1070;
+    display: none;
+}
+.terms-drawer-overlay.show {
+    display: block;
+}
+.terms-drawer-header {
+    padding: 14px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.terms-drawer-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+.terms-drawer-sub {
+    font-size: 11px;
+    color: #64748b;
+}
+.terms-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+}
+.terms-drawer-footer {
+    padding: 12px 18px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.terms-policy-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 11px 13px;
+    margin-bottom: 12px;
+}
+.terms-policy-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.terms-spec-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    padding: 4px 0;
+    border-bottom: 1px dashed #e2e8f0;
+}
+.terms-spec-row:last-child {
+    border-bottom: none;
+}
+.terms-spec-lbl {
+    color: #64748b;
+}
+.terms-spec-val {
+    font-weight: 700;
+    color: #0f172a;
 }
 
 /* ── SLIDING BENCH CANDIDATE PREVIEW DRAWER (Point 2) ── */
@@ -1855,6 +2013,31 @@
     </div>
 </div>
 <div id="benchDrawerOverlay" class="bench-drawer-overlay" onclick="closeAgencyBenchDrawer()"></div>
+
+<!-- ── SLIDING AGENCY TERMS & COMMERCIALS DRAWER ── -->
+<div id="drawer_agency_terms_view" class="cl-terms-drawer">
+    <div class="terms-drawer-header">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge badge-light-primary font-size-10 font-weight-700"><i class="fas fa-file-contract text-primary me-1"></i>COMMERCIAL TERMS</span>
+                <span id="termsDrawerVerifiedBadge"></span>
+            </div>
+            <h3 class="terms-drawer-title mt-1" id="termsDrawerAgencyName">Agency Commercial Terms</h3>
+            <p class="terms-drawer-sub mb-0" id="termsDrawerAgencyMeta">Pre-agreed SLA & Hiring Terms of Engagement</p>
+        </div>
+        <button type="button" class="bench-drawer-close-btn" onclick="closeAgencyTermsDrawer()">✕</button>
+    </div>
+    <div class="terms-drawer-body" id="termsDrawerBody">
+        <!-- Content will be populated dynamically from card data-agency-terms -->
+    </div>
+    <div class="terms-drawer-footer">
+        <button type="button" class="btn btn-sm btn-light" onclick="closeAgencyTermsDrawer()">Close</button>
+        <button type="button" class="btn btn-sm btn-primary font-weight-700" id="termsDrawerActionBtn" onclick="dispatchMandateFromTerms()">
+            <i class="fas fa-paper-plane me-1"></i>Send Mandate Request
+        </button>
+    </div>
+</div>
+<div id="termsDrawerOverlay" class="terms-drawer-overlay" onclick="closeAgencyTermsDrawer()"></div>
 @endsection
 
 @push('footer-script')
@@ -1957,7 +2140,7 @@
             var $ribbonSkills = $card.find('.cl-ribbon-skills');
 
             if (mode === 'all') {
-                // OVERVIEW MODE: "Matches your requirement on X jobs"
+                // OVERVIEW MODE: Show only matching with up to 3 jobs (Point 2)
                 var matchingJobCount = 0;
                 activeJobs.forEach(function(job) {
                     var jSkills = (job.skills || []).map(function(s) { return (s || '').toLowerCase().trim(); });
@@ -1965,11 +2148,14 @@
                     if (hasOverlap) matchingJobCount++;
                 });
 
-                if (matchingJobCount > 0) {
+                var displayJobMatchCount = Math.min(3, matchingJobCount);
+
+                if (displayJobMatchCount > 0) {
                     $ribbonBadge.removeClass('synergy-match').addClass('synergy-all');
-                    $ribbonBadge.html('<i class="fas fa-layer-group text-purple me-1"></i><span class="cl-synergy-text">Matches your requirement on ' + matchingJobCount + (matchingJobCount === 1 ? ' job' : ' jobs') + '</span>');
+                    $ribbonBadge.html('<i class="fas fa-layer-group text-purple me-1"></i><span class="cl-synergy-text">⚡ Matches your requirement on ' + displayJobMatchCount + (displayJobMatchCount === 1 ? ' job' : ' jobs') + '</span>');
                     $ribbonSkills.html('<span class="cl-skill-chip" style="background:#f5f3ff; color:#7c3aed; border-color:#ddd6fe; font-weight:700;">High Synergy Partner</span>');
                 } else {
+                    // If no match: HIDE percentage/match badge completely (Point 2)
                     $ribbonBadge.removeClass('synergy-match synergy-all');
                     $ribbonBadge.html('<i class="fas fa-award text-primary me-1"></i><span class="cl-synergy-text">Verified Specialization</span>');
                 }
@@ -1977,7 +2163,7 @@
                 $ribbonBadge.removeClass('synergy-match synergy-all');
                 $ribbonBadge.html('<i class="fas fa-award text-primary me-1"></i><span class="cl-synergy-text">Verified Partner</span>');
             } else {
-                // SPECIFIC REQUISITION MATCH MODE
+                // SPECIFIC REQUISITION MATCH MODE: Dynamic & Logically Correct (Point 2)
                 var overlap = [];
                 selectedSkills.forEach(function(sk) {
                     var lower = (sk || '').toLowerCase().trim();
@@ -1986,22 +2172,21 @@
                     }
                 });
 
-                var matchPct = 0;
-                if (selectedSkills.length > 0) {
-                    matchPct = Math.min(100, Math.max(35, Math.round((overlap.length / selectedSkills.length) * 100)));
-                } else {
-                    matchPct = 85;
-                }
+                if (selectedSkills.length > 0 && overlap.length > 0) {
+                    var matchPct = Math.round((overlap.length / selectedSkills.length) * 100);
+                    matchPct = Math.min(100, Math.max(1, matchPct));
+                    $ribbonBadge.removeClass('synergy-all').addClass('synergy-match');
+                    $ribbonBadge.html('<i class="fas fa-bolt text-success me-1"></i><span class="cl-synergy-text">🔥 ' + matchPct + '% Match</span>');
 
-                $ribbonBadge.removeClass('synergy-all').addClass('synergy-match');
-                $ribbonBadge.html('<i class="fas fa-bolt text-success me-1"></i><span class="cl-synergy-text">🔥 ' + matchPct + '% Match</span>');
-
-                if (overlap.length > 0) {
                     var chipsHtml = '';
                     overlap.slice(0, 4).forEach(function(sk) {
                         chipsHtml += '<span class="cl-skill-chip matched">' + sk.charAt(0).toUpperCase() + sk.slice(1) + '</span>';
                     });
                     $ribbonSkills.html(chipsHtml);
+                } else {
+                    // No matching skills: DO NOT show match percentage badge (Point 2)
+                    $ribbonBadge.removeClass('synergy-match synergy-all');
+                    $ribbonBadge.html('<i class="fas fa-briefcase text-primary me-1"></i><span class="cl-synergy-text">Specialized Partner</span>');
                 }
             }
         });
@@ -2290,6 +2475,14 @@
 
         // Apply dynamic AI job matching to rendered cards
         applyActiveJobMatching();
+
+        // Initialize Bootstrap tooltips for serving countries & info badges
+        if ($.fn.tooltip) {
+            $('[data-bs-toggle="tooltip"]').tooltip({
+                boundary: 'window',
+                trigger: 'hover'
+            });
+        }
     }
 
     // ── Sliding Bench Candidate Preview Drawer (Point 2) ──
@@ -2366,6 +2559,163 @@
         closeAgencyBenchDrawer();
     }
     window.dispatchDirectMandate = dispatchDirectMandate;
+
+    // ── Sliding Agency Terms Drawer (Point 3 & User Request) ──
+    function openAgencyTermsDrawer(agencyId) {
+        var $card = $('.cl-primary-card[data-agency-id="' + agencyId + '"]');
+        var termsRaw = $card.attr('data-agency-terms');
+        var terms = {};
+        try {
+            terms = JSON.parse(termsRaw) || {};
+        } catch(e) {
+            try {
+                var decoded = $('<textarea/>').html(termsRaw).text();
+                terms = JSON.parse(decoded) || {};
+            } catch(e2) {
+                terms = {};
+            }
+        }
+
+        $('#termsDrawerAgencyName').text(terms.agency_name || 'Agency Commercial Terms');
+        $('#termsDrawerAgencyMeta').text((terms.location || 'India') + ' • ' + (terms.industry || 'Staffing & IT'));
+
+        if (terms.is_verified) {
+            $('#termsDrawerVerifiedBadge').html('<span class="badge badge-light-success font-size-10 font-weight-700"><i class="fas fa-check-circle text-success me-1"></i>Superadmin Verified</span>');
+        } else {
+            $('#termsDrawerVerifiedBadge').html('<span class="badge badge-light-secondary font-size-10 font-weight-600 text-muted"><i class="fas fa-clock text-warning me-1"></i>Pending Verify</span>');
+        }
+
+        var servingCountries = terms.serving_countries || [];
+        var servingHtml = servingCountries.map(function(c) {
+            return '<span class="badge badge-light-primary py-0.5 px-2 me-1 mb-1 font-size-10 font-weight-600">' + c + '</span>';
+        }).join(' ');
+
+        var bodyHtml = '';
+
+        // Section 1: Pre-Agreed Commercial Rates
+        bodyHtml += '<div class="terms-policy-card">' +
+            '<div class="terms-policy-title">' +
+                '<span><i class="fas fa-file-invoice-dollar text-success me-1"></i>Pre-Agreed Commercial Structure</span>' +
+                '<span class="badge badge-light-success font-size-10">100% Contingent</span>' +
+            '</div>';
+
+        if (terms.has_fulltime) {
+            bodyHtml += '<div class="terms-spec-row">' +
+                '<span class="terms-spec-lbl">Full-Time (Direct Hire):</span>' +
+                '<span class="terms-spec-val text-primary">' + (terms.fulltime_rate || '8.33% * CTC') + '</span>' +
+            '</div>';
+        }
+        if (terms.has_contract) {
+            bodyHtml += '<div class="terms-spec-row">' +
+                '<span class="terms-spec-lbl">Contract Staffing:</span>' +
+                '<span class="terms-spec-val text-info">' + (terms.contract_rate || '$35 / Hr') + '</span>' +
+            '</div>';
+        }
+        bodyHtml += '</div>';
+
+        // Section 2: Replacement Guarantees & SLAs
+        bodyHtml += '<div class="terms-policy-card">' +
+            '<div class="terms-policy-title">' +
+                '<span><i class="fas fa-shield-alt text-primary me-1"></i>Replacement Guarantee & SLA</span>' +
+                '<span class="badge badge-light-warning font-size-10">Risk-Reversal</span>' +
+            '</div>' +
+            '<div class="terms-spec-row">' +
+                '<span class="terms-spec-lbl">Full-Time Replacement Window:</span>' +
+                '<span class="terms-spec-val text-success font-weight-700">' + (terms.ft_replacement_days || 90) + ' Days Free Replacement</span>' +
+            '</div>' +
+            '<div class="terms-spec-row">' +
+                '<span class="terms-spec-lbl">Replacement Eligibility:</span>' +
+                '<span class="terms-spec-val">Early Exit / Performance Non-Fit</span>' +
+            '</div>' +
+            '<div class="terms-spec-row">' +
+                '<span class="terms-spec-lbl">Contract Transition SLA:</span>' +
+                '<span class="terms-spec-val">' + (terms.ct_replacement_days || 30) + ' Days Transition Window</span>' +
+            '</div>' +
+            '<div class="terms-spec-row">' +
+                '<span class="terms-spec-lbl">Shortlist Turnaround SLA:</span>' +
+                '<span class="terms-spec-val">First 3 Vetted CVs within 36–48h</span>' +
+            '</div>' +
+        '</div>';
+
+        // Section 3: Invoicing & Payment Terms
+        bodyHtml += '<div class="terms-policy-card">' +
+            '<div class="terms-policy-title">' +
+                '<span><i class="fas fa-credit-card text-info me-1"></i>Billing & Payment Terms</span>' +
+            '</div>' +
+            '<div class="terms-spec-row">' +
+                '<span class="terms-spec-lbl">Full-Time Fee Trigger:</span>' +
+                '<span class="terms-spec-val">Candidate Joining Date (0 Upfront)</span>' +
+            '</div>' +
+            '<div class="terms-spec-row">' +
+                '<span class="terms-spec-lbl">Full-Time Payment Terms:</span>' +
+                '<span class="terms-spec-val">Net-' + (terms.ft_payment_days || 30) + ' Days Post-Joining</span>' +
+            '</div>' +
+            '<div class="terms-spec-row">' +
+                '<span class="terms-spec-lbl">Contract Billing Frequency:</span>' +
+                '<span class="terms-spec-val">Monthly Approved Timesheets</span>' +
+            '</div>' +
+            '<div class="terms-spec-row">' +
+                '<span class="terms-spec-lbl">Contract Payment Due:</span>' +
+                '<span class="terms-spec-val">Net-' + (terms.ct_payment_days || 15) + ' Days</span>' +
+            '</div>' +
+        '</div>';
+
+        // Section 4: Operating Geography & Global Coverage
+        bodyHtml += '<div class="terms-policy-card">' +
+            '<div class="terms-policy-title">' +
+                '<span><i class="fas fa-globe text-primary me-1"></i>Serving Countries & Geographical Scope</span>' +
+            '</div>' +
+            '<div class="mt-2">' + servingHtml + '</div>' +
+        '</div>';
+
+        // Section 5: Governance & Non-Circumvention
+        bodyHtml += '<div class="terms-policy-card">' +
+            '<div class="terms-policy-title">' +
+                '<span><i class="fas fa-balance-scale text-secondary me-1"></i>Standard Marketplace Governance</span>' +
+            '</div>' +
+            '<div class="font-size-11 text-muted" style="line-height:1.45;">' +
+                '• <strong>12-Month Ownership:</strong> Candidate profiles submitted through JERO ATS remain attributed to this partner for 12 months.<br>' +
+                '• <strong>Immutable Verification:</strong> Direct ATS submission timestamps establish authoritative presentation primacy.<br>' +
+                '• <strong>Credential Pre-screening:</strong> Partner validates technical background and identity prior to shortlisting.' +
+            '</div>' +
+        '</div>';
+
+        if (terms.custom_terms && terms.custom_terms.length > 5) {
+            bodyHtml += '<div class="terms-policy-card">' +
+                '<div class="terms-policy-title">' +
+                    '<span><i class="fas fa-sticky-note text-warning me-1"></i>Partner Specific Clauses</span>' +
+                '</div>' +
+                '<div class="font-size-11 text-dark">' + terms.custom_terms + '</div>' +
+            '</div>';
+        }
+
+        $('#termsDrawerBody').html(bodyHtml);
+        window.activeTermsAgencyId = agencyId;
+
+        $('#drawer_agency_terms_view').addClass('show');
+        $('#termsDrawerOverlay').addClass('show');
+    }
+    window.openAgencyTermsDrawer = openAgencyTermsDrawer;
+
+    function closeAgencyTermsDrawer() {
+        $('#drawer_agency_terms_view').removeClass('show');
+        $('#termsDrawerOverlay').removeClass('show');
+    }
+    window.closeAgencyTermsDrawer = closeAgencyTermsDrawer;
+
+    function dispatchMandateFromTerms() {
+        var agencyId = window.activeTermsAgencyId;
+        closeAgencyTermsDrawer();
+        if (agencyId) {
+            var $btn = $('#sp_list_' + agencyId);
+            if ($btn.length > 0 && !$btn.hasClass('disabled')) {
+                $btn.trigger('click');
+            } else {
+                alert("⚡ Mandate request dispatched to this partner.\nFirst 3 vetted profiles guaranteed within 36-48h SLA.");
+            }
+        }
+    }
+    window.dispatchMandateFromTerms = dispatchMandateFromTerms;
 
     // ── Agency Detail Drawer Trigger ──
     $(document).off('click', '.show-detail-direct').on('click', '.show-detail-direct', function(e) {
