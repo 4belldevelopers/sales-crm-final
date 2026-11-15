@@ -462,6 +462,34 @@ class FindAgencyService
         $batchCommercialsContractMap = ! empty($agencyIds) ? GeneralMethod::batchGetCommercialsData($agencyIds, 1) : [];
         $batchCommercialsFulltimeMap = ! empty($agencyIds) ? GeneralMethod::batchGetCommercialsData($agencyIds, 2) : [];
 
+        // Batch superadmin verification status and terms from companies table
+        $batchAccountVerify = [];
+        $batchCompanyTerms = [];
+        if (! empty($agencyIds)) {
+            $compRows = DB::table('companies')
+                ->whereIn('id', $agencyIds)
+                ->select('id', 'accountVerify', 'terms', 'agency_offer_terms')
+                ->get();
+            foreach ($compRows as $cr) {
+                $batchAccountVerify[$cr->id] = (int) $cr->accountVerify;
+                $batchCompanyTerms[$cr->id] = $cr;
+            }
+        }
+
+        // Batch serving countries from commericial_countries
+        $batchServingCountries = [];
+        if (! empty($agencyIds)) {
+            $scRows = DB::table('commericial_countries')
+                ->join('countries', 'countries.id', '=', 'commericial_countries.country_id')
+                ->whereIn('commericial_countries.company_id', $agencyIds)
+                ->select('commericial_countries.company_id', 'countries.country_name')
+                ->distinct()
+                ->get();
+            foreach ($scRows as $scr) {
+                $batchServingCountries[$scr->company_id][] = $scr->country_name;
+            }
+        }
+
         // Batch recruiter user counts
         $batchUserCounts = [];
         if (! empty($agencyIds)) {
@@ -507,6 +535,10 @@ class FindAgencyService
             $source['_minimum_rate_contract_type'] = $commContract ? $commContract->minimum_rate_type : null;
             $source['_minimum_rate_fulltime'] = $commFulltime ? $commFulltime->minimum_rate : null;
             $source['_minimum_rate_fulltime_type'] = $commFulltime ? $commFulltime->minimum_rate_type : null;
+
+            $source['_account_verify'] = $batchAccountVerify[$matchedCompanyId] ?? 0;
+            $source['_serving_countries'] = array_values(array_unique($batchServingCountries[$matchedCompanyId] ?? []));
+            $source['_company_terms'] = $batchCompanyTerms[$matchedCompanyId] ?? null;
 
             $data[] = $source;
         }
