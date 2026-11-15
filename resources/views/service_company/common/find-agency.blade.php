@@ -846,18 +846,18 @@
 /* 5 Discrete Sub-Cards Grid (Rule 20 Enterprise Standard - Compact & Identical Spacing) */
 .cl-subcards-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.1fr) !important;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.05fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 1.15fr) !important;
     gap: 7px !important;
     width: 100% !important;
     align-items: stretch !important;
 }
 
-/* Sub-Card Base Container */
+/* Sub-Card Base Container (Decent Enterprise Height Reduction) */
 .cl-subcard {
     background: #f8fafc !important;
-    border: 1px solid #edf2f7 !important;
-    border-radius: 7px !important;
-    padding: 5px 7px !important;
+    border: 1px solid #eef2f6 !important;
+    border-radius: 8px !important;
+    padding: 7px 9px !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
@@ -865,333 +865,323 @@
     box-sizing: border-box !important;
     position: relative !important;
     height: 100% !important;
+    min-height: 80px !important;
 }
 
-/* Mandatory Dedicated Header Background (Rule 20) */
+/* Mandatory Dedicated Header Standard (Rule 20) */
 .cl-subcard-head {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 3px 6px !important;
-    margin: -5px -7px 5px -7px !important;
-    background: #f1f5f9 !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-    border-radius: 6px 6px 0 0 !important;
-    min-height: 22px !important;
-    height: 22px !important;
+    padding: 0 0 4px 0 !important;
+    margin: 0 0 5px 0 !important;
+    background: transparent !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    border-radius: 0 !important;
+    min-height: 18px !important;
+    height: 18px !important;
 }
 .cl-subcard-title {
-    font-size: 9px !important;
+    font-size: 10px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.3px !important;
-    color: #475569 !important;
+    letter-spacing: 0.03em !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1 !important;
+}
+.cl-subcard-badges {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+.cl-scope-pill {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    line-height: 1.2 !important;
+}
+.cl-scope-pill.pill-marketplace { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+.cl-scope-pill.pill-connected   { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+
+.cl-status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3.5px !important;
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    line-height: 1.2 !important;
+}
+.cl-status-pill.pill-active   { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+.cl-status-pill.pill-inactive { background: #fdf2f8 !important; color: #db2777 !important; border: 1px solid #fbcfe8 !important; }
+.cl-status-pill-dot {
+    width: 4.5px !important;
+    height: 4.5px !important;
+    border-radius: 50% !important;
+    background: currentColor !important;
+}
+
+/* Sub-Card 1: Agency Identity (Matches Attached Screenshot Design) */
+.cl-identity-body {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+}
+.cl-logo-box {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+}
+.cl-logo-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+.cl-initials-fallback {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+.cl-details-box {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    line-height: 1.25 !important;
+    flex: 1 !important;
+}
+.cl-name {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.2 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-decoration: none !important;
+}
+.cl-name:hover {
+    color: #009ef7 !important;
+    text-decoration: underline !important;
+}
+.cl-ind {
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    margin-top: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.15 !important;
+}
+.cl-size {
+    font-size: 10px !important;
+    color: #94a3b8 !important;
+    margin-top: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.15 !important;
+}
+
+/* Sub-Card 2: Location (Matches Attached Screenshot Design) */
+.cl-loc-body {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+}
+.cl-loc-pin {
+    color: #2563eb !important;
+    flex-shrink: 0 !important;
+    margin-top: 2px !important;
+}
+.cl-loc-lines {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    line-height: 1.25 !important;
+    flex: 1 !important;
+}
+.cl-loc-city {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.cl-loc-state {
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    line-height: 1.15 !important;
+    margin-top: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.cl-loc-country {
+    font-size: 10px !important;
+    color: #94a3b8 !important;
+    line-height: 1.15 !important;
+    margin-top: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.cl-serving-badge {
+    font-size: 8.5px !important;
+    font-weight: 600 !important;
+    background: #eff6ff !important;
+    color: #1e40af !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 4px !important;
+    padding: 1px 4px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+}
+
+/* Sub-Card 3: Adaptive Commercials (Dual / Single) */
+.cl-rates-content-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    height: 100% !important;
+}
+.cl-dual-rates-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 4px !important;
+}
+.cl-single-rate-box {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 5px !important;
+    padding: 3px 6px !important;
+    text-align: center !important;
+}
+.cl-single-rate-box.fulltime {
+    border-color: #a7f3d0 !important;
+    background: #f0fdf4 !important;
+}
+.cl-single-rate-box.contract {
+    border-color: #bae6fd !important;
+    background: #f0f9ff !important;
+}
+.cl-rate-box {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 5px !important;
+    padding: 2px 3px !important;
+    text-align: center !important;
+}
+.rate-box-tag {
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+    border-radius: 2px !important;
+    padding: 1px 2px !important;
+    line-height: 1 !important;
+    margin-bottom: 1px !important;
+}
+.rate-box-tag.ft { background: #ecfdf5 !important; color: #047857 !important; }
+.rate-box-tag.ct { background: #f0f9ff !important; color: #0284c7 !important; }
+.rate-box-val {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.rate-box-desc {
+    font-size: 7.5px !important;
+    color: #64748b !important;
+    margin-top: 1px !important;
+    line-height: 1 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
 
-/* Sub-Card 1: Agency Identity */
-.cl-identity-body {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
+/* Sub-Card 4: Talent Supply (Vertical Listings matching Location Rhythm) */
+.cl-talent-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2.5px !important;
+    min-width: 0 !important;
 }
-.agency-logo-wrap {
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
-    overflow: hidden;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+.cl-talent-line {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 10.5px !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    min-width: 0 !important;
 }
-.agency-logo-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.cl-talent-line strong {
+    font-weight: 700 !important;
+    font-size: 11.5px !important;
 }
-.agency-logo-initials {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 700;
+.cl-talent-line.cl-bench-trigger {
+    cursor: pointer !important;
 }
-.agency-meta-info {
-    min-width: 0;
-    flex: 1;
-}
-.agency-name {
-    font-size: 12px;
-    font-weight: 700;
-    color: #0f172a;
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-decoration: none;
-    line-height: 1.2;
-}
-.agency-name:hover {
-    color: #009ef7;
-    text-decoration: underline;
-}
-.agency-ind-pill {
-    font-size: 10px;
-    color: #64748b;
-    margin-top: 1px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.1;
-}
-.cl-identity-tagline {
-    display: flex;
-    align-items: center;
-    margin-top: 2px;
-}
-.cl-activity-meta {
-    font-size: 10px;
-    color: #64748b;
-    margin-top: 3px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-.cl-status-dot-pulse {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #10b981;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    display: inline-block;
-    flex-shrink: 0;
-}
-
-/* Sub-Card 2: Dedicated Location & Coverage */
-.cl-subcard-location {
-    border-color: #fecdd3 !important;
-}
-.cl-location-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-    min-width: 0;
-}
-.cl-loc-primary-row {
-    display: flex;
-    align-items: center;
-    font-size: 11.5px;
-    line-height: 1.2;
-    color: #0f172a;
-    min-width: 0;
-}
-.cl-loc-city {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.cl-loc-secondary-row {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #64748b;
-    font-size: 10px;
-    line-height: 1.2;
-}
-.cl-loc-serving-row {
-    margin-top: auto;
-    padding-top: 2px;
-}
-.cl-serving-pill {
-    display: inline-flex;
-    align-items: center;
-    background: #eff6ff;
-    color: #1e40af;
-    border: 1px solid #bfdbfe;
-    border-radius: 4px;
-    padding: 1px 5px;
-    font-size: 9.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-.cl-serving-pill:hover {
-    background: #dbeafe;
-    border-color: #93c5fd;
-    color: #1d4ed8;
-}
-
-/* Sub-Card 3: Adaptive Commercials (Dual / Single) */
-.cl-rates-content-wrap {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 100%;
-}
-.cl-dual-rates-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-}
-.cl-single-rate-box {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 5px;
-    padding: 3px 6px;
-    text-align: center;
-}
-.cl-single-rate-box.fulltime {
-    border-color: #a7f3d0;
-    background: #f0fdf4;
-}
-.cl-single-rate-box.contract {
-    border-color: #bae6fd;
-    background: #f0f9ff;
-}
-.cl-rate-box {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 5px;
-    padding: 2px 3px;
-    text-align: center;
-}
-.rate-box-tag {
-    font-size: 8px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    border-radius: 2px;
-    padding: 1px 2px;
-    line-height: 1;
-    margin-bottom: 1px;
-}
-.rate-box-tag.ft { background: #ecfdf5; color: #047857; }
-.rate-box-tag.ct { background: #f0f9ff; color: #0284c7; }
-.rate-box-val {
-    font-size: 11px;
-    font-weight: 700;
-    color: #0f172a;
-    line-height: 1.1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.rate-box-desc {
-    font-size: 7.5px;
-    color: #64748b;
-    margin-top: 1px;
-    line-height: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Sub-Card 4: Jobs & Talent Supply (Vertical Listings) */
-.cl-subcard-talent {
-    border-color: #fde68a !important;
-}
-.cl-talent-vertical-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2.5px;
-    margin-bottom: auto;
-}
-.cl-talent-vrow {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    padding: 2px 5px;
-    font-size: 10px;
-    min-height: 19px;
-    transition: all 0.15s ease;
-}
-.cl-talent-vrow .vrow-left {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-}
-.cl-talent-vrow .vrow-lbl {
-    font-size: 9.5px;
-    font-weight: 600;
-    color: #475569;
-    white-space: nowrap;
-}
-.cl-talent-vrow .vrow-val {
-    font-size: 10.5px;
-    line-height: 1.1;
-    white-space: nowrap;
-    margin-left: 4px;
-}
-.cl-talent-vrow.bench {
-    background: #fffbeb;
-    border-color: #fde68a;
-    cursor: pointer;
-}
-.cl-talent-vrow.bench:hover {
-    background: #fef3c7;
-    border-color: #f59e0b;
-}
-.cl-talent-vrow.disabled {
-    background: #f8fafc;
-    border-color: #e2e8f0;
-    opacity: 0.7;
-    cursor: default;
-}
-.cl-talent-supply-note {
-    font-size: 8px;
-    color: #64748b;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 2px;
+.cl-talent-line.cl-bench-trigger:hover strong,
+.cl-talent-line.cl-bench-trigger:hover span {
+    color: #d97706 !important;
 }
 
 /* Sub-Card 5: Separate Partnership & Action Hub */
-.cl-subcard-action-hub {
-    border-color: #bae6fd !important;
-}
 .cl-action-hub-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 100%;
-    padding: 2px 0;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    height: 100% !important;
+    padding: 2px 0 !important;
 }
 .cl-card-action-wrap {
-    margin-top: auto;
-    margin-bottom: auto;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
 }
 .cl-action-btn {
     border-radius: 6px !important;
     font-size: 11px !important;
     font-weight: 700 !important;
-    padding: 4px 8px !important;
-    height: 28px !important;
+    padding: 3px 8px !important;
+    height: 26px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 .cl-action-footnote {
-    font-size: 8.5px;
-    color: #94a3b8;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 2px;
+    font-size: 8px !important;
+    color: #94a3b8 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 2px !important;
 }
 
 /* ── BOTTOM FOOTER ACTIVITY STRIP (Rule 20 Enterprise Standard) ── */

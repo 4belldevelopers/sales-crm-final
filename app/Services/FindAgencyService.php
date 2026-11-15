@@ -468,7 +468,7 @@ class FindAgencyService
         if (! empty($agencyIds)) {
             $compRows = DB::table('companies')
                 ->whereIn('id', $agencyIds)
-                ->select('id', 'accountVerify', 'terms', 'agency_offer_terms')
+                ->select('id', 'accountVerify', 'terms', 'agency_offer_terms', 'company_size_from', 'company_size')
                 ->get();
             foreach ($compRows as $cr) {
                 $batchAccountVerify[$cr->id] = (int) $cr->accountVerify;
@@ -539,6 +539,8 @@ class FindAgencyService
             $source['_account_verify'] = $batchAccountVerify[$matchedCompanyId] ?? 0;
             $source['_serving_countries'] = array_values(array_unique($batchServingCountries[$matchedCompanyId] ?? []));
             $source['_company_terms'] = $batchCompanyTerms[$matchedCompanyId] ?? null;
+            $source['_company_size_from'] = $batchCompanyTerms[$matchedCompanyId]->company_size_from ?? null;
+            $source['_company_size'] = $batchCompanyTerms[$matchedCompanyId]->company_size ?? null;
 
             $data[] = $source;
         }
