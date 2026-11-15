@@ -195,9 +195,9 @@
             $displayManagerName = $limitWords($managerName . $extra, 20);
         @endphp
 
-        <!-- Master Primary Talent Card (Rule 20 Modern Card + Sub-Card Enterprise Standard) -->
+        <!-- Master Primary Talent Card (Rule 20 Modern 5-Subcard Layout) -->
         <article class="cd-talent-card" data-bench-row-id="{{ $row->id }}" data-candidate-id="{{ $row->id }}" style="border-left-color: {{ $statusBorderAccent }} !important;">
-            <!-- Upper Sub-Cards Grid (6 Discrete Sections) -->
+            <!-- Upper Sub-Cards Grid (5 Spacious Discrete Sections) -->
             <div class="cd-talent-card-grid">
 
                 <!-- Sub-Card 1: Talent Profile & Status -->
@@ -224,7 +224,7 @@
                     </div>
                     <div class="cd-subcard-body">
                         <div class="d-flex align-items-start gap-2">
-                            <div class="symbol symbol-circle symbol-36px flex-shrink-0" style="overflow:hidden; border-radius:50%;">
+                            <div class="symbol symbol-circle symbol-38px flex-shrink-0" style="overflow:hidden; border-radius:50%;">
                                 <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="{{ $profile_sidebar_css }} d-flex w-100 h-100" title="{{ ucwords(@$row->full_name) }}">
                                     <div class="symbol-label {{ $bgTextDecore }} w-100 h-100 d-flex align-items-center justify-content-center fw-bold" style="border-radius:50%;">{{ $strVal }}</div>
                                 </a>
@@ -240,9 +240,11 @@
                                     data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}">
                                     {{ $displayDesignation }}
                                 </a>
-                                <div class="cd-talent-type-line mt-1">
-                                    <span class="badge badge-light-info fs-9 py-0 px-1"><i class="fas fa-briefcase me-1"></i>{{ $outsourcing_type }}</span>
-                                    <span class="text-muted fs-8 ms-1">{{ $subS }}</span>
+                                <div class="cd-talent-type-line d-flex align-items-center gap-1 mt-1 flex-wrap">
+                                    <span class="badge badge-light-primary fs-9 py-0 px-1"><i class="fas fa-briefcase me-1"></i>{{ $outsourcing_type }}</span>
+                                    @if (!empty($row->qualification_name))
+                                        <span class="badge badge-light-secondary text-muted fs-9 py-0 px-1" title="{{ $row->qualification_name }}"><i class="fas fa-graduation-cap me-1"></i>{{ \Illuminate\Support\Str::limit($row->qualification_name, 12) }}</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -255,29 +257,12 @@
                         <span class="cd-subcard-label">Comp &amp; Exp</span>
                     </div>
                     <div class="cd-subcard-body">
-                        <div class="cd-val-salary">
-                            <strong>{!! $bill_rate_currency !!}{{ $billAmountClean }} /{{ mb_substr($bill_rate_mode, 0, 1) }}</strong>
+                        <div class="cd-val-salary d-flex align-items-center justify-content-between flex-wrap gap-1">
+                            <strong class="fs-6">{!! $bill_rate_currency !!}{{ $billAmountClean }} /{{ mb_substr($bill_rate_mode, 0, 1) }}</strong>
+                            <span class="badge badge-light-success fs-9 py-0 px-1"><i class="fa fa-circle-check me-1"></i>{{ $serviceType }}</span>
                         </div>
-                        <div class="cd-val-service {{ $serviceClass }}">
-                            <i class="fa fa-circle-check fs-8 me-1"></i>{{ $serviceType }}
-                        </div>
-                        <div class="cd-val-exp text-dark fw-bold">
+                        <div class="cd-val-exp text-dark fw-bold fs-7">
                             <i class="far fa-clock text-muted me-1"></i>{{ $formattedExperience }} Yrs Total
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sub-Card 3: Availability & Work Mode -->
-                <div class="cd-talent-subcard cd-subcard-avail-mode">
-                    <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">Availability &amp; Mode</span>
-                    </div>
-                    <div class="cd-subcard-body">
-                        <div class="cd-val-avail {{ $availClass }} fw-bolder">
-                            <i class="far fa-calendar-check me-1"></i>{{ $availLine }}
-                        </div>
-                        <div class="cd-val-wm {{ $wmClass }} fw-bold">
-                            <i class="fas fa-building me-1"></i>{{ $wmLabel }}
                         </div>
                         @if ($benchDaysCount !== null)
                             <div class="cd-val-aging {{ $benchDaysClass }} fw-bold fs-8">
@@ -285,34 +270,37 @@
                             </div>
                         @else
                             <div class="text-muted fs-8">
-                                <i class="far fa-user me-1"></i>In-House Active
+                                <i class="far fa-circle-check text-success me-1"></i>{{ $subS ?: 'In-House Active' }}
                             </div>
                         @endif
                     </div>
                 </div>
 
-                <!-- Sub-Card 4: Location & Education -->
-                <div class="cd-talent-subcard cd-subcard-location-edu">
+                <!-- Sub-Card 3: Availability & Location -->
+                <div class="cd-talent-subcard cd-subcard-avail-loc">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">Location &amp; Degree</span>
+                        <span class="cd-subcard-label">Availability &amp; Location</span>
                     </div>
                     <div class="cd-subcard-body">
-                        <div class="cd-val-location text-dark fw-bold wrap-2" data-toggle="tooltip" title="{{ $cityCountry }}">
-                            <i class="fas fa-map-marker-alt text-muted me-1"></i>{{ $cityCountry }}
+                        <div class="cd-val-avail {{ $availClass }} fw-bolder fs-7">
+                            <i class="far fa-calendar-check me-1"></i>{{ $availLine }}
                         </div>
-                        <div class="cd-val-edu text-muted fw-bold wrap-2 fs-8" data-toggle="tooltip" title="{{ @$row->qualification_name }}" style="text-transform:uppercase;">
-                            <i class="fas fa-graduation-cap text-muted me-1"></i>{{ @$row->qualification_name ?: '—' }}
+                        <div class="cd-val-wm {{ $wmClass }} fw-bold fs-8">
+                            <i class="fas fa-building me-1"></i>{{ $wmLabel }}
+                        </div>
+                        <div class="cd-val-location text-dark fw-bold fs-8 wrap-1" data-toggle="tooltip" title="{{ $cityCountry }}">
+                            <i class="fas fa-map-marker-alt text-muted me-1"></i>{{ $cityCountry }}
                         </div>
                     </div>
                 </div>
 
-                <!-- Sub-Card 5: Relationship Manager -->
+                <!-- Sub-Card 4: Relationship Manager -->
                 <div class="cd-talent-subcard cd-subcard-manager">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label"><i class="fa fa-user-tie me-1"></i>Relationship Mgr</span>
                     </div>
                     <div class="cd-subcard-body">
-                        <div class="cd-manager-name text-dark fw-bolder wrap-2" data-toggle="tooltip" title="{{ $managerName }}{{ $extra }}">
+                        <div class="cd-manager-name text-dark fw-bolder wrap-2 fs-7" data-toggle="tooltip" title="{{ $managerName }}{{ $extra }}">
                             {{ $displayManagerName }}
                         </div>
                         <div class="mt-1">
@@ -323,38 +311,33 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 6: Clients Pipeline Activity -->
+                <!-- Sub-Card 5: Clients Pipeline Activity -->
                 <div class="cd-talent-subcard cd-subcard-pipeline col-pipeline-activity">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label">Clients Pipeline Activity</span>
                     </div>
                     <div class="cd-subcard-body p-1">
-                        <div class="pipe">
-                            <div class="w-100">
-                                <div class="pipe-grid">
-                                    <div class="h">INW</div><div class="h">SOU</div><div class="h">SCR</div><div class="h">EVA</div><div class="h">NEG</div><div class="h">OFF</div><div class="h">JOI</div><div class="h">REJ</div>
-                                    <div class="v"><a href="{{ $exploreBase }}/all" class="text-hover-primary" data-bench-pipe="inreview">{{ $row->InReview }}</a></div>
-                                    <div class="v"><a href="{{ $exploreBase }}/1" class="text-hover-primary" data-bench-pipe="sourcing">{{ $row->Sourcing }}</a></div>
-                                    <div class="v"><a href="{{ $exploreBase }}/2" class="text-hover-primary" data-bench-pipe="screening">{{ $row->Screening }}</a></div>
-                                    <div class="v"><a href="{{ $exploreBase }}/3" class="text-hover-primary" data-bench-pipe="evaluation">{{ $row->Evaluation }}</a></div>
-                                    <div class="v"><a href="{{ $exploreBase }}/4" class="text-hover-primary" data-bench-pipe="negotiation">{{ $row->Negotiation }}</a></div>
-                                    <div class="v"><a href="{{ $exploreBase }}/5" class="text-hover-primary" data-bench-pipe="offered">{{ $row->Offered }}</a></div>
-                                    <div class="v"><a href="{{ $exploreBase }}/6" class="text-hover-primary" data-bench-pipe="joined">{{ $row->Joined }}</a></div>
-                                    <div class="v"><a href="{{ $exploreBase }}/7" class="text-hover-primary" data-bench-pipe="rejected">{{ $row->Rejected }}</a></div>
-                                </div>
-                                <div class="pipe-foot justify-content-between mt-2 pt-1 border-top border-gray-200">
-                                    <span class="pipe-stat text-primary fw-bold">Interview: <strong data-bench-pipe-interview="{{ $row->id }}" class="ms-1">{{ $row->InReview }}</strong></span>
-                                    <span class="pipe-stat">Views: <strong class="ms-1">{{ $viewCount }}</strong></span>
-                                    <span class="pipe-stat">Downloads: <strong class="ms-1">{{ $downloadCount }}</strong></span>
-                                </div>
-                            </div>
+                        <div class="cd-pipe-grid">
+                            <div class="cd-pipe-col"><span class="h">INW</span><span class="v"><a href="{{ $exploreBase }}/all" class="text-hover-primary" data-bench-pipe="inreview">{{ $row->InReview }}</a></span></div>
+                            <div class="cd-pipe-col"><span class="h">SOU</span><span class="v"><a href="{{ $exploreBase }}/1" class="text-hover-primary" data-bench-pipe="sourcing">{{ $row->Sourcing }}</a></span></div>
+                            <div class="cd-pipe-col"><span class="h">SCR</span><span class="v"><a href="{{ $exploreBase }}/2" class="text-hover-primary" data-bench-pipe="screening">{{ $row->Screening }}</a></span></div>
+                            <div class="cd-pipe-col"><span class="h">EVA</span><span class="v"><a href="{{ $exploreBase }}/3" class="text-hover-primary" data-bench-pipe="evaluation">{{ $row->Evaluation }}</a></span></div>
+                            <div class="cd-pipe-col"><span class="h">NEG</span><span class="v"><a href="{{ $exploreBase }}/4" class="text-hover-primary" data-bench-pipe="negotiation">{{ $row->Negotiation }}</a></span></div>
+                            <div class="cd-pipe-col"><span class="h">OFF</span><span class="v"><a href="{{ $exploreBase }}/5" class="text-hover-primary" data-bench-pipe="offered">{{ $row->Offered }}</a></span></div>
+                            <div class="cd-pipe-col"><span class="h">JOI</span><span class="v"><a href="{{ $exploreBase }}/6" class="text-hover-primary" data-bench-pipe="joined">{{ $row->Joined }}</a></span></div>
+                            <div class="cd-pipe-col"><span class="h">REJ</span><span class="v"><a href="{{ $exploreBase }}/7" class="text-hover-primary" data-bench-pipe="rejected">{{ $row->Rejected }}</a></span></div>
+                        </div>
+                        <div class="cd-pipe-summary d-flex align-items-center justify-content-between mt-1 pt-1 border-top border-gray-200">
+                            <span class="pipe-stat text-primary fw-bold" style="font-size: 10px;">Interviews: <strong data-bench-pipe-interview="{{ $row->id }}" class="ms-1">{{ $row->InReview }}</strong></span>
+                            <span class="pipe-stat text-muted" style="font-size: 10px;">Views: <strong class="ms-1">{{ $viewCount }}</strong></span>
+                            <span class="pipe-stat text-muted" style="font-size: 10px;">Downloads: <strong class="ms-1">{{ $downloadCount }}</strong></span>
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <!-- Sub-Card 7 / Bottom Activity Strip -->
+            <!-- Sub-Card 6 / Bottom Activity Strip -->
             <div class="cd-talent-card-bottom">
                 <div class="cd-bottom-left d-flex align-items-center gap-2 flex-wrap">
                     @if ($stageDateLabel)
