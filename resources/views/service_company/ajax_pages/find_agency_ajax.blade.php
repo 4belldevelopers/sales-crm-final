@@ -255,7 +255,7 @@
             $matchFound = $row->_match_found ?? collect($row->staffing_company_relation ?? [])->contains('from_company_id', $company_id);
             $isConnected = ($matchFound || $final_status == 1);
             if ($isConnected) {
-                $actionBtnHtml = '<button type="button" class="btn btn-sm btn-light-success disabled cl-action-btn w-100" style="cursor:default;"><i class="fas fa-check-circle me-1"></i>Connected</button>';
+                $actionBtnHtml = '<button type="button" class="btn btn-sm btn-light-success disabled cl-action-btn cl-btn-connected w-100" style="cursor:default;"><i class="fas fa-check-circle me-1"></i>Connected</button>';
             } elseif (!empty($relationget) && !empty($to_company_id) && $final_status == 0) {
                 $actionBtnHtml = '<button type="button" id="sp_list_' . $row->id . '" data-row-id="' . $row->id . '" data-row-event="-1" data-row-jobid="" class="btn btn-sm btn-light-danger send_job_recommanded_request cl-action-btn w-100"><i class="fas fa-times-circle me-1"></i>Cancel Request</button>';
             } elseif (!empty($relationget) && !empty($to_company_id) && $final_status == -1) {
@@ -416,7 +416,6 @@
                 <div class="cl-subcard cl-subcard-action-hub">
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title">Partnership</span>
-                        <span class="badge badge-light-primary py-0.5 px-1.5 font-size-8.5 font-weight-700">Connect</span>
                     </div>
                     <div class="cl-action-hub-body">
                         <!-- Action Button (Send / Cancel / Connected) -->
@@ -435,14 +434,8 @@
             <!-- ── BOTTOM FOOTER ACTIVITY STRIP (Rule 20 Enterprise Standard) ── -->
             <div class="cl-card-footer-strip">
                 <div class="cl-footer-strip-left">
-                    <div class="cl-footer-item">
-                        @if($isSuperAdminVerified)
-                            <i class="fas fa-shield-alt text-success font-size-10 me-1"></i>
-                            <span class="text-success font-weight-600">Marketplace Accredited</span>
-                        @else
-                            <i class="fas fa-info-circle text-muted font-size-10 me-1"></i>
-                            <span class="text-muted">Onboarding Partner</span>
-                        @endif
+                    <div class="cl-footer-match-wrap">
+                        <span class="cl-card-match-badge d-none badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2"></span>
                     </div>
                 </div>
                 <div class="cl-footer-strip-right">
