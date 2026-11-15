@@ -274,7 +274,7 @@
                 <!-- SUB-CARD 1: Agency Identity -->
                 <div class="cl-subcard cl-subcard-identity">
                     <div class="cl-subcard-head">
-                        <span class="cl-subcard-title">Agency Identity</span>
+                        <span class="cl-subcard-title" title="Agency Identity">Identity</span>
                         <div class="cl-subcard-badges">
                             @if($isConnected)
                                 <span class="cl-scope-pill pill-connected" title="Connected Agency Partner">Connected</span>
@@ -377,7 +377,7 @@
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: Talent Supply (Vertical Listings matching Location Rhythm) -->
+                <!-- SUB-CARD 4: Talent Supply (High-Contrast Vertical Rhythm) -->
                 <div class="cl-subcard cl-subcard-talent">
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title">Talent Supply</span>
@@ -385,26 +385,26 @@
                     </div>
                     <div class="cl-talent-body">
                         <div class="cl-talent-line">
-                            <i class="fas fa-briefcase text-primary me-1.5 font-size-10" style="width:13px; text-align:center;"></i>
-                            <strong class="text-dark font-size-11.5">{{ $activeJobs }}</strong>
-                            <span class="text-secondary font-size-10.5 ms-0.5">Active Jobs</span>
+                            <i class="fas fa-briefcase text-primary cl-talent-icon"></i>
+                            <span class="cl-talent-num">{{ $activeJobs }}</span>
+                            <span class="cl-talent-lbl">Active Jobs</span>
                         </div>
                         <div class="cl-talent-line">
-                            <i class="fas fa-user-friends text-info me-1.5 font-size-10" style="width:13px; text-align:center;"></i>
-                            <strong class="text-dark font-size-11.5">{{ $all_candidates }}</strong>
-                            <span class="text-secondary font-size-10.5 ms-0.5">Candidate Profiles</span>
+                            <i class="fas fa-user-friends text-info cl-talent-icon"></i>
+                            <span class="cl-talent-num">{{ $all_candidates }}</span>
+                            <span class="cl-talent-lbl">Candidate Profiles</span>
                         </div>
                         @if($all_candidate_bench > 0)
-                            <div class="cl-talent-line cl-bench-trigger cursor-pointer" onclick="openAgencyBenchDrawer({{ $row->id }}, '{{ addslashes($row->company_name) }}', {{ $all_candidate_bench }})" title="Click to preview pre-vetted bench profiles">
-                                <i class="fas fa-bolt text-warning me-1.5 font-size-10" style="width:13px; text-align:center;"></i>
-                                <strong class="text-warning font-size-11.5">{{ $all_candidate_bench }}</strong>
-                                <span class="text-warning font-weight-600 font-size-10.5 ms-0.5 underline">Pre-Vetted Bench 👁️</span>
+                            <div class="cl-talent-line bench-active cl-bench-trigger cursor-pointer" onclick="openAgencyBenchDrawer({{ $row->id }}, '{{ addslashes($row->company_name) }}', {{ $all_candidate_bench }})" title="Click to preview pre-vetted bench profiles">
+                                <i class="fas fa-bolt text-warning cl-talent-icon"></i>
+                                <span class="cl-talent-num text-warning">{{ $all_candidate_bench }}</span>
+                                <span class="cl-talent-lbl text-warning font-weight-600 underline">Pre-Vetted Bench 👁️</span>
                             </div>
                         @else
-                            <div class="cl-talent-line text-muted" title="No bench candidates currently listed">
-                                <i class="fas fa-bolt text-muted me-1.5 font-size-10" style="width:13px; text-align:center;"></i>
-                                <strong class="text-muted font-size-11.5">0</strong>
-                                <span class="text-muted font-size-10.5 ms-0.5">Pre-Vetted Bench</span>
+                            <div class="cl-talent-line bench-zero" title="No bench candidates currently listed">
+                                <i class="fas fa-bolt text-muted cl-talent-icon"></i>
+                                <span class="cl-talent-num text-muted">0</span>
+                                <span class="cl-talent-lbl text-muted">Pre-Vetted Bench</span>
                             </div>
                         @endif
                     </div>
