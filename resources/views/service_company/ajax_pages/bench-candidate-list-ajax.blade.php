@@ -312,11 +312,11 @@
                 </div>
 
                 <!-- Sub-Card 5: Clients Pipeline Activity -->
-                <div class="cd-talent-subcard cd-subcard-pipeline col-pipeline-activity">
+                <div class="cd-talent-subcard cd-subcard-pipeline">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label">Clients Pipeline Activity</span>
                     </div>
-                    <div class="cd-subcard-body p-1">
+                    <div class="cd-subcard-body p-2">
                         <div class="cd-pipe-grid">
                             <div class="cd-pipe-col"><span class="h">INW</span><span class="v"><a href="{{ $exploreBase }}/all" class="text-hover-primary" data-bench-pipe="inreview">{{ $row->InReview }}</a></span></div>
                             <div class="cd-pipe-col"><span class="h">SOU</span><span class="v"><a href="{{ $exploreBase }}/1" class="text-hover-primary" data-bench-pipe="sourcing">{{ $row->Sourcing }}</a></span></div>
@@ -327,10 +327,10 @@
                             <div class="cd-pipe-col"><span class="h">JOI</span><span class="v"><a href="{{ $exploreBase }}/6" class="text-hover-primary" data-bench-pipe="joined">{{ $row->Joined }}</a></span></div>
                             <div class="cd-pipe-col"><span class="h">REJ</span><span class="v"><a href="{{ $exploreBase }}/7" class="text-hover-primary" data-bench-pipe="rejected">{{ $row->Rejected }}</a></span></div>
                         </div>
-                        <div class="cd-pipe-summary d-flex align-items-center justify-content-between mt-1 pt-1 border-top border-gray-200">
+                        <div class="cd-pipe-summary d-flex align-items-center justify-content-between mt-2 pt-1 border-top border-gray-200">
                             <span class="pipe-stat text-primary fw-bold" style="font-size: 10px;">Interviews: <strong data-bench-pipe-interview="{{ $row->id }}" class="ms-1">{{ $row->InReview }}</strong></span>
-                            <span class="pipe-stat text-muted" style="font-size: 10px;">Views: <strong class="ms-1">{{ $viewCount }}</strong></span>
-                            <span class="pipe-stat text-muted" style="font-size: 10px;">Downloads: <strong class="ms-1">{{ $downloadCount }}</strong></span>
+                            <span class="pipe-stat text-muted" style="font-size: 10px;">Views: <strong class="ms-1 text-dark">{{ $viewCount }}</strong></span>
+                            <span class="pipe-stat text-muted" style="font-size: 10px;">Downloads: <strong class="ms-1 text-dark">{{ $downloadCount }}</strong></span>
                         </div>
                     </div>
                 </div>
