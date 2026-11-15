@@ -107,6 +107,22 @@
                 $formattedExperience = $experience ?: '0';
             }
 
+            // Relevant Experience formatting (format: 4 Y Rel)
+            $relExperience = trim((string) @$row->rel_exp);
+            if (strpos($relExperience, '.') !== false) {
+                $rParts = explode('.', $relExperience);
+                $formattedRelExperience = (empty($rParts[1]) || $rParts[1] === '00') ? $rParts[0] : $relExperience;
+            } else {
+                $formattedRelExperience = $relExperience ?: '';
+            }
+
+            // Bench Company Name resolution
+            $benchCompanyName = trim((string) (@$row->company_name ?: @$row->current_company ?: ''));
+            if ($benchCompanyName === '') {
+                $benchCompanyName = 'In-House Talent';
+            }
+            $displayBenchCompany = $limitWords($benchCompanyName, 25);
+
             // Notice / Availability line
             if ($row->serving_notice_period_mode == 2) {
                 $availLine = 'Immediate';
@@ -129,11 +145,15 @@
                 $availClass = 'text-success';
             }
 
-            // Location formatting
-            $row_city_name = @$row->city_name;
-            $row_country_name = @$row->country_name;
-            $cityCountry = trim(ucwords($row_city_name) . ($row_country_name ? ', ' . ucwords($row_country_name) : ''), ', ');
-            if ($cityCountry === '') { $cityCountry = '—'; }
+            // Location formatting (First Row: City, State, Country)
+            $locParts = array_filter([
+                !empty($row->city_name) ? ucwords(trim($row->city_name)) : null,
+                !empty($row->state_name) ? ucwords(trim($row->state_name)) : null,
+                !empty($row->country_name) ? ucwords(trim($row->country_name)) : null,
+            ]);
+            $fullLocation = !empty($locParts) ? implode(', ', $locParts) : '—';
+            $qualificationName = !empty($row->qualification_name) ? trim($row->qualification_name) : '';
+            $cityCountry = $fullLocation;
 
             // Salary & Service Type formatting
             $currencyBenchMode = $companyCurrencyBenchshowMode ?? GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
@@ -205,10 +225,10 @@
             <!-- Upper Sub-Cards Grid (5 Spacious Discrete Sections) -->
             <div class="cd-talent-card-grid">
 
-                <!-- Sub-Card 1: Talent Profile & Status -->
+                <!-- Sub-Card 1: Talent Profile & Status (Rule 20 Standard) -->
                 <div class="cd-talent-subcard cd-subcard-talent">
                     <div class="cd-subcard-header">
-                        <div class="d-flex align-items-center gap-2 min-w-0">
+                        <div class="d-flex align-items-center gap-1.5 min-w-0">
                             <div class="form-check form-check-sm form-check-custom form-check-solid m-0">
                                 <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox"
                                     data-skills="{{ e($row->skills ?? '') }}"
@@ -216,40 +236,46 @@
                                     value="{{ $row->id }}"
                                     title="Select candidate" />
                             </div>
-                            <span class="cd-subcard-label">Talent Profile</span>
+                            <!-- Hiring Category: Full-Time / Contract -->
+                            <span class="badge badge-light-primary text-primary fs-9 py-0.5 px-1.5 fw-bold border border-primary-subtle text-truncate" title="Hiring Category">
+                                <i class="fas fa-briefcase me-1" style="font-size: 8.5px;"></i>{{ $outsourcing_type }}
+                            </span>
                         </div>
                         <div class="d-flex align-items-center gap-1">
                             @if($isAds)
                                 <span class="badge badge-light-danger fs-9 py-0 px-1">Ads</span>
                             @endif
+                            <!-- Candidate Availability Status (Bench) -->
                             <span class="cd-status-badge {{ $statusPillClass }} stage_sub_stage" data-row-id="{{ $row->id }}" title="Click to change status" style="cursor: pointer;">
                                 {{ $statusName }}
                             </span>
                         </div>
                     </div>
                     <div class="cd-subcard-body">
-                        <div class="d-flex align-items-start gap-2">
-                            <div class="symbol symbol-circle symbol-38px flex-shrink-0" style="overflow:hidden; border-radius:50%;">
+                        <div class="d-flex align-items-start gap-2.5">
+                            <!-- Refined Visual Profile Avatar Icon -->
+                            <div class="cd-talent-avatar symbol symbol-38px flex-shrink-0" style="overflow:hidden; border-radius:10px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15,23,42,0.04);">
                                 <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="{{ $profile_sidebar_css }} d-flex w-100 h-100" title="{{ ucwords(@$row->full_name) }}">
-                                    <div class="symbol-label {{ $bgTextDecore }} w-100 h-100 d-flex align-items-center justify-content-center fw-bold" style="border-radius:50%;">{{ $strVal }}</div>
+                                    <div class="symbol-label {{ $bgTextDecore }} w-100 h-100 d-flex align-items-center justify-content-center fw-bolder" style="border-radius:10px; font-size: 13.5px;">{{ $strVal }}</div>
                                 </a>
                             </div>
                             <div class="d-flex flex-column min-w-0 flex-grow-1">
+                                <!-- 1. Candidate Name -->
                                 <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                                    class="cd-talent-name text-dark fw-bolder text-hover-primary fs-6 {{ $profile_sidebar_css }}"
+                                    class="cd-talent-name text-dark fw-bolder text-hover-primary fs-6 {{ $profile_sidebar_css }} text-truncate"
                                     data-toggle="tooltip" title="{{ ucwords(@$row->full_name) }}">
                                     {{ $displayFullName }}
                                 </a>
+                                <!-- 2. Designation -->
                                 <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                                    class="cd-talent-role text-muted fw-bold d-block fs-7 text-hover-primary {{ $profile_sidebar_css }}"
+                                    class="cd-talent-role text-muted fw-bold d-block fs-7 text-hover-primary {{ $profile_sidebar_css }} text-truncate"
                                     data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}">
                                     {{ $displayDesignation }}
                                 </a>
-                                <div class="cd-talent-type-line d-flex align-items-center gap-1 mt-1 flex-wrap">
-                                    <span class="badge badge-light-primary fs-9 py-0 px-1"><i class="fas fa-briefcase me-1"></i>{{ $outsourcing_type }}</span>
-                                    @if (!empty($row->qualification_name))
-                                        <span class="badge badge-light-secondary text-muted fs-9 py-0 px-1" title="{{ $row->qualification_name }}"><i class="fas fa-graduation-cap me-1"></i>{{ \Illuminate\Support\Str::limit($row->qualification_name, 12) }}</span>
-                                    @endif
+                                <!-- 3. Bench Company Name -->
+                                <div class="cd-talent-company d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Bench Company: {{ $benchCompanyName }}">
+                                    <i class="fa fa-building text-primary" style="font-size: 9.5px;"></i>
+                                    <span class="fs-8 fw-semibold text-gray-700 text-truncate">{{ $displayBenchCompany }}</span>
                                 </div>
                             </div>
                         </div>
@@ -259,36 +285,55 @@
                 <!-- Sub-Card 2: Compensation & Experience -->
                 <div class="cd-talent-subcard cd-subcard-comp-exp">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">Comp &amp; Exp</span>
+                        <span class="cd-subcard-label">COMP &amp; EXP</span>
+                        <!-- Service Category: Paid / Free Services -->
+                        <span class="badge {{ @$row->comission_type == 2 ? 'badge-light-success text-success border border-success-subtle' : 'badge-light-secondary text-muted border border-gray-300' }} fs-9 py-0.5 px-1.5 fw-bold" title="Service Category">
+                            <i class="fa fa-circle-check me-1" style="font-size: 8.5px;"></i>{{ $serviceType }}
+                        </span>
                     </div>
                     <div class="cd-subcard-body">
-                        <div class="cd-val-salary d-flex align-items-center justify-content-between flex-wrap gap-1">
-                            <strong class="fs-6">{!! $bill_rate_currency !!}{{ $billAmountClean }} /{{ mb_substr($bill_rate_mode, 0, 1) }}</strong>
-                            <span class="badge badge-light-success fs-9 py-0 px-1"><i class="fa fa-circle-check me-1"></i>{{ $serviceType }}</span>
+                        <!-- 1. Bill Rate -->
+                        <div class="cd-val-salary d-flex align-items-center gap-1">
+                            <span class="fs-8 text-muted fw-semibold">Bill Rate:</span>
+                            <strong class="fs-6 text-dark">{!! $bill_rate_currency !!}{{ $billAmountClean }} /{{ mb_substr($bill_rate_mode, 0, 1) }}</strong>
                         </div>
-                        <div class="cd-val-exp text-dark fw-bold fs-7">
-                            <i class="far fa-clock text-muted me-1"></i>{{ $formattedExperience }} Yrs Total
+                        <!-- 2. Total Experience & Relevant Experience (4 Y Rel format) -->
+                        <div class="cd-val-exp text-dark fw-bold fs-7 d-flex align-items-center gap-1 mt-0.5">
+                            <i class="far fa-clock text-muted" style="font-size: 11px;"></i>
+                            <span>{{ $formattedExperience }} Y Total</span>
+                            @if (!empty($formattedRelExperience) && $formattedRelExperience > 0)
+                                <span class="badge badge-light-primary text-primary fs-9 py-0 px-1.5 fw-bolder" title="Relevant Experience">{{ $formattedRelExperience }} Y Rel</span>
+                            @endif
                         </div>
-                        <div class="text-muted fs-8">
-                            <i class="far fa-circle-check text-success me-1"></i>{{ $subS ?: 'In-House Active' }}
+                        <!-- 3. Notice Period -->
+                        <div class="cd-val-avail {{ $availClass }} fw-bold fs-8 d-flex align-items-center gap-1 mt-0.5" title="Notice Period">
+                            <i class="far fa-calendar-check" style="font-size: 11px;"></i>
+                            <span>Notice: <strong>{{ $availLine }}</strong></span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sub-Card 3: Availability & Location -->
+                <!-- Sub-Card 3: Location & Education -->
                 <div class="cd-talent-subcard cd-subcard-avail-loc">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">Availability &amp; Location</span>
+                        <span class="cd-subcard-label">LOCATION &amp; EDUCATION</span>
                     </div>
                     <div class="cd-subcard-body">
-                        <div class="cd-val-avail {{ $availClass }} fw-bolder fs-7">
-                            <i class="far fa-calendar-check me-1"></i>{{ $availLine }}
+                        <!-- First Row: City, State, Country -->
+                        <div class="cd-val-location text-dark fw-bold fs-8 text-truncate mb-1" data-toggle="tooltip" title="{{ $fullLocation }}">
+                            <i class="fas fa-map-marker-alt text-danger me-1" style="font-size: 11px;"></i>
+                            <span>{{ $fullLocation }}</span>
                         </div>
-                        <div class="cd-val-wm {{ $wmClass }} fw-bold fs-8">
-                            <i class="fas fa-building me-1"></i>{{ $wmLabel }}
-                        </div>
-                        <div class="cd-val-location text-dark fw-bold fs-8 wrap-1" data-toggle="tooltip" title="{{ $cityCountry }}">
-                            <i class="fas fa-map-marker-alt text-muted me-1"></i>{{ $cityCountry }}
+                        <!-- Second Row: Work Mode & Education / Qualification -->
+                        <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                            <span class="cd-val-wm {{ $wmClass }} fw-bold fs-8 d-inline-flex align-items-center">
+                                <i class="fas fa-building me-1" style="font-size: 10px;"></i>{{ $wmLabel }}
+                            </span>
+                            @if (!empty($qualificationName))
+                                <span class="badge badge-light-secondary text-gray-700 fs-9 py-0.5 px-1.5 border border-gray-200 text-truncate" title="Qualification: {{ $qualificationName }}" style="max-width: 130px;">
+                                    <i class="fas fa-graduation-cap me-1 text-primary" style="font-size: 9px;"></i>{{ \Illuminate\Support\Str::limit($qualificationName, 15) }}
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>

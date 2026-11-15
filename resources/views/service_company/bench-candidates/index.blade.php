@@ -969,11 +969,41 @@
         }
         .cd-talent-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.05fr) minmax(0, 1.55fr) minmax(0, 2.3fr) !important;
+            grid-template-columns: minmax(0, 1.95fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 2.15fr) !important;
             gap: 8px !important;
             padding: 10px 12px !important;
             width: 100% !important;
             align-items: stretch !important;
+        }
+        .cd-talent-avatar {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 10px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+            flex-shrink: 0 !important;
+            overflow: hidden !important;
+        }
+        .cd-talent-avatar .symbol-label {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 9px !important;
+            font-size: 13.5px !important;
+            font-weight: 700 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .cd-talent-company {
+            font-size: 11px !important;
+            color: #475569 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+        .cd-talent-company i {
+            color: #009ef7 !important;
+            font-size: 10px !important;
         }
         .cd-subcard-similar-clients {
             width: 100% !important;
@@ -1190,7 +1220,7 @@
         /* 15.6" Screen responsiveness */
         @media only screen and (max-width: 1440px) {
             .cd-talent-card-grid {
-                grid-template-columns: minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 1.0fr) minmax(0, 1.5fr) minmax(0, 2.2fr) !important;
+                grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.3fr) minmax(0, 1.4fr) minmax(0, 1.0fr) minmax(0, 1.3fr) minmax(0, 2.1fr) !important;
                 gap: 6px !important;
                 padding: 8px 10px !important;
             }
