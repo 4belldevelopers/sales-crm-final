@@ -716,7 +716,8 @@
         #bstatus_drawer .min-w-0 { min-width: 0; }
 
         /* ---- Header ---- */
-        .bstatus-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 22px; background: #fff; border-bottom: 1px solid #eef0f4; flex-shrink: 0; }
+        .bstatus-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 22px; background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important; flex-shrink: 0; }
+        #kt_activitiesB_header { background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; }
         .bstatus-topbar-left { display: flex; align-items: center; gap: 12px; }
         .bstatus-title-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef3ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 15px; }
         .bstatus-title { font-size: 16.5px; font-weight: 700; color: #181c32; line-height: 1.2; }
@@ -815,6 +816,361 @@
             .bs-status-row { flex-wrap: wrap; }
             .bs-status-arrow { display: none; }
             .bs-status-cell { flex: 1 1 30%; }
+        }
+
+        /* ==========================================================================
+           RULE 20: MODERN CARD + SUB-CARD ENTERPRISE DESIGN SYSTEM (IN-HOUSE TALENT)
+           ========================================================================== */
+        /* Tier 1: Toolbar Card */
+        .cd-bench-toolbar-card {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 10px 16px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+        }
+        .cd-bench-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .cd-bench-toolbar-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #eff6ff;
+            color: #009ef7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .cd-bench-toolbar-title {
+            font-size: 14.5px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.25;
+            margin: 0;
+        }
+        .cd-bench-toolbar-sub {
+            font-size: 11px !important;
+            color: #64748b !important;
+            margin-top: 1px;
+        }
+        .cd-bench-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .cd-bench-search-subcard {
+            display: flex;
+            align-items: center;
+            height: 36px;
+            width: 320px;
+            max-width: 100%;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 10px;
+            transition: all 0.2s ease;
+        }
+        .cd-bench-search-subcard:focus-within {
+            border-color: #009ef7;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+        }
+        .cd-bench-search-subcard input {
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 12px !important;
+            font-family: 'Poppins', sans-serif;
+            color: #1e293b;
+            width: 100%;
+            padding: 0 8px;
+        }
+        .cd-bench-search-clear {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 0 4px;
+            display: none;
+        }
+        .cd-bench-search-clear:hover {
+            color: #0f172a;
+        }
+        .cd-bench-sort-select {
+            height: 36px !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            background: #ffffff !important;
+            font-size: 12px !important;
+            color: #334155 !important;
+            padding: 0 10px !important;
+            min-width: 180px;
+        }
+
+        /* Tier 2: Sub-Tabs Card */
+        .cd-bench-tabs-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+        }
+        .cd-bench-tabs-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .cd-bench-tab-btn {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 6px 14px !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #475569 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none !important;
+        }
+        .cd-bench-tab-btn:hover {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        .cd-bench-tab-btn .cd-tab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 18px;
+            padding: 0 6px;
+            border-radius: 10px;
+            font-size: 10.5px;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: #475569;
+            transition: all 0.15s ease;
+        }
+        .cd-bench-tab-btn.active {
+            background: #009ef7 !important;
+            border-color: #009ef7 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+        }
+        .cd-bench-tab-btn.active i {
+            color: #ffffff !important;
+        }
+        .cd-bench-tab-btn.active .cd-tab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+        }
+
+        /* Tier 3: Primary Talent Card Stream */
+        .cd-talent-stream-wrapper {
+            position: relative;
+            width: 100%;
+            min-width: 0;
+        }
+        .cd-talent-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            min-width: 0;
+        }
+        .cd-talent-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-left: 4px solid #009ef7 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .cd-talent-card:hover {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+        }
+        .cd-talent-card-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.35fr) minmax(0, 1.35fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 2.0fr) !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+            width: 100% !important;
+            align-items: stretch !important;
+        }
+        .cd-talent-subcard {
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        /* Mandatory Header Background Color Standard */
+        .cd-subcard-header {
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            padding: 5px 9px !important;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 28px;
+            flex-shrink: 0;
+        }
+        .cd-subcard-label {
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            color: #475569 !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cd-subcard-body {
+            padding: 8px 10px !important;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+            font-size: 11.5px;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .cd-talent-name {
+            font-size: 12.5px !important;
+            font-weight: 700 !important;
+            line-height: 1.25;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+        }
+        .cd-talent-role {
+            font-size: 11px !important;
+            color: #64748b !important;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+            line-height: 1.2;
+        }
+        .cd-status-badge {
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            padding: 2px 7px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .status-bench { background: #fff4de; color: #f6a609; border: 1px solid #ffe2a8; }
+        .status-pool { background: #f3effe; color: #7239ea; border: 1px solid #dfcffc; }
+        .status-hold { background: #fff8dd; color: #f59e0b; border: 1px solid #fde68a; }
+        .status-placed { background: #eef3ff; color: #009ef7; border: 1px solid #cfe2ff; }
+        .status-exited { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+        .cd-val-salary { font-size: 12.5px; color: #0f172a; font-weight: 700; line-height: 1.2; }
+        .cd-val-service { font-size: 10.5px; font-weight: 600; }
+        .cd-val-exp { font-size: 11px; }
+        .cd-val-avail { font-size: 11.5px; line-height: 1.2; }
+        .cd-val-wm { font-size: 10.5px; }
+        .cd-val-location { font-size: 11.5px; line-height: 1.2; }
+        .cd-val-edu { font-size: 10px; }
+        .cd-manager-name { font-size: 11.5px; line-height: 1.25; }
+        .cd-rm-change-btn { font-size: 10.5px !important; font-weight: 600 !important; color: #009ef7 !important; cursor: pointer; text-decoration: none; }
+        .cd-rm-change-btn:hover { text-decoration: underline; color: #0077b6 !important; }
+
+        /* Sub-Card 7 / Bottom Activity Strip */
+        .cd-talent-card-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 7px 14px;
+            background: #fafbfc;
+            border-top: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            font-size: 11px;
+        }
+        .cd-bottom-skills {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            max-width: 580px;
+        }
+        .cd-bottom-skills::-webkit-scrollbar { display: none; }
+        .cd-skill-pill {
+            display: inline-flex;
+            align-items: center;
+            background: #f1f5f9;
+            color: #475569;
+            border-radius: 5px;
+            padding: 2px 7px;
+            font-size: 10px !important;
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+            line-height: 1.25;
+        }
+        .cd-bottom-date { font-size: 11px; color: #64748b; white-space: nowrap; }
+
+        /* Empty state */
+        .cd-talent-empty {
+            background: #ffffff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 48px 24px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* 15.6" Screen responsiveness */
+        @media only screen and (max-width: 1440px) {
+            .cd-talent-card-grid {
+                grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.3fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 2.0fr) !important;
+                gap: 6px !important;
+                padding: 8px 10px !important;
+            }
+            .cd-subcard-header { padding: 4px 6px !important; min-height: 26px; }
+            .cd-subcard-body { padding: 6px 8px !important; font-size: 11px !important; }
+            .cd-subcard-label { font-size: 9.5px !important; }
+            .cd-bench-search-subcard { width: 260px; }
+            .cd-bench-sort-select { min-width: 150px; }
         }
     </style>
 @endpush
@@ -1045,46 +1401,62 @@
                         </div>
                     </div>
 
-                    <!-- Search + Sort row -->
-                    <div class="jw-card p-2 mb-2 d-flex align-items-center gap-2">
-                        <div class="position-relative flex-grow-1">
-                            <i class="fa fa-search position-absolute text-muted" style="left:12px; top:11px; font-size:12px !important;"></i>
-                            <input type="text" class="form-control dash-search w-100" style="padding-left:30px;" name="inputJobSearch"
-                                placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" onkeyup="debouncedBenchSearch(event)" />
+                    <!-- Tier 1: Top Header Toolbar Card with Dynamic Search (Rule 20 Modern Enterprise Standard) -->
+                    <div class="cd-bench-toolbar-card">
+                        <div class="cd-bench-toolbar-left">
+                            <div class="cd-bench-toolbar-icon">
+                                <i class="fa fa-users"></i>
+                            </div>
+                            <div>
+                                <h2 class="cd-bench-toolbar-title">In-House Talent Roster</h2>
+                                <div class="cd-bench-toolbar-sub">Manage, filter, and track bench and pool candidates with client pipelines.</div>
+                            </div>
                         </div>
-                        <select class="form-select form-select-solid w-200px flex-shrink-0" data-hide-search="true" id="sortingfilter"
-                            data-placeholder="Sort" onchange="filtersdataget()">
-                            <option value="Show All" selected>Sort by</option>
-                            <option value="1">Newest to Oldest (Upload Date)</option>
-                            <option value="2">Oldest to Newest (Upload Date)</option>
-                            <option value="9">Notice Period (Immediate)</option>
-                            <option value="5">Low to High (Notice Period)</option>
-                            <option value="6">High to Low (Notice Period)</option>
-                            <option value="7">High to Low (Experience)</option>
-                            <option value="8">Low to High (Experience)</option>
-                        </select>
+                        <div class="cd-bench-toolbar-right">
+                            <div class="cd-bench-search-subcard">
+                                <i class="fa fa-search text-muted"></i>
+                                <input type="text" name="inputJobSearch" placeholder="Search by name, skills, role, experience, location..."
+                                    id="kt_tagify_2" onkeyup="debouncedBenchSearch(event)" autocomplete="off" />
+                                <button type="button" class="cd-bench-search-clear" id="btnBenchSearchClear" title="Clear search">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <select class="form-select cd-bench-sort-select flex-shrink-0" id="sortingfilter" data-placeholder="Sort" onchange="filtersdataget()">
+                                <option value="Show All" selected>Sort by</option>
+                                <option value="1">Newest to Oldest (Upload Date)</option>
+                                <option value="2">Oldest to Newest (Upload Date)</option>
+                                <option value="9">Notice Period (Immediate)</option>
+                                <option value="5">Low to High (Notice Period)</option>
+                                <option value="6">High to Low (Notice Period)</option>
+                                <option value="7">High to Low (Experience)</option>
+                                <option value="8">Low to High (Experience)</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-primary fw-bold cd-bench-add-btn" id="exportTalents" title="Export talent records to CSV">
+                                <i class="fa fa-download me-1"></i> Export
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Tabs strip -->
-                    <div class="jw-card mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2" style="overflow:hidden;">
-                        <div class="tab-strip">
-                            <a href="Javascript:void(0);" rel="all" for="all_talents" class="tab-pill tab-all application_sttus_nav active" id="tab_all">
-                                <i class="fa fa-users tab-ico"></i><span class="lbl">All Talents</span><span class="cnt" id="bg_all">{{ $counts->all_records ?? 0 }}</span>
+                    <!-- Tier 2: Sub-Tabs Card with White Background (Rule 20 Standard) -->
+                    <div class="cd-bench-tabs-card">
+                        <div class="cd-bench-tabs-group">
+                            <a href="Javascript:void(0);" rel="all" for="all_talents" class="cd-bench-tab-btn tab-pill tab-all application_sttus_nav active" id="tab_all">
+                                <i class="fa fa-users"></i><span>All Talents</span><span class="cd-tab-badge" id="bg_all">{{ $counts->all_records ?? 0 }}</span>
                             </a>
-                            <a href="Javascript:void(0);" rel="1" for="talent_Pool" class="tab-pill tab-pool application_sttus_nav">
-                                <i class="fa fa-user-group tab-ico"></i><span class="lbl">On Pool</span><span class="cnt" id="bg_1">{{ $counts->pool ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="1" for="talent_Pool" class="cd-bench-tab-btn tab-pill tab-pool application_sttus_nav">
+                                <i class="fa fa-user-group"></i><span>On Pool</span><span class="cd-tab-badge" id="bg_1">{{ $counts->pool ?? 0 }}</span>
                             </a>
-                            <a href="Javascript:void(0);" rel="2" for="bench_live" class="tab-pill tab-bench application_sttus_nav">
-                                <i class="fa fa-briefcase tab-ico"></i><span class="lbl">Bench</span><span class="cnt" id="bg_2">{{ $counts->bench ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="2" for="bench_live" class="cd-bench-tab-btn tab-pill tab-bench application_sttus_nav">
+                                <i class="fa fa-briefcase"></i><span>Bench</span><span class="cd-tab-badge" id="bg_2">{{ $counts->bench ?? 0 }}</span>
                             </a>
-                            <a href="Javascript:void(0);" rel="4" for="bench_pause" class="tab-pill tab-hold application_sttus_nav">
-                                <i class="fa fa-circle-pause tab-ico"></i><span class="lbl">On Hold</span><span class="cnt" id="bg_4">{{ $counts->paused ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="4" for="bench_pause" class="cd-bench-tab-btn tab-pill tab-hold application_sttus_nav">
+                                <i class="fa fa-circle-pause"></i><span>On Hold</span><span class="cd-tab-badge" id="bg_4">{{ $counts->paused ?? 0 }}</span>
                             </a>
-                            <a href="Javascript:void(0);" rel="3" for="bench_placed" class="tab-pill tab-placed application_sttus_nav">
-                                <i class="fa fa-calendar-check tab-ico"></i><span class="lbl">Placed</span><span class="cnt" id="bg_3">{{ $counts->placed ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="3" for="bench_placed" class="cd-bench-tab-btn tab-pill tab-placed application_sttus_nav">
+                                <i class="fa fa-calendar-check"></i><span>Placed</span><span class="cd-tab-badge" id="bg_3">{{ $counts->placed ?? 0 }}</span>
                             </a>
-                            <a href="Javascript:void(0);" rel="5" for="bench_left" class="tab-pill tab-exited application_sttus_nav">
-                                <i class="fa fa-right-from-bracket tab-ico"></i><span class="lbl">Exited</span><span class="cnt" id="bg_5">{{ $counts->exited ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="5" for="bench_left" class="cd-bench-tab-btn tab-pill tab-exited application_sttus_nav">
+                                <i class="fa fa-right-from-bracket"></i><span>Exited</span><span class="cd-tab-badge" id="bg_5">{{ $counts->exited ?? 0 }}</span>
                             </a>
                         </div>
                         <!-- Hidden inputs preserved for existing fetch logic -->
@@ -1104,55 +1476,38 @@
                         </div>
                     </div>
 
-                    <!-- Talent table -->
-                    <div class="jw-card p-2">
+                    <!-- Multi-Selection Action Bar (Visible when any candidate is selected) -->
+                    <div class="bench-table-header-toolbar" id="bench_selection_bar" style="display: none;">
+                        <div class="bench-th-left">
+                            <div class="form-check form-check-sm form-check-custom form-check-solid m-0 me-2">
+                                <input class="form-check-input chk_all_bench_list" type="checkbox" id="bench_selection_master_chk" value="1" title="Select all on this page">
+                            </div>
+                            <span class="bench-th-badge" id="bench_selected_count_badge">0</span>
+                            <span class="bench-th-text" id="bench_selected_text_wrap"><span id="bench_selected_count">0</span> Candidates Selected</span>
+                            <button type="button" class="bench-th-clear-btn" id="bench_selection_close" title="Clear selection">
+                                (Deselect All)
+                            </button>
+                        </div>
+                        <div class="bench-th-right">
+                            <button type="button" class="btn bench-btn-fwd-resumes" id="bench_fwd_resumes_bulk_btn" title="Forward selected candidate resumes">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                                <span>Forward Resume</span>
+                                <span class="bench-btn-count" id="bench_btn_count_badge">0/5</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tier 3: Primary Talent Card Stream (Rule 20 Standard) -->
+                    <div class="cd-talent-stream-wrapper" id="benchListingTable">
                         <div class="loadingMessage loadingMessagebenchCandidateBenchCandidatesAjax"
-                            style="display:none; position:absolute;">Processing...</div>
-
-                        <!-- Hidden Table Header: Visible ONLY once any profile is selected, placed at the right corner above list headers -->
-                        <div class="bench-table-header-toolbar" id="bench_selection_bar" style="display: none;">
-                            <div class="bench-th-left">
-                                <span class="bench-th-badge" id="bench_selected_count_badge">0</span>
-                                <span class="bench-th-text" id="bench_selected_text_wrap"><span id="bench_selected_count">0</span> Candidates Selected</span>
-                                <button type="button" class="bench-th-clear-btn" id="bench_selection_close" title="Clear selection">
-                                    (Deselect All)
-                                </button>
-                            </div>
-                            <div class="bench-th-right">
-                                <button type="button" class="btn bench-btn-fwd-resumes" id="bench_fwd_resumes_bulk_btn" title="Forward selected candidate resumes">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                    </svg>
-                                    <span>Forward Resume</span>
-                                    <span class="bench-btn-count" id="bench_btn_count_badge">0/5</span>
-                                </button>
-                            </div>
+                            style="display:none; position:absolute; z-index: 10; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 8px 18px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                            <i class="fa fa-spinner fa-spin text-primary me-2"></i>Loading talents...
                         </div>
-
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0" id="benchListingTable">
-                                <thead>
-                                    <tr role="row">
-                                        <th class="col-select pe-0">
-                                            <div class="form-check form-check-sm form-check-custom form-check-solid me-2">
-                                                <input class="form-check-input chk_all_bench_list" type="checkbox" id="chk_all_bench_list" value="1" title="Select all on this page">
-                                            </div>
-                                        </th>
-                                        <th class="col-talent-name">Talent Name</th>
-                                        <th class="col-experience">Experience</th>
-                                        <th class="col-availability">Availability</th>
-                                        <th class="col-location">Location</th>
-                                        <th class="col-salary">Expected Salary</th>
-                                        <th class="col-status">Bench Status</th>
-                                        <th class="col-manager-name">Relationship Manager</th>
-                                        <th class="col-pipeline-activity">Clients Pipeline Activity</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="benchCandidateBenchCandidatesAjax"></tbody>
-                            </table>
-                        </div>
-                        <div id="paginationbenchCandidateBenchCandidates" class="mt-2"></div>
+                        <div id="benchCandidateBenchCandidatesAjax" class="cd-talent-stream"></div>
+                        <div id="paginationbenchCandidateBenchCandidates" class="mt-4"></div>
                     </div>
                 @endif
             </div>
@@ -1389,7 +1744,7 @@
         $(document).on('click', '.application_sttus_nav', function() {
             var page = $(this).attr('rel');
 
-            $('.tab-pill').removeClass('active');
+            $('.tab-pill, .cd-bench-tab-btn').removeClass('active');
             $(this).addClass('active');
             $('.kpi-filter').removeClass('active');
             $('#kpi_' + page).addClass('active');
@@ -1439,6 +1794,11 @@
             if (_benchSearchTimer) {
                 clearTimeout(_benchSearchTimer);
             }
+            if ($('#kt_tagify_2').val().trim().length > 0) {
+                $('#btnBenchSearchClear').show();
+            } else {
+                $('#btnBenchSearchClear').hide();
+            }
             if (e && (e.key === 'Enter' || e.keyCode === 13)) {
                 filtersdataget();
                 return;
@@ -1447,6 +1807,16 @@
                 filtersdataget();
             }, 250);
         }
+
+        $(document).on('click', '#btnBenchSearchClear', function() {
+            $('#kt_tagify_2').val('');
+            $(this).hide();
+            filtersdataget();
+        });
+
+        $(document).on('click', '#AddInternalPoolEmpty', function() {
+            $('#AddInternalPool').trigger('click');
+        });
 
         function filtersdataget() {
             fetchBenchBenchCandidatesCandidateList(1);
@@ -1533,9 +1903,9 @@
         // Pre-warm team roster in Browser RAM on page idle
         setTimeout(function() { window.JeroRmStore.fetchRoster(); }, 800);
 
-        // Optimistic DOM patching on parent table row (0ms, 0 secondary HTTP roundtrips)
+        // Optimistic DOM patching on parent row or card (0ms, 0 secondary HTTP roundtrips)
         window.patchBenchCandidateRmRow = function(candidateId, response) {
-            var $cell = $('a.hmb-listing[data-row-id="' + candidateId + '"]').closest('td.col-manager-name');
+            var $cell = $('a.hmb-listing[data-row-id="' + candidateId + '"]').closest('td.col-manager-name, .cd-subcard-manager');
             if ($cell.length && response) {
                 var count = Number(response.assigned_count || 0);
                 var firstName = response.first_manager || 'Unassigned';
@@ -1955,7 +2325,7 @@
                 var applicantIds = Array.isArray(detail.applicantIds) ? detail.applicantIds : [];
                 var jobCount = (Array.isArray(detail.jobIds) && detail.jobIds.length > 0) ? detail.jobIds.length : 1;
                 applicantIds.forEach(function(appId) {
-                    var $row = $('#benchCandidateBenchCandidatesAjax tr[data-bench-row-id="' + appId + '"]');
+                    var $row = $('#benchCandidateBenchCandidatesAjax [data-bench-row-id="' + appId + '"]');
                     if (!$row.length) return;
                     var $inw = $row.find('[data-bench-pipe="inreview"]');
                     if ($inw.length) {
@@ -2062,12 +2432,13 @@
 
         function applyBenchCounts(counts) {
             if (!counts) return;
-            $('#bg_all').text(counts.all_records);
-            $('#bg_1').text(counts.pool);
-            $('#bg_2').text(counts.bench);
-            $('#bg_4').text(counts.paused);
-            $('#bg_3').text(counts.placed);
-            $('#bg_5').text(counts.exited);
+            $('#bg_all').text(counts.all_records || 0);
+            $('#bg_1').text(counts.pool || 0);
+            $('#bg_2').text(counts.bench || 0);
+            $('#bg_4').text(counts.paused || 0);
+            $('#bg_3').text(counts.placed || 0);
+            $('#bg_5').text(counts.exited || 0);
+            $('#headerTotalTalentCount').text(counts.all_records || 0);
             $('#kpival_all').text(Number(counts.all_records || 0).toLocaleString());
             $('#kpival_2').text(Number(counts.bench || 0).toLocaleString());
         }
@@ -2089,25 +2460,41 @@
 
     <!-- ===== Toolbar functionality: Export / filters ===== -->
     <script>
-        // Export the currently loaded talent table to CSV.
+        // Export the currently loaded talent records to CSV.
         $(document).on('click', '#exportTalents', function() {
             var rows = [];
-            var headers = [];
-            $('#benchListingTable thead th').each(function(i) {
-                if (i === 0) return; // skip checkbox col
-                headers.push('"' + $(this).text().trim().replace(/"/g, '""') + '"');
-            });
+            var headers = ['"Talent Name"', '"Experience"', '"Availability"', '"Location"', '"Expected Salary"', '"Bench Status"', '"Relationship Manager"', '"Interviews"', '"Views"', '"Downloads"'];
             rows.push(headers.join(','));
-            $('#benchListingTable tbody tr').each(function() {
-                if ($(this).find('td').length < 2) return; // skip "no data" row
-                var cols = [];
-                $(this).find('td').each(function(i) {
-                    if (i === 0) return;
-                    var txt = $(this).text().replace(/\s+/g, ' ').trim().replace(/"/g, '""');
-                    cols.push('"' + txt + '"');
+
+            var $cards = $('#benchCandidateBenchCandidatesAjax .cd-talent-card');
+            if ($cards.length > 0) {
+                $cards.each(function() {
+                    var name = $(this).find('.cd-talent-name').text().replace(/\s+/g, ' ').trim().replace(/"/g, '""');
+                    var exp = $(this).find('.cd-val-exp').text().replace(/\s+/g, ' ').trim().replace(/"/g, '""');
+                    var avail = $(this).find('.cd-val-avail').text().replace(/\s+/g, ' ').trim().replace(/"/g, '""');
+                    var loc = $(this).find('.cd-val-location').text().replace(/\s+/g, ' ').trim().replace(/"/g, '""');
+                    var sal = $(this).find('.cd-val-salary strong').text().replace(/\s+/g, ' ').trim().replace(/"/g, '""');
+                    var status = $(this).find('.cd-status-badge').text().replace(/\s+/g, ' ').trim().replace(/"/g, '""');
+                    var rm = $(this).find('.cd-manager-name').text().replace(/\s+/g, ' ').trim().replace(/"/g, '""');
+                    var intCount = $(this).find('[data-bench-pipe-interview]').text().trim() || '0';
+                    var views = $(this).find('.cd-pipe-summary-stat:contains("Views") strong').text().trim() || '0';
+                    var downloads = $(this).find('.cd-pipe-summary-stat:contains("Downloads") strong').text().trim() || '0';
+
+                    rows.push(['"' + name + '"', '"' + exp + '"', '"' + avail + '"', '"' + loc + '"', '"' + sal + '"', '"' + status + '"', '"' + rm + '"', '"' + intCount + '"', '"' + views + '"', '"' + downloads + '"'].join(','));
                 });
-                rows.push(cols.join(','));
-            });
+            } else {
+                $('#benchListingTable tbody tr').each(function() {
+                    if ($(this).find('td').length < 2) return;
+                    var cols = [];
+                    $(this).find('td').each(function(i) {
+                        if (i === 0) return;
+                        var txt = $(this).text().replace(/\s+/g, ' ').trim().replace(/"/g, '""');
+                        cols.push('"' + txt + '"');
+                    });
+                    rows.push(cols.join(','));
+                });
+            }
+
             if (rows.length <= 1) { sweetAlert('Info', 'No records to export.', 'info'); return; }
             var blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
             var link = document.createElement('a');
@@ -2121,7 +2508,7 @@
     <script>
         (function() {
             function updateBenchSelectionBar() {
-                var $checked = $('#benchListingTable tbody .chk_list_item:checked');
+                var $checked = $('.chk_list_item:checked');
                 var n = $checked.length;
                 $('#bench_selected_count').text(n);
                 $('#bench_selected_count_badge').text(n);
@@ -2137,19 +2524,22 @@
                     $('#chk_all_bench_list').prop('checked', false);
                 }
 
-                var totalVisible = $('#benchListingTable tbody .chk_list_item').length;
+                var totalVisible = $('.chk_list_item').length;
                 if (totalVisible > 0 && n === totalVisible) {
                     $('#chk_all_bench_list').prop('checked', true).prop('indeterminate', false);
+                    $('#bench_selection_master_chk').prop('checked', true).prop('indeterminate', false);
                 } else if (n > 0 && n < totalVisible) {
                     $('#chk_all_bench_list').prop('checked', false).prop('indeterminate', true);
+                    $('#bench_selection_master_chk').prop('checked', false).prop('indeterminate', true);
                 } else {
                     $('#chk_all_bench_list').prop('checked', false).prop('indeterminate', false);
+                    $('#bench_selection_master_chk').prop('checked', false).prop('indeterminate', false);
                 }
             }
             window.updateBenchSelectionBar = updateBenchSelectionBar;
 
             function clearBenchSelection() {
-                $('#benchListingTable .chk_list_item, #chk_all_bench_list, #bench_selection_master_chk').prop('checked', false).prop('indeterminate', false);
+                $('.chk_list_item, #chk_all_bench_list, #bench_selection_master_chk').prop('checked', false).prop('indeterminate', false);
                 $('#bench_selected_count').text('0');
                 $('#bench_selected_count_badge').text('0');
                 $('#bench_btn_count_badge').text('0/5');
@@ -2158,15 +2548,15 @@
             }
             window.clearBenchSelection = clearBenchSelection;
 
-            // Select all checkbox in table header
-            $(document).on('change', '#chk_all_bench_list', function() {
+            // Select all checkbox in table header or selection bar
+            $(document).on('change', '#chk_all_bench_list, #bench_selection_master_chk', function() {
                 var isChecked = $(this).is(':checked');
-                $('#benchListingTable tbody .chk_list_item').prop('checked', isChecked);
+                $('.chk_list_item').prop('checked', isChecked);
                 updateBenchSelectionBar();
             });
 
-            // Row-level checkbox toggle
-            $(document).on('change', '#benchListingTable tbody .chk_list_item', function() {
+            // Card / Row-level checkbox toggle
+            $(document).on('change', '.chk_list_item', function() {
                 updateBenchSelectionBar();
             });
 
@@ -2184,7 +2574,7 @@
             $(document).on('click', '#bench_fwd_resumes_bulk_btn', function(e) {
                 e.preventDefault();
                 var arr = [];
-                $('#benchListingTable tbody .chk_list_item:checked').each(function() {
+                $('.chk_list_item:checked').each(function() {
                     var val = $(this).val();
                     if (val) arr.push(val);
                 });
