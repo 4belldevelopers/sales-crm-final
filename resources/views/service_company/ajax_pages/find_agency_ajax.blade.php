@@ -355,11 +355,6 @@
                                 <div class="rate-box-desc">{{ $ctModeText === 'Hr' ? 'Hourly Billed' : 'Monthly Net-15' }}</div>
                             </div>
                         @endif
-
-                        <!-- Agency Terms Drawer Button -->
-                        <button type="button" class="btn btn-xs btn-light-primary w-100 cl-view-terms-btn" onclick="openAgencyTermsDrawer({{ $row->id }})">
-                            <i class="fas fa-file-contract me-1"></i>View Agency Terms →
-                        </button>
                     </div>
                 </div>
 
@@ -457,6 +452,11 @@
                     </div>
                 </div>
                 <div class="cl-footer-strip-right">
+                    <a href="javascript:;" class="cl-terms-link" onclick="openAgencyTermsDrawer({{ $row->id }})" title="View pre-agreed commercial terms & SLA guarantees">
+                        <i class="fas fa-file-contract text-primary font-size-10 me-1"></i>
+                        <span>Agency Terms</span>
+                    </a>
+                    <span class="cl-footer-divider ms-1 me-1">•</span>
                     <a href="javascript:;" class="cl-profile-link show-detail-direct" data-row-id="{{ $row->client_id }}" title="View full agency dossier">
                         <span>View Full Profile</span>
                         <i class="fas fa-arrow-right font-size-10 ms-1"></i>

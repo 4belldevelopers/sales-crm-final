@@ -48,13 +48,13 @@ The primary agency card stream (`.cl-primary-card.tbl-r`) now features a perfect
   - State and Country displayed clearly underneath in muted font.
   - Interactive serving countries pill with Bootstrap hover tooltip (`Serving X Countries`) listing all serving territories.
 
-### Sub-Card 3: Commercials & Terms (`.cl-subcard-rates`)
+### Sub-Card 3: Commercials (`.cl-subcard-rates`)
 - **Header:** `<i class="fas fa-file-invoice-dollar text-success me-1"></i>Commercials` with `Pre-Agreed` pill.
 - **Body:** Compact adaptive commercial boxes:
   - Dual Mode (Full-Time % CTC + Contract Rate / Hr or / Mo).
   - Permanent Only Mode.
   - Contract Only Mode.
-  - Interactive sliding drawer trigger: `📄 View Agency Terms →` opening `#drawer_agency_terms_view`.
+  - Height optimized by relocating terms trigger to the footer strip.
 
 ### Sub-Card 4: Talent Supply (`.cl-subcard-talent`)
 - **Header:** `<i class="fas fa-users-cog text-warning me-1"></i>Talent Supply` with `Live Pool` pill.
@@ -73,9 +73,11 @@ The primary agency card stream (`.cl-primary-card.tbl-r`) now features a perfect
 ### Card Bottom Activity Strip (`.cl-card-footer-strip`)
 - Tenant timezone-converted last active timestamp (Rule 24).
 - Average SLA turnaround (~36-48h First TAT).
-- Recruiter team capacity: `Capacity: X Active Recruiters` (relocated from Sub-Card 5 to optimize height).
+- Recruiter team capacity: `Capacity: X Active Recruiters` (relocated from Sub-Card 5).
 - Marketplace accreditation status badge (`Marketplace Accredited` or `Onboarding Partner`).
-- Right-anchored `View Full Profile →` link.
+- Right-anchored dual actions:
+  - `📄 Agency Terms` link (triggers `#drawer_agency_terms_view`).
+  - `View Full Profile →` link (opens client details).
 
 ---
 

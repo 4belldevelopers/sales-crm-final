@@ -1034,7 +1034,7 @@
 .cl-rates-content-wrap {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
     height: 100%;
 }
 .cl-dual-rates-grid {
@@ -1093,14 +1093,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-.cl-view-terms-btn {
-    border-radius: 4px !important;
-    font-size: 9.5px !important;
-    font-weight: 600 !important;
-    padding: 2px 4px !important;
-    height: 22px !important;
-    margin-top: 3px !important;
 }
 
 /* Sub-Card 4: Jobs & Talent Supply (Vertical Listings) */
@@ -1240,6 +1232,33 @@
     font-weight: 700 !important;
     font-size: 10px !important;
 }
+.cl-footer-strip-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+}
+.cl-footer-strip-right .cl-terms-link {
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+}
+.cl-footer-strip-right .cl-terms-link:hover {
+    color: #009ef7 !important;
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    text-decoration: none !important;
+}
 .cl-footer-strip-right .cl-profile-link {
     font-size: 10.5px !important;
     font-weight: 600 !important;
@@ -1257,10 +1276,6 @@
     color: #007bb5 !important;
     background: #e0f2fe !important;
     text-decoration: none !important;
-}
-.cl-footer-strip-right .cl-profile-link:hover {
-    color: #007bb5;
-    text-decoration: underline;
 }
 
 /* ── SLIDING AGENCY TERMS DRAWER ── */
