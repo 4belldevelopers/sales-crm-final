@@ -828,9 +828,9 @@
     flex-direction: column !important;
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 11px !important;
-    padding: 10px 14px !important;
-    margin-bottom: 4px !important;
+    border-radius: 10px !important;
+    padding: 8px 10px 0 10px !important;
+    margin-bottom: 8px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
     box-sizing: border-box !important;
@@ -843,97 +843,11 @@
     transform: translateY(-1px) !important;
 }
 
-/* Card Top Ribbon (Point 1 & Point 3) */
-.cl-card-ribbon {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding-bottom: 7px !important;
-    margin-bottom: 8px !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-}
-.cl-ribbon-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    min-width: 0;
-}
-.cl-synergy-badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 20px;
-    border: 1px solid #bfdbfe;
-    background: #eff6ff;
-    color: #1d4ed8;
-}
-.cl-synergy-badge.synergy-match {
-    background: #ecfdf5;
-    border-color: #a7f3d0;
-    color: #065f46;
-}
-.cl-synergy-badge.synergy-all {
-    background: #f5f3ff;
-    border-color: #ddd6fe;
-    color: #6d28d9;
-}
-.cl-ribbon-divider { color: #cbd5e1; }
-.cl-ribbon-skills {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: wrap;
-}
-.cl-skill-chip {
-    font-size: 9.5px;
-    font-weight: 600;
-    background: #f1f5f9;
-    color: #334155;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    padding: 1px 6px;
-}
-.cl-skill-chip.matched {
-    background: #ecfdf5;
-    color: #047857;
-    border-color: #a7f3d0;
-    font-weight: 700;
-}
-.cl-ribbon-right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
-.cl-trust-chip {
-    font-size: 10.5px;
-    font-weight: 600;
-    padding: 2px 7px;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
-}
-.cl-trust-chip.sla {
-    background: #f0fdf4;
-    color: #166534;
-    border: 1px solid #bbf7d0;
-}
-.cl-trust-chip.contingent {
-    background: #f0f9ff;
-    color: #0369a1;
-    border: 1px solid #bae6fd;
-}
-
-/* 5 Discrete Sub-Cards Grid (Rule 20 Enterprise Standard) */
+/* 5 Discrete Sub-Cards Grid (Rule 20 Enterprise Standard - Compact & Identical Spacing) */
 .cl-subcards-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.15fr) !important;
-    gap: 8px !important;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.15fr) minmax(0, 1.1fr) !important;
+    gap: 7px !important;
     width: 100% !important;
     align-items: stretch !important;
 }
@@ -942,14 +856,15 @@
 .cl-subcard {
     background: #f8fafc !important;
     border: 1px solid #edf2f7 !important;
-    border-radius: 8px !important;
-    padding: 8px 10px !important;
+    border-radius: 7px !important;
+    padding: 5px 7px !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
     position: relative !important;
+    height: 100% !important;
 }
 
 /* Mandatory Dedicated Header Background (Rule 20) */
@@ -957,18 +872,19 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 5px 8px !important;
-    margin: -8px -10px 8px -10px !important;
+    padding: 3px 6px !important;
+    margin: -5px -7px 5px -7px !important;
     background: #f1f5f9 !important;
     border-bottom: 1px solid #e2e8f0 !important;
-    border-radius: 7px 7px 0 0 !important;
-    min-height: 24px !important;
+    border-radius: 6px 6px 0 0 !important;
+    min-height: 22px !important;
+    height: 22px !important;
 }
 .cl-subcard-title {
-    font-size: 9.5px !important;
+    font-size: 9px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.35px !important;
+    letter-spacing: 0.3px !important;
     color: #475569 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -978,14 +894,14 @@
 /* Sub-Card 1: Agency Identity */
 .cl-identity-body {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
+    align-items: center;
+    gap: 8px;
     min-width: 0;
 }
 .agency-logo-wrap {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
     overflow: hidden;
     flex-shrink: 0;
     display: flex;
@@ -1005,7 +921,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
 }
 .agency-meta-info {
@@ -1013,7 +929,7 @@
     flex: 1;
 }
 .agency-name {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: #0f172a;
     display: block;
@@ -1021,23 +937,25 @@
     overflow: hidden;
     text-overflow: ellipsis;
     text-decoration: none;
-    line-height: 1.25;
+    line-height: 1.2;
 }
 .agency-name:hover {
     color: #009ef7;
     text-decoration: underline;
 }
 .agency-ind-pill {
-    font-size: 11px;
+    font-size: 10px;
     color: #64748b;
     margin-top: 1px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.1;
 }
 .cl-identity-tagline {
     display: flex;
     align-items: center;
+    margin-top: 2px;
 }
 .cl-activity-meta {
     font-size: 10px;
@@ -1064,14 +982,15 @@
 .cl-location-body {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     height: 100%;
     min-width: 0;
 }
 .cl-loc-primary-row {
     display: flex;
     align-items: center;
-    font-size: 12px;
-    line-height: 1.25;
+    font-size: 11.5px;
+    line-height: 1.2;
     color: #0f172a;
     min-width: 0;
 }
@@ -1085,11 +1004,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     color: #64748b;
+    font-size: 10px;
     line-height: 1.2;
 }
 .cl-loc-serving-row {
     margin-top: auto;
-    padding-top: 6px;
+    padding-top: 2px;
 }
 .cl-serving-pill {
     display: inline-flex;
@@ -1098,8 +1018,8 @@
     color: #1e40af;
     border: 1px solid #bfdbfe;
     border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 10px;
+    padding: 1px 5px;
+    font-size: 9.5px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -1114,18 +1034,19 @@
 .cl-rates-content-wrap {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     height: 100%;
 }
 .cl-dual-rates-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 5px;
+    gap: 4px;
 }
 .cl-single-rate-box {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 5px 8px;
+    border-radius: 5px;
+    padding: 3px 6px;
     text-align: center;
 }
 .cl-single-rate-box.fulltime {
@@ -1139,44 +1060,47 @@
 .cl-rate-box {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 4px;
+    border-radius: 5px;
+    padding: 2px 3px;
     text-align: center;
 }
 .rate-box-tag {
-    font-size: 8.5px;
+    font-size: 8px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-radius: 3px;
-    padding: 1px 3px;
-    margin-bottom: 2px;
+    letter-spacing: 0.03em;
+    border-radius: 2px;
+    padding: 1px 2px;
+    line-height: 1;
+    margin-bottom: 1px;
 }
 .rate-box-tag.ft { background: #ecfdf5; color: #047857; }
 .rate-box-tag.ct { background: #f0f9ff; color: #0284c7; }
 .rate-box-val {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: #0f172a;
-    line-height: 1.15;
+    line-height: 1.1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .rate-box-desc {
-    font-size: 8.5px;
+    font-size: 7.5px;
     color: #64748b;
     margin-top: 1px;
+    line-height: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .cl-view-terms-btn {
-    border-radius: 5px !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    padding: 3px 6px !important;
-    height: 26px !important;
+    border-radius: 4px !important;
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    padding: 2px 4px !important;
+    height: 22px !important;
+    margin-top: 3px !important;
 }
 
 /* Sub-Card 4: Jobs & Talent Supply (Vertical Listings) */
@@ -1186,7 +1110,7 @@
 .cl-talent-vertical-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2.5px;
     margin-bottom: auto;
 }
 .cl-talent-vrow {
@@ -1195,10 +1119,10 @@
     justify-content: space-between;
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 3px 6px;
-    font-size: 11px;
-    min-height: 24px;
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 10px;
+    min-height: 19px;
     transition: all 0.15s ease;
 }
 .cl-talent-vrow .vrow-left {
@@ -1207,13 +1131,13 @@
     min-width: 0;
 }
 .cl-talent-vrow .vrow-lbl {
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 600;
     color: #475569;
     white-space: nowrap;
 }
 .cl-talent-vrow .vrow-val {
-    font-size: 11px;
+    font-size: 10.5px;
     line-height: 1.1;
     white-space: nowrap;
     margin-left: 4px;
@@ -1226,22 +1150,21 @@
 .cl-talent-vrow.bench:hover {
     background: #fef3c7;
     border-color: #f59e0b;
-    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.15);
 }
 .cl-talent-vrow.disabled {
     background: #f8fafc;
     border-color: #e2e8f0;
-    opacity: 0.75;
+    opacity: 0.7;
     cursor: default;
 }
 .cl-talent-supply-note {
-    font-size: 9px;
+    font-size: 8px;
     color: #64748b;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 /* Sub-Card 5: Separate Partnership & Action Hub */
@@ -1251,73 +1174,89 @@
 .cl-action-hub-body {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     height: 100%;
-}
-.cl-action-team-meta {
-    font-size: 11px;
-    color: #475569;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 2px 0;
 }
 .cl-card-action-wrap {
     margin-top: auto;
+    margin-bottom: auto;
 }
 .cl-action-btn {
     border-radius: 6px !important;
     font-size: 11px !important;
     font-weight: 700 !important;
-    padding: 5px 10px !important;
-    height: 30px !important;
+    padding: 4px 8px !important;
+    height: 28px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 .cl-action-footnote {
-    font-size: 9px;
+    font-size: 8.5px;
     color: #94a3b8;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-top: 2px;
 }
 
 /* ── BOTTOM FOOTER ACTIVITY STRIP (Rule 20 Enterprise Standard) ── */
 .cl-card-footer-strip {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 12px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-    font-size: 10.5px;
-    color: #64748b;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 6px 12px !important;
+    margin: 6px -10px 0 -10px !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom-left-radius: 9px !important;
+    border-bottom-right-radius: 9px !important;
+    font-size: 10.5px !important;
+    color: #475569 !important;
+    line-height: 1.2 !important;
 }
 .cl-footer-strip-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
 }
 .cl-footer-item {
-    display: inline-flex;
-    align-items: center;
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 10.5px !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+}
+.cl-footer-item strong {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    margin-left: 2px !important;
 }
 .cl-footer-divider {
-    color: #cbd5e1;
-    font-weight: 700;
+    color: #cbd5e1 !important;
+    font-weight: 700 !important;
+    font-size: 10px !important;
 }
 .cl-footer-strip-right .cl-profile-link {
-    font-size: 10.5px;
-    font-weight: 700;
-    color: #009ef7;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    color: #009ef7 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+}
+.cl-footer-strip-right .cl-profile-link:hover {
+    color: #007bb5 !important;
+    background: #e0f2fe !important;
+    text-decoration: none !important;
 }
 .cl-footer-strip-right .cl-profile-link:hover {
     color: #007bb5;
@@ -2180,8 +2119,7 @@
             }
             agencySkills = agencySkills.map(function(s) { return (s || '').toLowerCase().trim(); });
 
-            var $ribbonBadge = $card.find('.cl-synergy-badge');
-            var $ribbonSkills = $card.find('.cl-ribbon-skills');
+            var $cardMatchBadge = $card.find('.cl-card-match-badge');
 
             if (mode === 'all') {
                 // OVERVIEW MODE: Show only matching with up to 3 jobs (Point 2)
@@ -2195,17 +2133,13 @@
                 var displayJobMatchCount = Math.min(3, matchingJobCount);
 
                 if (displayJobMatchCount > 0) {
-                    $ribbonBadge.removeClass('synergy-match').addClass('synergy-all');
-                    $ribbonBadge.html('<i class="fas fa-layer-group text-purple me-1"></i><span class="cl-synergy-text">⚡ Matches your requirement on ' + displayJobMatchCount + (displayJobMatchCount === 1 ? ' job' : ' jobs') + '</span>');
-                    $ribbonSkills.html('<span class="cl-skill-chip" style="background:#f5f3ff; color:#7c3aed; border-color:#ddd6fe; font-weight:700;">High Synergy Partner</span>');
+                    $cardMatchBadge.removeClass('d-none badge-light-success').addClass('badge-light-primary');
+                    $cardMatchBadge.html('⚡ Matches ' + displayJobMatchCount + (displayJobMatchCount === 1 ? ' Job' : ' Jobs'));
                 } else {
-                    // If no match: HIDE percentage/match badge completely (Point 2)
-                    $ribbonBadge.removeClass('synergy-match synergy-all');
-                    $ribbonBadge.html('<i class="fas fa-award text-primary me-1"></i><span class="cl-synergy-text">Verified Specialization</span>');
+                    $cardMatchBadge.addClass('d-none');
                 }
             } else if (mode === 'none') {
-                $ribbonBadge.removeClass('synergy-match synergy-all');
-                $ribbonBadge.html('<i class="fas fa-award text-primary me-1"></i><span class="cl-synergy-text">Verified Partner</span>');
+                $cardMatchBadge.addClass('d-none');
             } else {
                 // SPECIFIC REQUISITION MATCH MODE: Dynamic & Logically Correct (Point 2)
                 var overlap = [];
@@ -2219,18 +2153,11 @@
                 if (selectedSkills.length > 0 && overlap.length > 0) {
                     var matchPct = Math.round((overlap.length / selectedSkills.length) * 100);
                     matchPct = Math.min(100, Math.max(1, matchPct));
-                    $ribbonBadge.removeClass('synergy-all').addClass('synergy-match');
-                    $ribbonBadge.html('<i class="fas fa-bolt text-success me-1"></i><span class="cl-synergy-text">🔥 ' + matchPct + '% Match</span>');
-
-                    var chipsHtml = '';
-                    overlap.slice(0, 4).forEach(function(sk) {
-                        chipsHtml += '<span class="cl-skill-chip matched">' + sk.charAt(0).toUpperCase() + sk.slice(1) + '</span>';
-                    });
-                    $ribbonSkills.html(chipsHtml);
+                    $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
+                    $cardMatchBadge.html('🔥 ' + matchPct + '% Match');
                 } else {
                     // No matching skills: DO NOT show match percentage badge (Point 2)
-                    $ribbonBadge.removeClass('synergy-match synergy-all');
-                    $ribbonBadge.html('<i class="fas fa-briefcase text-primary me-1"></i><span class="cl-synergy-text">Specialized Partner</span>');
+                    $cardMatchBadge.addClass('d-none');
                 }
             }
         });
