@@ -267,13 +267,13 @@
                 </div>
             </div>
 
-            <!-- 4 SUB-CARDS GRID (RULE 20) -->
+            <!-- 5 SUB-CARDS GRID (RULE 20: DEDICATED LOCATION SUBCARD + VERTICAL TALENT LISTING) -->
             <div class="cl-subcards-grid">
                 
-                <!-- SUB-CARD 1: Agency Identity & Full Location Hierarchy -->
+                <!-- SUB-CARD 1: Agency Identity -->
                 <div class="cl-subcard cl-subcard-identity">
                     <div class="cl-subcard-head">
-                        <span class="cl-subcard-title"><i class="fas fa-shield-alt text-primary me-1"></i>Identity & Location</span>
+                        <span class="cl-subcard-title"><i class="fas fa-shield-alt text-primary me-1"></i>Agency Identity</span>
                         @if($isSuperAdminVerified)
                             <span class="badge badge-light-success py-0.5 px-2 font-size-10 font-weight-700" title="Accredited & Verified by Superadmin">
                                 <i class="fas fa-check-circle text-success me-1"></i>Verified
@@ -302,28 +302,42 @@
                                 <i class="fas fa-briefcase font-size-10 me-1 text-muted"></i>
                                 <span>{{ !empty($ind_name) ? ucwords(substr($ind_name, 0, 24)) : 'Staffing & IT' }}</span>
                             </div>
-                            
-                            <!-- Location: City, State, Country -->
-                            <div class="cl-identity-location mt-1" title="{{ $cityName }}, {{ $stateName }}, {{ $countryName }}">
-                                <i class="fas fa-map-marker-alt text-danger font-size-11 me-1"></i>
-                                <span class="font-weight-700 text-dark">{{ $cityName }}</span>, 
-                                <span class="text-secondary font-size-11">{{ $stateName }}</span>, 
-                                <span class="text-muted font-size-11">{{ $countryName }}</span>
-                            </div>
-
-                            <!-- Serving Countries with Mouse Hover Tooltip -->
-                            <div class="cl-identity-serving mt-1">
-                                <span class="cl-serving-pill" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $servingCountriesList }}">
-                                    <i class="fas fa-globe-americas text-primary me-1 font-size-10"></i>
-                                    Serving <strong>{{ $servingCount }}</strong> {{ $servingCount > 1 ? 'Countries' : 'Country' }}
-                                    <i class="fas fa-info-circle ms-0.5 text-muted font-size-9"></i>
-                                </span>
+                            <div class="cl-identity-tagline mt-1">
+                                @if($isSuperAdminVerified)
+                                    <span class="badge badge-light-primary font-size-9 py-0.5 px-1.5"><i class="fas fa-certificate text-primary me-1"></i>Accredited</span>
+                                @else
+                                    <span class="badge badge-light-secondary font-size-9 py-0.5 px-1.5 text-muted"><i class="fas fa-user-check text-muted me-1"></i>Partner</span>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- SUB-CARD 2: Adaptive Commercials & Agency Terms Drawer Trigger -->
+                <!-- SUB-CARD 2: Dedicated Location & Countries Serving Sub-Card -->
+                <div class="cl-subcard cl-subcard-location">
+                    <div class="cl-subcard-head">
+                        <span class="cl-subcard-title"><i class="fas fa-map-marker-alt text-danger me-1"></i>Location & Coverage</span>
+                        <span class="badge badge-light-danger py-0.5 px-1.5 font-size-9 font-weight-700" title="{{ $countryName }}">{{ $countryCode }}</span>
+                    </div>
+                    <div class="cl-location-body">
+                        <div class="cl-loc-primary-row" title="{{ $cityName }}, {{ $stateName }}, {{ $countryName }}">
+                            <i class="fas fa-map-marker-alt text-danger font-size-11 me-1"></i>
+                            <span class="cl-loc-city font-weight-700 text-dark">{{ $cityName }}</span>
+                        </div>
+                        <div class="cl-loc-secondary-row text-secondary font-size-11 mt-0.5 truncate" title="{{ $stateName }}, {{ $countryName }}">
+                            {{ $stateName }}, {{ $countryName }}
+                        </div>
+                        <div class="cl-loc-serving-row mt-2">
+                            <span class="cl-serving-pill" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $servingCountriesList }}">
+                                <i class="fas fa-globe-americas text-primary me-1 font-size-10"></i>
+                                Serving <strong>{{ $servingCount }}</strong> {{ $servingCount > 1 ? 'Countries' : 'Country' }}
+                                <i class="fas fa-info-circle ms-0.5 text-muted font-size-9"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-CARD 3: Adaptive Commercials & Agency Terms Drawer Trigger -->
                 <div class="cl-subcard cl-subcard-rates">
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title"><i class="fas fa-file-invoice-dollar text-success me-1"></i>Commercials</span>
@@ -373,41 +387,52 @@
                     </div>
                 </div>
 
-                <!-- SUB-CARD 3: Separate Jobs & Talent Supply Sub-Card -->
+                <!-- SUB-CARD 4: Jobs & Talent Supply (Vertical Listings) -->
                 <div class="cl-subcard cl-subcard-talent">
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title"><i class="fas fa-users-cog text-warning me-1"></i>Jobs & Talent Supply</span>
-                        <span class="font-size-10 text-muted font-weight-600">Live Pool</span>
+                        <span class="badge badge-light-warning py-0.5 px-1.5 font-size-9 font-weight-700 text-dark">Live Pool</span>
                     </div>
-                    <div class="cl-talent-stats-grid">
-                        <div class="talent-stat-box">
-                            <div class="stat-num text-primary">{{ $activeJobs }}</div>
-                            <div class="stat-lbl"><i class="fas fa-briefcase font-size-10 me-1"></i>Jobs</div>
+                    <div class="cl-talent-vertical-list">
+                        <div class="cl-talent-vrow">
+                            <div class="vrow-left">
+                                <i class="fas fa-briefcase text-primary font-size-10 me-1.5"></i>
+                                <span class="vrow-lbl">Active Jobs:</span>
+                            </div>
+                            <span class="vrow-val text-primary font-weight-700">{{ $activeJobs }}</span>
                         </div>
-                        <div class="talent-stat-box">
-                            <div class="stat-num text-info">{{ $all_candidates }}</div>
-                            <div class="stat-lbl"><i class="fas fa-user-friends font-size-10 me-1"></i>Profiles</div>
+                        <div class="cl-talent-vrow">
+                            <div class="vrow-left">
+                                <i class="fas fa-user-friends text-info font-size-10 me-1.5"></i>
+                                <span class="vrow-lbl">Talent Profiles:</span>
+                            </div>
+                            <span class="vrow-val text-info font-weight-700">{{ $all_candidates }}</span>
                         </div>
-                        <!-- Bench Box (Context-Aware: Clickable only if Bench > 0) -->
                         @if($all_candidate_bench > 0)
-                            <div class="talent-stat-box bench cl-bench-trigger" onclick="openAgencyBenchDrawer({{ $row->id }}, '{{ addslashes($row->company_name) }}', {{ $all_candidate_bench }})" title="Click to preview pre-vetted bench profiles">
-                                <div class="stat-num text-warning">⚡ {{ $all_candidate_bench }}</div>
-                                <div class="stat-lbl text-warning font-weight-700"><u>Bench 👁️</u></div>
+                            <div class="cl-talent-vrow bench cl-bench-trigger" onclick="openAgencyBenchDrawer({{ $row->id }}, '{{ addslashes($row->company_name) }}', {{ $all_candidate_bench }})" title="Click to preview pre-vetted bench profiles">
+                                <div class="vrow-left">
+                                    <i class="fas fa-bolt text-warning font-size-10 me-1.5"></i>
+                                    <span class="vrow-lbl text-warning font-weight-700">Pre-Vetted Bench:</span>
+                                </div>
+                                <span class="vrow-val text-warning font-weight-700"><u>⚡ {{ $all_candidate_bench }} 👁️</u></span>
                             </div>
                         @else
-                            <div class="talent-stat-box disabled" title="No bench candidates currently listed">
-                                <div class="stat-num text-muted">0</div>
-                                <div class="stat-lbl text-muted">Bench</div>
+                            <div class="cl-talent-vrow disabled" title="No bench candidates currently listed">
+                                <div class="vrow-left">
+                                    <i class="fas fa-bolt text-muted font-size-10 me-1.5"></i>
+                                    <span class="vrow-lbl text-muted">Pre-Vetted Bench:</span>
+                                </div>
+                                <span class="vrow-val text-muted font-weight-600">0</span>
                             </div>
                         @endif
                     </div>
-                    <div class="cl-talent-supply-note mt-2">
-                        <i class="fas fa-check-circle text-success font-size-10 me-1"></i>
-                        <span>Domain verified candidate pipeline</span>
+                    <div class="cl-talent-supply-note mt-1">
+                        <i class="fas fa-check-circle text-success font-size-9 me-1"></i>
+                        <span>Domain verified candidate pool</span>
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: Separate Partnership & Action Hub Sub-Card -->
+                <!-- SUB-CARD 5: Separate Partnership & Action Hub Sub-Card -->
                 <div class="cl-subcard cl-subcard-action-hub">
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title"><i class="fas fa-handshake text-info me-1"></i>Partnership & Action</span>
