@@ -969,11 +969,15 @@
         }
         .cd-talent-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 1.15fr) minmax(0, 2.85fr) !important;
+            grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.05fr) minmax(0, 1.55fr) minmax(0, 2.3fr) !important;
             gap: 8px !important;
             padding: 10px 12px !important;
             width: 100% !important;
             align-items: stretch !important;
+        }
+        .cd-subcard-similar-clients {
+            width: 100% !important;
+            min-width: 0 !important;
         }
         .cd-subcard-pipeline {
             width: 100% !important;
@@ -1186,7 +1190,7 @@
         /* 15.6" Screen responsiveness */
         @media only screen and (max-width: 1440px) {
             .cd-talent-card-grid {
-                grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.3fr) minmax(0, 1.4fr) minmax(0, 1.1fr) minmax(0, 2.8fr) !important;
+                grid-template-columns: minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 1.0fr) minmax(0, 1.5fr) minmax(0, 2.2fr) !important;
                 gap: 6px !important;
                 padding: 8px 10px !important;
             }
