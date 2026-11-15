@@ -20,63 +20,61 @@ To achieve maximum enterprise clarity, readability, and visual balance per **Use
 
 ## 2. 5-Sub-Card Grid Architecture (Rule 20)
 
-The primary agency card stream (`.cl-primary-card.tbl-r`) now features a perfectly balanced 5-tier sub-card layout:
+The primary agency card stream (`.cl-primary-card.tbl-r`) now features a perfectly balanced 5-tier compact sub-card layout with the top ribbon removed and capacity moved to the footer strip:
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ TOP TRUST & SYNERGY RIBBON: Specialization / Skill Chips | 🛡️ 90-Day Free Replacement | 🎯 100% Contingent             │
-├─────────────────┬─────────────────┬─────────────────┬───────────────────────────────┬──────────────────────────────────┤
+┌─────────────────┬─────────────────┬─────────────────┬───────────────────────────────┬──────────────────────────────────┐
 │ SUB-CARD 1:     │ SUB-CARD 2:     │ SUB-CARD 3:     │ SUB-CARD 4:                   │ SUB-CARD 5:                      │
-│ Agency Identity │ Location & Reach│ Commercials     │ Jobs & Talent Supply          │ Partnership & Action             │
+│ Identity        │ Location        │ Commercials     │ Talent Supply                 │ Partnership                      │
 │ [Header #f1f5f9]│ [Header #f1f5f9]│ [Header #f1f5f9]│ [Header #f1f5f9]              │ [Header #f1f5f9]                 │
 │                 │                 │                 │ (Vertical Stacked Rows)       │                                  │
-│ • Logo/Initials │ • City (Bold)   │ • Full-Time CTC │ • 💼 Active Jobs: 5           │ • Capacity: 8 Recruiters         │
-│ • Company Name  │ • State, Country│ • Contract / Hr │ • 👥 Talent Profiles: 12      │ • [ Send Request ] Button        │
-│ • Industry Pill │ • 🌐 Serving X  │ • View Agency   │ • ⚡ Pre-Vetted Bench: 2 👁️   │ • Instant SLA Alert Footnote     │
-│ • Accredited Tag│   Countries (i) │   Terms Drawer  │ • Domain verified pool        │                                  │
+│ • Logo/Initials │ • City (Bold)   │ • Full-Time CTC │ • 💼 Active Jobs: 5           │ • [ Send Request ] CTA Button    │
+│ • Company Name  │ • State, Country│ • Contract / Hr │ • 👥 Profiles: 12             │ • ⚡ Instant SLA Alert Footnote  │
+│ • Industry Pill │ • 🌐 Serving X  │ • View Terms    │ • ⚡ Pre-Vetted Bench: 2 👁️   │                                  │
+│ • Accredited Tag│   Countries (i) │   Drawer Button │ • Domain verified pool        │                                  │
 ├─────────────────┴─────────────────┴─────────────────┴───────────────────────────────┴──────────────────────────────────┤
-│ BOTTOM FOOTER ACTIVITY STRIP: ● Active <timestamp>  •  ● Avg SLA: ~36-48h First TAT  •  Marketplace Accredited  • View →│
+│ BOTTOM FOOTER ACTIVITY STRIP: ● Active <time> • ● Avg SLA: ~36-48h • 👥 Capacity: 8 Recruiters • Accredited • View →   │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Sub-Card 1: Agency Identity (`.cl-subcard-identity`)
-- **Header:** `<i class="fas fa-shield-alt text-primary me-1"></i>Agency Identity` with Superadmin Verified badge (`companies.accountVerify == 1`).
-- **Body:** Rounded company logo (with dynamic fallback colored initials), company name linked to client details, industry taxonomy pill, and partnership status pill (`Accredited Partner` or `Direct Partner`).
+- **Header:** `<i class="fas fa-shield-alt text-primary me-1"></i>Identity` with Superadmin Verified badge (`companies.accountVerify == 1`) and optional dynamic job match badge.
+- **Body:** Rounded company logo (with dynamic fallback colored initials), company name linked to client details, industry taxonomy pill, and partnership status pill (`Accredited` or `Partner`).
 
 ### Sub-Card 2: Location & Coverage (`.cl-subcard-location`)
-- **Header:** `<i class="fas fa-map-marker-alt text-danger me-1"></i>Location & Coverage` with 2-letter country code pill (`IN`, `US`, etc.).
+- **Header:** `<i class="fas fa-map-marker-alt text-danger me-1"></i>Location` with 2-letter country code pill (`IN`, `US`, etc.).
 - **Body:**
   - City highlighted in bold dark font (`font-weight-700`).
-  - State and Country displayed clearly underneath.
+  - State and Country displayed clearly underneath in muted font.
   - Interactive serving countries pill with Bootstrap hover tooltip (`Serving X Countries`) listing all serving territories.
 
 ### Sub-Card 3: Commercials & Terms (`.cl-subcard-rates`)
 - **Header:** `<i class="fas fa-file-invoice-dollar text-success me-1"></i>Commercials` with `Pre-Agreed` pill.
-- **Body:** Adaptive commercial cards supporting:
+- **Body:** Compact adaptive commercial boxes:
   - Dual Mode (Full-Time % CTC + Contract Rate / Hr or / Mo).
   - Permanent Only Mode.
   - Contract Only Mode.
   - Interactive sliding drawer trigger: `📄 View Agency Terms →` opening `#drawer_agency_terms_view`.
 
-### Sub-Card 4: Jobs & Talent Supply (`.cl-subcard-talent`)
-- **Header:** `<i class="fas fa-users-cog text-warning me-1"></i>Jobs & Talent Supply` with `Live Pool` pill.
+### Sub-Card 4: Talent Supply (`.cl-subcard-talent`)
+- **Header:** `<i class="fas fa-users-cog text-warning me-1"></i>Talent Supply` with `Live Pool` pill.
 - **Body (Vertical Stacked Rows):**
-  - Row 1: `💼 Active Jobs: <count>`
-  - Row 2: `👥 Talent Profiles: <count>`
-  - Row 3: `⚡ Pre-Vetted Bench: <count> Bench 👁️` (Context-aware: highlighted and clickable to open `#drawer_agency_bench_preview` when bench $> 0$, disabled when 0).
+  - Row 1: `Active Jobs: <count>`
+  - Row 2: `Profiles: <count>`
+  - Row 3: `Pre-Vetted Bench: <count> Bench 👁️` (Context-aware: highlighted and clickable to open `#drawer_agency_bench_preview` when bench $> 0$, disabled when 0).
   - Sub-note: `✓ Domain verified candidate pool`.
 
-### Sub-Card 5: Partnership & Action Hub (`.cl-subcard-action-hub`)
-- **Header:** `<i class="fas fa-handshake text-info me-1"></i>Partnership & Action` with `Connect` pill.
+### Sub-Card 5: Partnership & Action (`.cl-subcard-action-hub`)
+- **Header:** `<i class="fas fa-handshake text-info me-1"></i>Partnership` with `Connect` pill.
 - **Body:**
-  - Recruiter team capacity: `Capacity: X Active Recruiters`.
-  - Primary context-aware CTA button: `Send Request` (Primary Blue), `Cancel Request` (Light Danger), `Connected` (Light Success), or `Rejected`.
+  - Vertically centered primary context-aware CTA button: `Send Request` (Primary Blue), `Cancel Request` (Light Danger), `Connected` (Light Success), or `Rejected`.
   - SLA footnote: `Instant SLA Alert to Lead Partner`.
 
 ### Card Bottom Activity Strip (`.cl-card-footer-strip`)
 - Tenant timezone-converted last active timestamp (Rule 24).
 - Average SLA turnaround (~36-48h First TAT).
-- Marketplace accreditation status.
+- Recruiter team capacity: `Capacity: X Active Recruiters` (relocated from Sub-Card 5 to optimize height).
+- Marketplace accreditation status badge (`Marketplace Accredited` or `Onboarding Partner`).
 - Right-anchored `View Full Profile →` link.
 
 ---
