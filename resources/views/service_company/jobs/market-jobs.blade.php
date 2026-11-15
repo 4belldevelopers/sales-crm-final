@@ -381,6 +381,672 @@
     }
     .mjh-more-btn:hover { background: #E5E7EB; }
 
+    /* ══════════════════════════════════════════════════════════════════
+       Modern Enterprise Card + Sub-Card Design System (Rule 20)
+       ══════════════════════════════════════════════════════════════════ */
+    .cd-market-header-card {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 14px 18px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+        font-family: 'Poppins', sans-serif;
+    }
+    .cd-market-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    .cd-market-header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 19px;
+        flex-shrink: 0;
+    }
+    .cd-market-title-wrap {
+        min-width: 0;
+    }
+    .cd-market-header-title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .cd-market-header-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.25;
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+    }
+    .cd-market-verified-badge {
+        color: #16a34a;
+        display: inline-flex;
+        align-items: center;
+        font-size: 16px;
+    }
+    .cd-market-count-pill {
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 12px;
+        border: 1px solid #bfdbfe;
+        line-height: 1.3;
+    }
+    .cd-market-header-sub {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 3px;
+        line-height: 1.4;
+    }
+    .cd-market-header-pills {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+    }
+    .cd-market-pill {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        line-height: 1.3;
+    }
+    .cd-market-pill.pill-verified {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+    .cd-market-pill.pill-active {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+    .cd-market-dot-live {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
+        display: inline-block;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+        animation: cdPulseLive 2s infinite ease-in-out;
+    }
+    @keyframes cdPulseLive {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.15); }
+    }
+    .cd-market-pill.pill-eligible {
+        background: #f5f3ff;
+        color: #7c3aed;
+        border: 1px solid #ddd6fe;
+    }
+    .cd-market-header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+    }
+    .cd-market-search-subcard {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0 10px;
+        height: 38px;
+        width: 290px;
+        max-width: 100%;
+        transition: all 0.15s ease;
+    }
+    .cd-market-search-subcard:hover {
+        border-color: #cbd5e1;
+    }
+    .cd-market-search-subcard:focus-within {
+        border-color: #009ef7;
+        box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+    }
+    .cd-market-search-subcard i.fa-search {
+        color: #94a3b8;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+    .cd-market-search-subcard input {
+        border: none !important;
+        outline: none !important;
+        background: transparent !important;
+        font-family: 'Poppins', sans-serif !important;
+        font-size: 12px !important;
+        color: #0f172a !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        line-height: normal !important;
+    }
+    .cd-market-search-subcard input::placeholder {
+        color: #94a3b8;
+    }
+    .cd-market-search-clear {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 0 2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.15s ease;
+    }
+    .cd-market-search-clear:hover {
+        color: #dc2626;
+    }
+
+    /* Tier 2: Executive KPI Metrics Grid */
+    .cd-market-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
+        width: 100%;
+        font-family: 'Poppins', sans-serif;
+    }
+    .cd-market-kpi-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 12px 14px;
+        text-decoration: none !important;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+    .cd-market-kpi-card:hover {
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        transform: translateY(-1px);
+        border-color: #cbd5e1;
+    }
+    .cd-market-kpi-card.cd-kpi-active {
+        border-color: #009ef7 !important;
+        background: #f8fbff !important;
+        box-shadow: 0 2px 6px rgba(0, 158, 247, 0.15) !important;
+    }
+    .cd-kpi-top-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .cd-kpi-icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    .cd-kpi-icon-blue   { background: #eff6ff; color: #2563eb; }
+    .cd-kpi-icon-green  { background: #ecfdf5; color: #059669; }
+    .cd-kpi-icon-purple { background: #f5f3ff; color: #7c3aed; }
+    .cd-kpi-icon-amber  { background: #fff7ed; color: #ea580c; }
+    .cd-kpi-meta {
+        min-width: 0;
+        flex: 1;
+    }
+    .cd-kpi-label {
+        font-size: 11.5px;
+        font-weight: 500;
+        color: #64748b;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .cd-kpi-value {
+        font-size: 19px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.15;
+        font-variant-numeric: tabular-nums;
+    }
+    .cd-kpi-subtext {
+        font-size: 10.5px;
+        color: #94a3b8;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Tier 3: Dedicated Sub-Tabs Card */
+    .cd-market-tabs-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 8px 12px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        font-family: 'Poppins', sans-serif;
+    }
+    .cd-market-tabs-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+    .cd-market-tab-btn {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        transition: all 0.15s ease;
+        text-decoration: none !important;
+        user-select: none;
+        font-family: 'Poppins', sans-serif;
+        line-height: 1.3;
+    }
+    .cd-market-tab-btn:hover {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    .cd-market-tab-btn.active {
+        background: #009ef7 !important;
+        border-color: #009ef7 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+    }
+    .cd-market-tab-btn i {
+        font-size: 12px;
+        opacity: 0.9;
+    }
+    .cd-tab-badge {
+        min-width: 20px;
+        height: 18px;
+        padding: 0 6px;
+        border-radius: 10px;
+        font-size: 10.5px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+    .cd-market-tab-btn .cd-tab-badge {
+        background: #f1f5f9;
+        color: #475569;
+    }
+    .cd-market-tab-btn .cd-tab-badge.badge-blue   { background: #eff6ff; color: #1d4ed8; }
+    .cd-market-tab-btn .cd-tab-badge.badge-green  { background: #ecfdf5; color: #059669; }
+    .cd-market-tab-btn .cd-tab-badge.badge-amber  { background: #fef3c7; color: #d97706; }
+    .cd-market-tab-btn .cd-tab-badge.badge-purple { background: #f5f3ff; color: #6d28d9; }
+    .cd-market-tab-btn .cd-tab-badge.badge-indigo { background: #e0e7ff; color: #4338ca; }
+    .cd-market-tab-btn .cd-tab-badge.badge-orange { background: #fff7ed; color: #c2410c; }
+    .cd-market-tab-btn.active .cd-tab-badge {
+        background: rgba(255, 255, 255, 0.28) !important;
+        color: #ffffff !important;
+    }
+
+    /* Tier 4: Primary Card Stream & Discrete Sub-Cards */
+    .cd-market-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        transition: all 0.2s ease !important;
+        display: flex !important;
+        flex-direction: column !important;
+        font-family: 'Poppins', sans-serif !important;
+        overflow: hidden !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .cd-market-card:hover {
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+        border-color: #cbd5e1 !important;
+    }
+    .cd-market-card.jc-accent-green {
+        border-left: 3.5px solid #10b981 !important;
+    }
+    .cd-market-card.jc-accent-yellow {
+        border-left: 3.5px solid #f59e0b !important;
+    }
+    .cd-market-card.jc-accent-orange {
+        border-left: 3.5px solid #ea580c !important;
+    }
+    .cd-market-card.jc-accent-blue {
+        border-left: 3.5px solid #2563eb !important;
+    }
+    .cd-market-card-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.5fr) minmax(0, 1.05fr) minmax(0, 1.45fr) minmax(0, 1.35fr) !important;
+        gap: 8px !important;
+        padding: 10px 12px 6px 12px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        align-items: stretch !important;
+    }
+    .cd-market-subcard {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    .cd-subcard-header {
+        background: #f8fafc !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        padding: 6px 9px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+    }
+    .cd-subcard-label {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #475569 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.4px !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .cd-badges-group {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: nowrap;
+        overflow: hidden;
+    }
+    .cd-subcard-body {
+        padding: 8px 10px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+    .cd-market-job-title {
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        margin: 0 0 2px 0 !important;
+        line-height: 1.3 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        cursor: pointer;
+        transition: color 0.15s ease;
+    }
+    .cd-market-job-title:hover {
+        color: #009ef7 !important;
+    }
+    .cd-market-job-dept {
+        font-size: 11px !important;
+        color: #009ef7 !important;
+        font-weight: 500 !important;
+        margin-bottom: 5px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: flex;
+        align-items: center;
+    }
+    .cd-role-mandate-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        color: #64748b;
+        margin-top: auto;
+    }
+    .cd-mandate-tag {
+        display: inline-flex;
+        align-items: center;
+        font-weight: 600;
+        color: #059669;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 10px;
+    }
+    .cd-openings-count {
+        font-size: 10.5px;
+        color: #475569;
+        font-weight: 500;
+    }
+    .cd-comp-highlight {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.25;
+        font-variant-numeric: tabular-nums;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .cd-comp-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #475569;
+        font-weight: 500;
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 3px;
+    }
+    .cd-location-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .cd-subcard-bench {
+        cursor: pointer;
+        transition: background-color 0.15s, border-color 0.15s;
+    }
+    .cd-subcard-bench:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
+    .cd-bench-kpi-num {
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.1;
+        margin: 2px 0 1px 0;
+        font-variant-numeric: tabular-nums;
+        text-align: center;
+    }
+    .cd-bench-kpi-sub {
+        font-size: 10px;
+        color: #64748b;
+        line-height: 1.2;
+        text-align: center;
+    }
+    .cd-subcard-link {
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+        color: #009ef7 !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin-top: 4px !important;
+        cursor: pointer !important;
+    }
+    .cd-subcard-link:hover {
+        text-decoration: underline !important;
+        color: #0081c7 !important;
+    }
+    .cd-terms-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        font-size: 10px;
+        line-height: 1.3;
+    }
+    .cd-subcard-actions .cd-subcard-body {
+        gap: 5px;
+        justify-content: center;
+    }
+    .cd-actions-sec-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        width: 100%;
+    }
+    .cd-actions-sec-row .btn {
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+        padding: 3px 6px !important;
+        border-radius: 5px !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+    .cd-market-card-bottom {
+        border-top: 1px solid #f1f5f9 !important;
+        padding: 6px 14px !important;
+        background: #ffffff !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        border-radius: 0 0 10px 10px !important;
+        font-family: 'Poppins', sans-serif !important;
+    }
+    .cd-bottom-telemetry {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 10.5px;
+        color: #64748b;
+    }
+    .cd-bottom-telemetry strong {
+        color: #0f172a;
+        font-weight: 600;
+    }
+    .cd-bottom-skills {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+        flex: 1 1 auto;
+        justify-content: flex-end;
+        overflow: hidden;
+    }
+    .cd-bottom-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .cd-bottom-actions .cd-icon-btn {
+        font-size: 12.5px;
+        color: #94a3b8;
+        cursor: pointer;
+        transition: color 0.15s;
+        padding: 2px 4px;
+    }
+    .cd-bottom-actions .cd-icon-btn:hover {
+        color: #009ef7;
+    }
+
+    @media (max-width: 1366px) {
+        .cd-market-card-grid {
+            grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.45fr) minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, 1.35fr) !important;
+            gap: 6px !important;
+            padding: 8px 10px 6px 10px !important;
+        }
+        .cd-market-header-card {
+            padding: 12px 14px !important;
+        }
+        .cd-market-search-subcard {
+            width: 250px;
+        }
+    }
+    @media (max-width: 1100px) {
+        .cd-market-kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .cd-market-card-grid {
+            grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.2fr) !important;
+        }
+        .cd-subcard-actions {
+            grid-column: span 2;
+        }
+    }
+    @media (max-width: 768px) {
+        .cd-market-kpi-grid {
+            grid-template-columns: 1fr;
+        }
+        .cd-market-card-grid {
+            grid-template-columns: 1fr !important;
+        }
+        .cd-market-header-card {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .cd-market-header-right {
+            width: 100%;
+            justify-content: stretch;
+        }
+        .cd-market-search-subcard {
+            width: 100%;
+        }
+    }
+
 </style>
 
 <link href="{{ asset('demo/css/find-market-jobs.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
@@ -407,98 +1073,38 @@
             <div class="content-area">
                 
 
-                    <!-- HERO -->
-                    {{-- ── Market Jobs Hero Card ── --}}
-                    <div class="mjh-wrap">
-                        <div class="mjh-top">
-                            <div class="mjh-title-block">
-                                <div class="mjh-title">
-                                    Agency Job Marketplace
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                        <path d="m9 12 2 2 4-4"/>
-                                    </svg>
+                    <!-- ══════════════════════════════════════════════════════════════
+                         TIER 1: TOP HEADER TOOLBAR CARD (Modern Card + Sub-Card Standard)
+                         ══════════════════════════════════════════════════════════════ -->
+                    <div class="cd-market-header-card">
+                        <div class="cd-market-header-left">
+                            <div class="cd-market-header-icon">
+                                <i class="fas fa-store-alt"></i>
+                            </div>
+                            <div class="cd-market-title-wrap">
+                                <div class="cd-market-header-title-row">
+                                    <h1 class="cd-market-header-title">Agency Job Marketplace</h1>
+                                    <span class="cd-market-verified-badge" title="Verified ATS Marketplace">
+                                        <i class="fas fa-check-circle"></i>
+                                    </span>
+                                    <span class="cd-market-count-pill" id="span_jobMarket_header">{{ number_format($all_jobs ?? 0) }} Opportunities</span>
                                 </div>
-                                <div class="mjh-sub-desc">Verified hiring requirements shared directly by client companies. Find opportunities, review terms, and submit qualified candidates.</div>
-                                <div class="mjh-header-pills">
-                                    <span class="mjh-pill mjh-pill-green"><i class="fa-solid fa-circle-check"></i> Verified Clients</span>
-                                    <span class="mjh-pill mjh-pill-green-dot"><span class="mjh-dot-live"></span> Active Requirements</span>
-                                    <span class="mjh-pill mjh-purple" style="background:#F3F0FF;color:#6D28D9;"><i class="fa-solid fa-users"></i> Agency Eligible</span>
+                                <div class="cd-market-header-sub">Verified hiring requirements shared directly by client companies. Find opportunities, review terms, and submit qualified candidates.</div>
+                                <div class="cd-market-header-pills">
+                                    <span class="cd-market-pill pill-verified"><i class="fas fa-check-circle"></i> Verified Clients</span>
+                                    <span class="cd-market-pill pill-active"><span class="cd-market-dot-live"></span> Active Requirements</span>
+                                    <span class="cd-market-pill pill-eligible"><i class="fas fa-users"></i> Agency Eligible</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mjh-stats">
-                            {{-- All Jobs / All Opportunities --}}
-                            <div class="mjh-card">
-                                <div class="mjh-icon mjh-icon-blue">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="2" y="7" width="20" height="14" rx="2"/>
-                                        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                                        <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
-                                    </svg>
-                                </div>
-                                <div class="mjh-card-body">
-                                    <div class="mjh-card-label">All Opportunities</div>
-                                    <div class="mjh-card-num">{{ number_format($all_jobs ?? 0) }}</div>
-                                </div>
-                            </div>
-
-                            {{-- Fulltime Jobs / Full-Time Hiring --}}
-                            <div class="mjh-card">
-                                <div class="mjh-icon mjh-icon-green">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                        <circle cx="12" cy="7" r="4"/>
-                                    </svg>
-                                </div>
-                                <div class="mjh-card-body">
-                                    <div class="mjh-card-label">Full-Time Hiring</div>
-                                    <div class="mjh-card-num">{{ number_format($fulltime_jobs ?? 0) }}</div>
-                                </div>
-                            </div>
-
-                            {{-- Contract Jobs / Contract Hiring --}}
-                            <div class="mjh-card">
-                                <div class="mjh-icon mjh-icon-purple">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <polyline points="12 6 12 12 16 14"/>
-                                    </svg>
-                                </div>
-                                <div class="mjh-card-body">
-                                    <div class="mjh-card-label">Contract Hiring</div>
-                                    <div class="mjh-card-num">{{ number_format($contract_jobs ?? 0) }}</div>
-                                </div>
-                            </div>
-
-                            {{-- Agency Request / Bench Talent Requests --}}
-                            <div class="mjh-card">
-                                <div class="mjh-icon mjh-icon-orange">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                        <circle cx="9" cy="7" r="4"/>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                                    </svg>
-                                </div>
-                                <div class="mjh-card-body">
-                                    <div class="mjh-card-label">Bench Talent Requests</div>
-                                    <div class="mjh-card-num">{{ number_format($agency_requests ?? 0) }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- ── Apptracker Search / Sort / Filter Toolbar ── --}}
-                    <div class="simf-toolbar-card">
-                        <div class="simf-toolbar-row">
-                            {{-- Search Input --}}
-                            <div class="simf-search-wrap">
-                                <span class="simf-search-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
-                                </span>
-                                <input type="text" class="simf-search-input search-input" name="inputJobSearch" id="kt_tagify_2"
-                                    placeholder="Search by job title, skills, requirement ID or client..." autocomplete="off" />
+                        <div class="cd-market-header-right">
+                            {{-- Integrated Dynamic Search Sub-Card with Clear 'X' --}}
+                            <div class="cd-market-search-subcard">
+                                <i class="fas fa-search"></i>
+                                <input type="text" class="cd-market-search-input search-input" name="inputJobSearch" id="kt_tagify_2"
+                                    placeholder="Search by job title, skills, requirement ID..." autocomplete="off" />
+                                <button type="button" class="cd-market-search-clear" id="cd_market_search_clear" style="display:none;" title="Clear search">✕</button>
                             </div>
 
                             {{-- Sort Dropdown Control --}}
@@ -530,6 +1136,75 @@
                         </div>
                     </div>
 
+                    <!-- ══════════════════════════════════════════════════════════════
+                         TIER 2: EXECUTIVE KPI METRICS GRID (Rule 20 Design Standard)
+                         ══════════════════════════════════════════════════════════════ -->
+                    <div class="cd-market-kpi-grid">
+                        {{-- All Opportunities --}}
+                        <div class="cd-market-kpi-card cd-kpi-active" data-tab="all" id="kpi_card_all" title="View all marketplace opportunities">
+                            <div class="cd-kpi-top-row">
+                                <div class="cd-kpi-icon-box cd-kpi-icon-blue">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <div class="cd-kpi-meta">
+                                    <div class="cd-kpi-label">All Opportunities</div>
+                                    <div class="cd-kpi-value" id="kpi_num_all">{{ number_format($all_jobs ?? 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="cd-kpi-subtext">
+                                <i class="fas fa-layer-group text-primary"></i> Total active requirements
+                            </div>
+                        </div>
+
+                        {{-- Full-Time Hiring --}}
+                        <div class="cd-market-kpi-card" data-tab="fulltime" id="kpi_card_fulltime" title="Filter full-time direct positions">
+                            <div class="cd-kpi-top-row">
+                                <div class="cd-kpi-icon-box cd-kpi-icon-green">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="cd-kpi-meta">
+                                    <div class="cd-kpi-label">Full-Time Hiring</div>
+                                    <div class="cd-kpi-value" id="kpi_num_fulltime">{{ number_format($fulltime_jobs ?? 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="cd-kpi-subtext">
+                                <i class="fas fa-check-double text-success"></i> Permanent direct mandates
+                            </div>
+                        </div>
+
+                        {{-- Contract Hiring --}}
+                        <div class="cd-market-kpi-card" data-tab="contract" id="kpi_card_contract" title="Filter contract & staffing mandates">
+                            <div class="cd-kpi-top-row">
+                                <div class="cd-kpi-icon-box cd-kpi-icon-purple">
+                                    <i class="fas fa-file-contract"></i>
+                                </div>
+                                <div class="cd-kpi-meta">
+                                    <div class="cd-kpi-label">Contract Hiring</div>
+                                    <div class="cd-kpi-value" id="kpi_num_contract">{{ number_format($contract_jobs ?? 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="cd-kpi-subtext">
+                                <i class="fas fa-clock text-purple"></i> Fixed-term &amp; C2C staffing
+                            </div>
+                        </div>
+
+                        {{-- Bench Talent Requests --}}
+                        <div class="cd-market-kpi-card" data-tab="agency_request" id="kpi_card_agency_request" title="Filter bench talent demands">
+                            <div class="cd-kpi-top-row">
+                                <div class="cd-kpi-icon-box cd-kpi-icon-amber">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <div class="cd-kpi-meta">
+                                    <div class="cd-kpi-label">Bench Talent Requests</div>
+                                    <div class="cd-kpi-value" id="kpi_num_agency_request">{{ number_format($agency_requests ?? 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="cd-kpi-subtext">
+                                <i class="fas fa-users-cog text-warning"></i> Match &amp; monetize bench
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- ── Applied Filters Summary Card (Appears when filters applied) ── --}}
                     <div class="simf-applied-card d-none" id="simf_applied_card">
                         <div class="simf-applied-head">
@@ -548,43 +1223,51 @@
                     <!-- ACTIVE FILTER TAGS -->
                     <div class="active-filters" id="selectedFilters" style="display:none;"></div>
 
-                    {{-- ── Horizontal Filter Tabs ── --}}
-                    <div class="mjh-tabs-bar">
-                        <div class="mjh-tab-item active" data-tab="all">
-                            <i class="fa-solid fa-briefcase mjh-tab-icon"></i>
-                            <span>All Jobs</span>
-                            <span class="mjh-tab-badge mjh-badge-blue">{{ number_format($all_jobs ?? 0) }}</span>
-                        </div>
-                        <div class="mjh-tab-item" data-tab="fulltime">
-                            <i class="fa-solid fa-user-tie mjh-tab-icon"></i>
-                            <span>Full-Time</span>
-                            <span class="mjh-tab-badge mjh-badge-green">{{ number_format($fulltime_jobs ?? 0) }}</span>
-                        </div>
-                        <div class="mjh-tab-item" data-tab="contract">
-                            <i class="fa-solid fa-file-contract mjh-tab-icon"></i>
-                            <span>Contract</span>
-                            <span class="mjh-tab-badge mjh-badge-amber">{{ number_format($contract_jobs ?? 0) }}</span>
-                        </div>
-                        <div class="mjh-tab-item" data-tab="freelance">
-                            <i class="fa-solid fa-laptop-code mjh-tab-icon"></i>
-                            <span>Freelance</span>
-                            <span class="mjh-tab-badge mjh-badge-purple">{{ number_format($freelance_jobs ?? 0) }}</span>
-                        </div>
-                        <div class="mjh-tab-item" data-tab="parttime">
-                            <i class="fa-solid fa-business-time mjh-tab-icon"></i>
-                            <span>Part-Time</span>
-                            <span class="mjh-tab-badge mjh-badge-indigo">{{ number_format($parttime_jobs ?? 0) }}</span>
-                        </div>
-                        <div class="mjh-tab-item" data-tab="agency_request">
-                            <i class="fa-solid fa-handshake mjh-tab-icon"></i>
-                            <span>Agency Requests</span>
-                            <span class="mjh-tab-badge mjh-badge-orange">{{ number_format($agency_requests ?? 0) }}</span>
+                    <!-- ══════════════════════════════════════════════════════════════
+                         TIER 3: DEDICATED SUB-TABS CARD (Pure White #ffffff Card)
+                         ══════════════════════════════════════════════════════════════ -->
+                    <div class="cd-market-tabs-card">
+                        <div class="cd-market-tabs-group">
+                            <button type="button" class="cd-market-tab-btn mjh-tab-item active" data-tab="all">
+                                <i class="fas fa-briefcase"></i>
+                                <span>All Jobs</span>
+                                <span class="cd-tab-badge badge-blue">{{ number_format($all_jobs ?? 0) }}</span>
+                            </button>
+                            <button type="button" class="cd-market-tab-btn mjh-tab-item" data-tab="fulltime">
+                                <i class="fas fa-user-tie"></i>
+                                <span>Full-Time</span>
+                                <span class="cd-tab-badge badge-green">{{ number_format($fulltime_jobs ?? 0) }}</span>
+                            </button>
+                            <button type="button" class="cd-market-tab-btn mjh-tab-item" data-tab="contract">
+                                <i class="fas fa-file-contract"></i>
+                                <span>Contract</span>
+                                <span class="cd-tab-badge badge-amber">{{ number_format($contract_jobs ?? 0) }}</span>
+                            </button>
+                            <button type="button" class="cd-market-tab-btn mjh-tab-item" data-tab="freelance">
+                                <i class="fas fa-laptop-code"></i>
+                                <span>Freelance</span>
+                                <span class="cd-tab-badge badge-purple">{{ number_format($freelance_jobs ?? 0) }}</span>
+                            </button>
+                            <button type="button" class="cd-market-tab-btn mjh-tab-item" data-tab="parttime">
+                                <i class="fas fa-business-time"></i>
+                                <span>Part-Time</span>
+                                <span class="cd-tab-badge badge-indigo">{{ number_format($parttime_jobs ?? 0) }}</span>
+                            </button>
+                            <button type="button" class="cd-market-tab-btn mjh-tab-item" data-tab="agency_request">
+                                <i class="fas fa-handshake"></i>
+                                <span>Agency Requests</span>
+                                <span class="cd-tab-badge badge-orange">{{ number_format($agency_requests ?? 0) }}</span>
+                            </button>
                         </div>
                     </div>
 
-                <!-- Job List -->
-                <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
-                <div class="job-list" id="marketJobLists"></div>
+                    <!-- ══════════════════════════════════════════════════════════════
+                         TIER 4: PRIMARY ENTITY CARD STREAM (Modern Card + Sub-Cards)
+                         ══════════════════════════════════════════════════════════════ -->
+                    <div class="loadingMessage" style="display: none; position: absolute; z-index: 10; background: rgba(255,255,255,0.85); padding: 8px 16px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 12px; font-weight: 600; color: #009ef7;">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Processing...
+                    </div>
+                    <div class="job-list cd-market-stream" id="marketJobLists"></div>
 
             </div>
 
@@ -2040,6 +2723,15 @@
         });
 
 
+        function escapeHtmlAttr(val) {
+            return String(val || '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
         function renderMarketJobCard(row) {
             // ── Status badge (OPEN / HOLD) ──
             let statusBadgeClass = 'jc-badge-open';
@@ -2065,23 +2757,23 @@
             }
 
             // ── Skills HTML ──
-            let skillTagsHtml = (row.skills || []).map(s => `<span class="skill-tag">${s}</span>`).join('');
+            let skillTagsHtml = (row.skills || []).map(s => `<span class="skill-tag">${escapeHtmlAttr(s)}</span>`).join('');
             if (row.remaining_skills_count > 0) {
                 skillTagsHtml += `<span class="skill-tag skill-more client-show-detail" data-row-id="${row.id}">+${row.remaining_skills_count}</span>`;
             }
 
-            // ── Action button (Col 6 primary CTA) ──
+            // ── Action button (Col 5 primary CTA) ──
             let actionBtnHtml = '';
             if (row.action_type === 'vendor_fulfilled') {
-                actionBtnHtml = `<button data-row-status="" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#EF4444;">Vendor Fulfilled</button>`;
+                actionBtnHtml = `<button data-row-status="" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#EF4444;" disabled>Vendor Fulfilled</button>`;
             } else if (row.action_type === 'apply_agency') {
                 actionBtnHtml = `<button class="btn-cta-primary request_approval" data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">Submit Candidates</button>`;
             } else if (row.action_type === 'reject') {
                 actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#EF4444;">Reject</button>`;
             } else if (row.action_type === 'under_review') {
-                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#F59E0B;">Under Review</button>`;
+                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#F59E0B;" disabled>Under Review</button>`;
             } else if (row.action_type === 'vendor_limit') {
-                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#EF4444;">Vendor Limit</button>`;
+                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#EF4444;" disabled>Vendor Limit</button>`;
             } else if (row.action_type === 'view_job' && row.view_job_url) {
                 actionBtnHtml = `<a href="${row.view_job_url}" class="btn-cta-primary text-center">View Job</a>`;
             } else if (typeLabel === 'Contract') {
@@ -2097,7 +2789,7 @@
                 ? `${row.salary_currency}${row.min_salary} – ${row.max_salary} / ${row.salary_mode_short}`
                 : 'As per Market Norms';
 
-            // ── Commercial Terms subcard (Col 5) ──
+            // ── Commercial Terms subcard (Col 4) ──
             let termsTitle = 'Commercial Terms';
             let termsRows = '';
             const ct = row.commercial_terms;
@@ -2128,7 +2820,7 @@
                 termsTitle = 'Requirement Details';
                 termsRows = `
                     <div class="jc-ct-row"><span class="jc-ct-label">Deployment</span><span class="jc-ct-val">Bench</span></div>
-                    <div class="jc-ct-row"><span class="jc-ct-label">Work Mode</span><span class="jc-ct-val">${row.work_type || 'Remote'}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Work Mode</span><span class="jc-ct-val">${escapeHtmlAttr(row.work_type || 'Remote')}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Availability</span><span class="jc-ct-val">Immediate</span></div>`;
             } else {
                 let feeLabel = (ct && ct.fulltime_fee_label) ? ct.fulltime_fee_label : 'Hiring Fee';
@@ -2152,118 +2844,118 @@
             if (row.status_label === 'HOLD' || typeLabel === 'Contract') {
                 cardAccentClass = 'jc-accent-yellow';
             } else if (typeLabel === 'Bench Talent' || row.public_market_status === 2) {
-                cardAccentClass = 'jc-accent-green';
+                cardAccentClass = 'jc-accent-orange';
             }
 
+            // ── Modern Card + Sub-Card Enterprise Layout (Rule 20) ──
             return `
-            <div class="job-card ${cardAccentClass}" data-market-job-id="${row.id}">
+            <div class="job-card cd-market-card ${cardAccentClass}" data-market-job-id="${row.id}">
+                <!-- UPPER DISCRETE SUB-CARDS GRID -->
+                <div class="cd-market-card-grid">
 
-                <!-- ── COL 1: Title, Badges, Subtitle, Skills ── -->
-                <div class="jc-col-main">
-                    <div class="jc-badges-row">
-                        <span class="jc-badge ${statusBadgeClass}">
-                            <span class="jc-dot-mini"></span>${row.status_label || 'OPEN'}
-                        </span>
-                        <span class="jc-badge ${typeBadgeClass}">${typeLabel}</span>
-                        <span class="jc-req-id">${row.req_id}</span>
-                    </div>
-
-                    <h2 class="jc-job-title" title="${row.title}">${row.title_short || row.title}</h2>
-                    <div class="jc-job-dept" title="${row.department || ''}">${row.department || '—'}</div>
-                    <div class="skills-row">${skillTagsHtml}</div>
-                </div>
-
-                <!-- ── COL 2: Meta Info (Icons + Data ONLY, NO Headings) ── -->
-                <div class="jc-col-meta">
-                    <div class="jc-meta-item" title="Location">
-                        <i class="fa-solid fa-location-dot"></i>
-                        <span>${locationText}</span>
-                    </div>
-                    <div class="jc-meta-item" title="Work Mode">
-                        <i class="fa-solid fa-laptop"></i>
-                        <span>${row.work_type}</span>
-                    </div>
-                    <div class="jc-meta-item" title="Experience">
-                        <i class="fa-regular fa-user"></i>
-                        <span>${row.min_exp} – ${row.max_exp} Years</span>
-                    </div>
-                    <div class="jc-meta-item" title="Openings">
-                        <i class="fa-solid fa-users"></i>
-                        <span>${row.total_positions} Openings</span>
-                    </div>
-                    <div class="jc-meta-item" title="Salary">
-                        <i class="fa-solid fa-indian-rupee-sign"></i>
-                        <span>${salaryDisplay}</span>
-                    </div>
-                </div>
-
-                <!-- ── COL 3: Dates & Status ── -->
-                <div class="jc-col-dates">
-                    <div class="jc-date-item">
-                        <i class="fa-regular fa-calendar"></i>
-                        <div class="jc-date-content">
-                            <span class="jc-date-label">Posted</span>
-                            <span class="jc-date-val">${postedDate}</span>
+                    <!-- SUB-CARD 1: Role Profile -->
+                    <div class="cd-market-subcard cd-subcard-role">
+                        <div class="cd-subcard-header">
+                            <span class="cd-subcard-label"><i class="fas fa-briefcase text-primary me-1"></i>ROLE PROFILE</span>
+                            <div class="cd-badges-group">
+                                <span class="jc-badge ${statusBadgeClass}">
+                                    <span class="jc-dot-mini"></span>${row.status_label || 'OPEN'}
+                                </span>
+                                <span class="jc-badge ${typeBadgeClass}">${typeLabel}</span>
+                                <span class="jc-req-id">${row.req_id}</span>
+                            </div>
+                        </div>
+                        <div class="cd-subcard-body">
+                            <h2 class="cd-market-job-title market-show-detail" data-row-id="${row.id}" title="${escapeHtmlAttr(row.title)}">${escapeHtmlAttr(row.title_short || row.title)}</h2>
+                            <div class="cd-market-job-dept" title="${escapeHtmlAttr(row.department || '')}"><i class="far fa-folder-open text-muted me-1"></i>${escapeHtmlAttr(row.department || 'General')}</div>
+                            <div class="cd-role-mandate-row">
+                                <span class="cd-mandate-tag"><i class="fas fa-shield-alt text-success me-1"></i>Client Mandate</span>
+                                <span class="cd-openings-count"><i class="fas fa-users text-muted me-1"></i>${row.total_positions} Openings</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="jc-date-item">
-                        <i class="fa-solid fa-rotate"></i>
-                        <div class="jc-date-content">
-                            <span class="jc-date-label">Last Updated</span>
-                            <span class="jc-date-val jc-text-green">${row.updated_at_ago || 'Recently'}</span>
+
+                    <!-- SUB-CARD 2: Compensation & Work Mode -->
+                    <div class="cd-market-subcard cd-subcard-comp">
+                        <div class="cd-subcard-header">
+                            <span class="cd-subcard-label"><i class="fas fa-coins text-warning me-1"></i>COMPENSATION &amp; WORK</span>
+                        </div>
+                        <div class="cd-subcard-body">
+                            <div class="cd-comp-highlight">
+                                <strong>${salaryDisplay}</strong>
+                            </div>
+                            <div class="cd-comp-meta-row">
+                                <i class="far fa-user text-muted me-1"></i>
+                                <span>${row.min_exp} – ${row.max_exp} Years Exp</span>
+                            </div>
+                            <div class="cd-comp-meta-row" title="${escapeHtmlAttr(locationText)}">
+                                <i class="fa-solid fa-location-dot text-danger me-1"></i>
+                                <span class="cd-location-name">${escapeHtmlAttr(locationText)}</span> • <span class="badge badge-light-primary px-1.5 py-0 fs-8">${escapeHtmlAttr(row.work_type || 'Office')}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="jc-date-item">
-                        <i class="fa-regular fa-clock"></i>
-                        <div class="jc-date-content">
-                            <span class="jc-date-label">${row.is_bench_enabled ? 'Bench Submission' : 'Submission Deadline'}</span>
-                            <span class="jc-date-val ${row.is_bench_enabled ? 'jc-text-green' : (row.is_direct_expired ? 'jc-text-red' : 'jc-text-green')}">
-                                ${row.submission_deadline_formatted || 'Open till filled'}
-                            </span>
+
+                    <!-- SUB-CARD 3: Your Bench Match -->
+                    <div class="cd-market-subcard cd-subcard-bench open-bench-talents"
+                         data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}"
+                         role="button" tabindex="0" title="View matching bench talents">
+                        <div class="cd-subcard-header">
+                            <span class="cd-subcard-label"><i class="fas fa-user-check text-primary me-1"></i>BENCH MATCH</span>
+                        </div>
+                        <div class="cd-subcard-body text-center">
+                            <div class="cd-bench-kpi-num ${row.bench_match_count > 0 ? 'text-primary' : 'text-gray-700'}">${row.bench_match_count || 0}</div>
+                            <div class="cd-bench-kpi-sub">Matching Candidates</div>
+                            <div class="cd-subcard-link justify-content-center">View Matches &rarr;</div>
                         </div>
                     </div>
-                    <div class="jc-status-row">
-                        <span class="jc-date-label">Status</span>
-                        <span class="jc-status-indicator">
-                            <span class="${statusDotClass}"></span>
-                            ${statusText}
-                        </span>
+
+                    <!-- SUB-CARD 4: Commercial Terms -->
+                    <div class="cd-market-subcard cd-subcard-terms">
+                        <div class="cd-subcard-header">
+                            <span class="cd-subcard-label"><i class="fas fa-file-invoice-dollar text-success me-1"></i>${termsTitle.toUpperCase()}</span>
+                        </div>
+                        <div class="cd-subcard-body">
+                            <div class="cd-terms-rows">
+                                ${termsRows}
+                            </div>
+                            <a class="cd-subcard-link client-terms-listing-find-job"
+                               data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">
+                               View Full Terms &rarr;
+                            </a>
+                        </div>
                     </div>
+
+                    <!-- SUB-CARD 5: Submission & Telemetry -->
+                    <div class="cd-market-subcard cd-subcard-actions">
+                        <div class="cd-subcard-header">
+                            <span class="cd-subcard-label"><i class="fas fa-paper-plane text-info me-1"></i>SUBMISSION</span>
+                        </div>
+                        <div class="cd-subcard-body">
+                            ${actionBtnHtml}
+                            <div class="cd-actions-sec-row">
+                                <button class="btn btn-sm btn-light-primary py-1 px-2 fs-8 w-100 market-show-detail" data-row-id="${row.id}">View Req</button>
+                                <button class="btn btn-sm btn-light-secondary py-1 px-2 fs-8 w-100 client-terms-listing-find-job" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">Terms</button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <!-- ── COL 4: Sub-card 1 (Your Bench Match) ── -->
-                <div class="jc-subcard jc-bench-subcard open-bench-talents"
-                     data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}"
-                     role="button" tabindex="0" title="View matching bench talents">
-                    <div class="jc-bench-header">
-                        <i class="fa-solid fa-user-plus"></i>
-                        <span>Your Bench Match</span>
+                <!-- SUB-CARD 6: BOTTOM ACTIVITY STRIP -->
+                <div class="cd-market-card-bottom">
+                    <div class="cd-bottom-telemetry">
+                        <span><i class="far fa-calendar-alt text-muted me-1"></i>Posted: <strong>${postedDate}</strong></span>
+                        <span><i class="fas fa-history text-success me-1"></i>Updated: <strong class="text-success">${row.updated_at_ago || 'Recently'}</strong></span>
+                        <span><i class="far fa-clock text-warning me-1"></i>Deadline: <strong class="${row.is_bench_enabled ? 'text-success' : (row.is_direct_expired ? 'text-danger' : 'text-gray-700')}">${row.submission_deadline_formatted || 'Open till filled'}</strong></span>
                     </div>
-                    <div class="jc-bench-num">${row.bench_match_count || 0}</div>
-                    <div class="jc-bench-desc">Matching candidates</div>
-                    <div class="jc-subcard-link">View Matches &rarr;</div>
-                </div>
 
-                <!-- ── COL 5: Sub-card 2 (Commercial Terms / Details) ── -->
-                <div class="jc-subcard jc-terms-subcard">
-                    <div class="jc-subcard-title">${termsTitle}</div>
-                    <div class="jc-terms-rows">
-                        ${termsRows}
+                    <div class="cd-bottom-skills">
+                        <div class="skills-row">${skillTagsHtml}</div>
                     </div>
-                    <a class="jc-subcard-link client-terms-listing-find-job"
-                       data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">
-                       View Full Terms &rarr;
-                    </a>
-                </div>
 
-                <!-- ── COL 6: Action Buttons Column ── -->
-                <div class="jc-col-actions">
-                    ${actionBtnHtml}
-                    <button class="btn-cta-secondary market-show-detail" data-row-id="${row.id}">View Requirement</button>
-                    <button class="btn-cta-secondary client-terms-listing-find-job" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">View Terms</button>
-                    <div class="jc-actions-footer">
-                        <i class="fa-regular fa-bookmark jc-icon-btn" title="Save Job"></i>
-                        <i class="fa-solid fa-ellipsis-vertical jc-icon-btn" title="More Options"></i>
+                    <div class="cd-bottom-actions">
+                        <i class="fa-regular fa-bookmark cd-icon-btn" title="Save Job"></i>
+                        <i class="fa-solid fa-ellipsis-vertical cd-icon-btn" title="More Options"></i>
                     </div>
                 </div>
 
@@ -2681,7 +3373,30 @@
             $('.mjh-tab-item').removeClass('active');
             $(this).addClass('active');
             currentActiveTab = $(this).data('tab') || 'all';
+            $('.cd-market-kpi-card').removeClass('cd-kpi-active');
+            $('.cd-market-kpi-card[data-tab="' + currentActiveTab + '"]').addClass('cd-kpi-active');
             fetchCandidates(1);
+        });
+
+        // Executive KPI card click switches corresponding sub-tab
+        $(document).on('click', '.cd-market-kpi-card', function() {
+            var tabKey = $(this).data('tab') || 'all';
+            $('.mjh-tab-item[data-tab="' + tabKey + '"]').trigger('click');
+        });
+
+        // Live Search clear button toggle & execution
+        $(document).on('input keyup', '#kt_tagify_2', function() {
+            if ($(this).val().trim().length > 0) {
+                $('#cd_market_search_clear').show();
+            } else {
+                $('#cd_market_search_clear').hide();
+            }
+        });
+
+        $(document).on('click', '#cd_market_search_clear', function() {
+            $('#kt_tagify_2').val('');
+            $(this).hide();
+            filtersdataget();
         });
 
         /**
@@ -2720,6 +3435,10 @@
                 $('#marketJobLists').html(renderEnterpriseEmptyState(currentActiveTab));
             }
             $('#span_jobMarket').html(response.total);
+            $('#span_jobMarket_header').text((response.total || 0) + ' Opportunities');
+            if (currentActiveTab === 'all') {
+                $('#kpi_num_all').text(response.total || 0);
+            }
             $('#mktf_footer_number').text(response.total || 0);
             $('#pagination').html(response.pagination || '');
         }

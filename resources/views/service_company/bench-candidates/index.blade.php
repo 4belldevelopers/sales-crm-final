@@ -823,101 +823,90 @@
            ========================================================================== */
         /* Tier 1: Toolbar Card */
         .cd-bench-toolbar-card {
-            background: #f8fafc !important;
+            background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
-            padding: 10px 16px !important;
+            padding: 8px 14px !important;
             margin-bottom: 12px !important;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            flex-wrap: wrap !important;
             gap: 12px !important;
-        }
-        .cd-bench-toolbar-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 0;
-        }
-        .cd-bench-toolbar-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
-            background: #eff6ff;
-            color: #009ef7;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-        .cd-bench-toolbar-title {
-            font-size: 14.5px !important;
-            font-weight: 700 !important;
-            color: #0f172a !important;
-            line-height: 1.25;
-            margin: 0;
-        }
-        .cd-bench-toolbar-sub {
-            font-size: 11px !important;
-            color: #64748b !important;
-            margin-top: 1px;
-        }
-        .cd-bench-toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            width: 100% !important;
         }
         .cd-bench-search-subcard {
-            display: flex;
-            align-items: center;
-            height: 36px;
-            width: 320px;
-            max-width: 100%;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 10px;
-            transition: all 0.2s ease;
+            flex: 1 1 auto !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 0 12px !important;
+            height: 38px !important;
+            transition: all 0.15s ease-in-out !important;
+            min-width: 0 !important;
         }
         .cd-bench-search-subcard:focus-within {
-            border-color: #009ef7;
-            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12);
+            background: #ffffff !important;
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+        }
+        .cd-bench-search-subcard i.fa-search {
+            color: #94a3b8 !important;
+            font-size: 12.5px !important;
+            flex-shrink: 0 !important;
         }
         .cd-bench-search-subcard input {
-            border: none;
-            outline: none;
-            background: transparent;
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
             font-size: 12px !important;
-            font-family: 'Poppins', sans-serif;
-            color: #1e293b;
-            width: 100%;
-            padding: 0 8px;
+            font-family: 'Poppins', sans-serif !important;
+            color: #0f172a !important;
+            width: 100% !important;
+            padding: 0 !important;
+            line-height: 38px !important;
         }
         .cd-bench-search-clear {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 12px;
-            cursor: pointer;
-            padding: 0 4px;
+            background: none !important;
+            border: none !important;
+            color: #94a3b8 !important;
+            font-size: 11px !important;
+            padding: 0 !important;
+            cursor: pointer !important;
             display: none;
+            flex-shrink: 0 !important;
         }
         .cd-bench-search-clear:hover {
-            color: #0f172a;
+            color: #475569 !important;
+        }
+        .cd-bench-toolbar-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            flex-shrink: 0 !important;
         }
         .cd-bench-sort-select {
-            height: 36px !important;
+            height: 38px !important;
+            width: 190px !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 8px !important;
             background: #ffffff !important;
             font-size: 12px !important;
-            color: #334155 !important;
+            color: #475569 !important;
             padding: 0 10px !important;
-            min-width: 180px;
+        }
+        .cd-bench-export-btn {
+            height: 38px !important;
+            padding: 0 16px !important;
+            border-radius: 8px !important;
+            font-size: 12px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            white-space: nowrap !important;
         }
 
         /* Tier 2: Sub-Tabs Card */
@@ -930,15 +919,13 @@
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
             display: flex !important;
             align-items: center !important;
-            justify-content: space-between !important;
-            flex-wrap: wrap !important;
-            gap: 8px !important;
+            width: 100% !important;
         }
         .cd-bench-tabs-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
         }
         .cd-bench-tab-btn {
             background: #ffffff !important;
@@ -954,6 +941,7 @@
             cursor: pointer;
             transition: all 0.15s ease;
             text-decoration: none !important;
+            white-space: nowrap !important;
         }
         .cd-bench-tab-btn:hover {
             background: #f8fafc !important;
@@ -1019,7 +1007,7 @@
         }
         .cd-talent-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.35fr) minmax(0, 1.35fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 2.0fr) !important;
+            grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.4fr) minmax(0, 1.5fr) minmax(0, 1.2fr) minmax(0, 2.4fr) !important;
             gap: 8px !important;
             padding: 10px 12px !important;
             width: 100% !important;
@@ -1046,10 +1034,10 @@
             flex-shrink: 0;
         }
         .cd-subcard-label {
-            font-size: 10px !important;
+            font-size: 9.5px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
+            letter-spacing: 0.4px !important;
             color: #475569 !important;
             white-space: nowrap;
             overflow: hidden;
@@ -1061,7 +1049,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 3px;
+            gap: 4px;
             font-size: 11.5px;
             min-width: 0;
             overflow: hidden;
@@ -1087,7 +1075,7 @@
             line-height: 1.2;
         }
         .cd-status-badge {
-            font-size: 9.5px !important;
+            font-size: 9px !important;
             font-weight: 700 !important;
             padding: 2px 7px;
             border-radius: 6px;
@@ -1106,13 +1094,49 @@
         .cd-val-exp { font-size: 11px; }
         .cd-val-avail { font-size: 11.5px; line-height: 1.2; }
         .cd-val-wm { font-size: 10.5px; }
-        .cd-val-location { font-size: 11.5px; line-height: 1.2; }
-        .cd-val-edu { font-size: 10px; }
+        .cd-val-location { font-size: 11px; line-height: 1.2; }
         .cd-manager-name { font-size: 11.5px; line-height: 1.25; }
         .cd-rm-change-btn { font-size: 10.5px !important; font-weight: 600 !important; color: #009ef7 !important; cursor: pointer; text-decoration: none; }
         .cd-rm-change-btn:hover { text-decoration: underline; color: #0077b6 !important; }
 
-        /* Sub-Card 7 / Bottom Activity Strip */
+        /* Clients Pipeline Micro Grid */
+        .cd-pipe-grid {
+            display: grid !important;
+            grid-template-columns: repeat(8, 1fr) !important;
+            gap: 3px !important;
+            width: 100% !important;
+        }
+        .cd-pipe-col {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            background: #f8fafc !important;
+            border: 1px solid #eef2f6 !important;
+            border-radius: 4px !important;
+            padding: 3px 1px !important;
+        }
+        .cd-pipe-col .h {
+            font-size: 8px !important;
+            font-weight: 700 !important;
+            color: #64748b !important;
+            line-height: 1.1 !important;
+        }
+        .cd-pipe-col .v {
+            font-size: 10.5px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.2 !important;
+            margin-top: 1px !important;
+        }
+        .cd-pipe-col .v a {
+            color: #0f172a !important;
+            text-decoration: none !important;
+        }
+        .cd-pipe-col .v a:hover {
+            color: #009ef7 !important;
+        }
+
+        /* Sub-Card 6 / Bottom Activity Strip */
         .cd-talent-card-bottom {
             display: flex;
             align-items: center;
@@ -1159,18 +1183,34 @@
             width: 100%;
         }
 
+        .wrap-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+        }
+        .wrap-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+        }
+
         /* 15.6" Screen responsiveness */
         @media only screen and (max-width: 1440px) {
             .cd-talent-card-grid {
-                grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.3fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 2.0fr) !important;
+                grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 1.15fr) minmax(0, 2.35fr) !important;
                 gap: 6px !important;
                 padding: 8px 10px !important;
             }
             .cd-subcard-header { padding: 4px 6px !important; min-height: 26px; }
             .cd-subcard-body { padding: 6px 8px !important; font-size: 11px !important; }
-            .cd-subcard-label { font-size: 9.5px !important; }
-            .cd-bench-search-subcard { width: 260px; }
-            .cd-bench-sort-select { min-width: 150px; }
+            .cd-subcard-label { font-size: 9px !important; }
+            .cd-pipe-col .h { font-size: 7.5px !important; }
+            .cd-pipe-col .v { font-size: 9.5px !important; }
+            .cd-bench-sort-select { width: 160px !important; }
         }
     </style>
 @endpush
@@ -1401,26 +1441,17 @@
                         </div>
                     </div>
 
-                    <!-- Tier 1: Top Header Toolbar Card with Dynamic Search (Rule 20 Modern Enterprise Standard) -->
+                    <!-- Tier 1: Toolbar Card with Dynamic Search (Rule 20 Standard) -->
                     <div class="cd-bench-toolbar-card">
-                        <div class="cd-bench-toolbar-left">
-                            <div class="cd-bench-toolbar-icon">
-                                <i class="fa fa-users"></i>
-                            </div>
-                            <div>
-                                <h2 class="cd-bench-toolbar-title">In-House Talent Roster</h2>
-                                <div class="cd-bench-toolbar-sub">Manage, filter, and track bench and pool candidates with client pipelines.</div>
-                            </div>
+                        <div class="cd-bench-search-subcard">
+                            <i class="fa fa-search text-muted"></i>
+                            <input type="text" name="inputJobSearch" placeholder="Search by name, skills, role, experience, location..."
+                                id="kt_tagify_2" onkeyup="debouncedBenchSearch(event)" autocomplete="off" />
+                            <button type="button" class="cd-bench-search-clear" id="btnBenchSearchClear" title="Clear search">
+                                <i class="fa fa-times"></i>
+                            </button>
                         </div>
-                        <div class="cd-bench-toolbar-right">
-                            <div class="cd-bench-search-subcard">
-                                <i class="fa fa-search text-muted"></i>
-                                <input type="text" name="inputJobSearch" placeholder="Search by name, skills, role, experience, location..."
-                                    id="kt_tagify_2" onkeyup="debouncedBenchSearch(event)" autocomplete="off" />
-                                <button type="button" class="cd-bench-search-clear" id="btnBenchSearchClear" title="Clear search">
-                                    <i class="fa fa-times"></i>
-                                </button>
-                            </div>
+                        <div class="cd-bench-toolbar-actions">
                             <select class="form-select cd-bench-sort-select flex-shrink-0" id="sortingfilter" data-placeholder="Sort" onchange="filtersdataget()">
                                 <option value="Show All" selected>Sort by</option>
                                 <option value="1">Newest to Oldest (Upload Date)</option>
@@ -1431,7 +1462,7 @@
                                 <option value="7">High to Low (Experience)</option>
                                 <option value="8">Low to High (Experience)</option>
                             </select>
-                            <button type="button" class="btn btn-sm btn-primary fw-bold cd-bench-add-btn" id="exportTalents" title="Export talent records to CSV">
+                            <button type="button" class="btn btn-sm btn-primary fw-bold cd-bench-export-btn flex-shrink-0" id="exportTalents" title="Export talent records to CSV">
                                 <i class="fa fa-download me-1"></i> Export
                             </button>
                         </div>
