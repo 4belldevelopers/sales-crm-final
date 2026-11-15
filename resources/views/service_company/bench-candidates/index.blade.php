@@ -1897,8 +1897,8 @@
             $body.html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"></i><div>Loading opportunities...</div></div>');
 
             var endpoint = (_activeSimilarType === 'internal') 
-                ? "{{ route('recommend.all_internal_data_ajax') }}" 
-                : "{{ route('recommend.all_data_ajax') }}";
+                ? "{{ route('service_company.recommend.all_internal_data_ajax') }}" 
+                : "{{ route('service_company.recommend.all_data_ajax') }}";
 
             var fullPageUrl = (_activeSimilarType === 'internal')
                 ? "{{ url('service_company/bench-candidates/recommend_internal_req') }}/" + candidateId
