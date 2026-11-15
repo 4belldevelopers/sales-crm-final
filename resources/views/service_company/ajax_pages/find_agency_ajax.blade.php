@@ -252,7 +252,7 @@
             $displaySkills = !empty($agencySkills) ? array_slice($agencySkills, 0, 4) : ['Java', 'React', 'Cloud', 'DevOps'];
 
             // Action Button logic (Anchored inside Sub-Card 4)
-            $matchFound = collect($row->staffing_company_relation ?? [])->contains('from_company_id', $company_id);
+            $matchFound = $row->_match_found ?? collect($row->staffing_company_relation ?? [])->contains('from_company_id', $company_id);
             $isConnected = ($matchFound || $final_status == 1);
             if ($isConnected) {
                 $actionBtnHtml = '<button type="button" class="btn btn-sm btn-light-success disabled cl-action-btn w-100" style="cursor:default;"><i class="fas fa-check-circle me-1"></i>Connected</button>';
@@ -274,7 +274,7 @@
                 <!-- SUB-CARD 1: Agency Identity -->
                 <div class="cl-subcard cl-subcard-identity">
                     <div class="cl-subcard-head">
-                        <span class="cl-subcard-title" title="Agency Identity">Identity</span>
+                        <span class="cl-subcard-title" title="Agency">Agency</span>
                         <div class="cl-subcard-badges">
                             @if($isConnected)
                                 <span class="cl-scope-pill pill-connected" title="Connected Agency Partner">Connected</span>
@@ -378,33 +378,35 @@
                 </div>
 
                 <!-- SUB-CARD 4: Talent Supply (High-Contrast Vertical Rhythm) -->
+                @php
+                    $matchingBenchCount = (int)($row->_matching_bench_count ?? ($row->matching_bench ?? $all_candidate_bench));
+                @endphp
                 <div class="cl-subcard cl-subcard-talent">
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title">Talent Supply</span>
-                        <span class="badge badge-light-warning py-0.5 px-1.5 font-size-8.5 font-weight-700 text-dark" style="background:#fffbeb; color:#92400e; border:1px solid #fde68a;">Live Pool</span>
                     </div>
                     <div class="cl-talent-body">
                         <div class="cl-talent-line">
                             <i class="fas fa-briefcase text-primary cl-talent-icon"></i>
                             <span class="cl-talent-num">{{ $activeJobs }}</span>
-                            <span class="cl-talent-lbl">Active Jobs</span>
+                            <span class="cl-talent-lbl">Similar Jobs</span>
                         </div>
                         <div class="cl-talent-line">
                             <i class="fas fa-user-friends text-info cl-talent-icon"></i>
                             <span class="cl-talent-num">{{ $all_candidates }}</span>
-                            <span class="cl-talent-lbl">Candidate Profiles</span>
+                            <span class="cl-talent-lbl">Similar Candidates</span>
                         </div>
-                        @if($all_candidate_bench > 0)
-                            <div class="cl-talent-line bench-active cl-bench-trigger cursor-pointer" onclick="openAgencyBenchDrawer({{ $row->id }}, '{{ addslashes($row->company_name) }}', {{ $all_candidate_bench }})" title="Click to preview pre-vetted bench profiles">
+                        @if($matchingBenchCount > 0)
+                            <div class="cl-talent-line bench-active cl-bench-trigger cursor-pointer" onclick="openAgencyBenchDrawer({{ $row->id }}, '{{ addslashes($row->company_name) }}', {{ $matchingBenchCount }})" title="Click to preview matching bench profiles">
                                 <i class="fas fa-bolt text-warning cl-talent-icon"></i>
-                                <span class="cl-talent-num text-warning">{{ $all_candidate_bench }}</span>
-                                <span class="cl-talent-lbl text-warning font-weight-600 underline">Pre-Vetted Bench 👁️</span>
+                                <span class="cl-talent-num text-warning">{{ $matchingBenchCount }}</span>
+                                <span class="cl-talent-lbl text-warning font-weight-600 underline">Bench ({{ $matchingBenchCount }} Matching Bench)</span>
                             </div>
                         @else
                             <div class="cl-talent-line bench-zero" title="No bench candidates currently listed">
                                 <i class="fas fa-bolt text-muted cl-talent-icon"></i>
                                 <span class="cl-talent-num text-muted">0</span>
-                                <span class="cl-talent-lbl text-muted">Pre-Vetted Bench</span>
+                                <span class="cl-talent-lbl text-muted">Bench</span>
                             </div>
                         @endif
                     </div>
@@ -433,21 +435,6 @@
             <!-- ── BOTTOM FOOTER ACTIVITY STRIP (Rule 20 Enterprise Standard) ── -->
             <div class="cl-card-footer-strip">
                 <div class="cl-footer-strip-left">
-                    <div class="cl-footer-item">
-                        <span class="cl-status-dot-pulse"></span>
-                        <span class="cl-activity-lbl">Active {{ $lastLoginFormatted }}</span>
-                    </div>
-                    <span class="cl-footer-divider">•</span>
-                    <div class="cl-footer-item">
-                        <i class="fas fa-clock text-warning font-size-10 me-1"></i>
-                        <span>Avg SLA: <strong>~36-48h First TAT</strong></span>
-                    </div>
-                    <span class="cl-footer-divider">•</span>
-                    <div class="cl-footer-item">
-                        <i class="fas fa-user-tie text-primary font-size-10 me-1"></i>
-                        <span>Capacity: <strong>{{ $Sizecount }} Active {{ $Sizecount > 1 ? 'Recruiters' : 'Recruiter' }}</strong></span>
-                    </div>
-                    <span class="cl-footer-divider">•</span>
                     <div class="cl-footer-item">
                         @if($isSuperAdminVerified)
                             <i class="fas fa-shield-alt text-success font-size-10 me-1"></i>

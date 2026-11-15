@@ -846,7 +846,7 @@
 /* 5 Discrete Sub-Cards Grid (Rule 20 Enterprise Standard - Compact & Identical Spacing) */
 .cl-subcards-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.48fr) minmax(0, 1.02fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 1.1fr) !important;
+    grid-template-columns: minmax(0, 1.85fr) minmax(0, 0.72fr) minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, 1.03fr) !important;
     gap: 7px !important;
     width: 100% !important;
     align-items: stretch !important;
@@ -1505,7 +1505,7 @@
 /* ── 15.6" Screen Responsive Breakpoints (Rule 14 & Rule 20) ── */
 @media (max-width: 1400px) {
     .cl-subcards-grid {
-        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 1.1fr) !important;
+        grid-template-columns: minmax(0, 1.75fr) minmax(0, 0.72fr) minmax(0, 1.25fr) minmax(0, 1.18fr) minmax(0, 1.1fr) !important;
         gap: 6px !important;
     }
 }
@@ -1588,106 +1588,6 @@
                 </div>
             </div>
 
-            <!-- ── POINT 1: "Match With My Open Jobs" Instant AI Job Matcher ── -->
-            @php
-                $tenantJobsList = $activeTenantJobs ?? [];
-            @endphp
-            @if(!empty($tenantJobsList) && count($tenantJobsList) > 0)
-                <div class="fa-matchmaker-bar" id="faMatchmakerBar">
-                    <div class="matchmaker-left">
-                        <div class="matchmaker-icon">
-                            <i class="fas fa-bolt"></i>
-                        </div>
-                        <div>
-                            <div class="matchmaker-tag">Instant AI Job Matcher <span class="badge badge-light-primary ms-1 font-size-10">{{ count($tenantJobsList) }} Active Jobs</span></div>
-                            <div class="matchmaker-desc">Select an open job or match across all your active requisitions:</div>
-                        </div>
-                    </div>
-                    <div class="matchmaker-right">
-                        <div class="fa-job-combobox-wrapper" id="faJobComboboxWrapper">
-                            <button type="button" class="fa-job-combobox-btn" id="faJobComboboxBtn" onclick="toggleJobMatchmakerPopover(event)">
-                                <div class="d-flex align-items-center gap-2 truncate">
-                                    <span class="job-status-dot"></span>
-                                    <span class="job-btn-text" id="faJobSelectedLabel">Matches your requirement on {{ count($tenantJobsList) }} jobs</span>
-                                </div>
-                                <i class="fas fa-chevron-down job-chevron"></i>
-                            </button>
-
-                            <!-- Popover Panel -->
-                            <div class="fa-job-popover-panel" id="faJobPopoverPanel">
-                                <div class="job-popover-search">
-                                    <i class="fas fa-search search-icon"></i>
-                                    <input type="text" class="job-search-inp" id="faJobSearchInp" placeholder="Search your {{ count($tenantJobsList) }} open jobs..." oninput="filterJobPopoverItems(this.value)" />
-                                </div>
-                                <div class="job-popover-list" id="faJobPopoverList">
-                                    <!-- Overview: Matches requirement on X jobs -->
-                                    <div class="job-popover-item selected" onclick="selectMatchmakerJob('all', 'Matches your requirement on {{ count($tenantJobsList) }} jobs', [])">
-                                        <div class="d-flex align-items-center justify-content-between">
-                                            <span class="font-weight-700 text-primary"><i class="fas fa-layer-group me-1"></i>Matches your requirement on {{ count($tenantJobsList) }} jobs</span>
-                                            <span class="badge badge-light-primary py-0.5 px-2 font-size-10">High Synergy</span>
-                                        </div>
-                                        <div class="font-size-11 text-muted mt-1">Cross-requisition agency capability overview</div>
-                                    </div>
-                                    <div class="job-section-divider">Individual Open Requisitions</div>
-                                    @foreach($tenantJobsList as $tJob)
-                                        @php
-                                            $jSkillsArr = $tJob['skills'] ?? [];
-                                            $jSkillsJson = htmlspecialchars(json_encode($jSkillsArr), ENT_QUOTES, 'UTF-8');
-                                        @endphp
-                                        <div class="job-popover-item job-item-row" data-title="{{ strtolower($tJob['title']) }}" onclick="selectMatchmakerJob({{ $tJob['id'] }}, '{{ addslashes($tJob['title']) }} ({{ $tJob['total_positions'] }} Openings)', {{ $jSkillsJson }})">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <span class="font-weight-700 text-dark">{{ $tJob['title'] }}</span>
-                                                <span class="badge badge-light-info py-0.5 px-2 font-size-10">{{ $tJob['total_positions'] }} {{ $tJob['total_positions'] == 1 ? 'Opening' : 'Openings' }}</span>
-                                            </div>
-                                            <div class="font-size-11 text-muted mt-1">
-                                                Exp: {{ $tJob['min_exp'] }}–{{ $tJob['max_exp'] }} Yrs • 
-                                                @if(!empty($tJob['min_salary'])) ₹{{ round($tJob['min_salary']/100000, 1) }}L–₹{{ round($tJob['max_salary']/100000, 1) }}L @else Market Competitive @endif
-                                            </div>
-                                            @if(!empty($jSkillsArr))
-                                                <div class="d-flex flex-wrap gap-1 mt-1">
-                                                    @foreach(array_slice($jSkillsArr, 0, 4) as $jsk)
-                                                        <span class="cl-mini-tag">{{ ucfirst($jsk) }}</span>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endforeach
-                                </div>
-                                <div class="job-popover-footer">
-                                    <button type="button" class="btn btn-sm btn-link text-muted p-0 font-size-11" onclick="selectMatchmakerJob('none', 'General Catalog (No Job Filter)', [])">Clear Filter</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @else
-                <!-- Zero Job High-Conversion Empty State Banner -->
-                <div class="fa-zero-job-banner">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="zero-job-icon">
-                            <i class="fas fa-lightbulb"></i>
-                        </div>
-                        <div>
-                            <div class="zero-job-title">
-                                <span>No Active Job Requisitions Found</span>
-                                <span class="badge badge-light-warning font-size-10 font-weight-700 ms-2">0 Active Jobs</span>
-                            </div>
-                            <div class="zero-job-desc">
-                                Have an urgent hiring requirement? Post a new job or match partner agencies directly by your required tech stack:
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                        <button type="button" class="btn btn-sm btn-light-primary" onclick="promptCustomSkillsMatch()">
-                            <i class="fas fa-code me-1"></i>Match by Custom Skills
-                        </button>
-                        <a href="{{ route('service_company.jobs.create') }}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus me-1"></i>Post a Quick Job
-                        </a>
-                    </div>
-                </div>
-            @endif
-
             <!-- ── TIER 2: 6 Stat KPI Cards Row (Single Horizontal Row) ── -->
             <div class="cl-stat-grid" id="agencyKpiGrid">
                 
@@ -1738,7 +1638,7 @@
                     </div>
                     <div class="cl-card-sub">
                         <i class="fas fa-sync-alt text-success font-size-11"></i>
-                        <span>Recurring monthly hiring</span>
+                        <span>C2H, C2C, Contract Hiring</span>
                     </div>
                 </div>
 
