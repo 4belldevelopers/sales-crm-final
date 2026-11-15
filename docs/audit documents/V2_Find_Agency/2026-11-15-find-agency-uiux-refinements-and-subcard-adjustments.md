@@ -23,7 +23,8 @@ In response to direct UI/UX feedback and annotated review screenshots on the **F
 6. **Subcard Proportions Optimization:** Adjusted `.cl-subcards-grid` columns to widen Sub-Card 1 (Company/Agency Name) from `1.48fr` to `1.85fr` (preventing truncation of lengthy agency names) and narrowed Sub-Card 2 (Location) from `1.02fr` to `0.72fr` (where compact city/country information sits cleanly).
 7. **Agency Terms Drawer Redesign & Governance Overhaul:**
    - **Modern Card Elevation:** Replaced flat grey cards with pure white (`#ffffff`) cards, clean solid hairline borders (`#f1f5f9`), and 10px rounded corners on soft `#f8fafc` canvas.
-   - **Header Brand Identity:** Integrated agency avatar/logo box alongside agency name, clean `Marketplace Verified` / `Onboarding Partner` pills, and an elegant SVG dismiss button.
+   - **Header Decluttering & Brand Identity:** Integrated agency avatar/logo box alongside agency name, while removing redundant `COMMERCIAL TERMS` and `Marketplace Verified` header badges and the close button for an ultra-clean presentation.
+   - **Drawer Action Streamlined:** Removed the redundant footer strip (`Send Mandate Request` and `Close` buttons), enabling smooth, unobtrusive backdrop and Escape-key dismissal.
    - **Standard Marketplace Governance Overhaul:** Completely removed arbitrary candidate ownership / duplicate lookback defaults. Mandated that **all terms are established directly by the hiring company** and any agency wishing to work with a company must review, discuss, and mutually agree to that company's specific terms.
    - **JERO.works Neutrality Disclaimer:** Explicitly stated that JERO.works operates strictly as an independent software platform provider with zero involvement, responsibility, or liability in contractual enforcement or bilateral disputes.
 
