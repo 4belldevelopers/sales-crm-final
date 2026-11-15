@@ -26,24 +26,45 @@
     color: #1e293b;
 }
 
-/* ── TIER 1: Top Header Toolbar Card ── */
+/* ── TIER 1: Top Header Toolbar Card (Rule 20 Modern Card + Sub-Card) ── */
 .fa-header-card {
-    background: #f8fafc !important;
+    background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 12px !important;
-    padding: 14px 20px !important;
+    padding: 8px 10px !important;
     margin-bottom: 14px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 16px !important;
+    gap: 10px !important;
     flex-wrap: wrap !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+}
+.fa-header-subcard {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 9px !important;
+    padding: 8px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.fa-header-subcard-identity {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    gap: 12px !important;
+}
+.fa-header-subcard-actions {
+    flex-shrink: 0 !important;
+    gap: 8px !important;
 }
 .fa-header-left {
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
+    min-width: 0 !important;
+}
+.fa-header-text-wrap {
     min-width: 0 !important;
 }
 .fa-header-icon-box {
@@ -66,7 +87,7 @@
     gap: 8px !important;
 }
 .fa-header-title {
-    font-size: 19px !important;
+    font-size: 18px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     letter-spacing: -0.015em !important;
@@ -74,7 +95,7 @@
     line-height: 1.2 !important;
 }
 .fa-header-subtitle {
-    font-size: 12.5px !important;
+    font-size: 12px !important;
     font-weight: 400 !important;
     color: #64748b !important;
     margin-top: 3px !important;
@@ -94,8 +115,8 @@
     border: 1px solid #a7f3d0 !important;
     color: #065f46 !important;
     border-radius: 20px !important;
-    padding: 6px 12px !important;
-    font-size: 11.5px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
 }
 
@@ -906,7 +927,7 @@
     line-height: 1.2 !important;
 }
 .cl-scope-pill.pill-marketplace { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
-.cl-scope-pill.pill-connected   { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+.cl-scope-pill.pill-connected   { background: #a7f3d0 !important; color: #064e3b !important; border: 1px solid #059669 !important; font-weight: 700 !important; }
 
 .cl-status-pill {
     display: inline-flex !important;
@@ -1200,6 +1221,18 @@
     align-items: center !important;
     justify-content: center !important;
 }
+.cl-action-btn.cl-btn-connected,
+.btn.btn-light-success.cl-action-btn {
+    background: #a7f3d0 !important;
+    color: #064e3b !important;
+    border: 1px solid #059669 !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+}
+.cl-action-btn.cl-btn-connected i,
+.btn.btn-light-success.cl-action-btn i {
+    color: #064e3b !important;
+}
 .cl-action-footnote {
     font-size: 8px !important;
     color: #94a3b8 !important;
@@ -1230,6 +1263,30 @@
     align-items: center !important;
     gap: 8px !important;
     flex-wrap: wrap !important;
+}
+.cl-footer-match-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+}
+.cl-card-match-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    padding: 2.5px 8px !important;
+    border-radius: 6px !important;
+    line-height: 1.25 !important;
+    transition: all 0.15s ease !important;
+}
+.cl-card-match-badge.badge-light-success {
+    background: #dcfce7 !important;
+    color: #14532d !important;
+    border: 1px solid #86efac !important;
+}
+.cl-card-match-badge.badge-light-primary {
+    background: #eff6ff !important;
+    color: #1e40af !important;
+    border: 1px solid #bfdbfe !important;
 }
 .cl-footer-item {
     display: inline-flex !important;
@@ -1631,17 +1688,17 @@
     <div class="post d-flex flex-column-fluid" id="kt_post">
         <div id="kt_content_container" class="container-fluid px-3">
 
-            <!-- ── TIER 1: Header Toolbar Card (Rule 20) ── -->
+            <!-- ── TIER 1: Header Toolbar Card (Rule 20 Modern Card + Sub-Card) ── -->
             <div class="fa-header-card">
-                <div class="fa-header-left">
+                <div class="fa-header-subcard fa-header-subcard-identity">
                     <div class="fa-header-icon-box">
                         <i class="fas fa-handshake"></i>
                     </div>
-                    <div>
+                    <div class="fa-header-text-wrap">
                         <div class="fa-header-title-row">
                             <h1 class="fa-header-title">Find Trusted Hiring Agencies</h1>
                             <span class="fa-trust-pill">
-                                <i class="fas fa-shield-alt"></i> Verified Marketplace
+                                <i class="fas fa-shield-alt text-success"></i> Verified agencies
                             </span>
                         </div>
                         <div class="fa-header-subtitle">
@@ -1649,7 +1706,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="fa-header-actions">
+                <div class="fa-header-subcard fa-header-subcard-actions">
                     <button type="button" class="btn btn-sm btn-light-primary" onclick="resetAllAgencyFilters()">
                         <i class="fas fa-redo me-1"></i>Refresh Catalog
                     </button>
@@ -2135,24 +2192,47 @@
             var $cardMatchBadge = $card.find('.cl-card-match-badge');
 
             if (mode === 'all') {
-                // OVERVIEW MODE: Show only matching with up to 3 jobs (Point 2)
-                var matchingJobCount = 0;
+                // OVERVIEW MODE: Calculate actual match % based on open jobs
+                var matchingJobs = [];
+                var highestMatchPct = 0;
+
                 activeJobs.forEach(function(job) {
                     var jSkills = (job.skills || []).map(function(s) { return (s || '').toLowerCase().trim(); });
-                    var hasOverlap = jSkills.some(function(js) { return agencySkills.indexOf(js) !== -1; });
-                    if (hasOverlap) matchingJobCount++;
+                    if (jSkills.length === 0) return;
+                    var overlap = jSkills.filter(function(js) { return agencySkills.indexOf(js) !== -1; });
+                    if (overlap.length > 0) {
+                        var pct = Math.round((overlap.length / jSkills.length) * 100);
+                        pct = Math.min(100, Math.max(1, pct));
+                        matchingJobs.push({
+                            title: job.title,
+                            pct: pct,
+                            overlap: overlap
+                        });
+                        if (pct > highestMatchPct) {
+                            highestMatchPct = pct;
+                        }
+                    }
                 });
 
-                var displayJobMatchCount = Math.min(3, matchingJobCount);
+                // Sort matching jobs by match % descending
+                matchingJobs.sort(function(a, b) { return b.pct - a.pct; });
 
-                if (displayJobMatchCount > 0) {
-                    $cardMatchBadge.removeClass('d-none badge-light-success').addClass('badge-light-primary');
-                    $cardMatchBadge.html('⚡ Matches ' + displayJobMatchCount + (displayJobMatchCount === 1 ? ' Job' : ' Jobs'));
+                if (matchingJobs.length > 0 && highestMatchPct > 0) {
+                    var jobCount = matchingJobs.length;
+                    var jobTitlesList = matchingJobs.map(function(mj) { return mj.title; }).slice(0, 3).join(', ');
+                    if (matchingJobs.length > 3) {
+                        jobTitlesList += ' +' + (matchingJobs.length - 3) + ' more';
+                    }
+
+                    $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
+                    $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i>' + highestMatchPct + '% Match <span class="text-muted font-weight-500 ms-1">• Matches ' + jobCount + (jobCount === 1 ? ' Job' : ' Jobs') + ' (' + jobTitlesList + ')</span>');
+                    $cardMatchBadge.attr('title', 'Matches ' + jobCount + ' open jobs: ' + matchingJobs.map(function(mj) { return mj.title + ' (' + mj.pct + '%)'; }).join(', '));
                 } else {
-                    $cardMatchBadge.addClass('d-none');
+                    // Do not display a matching percentage when the agency has 0% match (Point 7)
+                    $cardMatchBadge.addClass('d-none').empty();
                 }
             } else if (mode === 'none') {
-                $cardMatchBadge.addClass('d-none');
+                $cardMatchBadge.addClass('d-none').empty();
             } else {
                 // SPECIFIC REQUISITION MATCH MODE: Dynamic & Logically Correct (Point 2)
                 var overlap = [];
@@ -2167,10 +2247,11 @@
                     var matchPct = Math.round((overlap.length / selectedSkills.length) * 100);
                     matchPct = Math.min(100, Math.max(1, matchPct));
                     $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
-                    $cardMatchBadge.html('🔥 ' + matchPct + '% Match');
+                    $cardMatchBadge.html('<i class="fas fa-fire text-danger me-1"></i>' + matchPct + '% Match <span class="text-muted font-weight-500 ms-1">• Matches requirement (' + overlap.slice(0, 3).join(', ') + ')</span>');
+                    $cardMatchBadge.attr('title', 'Matching Skills: ' + overlap.join(', '));
                 } else {
                     // No matching skills: DO NOT show match percentage badge (Point 2)
-                    $cardMatchBadge.addClass('d-none');
+                    $cardMatchBadge.addClass('d-none').empty();
                 }
             }
         });
