@@ -3040,8 +3040,11 @@
         });
 
         // Realtime Echo Subscription for agency.request.delta
-        if (typeof window.Echo !== 'undefined' && window.Echo) {
-            window.Echo.private('company.' + {{ $company_id }})
+        @php
+            $currentEchoCompanyId = $company_id ?? (auth()->check() ? auth()->user()->company_id : 0);
+        @endphp
+        if (typeof window.Echo !== 'undefined' && window.Echo && {{ $currentEchoCompanyId }} > 0) {
+            window.Echo.private('company.' + {{ $currentEchoCompanyId }})
                 .listen('.agency.request.delta', function(e) {
                     if (window.JeroFindAgencyRAM) window.JeroFindAgencyRAM.clear();
                     fetchAgencies(window.agencyState.page || 1);

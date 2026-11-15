@@ -180,6 +180,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 
         $this->pageTitle = __('Find Agency');
         $company_id = auth()->user()->company_id;
+        $this->company_id = $company_id;
 
         // Resolve job_id dynamically from request or fallback to company's latest job, using find() instead of findOrFail(48) to avoid 404
         $id = $request->get('id') ?? $request->get('job_id') ?? Job::where('company_id', $company_id)->latest()->value('id');
