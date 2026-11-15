@@ -11,6 +11,12 @@
 @endphp
 
 @if (count($data) > 0)
+    @if(!empty($isFallback) && !empty($fallbackNotice))
+        <div class="cl-fallback-alert-banner">
+            <i class="fas fa-lightbulb text-warning me-2 font-size-13"></i>
+            <span>{{ $fallbackNotice }}</span>
+        </div>
+    @endif
     @foreach ($data as $rowArr)
         @php
             $row = (object) $rowArr;
@@ -265,8 +271,16 @@
             }
         @endphp
 
+        @php
+            $isDirectMatch = (bool) ($row->is_direct_match ?? false);
+            $recLabel = $row->recommendation_label ?? 'Recommended Partner';
+            $recReason = $row->recommendation_reason ?? 'Verified marketplace recruitment partner';
+            $recTier = $row->recommendation_tier ?? 'marketplace';
+            $rowMatchPct = (int) ($row->match_pct ?? 0);
+        @endphp
+
         <!-- ── PRIMARY AGENCY CARD (Modern Card + Sub-Card Enterprise Standard - Rule 20) ── -->
-        <div class="cl-primary-card tbl-r" data-agency-id="{{ $row->id }}" data-client-id="{{ $row->client_id }}" data-agency-skills="{!! $skillsJsonAttr !!}" data-agency-name="{{ $row->company_name }}" data-agency-terms="{!! $termsJsonAttr !!}">
+        <div class="cl-primary-card tbl-r" data-agency-id="{{ $row->id }}" data-client-id="{{ $row->client_id }}" data-agency-skills="{!! $skillsJsonAttr !!}" data-agency-name="{{ $row->company_name }}" data-agency-terms="{!! $termsJsonAttr !!}" data-direct-match="{{ $isDirectMatch ? '1' : '0' }}" data-rec-tier="{{ $recTier }}" data-rec-label="{{ htmlspecialchars($recLabel, ENT_QUOTES, 'UTF-8') }}" data-rec-reason="{{ htmlspecialchars($recReason, ENT_QUOTES, 'UTF-8') }}" data-match-pct="{{ $rowMatchPct }}">
             
             <!-- 5 COMPACT SUB-CARDS GRID (RULE 20: UNIFORM HEIGHT & IDENTICAL SPACING) -->
             <div class="cl-subcards-grid">
@@ -276,6 +290,16 @@
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title" title="Agency">Agency</span>
                         <div class="cl-subcard-badges">
+                            @if($isDirectMatch)
+                                <span class="cl-match-type-pill pill-direct-match" title="{{ $recReason }}">
+                                    <i class="fas fa-check-circle font-size-7 me-0.5"></i>{{ $recLabel }}
+                                </span>
+                            @elseif(!empty($recLabel) && $recTier !== 'marketplace')
+                                <span class="cl-match-type-pill pill-recommended" title="{{ $recReason }}">
+                                    <i class="fas fa-lightbulb font-size-7 me-0.5"></i>{{ $recLabel }}
+                                </span>
+                            @endif
+
                             @if($isConnected)
                                 <span class="cl-scope-pill pill-connected" title="Connected Agency Partner">Connected</span>
                             @else
@@ -435,7 +459,17 @@
             <div class="cl-card-footer-strip">
                 <div class="cl-footer-strip-left">
                     <div class="cl-footer-match-wrap">
-                        <span class="cl-card-match-badge d-none badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2"></span>
+                        @if($isDirectMatch && $rowMatchPct > 0)
+                            <span class="cl-card-match-badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
+                                <i class="fas fa-bolt text-success me-1"></i><strong>{{ $rowMatchPct }}% Match</strong> • <span class="text-muted font-weight-500 ms-1">{{ $recReason }}</span>
+                            </span>
+                        @elseif(!empty($recReason) && $recTier !== 'marketplace')
+                            <span class="cl-card-match-badge badge-light-primary font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
+                                <i class="fas fa-lightbulb text-primary me-1"></i><strong>{{ $recLabel }}</strong> • <span class="text-muted font-weight-500 ms-1">{{ $recReason }}</span>
+                            </span>
+                        @else
+                            <span class="cl-card-match-badge d-none badge-light-success font-size-10 font-weight-700 py-0.5 px-2"></span>
+                        @endif
                     </div>
                 </div>
                 <div class="cl-footer-strip-right">

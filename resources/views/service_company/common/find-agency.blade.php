@@ -929,6 +929,42 @@
 .cl-scope-pill.pill-marketplace { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
 .cl-scope-pill.pill-connected   { background: #a7f3d0 !important; color: #064e3b !important; border: 1px solid #059669 !important; font-weight: 700 !important; }
 
+/* Smart Recommendation Hierarchy Pills (Rule 20) */
+.cl-match-type-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    line-height: 1.2 !important;
+}
+.cl-match-type-pill.pill-direct-match {
+    background: #ecfdf5 !important;
+    color: #065f46 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+.cl-match-type-pill.pill-recommended {
+    background: #eff6ff !important;
+    color: #1e40af !important;
+    border: 1px solid #bfdbfe !important;
+}
+
+.cl-fallback-alert-banner {
+    background: #f0fdf4 !important;
+    border: 1px solid #bbf7d0 !important;
+    border-radius: 9px !important;
+    padding: 9px 14px !important;
+    margin-bottom: 12px !important;
+    font-size: 11.5px !important;
+    color: #166534 !important;
+    display: flex !important;
+    align-items: center !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
 .cl-status-pill {
     display: inline-flex !important;
     align-items: center !important;
@@ -2114,7 +2150,11 @@
         perPage: localStorage.getItem('agencyPerPage') || 10
     };
 
-    window.JeroAgencyRAM = new Map();
+    window.JeroFindAgencyRAM = window.JeroAgencyRAM = new Map();
+    window.JeroFindAgencyDB = window.JeroAgencyDB || {
+        getPage: function() { return Promise.resolve(null); },
+        setPage: function() { return Promise.resolve(); }
+    };
     window.JeroAgencyDetailCache = window.JeroAgencyDetailCache || new Map();
     var activeAgencyXHR = null;
     var activeDetailXHR = null;
@@ -2190,6 +2230,9 @@
             agencySkills = agencySkills.map(function(s) { return (s || '').toLowerCase().trim(); });
 
             var $cardMatchBadge = $card.find('.cl-card-match-badge');
+            var recLabel = $card.attr('data-rec-label') || 'Recommended Partner';
+            var recReason = $card.attr('data-rec-reason') || '';
+            var recTier = $card.attr('data-rec-tier') || 'marketplace';
 
             if (mode === 'all') {
                 // OVERVIEW MODE: Calculate actual match % based on open jobs
@@ -2225,10 +2268,14 @@
                     }
 
                     $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
-                    $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i>' + highestMatchPct + '% Match <span class="text-muted font-weight-500 ms-1">• Matches ' + jobCount + (jobCount === 1 ? ' Job' : ' Jobs') + ' (' + jobTitlesList + ')</span>');
+                    $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong>' + highestMatchPct + '% Match</strong> <span class="text-muted font-weight-500 ms-1">• Matches ' + jobCount + (jobCount === 1 ? ' Job' : ' Jobs') + ' (' + jobTitlesList + ')</span>');
                     $cardMatchBadge.attr('title', 'Matches ' + jobCount + ' open jobs: ' + matchingJobs.map(function(mj) { return mj.title + ' (' + mj.pct + '%)'; }).join(', '));
+                } else if (recReason && recTier !== 'marketplace') {
+                    // Fallback Recommendation Display (Never leave empty per Rule 4)
+                    $cardMatchBadge.removeClass('d-none badge-light-success').addClass('badge-light-primary');
+                    $cardMatchBadge.html('<i class="fas fa-lightbulb text-primary me-1"></i><strong>' + recLabel + '</strong> <span class="text-muted font-weight-500 ms-1">• ' + recReason + '</span>');
+                    $cardMatchBadge.attr('title', recReason);
                 } else {
-                    // Do not display a matching percentage when the agency has 0% match (Point 7)
                     $cardMatchBadge.addClass('d-none').empty();
                 }
             } else if (mode === 'none') {
@@ -2247,10 +2294,14 @@
                     var matchPct = Math.round((overlap.length / selectedSkills.length) * 100);
                     matchPct = Math.min(100, Math.max(1, matchPct));
                     $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
-                    $cardMatchBadge.html('<i class="fas fa-fire text-danger me-1"></i>' + matchPct + '% Match <span class="text-muted font-weight-500 ms-1">• Matches requirement (' + overlap.slice(0, 3).join(', ') + ')</span>');
+                    $cardMatchBadge.html('<i class="fas fa-fire text-danger me-1"></i><strong>' + matchPct + '% Match</strong> <span class="text-muted font-weight-500 ms-1">• Matches requirement (' + overlap.slice(0, 3).join(', ') + ')</span>');
                     $cardMatchBadge.attr('title', 'Matching Skills: ' + overlap.join(', '));
+                } else if (recReason && recTier !== 'marketplace') {
+                    // Fallback Recommendation for specific requirement
+                    $cardMatchBadge.removeClass('d-none badge-light-success').addClass('badge-light-primary');
+                    $cardMatchBadge.html('<i class="fas fa-lightbulb text-primary me-1"></i><strong>' + recLabel + '</strong> <span class="text-muted font-weight-500 ms-1">• ' + recReason + '</span>');
+                    $cardMatchBadge.attr('title', recReason);
                 } else {
-                    // No matching skills: DO NOT show match percentage badge (Point 2)
                     $cardMatchBadge.addClass('d-none').empty();
                 }
             }
@@ -2987,6 +3038,15 @@
                 closeAgencyBenchDrawer();
             }
         });
+
+        // Realtime Echo Subscription for agency.request.delta
+        if (typeof window.Echo !== 'undefined' && window.Echo) {
+            window.Echo.private('company.' + {{ $company_id }})
+                .listen('.agency.request.delta', function(e) {
+                    if (window.JeroFindAgencyRAM) window.JeroFindAgencyRAM.clear();
+                    fetchAgencies(window.agencyState.page || 1);
+                });
+        }
     });
 </script>
 @endpush
