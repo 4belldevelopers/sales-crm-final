@@ -78,7 +78,8 @@ Because Elasticsearch `function_score` weights are separated by orders of magnit
 | :--- | :--- | :--- |
 | `app/Services/FindAgencyService.php` | Modified | Added 100% CQRS job context resolution via ES, 5-Tier dynamic `function_score` boosts, automatic fallback relaxation query when 0 matches found, and per-agency recommendation tier enrichment. |
 | `resources/views/service_company/ajax_pages/find_agency_ajax.blade.php` | Modified | Added fallback notice banner (`.cl-fallback-alert-banner`), rendered recommendation data attributes (`data-direct-match`, `data-rec-tier`, `data-match-pct`), and dynamic badge pills (`.pill-direct-match` vs `.pill-recommended`). |
-| `resources/views/service_company/common/find-agency.blade.php` | Modified | Added CSS styling for recommendation badges and fallback alert, registered `window.JeroFindAgencyRAM` / `window.JeroAgencyRAM`, and updated `applyActiveJobMatching()` for Client-First browser execution. |
+| `resources/views/service_company/common/find-agency.blade.php` | Modified | Added CSS styling for recommendation badges and fallback alert, registered `window.JeroFindAgencyRAM` / `window.JeroAgencyRAM`, updated `applyActiveJobMatching()` for Client-First browser execution, and safeguarded Echo channel subscription against uninitialized `$company_id`. |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyCompanyController.php` | Modified | Added `$this->company_id = $company_id` in `findAgency()` to ensure tenant scope is passed to the view. |
 | `tests/Feature/FindAgencySmartMatchingTest.php` | New File | Feature test asserting service recommendation hierarchy, AJAX blade elements, and main blade client styles. |
 
 ---
