@@ -79,7 +79,9 @@
      data-current-stage-key="{{ $csdcCurrentKey }}"
      data-current-stage-label="{{ $csdcCurrentMeta['label'] }}"
      data-current-stage-order="{{ $csdcCurrentMeta['order'] }}"
-     data-current-sub-name="{{ $csdcHasCurrentSub ? $csdcCurrentSubName : '' }}">
+     data-current-sub-name="{{ $csdcHasCurrentSub ? $csdcCurrentSubName : '' }}"
+     data-has-valid-skill-rating="{{ !empty($has_valid_skill_rating) ? '1' : '0' }}"
+     data-unrated-skills="{{ implode(', ', $unrated_skill_names ?? []) }}">
 
     <style>
         /* Enterprise Drawer Header Background (Rule 20 / Mandatory Dedicated Header Background) */
@@ -1076,6 +1078,8 @@
         var $arrowLbl = $('#csd_trans_arrow_lbl');
         var $badge = $('#csd_transition_badge');
         var $seqHint = $('#csd_sequence_hint');
+        var hasValidSkillRating = $('.csd-wrap').data('has-valid-skill-rating') == '1';
+        var unratedSkills = $('.csd-wrap').data('unrated-skills') || '';
 
         $badge.removeClass('is-advance is-back is-reject is-reopen is-warn');
         $seqHint.hide();
@@ -1090,7 +1094,12 @@
             $arrowCircle.addClass('is-moving').css({ background: selBg, borderColor: selColor, color: selTextColor });
             $arrowLbl.text('Moving To').css('color', selTextColor);
 
-            if (selKey === 'rejected') {
+            if (curKey === 'inreview' && selKey === 'sourcing' && !hasValidSkillRating) {
+                $badge.addClass('is-warn').text('Skill Rating Required');
+                var unratedText = unratedSkills ? ' (' + unratedSkills + ')' : '';
+                $('#csd_sequence_hint_text').html('<strong>Skill Rating Required:</strong> Candidate does not have a valid skill rating' + unratedText + '. A candidate without a valid skill rating must NEVER be moved from InReview to Sourcing. Please edit the candidate to evaluate required skills.');
+                $seqHint.css('display', 'flex');
+            } else if (selKey === 'rejected') {
                 $badge.addClass('is-reject').text(curLabel + ' \u2192 Rejected');
             } else if (curKey === 'rejected') {
                 $badge.addClass('is-reopen').text('Reopening \u2192 ' + selLabel);

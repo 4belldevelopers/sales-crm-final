@@ -1540,7 +1540,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     }
                 }
 
-                if ($request->filled('expected_resume_version') && ($resumeSession || $request->hasFile('resume') || empty($request->resumeCheck))) {
+                if ($request->filled('expected_resume_version') && ($resumeSession || $request->hasFile('resume') || $request->input('resume_intent') === 'REMOVE')) {
                     $expectedResume = (int) $request->input('expected_resume_version');
                     $currentResume = (int) ($benchApplication->resume_version ?? 1);
                     if ($expectedResume !== $currentResume) {
@@ -1846,7 +1846,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
                     $benchApplication->resume = $fileUrl;
                 }
-            } elseif (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume') && ! $request->filled('uploaded_file_path')) {
+            } elseif (($request->input('resume_intent') === 'REMOVE' || $request->input('resume_action') === 'delete') && ! $resumeSession && ! $request->hasFile('resume') && ! $request->filled('uploaded_file_path')) {
                 $benchApplication->resume = '';
             }
 

@@ -3246,8 +3246,8 @@
             <input type="hidden" name="job_id" value="{{ @$jobId }}" id="job_id" />
             <input type="hidden" name="appId" value="{{ @$appId }}" id="appId" />
             <input type="hidden" name="currentPage" value="{{ @$currentPage }}" id="currentPage" />
-            <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
-            <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
+            <input type="hidden" name="resumeCheck" value="{{ (!empty($application->resume) || !empty($application->current_resume_id) || !empty($resumeCheck)) ? '1' : '' }}" id="resumeCheck" />
+            <input type="hidden" name="existing_resume_path" id="existing_resume_path" value="{{ $application->resume ?? '' }}" />
             <input type="hidden" name="current_master_status_id" id="current_master_status_id" value="{{ @$application->master_status_id ?? 8 }}" />
             <input type="hidden" name="master_status_id" id="master_status_id" value="{{ $currentAppMasterStatus }}" />
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
@@ -4104,7 +4104,7 @@
                   <thead>
                     <tr>
                       <th>Skill <span class="rq">*</span></th>
-                      <th>Experience (Years) <span class="rq">*</span></th>
+                      <th>Experience (Years)</th>
                       <th>Experience (Months)</th>
                       <th>Proficiency Rating <span class="rq">*</span></th>
                     </tr>
@@ -4116,7 +4116,7 @@
                             @php
                                   $selected_skill_exp_year = null;
                                   $selected_skill_exp_month = null;
-                                  $selected_skill_rating = null;
+                                  $selected_skill_rating = $skill_val->rating ?? null;
                                   $skill_val_id = $skill_val->id ?? $skill_val->job_skill_id ?? $skill_val->skill_id ?? null;
 
                                   if(!empty($skill_val->skill_value)){
@@ -4128,7 +4128,6 @@
 
                                       $selected_skill_exp_year = $skill_exp_years;
                                       $selected_skill_exp_month = $skill_exp_months;
-                                      $selected_skill_rating = $skill_val->rating ?? null;
                                      }
                                   }
                             @endphp
@@ -6855,6 +6854,7 @@ $(document).ready(function () {
         $('#fileName').text('');
         $('#resume').val('');
         $('#resumeCheck').val('');
+        $('#existing_resume_path').val('');
         var isEdit = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
         $('#resume_intent').val(isEdit ? 'REMOVE' : 'NONE');
         $('.download-file, #upDownloadBtn').addClass('d-none').hide();
@@ -9315,12 +9315,12 @@ var candidateFieldConfigMap = {
     },
     'ctc': {
         label: 'Current CTC (Salary Details)',
-        selector: '#ctc',
+        selector: '#pay_annual:visible, #pay_monthly:visible, #ctc',
         message: 'Current salary details are required.'
     },
     'ectc': {
         label: 'Expected CTC (Salary Details)',
-        selector: '#ectc',
+        selector: '#bill_annual:visible, #bill_monthly:visible, #ectc',
         message: 'Expected salary details are required.'
     },
     'np_id': {
@@ -9336,7 +9336,7 @@ var candidateFieldConfigMap = {
     'job_skills': {
         label: 'Job Skills Details',
         selector: '.candidate-job-skills-scroll table',
-        message: 'Job skills experience and ratings are required.'
+        message: 'Job skills proficiency ratings are required.'
     },
     'screening_questions': {
         label: 'Screening Questions',
@@ -9457,12 +9457,12 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
         var et = ($('#EmploymentType').val() || '').trim();
         if (!et) addMissing('employmentType');
 
-        // Salary Details: Current CTC, Expected CTC
-        var ctc = ($('#ctc').val() || '').trim();
-        if (!ctc) addMissing('ctc');
+        // Salary Details: Current CTC, Expected CTC across all active periods (Annual, Monthly, Hourly)
+        var ctc = parseFloat($('#pay_annual').val()) || parseFloat($('#pay_monthly').val()) || parseFloat($('#ctc').val()) || 0;
+        if (ctc <= 0) addMissing('ctc');
 
-        var ectc = ($('#ectc').val() || '').trim();
-        if (!ectc) addMissing('ectc');
+        var ectc = parseFloat($('#bill_annual').val()) || parseFloat($('#bill_monthly').val()) || parseFloat($('#ectc').val()) || 0;
+        if (ectc <= 0) addMissing('ectc');
 
         // Notice Period & Joining Details
         var snpMode = ($('#serving_notice_period').val() || '').trim();
@@ -9481,13 +9481,13 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
     var wm = $('input[name="wm"]:checked').val();
     if (!wm) addMissing('wm');
 
-    // 9. Job Skills Details (if job has skills)
-    var $jobSkillYears = $('select[name^="YearskillId"]');
-    if ($jobSkillYears.length > 0) {
+    // 9. Job Skills Details (if job has skills) - Experience Year is optional, Proficiency Rating is required
+    var $jobSkillRatings = $('select[name^="rating"]');
+    if ($jobSkillRatings.length > 0) {
         var missingJobSkills = false;
-        $jobSkillYears.each(function() {
-            var val = $(this).val();
-            if (!val || val === '0') {
+        $jobSkillRatings.each(function() {
+            var rVal = $(this).val();
+            if (!rVal || rVal === '0') {
                 missingJobSkills = true;
             }
         });
