@@ -7980,18 +7980,20 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 }
 
                 $offer_create_main_tds = [
-                    'offer_id' => $offer_id,
-                    'currency' => $option_currency_val,
+                    'offer_id' => (int) $offer_id,
+                    'currency' => ($option_currency_val !== null) ? (int) $option_currency_val : null,
                     'employment_type' => $request->filled('employment_type') ? (int) $request->employment_type : 0,
                     'salary_ctc' => $request->filled('ctc') ? (float) $request->ctc : null,
-                    'salary_mode' => $current_ctc_mode,
-                    'designation' => $request->current_designation,
+                    'salary_mode' => (int) ($current_ctc_mode ?? 0),
+                    'designation' => (string) ($request->current_designation ?? ''),
                     'joined_date' => $joined_date,
                     'joined' => null,
                     'yearly_gross' => $request->filled('totalhourlyhourly') ? (float) $request->totalhourlyhourly : null,
                     'yearly_bonus_gross' => $request->filled('totalhourlyybonus') ? (float) $request->totalhourlyybonus : null,
                     'yearly_insurence_gross' => $request->filled('totalYearlyinsurencehourly') ? (float) $request->totalYearlyinsurencehourly : null,
                     'yearly_final_gross' => ($otherPoint) ? ($request->filled('finalpaytotalhourly') ? (float) $request->finalpaytotalhourly : null) : ($request->filled('totalhourlyhourly') ? (float) $request->totalhourlyhourly : null),
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
 
                 $yearly_gross = $request->totalhourlyhourly;
@@ -8002,13 +8004,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 // Check if offer points exist and insert them
                 if (! empty($request->offer_point_hourly)) {
                     foreach ($request->offer_point_hourly as $bp => $point) {
+                        if (trim((string) $point) === '') {
+                            continue;
+                        }
                         $basic_offer_points = [
-                            'poins' => $point,
-                            'Percentage' => $request->option_percentage_hourly[$bp],
-                            'condition_s' => $request->option_salarymode_hourly[$bp],
-                            'yearly' => $request->offer_hourly[$bp],
-                            'offer_create_main_td_id' => $offer_create_main_td_id,
-                            'offer_id' => $offer_id,
+                            'poins' => (string) $point,
+                            'Percentage' => (int) round((float) ($request->option_percentage_hourly[$bp] ?? 0)),
+                            'condition_s' => (int) ($request->option_salarymode_hourly[$bp] ?? 0),
+                            'monthly' => null,
+                            'yearly' => (isset($request->offer_hourly[$bp]) && $request->offer_hourly[$bp] !== '') ? (float) $request->offer_hourly[$bp] : null,
+                            'view_type' => 0,
+                            'offer_create_main_td_id' => (int) $offer_create_main_td_id,
+                            'offer_id' => (int) $offer_id,
                         ];
                         DB::table('basic_offer_points')->insert($basic_offer_points);
                     }
@@ -8017,13 +8024,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 // Check if insurance points exist and insert them
                 if (! empty($request->insurence_point_hourly)) {
                     foreach ($request->insurence_point_hourly as $bp => $point) {
+                        if (trim((string) $point) === '') {
+                            continue;
+                        }
                         $insurence_offer_points = [
-                            'poins' => $point,
-                            'Percentage' => $request->insurence_option_percentage_hourly[$bp],
-                            'condition_s' => $request->insurence_option_salarymode_hourly[$bp],
-                            'yearly' => $request->insurence_offer_hourly[$bp],
-                            'offer_create_main_td_id' => $offer_create_main_td_id,
-                            'offer_id' => $offer_id,
+                            'poins' => (string) $point,
+                            'Percentage' => (int) round((float) ($request->insurence_option_percentage_hourly[$bp] ?? 0)),
+                            'condition_s' => (int) ($request->insurence_option_salarymode_hourly[$bp] ?? 0),
+                            'monthly' => null,
+                            'yearly' => (isset($request->insurence_offer_hourly[$bp]) && $request->insurence_offer_hourly[$bp] !== '') ? (float) $request->insurence_offer_hourly[$bp] : null,
+                            'view_type' => 0,
+                            'offer_create_main_td_id' => (int) $offer_create_main_td_id,
+                            'offer_id' => (int) $offer_id,
                         ];
                         DB::table('insurence_offer_points')->insert($insurence_offer_points);
                     }
@@ -8032,13 +8044,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 // Check if bonus points exist and insert them
                 if (! empty($request->bonus_point_hourly)) {
                     foreach ($request->bonus_point_hourly as $bp => $point) {
+                        if (trim((string) $point) === '') {
+                            continue;
+                        }
                         $bonus_offer_points = [
-                            'poins' => $point,
-                            'Percentage' => $request->bonus_option_percentage_hourly[$bp],
-                            'condition_s' => $request->bonus_option_salarymode_hourly[$bp],
-                            'yearly' => $request->bonus_offer_hourly[$bp],
-                            'offer_create_main_td_id' => $offer_create_main_td_id,
-                            'offer_id' => $offer_id,
+                            'poins' => (string) $point,
+                            'Percentage' => (int) round((float) ($request->bonus_option_percentage_hourly[$bp] ?? 0)),
+                            'condition_s' => (int) ($request->bonus_option_salarymode_hourly[$bp] ?? 0),
+                            'monthly' => null,
+                            'yearly' => (isset($request->bonus_offer_hourly[$bp]) && $request->bonus_offer_hourly[$bp] !== '') ? (float) $request->bonus_offer_hourly[$bp] : null,
+                            'view_type' => 0,
+                            'offer_create_main_td_id' => (int) $offer_create_main_td_id,
+                            'offer_id' => (int) $offer_id,
                         ];
                         DB::table('bonus_offer_points')->insert($bonus_offer_points);
                     }
@@ -8052,12 +8069,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
                 // Prepare the main offer data
                 $offer_create_main_tds = [
-                    'offer_id' => $offer_id,
-                    'currency' => $option_currency_val,
+                    'offer_id' => (int) $offer_id,
+                    'currency' => ($option_currency_val !== null) ? (int) $option_currency_val : null,
                     'employment_type' => $request->filled('employment_type') ? (int) $request->employment_type : 0,
                     'salary_ctc' => $request->filled('ctc') ? (float) $request->ctc : null,
-                    'salary_mode' => $current_ctc_mode,
-                    'designation' => $request->current_designation,
+                    'salary_mode' => (int) ($current_ctc_mode ?? 0),
+                    'designation' => (string) ($request->current_designation ?? ''),
                     'joined_date' => $joined_date,
                     'joined' => null,
                     'monthly_gross' => $request->filled('totalMonthly') ? (float) $request->totalMonthly : null,
@@ -8068,6 +8085,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     'yearly_insurence_gross' => $request->filled('totalYearlyinsurence') ? (float) $request->totalYearlyinsurence : null,
                     'monthly_final_gross' => $request->filled('finalpaytotalMonthly') ? (float) $request->finalpaytotalMonthly : null,
                     'yearly_final_gross' => ($otherPoint) ? ($request->filled('finalpaytotalYearly') ? (float) $request->finalpaytotalYearly : null) : ($request->filled('totalYearly') ? (float) $request->totalYearly : null),
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
                 $yearly_gross = $request->totalYearly;
                 $yearly_final_gross = ($otherPoint) ? $request->finalpaytotalYearly : $request->totalYearly;
@@ -8078,15 +8097,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 // Check if offer points exist and insert them
                 if (! empty($request->offer_point)) {
                     foreach ($request->offer_point as $bp => $point) {
+                        if (trim((string) $point) === '') {
+                            continue;
+                        }
                         $basic_offer_points = [
-                            'poins' => $point,
-                            'Percentage' => $request->option_percentage[$bp],
-                            'condition_s' => $request->option_salarymode[$bp],
-                            'monthly' => $request->offer_monthly[$bp],
-                            'yearly' => $request->offer_yearly[$bp],
-                            'view_type' => $request->basic_view[$bp],
-                            'offer_create_main_td_id' => $offer_create_main_td_id,
-                            'offer_id' => $offer_id,
+                            'poins' => (string) $point,
+                            'Percentage' => (int) round((float) ($request->option_percentage[$bp] ?? 0)),
+                            'condition_s' => (int) ($request->option_salarymode[$bp] ?? 0),
+                            'monthly' => (isset($request->offer_monthly[$bp]) && $request->offer_monthly[$bp] !== '') ? (float) $request->offer_monthly[$bp] : null,
+                            'yearly' => (isset($request->offer_yearly[$bp]) && $request->offer_yearly[$bp] !== '') ? (float) $request->offer_yearly[$bp] : null,
+                            'view_type' => (int) ($request->basic_view[$bp] ?? 0),
+                            'offer_create_main_td_id' => (int) $offer_create_main_td_id,
+                            'offer_id' => (int) $offer_id,
                         ];
                         DB::table('basic_offer_points')->insert($basic_offer_points);
                     }
@@ -8095,15 +8117,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 // Check if insurance points exist and insert them
                 if (! empty($request->insurence_points)) {
                     foreach ($request->insurence_points as $bp => $point) {
+                        if (trim((string) $point) === '') {
+                            continue;
+                        }
                         $insurence_offer_points = [
-                            'poins' => $point,
-                            'Percentage' => $request->insurence_option_percentage[$bp],
-                            'condition_s' => $request->insurence_option_salarymode[$bp],
-                            'monthly' => $request->insurence_offer_monthly[$bp],
-                            'yearly' => $request->insurence_offer_yearly[$bp],
-                            'view_type' => $request->insurence_view[$bp],
-                            'offer_create_main_td_id' => $offer_create_main_td_id,
-                            'offer_id' => $offer_id,
+                            'poins' => (string) $point,
+                            'Percentage' => (int) round((float) ($request->insurence_option_percentage[$bp] ?? 0)),
+                            'condition_s' => (int) ($request->insurence_option_salarymode[$bp] ?? 0),
+                            'monthly' => (isset($request->insurence_offer_monthly[$bp]) && $request->insurence_offer_monthly[$bp] !== '') ? (float) $request->insurence_offer_monthly[$bp] : null,
+                            'yearly' => (isset($request->insurence_offer_yearly[$bp]) && $request->insurence_offer_yearly[$bp] !== '') ? (float) $request->insurence_offer_yearly[$bp] : null,
+                            'view_type' => (int) ($request->insurence_view[$bp] ?? 0),
+                            'offer_create_main_td_id' => (int) $offer_create_main_td_id,
+                            'offer_id' => (int) $offer_id,
                         ];
                         DB::table('insurence_offer_points')->insert($insurence_offer_points);
                     }
@@ -8112,15 +8137,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 // Check if bonus points exist and insert them
                 if (! empty($request->bonus_points)) {
                     foreach ($request->bonus_points as $bp => $point) {
+                        if (trim((string) $point) === '') {
+                            continue;
+                        }
                         $bonus_offer_points = [
-                            'poins' => $point,
-                            'Percentage' => $request->bonus_option_percentage[$bp],
-                            'condition_s' => $request->bonus_option_salarymode[$bp],
-                            'monthly' => $request->bonus_offer_monthly[$bp],
-                            'yearly' => $request->bonus_offer_yearly[$bp],
-                            'view_type' => $request->bonus_view[$bp],
-                            'offer_create_main_td_id' => $offer_create_main_td_id,
-                            'offer_id' => $offer_id,
+                            'poins' => (string) $point,
+                            'Percentage' => (int) round((float) ($request->bonus_option_percentage[$bp] ?? 0)),
+                            'condition_s' => (int) ($request->bonus_option_salarymode[$bp] ?? 0),
+                            'monthly' => (isset($request->bonus_offer_monthly[$bp]) && $request->bonus_offer_monthly[$bp] !== '') ? (float) $request->bonus_offer_monthly[$bp] : null,
+                            'yearly' => (isset($request->bonus_offer_yearly[$bp]) && $request->bonus_offer_yearly[$bp] !== '') ? (float) $request->bonus_offer_yearly[$bp] : null,
+                            'view_type' => (int) ($request->bonus_view[$bp] ?? 0),
+                            'offer_create_main_td_id' => (int) $offer_create_main_td_id,
+                            'offer_id' => (int) $offer_id,
                         ];
                         DB::table('bonus_offer_points')->insert($bonus_offer_points);
                     }
@@ -8210,7 +8238,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $values['offer_currency'] = $option_currency_val;
             $values['offer_mode'] = $current_ctc_mode;
-            $values['offer_amount'] = ($ctc !== null && $ctc !== '') ? (string) $ctc : null;
+            $values['offer_amount'] = ($ctc !== null && $ctc !== '') ? substr((string) round((float) $ctc), 0, 10) : null;
             $values['joined_date'] = $joined_date;
             $values['confidential'] = $confidential;
 
@@ -8234,11 +8262,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ->select('offer_job_applications.*', 'job_applications.full_name')
                 ->where('offer_job_applications.id', $offer_id)->first();
 
-            $this->account = DB::table('companies')->select('*')->where('id', auth()->user()->company_id)->first();
+            $companyId = (int) (auth()->user()->company_id ?? 0);
+            $this->account = DB::table('companies')->select('*')->where('id', $companyId)->first();
             $this->global_settings = DB::table('global_settings')->select('*')->first();
             $offer_terms = '';
 
-            $offer_terms = (@$this->account->offer_terms) ? $this->account->offer_terms : @$this->global_settings->offer_terms;
+            $offer_terms = (@$this->account && @$this->account->offer_terms) ? $this->account->offer_terms : (@$this->global_settings->offer_terms ?? '');
 
             $rowDataOfferDetails = GeneralMethod::offerLetterdetails($offer_id);
 
@@ -8263,10 +8292,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             // Return a success response
 
+            $userId = auth()->id() ?? ($this->user->id ?? 0);
             $cachekeys = [
-                'allapptracker_version_user_'.$this->user->id,
-                'allcvtracker_version_user_'.$this->user->id,
-                'candidateDetails_version_user_'.$this->user->id,
+                'allapptracker_version_user_'.$userId,
+                'allcvtracker_version_user_'.$userId,
+                'candidateDetails_version_user_'.$userId,
             ];
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
@@ -8275,7 +8305,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // Real-time delta broadcast over WebSocket / Laravel Reverb to synchronize all active browser sessions in company
             try {
                 event(new \App\Events\ApplicationOfferUpdated(
-                    (int) auth()->user()->company_id,
+                    (int) (auth()->user()->company_id ?? 0),
                     (int) $offer_id,
                     (int) (@$Offertimelime->application_id ?? 0),
                     'saved',
@@ -8300,7 +8330,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             \Log::error('saveCreateOffer transaction failed: '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine()."\n".$e->getTraceAsString());
 
             // Return an error response
-            return response()->json(['status' => 'failed', 'message' => 'Failed to save data. Please try again.'], 500);
+            return response()->json(['status' => 'failed', 'message' => 'Failed to save offer: '.$e->getMessage()], 500);
         }
 
     }
@@ -8322,16 +8352,21 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ], 422);
         }
 
-        $offer_create_main_tds = [
-            'offer_id' => $request->offerId,
-            'terms_condition' => $request->editor1,
-        ];
-        // Insert the main offer data and get the ID
-        $offer_terms_conditions = DB::table('offer_terms_conditions')->insertGetId($offer_create_main_tds);
-        if ($offer_terms_conditions > 0) {
-            return response()->json(['status' => 'success', 'message' => 'Offer Terms Created successfully.']);
-        } else {
-            return response()->json(['status' => 'failed', 'message' => 'Failed to save data. Please try again']);
+        try {
+            $offer_create_main_tds = [
+                'offer_id' => (int) $request->offerId,
+                'terms_condition' => (string) $request->editor1,
+            ];
+            // Insert the main offer data and get the ID
+            $offer_terms_conditions = DB::table('offer_terms_conditions')->insertGetId($offer_create_main_tds);
+            if ($offer_terms_conditions > 0) {
+                return response()->json(['status' => 'success', 'message' => 'Offer Terms Created successfully.']);
+            } else {
+                return response()->json(['status' => 'failed', 'message' => 'Failed to save data. Please try again']);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('termsSaveCreateOffer failed: '.$e->getMessage());
+            return response()->json(['status' => 'failed', 'message' => 'Failed to save terms: '.$e->getMessage()], 500);
         }
 
     }

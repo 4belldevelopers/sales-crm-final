@@ -1616,7 +1616,7 @@ END:VCALENDAR";
 
             'offer_currency' => @$timelineArr['offer_currency'] ? @$timelineArr['offer_currency'] : null,
             'offer_mode' => @$timelineArr['offer_mode'] ? @$timelineArr['offer_mode'] : null,
-            'offer_amount' => @$timelineArr['offer_amount'] ? @$timelineArr['offer_amount'] : null,
+            'offer_amount' => ! empty($timelineArr['offer_amount']) ? substr((string) $timelineArr['offer_amount'], 0, 10) : null,
             'joined_date' => @$timelineArr['joined_date'] ? @$timelineArr['joined_date'] : null,
             'candidate_status' => @$timelineArr['candidate_status'] ? @$timelineArr['candidate_status'] : 0,
             'management_status' => @$timelineArr['management_status'] ? @$timelineArr['management_status'] : 0,
@@ -1636,253 +1636,257 @@ END:VCALENDAR";
         ];
         $updatetimelineId = DB::table('updatetimeline')->insertGetId($values);
 
-        $elasticService = app(ElasticService::class);
-        static $esTimelineDocCache = [];
-        $fetchEsDoc = function (string $index, $docId) use ($elasticService, &$esTimelineDocCache) {
-            $docId = (int) $docId;
-            if ($docId <= 0) {
-                return null;
-            }
-            $cKey = $index.':'.$docId;
-            if (! array_key_exists($cKey, $esTimelineDocCache)) {
-                try {
-                    $res = $elasticService->getClient()->get([
-                        'index' => $index,
-                        'id' => $docId,
-                    ]);
-                    $esTimelineDocCache[$cKey] = isset($res['_source']) ? (object) $res['_source'] : null;
-                } catch (\Throwable $e) {
-                    $esTimelineDocCache[$cKey] = null;
+        try {
+            $elasticService = app(ElasticService::class);
+            static $esTimelineDocCache = [];
+            $fetchEsDoc = function (string $index, $docId) use ($elasticService, &$esTimelineDocCache) {
+                $docId = (int) $docId;
+                if ($docId <= 0) {
+                    return null;
                 }
+                $cKey = $index.':'.$docId;
+                if (! array_key_exists($cKey, $esTimelineDocCache)) {
+                    try {
+                        $res = $elasticService->getClient()->get([
+                            'index' => $index,
+                            'id' => $docId,
+                        ]);
+                        $esTimelineDocCache[$cKey] = isset($res['_source']) ? (object) $res['_source'] : null;
+                    } catch (\Throwable $e) {
+                        $esTimelineDocCache[$cKey] = null;
+                    }
+                }
+
+                return $esTimelineDocCache[$cKey];
+            };
+
+            $job_details = $fetchEsDoc(ELASTIC_JOBS, @$timelineArr['job_id'] ?: 0);
+            $user_details = $fetchEsDoc(ELASTIC_USERS_LIST, @$timelineArr['event_by_user_id'] ?: 0);
+
+            $interview_details = null;
+            $interviewScheduleId = $timelineArr['interview_schedules_id'] ?? null;
+            if (! empty($interviewScheduleId)) {
+                $interview_details = $fetchEsDoc(ELASTIC_INERTVIEW_TRACKER, $interviewScheduleId);
             }
 
-            return $esTimelineDocCache[$cKey];
-        };
+            $status_details = null;
+            if (! empty($interview_details->stage ?? null)) {
+                $status_details = $fetchEsDoc(ELASTIC_MASTER_STATUS, $interview_details->stage);
+            }
 
-        $job_details = $fetchEsDoc(ELASTIC_JOBS, @$timelineArr['job_id'] ?: 0);
-        $user_details = $fetchEsDoc(ELASTIC_USERS_LIST, @$timelineArr['event_by_user_id'] ?: 0);
+            $client_details = $fetchEsDoc(ELASTIC_CLIENT_LIST, $job_details->client_id ?? 0);
+            $company_details = $fetchEsDoc(ELASTIC_COMPANIES_INDEX, $user_details->company_id ?? 0);
 
-        $interview_details = null;
-        $interviewScheduleId = $timelineArr['interview_schedules_id'] ?? null;
-        if (! empty($interviewScheduleId)) {
-            $interview_details = $fetchEsDoc(ELASTIC_INERTVIEW_TRACKER, $interviewScheduleId);
-        }
+            // return users
 
-        $status_details = null;
-        if (! empty($interview_details->stage ?? null)) {
-            $status_details = $fetchEsDoc(ELASTIC_MASTER_STATUS, $interview_details->stage);
-        }
-
-        $client_details = $fetchEsDoc(ELASTIC_CLIENT_LIST, $job_details->client_id ?? 0);
-        $company_details = $fetchEsDoc(ELASTIC_COMPANIES_INDEX, $user_details->company_id ?? 0);
-
-        // return users
-
-        $response = $elasticService->getClient()->update([
-            'index' => ELASTIC_CANDIDATE_TIMELINE,
-            'id' => $updatetimelineId,
-            'retry_on_conflict' => 5,
-            'body' => [
-                'doc' => [
-                    'id' => $updatetimelineId,
-                    'event_id' => @$timelineArr['event_id'] ? @$timelineArr['event_id'] : null,
-                    'event_by_company_id' => @$timelineArr['event_by_company_id'] ? @$timelineArr['event_by_company_id'] : null,
-                    'event_by_user_id' => @$timelineArr['event_by_user_id'] ? @$timelineArr['event_by_user_id'] : null,
-                    'master_process_name' => @$timelineArr['master_process_name'] ? @$timelineArr['master_process_name'] : null,
-                    'child_process_name' => @$timelineArr['child_process_name'] ? @$timelineArr['child_process_name'] : null,
-                    'application_id' => @$timelineArr['application_id'] ? @$timelineArr['application_id'] : null,
-                    'application_email' => @$timelineArr['application_email'] ? @$timelineArr['application_email'] : null,
-                    'job_id' => @$timelineArr['job_id'] ? @$timelineArr['job_id'] : null,
-                    'note' => @$timelineArr['note'] ? @$timelineArr['note'] : null,
-                    'interview_schedule_date' => (@$timelineArr['interview_schedule_date']) ? Carbon::parse(@$timelineArr['interview_schedule_date'])->toIso8601String() : null,
-                    'interview_from_time' => (@$timelineArr['interview_from_time']) ? Carbon::parse(@$timelineArr['interview_from_time'])->toIso8601String() : null,
-                    'interview_to_time' => (@$timelineArr['interview_to_time']) ? Carbon::parse(@$timelineArr['interview_to_time'])->toIso8601String() : null,
-                    'interview_mode' => @$timelineArr['interview_mode'] ? $timelineArr['interview_mode'] : null,
-                    'interview_mode_child_level' => @$timelineArr['interview_mode_child_level'] ? @$timelineArr['interview_mode_child_level'] : null,
-                    'interview_mention_link' => @$timelineArr['interview_mention_link'] ? @$timelineArr['interview_mention_link'] : null,
-                    'interviewers' => @$timelineArr['interviewers'] ? @$timelineArr['interviewers'] : null,
-                    'interview_additional_email' => @$timelineArr['interview_additional_email'] ? @$timelineArr['interview_additional_email'] : null,
-                    'interview_message' => @$timelineArr['interview_message'] ? @$timelineArr['interview_message'] : null,
-                    'comment' => @$timelineArr['comment'] ? @$timelineArr['comment'] : null,
-                    'interview_schedules_id' => @$timelineArr['interview_schedules_id'] ? @$timelineArr['interview_schedules_id'] : null,
-                    'average_star_rating' => @$timelineArr['average_star_rating'] ? @$timelineArr['average_star_rating'] : null,
-                    'prev_process_name' => @$timelineArr['prev_process_name'] ? @$timelineArr['prev_process_name'] : null,
-                    'prev_process_child_name' => @$timelineArr['prev_process_child_name'] ? @$timelineArr['prev_process_child_name'] : null,
-                    'offer_currency' => @$timelineArr['offer_currency'] ? @$timelineArr['offer_currency'] : null,
-                    'offer_mode' => @$timelineArr['offer_mode'] ? @$timelineArr['offer_mode'] : null,
-                    'offer_amount' => @$timelineArr['offer_amount'] ? (float) @$timelineArr['offer_amount'] : null,
-                    'joined_date' => (@$timelineArr['joined_date']) ? Carbon::parse(@$timelineArr['joined_date'])->toIso8601String() : null,
-                    'candidate_status' => @$timelineArr['candidate_status'] ? @$timelineArr['candidate_status'] : 0,
-                    'management_status' => @$timelineArr['management_status'] ? @$timelineArr['management_status'] : 0,
-                    'accept_date_time' => (@$timelineArr['accept_date_time']) ? Carbon::parse(@$timelineArr['accept_date_time'])->toIso8601String() : null,
-                    'approved_date_time' => (@$timelineArr['approved_date_time']) ? Carbon::parse(@$timelineArr['approved_date_time'])->toIso8601String() : null,
-                    'send_approved_date_time' => (@$timelineArr['send_approved_date_time']) ? Carbon::parse(@$timelineArr['send_approved_date_time'])->toIso8601String() : null,
-                    'send_accept_date_time' => (@$timelineArr['send_accept_date_time']) ? Carbon::parse(@$timelineArr['send_accept_date_time'])->toIso8601String() : null,
-                    'email_id_hr' => @$timelineArr['email_id_hr'] ? @$timelineArr['email_id_hr'] : null,
-                    'name_hr' => @$timelineArr['email_id_hr'] ? @$timelineArr['email_id_hr'] : null,
-                    'yearly_gross' => @$timelineArr['yearly_gross'] ? @$timelineArr['yearly_gross'] : null,
-                    'yearly_final_gross' => @$timelineArr['yearly_final_gross'] ? @$timelineArr['yearly_final_gross'] : null,
-                    'mtypeSection' => @$timelineArr['mtypeSection'] ? @$timelineArr['mtypeSection'] : null,
-                    'designation_offer' => @$timelineArr['designation_offer'] ? @$timelineArr['designation_offer'] : null,
-                    'timezone_abbreviation' => @$timelineArr['timezone_abbreviation'] ? @$timelineArr['timezone_abbreviation'] : null,
-                    'confidential' => @$timelineArr['confidential'] ? @$timelineArr['confidential'] : null,
-                    'event_name' => null,
-                    'title' => $job_details->title ?? null,
-                    'employment_type' => $job_details->employment_type ?? null,
-                    'name' => $user_details->name ?? null,
-                    'image' => $user_details->image ?? null,
-                    'client_name' => $client_details->client_name ?? null,
-                    'available_status' => $interview_details->stage ?? null,
-                    'reschedule' => ! empty($interview_details->reschedule ?? null) ? Carbon::parse($interview_details->reschedule)->toIso8601String() : null,
-                    'feedback' => $interview_details->feedback ?? null,
-                    'stage' => $interview_details->stage ?? null,
-                    'status_name' => $status_details->name ?? null,
-                    'cur_companyname' => $company_details->company_name ?? null,
-                    'css_style' => $status_details->css_style ?? null,
-                    'updated_at' => now()->toIso8601String(),
-                    'created_at' => now()->toIso8601String(),
+            $response = $elasticService->getClient()->update([
+                'index' => ELASTIC_CANDIDATE_TIMELINE,
+                'id' => $updatetimelineId,
+                'retry_on_conflict' => 5,
+                'body' => [
+                    'doc' => [
+                        'id' => $updatetimelineId,
+                        'event_id' => @$timelineArr['event_id'] ? @$timelineArr['event_id'] : null,
+                        'event_by_company_id' => @$timelineArr['event_by_company_id'] ? @$timelineArr['event_by_company_id'] : null,
+                        'event_by_user_id' => @$timelineArr['event_by_user_id'] ? @$timelineArr['event_by_user_id'] : null,
+                        'master_process_name' => @$timelineArr['master_process_name'] ? @$timelineArr['master_process_name'] : null,
+                        'child_process_name' => @$timelineArr['child_process_name'] ? @$timelineArr['child_process_name'] : null,
+                        'application_id' => @$timelineArr['application_id'] ? @$timelineArr['application_id'] : null,
+                        'application_email' => @$timelineArr['application_email'] ? @$timelineArr['application_email'] : null,
+                        'job_id' => @$timelineArr['job_id'] ? @$timelineArr['job_id'] : null,
+                        'note' => @$timelineArr['note'] ? @$timelineArr['note'] : null,
+                        'interview_schedule_date' => (! empty($timelineArr['interview_schedule_date']) && $timelineArr['interview_schedule_date'] != '0000-00-00 00:00:00') ? Carbon::parse(@$timelineArr['interview_schedule_date'])->toIso8601String() : null,
+                        'interview_from_time' => (! empty($timelineArr['interview_from_time']) && $timelineArr['interview_from_time'] != '0000-00-00 00:00:00') ? Carbon::parse(@$timelineArr['interview_from_time'])->toIso8601String() : null,
+                        'interview_to_time' => (! empty($timelineArr['interview_to_time']) && $timelineArr['interview_to_time'] != '0000-00-00 00:00:00') ? Carbon::parse(@$timelineArr['interview_to_time'])->toIso8601String() : null,
+                        'interview_mode' => @$timelineArr['interview_mode'] ? $timelineArr['interview_mode'] : null,
+                        'interview_mode_child_level' => @$timelineArr['interview_mode_child_level'] ? @$timelineArr['interview_mode_child_level'] : null,
+                        'interview_mention_link' => @$timelineArr['interview_mention_link'] ? @$timelineArr['interview_mention_link'] : null,
+                        'interviewers' => @$timelineArr['interviewers'] ? @$timelineArr['interviewers'] : null,
+                        'interview_additional_email' => @$timelineArr['interview_additional_email'] ? @$timelineArr['interview_additional_email'] : null,
+                        'interview_message' => @$timelineArr['interview_message'] ? @$timelineArr['interview_message'] : null,
+                        'comment' => @$timelineArr['comment'] ? @$timelineArr['comment'] : null,
+                        'interview_schedules_id' => @$timelineArr['interview_schedules_id'] ? @$timelineArr['interview_schedules_id'] : null,
+                        'average_star_rating' => @$timelineArr['average_star_rating'] ? @$timelineArr['average_star_rating'] : null,
+                        'prev_process_name' => @$timelineArr['prev_process_name'] ? @$timelineArr['prev_process_name'] : null,
+                        'prev_process_child_name' => @$timelineArr['prev_process_child_name'] ? @$timelineArr['prev_process_child_name'] : null,
+                        'offer_currency' => @$timelineArr['offer_currency'] ? @$timelineArr['offer_currency'] : null,
+                        'offer_mode' => @$timelineArr['offer_mode'] ? @$timelineArr['offer_mode'] : null,
+                        'offer_amount' => @$timelineArr['offer_amount'] ? (float) @$timelineArr['offer_amount'] : null,
+                        'joined_date' => (! empty($timelineArr['joined_date']) && $timelineArr['joined_date'] != '0000-00-00 00:00:00') ? Carbon::parse(@$timelineArr['joined_date'])->toIso8601String() : null,
+                        'candidate_status' => @$timelineArr['candidate_status'] ? @$timelineArr['candidate_status'] : 0,
+                        'management_status' => @$timelineArr['management_status'] ? @$timelineArr['management_status'] : 0,
+                        'accept_date_time' => (! empty($timelineArr['accept_date_time']) && $timelineArr['accept_date_time'] != '0000-00-00 00:00:00') ? Carbon::parse(@$timelineArr['accept_date_time'])->toIso8601String() : null,
+                        'approved_date_time' => (! empty($timelineArr['approved_date_time']) && $timelineArr['approved_date_time'] != '0000-00-00 00:00:00') ? Carbon::parse(@$timelineArr['approved_date_time'])->toIso8601String() : null,
+                        'send_approved_date_time' => (! empty($timelineArr['send_approved_date_time']) && $timelineArr['send_approved_date_time'] != '0000-00-00 00:00:00') ? Carbon::parse(@$timelineArr['send_approved_date_time'])->toIso8601String() : null,
+                        'send_accept_date_time' => (! empty($timelineArr['send_accept_date_time']) && $timelineArr['send_accept_date_time'] != '0000-00-00 00:00:00') ? Carbon::parse(@$timelineArr['send_accept_date_time'])->toIso8601String() : null,
+                        'email_id_hr' => @$timelineArr['email_id_hr'] ? @$timelineArr['email_id_hr'] : null,
+                        'name_hr' => @$timelineArr['name_hr'] ? @$timelineArr['name_hr'] : null,
+                        'yearly_gross' => @$timelineArr['yearly_gross'] ? @$timelineArr['yearly_gross'] : null,
+                        'yearly_final_gross' => @$timelineArr['yearly_final_gross'] ? @$timelineArr['yearly_final_gross'] : null,
+                        'mtypeSection' => @$timelineArr['mtypeSection'] ? @$timelineArr['mtypeSection'] : null,
+                        'designation_offer' => @$timelineArr['designation_offer'] ? @$timelineArr['designation_offer'] : null,
+                        'timezone_abbreviation' => @$timelineArr['timezone_abbreviation'] ? @$timelineArr['timezone_abbreviation'] : null,
+                        'confidential' => @$timelineArr['confidential'] ? @$timelineArr['confidential'] : null,
+                        'event_name' => null,
+                        'title' => $job_details->title ?? null,
+                        'employment_type' => $job_details->employment_type ?? null,
+                        'name' => $user_details->name ?? null,
+                        'image' => $user_details->image ?? null,
+                        'client_name' => $client_details->client_name ?? null,
+                        'available_status' => $interview_details->stage ?? null,
+                        'reschedule' => (! empty($interview_details->reschedule) && $interview_details->reschedule != '0000-00-00 00:00:00') ? Carbon::parse($interview_details->reschedule)->toIso8601String() : null,
+                        'feedback' => $interview_details->feedback ?? null,
+                        'stage' => $interview_details->stage ?? null,
+                        'status_name' => $status_details->name ?? null,
+                        'cur_companyname' => $company_details->company_name ?? null,
+                        'css_style' => $status_details->css_style ?? null,
+                        'updated_at' => now()->toIso8601String(),
+                        'created_at' => now()->toIso8601String(),
+                    ],
+                    'doc_as_upsert' => true,
+                    'detect_noop' => false,
                 ],
-                'doc_as_upsert' => true,
-                'detect_noop' => false,
-            ],
-        ]);
+            ]);
 
-        $updateTime = now()->toIso8601String();
+            $updateTime = now()->toIso8601String();
 
-        if (@$timelineArr['master_process_name'] == 'Sourcing' || @$timelineArr['master_process_name'] == 'Joined') {
+            if (@$timelineArr['master_process_name'] == 'Sourcing' || @$timelineArr['master_process_name'] == 'Joined') {
 
-            /* ===================== USERS ===================== */
+                /* ===================== USERS ===================== */
 
-            $userId = $timelineArr['event_by_user_id'] ?? null;
+                $userId = $timelineArr['event_by_user_id'] ?? null;
 
-            if ($userId) {
+                if ($userId) {
 
-                $exists = $elasticService->getClient()->exists([
-                    'index' => ELASTIC_USERS_LIST,
-                    'id' => $userId,
-                ]);
-
-                if ($exists) {
-
-                    $existingDoc = $elasticService->getClient()->get([
+                    $exists = $elasticService->getClient()->exists([
                         'index' => ELASTIC_USERS_LIST,
                         'id' => $userId,
                     ]);
 
-                    $candidateRelations = $existingDoc['_source']['candidate_relation'] ?? [];
+                    if ($exists) {
 
-                    $newRelation = [
-                        'application_id' => $timelineArr['application_id'] ?? null,
-                        'master_process_name' => $timelineArr['master_process_name'] ?? null,
-                        'job_id' => $timelineArr['job_id'] ?? null,
-                        'created_at' => $updateTime,
-                        'updated_at' => $updateTime,
-                    ];
+                        $existingDoc = $elasticService->getClient()->get([
+                            'index' => ELASTIC_USERS_LIST,
+                            'id' => $userId,
+                        ]);
 
-                    /* ✅ Prevent Duplicate */
-                    $existsAlready = false;
-                    foreach ($candidateRelations as $relation) {
-                        if (($relation['application_id'] ?? null) == $newRelation['application_id']) {
-                            $existsAlready = true;
-                            break;
+                        $candidateRelations = $existingDoc['_source']['candidate_relation'] ?? [];
+
+                        $newRelation = [
+                            'application_id' => $timelineArr['application_id'] ?? null,
+                            'master_process_name' => $timelineArr['master_process_name'] ?? null,
+                            'job_id' => $timelineArr['job_id'] ?? null,
+                            'created_at' => $updateTime,
+                            'updated_at' => $updateTime,
+                        ];
+
+                        /* ✅ Prevent Duplicate */
+                        $existsAlready = false;
+                        foreach ($candidateRelations as $relation) {
+                            if (($relation['application_id'] ?? null) == $newRelation['application_id']) {
+                                $existsAlready = true;
+                                break;
+                            }
                         }
-                    }
 
-                    if (! $existsAlready) {
-                        $candidateRelations[] = $newRelation;
-                    }
+                        if (! $existsAlready) {
+                            $candidateRelations[] = $newRelation;
+                        }
 
-                    /* ✅ Limit Size (VERY IMPORTANT) */
-                    $MAX_RELATIONS = 3000;
-                    if (count($candidateRelations) > $MAX_RELATIONS) {
-                        $candidateRelations = array_slice($candidateRelations, -$MAX_RELATIONS);
-                    }
+                        /* ✅ Limit Size (VERY IMPORTANT) */
+                        $MAX_RELATIONS = 3000;
+                        if (count($candidateRelations) > $MAX_RELATIONS) {
+                            $candidateRelations = array_slice($candidateRelations, -$MAX_RELATIONS);
+                        }
 
-                    $updateParams = [
-                        'index' => ELASTIC_USERS_LIST,
-                        'id' => $userId,
-                        'retry_on_conflict' => 5,
-                        'body' => [
-                            'doc' => [
-                                'candidate_relation' => $candidateRelations,
+                        $updateParams = [
+                            'index' => ELASTIC_USERS_LIST,
+                            'id' => $userId,
+                            'retry_on_conflict' => 5,
+                            'body' => [
+                                'doc' => [
+                                    'candidate_relation' => $candidateRelations,
+                                ],
+                                'doc_as_upsert' => true,
+                                'detect_noop' => false,
                             ],
-                            'doc_as_upsert' => true,
-                            'detect_noop' => false,
-                        ],
-                    ];
+                        ];
 
-                    $elasticService->getClient()->update($updateParams);
+                        $elasticService->getClient()->update($updateParams);
+                    }
                 }
-            }
 
-            /* ===================== CLIENT ===================== */
+                /* ===================== CLIENT ===================== */
 
-            $clientDetails = DB::table('clients')
-                ->where('clients.company_id', '=', @$timelineArr['event_by_company_id'])
-                ->where('self_company', '=', 1)
-                ->first();
+                $clientDetails = DB::table('clients')
+                    ->where('clients.company_id', '=', @$timelineArr['event_by_company_id'])
+                    ->where('self_company', '=', 1)
+                    ->first();
 
-            if ($clientDetails) {
+                if ($clientDetails) {
 
-                $client_id = $clientDetails->id;
+                    $client_id = $clientDetails->id;
 
-                $exists = $elasticService->getClient()->exists([
-                    'index' => ELASTIC_CLIENT_LIST,
-                    'id' => $client_id,
-                ]);
-
-                if ($exists) {
-
-                    $clientExistingDoc = $elasticService->getClient()->get([
+                    $exists = $elasticService->getClient()->exists([
                         'index' => ELASTIC_CLIENT_LIST,
                         'id' => $client_id,
                     ]);
 
-                    $clientCandidateRelations = $clientExistingDoc['_source']['candidate_relation'] ?? [];
+                    if ($exists) {
 
-                    $newRelation = [
-                        'application_id' => $timelineArr['application_id'] ?? null,
-                        'master_process_name' => $timelineArr['master_process_name'] ?? null,
-                        'job_id' => $timelineArr['job_id'] ?? null,
-                        'created_at' => $updateTime,
-                        'updated_at' => $updateTime,
-                    ];
+                        $clientExistingDoc = $elasticService->getClient()->get([
+                            'index' => ELASTIC_CLIENT_LIST,
+                            'id' => $client_id,
+                        ]);
 
-                    /* ✅ Prevent Duplicate */
-                    $existsAlready = false;
-                    foreach ($clientCandidateRelations as $relation) {
-                        if (($relation['application_id'] ?? null) == $newRelation['application_id']) {
-                            $existsAlready = true;
-                            break;
+                        $clientCandidateRelations = $clientExistingDoc['_source']['candidate_relation'] ?? [];
+
+                        $newRelation = [
+                            'application_id' => $timelineArr['application_id'] ?? null,
+                            'master_process_name' => $timelineArr['master_process_name'] ?? null,
+                            'job_id' => $timelineArr['job_id'] ?? null,
+                            'created_at' => $updateTime,
+                            'updated_at' => $updateTime,
+                        ];
+
+                        /* ✅ Prevent Duplicate */
+                        $existsAlready = false;
+                        foreach ($clientCandidateRelations as $relation) {
+                            if (($relation['application_id'] ?? null) == $newRelation['application_id']) {
+                                $existsAlready = true;
+                                break;
+                            }
                         }
-                    }
 
-                    if (! $existsAlready) {
-                        $clientCandidateRelations[] = $newRelation;
-                    }
+                        if (! $existsAlready) {
+                            $clientCandidateRelations[] = $newRelation;
+                        }
 
-                    /* ✅ Limit Size */
-                    $MAX_RELATIONS = 3000;
-                    if (count($clientCandidateRelations) > $MAX_RELATIONS) {
-                        $clientCandidateRelations = array_slice($clientCandidateRelations, -$MAX_RELATIONS);
-                    }
+                        /* ✅ Limit Size */
+                        $MAX_RELATIONS = 3000;
+                        if (count($clientCandidateRelations) > $MAX_RELATIONS) {
+                            $clientCandidateRelations = array_slice($clientCandidateRelations, -$MAX_RELATIONS);
+                        }
 
-                    $updateParams = [
-                        'index' => ELASTIC_CLIENT_LIST,
-                        'id' => $client_id,
-                        'retry_on_conflict' => 5,
-                        'body' => [
-                            'doc' => [
-                                'candidate_relation' => $clientCandidateRelations,
+                        $updateParams = [
+                            'index' => ELASTIC_CLIENT_LIST,
+                            'id' => $client_id,
+                            'retry_on_conflict' => 5,
+                            'body' => [
+                                'doc' => [
+                                    'candidate_relation' => $clientCandidateRelations,
+                                ],
+                                'doc_as_upsert' => true,
+                                'detect_noop' => false,
                             ],
-                            'doc_as_upsert' => true,
-                            'detect_noop' => false,
-                        ],
-                    ];
+                        ];
 
-                    $elasticService->getClient()->update($updateParams);
+                        $elasticService->getClient()->update($updateParams);
+                    }
                 }
             }
+        } catch (\Throwable $esTimelineEx) {
+            \Log::warning('[UpdateTimeline] Elastic sync failed: '.$esTimelineEx->getMessage());
         }
 
         // }
