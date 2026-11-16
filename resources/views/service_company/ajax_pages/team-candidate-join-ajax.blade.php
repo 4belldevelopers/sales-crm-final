@@ -233,12 +233,19 @@
                     $joined_date = $joined_time = $date = '';
                     $date = @$row->of_joined_date;
                     if ($date != '0000-00-00 00:00:00' && !empty($date)) {
-                        $joined_date = date('d-M-y', strtotime($date));
-                        $joined_time = date('H:i a', strtotime($date));
+                        $defaultTz = \App\Helper\GeneralMethod::defaultTimeZone($company_id ?? auth()->user()->company_id ?? null);
+                        try {
+                            $carbonDate = \Illuminate\Support\Carbon::parse($date)->setTimezone($defaultTz);
+                            $joined_date = $carbonDate->format('d M y');
+                            $joined_time = $carbonDate->format('h:i A T');
+                        } catch (\Throwable $e) {
+                            $joined_date = date('d-M-y', strtotime($date));
+                            $joined_time = date('H:i a', strtotime($date));
+                        }
                     }
                     echo '<div class="d-flex flex-column">
 							 <span class="text-dark fw-bolder fs-6">' .
-                        $joined_date .
+                        ($joined_date ?: '-') .
                         '</span>
 							 <span class="text-muted fw-bold d-block fs-7">' .
                         $joined_time .

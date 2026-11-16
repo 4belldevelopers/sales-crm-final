@@ -178,4 +178,22 @@ ALL TESTS COMPLETED SUCCESSFULLY!
   - Uses `GeneralMethod::benchRequestCheckBulk($candidateId, $jobIds)` (queries `ELASTIC_CANDIDATES_REQUEST`) to resolve all statuses in a single bulk lookup.
   - Uses `GeneralMethod::getrRcommendationRelationDataBulk($company_id, $jobIds)` (queries `ELASTIC_JOB_REQUEST`) to resolve relation IDs in bulk.
 
+---
+
+## 11. Red Remark Section Gap Issue Resolution & Professional Toolbar Refactor
+
+- **Observations from User Feedback (`media_1794830185362.png`):**
+  1. **Disjointed Two-Row Stacking:** Sub-tabs and Search/Sort were previously split into two consecutive full-width horizontal strips (`#ffffff` and `#f8fafc`), creating zebra striping, 100px+ vertical height consumption, and massive empty voids on wide displays (700px gap next to tabs, 600px gap next to search).
+  2. **Isolated 'Full View' Button:** The 'Full View' link was stranded on the far right of the sub-tabs row with ~800px of blank space separating it from the tabs.
+  3. **Sort Dropdown Text Cutoff:** The sort dropdown had a rigid `width: 160px` which truncated the label `"Best Match (% Match)"` into `"Best Match (% Matc"`.
+  4. **Sub-Optimal Card Spacing:** Both `margin-bottom: 12px` and `gap-3` (12px) were active simultaneously on `.cd-market-card`, creating an uncalibrated 24px double gap between cards.
+- **Implemented Architectural & UX Refactor:**
+  1. **Top Header Alignment:** Moved `#sc_btn_full_page` ('Full View') into the top `.card-header` toolbar directly beside the close button (`#kt_activitiesSimilarClients_close`). This aligns with standard enterprise SaaS UX (view-level action placed in header) and balances the topbar.
+  2. **Unified Control Bar:** Merged the two disparate strips into a single sleek, high-density toolbar (`min-height: 56px`, `#ffffff` with crisp `#e2e8f0` border):
+     - **Left Anchor:** Aligned category sub-tabs (`Direct Client`, `Internal Client`, `My Organization`) with pill counts and canonical colors.
+     - **Right Anchor:** Search input with smooth flex expansion (`min-width: 180px`, `max-width: 580px`) + Sort dropdown.
+  3. **Sort Truncation Fix:** Set `width: 195px; min-width: 195px;` on `#sc_sort_select`, ensuring `"Best Match (% Match)"` renders completely without any ellipsis or clipping across all browsers.
+  4. **Card Stream Rhythm:** Removed the redundant `margin-bottom: 12px` on `.cd-market-card` inside `.rj-cards-stream`, allowing `.gap-3` (12px) to manage strict, uniform card rhythm. Reduced body padding from `p-6` to `px-6 py-4` to eliminate awkward dead zones.
+
+
 

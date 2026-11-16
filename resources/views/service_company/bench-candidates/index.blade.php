@@ -488,7 +488,7 @@
             box-shadow: -8px 0 40px rgba(15, 23, 42, 0.2) !important;
         }
         .sc-category-tab {
-            padding: 8px 16px;
+            padding: 7px 14px;
             font-size: 12px;
             font-weight: 600;
             border-radius: 8px;
@@ -497,11 +497,13 @@
             color: #475569;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 7px;
             cursor: pointer;
             transition: all 0.15s ease;
             text-decoration: none !important;
             user-select: none;
+            white-space: nowrap;
+            line-height: 1.2;
         }
         .sc-category-tab:hover {
             background: #f1f5f9;
@@ -512,7 +514,7 @@
             background: #009ef7 !important;
             border-color: #009ef7 !important;
             color: #ffffff !important;
-            box-shadow: 0 2px 8px rgba(0, 158, 247, 0.3) !important;
+            box-shadow: 0 2px 8px rgba(0, 158, 247, 0.28) !important;
         }
         .sc-category-tab.active i {
             color: #ffffff !important;
@@ -521,14 +523,25 @@
             font-size: 11px;
             font-weight: 700;
             padding: 2px 8px;
-            border-radius: 12px;
+            border-radius: 10px;
             background: #e2e8f0;
             color: #334155;
             transition: all 0.15s ease;
+            line-height: 1.2;
         }
         .sc-category-tab.active .sc-tab-badge {
             background: rgba(255, 255, 255, 0.28) !important;
             color: #ffffff !important;
+        }
+        #sc_search_input:focus {
+            background: #ffffff !important;
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+        }
+        #sc_sort_select:focus {
+            background: #ffffff !important;
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
         }
         .rj-job-card {
             border: 1px solid #e2e8f0 !important;
@@ -555,7 +568,7 @@
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
-            margin-bottom: 12px !important;
+            margin-bottom: 0 !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
             transition: all 0.2s ease !important;
             display: flex !important;
@@ -2055,32 +2068,37 @@
             
             <!-- Tier 1 Topbar Header (Mandatory #f8fafc Background per Rule 20) -->
             <div class="card-header px-6 py-3.5 d-flex align-items-center justify-content-between" style="background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; min-height: 64px;">
-                <div class="d-flex align-items-center gap-3 min-w-0">
+                <div class="d-flex align-items-center gap-3 min-w-0 flex-grow-1 me-3">
                     <div style="width: 38px; height: 38px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid #bfdbfe; flex-shrink: 0;">
                         <i class="fa fa-briefcase"></i>
                     </div>
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-grow-1">
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <h3 class="card-title fw-bolder text-dark m-0 fs-5" style="letter-spacing: -0.2px;">Related Jobs</h3>
                             <span class="badge badge-light-primary fw-bolder py-0.5 px-2 fs-9 border border-primary-subtle">
                                 <i class="fa fa-handshake me-1" style="font-size: 8.5px;"></i>Similar Client Jobs
                             </span>
                         </div>
-                        <div class="text-muted m-0 fs-7 text-truncate" id="sc_drawer_candidate_wrap" style="max-width: 480px;">
+                        <div class="text-muted m-0 fs-7 text-truncate" id="sc_drawer_candidate_wrap" style="max-width: calc(100% - 20px);">
                             Candidate: <strong class="text-dark" id="sc_drawer_candidate_name">—</strong>
                             <span class="text-muted fs-8" id="sc_drawer_candidate_role"></span>
                         </div>
                     </div>
                 </div>
-                <div class="card-toolbar d-flex align-items-center gap-2">
+                <div class="card-toolbar d-flex align-items-center gap-2 flex-shrink-0">
+                    <a href="javascript:void(0);" id="sc_btn_full_page" target="_blank" class="btn btn-sm btn-light-primary fw-bold fs-8 py-2 px-3 d-inline-flex align-items-center gap-1.5" title="Open in Full View" style="border-radius: 8px; border: 1px solid #bfdbfe; height: 34px;">
+                        <i class="fa fa-arrow-up-right-from-square fs-8"></i>
+                        <span class="d-none d-sm-inline">Full View</span>
+                    </a>
                     <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_activitiesSimilarClients_close" title="Close Drawer" style="border-radius: 8px; border: 1px solid #e2e8f0; width: 34px; height: 34px; background: #ffffff;">
                         <i class="fa fa-times fs-4 text-gray-600"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Tier 2 Category Sub-Tabs Card (Rule 25 Canonical Amber/Blue/Emerald Tagging) -->
-            <div class="px-6 py-2.5 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: #ffffff; border-color: #e2e8f0 !important;">
+            <!-- Unified Tier 1 / Tier 2 Control Bar (Modern Card + Sub-Card Standard / Zero Gaps) -->
+            <div class="px-6 py-2.5 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: #ffffff; border-color: #e2e8f0 !important; min-height: 56px;">
+                <!-- Left: Category Sub-Tabs (Rule 25 Canonical Amber/Blue/Emerald Tagging) -->
                 <div class="d-flex align-items-center gap-2 flex-wrap" id="similarClientsTabs">
                     <button type="button" class="sc-category-tab active" id="tab_similar_direct" data-type="direct">
                         <i class="fa fa-shield-alt text-success me-1"></i>
@@ -2098,42 +2116,36 @@
                         <span class="sc-tab-badge" id="sc_badge_my_org">0</span>
                     </button>
                 </div>
-                <div>
-                    <a href="javascript:void(0);" id="sc_btn_full_page" target="_blank" class="btn btn-sm btn-light-primary fw-bold fs-8 py-1.5 px-3 d-inline-flex align-items-center gap-1.5" title="Open Full View">
-                        <i class="fa fa-arrow-up-right-from-square"></i>
-                        <span class="d-none d-sm-inline">Full View</span>
-                    </a>
-                </div>
-            </div>
 
-            <!-- Tier 1 Search & Sorting Toolbar (Mandatory #f8fafc Background per Rule 20) -->
-            <div class="px-6 py-2.5 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2.5" style="background: #f8fafc; border-color: #e2e8f0 !important;">
-                <!-- Search Input with Clear Button -->
-                <div class="position-relative flex-grow-1" style="max-width: 440px; min-width: 220px;">
-                    <i class="fa fa-search text-gray-400 position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 12px;"></i>
-                    <input type="text" id="sc_search_input" class="form-control form-control-sm form-control-solid" placeholder="Search by job title, client or location" style="padding-left: 34px; padding-right: 32px; height: 36px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; background: #ffffff;" autocomplete="off" />
-                    <button type="button" id="sc_search_clear" class="btn btn-icon btn-sm position-absolute d-none" style="right: 6px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; color: #94a3b8; background: transparent; border: none; padding: 0;" title="Clear search">
-                        <i class="fa fa-times-circle fs-6"></i>
-                    </button>
-                </div>
+                <!-- Right: Search Input + Sort Dropdown -->
+                <div class="d-flex align-items-center gap-2.5 flex-grow-1 justify-content-end" style="min-width: 280px; max-width: 580px;">
+                    <!-- Search Input with Clear Button -->
+                    <div class="position-relative flex-grow-1" style="min-width: 180px;">
+                        <i class="fa fa-search text-gray-400 position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; pointer-events: none;"></i>
+                        <input type="text" id="sc_search_input" class="form-control form-control-sm form-control-solid" placeholder="Search by job title, client or location" style="padding-left: 34px; padding-right: 32px; height: 36px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; background: #f8fafc;" autocomplete="off" />
+                        <button type="button" id="sc_search_clear" class="btn btn-icon btn-sm position-absolute d-none" style="right: 6px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; color: #94a3b8; background: transparent; border: none; padding: 0;" title="Clear search">
+                            <i class="fa fa-times-circle fs-6"></i>
+                        </button>
+                    </div>
 
-                <!-- Sorting Select -->
-                <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                    <label class="fs-8 fw-semibold text-muted text-nowrap m-0 d-none d-md-inline" for="sc_sort_select">
-                        <i class="fa fa-arrow-down-short-wide me-1"></i>Sort:
-                    </label>
-                    <select id="sc_sort_select" class="form-select form-select-sm form-select-solid" style="height: 36px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; background: #ffffff; width: 160px; cursor: pointer;">
-                        <option value="relevance" selected>Best Match (% Match)</option>
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="title_asc">Job Title A–Z</option>
-                        <option value="title_desc">Job Title Z–A</option>
-                    </select>
+                    <!-- Sorting Select (Full 195px width: Prevents 'Best Match (% Match)' from cutting off) -->
+                    <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
+                        <label class="fs-8 fw-semibold text-muted text-nowrap m-0 d-none d-xxl-inline" for="sc_sort_select">
+                            <i class="fa fa-arrow-down-short-wide me-1 text-gray-500"></i>Sort:
+                        </label>
+                        <select id="sc_sort_select" class="form-select form-select-sm form-select-solid" style="height: 36px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; background: #f8fafc; width: 195px; min-width: 195px; font-weight: 500; cursor: pointer; color: #1e293b; padding-left: 10px; padding-right: 28px;">
+                            <option value="relevance" selected>Best Match (% Match)</option>
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="title_asc">Job Title A–Z</option>
+                            <option value="title_desc">Job Title Z–A</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
             <!-- Drawer Body: Scrollable Job Listing Area -->
-            <div class="card-body position-relative p-6 flex-grow-1 overflow-auto" id="kt_activitiesSimilarClients_body" style="background: #fafbfc;">
+            <div class="card-body position-relative px-6 py-4 flex-grow-1 overflow-auto" id="kt_activitiesSimilarClients_body" style="background: #fafbfc;">
                 <div class="text-center py-20 text-muted">
                     <i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"></i>
                     <div>Loading related job opportunities...</div>
