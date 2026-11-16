@@ -8501,7 +8501,37 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => 'Primary Skills are required (minimum 1 skill)']);
             }
 
-            $hasResume = $request->hasFile('resume') || $request->filled('uploaded_file_path') || $request->filled('resume_original_name') || $request->input('resume_intent') === 'KEEP' || ! empty($jobApplication->resume) || ! empty($jobApplication->current_resume_id);
+            $hasResume = $request->filled('resume_session_uuid')
+                || $request->hasFile('resume')
+                || $request->filled('uploaded_file_path')
+                || $request->filled('resume_original_name')
+                || $request->filled('existing_resume_path')
+                || ($request->input('resumeCheck') === '1' || $request->input('resumeCheck') === 1)
+                || in_array($request->input('resume_intent'), ['KEEP', 'ATTACH_IF_AVAILABLE'])
+                || ! empty($jobApplication->resume)
+                || ! empty($jobApplication->current_resume_id);
+
+            if (! $hasResume) {
+                // MySQL SSOT Fallback: Check if candidate has an existing active resume recorded in database
+                $hasDbResume = DB::table('job_applications')
+                    ->where('id', $jobApplication->id)
+                    ->where(function ($q) {
+                        $q->whereNotNull('resume')->where('resume', '!=', '')
+                            ->orWhereNotNull('current_resume_id');
+                    })
+                    ->exists();
+                if (! $hasDbResume) {
+                    $hasDbResume = DB::table('resume_assets')
+                        ->where('company_id', $company_id)
+                        ->where('candidate_id', $jobApplication->id)
+                        ->where('status', '!=', 'REMOVAL_PENDING')
+                        ->exists();
+                }
+                if ($hasDbResume && $request->input('resume_intent') !== 'REMOVE') {
+                    $hasResume = true;
+                }
+            }
+
             if (! $hasResume) {
                 return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => 'Upload Resume is required']);
             }
@@ -11862,7 +11892,20 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $missing[] = 'Recruiter Comments';
         }
         if (empty($data->resume) && empty($data->resumeAwsPath)) {
-            $missing[] = 'Upload Resume';
+            $candId = (int) ($data->candidate_id ?? ($data->job_application_id ?? ($data->id ?? 0)));
+            $hasDbResume = false;
+            if ($candId > 0) {
+                $hasDbResume = DB::table('job_applications')
+                    ->where('id', $candId)
+                    ->where(function ($q) {
+                        $q->whereNotNull('resume')->where('resume', '!=', '')
+                            ->orWhereNotNull('current_resume_id');
+                    })
+                    ->exists();
+            }
+            if (! $hasDbResume) {
+                $missing[] = 'Upload Resume';
+            }
         }
         if (empty(trim((string) ($data->careersummary ?? '')))) {
             $missing[] = 'Career Summary';

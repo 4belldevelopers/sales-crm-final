@@ -263,7 +263,7 @@ class ServiceCompanyProfileService
             try {
                 $oR = $this->elasticService->getClient()->search([
                     'index' => ELASTIC_CANDIDATES,
-                    'body' => ['track_total_hits' => true, 'size' => 0, 'query' => ['bool' => ['must' => [['term' => ['submitted_by' => $userId]], ['exists' => ['field' => 'of_created_date']]]]]],
+                    'body' => ['track_total_hits' => true, 'size' => 0, 'query' => ['bool' => ['must' => [['term' => ['submitted_by' => $userId]], ['term' => ['job_master_status_id' => 5]]]]]],
                 ]);
                 $scpOffersTotal = $oR['hits']['total']['value'] ?? 0;
             } catch (\Throwable $e) {

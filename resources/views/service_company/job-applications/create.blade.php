@@ -6603,7 +6603,7 @@ $(document).ready(function () {
                 ).show();
                 $('#upInfoBannerTitle').text('Resume uploaded successfully using ' + activeMethod);
                 $('#uploaded_file_path').val('');   // v2 uses session_uuid, not file path
-                $('#resume_original_name').val('');
+                $('#resume_original_name').val(window._currentActiveResumeFile ? window._currentActiveResumeFile.name : ($('#upFileName').text() || ''));
                 $('#resumeCheck').val('1');
                 // Storage upload is isolated: do NOT clear ri.value or re-call showUploadedCard to avoid parser conflicts
             } else if (data.state === 'failed') {
@@ -9515,6 +9515,8 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
     var hasResume = false;
     if (($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) ||
         ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim()) ||
+        ($('#resume_session_uuid').val() && String($('#resume_session_uuid').val()).trim()) ||
+        ($('#resumeCheck').val() === '1') ||
         ($('#resume_intent').val() === 'KEEP' || $('#existing_resume_path').val())) {
         hasResume = true;
     } else {
