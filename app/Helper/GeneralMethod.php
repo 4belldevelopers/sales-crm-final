@@ -7671,78 +7671,102 @@ END:VCALENDAR";
         //  dd($company_id);
 
         $rowDataOffer = DB::table('offer_job_applications')
-            ->join('job_applications', 'job_applications.id', '=', 'offer_job_applications.application_id')
-            ->join('jobs', 'jobs.id', '=', 'offer_job_applications.job_id')
-            ->select('offer_job_applications.*', 'job_applications.full_name', 'job_applications.email', 'job_applications.phone', 'jobs.company_id')
+            ->leftJoin('job_applications', 'job_applications.id', '=', 'offer_job_applications.application_id')
+            ->leftJoin('jobs', 'jobs.id', '=', 'offer_job_applications.job_id')
+            ->select('offer_job_applications.*', 'job_applications.full_name', 'job_applications.email', 'job_applications.phone', 'jobs.company_id as job_company_id')
             ->where('offer_job_applications.id', $offerId)->first();
 
-        $elasticService = app(ElasticService::class);
-        $params = [
-            'index' => ELASTIC_CANDIDATES,
-            'id' => $rowDataOffer->joined,
-        ];
+        if (! $rowDataOffer) {
+            return null;
+        }
 
-        $response = $elasticService->getClient()->get($params);
-        $data_show = (object) $response['_source'];
-
-        // dd($data_show->send_accept_date_time);
-
-        // dd($data_show);
-
-        $jobID = $rowDataOffer->job_id;
-        $company_id = $rowDataOffer->company_id;
-
-        $clients = DB::table('clients')
-            ->join('companies', 'companies.id', '=', 'clients.company_id')
-            ->select('clients.id as clientId', 'companies.logo', 'companies.company_name')
-            ->where('company_id', '=', $company_id)
-            ->where('self_company', '=', 1)
-            ->first();
-
-        $companies = DB::table('users')
-            ->select('users.name', 'users.email', 'users.company_id', 'users.id')
-            ->where('company_id', '=', $company_id)
-            ->where('root_user', '=', 1)
-            ->first();
-
-        $jobDetails = DB::table('jobs')->where('id', '=', $jobID)->first();
-        $exits_offer = DB::table('offer_create_main_tds')->where('offer_id', '=', $offerId)->where('status', '=', 1)->first();
-
-        // dd($clients);
-
-        $locInfo = DB::table('client_location')
-            ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-            ->select(
-                'client_location.id',
-                'client_location.city',
-                'client_location.address',
-                'client_location.postcode',
-                'client_location.country_id',
-                'city_list.city as city_name',
-                'state_list.state as state_name',
-                'countries.country_name'
-            )
-            ->where('client_id', $clients->clientId)
-            ->get();
-
-        // dd( count($locInfo ));
-
-        // dd($locInfo);
-
-        $locArr = '';
-        if (count(@$locInfo) > 0) {
-            foreach ($locInfo as $key => $lArr) {
-                if ($key <= 0) {
-                    $city_name = $lArr->city;
-                    $selected = '';
-                    if ($lArr->country_id == 101) {
-                        $city_name = $lArr->city_name;
-                    }
-                    $locArr = ucwords($lArr->address).' '.ucwords($city_name).' , '.ucwords($lArr->state_name).' , '.ucwords($lArr->country_name);
+        $data_show = (object) [];
+        try {
+            $elasticService = app(ElasticService::class);
+            if (! empty($rowDataOffer->joined)) {
+                $params = [
+                    'index' => ELASTIC_CANDIDATES,
+                    'id' => $rowDataOffer->joined,
+                ];
+                if ($elasticService->getClient()->exists($params)) {
+                    $response = $elasticService->getClient()->get($params);
+                    $data_show = (object) ($response['_source'] ?? []);
                 }
             }
+        } catch (\Throwable $e) {
+            \Log::warning('[offerLetterdetails] Elastic fetch error: '.$e->getMessage());
+        }
+
+        $jobID = $rowDataOffer->job_id;
+        $company_id = $rowDataOffer->job_company_id ?: $rowDataOffer->company_id ?: (auth()->check() ? auth()->user()->company_id : null);
+
+        $clients = null;
+        if (! empty($company_id)) {
+            $clients = DB::table('clients')
+                ->join('companies', 'companies.id', '=', 'clients.company_id')
+                ->select('clients.id as clientId', 'companies.logo', 'companies.company_name')
+                ->where('clients.company_id', '=', $company_id)
+                ->where('clients.self_company', '=', 1)
+                ->first();
+
+            if (! $clients) {
+                $companyRow = DB::table('companies')->where('id', $company_id)->first();
+                if ($companyRow) {
+                    $clients = (object) [
+                        'clientId' => null,
+                        'logo' => $companyRow->logo,
+                        'company_name' => $companyRow->company_name,
+                    ];
+                }
+            }
+        }
+
+        $companies = null;
+        if (! empty($company_id)) {
+            $companies = DB::table('users')
+                ->select('users.name', 'users.email', 'users.company_id', 'users.id')
+                ->where('company_id', '=', $company_id)
+                ->where('root_user', '=', 1)
+                ->first();
+        }
+
+        $jobDetails = ! empty($jobID) ? DB::table('jobs')->where('id', '=', $jobID)->first() : null;
+        $exits_offer = DB::table('offer_create_main_tds')->where('offer_id', '=', $offerId)->where('status', '=', 1)->first();
+
+        $locInfo = collect();
+        if ($clients && ! empty($clients->clientId)) {
+            $locInfo = DB::table('client_location')
+                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select(
+                    'client_location.id',
+                    'client_location.city',
+                    'client_location.address',
+                    'client_location.postcode',
+                    'client_location.country_id',
+                    'city_list.city as city_name',
+                    'state_list.state as state_name',
+                    'countries.country_name'
+                )
+                ->where('client_id', $clients->clientId)
+                ->get();
+        }
+
+        $locArr = '';
+        if ($locInfo->isNotEmpty()) {
+            $lArr = $locInfo->first();
+            $city_name = $lArr->city;
+            if ($lArr->country_id == 101 && ! empty($lArr->city_name)) {
+                $city_name = $lArr->city_name;
+            }
+            $locParts = array_filter([
+                $lArr->address ? ucwords($lArr->address) : null,
+                $city_name ? ucwords($city_name) : null,
+                $lArr->state_name ? ucwords($lArr->state_name) : null,
+                $lArr->country_name ? ucwords($lArr->country_name) : null,
+            ]);
+            $locArr = implode(' , ', $locParts);
         } else {
             $locArr = ' ';
             $address_show = true;
@@ -7756,15 +7780,15 @@ END:VCALENDAR";
             'useremail' => @$companies->email,
             'usercompany_id' => @$companies->company_id,
             'user_id' => @$companies->id,
-            'job_title' => (@$exits_offer) ? @$exits_offer->designation : @$jobDetails->title,
-            'full_name' => $rowDataOffer->full_name,
+            'job_title' => (@$exits_offer && @$exits_offer->designation) ? @$exits_offer->designation : (@$jobDetails->title ?? ''),
+            'full_name' => @$rowDataOffer->full_name,
             'email' => @$rowDataOffer->email,
             'job_id' => @$rowDataOffer->job_id,
-            'company_id' => @$rowDataOffer->company_id,
+            'company_id' => @$company_id,
             'application_id' => @$rowDataOffer->application_id,
             'mobile' => @$rowDataOffer->phone,
-            'send_accept_date_time' => (@$data_show->send_accept_date_time) ? date('d-M-Y', strtotime(@$data_show->send_accept_date_time)) : '',
-            'of_joined_date' => (@$data_show->of_joined_date) ? date('d-M-Y', strtotime(@$data_show->of_joined_date)) : '',
+            'send_accept_date_time' => (! empty(@$data_show->send_accept_date_time)) ? date('d-M-Y', strtotime(@$data_show->send_accept_date_time)) : '',
+            'of_joined_date' => (! empty(@$data_show->of_joined_date)) ? date('d-M-Y', strtotime(@$data_show->of_joined_date)) : '',
         ];
 
         return (object) $data; // Rounds to 2 decimal places

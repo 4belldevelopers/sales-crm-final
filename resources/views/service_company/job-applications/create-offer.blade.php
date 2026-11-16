@@ -130,6 +130,7 @@
         #offer_create_show_right_bar .fs-2x,
         #offer_create_show_right_bar .fs-3x,
         #offer_create_show_right_bar .fs-4x { font-size: 16px !important; }
+        #offer_create_show_right_bar .is-invalid { border-color: #f1416c !important; box-shadow: 0 0 0 0.15rem rgba(241, 65, 108, 0.18) !important; }
 
         /* Drawer root is the positioning context for the floated close (X) button */
         #offer_create_show_right_bar { position: relative; }
@@ -5245,7 +5246,7 @@
                                     if ($submitBtn) { $submitBtn.disabled = false; $submitBtn.value = $submitBtn._origVal || $submitBtn.value; }
                                     Swal.fire({
                                         title: "Error",
-                                        text: "Main Components must add up to exactly 100%. Please adjust the allocation of your Main Components and try again.",
+                                        text: response.message || "Main Components must add up to exactly 100%. Please adjust the allocation of your Main Components and try again.",
                                         icon: "warning"
                                     });
                                 }else if(response.status == 'permisionInfo') {
@@ -5259,17 +5260,35 @@
                             },
                             error: function(response) {
                                 if ($submitBtn) { $submitBtn.disabled = false; $submitBtn.value = $submitBtn._origVal || $submitBtn.value; }
-                                // Backend returns one message per empty field (e.g. "Offer point is
-                                // required.", "Bonus offer monthly is required.") — that reads like a
-                                // wall of jargon to a normal user. Group the raw field names into plain,
-                                // actionable sentences instead of dumping the field-level list.
-                                let errors = response.responseJSON.errors || {};
-                                let groups = { main: false, additional: false, details: false };
-                                $.each(errors, function(fieldName) {
+
+                                // Clear previous validation highlights
+                                $('#createForm .is-invalid').removeClass('is-invalid');
+
+                                let res = response.responseJSON || {};
+                                let errors = res.errors || {};
+                                let groups = { main: false, additional: false, insurance: false, details: false };
+                                let fieldErrors = [];
+
+                                $.each(errors, function(fieldName, errorList) {
+                                    var msg = Array.isArray(errorList) ? errorList[0] : errorList;
+                                    fieldErrors.push(msg);
+
+                                    // Highlight matching inputs on the form
+                                    if (fieldName.indexOf('.') !== -1) {
+                                        var parts = fieldName.split('.');
+                                        var baseName = parts[0];
+                                        var index = parseInt(parts[1], 10);
+                                        $('[name="' + baseName + '[]"]').eq(index).addClass('is-invalid');
+                                    } else {
+                                        $('[name="' + fieldName + '"], #' + fieldName).addClass('is-invalid');
+                                    }
+
                                     if (/^(offer_point|option_percentage|option_salarymode|offer_monthly|offer_yearly)/.test(fieldName)) {
                                         groups.main = true;
                                     } else if (/^bonus_/.test(fieldName)) {
                                         groups.additional = true;
+                                    } else if (/^insurence_/.test(fieldName)) {
+                                        groups.insurance = true;
                                     } else if (/^(ctc|dob|current_designation|finalpaytotal)/.test(fieldName)) {
                                         groups.details = true;
                                     }
@@ -5282,11 +5301,24 @@
                                 if (groups.additional) {
                                     messages.push('Additional Components rows cannot be empty. Please fill in every field for each row you\'ve added, or remove the empty row.');
                                 }
+                                if (groups.insurance) {
+                                    messages.push('Insurance Components rows cannot be empty. Please fill in every field for each row you\'ve added, or remove the empty row.');
+                                }
                                 if (groups.details) {
                                     messages.push('Please complete the Compensation Details section (CTC, Offered Designation and Date of Joining) before proceeding.');
                                 }
                                 if (!messages.length) {
-                                    messages.push('Please review the highlighted fields and try again.');
+                                    if (res.message && res.message !== 'Failed to save data. Please try again.') {
+                                        messages.push(res.message);
+                                    } else if (fieldErrors.length > 0) {
+                                        messages = messages.concat(fieldErrors.slice(0, 5));
+                                    } else if (response.status === 419) {
+                                        messages.push('Your session has expired. Please refresh the page and try again.');
+                                    } else if (response.status === 500) {
+                                        messages.push(res.message || 'A server error occurred while processing the offer. Please try again.');
+                                    } else {
+                                        messages.push('Please review the highlighted fields and try again.');
+                                    }
                                 }
 
                                 let errorMessages = messages.map(function(msg, i) {
