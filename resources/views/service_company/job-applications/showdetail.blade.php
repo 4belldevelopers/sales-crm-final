@@ -10,6 +10,8 @@
         4	=>	"USD",
         5	=>	"AED"
      ];
+    $rawVisa = trim((string) (@$application->visastatu ?? @$application->visa_status ?? ''));
+    $visaMeta = \App\Services\VisaResolutionService::resolve($rawVisa);
 @endphp
 <style>
 .text-justify { text-align: justify!important; }
@@ -1251,8 +1253,9 @@
 
       $posted_by_image			=	$posted_by			=	'';
 
-      if($CaptainCompanyid != $application->ClientComID && $application->ClientComID != 0 && $application->ClientComID > 0){
-            $spokperson = $hdrSpokperson ?? DB::table('job_assign')->select('users.name')->leftjoin('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $jobId)->where('job_assign.company_id', $application->ClientComID)->first();
+      $clientComId = (int) (@$application->ClientComID ?? 0);
+      if($clientComId > 0 && $CaptainCompanyid != $clientComId){
+            $spokperson = $hdrSpokperson ?? DB::table('job_assign')->select('users.name')->leftjoin('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $jobId)->where('job_assign.company_id', $clientComId)->first();
             $posted_by = (@$spokperson->name) ? @$spokperson->name : @$application->posted_by;
         }else{
           // dd($application->posted_by);
@@ -1276,17 +1279,25 @@
 @endphp
 @php
     $dnone = "d-none";
-    if($application->master_status_id==8 && $application->rjobid > 0 && $application->from_company_id == auth()->user()->company_id){
+    $rjobid = (int) (@$application->rjobid ?? 0);
+    $fromCompanyId = (int) (@$application->from_company_id ?? 0);
+    $toCompanyId = (int) (@$application->to_company_id ?? 0);
+    $appCompanyId = (int) (@$application->company_id ?? 0);
+    $userPermissionsArr = (array) ($userPermissions ?? []);
+    $authCompanyId = (int) (auth()->user()->company_id ?? 0);
+    $masterStatusId = (int) (@$application->master_status_id ?? 0);
+
+    if($masterStatusId == 8 && $rjobid > 0 && $fromCompanyId == $authCompanyId){
       $dnone = "";
-    }elseif($application->master_status_id !=8 && $application->rjobid > 0 && $application->from_company_id== auth()->user()->company_id){
+    }elseif($masterStatusId != 8 && $rjobid > 0 && $fromCompanyId == $authCompanyId){
       $dnone = "";   
-    }elseif(in_array("add_schedule", $userPermissions) && $application->rjobid < 0){
+    }elseif(in_array("add_schedule", $userPermissionsArr) && $rjobid < 0){
       $dnone = "";
-    }elseif(in_array("add_schedule", $userPermissions) && $application->company_id== auth()->user()->company_id){
+    }elseif(in_array("add_schedule", $userPermissionsArr) && $appCompanyId == $authCompanyId){
       $dnone = "";
-    }elseif(in_array("add_schedule", $userPermissions) && $application->master_status_id==8 && $application->from_company_id == auth()->user()->company_id){
+    }elseif(in_array("add_schedule", $userPermissionsArr) && $masterStatusId == 8 && $fromCompanyId == $authCompanyId){
       $dnone = "";
-    }elseif(in_array("add_schedule", $userPermissions) && $application->master_status_id==8 && $application->to_company_id == auth()->user()->company_id){
+    }elseif(in_array("add_schedule", $userPermissionsArr) && $masterStatusId == 8 && $toCompanyId == $authCompanyId){
       $dnone = "";
     } 
 
@@ -4469,10 +4480,14 @@
               </a>
             @endif
           </section>
+          @else
+            <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
+            <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
+          @endif
 
           <!-- ===== VISA STATUS & WORK AUTHORIZATION CARD (Rule 14, Rule 17) ===== -->
           @php
-            $rawVisa = trim((string) @$application->visastatu);
+            $rawVisa = trim((string) (@$application->visastatu ?? @$application->visa_status ?? ''));
             $visaMeta = \App\Services\VisaResolutionService::resolve($rawVisa);
           @endphp
           <section class="cardshow" id="visa_status_card">
@@ -4535,10 +4550,6 @@
               No visa or work authorization details recorded yet.
             </p>
           </section>
-          @else
-            <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
-            <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
-          @endif
 
 
           @if(@$application->condidate_type=='bench_condidate')
@@ -5492,7 +5503,7 @@ setTimeout(() => {
 
     // Intent: Phase 3 Lazy loading Timeline tab on click (scoped to application ID)
     $('body').off('click.v2timeline').on('click.v2timeline', 'a[href="#timeline"], button[data-bs-target="#timeline"]', function(){
-        var appId = {{ $application->wiseId }};
+        var appId = {{ (int) (@$application->wiseId ?: @$jobWiseCanId ?: @$application->id ?: 0) }};
         var $container = $('#timeline-items-container');
         if ($container.data('loaded-app-id') === appId) return;
 
@@ -5561,8 +5572,8 @@ setTimeout(() => {
    
    		$('#add-note').click(function () {
    				var url 	= "{{ route('service_company.applicant-note.store') }}";
-   				var id 		= {{$application->id}};
-          var wiseId 		= {{$application->wiseId}};
+   				var id 		= {{ (int) (@$application->id ?: 0) }};
+          var wiseId 		= {{ (int) (@$application->wiseId ?: @$jobWiseCanId ?: @$application->id ?: 0) }};
    				var note 	= $('#note_text').val();
    				var token 	= '{{ csrf_token() }}';
    				$.ajax({ 
