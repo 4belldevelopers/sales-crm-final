@@ -3924,9 +3924,20 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->rel_exp = $rel_exp; // $request->rel_exp;
         // $jobApplication->passport				=	$request->passport;
         $salaryMode = $this->normalizedCandidateSalaryMode($request->input('current_ctc_mode'));
-        $jobApplication->ctc = $request->ctc;
+        $rawCtc = match ($salaryMode) {
+            1 => $request->input('pay_monthly') ?: $request->input('ctc'),
+            2 => $request->input('ctc'),
+            default => $request->input('pay_annual') ?: $request->input('ctc'),
+        };
+        $jobApplication->ctc = (! empty($rawCtc) && (float) $rawCtc > 0) ? (int) round((float) $rawCtc) : (int) round((float) ($request->ctc ?? 0));
         $jobApplication->current_ctc_mode = $salaryMode;
-        $jobApplication->ectc = $request->ectc;
+
+        $rawEctc = match ($salaryMode) {
+            1 => $request->input('bill_monthly') ?: $request->input('ectc'),
+            2 => $request->input('ectc'),
+            default => $request->input('bill_annual') ?: $request->input('ectc'),
+        };
+        $jobApplication->ectc = (! empty($rawEctc) && (float) $rawEctc > 0) ? (int) round((float) $rawEctc) : (int) round((float) ($request->ectc ?? 0));
         $jobApplication->current_ectc_mode = $salaryMode;
 
         // Authoritative Job Currency Enforcement (RULE-CURRENCY-JOB-AUTHORITATIVE-001)
@@ -3971,6 +3982,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->ctc_yearly = @$ctcdivided->yearly;
         $jobApplication->ctc_monthly = @$ctcdivided->monthly;
         $jobApplication->ctc_hourly = @$ctcdivided->hourly;
+
+        if ((empty($jobApplication->ctc) || (int) $jobApplication->ctc <= 0) && ($jobApplication->ctc_yearly ?? 0) > 0) {
+            $jobApplication->ctc = (int) round($jobApplication->ctc_yearly);
+        }
+        if ((empty($jobApplication->ectc) || (int) $jobApplication->ectc <= 0) && ($jobApplication->ectc_yearly ?? 0) > 0) {
+            $jobApplication->ectc = (int) round($jobApplication->ectc_yearly);
+        }
 
         $experienceGet = (@$request->total_exp_year == 0) ? 1 : 0;
         $jobApplication->percentage_hike = $this->calculatedCandidateSalaryIncrease(
@@ -4430,6 +4448,73 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 }
             }
 
+            // Atomically synchronize candidate_job_skill_exp and candidate rating inside MySQL transaction (SSOT)
+            $yearSkillId = $request->input('YearskillId', []);
+            $monthSkillId = $request->input('MonthskillId', []);
+            $ratingArr = $request->input('rating', []);
+
+            $insertedSkillsForEs = [];
+            $targetJobId = (int) $request->job_id;
+
+            if ($targetJobId > 0 && ((is_array($yearSkillId) && ! empty($yearSkillId)) || (is_array($ratingArr) && ! empty($ratingArr)))) {
+                DB::table('candidate_job_skill_exp')
+                    ->where('candidate_id', $jobApplication->id)
+                    ->where('job_id', $targetJobId)
+                    ->delete();
+
+                $allSkillIds = array_unique(array_merge(
+                    is_array($yearSkillId) ? array_keys($yearSkillId) : [],
+                    is_array($ratingArr) ? array_keys($ratingArr) : []
+                ));
+
+                $ratingSum = 0;
+                $ratingCount = 0;
+
+                foreach ($allSkillIds as $skillId) {
+                    $skillIdInt = (int) $skillId;
+                    if ($skillIdInt <= 0) {
+                        continue;
+                    }
+                    $valYear = isset($yearSkillId[$skillId]) ? (int) $yearSkillId[$skillId] : 0;
+                    $valMonth = isset($monthSkillId[$skillId]) ? (int) $monthSkillId[$skillId] : 0;
+                    $ss = $valYear >= 1 ? 'Years' : 'Year';
+                    $skillValue = $valYear.'.'.$valMonth.' '.$ss;
+                    $rating = isset($ratingArr[$skillId]) ? (int) $ratingArr[$skillId] : 0;
+
+                    $expId = DB::table('candidate_job_skill_exp')->insertGetId([
+                        'job_skill_id' => $skillIdInt,
+                        'skill_value' => $skillValue,
+                        'job_id' => $targetJobId,
+                        'rating' => $rating,
+                        'candidate_id' => $jobApplication->id,
+                    ]);
+
+                    $skillName = DB::table('job_metronics_skills')->where('id', $skillIdInt)->value('skill_name') ?? '';
+                    $insertedSkillsForEs[] = [
+                        'expId' => $expId,
+                        'skill_name' => $skillName,
+                        'job_skill_id' => $skillIdInt,
+                        'skill_value' => $skillValue,
+                        'job_id' => $targetJobId,
+                        'rating' => $rating,
+                        'candidate_id' => (int) $jobApplication->id,
+                    ];
+
+                    if ($rating > 0) {
+                        $ratingSum += $rating;
+                        $ratingCount++;
+                    }
+                }
+
+                if ($ratingCount > 0) {
+                    $jobApplication->rating = (int) round($ratingSum / $ratingCount);
+                    $this->resilientSaveJobApplication($jobApplication);
+                }
+            } elseif ($request->filled('rating') && is_numeric($request->input('rating'))) {
+                $jobApplication->rating = (int) $request->input('rating');
+                $this->resilientSaveJobApplication($jobApplication);
+            }
+
             $percentage = GeneralMethod::skill_match_percentage($request->job_id, $parsedSkillList);
 
             $now = now();
@@ -4547,6 +4632,45 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             $this->currencyConverter = GeneralMethod::currencyConverter();
+
+            // Synchronize Elasticsearch skills experience immediately
+            try {
+                if (! empty($insertedSkillsForEs) && $this->elasticService->indexExists(ELASTIC_CANDIDATE_SKILLS_EXP)) {
+                    $this->elasticService->getClient()->deleteByQuery([
+                        'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
+                        'conflicts' => 'proceed',
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['candidate_id' => (int) $jobApplication->id]],
+                                        ['term' => ['job_id' => (int) $targetJobId]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+
+                    foreach ($insertedSkillsForEs as $is) {
+                        $this->elasticService->getClient()->index([
+                            'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
+                            'id' => $is['expId'],
+                            'body' => [
+                                'skill_name' => $is['skill_name'],
+                                'job_skill_id' => $is['job_skill_id'],
+                                'skill_value' => $is['skill_value'],
+                                'job_id' => $is['job_id'],
+                                'rating' => $is['rating'],
+                                'candidate_id' => $is['candidate_id'],
+                                'created_at' => now()->toIso8601String(),
+                                'updated_at' => now()->toIso8601String(),
+                            ],
+                        ]);
+                    }
+                }
+            } catch (\Throwable $esEx) {
+                \Log::warning('store(): ELASTIC_CANDIDATE_SKILLS_EXP sync failed: '.$esEx->getMessage());
+            }
 
             // Dispatch ProcessOutboxEventJob to dedicated candidate-index queue
             try {
@@ -6838,6 +6962,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->get();
 
         $this->skillShow = true;
+        $this->resumeCheck = (! empty($this->application->resume) || ! empty($this->application->current_resume_id)) ? 1 : 0;
 
         $this->page_event = 'EDIT';
         $this->currency = GeneralMethod::currency();
@@ -8468,12 +8593,31 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->last_working_date = $noticePeriodState['last_working_date'];
         $jobApplication->serving_notice_period_mode = (int) ($noticePeriodState['serving_notice_period_mode'] ?? 0);
         $salaryMode = $this->normalizedCandidateSalaryMode($request->input('current_ctc_mode'));
-        if (! empty($request->ctc)) {
-            $jobApplication->ctc = @$request->ctc;
+        $rawCtc = match ($salaryMode) {
+            1 => $request->input('pay_monthly') ?: $request->input('ctc'),
+            2 => $request->input('ctc'),
+            default => $request->input('pay_annual') ?: $request->input('ctc'),
+        };
+        if (! empty($rawCtc) && (float) $rawCtc > 0) {
+            $jobApplication->ctc = (int) round((float) $rawCtc);
+        } elseif (! empty($request->pay_annual) && (float) $request->pay_annual > 0) {
+            $jobApplication->ctc = (int) round((float) $request->pay_annual);
+        } elseif (! empty($request->ctc)) {
+            $jobApplication->ctc = (int) round((float) $request->ctc);
         }
         $jobApplication->current_ctc_mode = $salaryMode;
-        if (! empty($request->ectc)) {
-            $jobApplication->ectc = @$request->ectc;
+
+        $rawEctc = match ($salaryMode) {
+            1 => $request->input('bill_monthly') ?: $request->input('ectc'),
+            2 => $request->input('ectc'),
+            default => $request->input('bill_annual') ?: $request->input('ectc'),
+        };
+        if (! empty($rawEctc) && (float) $rawEctc > 0) {
+            $jobApplication->ectc = (int) round((float) $rawEctc);
+        } elseif (! empty($request->bill_annual) && (float) $request->bill_annual > 0) {
+            $jobApplication->ectc = (int) round((float) $request->bill_annual);
+        } elseif (! empty($request->ectc)) {
+            $jobApplication->ectc = (int) round((float) $request->ectc);
         }
         $jobApplication->current_ectc_mode = $salaryMode;
 
@@ -8514,6 +8658,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->ctc_yearly = @$ctcdivided->yearly;
         $jobApplication->ctc_monthly = @$ctcdivided->monthly;
         $jobApplication->ctc_hourly = @$ctcdivided->hourly;
+
+        if ((empty($jobApplication->ctc) || (int) $jobApplication->ctc <= 0) && ($jobApplication->ctc_yearly ?? 0) > 0) {
+            $jobApplication->ctc = (int) round($jobApplication->ctc_yearly);
+        }
+        if ((empty($jobApplication->ectc) || (int) $jobApplication->ectc <= 0) && ($jobApplication->ectc_yearly ?? 0) > 0) {
+            $jobApplication->ectc = (int) round($jobApplication->ectc_yearly);
+        }
 
         $jobApplication->percentage_hike = $this->calculatedCandidateSalaryIncrease(
             $jobApplication->ctc_yearly,
@@ -8654,6 +8805,71 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
             if (! empty($jasRows)) {
                 DB::table('job_application_skills')->insert($jasRows);
+            }
+
+            // Atomically synchronize candidate_job_skill_exp and candidate rating inside MySQL transaction (SSOT)
+            $yearSkillId = $request->input('YearskillId', []);
+            $monthSkillId = $request->input('MonthskillId', []);
+            $ratingArr = $request->input('rating', []);
+
+            $insertedSkillsForEs = [];
+            $targetJobId = (int) ($request->job_id ?: $jobApplication->job_id);
+
+            if ($targetJobId > 0 && ((is_array($yearSkillId) && ! empty($yearSkillId)) || (is_array($ratingArr) && ! empty($ratingArr)))) {
+                DB::table('candidate_job_skill_exp')
+                    ->where('candidate_id', $jobApplication->id)
+                    ->where('job_id', $targetJobId)
+                    ->delete();
+
+                $allSkillIds = array_unique(array_merge(
+                    is_array($yearSkillId) ? array_keys($yearSkillId) : [],
+                    is_array($ratingArr) ? array_keys($ratingArr) : []
+                ));
+
+                $ratingSum = 0;
+                $ratingCount = 0;
+
+                foreach ($allSkillIds as $skillId) {
+                    $skillIdInt = (int) $skillId;
+                    if ($skillIdInt <= 0) {
+                        continue;
+                    }
+                    $valYear = isset($yearSkillId[$skillId]) ? (int) $yearSkillId[$skillId] : 0;
+                    $valMonth = isset($monthSkillId[$skillId]) ? (int) $monthSkillId[$skillId] : 0;
+                    $ss = $valYear >= 1 ? 'Years' : 'Year';
+                    $skillValue = $valYear.'.'.$valMonth.' '.$ss;
+                    $rating = isset($ratingArr[$skillId]) ? (int) $ratingArr[$skillId] : 0;
+
+                    $expId = DB::table('candidate_job_skill_exp')->insertGetId([
+                        'job_skill_id' => $skillIdInt,
+                        'skill_value' => $skillValue,
+                        'job_id' => $targetJobId,
+                        'rating' => $rating,
+                        'candidate_id' => $jobApplication->id,
+                    ]);
+
+                    $skillName = DB::table('job_metronics_skills')->where('id', $skillIdInt)->value('skill_name') ?? '';
+                    $insertedSkillsForEs[] = [
+                        'expId' => $expId,
+                        'skill_name' => $skillName,
+                        'job_skill_id' => $skillIdInt,
+                        'skill_value' => $skillValue,
+                        'job_id' => $targetJobId,
+                        'rating' => $rating,
+                        'candidate_id' => (int) $jobApplication->id,
+                    ];
+
+                    if ($rating > 0) {
+                        $ratingSum += $rating;
+                        $ratingCount++;
+                    }
+                }
+
+                if ($ratingCount > 0) {
+                    $jobApplication->rating = (int) round($ratingSum / $ratingCount);
+                }
+            } elseif ($request->filled('rating') && is_numeric($request->input('rating'))) {
+                $jobApplication->rating = (int) $request->input('rating');
             }
 
             $resumeIntent = $request->input('resume_intent');
@@ -8843,12 +9059,49 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ]);
                 }
             } else {
-                if (empty($request->resumeCheck)) {
+                // If user explicitly sent remove intent (e.g. clicked remove button in UI)
+                if ($resumeIntent === 'REMOVE' || $request->input('resume_action') === 'delete') {
+                    if ($oldResumeId) {
+                        try {
+                            DB::table('resume_assets')
+                                ->where('id', $oldResumeId)
+                                ->where('company_id', $company_id)
+                                ->update([
+                                    'status' => 'REMOVAL_PENDING',
+                                    'removed_at' => now(),
+                                ]);
+                        } catch (\Throwable $re) {
+                            \Log::warning('update(): resume_assets remove fallback: '.$re->getMessage());
+                        }
+                    }
                     $jobApplication->current_resume_id = null;
                     $jobApplication->resume = '';
+                    $jobApplication->resume_version = $currentResumeVersion + 1;
+                    $this->resilientSaveJobApplication($jobApplication);
+                } else {
+                    // KEEP EXISTING RESUME: Never wipe resume or current_resume_id when not explicitly removing
+                    if (empty($jobApplication->resume) && $request->filled('existing_resume_path')) {
+                        $jobApplication->resume = (string) $request->input('existing_resume_path');
+                    }
+                    if (empty($jobApplication->resume) || empty($jobApplication->current_resume_id)) {
+                        $activeAsset = DB::table('resume_assets')
+                            ->where('candidate_id', $jobApplication->id)
+                            ->where('company_id', $company_id)
+                            ->where('status', 'ACTIVE')
+                            ->orderByDesc('id')
+                            ->first();
+                        if ($activeAsset) {
+                            if (empty($jobApplication->current_resume_id)) {
+                                $jobApplication->current_resume_id = $activeAsset->id;
+                            }
+                            if (empty($jobApplication->resume)) {
+                                $jobApplication->resume = $activeAsset->object_key;
+                            }
+                        }
+                    }
+                    $jobApplication->resume_version = $currentResumeVersion + 1;
+                    $this->resilientSaveJobApplication($jobApplication);
                 }
-                $jobApplication->resume_version = $currentResumeVersion + 1;
-                $this->resilientSaveJobApplication($jobApplication);
             }
 
             // Recalculate skill match for ALL jobs this candidate is linked to
@@ -8915,6 +9168,45 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 if ($addJobWiseCandidateId > 0) {
                     GeneralMethod::JobApplicationsAddEditUpload($addJobWiseCandidateId);
                 }
+            }
+
+            // Synchronize Elasticsearch skills experience immediately
+            try {
+                if (! empty($insertedSkillsForEs) && $this->elasticService->indexExists(ELASTIC_CANDIDATE_SKILLS_EXP)) {
+                    $this->elasticService->getClient()->deleteByQuery([
+                        'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
+                        'conflicts' => 'proceed',
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['candidate_id' => (int) $jobApplication->id]],
+                                        ['term' => ['job_id' => (int) $targetJobId]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+
+                    foreach ($insertedSkillsForEs as $is) {
+                        $this->elasticService->getClient()->index([
+                            'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
+                            'id' => $is['expId'],
+                            'body' => [
+                                'skill_name' => $is['skill_name'],
+                                'job_skill_id' => $is['job_skill_id'],
+                                'skill_value' => $is['skill_value'],
+                                'job_id' => $is['job_id'],
+                                'rating' => $is['rating'],
+                                'candidate_id' => $is['candidate_id'],
+                                'created_at' => now()->toIso8601String(),
+                                'updated_at' => now()->toIso8601String(),
+                            ],
+                        ]);
+                    }
+                }
+            } catch (\Throwable $esEx) {
+                \Log::warning('update(): ELASTIC_CANDIDATE_SKILLS_EXP sync failed: '.$esEx->getMessage());
             }
 
             // Explicit Elasticsearch refresh to guarantee zero stale data on read
@@ -11190,6 +11482,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->row_city_name = $this->application->city;
         }
 
+        $skillRatingStatus = $this->getCandidateSkillRatingStatus($this->application);
+        $this->has_valid_skill_rating = $skillRatingStatus['has_valid'];
+        $this->unrated_skill_names = $skillRatingStatus['unrated'];
+
         $view = view('service_company.job-applications.stage_body_content', $this->data)->render();
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
@@ -11301,7 +11597,125 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     }
 
     /**
+     * Intent: Evaluate skill rating status for a candidate against a job's requirements.
+     * Tenancy: Scoped to candidate ID and job ID.
+     * Rule: A candidate WITHOUT a valid skill rating must NEVER be moved from InReview to Sourcing.
+     *
+     * @param  object  $data
+     * @return array{has_valid: bool, unrated: array<string>}
+     */
+    public function getCandidateSkillRatingStatus(object $data): array
+    {
+        $candidateId = (int) ($data->candidate_id ?? ($data->job_application_id ?? 0));
+        $jobId = (int) ($data->jobId ?? ($data->job_id ?? 0));
+        $wiseId = (int) ($data->job_wise_condidates_id ?? ($data->wise_id ?? 0));
+
+        if ($candidateId <= 0 || $jobId <= 0) {
+            $lookupId = $wiseId > 0 ? $wiseId : (int) ($data->id ?? 0);
+            if ($lookupId > 0) {
+                $wiseRow = DB::table('add_job_wise_condidates')->where('id', $lookupId)->first();
+                if ($wiseRow) {
+                    if ($candidateId <= 0) {
+                        $candidateId = (int) $wiseRow->job_application_id;
+                    }
+                    if ($jobId <= 0) {
+                        $jobId = (int) $wiseRow->job_id;
+                    }
+                }
+            }
+        }
+
+        if ($candidateId <= 0 && isset($data->id) && (int) $data->id > 0) {
+            if (DB::table('job_applications')->where('id', (int) $data->id)->exists()) {
+                $candidateId = (int) $data->id;
+            }
+        }
+
+        if ($candidateId <= 0) {
+            return ['has_valid' => false, 'unrated' => []];
+        }
+
+        if ($jobId > 0) {
+            $jobSkills = DB::table('job_metronics_skills')
+                ->leftJoin('candidate_job_skill_exp', function ($join) use ($candidateId) {
+                    $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+                        ->where('candidate_job_skill_exp.candidate_id', '=', $candidateId);
+                })
+                ->select(
+                    'job_metronics_skills.skill_name',
+                    DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
+                )
+                ->where('job_metronics_skills.job_id', '=', $jobId)
+                ->whereNotNull('job_metronics_skills.skill_name')
+                ->whereRaw("TRIM(job_metronics_skills.skill_name) != ''")
+                ->groupBy('job_metronics_skills.skill_name')
+                ->get();
+
+            if ($jobSkills->isNotEmpty()) {
+                $unrated = [];
+                foreach ($jobSkills as $js) {
+                    $rating = (int) ($js->rating ?? 0);
+                    if ($rating < 1 || $rating > 5) {
+                        $unrated[] = trim($js->skill_name);
+                    }
+                }
+
+                return [
+                    'has_valid' => empty($unrated),
+                    'unrated' => $unrated,
+                ];
+            }
+        }
+
+        // Fallback if job has no required skills configured in job_metronics_skills
+        $hasSkillExpRating = DB::table('candidate_job_skill_exp')
+            ->where('candidate_id', $candidateId)
+            ->where('rating', '>=', 1)
+            ->where('rating', '<=', 5)
+            ->exists();
+
+        if ($hasSkillExpRating) {
+            return ['has_valid' => true, 'unrated' => []];
+        }
+
+        $hasBenchRating = DB::table('bench_candidate_skill_experience')
+            ->where('candidate_id', $candidateId)
+            ->where('rating', '>=', 1)
+            ->where('rating', '<=', 5)
+            ->exists();
+
+        if ($hasBenchRating) {
+            return ['has_valid' => true, 'unrated' => []];
+        }
+
+        $appRating = DB::table('job_applications')->where('id', $candidateId)->value('rating');
+        $appRatingInt = (int) ($appRating ?? 0);
+        if ($appRatingInt >= 1 && $appRatingInt <= 5) {
+            return ['has_valid' => true, 'unrated' => []];
+        }
+
+        return ['has_valid' => false, 'unrated' => []];
+    }
+
+    /**
+     * Helper to check whether a candidate has valid skill rating.
+     */
+    public function checkCandidateHasValidSkillRating(object $data): bool
+    {
+        return $this->getCandidateSkillRatingStatus($data)['has_valid'];
+    }
+
+    /**
+     * Helper to get list of unrated skill names.
+     */
+    public function getCandidateUnratedSkillNames(object $data): array
+    {
+        return $this->getCandidateSkillRatingStatus($data)['unrated'];
+    }
+
+    /**
      * Stage-Aware 100% Validation when moving candidate from In Review (8) -> Sourcing (1).
+     * MANDATORY RULE: A candidate WITHOUT a valid skill rating must NEVER be moved from InReview to Sourcing.
      *
      * @param  object  $data  Candidate payload from Elastic or DB
      * @return array List of missing required field labels
@@ -11342,6 +11756,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
+        // Strict Skill Rating Validation: A candidate WITHOUT a valid skill rating must NEVER be moved from InReview to Sourcing.
+        $skillRatingStatus = $this->getCandidateSkillRatingStatus($data);
+        if (! $skillRatingStatus['has_valid']) {
+            $unrated = $skillRatingStatus['unrated'];
+            $missing[] = ! empty($unrated)
+                ? ('Skill Rating (' . implode(', ', $unrated) . ')')
+                : 'Skill Rating (Proficiency Rating)';
+        }
+
         if (! isset($data->total_exp) || $data->total_exp === '' || $data->total_exp === null) {
             $missing[] = 'Total Experience';
         }
@@ -11359,10 +11782,62 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             if (empty(trim((string) ($data->current_company ?? '')))) {
                 $missing[] = 'Current Company';
             }
-            if (empty($data->ctc)) {
+            // Robust check for Current CTC across all modes (annual, monthly, hourly) and schema representations
+            $hasCurrentCtc = false;
+            if (! empty($data->ctc) && (float) $data->ctc > 0) {
+                $hasCurrentCtc = true;
+            } elseif (! empty($data->ctc_yearly) && (float) $data->ctc_yearly > 0) {
+                $hasCurrentCtc = true;
+            } elseif (! empty($data->ctc_monthly) && (float) $data->ctc_monthly > 0) {
+                $hasCurrentCtc = true;
+            } elseif (! empty($data->ctc_hourly) && (float) $data->ctc_hourly > 0) {
+                $hasCurrentCtc = true;
+            } elseif (! empty($data->pay_rate_amount) && (float) $data->pay_rate_amount > 0) {
+                $hasCurrentCtc = true;
+            }
+
+            // Robust check for Expected CTC across all modes and schema representations
+            $hasExpectedCtc = false;
+            if (! empty($data->ectc) && (float) $data->ectc > 0) {
+                $hasExpectedCtc = true;
+            } elseif (! empty($data->ectc_yearly) && (float) $data->ectc_yearly > 0) {
+                $hasExpectedCtc = true;
+            } elseif (! empty($data->ectc_monthly) && (float) $data->ectc_monthly > 0) {
+                $hasExpectedCtc = true;
+            } elseif (! empty($data->ectc_hourly) && (float) $data->ectc_hourly > 0) {
+                $hasExpectedCtc = true;
+            } elseif (! empty($data->bill_rate_amount) && (float) $data->bill_rate_amount > 0) {
+                $hasExpectedCtc = true;
+            }
+
+            // Rule 1 & Rule 5 SSOT Fallback: query MySQL job_applications if ES data lacks salary fields
+            if (! $hasCurrentCtc || ! $hasExpectedCtc) {
+                $candId = (int) ($data->candidate_id ?? ($data->job_application_id ?? ($data->id ?? 0)));
+                if ($candId > 0) {
+                    $dbJa = DB::table('job_applications')->where('id', $candId)->first();
+                    if ($dbJa) {
+                        if (! $hasCurrentCtc) {
+                            $hasCurrentCtc = ((float) ($dbJa->ctc ?? 0) > 0)
+                                || ((float) ($dbJa->ctc_yearly ?? 0) > 0)
+                                || ((float) ($dbJa->ctc_monthly ?? 0) > 0)
+                                || ((float) ($dbJa->ctc_hourly ?? 0) > 0)
+                                || ((float) ($dbJa->pay_rate_amount ?? 0) > 0);
+                        }
+                        if (! $hasExpectedCtc) {
+                            $hasExpectedCtc = ((float) ($dbJa->ectc ?? 0) > 0)
+                                || ((float) ($dbJa->ectc_yearly ?? 0) > 0)
+                                || ((float) ($dbJa->ectc_monthly ?? 0) > 0)
+                                || ((float) ($dbJa->ectc_hourly ?? 0) > 0)
+                                || ((float) ($dbJa->bill_rate_amount ?? 0) > 0);
+                        }
+                    }
+                }
+            }
+
+            if (! $hasCurrentCtc) {
                 $missing[] = 'Salary Details (Current CTC)';
             }
-            if (empty($data->ectc)) {
+            if (! $hasExpectedCtc) {
                 $missing[] = 'Salary Details (Expected CTC)';
             }
             if (empty($data->np_id)) {
@@ -11830,7 +12305,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
                             $editUrl = route('service_company.job-applications.edit', [GeneralMethod::value_encrypt($addJobWiseCondidate_id)]);
 
-                            return Reply::dataOnly([
+                            return $failValidation([
                                 'status' => 'candidatevalidation',
                                 'modal' => 'required_fields',
                                 'candidate_id' => $addJobWiseCondidate_id,
@@ -13301,24 +13776,35 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $job_application_arr['ctc_monthly'] = @$ctcdivided->monthly;
         $job_application_arr['ctc_hourly'] = @$ctcdivided->hourly;
 
-        if (! empty($request->ctc)) {
-            $job_application_arr['ctc'] = $request->ctc;
+        $salaryMode = $this->normalizedCandidateSalaryMode($request->input('current_ctc_mode'));
+        $rawCtc = match ($salaryMode) {
+            1 => $request->input('pay_monthly') ?: $request->input('ctc'),
+            2 => $request->input('ctc'),
+            default => $request->input('pay_annual') ?: $request->input('ctc'),
+        };
+        $job_application_arr['ctc'] = (! empty($rawCtc) && (float) $rawCtc > 0) ? (int) round((float) $rawCtc) : (int) round((float) ($request->ctc ?? 0));
+        if ($job_application_arr['ctc'] <= 0 && ($job_application_arr['ctc_yearly'] ?? 0) > 0) {
+            $job_application_arr['ctc'] = (int) round($job_application_arr['ctc_yearly']);
         }
+
+        $rawEctc = match ($salaryMode) {
+            1 => $request->input('bill_monthly') ?: $request->input('ectc'),
+            2 => $request->input('ectc'),
+            default => $request->input('bill_annual') ?: $request->input('ectc'),
+        };
+        $job_application_arr['ectc'] = (! empty($rawEctc) && (float) $rawEctc > 0) ? (int) round((float) $rawEctc) : (int) round((float) ($request->ectc ?? 0));
+        if ($job_application_arr['ectc'] <= 0 && ($job_application_arr['ectc_yearly'] ?? 0) > 0) {
+            $job_application_arr['ectc'] = (int) round($job_application_arr['ectc_yearly']);
+        }
+
         if (! empty($request->current_ctc_cur)) {
             $job_application_arr['current_ctc_cur'] = $request->current_ctc_cur;
         }
-        if (! empty($request->current_ctc_mode)) {
-            $job_application_arr['current_ctc_mode'] = $request->current_ctc_mode;
-        }
-        if (! empty($request->ectc)) {
-            $job_application_arr['ectc'] = $request->ectc;
-        }
+        $job_application_arr['current_ctc_mode'] = $salaryMode;
         if (! empty($request->current_ectc_cur)) {
             $job_application_arr['current_ectc_cur'] = $request->current_ectc_cur;
         }
-        if (! empty($request->current_ectc_cur)) {
-            $job_application_arr['current_ectc_cur'] = $request->current_ectc_cur;
-        }
+        $job_application_arr['current_ectc_mode'] = $salaryMode;
         if (! empty($request->percentage_hike)) {
             $job_application_arr['percentage_hike'] = $request->percentage_hike;
         }
@@ -13673,6 +14159,75 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 }
             }
 
+            // Atomically synchronize candidate_job_skill_exp and candidate rating inside MySQL transaction (SSOT)
+            $yearSkillId = $request->input('YearskillId', []);
+            $monthSkillId = $request->input('MonthskillId', []);
+            $ratingArr = $request->input('rating', []);
+
+            $insertedSkillsForEsClient = [];
+            $targetJobIdClient = (int) $request->job_id;
+
+            if ($targetJobIdClient > 0 && ((is_array($yearSkillId) && ! empty($yearSkillId)) || (is_array($ratingArr) && ! empty($ratingArr)))) {
+                DB::table('candidate_job_skill_exp')
+                    ->where('candidate_id', $application_id)
+                    ->where('job_id', $targetJobIdClient)
+                    ->delete();
+
+                $allSkillIds = array_unique(array_merge(
+                    is_array($yearSkillId) ? array_keys($yearSkillId) : [],
+                    is_array($ratingArr) ? array_keys($ratingArr) : []
+                ));
+
+                $ratingSum = 0;
+                $ratingCount = 0;
+
+                foreach ($allSkillIds as $skillId) {
+                    $skillIdInt = (int) $skillId;
+                    if ($skillIdInt <= 0) {
+                        continue;
+                    }
+                    $valYear = isset($yearSkillId[$skillId]) ? (int) $yearSkillId[$skillId] : 0;
+                    $valMonth = isset($monthSkillId[$skillId]) ? (int) $monthSkillId[$skillId] : 0;
+                    $ss = $valYear >= 1 ? 'Years' : 'Year';
+                    $skillValue = $valYear.'.'.$valMonth.' '.$ss;
+                    $rating = isset($ratingArr[$skillId]) ? (int) $ratingArr[$skillId] : 0;
+
+                    $expId = DB::table('candidate_job_skill_exp')->insertGetId([
+                        'job_skill_id' => $skillIdInt,
+                        'skill_value' => $skillValue,
+                        'job_id' => $targetJobIdClient,
+                        'rating' => $rating,
+                        'candidate_id' => $application_id,
+                    ]);
+
+                    $skillName = DB::table('job_metronics_skills')->where('id', $skillIdInt)->value('skill_name') ?? '';
+                    $insertedSkillsForEsClient[] = [
+                        'expId' => $expId,
+                        'skill_name' => $skillName,
+                        'job_skill_id' => $skillIdInt,
+                        'skill_value' => $skillValue,
+                        'job_id' => $targetJobIdClient,
+                        'rating' => $rating,
+                        'candidate_id' => (int) $application_id,
+                    ];
+
+                    if ($rating > 0) {
+                        $ratingSum += $rating;
+                        $ratingCount++;
+                    }
+                }
+
+                if ($ratingCount > 0) {
+                    DB::table('job_applications')->where('id', $application_id)->update([
+                        'rating' => (int) round($ratingSum / $ratingCount),
+                    ]);
+                }
+            } elseif ($request->filled('rating') && is_numeric($request->input('rating'))) {
+                DB::table('job_applications')->where('id', $application_id)->update([
+                    'rating' => (int) $request->input('rating'),
+                ]);
+            }
+
             $percentage = GeneralMethod::skill_match_percentage($request->job_id, $parsedSkillListClient);
 
             $now = now();
@@ -13880,6 +14435,45 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $this->currencyConverter = GeneralMethod::currencyConverter();
             $submittedByEmail = auth()->user()->email;
+
+            // Synchronize Elasticsearch skills experience immediately
+            try {
+                if (! empty($insertedSkillsForEsClient) && $this->elasticService->indexExists(ELASTIC_CANDIDATE_SKILLS_EXP)) {
+                    $this->elasticService->getClient()->deleteByQuery([
+                        'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
+                        'conflicts' => 'proceed',
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['candidate_id' => (int) $application_id]],
+                                        ['term' => ['job_id' => (int) $targetJobIdClient]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+
+                    foreach ($insertedSkillsForEsClient as $is) {
+                        $this->elasticService->getClient()->index([
+                            'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
+                            'id' => $is['expId'],
+                            'body' => [
+                                'skill_name' => $is['skill_name'],
+                                'job_skill_id' => $is['job_skill_id'],
+                                'skill_value' => $is['skill_value'],
+                                'job_id' => $is['job_id'],
+                                'rating' => $is['rating'],
+                                'candidate_id' => $is['candidate_id'],
+                                'created_at' => now()->toIso8601String(),
+                                'updated_at' => now()->toIso8601String(),
+                            ],
+                        ]);
+                    }
+                }
+            } catch (\Throwable $esEx) {
+                \Log::warning('clientappstore(): ELASTIC_CANDIDATE_SKILLS_EXP sync failed: '.$esEx->getMessage());
+            }
 
             // Dispatch ProcessOutboxEventJob to dedicated candidate-index queue
             try {
@@ -14661,6 +15255,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->row_city_name = $this->application->city;
         }
 
+        $skillRatingStatus = $this->getCandidateSkillRatingStatus($this->application);
+        $this->has_valid_skill_rating = $skillRatingStatus['has_valid'];
+        $this->unrated_skill_names = $skillRatingStatus['unrated'];
+
         $view = view('service_company.job-applications.client_stage_body_content', $this->data)->render();
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
@@ -14728,6 +15326,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 }
             }
         }
+
+        $failValidation = function (array $payload) use ($company_id, $idempotencyKey) {
+            try {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', (int) $company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->update([
+                        'status' => 'FAILED_FINAL',
+                        'response_status' => 200,
+                        'response_body' => json_encode($payload),
+                        'last_error' => substr($payload['message'] ?? 'Validation failure', 0, 500),
+                        'completed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+            } catch (\Throwable $e) {
+            }
+
+            return Reply::dataOnly($payload);
+        };
 
         $addJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($addJobWiseCondidate_id);
         $exists = $this->elasticService->getClient()->exists([
@@ -15051,19 +15668,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $addJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($addJobWiseCondidate_id);
 
-        if ($master_status == 1) {
-            // dd($addJobWiseCondidate->thirdparty_company_id);
+        if ($master_status == 1 && (int) $addJobWiseCondidate->thirdparty_company_id > 0) {
             $eventId = 4;
             $coinsValidations = GeneralMethod::coinsValidations((int) $addJobWiseCondidate->thirdparty_company_id, $eventId, auth()->user()->id, $addJobWiseCondidate->thirdparty_company_id, '', '');
-            // dd($coinsValidations);
             if ($coinsValidations->status) {
                 $Company = Company::withoutGlobalScopes()->find($addJobWiseCondidate->thirdparty_company_id);
+                $companyName = $Company->company_name ?? 'Client';
 
-                return Reply::dataOnly(['status' => 'coinCheck', 'message' => '"'.$Company->company_name.'" does not have sufficient coins to receive your profile at this time', 'company_coins' => $coinsValidations->company_coins]);
+                return $failValidation(['status' => 'coinCheck', 'message' => '"'.$companyName.'" does not have sufficient coins to receive your profile at this time', 'company_coins' => $coinsValidations->company_coins]);
             }
             $coinsDeductions = GeneralMethod::coinsValidations((int) $addJobWiseCondidate->company_id, $eventId, auth()->user()->id, $addJobWiseCondidate->thirdparty_company_id, '', '');
             if ($coinsDeductions->status) {
-                return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                return $failValidation(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
             }
 
             GeneralMethod::coinsDeductions((int) $addJobWiseCondidate->company_id, $eventId, auth()->user()->id, $addJobWiseCondidate->thirdparty_company_id, '', '');
@@ -15219,7 +15835,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                                 ? route('service_company.job-applications.clientcreate', [GeneralMethod::value_encrypt($jobId), GeneralMethod::value_encrypt($addJobWiseCondidate_id)])
                                 : route('service_company.job-applications.edit', [GeneralMethod::value_encrypt($addJobWiseCondidate_id)]);
 
-                            return Reply::dataOnly([
+                            return $failValidation([
                                 'status' => 'candidatevalidation',
                                 'modal' => 'required_fields',
                                 'candidate_id' => $addJobWiseCondidate_id,

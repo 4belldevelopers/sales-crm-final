@@ -81,7 +81,7 @@ class ProcessCandidateSubmissionJob implements ShouldQueue
             $monthSkillId = $data['MonthskillId'] ?? [];
             $ratingArr    = $data['rating'] ?? [];
 
-            if (!empty($yearSkillId) && is_array($yearSkillId)) {
+            if ((!empty($yearSkillId) && is_array($yearSkillId)) || (!empty($ratingArr) && is_array($ratingArr))) {
                 $client->deleteByQuery([
                     'index'     => ELASTIC_CANDIDATE_SKILLS_EXP,
                     'conflicts' => 'proceed',
@@ -101,23 +101,41 @@ class ProcessCandidateSubmissionJob implements ShouldQueue
                     ->where('job_id', $jobId)
                     ->delete();
 
-                foreach ($yearSkillId as $skillId => $value) {
-                    $ss        = $value >= 1 ? 'Years' : 'Year';
-                    $valMonth  = $monthSkillId[$skillId] ?? 0;
-                    $skillValue = $value . '.' . $valMonth . ' ' . $ss;
+                $allSkillIds = array_unique(array_merge(
+                    is_array($yearSkillId) ? array_keys($yearSkillId) : [],
+                    is_array($ratingArr) ? array_keys($ratingArr) : []
+                ));
+
+                $ratingSum = 0;
+                $ratingCount = 0;
+
+                foreach ($allSkillIds as $skillId) {
+                    $skillIdInt = (int)$skillId;
+                    if ($skillIdInt <= 0) {
+                        continue;
+                    }
+                    $valYear   = isset($yearSkillId[$skillId]) ? (int)$yearSkillId[$skillId] : 0;
+                    $valMonth  = isset($monthSkillId[$skillId]) ? (int)$monthSkillId[$skillId] : 0;
+                    $ss        = $valYear >= 1 ? 'Years' : 'Year';
+                    $skillValue = $valYear . '.' . $valMonth . ' ' . $ss;
                     $rating     = (int)($ratingArr[$skillId] ?? 0);
 
                     $expId = DB::table('candidate_job_skill_exp')->insertGetId([
-                        'job_skill_id' => $skillId,
+                        'job_skill_id' => $skillIdInt,
                         'skill_value'  => $skillValue,
                         'job_id'       => $jobId,
                         'rating'       => $rating,
                         'candidate_id' => $appId,
                     ]);
 
+                    if ($rating > 0) {
+                        $ratingSum += $rating;
+                        $ratingCount++;
+                    }
+
                     $skillRow = DB::table('job_metronics_skills')
                         ->select('skill_name')
-                        ->where('id', $skillId)
+                        ->where('id', $skillIdInt)
                         ->first();
 
                     $client->index([
@@ -125,7 +143,7 @@ class ProcessCandidateSubmissionJob implements ShouldQueue
                         'id'    => $expId,
                         'body'  => [
                             'skill_name'   => $skillRow->skill_name ?? '',
-                            'job_skill_id' => $skillId,
+                            'job_skill_id' => $skillIdInt,
                             'skill_value'  => $skillValue,
                             'job_id'       => $jobId,
                             'rating'       => $rating,
@@ -133,6 +151,12 @@ class ProcessCandidateSubmissionJob implements ShouldQueue
                             'created_at'   => now()->toIso8601String(),
                             'updated_at'   => now()->toIso8601String(),
                         ],
+                    ]);
+                }
+
+                if ($ratingCount > 0) {
+                    DB::table('job_applications')->where('id', $appId)->update([
+                        'rating' => (int) round($ratingSum / $ratingCount),
                     ]);
                 }
             }
