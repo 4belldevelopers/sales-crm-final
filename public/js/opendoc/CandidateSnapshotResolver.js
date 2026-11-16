@@ -384,12 +384,13 @@
       { name: 'semantic_dom',       type: 'presentation_state',       trust: 'view_derived',  getter: function () { return getSemantic('location'); } },
       { name: 'server_payload',     type: 'authoritative_projection', trust: 'server_authoritative', getter: function () {
         if (cleanString(rawData.location_text) && !isNumericId(rawData.location_text) && rawData.location_text !== '--') return rawData.location_text;
-        if (cleanString(rawData.current_location) && !isNumericId(rawData.current_location) && rawData.current_location !== '--') return rawData.current_location;
         var p = [
           cleanString(rawData.city_name || rawData.city),
           cleanString(rawData.state_name || rawData.state),
           cleanString(rawData.country_name || rawData.country)
         ].filter(function (x) { return x && !isNumericId(x) && x !== '--'; });
+        if (p.length >= 2) return p.join(', ');
+        if (cleanString(rawData.current_location) && !isNumericId(rawData.current_location) && rawData.current_location !== '--') return rawData.current_location;
         return p.length ? p.join(', ') : (rawData.location || '');
       }}
     ], FIELD_VALIDATORS.location, formatLocation);

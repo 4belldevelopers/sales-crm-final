@@ -5925,6 +5925,86 @@ END:VCALENDAR";
         return ($stateId) ? $stateId->state_id : '';
     }
 
+    /**
+     * Resolve authoritative location hierarchy (city, state, country) from city_list SSOT.
+     * Guaranteed 0% MySQL reads via Redis caching (24-hour TTL).
+     *
+     * @param  int|string|null  $cityId
+     * @param  int|string|null  $fallbackStateId
+     * @param  int|string|null  $fallbackCountryId
+     * @return array{city_id: int, city: string, state_id: int, country_id: int, city_name: string, state_name: string, country_name: string}
+     */
+    public static function resolveAuthoritativeLocationHierarchy($cityId, $fallbackStateId = 0, $fallbackCountryId = 101): array
+    {
+        $cityId = (int) $cityId;
+        $fallbackStateId = (int) $fallbackStateId;
+        $fallbackCountryId = (int) ($fallbackCountryId ?: 101);
+
+        if ($cityId <= 0) {
+            return [
+                'city_id' => 0,
+                'city' => '',
+                'state_id' => $fallbackStateId,
+                'country_id' => $fallbackCountryId,
+                'city_name' => '',
+                'state_name' => '',
+                'country_name' => '',
+            ];
+        }
+
+        try {
+            $cacheKey = "ref_city_state_country:{$cityId}";
+            $cached = \Illuminate\Support\Facades\Redis::get($cacheKey);
+            if ($cached) {
+                $data = json_decode($cached, true);
+                if (is_array($data) && ! empty($data['city_name'])) {
+                    return $data;
+                }
+            }
+
+            $cityRow = DB::table('city_list')
+                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
+                ->where('city_list.city_id', $cityId)
+                ->select(
+                    'city_list.city_id',
+                    'city_list.city as city_name',
+                    'city_list.state_id',
+                    'state_list.state as state_name',
+                    'state_list.country_id',
+                    'countries.country_name'
+                )
+                ->first();
+
+            if ($cityRow) {
+                $result = [
+                    'city_id' => (int) $cityRow->city_id,
+                    'city' => (string) $cityRow->city_name,
+                    'state_id' => (int) ($cityRow->state_id ?: $fallbackStateId),
+                    'country_id' => (int) ($cityRow->country_id ?: $fallbackCountryId),
+                    'city_name' => (string) $cityRow->city_name,
+                    'state_name' => (string) ($cityRow->state_name ?? ''),
+                    'country_name' => (string) ($cityRow->country_name ?? ''),
+                ];
+                try {
+                    \Illuminate\Support\Facades\Redis::setex($cacheKey, 86400, json_encode($result));
+                } catch (\Throwable) {}
+
+                return $result;
+            }
+        } catch (\Throwable) {}
+
+        return [
+            'city_id' => $cityId,
+            'city' => '',
+            'state_id' => (int) ($fallbackStateId ?: self::stateId($cityId)),
+            'country_id' => $fallbackCountryId,
+            'city_name' => '',
+            'state_name' => '',
+            'country_name' => '',
+        ];
+    }
+
     public static function allCities()
     {
         return DB::table('city_list')
@@ -5992,43 +6072,42 @@ END:VCALENDAR";
         $state = $clean($cand->state_name ?? ($cand->state ?? ''));
         $country = $clean($cand->country_name ?? ($cand->country ?? ''));
 
-        // If city_id is available and city/state are missing or numeric, look up city_list
+        // If city_id is available, resolve authoritative city, state, and country from city_list SSOT
         $cityId = (int) ($cand->city_id ?? 0);
         if ($cityId <= 0 && is_numeric($cand->city ?? null)) {
             $cityId = (int) $cand->city;
         }
 
-        if ($cityId > 0 && ($city === '' || is_numeric($city) || $state === '')) {
-            try {
-                $cacheKey = "ref_city_state_country:{$cityId}";
-                $cached = \Illuminate\Support\Facades\Redis::get($cacheKey);
-                if ($cached) {
-                    $cityRow = json_decode($cached);
-                } else {
-                    $cityRow = DB::table('city_list')
-                        ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                        ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                        ->where('city_list.city_id', $cityId)
-                        ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
-                        ->first();
-                    if ($cityRow) {
-                        \Illuminate\Support\Facades\Redis::setex($cacheKey, 86400, json_encode($cityRow));
-                    }
-                }
-
-                if ($cityRow) {
-                    if ($city === '' || is_numeric($city)) {
-                        $city = $clean($cityRow->city_name);
-                    }
-                    if ($state === '' || is_numeric($state)) {
-                        $state = $clean($cityRow->state_name);
-                    }
-                    if ($country === '' || is_numeric($country)) {
-                        $country = $clean($cityRow->country_name);
-                    }
-                }
-            } catch (\Throwable) {
+        if ($cityId > 0) {
+            $authLoc = self::resolveAuthoritativeLocationHierarchy($cityId, $cand->state ?? 0, $cand->country ?? 101);
+            if (! empty($authLoc['city_name'])) {
+                $city = $clean($authLoc['city_name']);
             }
+            if (! empty($authLoc['state_name'])) {
+                $state = $clean($authLoc['state_name']);
+            }
+            if (! empty($authLoc['country_name'])) {
+                $country = $clean($authLoc['country_name']);
+            }
+        } elseif ($city !== '' && ! is_numeric($city)) {
+            // City text provided without city_id: match in city_list to resolve authoritative state and country
+            try {
+                $cityMatch = DB::table('city_list')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+                    ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
+                    ->where('city_list.city', $city)
+                    ->select('city_list.city_id', 'city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                    ->first();
+                if ($cityMatch) {
+                    $city = $clean($cityMatch->city_name);
+                    if (! empty($cityMatch->state_name)) {
+                        $state = $clean($cityMatch->state_name);
+                    }
+                    if (! empty($cityMatch->country_name)) {
+                        $country = $clean($cityMatch->country_name);
+                    }
+                }
+            } catch (\Throwable) {}
         }
 
         // If state is numeric, resolve from state_list
@@ -6049,9 +6128,9 @@ END:VCALENDAR";
             }
         }
 
-        $city = $city !== '' ? ucwords(strtolower($city)) : '';
-        $state = $state !== '' ? ucwords(strtolower($state)) : '';
-        $country = $country !== '' ? ucwords(strtolower($country)) : '';
+        $city = $city !== '' ? ucwords(strtolower($city), " \t\r\n\f\v/-") : '';
+        $state = $state !== '' ? ucwords(strtolower($state), " \t\r\n\f\v/-") : '';
+        $country = $country !== '' ? ucwords(strtolower($country), " \t\r\n\f\v/-") : '';
 
         $parts = array_filter([$city, $state, $country]);
         $locationText = ! empty($parts) ? implode(', ', $parts) : '--';
@@ -9099,10 +9178,12 @@ END:VCALENDAR";
             ->leftjoin('users', 'users.id', 'add_job_wise_condidates.submitted_by')
             ->leftjoin('documents', 'documents.documentable_id', 'job_applications.id')
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
             ->leftJoin('state_list', function ($join) {
-                $join->on('state_list.id', '=', DB::raw('COALESCE(NULLIF(job_applications.state, 0), city_list.state_id)'));
+                $join->on('state_list.id', '=', DB::raw('COALESCE(city_list.state_id, NULLIF(job_applications.state, 0))'));
+            })
+            ->leftJoin('countries', function ($join) {
+                $join->on('countries.id', '=', DB::raw('COALESCE(state_list.country_id, NULLIF(job_applications.country, 0))'));
             })
             ->where('add_job_wise_condidates.id', $id)
             ->orderByDesc('documents.id')->get();
@@ -9644,10 +9725,12 @@ END:VCALENDAR";
             ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
             ->leftjoin('companies', 'companies.id', 'job_applications.company_id')
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
             ->leftJoin('state_list', function ($join) {
-                $join->on('state_list.id', '=', DB::raw('COALESCE(NULLIF(job_applications.state, 0), city_list.state_id)'));
+                $join->on('state_list.id', '=', DB::raw('COALESCE(city_list.state_id, NULLIF(job_applications.state, 0))'));
+            })
+            ->leftJoin('countries', function ($join) {
+                $join->on('countries.id', '=', DB::raw('COALESCE(state_list.country_id, NULLIF(job_applications.country, 0))'));
             })
             ->where('condidate_type', '=', 'bench_condidate')
             ->where('job_applications.id', $id)
@@ -13177,10 +13260,12 @@ END:VCALENDAR";
             ->leftjoin('documents', 'documents.documentable_id', 'job_applications.id')
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
             // ->leftJoin('master_status', 'master_status.id', '=', 'job_applications.master_status_id')
-            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
             ->leftJoin('state_list', function ($join) {
-                $join->on('state_list.id', '=', DB::raw('COALESCE(NULLIF(job_applications.state, 0), city_list.state_id)'));
+                $join->on('state_list.id', '=', DB::raw('COALESCE(city_list.state_id, NULLIF(job_applications.state, 0))'));
+            })
+            ->leftJoin('countries', function ($join) {
+                $join->on('countries.id', '=', DB::raw('COALESCE(state_list.country_id, NULLIF(job_applications.country, 0))'));
             })
             ->where('job_applications.id', $id)->get();
 

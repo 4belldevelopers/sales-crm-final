@@ -557,9 +557,14 @@ class JobApplyService
         $stateId = '';
         $countryID = '';
         if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
-            $cityID = (int) $request->location_city_id;
-            $stateId = (int) $request->location_state_id;
-            $countryID = (int) ($request->location_country_id ?: 101);
+            $locAuth = GeneralMethod::resolveAuthoritativeLocationHierarchy(
+                $request->location_city_id,
+                $request->location_state_id,
+                $request->location_country_id
+            );
+            $cityID = $locAuth['city_id'];
+            $stateId = $locAuth['state_id'];
+            $countryID = $locAuth['country_id'];
         } else {
             $work_city = $request->input('kt_tagify_work_location');
             if (! empty($work_city)) {

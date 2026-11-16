@@ -3416,6 +3416,25 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cand->skills_authoritative = true;
             $cand->screening_qa = $candDossier['screening_qa'] ?? [];
 
+            // Authoritative Location from PrescreenDossierService (reconciled SSOT)
+            if (! empty($candDossier['location_text']) && $candDossier['location_text'] !== '--') {
+                $cand->location_text = $candDossier['location_text'];
+                $cand->current_location = $candDossier['location_text'];
+                $cand->location = $candDossier['location_text'];
+                if (! empty($candDossier['city'])) {
+                    $cand->city_name = $candDossier['city'];
+                    $cand->city = $candDossier['city'];
+                }
+                if (! empty($candDossier['state'])) {
+                    $cand->state_name = $candDossier['state'];
+                    $cand->state = $candDossier['state'];
+                }
+                if (! empty($candDossier['country'])) {
+                    $cand->country_name = $candDossier['country'];
+                    $cand->country = $candDossier['country'];
+                }
+            }
+
             // Validation badges matching showdetail
             // Resume presence detection & verification
             $candResume = trim((string) @$cand->resume);
@@ -3815,6 +3834,25 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cand->parsed_skills = $candDossier['skills'] ?? [];
             $cand->skills_authoritative = true;
             $cand->screening_qa = $candDossier['screening_qa'] ?? [];
+
+            // Authoritative Location from PrescreenDossierService (reconciled SSOT)
+            if (! empty($candDossier['location_text']) && $candDossier['location_text'] !== '--') {
+                $cand->location_text = $candDossier['location_text'];
+                $cand->current_location = $candDossier['location_text'];
+                $cand->location = $candDossier['location_text'];
+                if (! empty($candDossier['city'])) {
+                    $cand->city_name = $candDossier['city'];
+                    $cand->city = $candDossier['city'];
+                }
+                if (! empty($candDossier['state'])) {
+                    $cand->state_name = $candDossier['state'];
+                    $cand->state = $candDossier['state'];
+                }
+                if (! empty($candDossier['country'])) {
+                    $cand->country_name = $candDossier['country'];
+                    $cand->country = $candDossier['country'];
+                }
+            }
             $cand->dossier_fingerprint = $candDossier['fingerprint'] ?? '';
 
             // Resume presence detection & verification

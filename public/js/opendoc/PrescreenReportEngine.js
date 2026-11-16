@@ -153,6 +153,65 @@
     var countryName = clean(cand.country_name || cand.country || cand.countryName, '');
     if (/^\d+$/.test(countryName)) countryName = '';
 
+    var rawLoc = clean(cand.location_text || cand.current_location || cand.location, '');
+    if (/^\d+$/.test(rawLoc)) rawLoc = '';
+
+    // Known City -> { state, country } Reconciliation SSOT Dictionary (Zero-Desync Defense)
+    var knownCityStateMap = {
+      'noida': { state: 'Uttar Pradesh', country: 'India' },
+      'greater noida': { state: 'Uttar Pradesh', country: 'India' },
+      'gurgaon': { state: 'Haryana', country: 'India' },
+      'gurugram': { state: 'Haryana', country: 'India' },
+      'gurgaon/gurugram': { state: 'Haryana', country: 'India' },
+      'gurugram/gurgaon': { state: 'Haryana', country: 'India' },
+      'bengaluru': { state: 'Karnataka', country: 'India' },
+      'bangalore': { state: 'Karnataka', country: 'India' },
+      'hyderabad': { state: 'Telangana', country: 'India' },
+      'pune': { state: 'Maharashtra', country: 'India' },
+      'mumbai': { state: 'Maharashtra', country: 'India' },
+      'chennai': { state: 'Tamil Nadu', country: 'India' },
+      'kolkata': { state: 'West Bengal', country: 'India' },
+      'vadodara': { state: 'Gujarat', country: 'India' },
+      'visakhapatnam': { state: 'Andhra Pradesh', country: 'India' },
+      'anand': { state: 'Gujarat', country: 'India' },
+      'ahmedabad': { state: 'Gujarat', country: 'India' },
+      'lucknow': { state: 'Uttar Pradesh', country: 'India' },
+      'jaipur': { state: 'Rajasthan', country: 'India' },
+      'indore': { state: 'Madhya Pradesh', country: 'India' },
+      'kochi': { state: 'Kerala', country: 'India' },
+      'chandigarh': { state: 'Chandigarh', country: 'India' },
+      'bhubaneswar': { state: 'Odisha', country: 'India' },
+      'san francisco': { state: 'California', country: 'United States' },
+      'new york': { state: 'New York', country: 'United States' },
+      'new york city': { state: 'New York', country: 'United States' },
+      'seattle': { state: 'Washington', country: 'United States' },
+      'austin': { state: 'Texas', country: 'United States' },
+      'boston': { state: 'Massachusetts', country: 'United States' },
+      'chicago': { state: 'Illinois', country: 'United States' },
+      'london': { state: 'England', country: 'United Kingdom' },
+      'dubai': { state: 'Dubai', country: 'United Arab Emirates' },
+      'singapore': { state: 'Central Singapore', country: 'Singapore' },
+      'toronto': { state: 'Ontario', country: 'Canada' },
+      'sydney': { state: 'New South Wales', country: 'Australia' }
+    };
+
+    var normCity = cityName.toLowerCase().trim();
+    if (knownCityStateMap[normCity]) {
+      var hubInfo = knownCityStateMap[normCity];
+      stateName = hubInfo.state;
+      if (!countryName) countryName = hubInfo.country;
+    } else if (!cityName && rawLoc) {
+      var rParts = rawLoc.split(',').map(function (p) { return p.trim(); });
+      if (rParts.length > 0) {
+        var rFirst = rParts[0].toLowerCase();
+        if (knownCityStateMap[rFirst]) {
+          cityName = rParts[0];
+          stateName = knownCityStateMap[rFirst].state;
+          if (!countryName) countryName = knownCityStateMap[rFirst].country;
+        }
+      }
+    }
+
     var locParts = [cityName, stateName, countryName].filter(function (p) {
       return p && p !== '--' && !/^\d+$/.test(p);
     });
@@ -167,9 +226,6 @@
         uniqueLocParts.push(p);
       }
     });
-
-    var rawLoc = clean(cand.location_text || cand.current_location || cand.location, '');
-    if (/^\d+$/.test(rawLoc)) rawLoc = '';
 
     var finalLocation = uniqueLocParts.length >= 2
       ? uniqueLocParts.join(', ')

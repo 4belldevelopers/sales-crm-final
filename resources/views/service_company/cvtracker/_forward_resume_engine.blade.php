@@ -2943,6 +2943,13 @@
             designation: sf.designation,
             company: sf.company,
             location: sf.location,
+            city: candidate.city_name || candidate.city || '',
+            state: candidate.state_name || candidate.state || '',
+            country: candidate.country_name || candidate.country || '',
+            city_name: candidate.city_name || candidate.city || '',
+            state_name: candidate.state_name || candidate.state || '',
+            country_name: candidate.country_name || candidate.country || '',
+            location_text: candidate.location_text || sf.location || '',
             experience: sf.experience,
             notice: sf.noticePeriod,
             education: sf.education,
@@ -2987,7 +2994,7 @@
     });
     var rawLoc = candidate.current_location || candidate.location ? String(candidate.current_location || candidate.location).trim() : '';
     if (/^\d+$/.test(rawLoc)) rawLoc = '';
-    var formattedLocation = rawLoc || (locParts.length ? locParts.join(', ') : 'Not Specified');
+    var formattedLocation = locParts.length >= 2 ? locParts.join(', ') : (rawLoc || (locParts.length ? locParts.join(', ') : 'Not Specified'));
 
     var exp = candidate.experience;
     if (!exp && candidate.total_exp) {
@@ -3095,6 +3102,13 @@
       designation: candidate.current_designation || candidate.designation || '',
       company: candidate.current_company || candidate.company || 'Not Specified',
       location: formattedLocation,
+      city: cityName,
+      state: stateName,
+      country: countryName,
+      city_name: cityName,
+      state_name: stateName,
+      country_name: countryName,
+      location_text: formattedLocation,
       experience: exp,
       notice: rawNotice,
       education: eduStr,

@@ -4076,13 +4076,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $location_find = '';
         /* Intent: Canonical Location Resolution Engine Fast-Path (0% MySQL Reads, CQRS Compliant) */
         if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
-            $cityID = (int) $request->location_city_id;
-            $stateId = (int) $request->location_state_id;
-            $countryID = (int) ($request->location_country_id ?: 101);
+            $locAuth = GeneralMethod::resolveAuthoritativeLocationHierarchy(
+                $request->location_city_id,
+                $request->location_state_id,
+                $request->location_country_id
+            );
+            $cityID = $locAuth['city_id'];
+            $stateId = $locAuth['state_id'];
+            $countryID = $locAuth['country_id'];
             $location_find = (string) $request->location_canonical_label;
-            if ($cityID > 0 && $stateId <= 0) {
-                $stateId = (int) GeneralMethod::stateId($cityID);
-            }
         } else {
             $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
             if ($workLocation !== null) {
@@ -5038,6 +5040,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $jobApplication->city_id = $request->city_id;
         } else {
             $jobApplication->city = $request->city;
+        }
+
+        if (! empty($jobApplication->city_id) && (int) $jobApplication->city_id > 0) {
+            $locAuth = GeneralMethod::resolveAuthoritativeLocationHierarchy($jobApplication->city_id, $jobApplication->state, $jobApplication->country);
+            $jobApplication->state = $locAuth['state_id'];
+            if ($locAuth['country_id'] > 0) {
+                $jobApplication->country = $locAuth['country_id'];
+            }
         }
 
         if ($request->hasFile('photo')) {
@@ -8689,13 +8699,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $location_find = '';
         /* Intent: Canonical Location Resolution Engine Fast-Path (0% MySQL Reads, CQRS Compliant) */
         if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
-            $cityID = (int) $request->location_city_id;
-            $stateId = (int) $request->location_state_id;
-            $countryID = (int) ($request->location_country_id ?: 101);
+            $locAuth = GeneralMethod::resolveAuthoritativeLocationHierarchy(
+                $request->location_city_id,
+                $request->location_state_id,
+                $request->location_country_id
+            );
+            $cityID = $locAuth['city_id'];
+            $stateId = $locAuth['state_id'];
+            $countryID = $locAuth['country_id'];
             $location_find = (string) $request->location_canonical_label;
-            if ($cityID > 0 && $stateId <= 0) {
-                $stateId = (int) GeneralMethod::stateId($cityID);
-            }
         } else {
             $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
             if ($workLocation !== null) {
@@ -13923,12 +13935,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $countryID = '';
         /* Intent: Canonical Location Resolution Engine Fast-Path (0% MySQL Reads, CQRS Compliant) */
         if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
-            $cityID = (int) $request->location_city_id;
-            $stateId = (int) $request->location_state_id;
-            $countryID = (int) ($request->location_country_id ?: 101);
-            if ($cityID > 0 && $stateId <= 0) {
-                $stateId = (int) GeneralMethod::stateId($cityID);
-            }
+            $locAuth = GeneralMethod::resolveAuthoritativeLocationHierarchy(
+                $request->location_city_id,
+                $request->location_state_id,
+                $request->location_country_id
+            );
+            $cityID = $locAuth['city_id'];
+            $stateId = $locAuth['state_id'];
+            $countryID = $locAuth['country_id'];
         } else {
             $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
             if ($workLocation !== null) {
