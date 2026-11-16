@@ -366,6 +366,10 @@ class PrescreenReportDataIntegrityTest extends TestCase
         DB::table('countries')->updateOrInsert(['id' => 101], ['country_name' => 'India']);
         DB::table('state_list')->updateOrInsert(['id' => 4030], ['state' => 'Gujarat', 'country_id' => 101]);
         DB::table('city_list')->updateOrInsert(['city_id' => 57695], ['city' => 'Anand', 'state_id' => 4030]);
+        DB::table('state_list')->updateOrInsert(['id' => 4022], ['state' => 'Uttar Pradesh', 'country_id' => 101]);
+        DB::table('city_list')->updateOrInsert(['city_id' => 133230], ['city' => 'Noida', 'state_id' => 4022]);
+        DB::table('state_list')->updateOrInsert(['id' => 4007], ['state' => 'Haryana', 'country_id' => 101]);
+        DB::table('city_list')->updateOrInsert(['city_id' => 132032], ['city' => 'Gurgaon/gurugram', 'state_id' => 4007]);
 
         // Candidate with city_id = 57695 and state = 0 (reproducing the exact reported issue)
         $cand = (object) [
@@ -395,6 +399,40 @@ class PrescreenReportDataIntegrityTest extends TestCase
         $this->assertSame('Anand, Gujarat, India', $d['location_text']);
         $this->assertSame('2.0 Years', $d['total_exp_display']);
         $this->assertSame('1.0 Year', $d['rel_exp_display']);
+
+        // Verify Authoritative Hierarchy Resolution and conflicting state override (SSOT Invariant)
+        $noidaAuth = \App\Helper\GeneralMethod::resolveAuthoritativeLocationHierarchy(133230, 4031, 101);
+        $this->assertSame(4022, $noidaAuth['state_id'], 'Noida must resolve to Uttar Pradesh (4022), overriding client-passed Chandigarh (4031).');
+        $this->assertSame('Uttar Pradesh', $noidaAuth['state_name']);
+
+        $gurgaonAuth = \App\Helper\GeneralMethod::resolveAuthoritativeLocationHierarchy(132032, 4013, 101);
+        $this->assertSame(4007, $gurgaonAuth['state_id'], 'Gurgaon must resolve to Haryana (4007), overriding client-passed Odisha (4013).');
+        $this->assertSame('Haryana', $gurgaonAuth['state_name']);
+
+        // Verify Candidate Location Hierarchy self-healing on contradictory records
+        $corruptedNoida = (object) [
+            'city_id' => 133230,
+            'city' => 'Noida',
+            'state' => 4031, // Corrupted Chandigarh
+            'country' => 101,
+        ];
+        $healedNoida = \App\Helper\GeneralMethod::resolveCandidateLocationHierarchy($corruptedNoida);
+        $this->assertSame('Noida', $healedNoida['city']);
+        $this->assertSame('Uttar Pradesh', $healedNoida['state']);
+        $this->assertSame('India', $healedNoida['country']);
+        $this->assertSame('Noida, Uttar Pradesh, India', $healedNoida['location_text']);
+
+        $corruptedGurgaon = (object) [
+            'city_id' => 132032,
+            'city' => 'Gurgaon/gurugram',
+            'state' => 4013, // Corrupted Odisha
+            'country' => 101,
+        ];
+        $healedGurgaon = \App\Helper\GeneralMethod::resolveCandidateLocationHierarchy($corruptedGurgaon);
+        $this->assertSame('Gurgaon/Gurugram', $healedGurgaon['city']);
+        $this->assertSame('Haryana', $healedGurgaon['state']);
+        $this->assertSame('India', $healedGurgaon['country']);
+        $this->assertSame('Gurgaon/Gurugram, Haryana, India', $healedGurgaon['location_text']);
     }
 
     public function test_prescreen_report_skills_fallback_and_decoupled_contract(): void
