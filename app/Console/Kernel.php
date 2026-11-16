@@ -190,6 +190,13 @@ class Kernel extends ConsoleKernel
             ->dailyAt('03:45')
             ->withoutOverlapping(10)
             ->runInBackground();
+
+        // Monthly Leaderboard: Calculate and publish authoritative previous calendar month leaderboard by evening cutoff (6:00 PM IST)
+        $schedule->command('leaderboard:publish-monthly')
+            ->dailyAt('18:00')
+            ->timezone('Asia/Kolkata')
+            ->withoutOverlapping(30)
+            ->runInBackground();
     }
 
     protected function commands()

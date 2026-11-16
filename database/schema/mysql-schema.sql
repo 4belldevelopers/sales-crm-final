@@ -5093,6 +5093,18 @@ CREATE TABLE `custom_plan_request_logs` (
   CONSTRAINT `custom_plan_request_logs_custom_plan_request_id_foreign` FOREIGN KEY (`custom_plan_request_id`) REFERENCES `custom_plan_requests` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-
-
+DROP TABLE IF EXISTS `company_monthly_leaderboards`;
+CREATE TABLE `company_monthly_leaderboards` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `period_month` varchar(7) NOT NULL COMMENT 'Format YYYY-MM, e.g. 2026-10',
+  `leaderboard_data` longtext NOT NULL COMMENT 'JSON array of ranked members',
+  `total_members` int(11) NOT NULL DEFAULT 0,
+  `status` enum('draft','published') NOT NULL DEFAULT 'published',
+  `published_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_company_period` (`company_id`,`period_month`),
+  KEY `idx_company_status` (`company_id`,`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
