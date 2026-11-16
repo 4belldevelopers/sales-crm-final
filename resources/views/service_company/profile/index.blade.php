@@ -1492,7 +1492,7 @@ body
             </div>
           </div>
 
-          <div class="scp-kpi-subcard" onclick="$('.scp-tab-link[href=\'#candidate\']').trigger('click');" title="View Offers">
+          <div class="scp-kpi-subcard" onclick="$('.scp-tab-link[href=\'#offers\']').trigger('click');" title="View Offers">
             <div class="scp-kpi-ic-box scp-kpi-ic-indigo">
               <i class="bi bi-award"></i>
             </div>
@@ -1746,6 +1746,13 @@ if (! empty($str)) {
                 <i class="bi bi-calendar-event"></i>
                 <span class="scp-tab-text">Interviews</span>
                 <span class="scp-tab-badge">{{ number_format($scp_intv) }}</span>
+              </a>
+            </li>
+            <li class="nav-item scp-tab-item" onclick="if(typeof offertableLoad==='function'){ offertableLoad('{{ @$users->id }}'); }" title="My Offers">
+              <a class="nav-link scp-tab-link" data-toggle="tab" data-bs-toggle="tab" role="tab" href="#offers">
+                <i class="bi bi-award"></i>
+                <span class="scp-tab-text">Offers</span>
+                <span class="scp-tab-badge">{{ number_format($scp_offers) }}</span>
               </a>
             </li>
             <li class="nav-item scp-tab-item" onclick="if(typeof jointableLoad==='function'){ jointableLoad('{{ @$users->id }}'); }" title="My Joinings">
@@ -2329,20 +2336,63 @@ if (! empty($str)) {
               <!--end::Interview Tracker Content-->
             </div>
             <!--end::Interview Tracker  Content-->
+            <!--begin::Offers Content-->
+            <div class="tab-pane" id="offers" role="tabpanel">
+              <div class="card-body px-0 py-7">
+
+                  <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
+                        <div class="col-lg-4 d-flex align-items-center px-2" style="width:60%;position: relative;">
+                          <input type="text" class="form-control form-control-solid ps-3" name="offerinputJobSearch" value="" placeholder="Search..." id="offer_kt_tagify_2" />
+                          <div style="position: absolute; top: 0px; right: 36px;">
+                            <div id="loader_search_offer" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
+                        </div>
+
+                        </div>
+                        <div class="col-lg-2 d-flex align-items-center px-2" style="width: 25%;">
+                          <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="offersortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdatagetoffer()">
+                              <option value="Show All" selected="">Sort</option>
+                              <option value="12">Newest to Oldest (Offer Date)</option>
+                              <option value="13">Oldest to Newest (Offer Date)</option>
+                              <option value="14">Low to High (Offer Amount)</option>
+                              <option value="15">High to Low (Offer Amount)</option>
+                          </select>
+                        </div>
+                        <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
+                          <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="offer_country" data-dropdown-css-class="w-150px" data-placeholder="Select an option" data-kt-table-widget-3="filter_status" style="border: 1px solid #ffffff;" onchange="filtersdatagetoffer()">
+                              <option value="" selected="selected">Location</option>
+                              @if(@$countries)
+                                  @foreach($countries as $val_co)
+                                  <option value="{{ $val_co->id }}">{{ $val_co->country_name }}</option>
+                                  @endforeach
+                              @endif
+                          </select>
+                        </div>
+                  </div>
+
+                <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
+                <table id="myTable_offers" class="table align-middle table-row-dashed fs-6 gy-5">
+                  <thead>
+                    <tr class="fw-bolder text-muted" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                      <th class="w-10px pe-0"> <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                          <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#myTable_offers .form-check-input" value="1" />
+                        </div></th>
+                      <th class="">Name</th>
+                      <th class="">Jobs</th>
+                      <th class="">Job Status</th>
+                      <th class="">Source</th>
+                      <th class="">Offer Amount</th>
+                      <th class="">Offer Date</th>
+                      <th class="">Stage</th>
+                    </tr>
+                  </thead>
+                  <tbody id="teamoffersJobsListajax"> </tbody>
+                </table>
+                <div id="paginationteamoffersjobs"></div>
+              </div>
+            </div>
+            <!--end::Offers Content-->
             <!--begin::Joinings Content-->
             <div class="tab-pane" id="joinings" role="tabpanel">
-              <!--begin::Joinings header-->
-              {{-- <div class="card-header cursor-pointer px-0"> --}}
-                <!--begin::Card title-->
-                {{-- <div class="card-title m-0">
-                  <h3 class="fw-bolder m-0">Joinings</h3>
-                </div> --}}
-                <!--end::Card title-->
-                <!--begin::Action-->
-                <!-- <a href="javascript:void(0);" class="btn btn-primary align-self-center">Add Stage</a> -->
-                <!--end::Action-->
-              {{-- </div> --}}
-              <!--end::Joinings header-->
               <!--begin::Joinings Content-->
               <div class="card-body px-0 py-7">
 
@@ -2380,7 +2430,7 @@ if (! empty($str)) {
                 <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
                 <table id="myTable_joining" class="table align-middle table-row-dashed fs-6 gy-5">
                   <thead>
-                    <tr class="fw-bolder text-muted">
+                    <tr class="fw-bolder text-muted" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                       <th class="w-10px pe-0"> <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
                           <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_table_users .form-check-input" value="1" />
                         </div></th>
@@ -2978,6 +3028,7 @@ if (! empty($str)) {
     <div class="card-body position-relative px-0 py-0" id="kt_activitiesJob_body"></div>
   </div>
 </div>
+<div id="offer_stage_sub_stage" data-toggle="modal" data-target="#stage_sub_stage"></div>
 <div id="joining_stage_sub_stage" data-toggle="modal" data-target="#stage_sub_stage"></div>
 <div id="interview_stage_sub_stage" data-toggle="modal" data-target="#stage_sub_stage"></div>
 <div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
@@ -3008,6 +3059,7 @@ if (! empty($str)) {
     <!--end::Modal content-->
   </div>
 </div>
+<div id="offer_client_stage_sub_stage" data-toggle="modal" data-target="#client_stage_sub_stage"></div>
 <div id="joining_client_stage_sub_stage" data-toggle="modal" data-target="#client_stage_sub_stage"></div>
 <div id="interview_client_stage_sub_stage" data-toggle="modal" data-target="#client_stage_sub_stage"></div>
 <div class="modal fade" id="client_stage_sub_stage" tabindex="-1" aria-hidden="true">
@@ -3394,11 +3446,20 @@ $(document).ready(function() {
 <script>
    
    var jointable;
-  //  jointableLoad('load');
    function jointableLoad()
    {
-      return false;
-      var userId		=	$('#userId').val();
+      if (typeof fetchTeamCandidateJoining === 'function') {
+         fetchTeamCandidateJoining();
+      }
+      return true;
+   }
+   function offertableLoad()
+   {
+      if (typeof fetchTeamCandidateOffers === 'function') {
+         fetchTeamCandidateOffers();
+      }
+      return true;
+   }
       jointable = $('#myTable_joining').dataTable(
       {
         responsive  	: true,
@@ -4205,6 +4266,8 @@ $(document).ready(function() {
         fetchTeamJobs();
       } else if (tabKey === 'candidate') {
         fetchTeamCandidate();
+      } else if (tabKey === 'offers') {
+        fetchTeamCandidateOffers();
       } else if (tabKey === 'joinings') {
         fetchTeamCandidateJoining();
       } else if (tabKey === 'interview_tracker') {
@@ -4300,6 +4363,22 @@ $(document).ready(function() {
                 $('#paginationTeamtCandidates .pagi-page, #paginationTeamtCandidates .pagi-arrow, #paginationTeamtCandidates .page-link, #paginationTeamtCandidates .team-page-link').removeClass('disabled pagi-disabled');
             }).catch(() => {
                 $('#paginationTeamtCandidates .pagi-page, #paginationTeamtCandidates .pagi-arrow, #paginationTeamtCandidates .page-link, #paginationTeamtCandidates .team-page-link').removeClass('disabled pagi-disabled');
+            });
+    });
+
+    $(document).off('click.profilePaginate', '#paginationteamoffersjobs .pagi-page, #paginationteamoffersjobs .pagi-arrow, #paginationteamoffersjobs .page-link, #paginationteamoffersjobs .team-page-link')
+               .on('click.profilePaginate', '#paginationteamoffersjobs .pagi-page, #paginationteamoffersjobs .pagi-arrow, #paginationteamoffersjobs .page-link, #paginationteamoffersjobs .team-page-link', function(e) {
+            e.preventDefault();
+
+            const page = $(this).data('page');
+            if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
+
+            $(this).addClass('disabled pagi-disabled');
+
+            fetchTeamCandidateOffers(page).then(() => {
+                $('#paginationteamoffersjobs .pagi-page, #paginationteamoffersjobs .pagi-arrow, #paginationteamoffersjobs .page-link, #paginationteamoffersjobs .team-page-link').removeClass('disabled pagi-disabled');
+            }).catch(() => {
+                $('#paginationteamoffersjobs .pagi-page, #paginationteamoffersjobs .pagi-arrow, #paginationteamoffersjobs .page-link, #paginationteamoffersjobs .team-page-link').removeClass('disabled pagi-disabled');
             });
     });
 
@@ -4427,6 +4506,43 @@ function fetchTeamCandidate(page = 1, search = '') {
         });
         if (window.ProfileTabManager) window.ProfileTabManager.registerRequest('candidate', xhr);
         return xhr;
+}
+function fetchTeamCandidateOffers(page = 1, search = '') {
+  var t0 = performance.now();
+  var userId  = '{{ @$users->id }}';
+  var seq = window.ProfileTabManager ? window.ProfileTabManager.nextSequence('offers') : 0;
+  var sortingfilter = $('#offersortingfilter').val();
+  var country = $('#offer_country').val();
+  var cus_search = $('#offer_kt_tagify_2').val();
+  $('.loadingMessage').css({ display: 'block' });
+  var xhr = $.ajax({
+      url: `{!! route('service_company.team.offerdata_ajax') !!}?page=${page}`,
+      type: 'GET',
+      data: {
+          userId: userId,
+          sortingfilter: sortingfilter,
+          country: country,
+          cus_search: cus_search
+      },
+      success: function(response) {
+          if (window.ProfileTabManager && !window.ProfileTabManager.isLatestSequence('offers', seq)) {
+              return;
+          }
+          var dur = Math.round(performance.now() - t0);
+          if (window.__profileTelemetry) window.__profileTelemetry.recordTabLoad('my_offers', dur);
+          $('.loadingMessage').css({ display: 'none' });
+          $('#teamoffersJobsListajax').html(response.html);
+          $('#paginationteamoffersjobs').html(response.pagination);
+          if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('offers');
+      },
+      error: function(jqXHR, textStatus) {
+          if (textStatus === 'abort') return;
+          $('.loadingMessage').css({ display: 'none' });
+          if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('offers');
+      }
+  });
+  if (window.ProfileTabManager) window.ProfileTabManager.registerRequest('offers', xhr);
+  return xhr;
 }
 function fetchTeamCandidateJoining(page = 1, search = '') {
   var t0 = performance.now();
@@ -4575,6 +4691,16 @@ var elInterviewSearch = document.getElementById('interviewtracker_kt_tagify_2');
 if (elInterviewSearch) {
     elInterviewSearch.addEventListener('keyup', profileDebounce(function() {
         fetchTeamCandidateInterviewTracker();
+    }, 350));
+}
+
+function filtersdatagetoffer() {
+     fetchTeamCandidateOffers();
+}
+var elOfferSearch = document.getElementById('offer_kt_tagify_2');
+if (elOfferSearch) {
+    elOfferSearch.addEventListener('keyup', profileDebounce(function() {
+        fetchTeamCandidateOffers();
     }, 350));
 }
 

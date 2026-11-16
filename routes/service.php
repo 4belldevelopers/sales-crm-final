@@ -572,6 +572,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('team_ajax_intdata/intdata', [ServiceCompanyTeamController::class, 'intdata_ajax'])->name('team.intdata_ajax');
                 Route::get('team/joiningdata', [ServiceCompanyTeamController::class, 'joiningdata'])->name('team.joiningdata');
                 Route::get('team_ajax_joiningdata/joiningdata', [ServiceCompanyTeamController::class, 'joiningdata_ajax'])->name('team.joiningdata_ajax');
+                Route::get('team_ajax_offerdata/offerdata', [ServiceCompanyTeamController::class, 'offerdata_ajax'])->name('team.offerdata_ajax');
                 Route::get('team/data', [ServiceCompanyTeamController::class, 'data'])->name('team.data');
                 Route::get('team_ajax/data', [ServiceCompanyTeamController::class, 'data_ajax'])->name('team.data_ajax');
                 Route::get('team/editrole/{id?}', [ServiceCompanyTeamController::class, 'editrole'])->name('team.editrole');
