@@ -7717,6 +7717,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $offer_id = $request->offer_id;
         $yearly_gross = 0;
         $yearly_final_gross = 0;
+        $option_currency_val = ($request->has('current_ctc_cur') && $request->current_ctc_cur !== '' && $request->current_ctc_cur !== null) ? (int) $request->current_ctc_cur : null;
+        $current_ctc_mode = ($request->has('current_ctc_mode') && $request->current_ctc_mode !== '' && $request->current_ctc_mode !== null) ? (int) $request->current_ctc_mode : null;
+        $joined_date = $request->filled('dob') ? date('Y-m-d H:i:s', strtotime($request->dob)) : null;
+        $ctc = $request->filled('ctc') ? $request->ctc : null;
+        $confidential = $request->filled('confidential') ? (int) $request->confidential : null;
+
         $this->section_change_value = OfferJobApplication::join('offer_create_main_tds', 'offer_create_main_tds.offer_id', '=', 'offer_job_applications.id')->select('offer_create_main_tds.*', 'offer_job_applications.id as offer_id_main')->where('offer_job_applications.id', $offer_id)->where('offer_create_main_tds.status', '=', 1)->first();
         if ($this->section_change_value) {
             $offerPermision = 64;
@@ -7852,92 +7858,98 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ->select('joined as wiseId')
                     ->where('id', $offer_id)
                     ->first();
-                $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($offer_job_applications->wiseId);
+                $AddJobWiseCondidate = ($offer_job_applications && ! empty($offer_job_applications->wiseId))
+                    ? AddJobWiseCondidate::withoutGlobalScopes()->find($offer_job_applications->wiseId)
+                    : null;
 
-                $spok_user_id_rows = DB::table('job_assign')
-                    ->where('job_id', $AddJobWiseCondidate->job_id)
-                    ->get(['spok_user_id', 'company_id'])->toArray();
+                if ($AddJobWiseCondidate) {
+                    $spok_user_id_rows = DB::table('job_assign')
+                        ->where('job_id', $AddJobWiseCondidate->job_id)
+                        ->get(['spok_user_id', 'company_id'])->toArray();
 
-                // Step 2: Build result as [company_id => spok_user_id]
-                $teamCaptainId = [];
+                    // Step 2: Build result as [company_id => spok_user_id]
+                    $teamCaptainId = [];
 
-                foreach ($spok_user_id_rows as $row) {
-                    if (
-                        ! is_null($row->spok_user_id) &&
-                        $row->spok_user_id != $AddJobWiseCondidate->submitted_by
-                    ) {
-                        $teamCaptainId[$row->company_id][] = $row->spok_user_id;
+                    foreach ($spok_user_id_rows as $row) {
+                        if (
+                            ! is_null($row->spok_user_id) &&
+                            $row->spok_user_id != $AddJobWiseCondidate->submitted_by
+                        ) {
+                            $teamCaptainId[$row->company_id][] = $row->spok_user_id;
+                        }
                     }
-                }
 
-                // Step 3: Remove duplicates and reindex inner arrays
-                foreach ($teamCaptainId as $companyId => $spokIds) {
-                    $teamCaptainId[$companyId] = array_values(array_unique($spokIds));
-                }
+                    // Step 3: Remove duplicates and reindex inner arrays
+                    foreach ($teamCaptainId as $companyId => $spokIds) {
+                        $teamCaptainId[$companyId] = array_values(array_unique($spokIds));
+                    }
 
-                $join_update_date_check = date('Y-m-d H:i:s', strtotime($request->dob));
-                $join_update_date_check = Carbon::parse($join_update_date_check);
-                $today = Carbon::today();
-                $diffInDays = abs($today->diffInDays($join_update_date_check));
+                    // Every offer release counts (no 30-day window), so offers always reconcile with joins
+                    $offerReleasedUser = 300;
+                    $offerReleasedTeam = 20;
 
-                // Every offer release counts (no 30-day window), so offers always reconcile with joins
-                // (which are ungated). Product decision 2026-06-30 — fix applies going forward.
-                $offerReleasedUser = 300;
-                $offerReleasedTeam = 20;
+                    $teamCaptainId = array_map(function ($arr) {
+                        return array_values(array_filter($arr, function ($value) {
+                            return $value != 0;
+                        }));
+                    }, $teamCaptainId);
 
-                $teamCaptainId = array_map(function ($arr) {
-                    return array_values(array_filter($arr, function ($value) {
-                        return $value != 0;
-                    }));
-                }, $teamCaptainId);
+                    if (count($teamCaptainId) > 0) {
+                        foreach ($teamCaptainId as $comId => $captainId) {
+                            if (! empty($captainId[0])) {
+                                $teamRankElastic = [
+                                    'company_id' => $comId,
+                                    'user_id' => $captainId[0],
+                                    'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
+                                    'profileUpload' => 0,
+                                    'interviewScheduled' => 0,
+                                    'interviewNoShow' => 0,
+                                    'offerReleased' => 0,
+                                    'candidateJoined' => 0,
+                                    'jobsPosted' => 0,
+                                    'feedbackGivenOnCVs' => 0,
+                                    'postJobToVendorMarket' => 0,
+                                    'outsourceJobsToVendors' => 0,
+                                    'listBenchCandidates' => 0,
+                                    'respondToBenchRequests' => 0,
+                                    'interestedCandidates' => 0,
+                                    'notInterestedCandidates' => 0,
+                                    'teamCaptainInterviewScheduled' => 0,
+                                    'teamCaptainInterviewNoShow' => 0,
+                                    'teamCaptainOfferReleased' => $offerReleasedTeam,
+                                    'teamCaptainCandidateJoined' => 0,
+                                ];
+                                try {
+                                    GeneralMethod::teamRankElastic($teamRankElastic);
+                                } catch (\Throwable $eRank) {
+                                    \Log::warning('[saveCreateOffer] teamRankElastic team error: '.$eRank->getMessage());
+                                }
+                            }
+                        }
+                    }
 
-                if (count($teamCaptainId) > 0) {
-
-                    foreach ($teamCaptainId as $comId => $captainId) {
-                        $teamRankElastic = [
-                            'company_id' => $comId,
-                            'user_id' => $captainId[0],
-                            'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
-                            'profileUpload' => 0,
-                            'interviewScheduled' => 0,
-                            'interviewNoShow' => 0,
-                            'offerReleased' => 0,
-                            'candidateJoined' => 0,
-                            'jobsPosted' => 0,
-                            'feedbackGivenOnCVs' => 0,
-                            'postJobToVendorMarket' => 0,
-                            'outsourceJobsToVendors' => 0,
-                            'listBenchCandidates' => 0,
-                            'respondToBenchRequests' => 0,
-                            'interestedCandidates' => 0,
-                            'notInterestedCandidates' => 0,
-                            'teamCaptainInterviewScheduled' => 0,
-                            'teamCaptainInterviewNoShow' => 0,
-                            'teamCaptainOfferReleased' => $offerReleasedTeam,
-                            'teamCaptainCandidateJoined' => 0,
-                        ];
+                    $teamRankElastic = [
+                        'company_id' => $AddJobWiseCondidate->company_id,
+                        'user_id' => $AddJobWiseCondidate->submitted_by,
+                        'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
+                        'profileUpload' => 0,
+                        'interviewScheduled' => 0,
+                        'interviewNoShow' => 0,
+                        'offerReleased' => $offerReleasedUser,
+                        'candidateJoined' => 0,
+                        'jobsPosted' => 0,
+                        'feedbackGivenOnCVs' => 0,
+                        'postJobToVendorMarket' => 0,
+                        'outsourceJobsToVendors' => 0,
+                        'listBenchCandidates' => 0,
+                        'respondToBenchRequests' => 0,
+                    ];
+                    try {
                         GeneralMethod::teamRankElastic($teamRankElastic);
+                    } catch (\Throwable $eRank) {
+                        \Log::warning('[saveCreateOffer] teamRankElastic user error: '.$eRank->getMessage());
                     }
-
                 }
-
-                $teamRankElastic = [
-                    'company_id' => $AddJobWiseCondidate->company_id,
-                    'user_id' => $AddJobWiseCondidate->submitted_by,
-                    'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
-                    'profileUpload' => 0,
-                    'interviewScheduled' => 0,
-                    'interviewNoShow' => 0,
-                    'offerReleased' => $offerReleasedUser,
-                    'candidateJoined' => 0,
-                    'jobsPosted' => 0,
-                    'feedbackGivenOnCVs' => 0,
-                    'postJobToVendorMarket' => 0,
-                    'outsourceJobsToVendors' => 0,
-                    'listBenchCandidates' => 0,
-                    'respondToBenchRequests' => 0,
-                ];
-                GeneralMethod::teamRankElastic($teamRankElastic);
             }
 
             if ($exits_offer) {
@@ -7969,25 +7981,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
                 $offer_create_main_tds = [
                     'offer_id' => $offer_id,
-                    'currency' => $request->current_ctc_cur,
-                    'employment_type' => $request->employment_type,
-                    'salary_ctc' => $request->ctc,
-                    'salary_mode' => $request->current_ctc_mode,
+                    'currency' => $option_currency_val,
+                    'employment_type' => $request->filled('employment_type') ? (int) $request->employment_type : 0,
+                    'salary_ctc' => $request->filled('ctc') ? (float) $request->ctc : null,
+                    'salary_mode' => $current_ctc_mode,
                     'designation' => $request->current_designation,
-                    'joined_date' => date('Y-m-d H:i:s', strtotime($request->dob)),
-                    'joined' => '',
-                    'yearly_gross' => $request->totalhourlyhourly,
-                    'yearly_bonus_gross' => $request->totalhourlyybonus,
-                    'yearly_insurence_gross' => $request->totalYearlyinsurencehourly,
-                    'yearly_final_gross' => ($otherPoint) ? $request->finalpaytotalhourly : $request->totalhourlyhourly,
+                    'joined_date' => $joined_date,
+                    'joined' => null,
+                    'yearly_gross' => $request->filled('totalhourlyhourly') ? (float) $request->totalhourlyhourly : null,
+                    'yearly_bonus_gross' => $request->filled('totalhourlyybonus') ? (float) $request->totalhourlyybonus : null,
+                    'yearly_insurence_gross' => $request->filled('totalYearlyinsurencehourly') ? (float) $request->totalYearlyinsurencehourly : null,
+                    'yearly_final_gross' => ($otherPoint) ? ($request->filled('finalpaytotalhourly') ? (float) $request->finalpaytotalhourly : null) : ($request->filled('totalhourlyhourly') ? (float) $request->totalhourlyhourly : null),
                 ];
-                // $exits_offer_sign = DB::table('offer_create_main_tds')->where('offer_id','=',$offer_id)->where('signature_candidate','=',1)->orderByDesc('id')->first();
-                // if($exits_offer_sign){
-                // 	$offer_create_main_tds['signature_candidate'] = ($exits_offer->signature_candidate) ? $exits_offer->signature_candidate : '';
-                // 	$offer_create_main_tds['accept_date_time'] = ($exits_offer->accept_date_time) ? $exits_offer->accept_date_time : '';
-                // 	$offer_create_main_tds['approved_date_time'] = ($exits_offer->approved_date_time) ? $exits_offer->approved_date_time : '';
-                // 	$offer_create_main_tds['management_status'] = ($exits_offer->management_status) ? $exits_offer->management_status : '';
-                // }
+
                 $yearly_gross = $request->totalhourlyhourly;
                 $yearly_final_gross = ($otherPoint) ? $request->finalpaytotalhourly : $request->totalhourlyhourly;
                 // Insert the main offer data and get the ID
@@ -8047,28 +8053,27 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 // Prepare the main offer data
                 $offer_create_main_tds = [
                     'offer_id' => $offer_id,
-                    'currency' => $request->current_ctc_cur,
-                    'employment_type' => $request->employment_type,
-                    'salary_ctc' => $request->ctc,
-                    'salary_mode' => $request->current_ctc_mode,
+                    'currency' => $option_currency_val,
+                    'employment_type' => $request->filled('employment_type') ? (int) $request->employment_type : 0,
+                    'salary_ctc' => $request->filled('ctc') ? (float) $request->ctc : null,
+                    'salary_mode' => $current_ctc_mode,
                     'designation' => $request->current_designation,
-                    'joined_date' => date('Y-m-d H:i:s', strtotime($request->dob)),
-                    'joined' => '',
-                    'monthly_gross' => $request->totalMonthly,
-                    'yearly_gross' => $request->totalYearly,
-                    'monthly_bounus_gross' => $request->totalMonthlybonus,
-                    'yearly_bonus_gross' => $request->totalYearlybonus,
-                    'monthly_insurence_gross' => $request->totalMonthlyinsurence,
-                    'yearly_insurence_gross' => $request->totalYearlyinsurence,
-                    'monthly_final_gross' => $request->finalpaytotalMonthly,
-                    'yearly_final_gross' => ($otherPoint) ? $request->finalpaytotalYearly : $request->totalYearly,
+                    'joined_date' => $joined_date,
+                    'joined' => null,
+                    'monthly_gross' => $request->filled('totalMonthly') ? (float) $request->totalMonthly : null,
+                    'yearly_gross' => $request->filled('totalYearly') ? (float) $request->totalYearly : null,
+                    'monthly_bounus_gross' => $request->filled('totalMonthlybonus') ? (float) $request->totalMonthlybonus : null,
+                    'yearly_bonus_gross' => $request->filled('totalYearlybonus') ? (float) $request->totalYearlybonus : null,
+                    'monthly_insurence_gross' => $request->filled('totalMonthlyinsurence') ? (float) $request->totalMonthlyinsurence : null,
+                    'yearly_insurence_gross' => $request->filled('totalYearlyinsurence') ? (float) $request->totalYearlyinsurence : null,
+                    'monthly_final_gross' => $request->filled('finalpaytotalMonthly') ? (float) $request->finalpaytotalMonthly : null,
+                    'yearly_final_gross' => ($otherPoint) ? ($request->filled('finalpaytotalYearly') ? (float) $request->finalpaytotalYearly : null) : ($request->filled('totalYearly') ? (float) $request->totalYearly : null),
                 ];
                 $yearly_gross = $request->totalYearly;
                 $yearly_final_gross = ($otherPoint) ? $request->finalpaytotalYearly : $request->totalYearly;
+
                 // Insert the main offer data and get the ID
-                // dd($offer_create_main_tds);
                 $offer_create_main_td_id = DB::table('offer_create_main_tds')->insertGetId($offer_create_main_tds);
-                // dd($offer_create_main_tds);
 
                 // Check if offer points exist and insert them
                 if (! empty($request->offer_point)) {
@@ -8124,57 +8129,59 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             $Offertimelime = OfferJobApplication::withoutGlobalScopes()->find($offer_id);
+            if ($Offertimelime) {
+                $Offertimelime->confidential = $confidential;
+                $Offertimelime->offer_currency = $option_currency_val;
+                $Offertimelime->offer_mode = $current_ctc_mode;
+                $Offertimelime->offer_amount = ($yearly_final_gross !== '' && $yearly_final_gross !== null) ? (int) round((float) $yearly_final_gross) : null;
+                $Offertimelime->joined_date = $joined_date;
+                $Offertimelime->save();
+            }
 
-            $option_currency_val = @$request->current_ctc_cur;
-            $joined_date = @$request->dob ? date('Y-m-d H:i:s', strtotime(@$request->dob)) : 'NULL';
-            $ctc = @$request->ctc;
-            $current_ctc_mode = @$request->current_ctc_mode;
-            $confidential = @$request->confidential;
-            $Offertimelime->confidential = @$confidential;
-            $Offertimelime->offer_currency = @$option_currency_val ? @$option_currency_val : 'NULL';
-            $Offertimelime->offer_mode = @$current_ctc_mode ? @$current_ctc_mode : 'NULL';
-            $Offertimelime->offer_amount = @$yearly_final_gross ? @$yearly_final_gross : 'NULL';
-            $Offertimelime->joined_date = @$joined_date ? $joined_date : 'NULL';
-            $Offertimelime->save();
-
-            $exists = $this->elasticService->getClient()->exists([
-                'index' => ELASTIC_CANDIDATES,
-                'id' => $Offertimelime->joined,
-            ]);
-
-            // dd($Offertimelime->joined,$joined_date,$option_currency_val,$current_ctc_mode,$yearly_final_gross);
-            if ($exists) {
-
-                $updateTime = now()->toIso8601String();
-                $updateParams_e = [
-                    'index' => ELASTIC_CANDIDATES,
-                    'id' => $Offertimelime->joined,
-                    'body' => [
-                        'doc' => [
-                            'of_joined_date' => (! empty(@$joined_date) && @$joined_date != '0000-00-00 00:00:00') ? Carbon::parse(@$joined_date)->toIso8601String() : null,
-                            'of_offer_currency' => (int) @$option_currency_val,
-                            'of_offer_mode' => (int) @$current_ctc_mode,
-                            'of_offer_amount' => @$yearly_final_gross ? @$yearly_final_gross : 'NULL',
-                            'of_offer_acceptance' => 0,
-                            'of_employment_type' => $of_employment_type,
-                            'of_created_date' => $updateTime,
-                            'confidential' => $confidential,
-                            'updated_at' => $updateTime,
-                        ],
-                        'doc_as_upsert' => false, // Changed to false since we verified existence
-                    ],
-                    'refresh' => true, // Immediate consistency so Offer Tracker & CV Tracker reflect new values instantly
-                ];
-                // dd($updateParams);
-
-                $redudds = $this->elasticService->getClient()->update($updateParams_e);
-
-                if (@$Offertimelime->application_id) {
-                    GeneralMethod::elasticBenchCandidateAddEditIndex($Offertimelime->application_id);
+            $exists = false;
+            try {
+                if ($Offertimelime && ! empty($Offertimelime->joined)) {
+                    $exists = $this->elasticService->getClient()->exists([
+                        'index' => ELASTIC_CANDIDATES,
+                        'id' => $Offertimelime->joined,
+                    ]);
                 }
+            } catch (\Throwable $esEx) {
+                \Log::warning('[saveCreateOffer] Elastic exists check error: '.$esEx->getMessage());
+                $exists = false;
+            }
 
-                // dd($redudds);
+            if ($exists) {
+                try {
+                    $updateTime = now()->toIso8601String();
+                    $updateParams_e = [
+                        'index' => ELASTIC_CANDIDATES,
+                        'id' => $Offertimelime->joined,
+                        'body' => [
+                            'doc' => [
+                                'of_joined_date' => (! empty($joined_date) && $joined_date != '0000-00-00 00:00:00') ? Carbon::parse($joined_date)->toIso8601String() : null,
+                                'of_offer_currency' => $option_currency_val,
+                                'of_offer_mode' => $current_ctc_mode,
+                                'of_offer_amount' => ($yearly_final_gross !== '' && $yearly_final_gross !== null) ? (float) $yearly_final_gross : null,
+                                'of_offer_acceptance' => 0,
+                                'of_employment_type' => $of_employment_type,
+                                'of_created_date' => $updateTime,
+                                'confidential' => $confidential,
+                                'updated_at' => $updateTime,
+                            ],
+                            'doc_as_upsert' => false,
+                        ],
+                        'refresh' => true,
+                    ];
 
+                    $this->elasticService->getClient()->update($updateParams_e);
+
+                    if (@$Offertimelime->application_id) {
+                        GeneralMethod::elasticBenchCandidateAddEditIndex($Offertimelime->application_id);
+                    }
+                } catch (\Throwable $esUpdateEx) {
+                    \Log::warning('[saveCreateOffer] Elastic update candidate error: '.$esUpdateEx->getMessage());
+                }
             }
 
             $date = date('Y-m-d H:i:s');
@@ -8184,44 +8191,37 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'event_by_company_id' => auth()->user()->company_id,
                 'event_by_user_id' => auth()->user()->id,
 
-                'application_id' => @$Offertimelime->application_id ? @$Offertimelime->application_id : null,
-                'application_email' => @$Offertimelime->email ? @$Offertimelime->email : null,
-                'job_id' => @$Offertimelime->job_id ? @$Offertimelime->job_id : null,
+                'application_id' => @$Offertimelime->application_id ? (int) $Offertimelime->application_id : null,
+                'application_email' => @$Offertimelime->email ?: null,
+                'job_id' => @$Offertimelime->job_id ? (int) $Offertimelime->job_id : null,
                 'note' => '',
-                'create_at' => @$date ? @$date : null,
-                'update_at' => @$date ? @$date : null,
+                'create_at' => $date,
+                'update_at' => $date,
             ];
-            $jobApplication = AddJobWiseCondidate::withoutGlobalScopes()->find($Offertimelime->joined);
+            $jobApplication = ($Offertimelime && ! empty($Offertimelime->joined)) ? AddJobWiseCondidate::withoutGlobalScopes()->find($Offertimelime->joined) : null;
             if (@$jobApplication->master_status_id > 0) {
                 $masterStatus = DB::table('master_status')->select('master_status.name')->where('id', $jobApplication->master_status_id)->first();
                 $values['master_process_name'] = @$masterStatus->name;
             }
             if (@$jobApplication->child_status_id > 0) {
-                $masterStatus = DB::table('candidate_status')->select('candidate_status.name')->where('candidate_status.id', $jobApplication->child_status_id)->first();
-                $values['child_process_name'] = @$masterStatus->name;
+                $childStatus = DB::table('candidate_status')->select('candidate_status.name')->where('candidate_status.id', $jobApplication->child_status_id)->first();
+                $values['child_process_name'] = @$childStatus->name;
             }
 
-            $values['master_process_name'] = @$masterStatus->name;
-            $values['child_process_name'] = @$masterStatus->name;
-            $values['offer_currency'] = @$option_currency_val;
-            $values['offer_mode'] = @$current_ctc_mode;
-            $values['offer_amount'] = @$ctc;
-            $values['joined_date'] = @$joined_date;
-            $values['confidential'] = @$confidential;
-
-            $values['offer_currency'] = @$option_currency_val ? @$option_currency_val : null;
-            $values['offer_mode'] = @$current_ctc_mode ? @$current_ctc_mode : null;
-            $values['offer_amount'] = @$ctc ? @$ctc : null;
-            $values['joined_date'] = @$request->dob ? $joined_date : null;
+            $values['offer_currency'] = $option_currency_val;
+            $values['offer_mode'] = $current_ctc_mode;
+            $values['offer_amount'] = ($ctc !== null && $ctc !== '') ? (string) $ctc : null;
+            $values['joined_date'] = $joined_date;
+            $values['confidential'] = $confidential;
 
             $values['candidate_status'] = 0;
             $values['management_status'] = 0;
-            $values['accept_date_time'] = '';
-            $values['signature_candidate'] = '';
-            $values['email_id_hr'] = '';
-            $values['name_hr'] = '';
-            $values['yearly_gross'] = @$yearly_gross ? $yearly_gross : '';
-            $values['yearly_final_gross'] = @$yearly_final_gross ? $yearly_final_gross : '';
+            $values['accept_date_time'] = null;
+            $values['signature_candidate'] = null;
+            $values['email_id_hr'] = null;
+            $values['name_hr'] = null;
+            $values['yearly_gross'] = ($yearly_gross !== '' && $yearly_gross !== null) ? (float) $yearly_gross : null;
+            $values['yearly_final_gross'] = ($yearly_final_gross !== '' && $yearly_final_gross !== null) ? (float) $yearly_final_gross : null;
             $values['mtypeSection'] = 3;
             $values['designation_offer'] = @$request->current_designation;
 
@@ -8230,10 +8230,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->offer_terms_conditions = DB::table('offer_terms_conditions')->where('offer_id', '=', $offer_id)->orderByDesc('id')->first();
 
             $rowDataOffer = DB::table('offer_job_applications')
-                ->join('job_applications', 'job_applications.id', '=', 'offer_job_applications.application_id')
+                ->leftJoin('job_applications', 'job_applications.id', '=', 'offer_job_applications.application_id')
                 ->select('offer_job_applications.*', 'job_applications.full_name')
                 ->where('offer_job_applications.id', $offer_id)->first();
-            // dd($rowDataOffer);
 
             $this->account = DB::table('companies')->select('*')->where('id', auth()->user()->company_id)->first();
             $this->global_settings = DB::table('global_settings')->select('*')->first();
@@ -8247,9 +8246,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $comapny_name = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->comapny_name : '';
             $logo = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->logo : '';
             $job_title = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->job_title : '';
-            $candidate_name = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->full_name : '';
-            $candidate_email = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->email : '';
-            $candidate_mobile = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->mobile : '';
+            $candidate_name = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->full_name : (@$rowDataOffer->full_name ?? '');
+            $candidate_email = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->email : (@$rowDataOffer->email ?? '');
+            $candidate_mobile = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->mobile : (@$rowDataOffer->phone ?? '');
             $of_joined_date = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->of_joined_date : '';
             if (! empty($of_joined_date)) {
                 $of_joined_date_update = $of_joined_date;
@@ -8257,7 +8256,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $of_joined_date_update = '[JOINING_DATE]';
             }
 
-            $this->offer_terms = str_replace(['[CANDIDATE_NAME]', '[CANDIDATE_EMAIL]', '[CANDIDATE_MOBILE]', '[COMPANY_NAME]', '[JOB_TITLE]', '[JOINING_DATE]', '[{JOB_TITLE}]', '[TODAY_DATE]'], [$candidate_name, $candidate_email, $candidate_mobile, $comapny_name, $job_title, $of_joined_date_update, $job_title, date('d M Y')], $offer_terms);
+            $this->offer_terms = str_replace(['[CANDIDATE_NAME]', '[CANDIDATE_EMAIL]', '[CANDIDATE_MOBILE]', '[COMPANY_NAME]', '[JOB_TITLE]', '[JOINING_DATE]', '[{JOB_TITLE}]', '[TODAY_DATE]'], [$candidate_name, $candidate_email, $candidate_mobile, $comapny_name, $job_title, $of_joined_date_update, $job_title, date('d M Y')], (string) $offer_terms);
 
             // Commit the transaction if all operations are successful
             DB::commit();
@@ -8293,13 +8292,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             return response()->json(['status' => 'success', 'terms' => $this->offer_terms, 'message' => 'Offer Created successfully.']);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Rollback the transaction if any operation fails
             DB::rollBack();
 
-            // Log the exception message (optional)
-            \Log::error('Transaction failed: '.$e->getMessage());
-            // dd($e->getMessage());
+            // Log the exception message
+            \Log::error('saveCreateOffer transaction failed: '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine()."\n".$e->getTraceAsString());
 
             // Return an error response
             return response()->json(['status' => 'failed', 'message' => 'Failed to save data. Please try again.'], 500);
