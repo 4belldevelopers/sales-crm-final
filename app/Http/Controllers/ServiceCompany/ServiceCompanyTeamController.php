@@ -23,6 +23,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\CompanyRepresentativeService;
 use App\Services\ElasticService;
+use App\Services\LeaderboardService;
 use App\Services\MailService;
 use App\Services\TeamMutationService;
 use Carbon\Carbon;
@@ -41,7 +42,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
     protected $elasticService;
 
-    public function __construct(MailService $mailService, ElasticService $elasticService)
+    protected $leaderboardService;
+
+    public function __construct(MailService $mailService, ElasticService $elasticService, LeaderboardService $leaderboardService)
     {
         parent::__construct();
         $this->pageTitle = 'menu.team';
@@ -49,6 +52,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         view()->share('calling_codes', $this->getCallingCodes());
         $this->mailService = $mailService;
         $this->elasticService = $elasticService;
+        $this->leaderboardService = $leaderboardService;
     }
 
     public function getTeamCounts(int $companyId): array
@@ -4500,9 +4504,12 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $users = $targetUser;
             $durMs = round((microtime(true) - $startTime) * 1000, 2);
 
+            $leaderboard = $this->leaderboardService->getLeaderboard($company_id, $userId);
+
             $html = $this->sanitizeHtmlPayload(view('service_company.ajax_pages.team-rank-ajax', compact(
                 'rankings', 'users', 'userId', 'company_id',
-                'total_candidates', 'interviewsTrackerTotal', 'scpOffersTotal', 'total_candidates_join'
+                'total_candidates', 'interviewsTrackerTotal', 'scpOffersTotal', 'total_candidates_join',
+                'leaderboard'
             ))->render());
 
             $responseData = [

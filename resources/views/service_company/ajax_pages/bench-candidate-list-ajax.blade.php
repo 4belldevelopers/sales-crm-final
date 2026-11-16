@@ -97,6 +97,7 @@
             $recomInfo = $benchRecomCounts[$row->id] ?? null;
             $recomDirectCount = (int) ($recomInfo['recommend_req_counter'] ?? 0);
             $recomInternalCount = (int) ($recomInfo['recommend_internal_req_counter'] ?? 0);
+            $recomMyOrgCount = (int) ($recomInfo['recommend_my_org_req_counter'] ?? 0);
 
             // Experience formatting
             $experience = trim((string) @$row->total_exp);
@@ -355,14 +356,14 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 5: Similar Clients (Direct & Internal Clients) -->
+                <!-- Sub-Card 5: Similar Clients (Direct, Internal Clients & My Organization) -->
                 <div class="cd-talent-subcard cd-subcard-similar-clients">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label"><i class="fa fa-handshake me-1 text-primary"></i>Similar Clients</span>
                     </div>
                     <div class="cd-subcard-body">
                         <!-- Direct Client Mandates -->
-                        <div class="d-flex align-items-center justify-content-between mb-1.5">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
                             <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center gap-1"
                                 data-bench-id="{{ $row->id }}"
                                 data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
@@ -382,7 +383,7 @@
                             </a>
                         </div>
                         <!-- Internal Client Mandates -->
-                        <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
                             <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center gap-1"
                                 data-bench-id="{{ $row->id }}"
                                 data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
@@ -399,6 +400,26 @@
                                 data-bench-role="{{ e($row->current_designation ?? '') }}"
                                 data-client-type="internal">
                                 {{ $recomInternalCount }} <i class="fa fa-chevron-right text-muted fs-9 ms-0.5"></i>
+                            </a>
+                        </div>
+                        <!-- My Organization Mandates (Rule 25 Canonical Amber Theme) -->
+                        <div class="d-flex align-items-center justify-content-between">
+                            <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center gap-1"
+                                data-bench-id="{{ $row->id }}"
+                                data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
+                                data-bench-role="{{ e($row->current_designation ?? '') }}"
+                                data-client-type="my_org"
+                                title="View Potential My Organization Mandates">
+                                <span class="badge py-1 px-1.5 fs-9 fw-bold border d-inline-flex align-items-center" style="background-color: #fef3c7 !important; color: #92400e !important; border-color: #fcd34d !important;">
+                                    <i class="fa fa-id-badge me-1" style="color: #d97706 !important; font-size: 8.5px;"></i>My Organization
+                                </span>
+                            </a>
+                            <a href="javascript:void(0);" class="btn-similar-clients fs-8 fw-bolder text-dark text-hover-primary"
+                                data-bench-id="{{ $row->id }}"
+                                data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
+                                data-bench-role="{{ e($row->current_designation ?? '') }}"
+                                data-client-type="my_org">
+                                {{ $recomMyOrgCount }} <i class="fa fa-chevron-right text-muted fs-9 ms-0.5"></i>
                             </a>
                         </div>
                     </div>

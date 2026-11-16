@@ -33,3 +33,10 @@ Schedule::command('apptracker:prune-outbox --days=7')
     ->dailyAt('03:30')
     ->withoutOverlapping(10)
     ->runInBackground();
+
+// Monthly Leaderboard: Calculate and publish authoritative previous calendar month leaderboard by evening cutoff (6:00 PM IST)
+Schedule::command('leaderboard:publish-monthly')
+    ->dailyAt('18:00')
+    ->timezone('Asia/Kolkata')
+    ->withoutOverlapping(30)
+    ->runInBackground();

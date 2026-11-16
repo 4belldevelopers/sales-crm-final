@@ -25,7 +25,8 @@ use Illuminate\Support\Facades\DB;
 class ServiceCompanyProfileService
 {
     public function __construct(
-        private readonly ElasticService $elasticService
+        private readonly ElasticService $elasticService,
+        private readonly LeaderboardService $leaderboardService
     ) {}
 
     /**
@@ -413,91 +414,16 @@ class ServiceCompanyProfileService
     }
 
     /**
-     * Get top-10 leaderboard data (cached 15 mins).
+     * Get authoritative company leaderboard data (covering previous complete calendar month).
+     * Delegated to LeaderboardService to guarantee 100% synchronization between Profile and Team pages.
+     *
+     * @param int $companyId
+     * @param int $userId
+     * @return array
      */
     public function getLeaderboard(int $companyId, int $userId): array
     {
-        return Cache::remember("profile:leaderboard:c{$companyId}:u{$userId}", 1800, function () use ($companyId, $userId) {
-            $lm = Carbon::now()->startOfMonth();
-            $lbStart = $lm->copy()->startOfMonth()->toIso8601String();
-            $lbEnd = $lm->copy()->endOfMonth()->toIso8601String();
-
-            try {
-                $userResponse = $this->elasticService->getClient()->search([
-                    'index' => ELASTIC_USERS_LIST,
-                    'body' => [
-                        'query' => ['bool' => ['filter' => [['term' => ['company_id' => $companyId]]]]],
-                        '_source' => ['id', 'name', 'email', 'designation', 'status', 'image'],
-                        'size' => 1000,
-                    ],
-                ]);
-                $users = collect($userResponse['hits']['hits'])->pluck('_source');
-
-                $rankResponse = $this->elasticService->getClient()->search([
-                    'index' => ELASTIC_TEAM_RANK,
-                    'body' => [
-                        'query' => ['bool' => ['filter' => [
-                            ['term' => ['doc.company_id' => $companyId]],
-                            ['range' => ['doc.created_at' => ['gte' => $lbStart, 'lte' => $lbEnd]]],
-                        ]]],
-                        'aggs' => ['user_scores' => [
-                            'terms' => ['field' => 'doc.user_id', 'size' => 1000],
-                            'aggs' => [
-                                'profileUpload_sum' => ['sum' => ['field' => 'doc.profileUpload']],
-                                'interviewScheduled_sum' => ['sum' => ['field' => 'doc.interviewScheduled']],
-                                'offerReleased_sum' => ['sum' => ['field' => 'doc.offerReleased']],
-                                'candidateJoined_sum' => ['sum' => ['field' => 'doc.candidateJoined']],
-                            ],
-                        ]],
-                        'size' => 0,
-                    ],
-                ]);
-                $buckets = $rankResponse['aggregations']['user_scores']['buckets'] ?? [];
-
-                $scoreMap = collect($buckets)->mapWithKeys(function ($item) {
-                    $score = ($item['profileUpload_sum']['value'] ?? 0)
-                        + ($item['interviewScheduled_sum']['value'] ?? 0)
-                        + ($item['offerReleased_sum']['value'] ?? 0)
-                        + ($item['candidateJoined_sum']['value'] ?? 0);
-
-                    return [$item['key'] => $score];
-                });
-
-                $ranked = $users->map(function ($user) use ($scoreMap) {
-                    $id = $user['id'];
-
-                    return [
-                        'id' => $id,
-                        'name' => $user['name'] ?? 'User',
-                        'designation' => $user['designation'] ?? '',
-                        'image' => $user['image'] ?? '',
-                        'status' => strtolower($user['status'] ?? 'inactive'),
-                        'score' => (int) round($scoreMap[$id] ?? 0),
-                    ];
-                })->sort(function ($a, $b) {
-                    if ($a['status'] !== $b['status']) {
-                        return ($a['status'] === 'active') ? -1 : 1;
-                    }
-                    if ($a['score'] !== $b['score']) {
-                        return $b['score'] <=> $a['score'];
-                    }
-
-                    return $a['id'] <=> $b['id'];
-                })->values()->map(function ($user, $index) {
-                    $user['rank'] = $index + 1;
-
-                    return $user;
-                });
-
-                return [
-                    'top' => $ranked->take(10)->values(),
-                    'me' => $ranked->firstWhere('id', $userId),
-                    'total' => $ranked->count(),
-                ];
-            } catch (\Throwable $e) {
-                return ['top' => collect(), 'me' => null, 'total' => 0];
-            }
-        });
+        return $this->leaderboardService->getLeaderboard($companyId, $userId);
     }
 
     /**

@@ -470,7 +470,7 @@
             align-items: center !important;
         }
 
-        /* Similar Clients Sub-Card */
+        /* Similar Clients / Related Jobs Drawer (Rule 20 Modern Card + Sub-Card Enterprise Standard) */
         .cd-subcard-similar-clients {
             width: 100% !important;
             min-width: 0 !important;
@@ -478,6 +478,409 @@
         .btn-similar-clients {
             text-decoration: none !important;
             cursor: pointer !important;
+        }
+        #kt_activitiesSimilarClients {
+            box-shadow: -6px 0 32px rgba(15, 23, 42, 0.15) !important;
+            z-index: 1000000 !important;
+        }
+        #kt_activitiesClientjob {
+            z-index: 1000005 !important;
+            box-shadow: -8px 0 40px rgba(15, 23, 42, 0.2) !important;
+        }
+        .sc-category-tab {
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none !important;
+            user-select: none;
+        }
+        .sc-category-tab:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+        .sc-category-tab.active {
+            background: #009ef7 !important;
+            border-color: #009ef7 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 8px rgba(0, 158, 247, 0.3) !important;
+        }
+        .sc-category-tab.active i {
+            color: #ffffff !important;
+        }
+        .sc-category-tab .sc-tab-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #e2e8f0;
+            color: #334155;
+            transition: all 0.15s ease;
+        }
+        .sc-category-tab.active .sc-tab-badge {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+        }
+        .rj-job-card {
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            background: #ffffff !important;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+        }
+        .rj-job-card:hover {
+            border-color: #93c5fd !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+            transform: translateY(-1px);
+        }
+        .btn-view-job {
+            transition: all 0.15s ease;
+        }
+        .btn-view-job:hover {
+            background: #0086d4 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 158, 247, 0.3) !important;
+        }
+
+        /* ── Modern Card + Sub-Card Enterprise Layout (Rule 20 / market-jobs standard) ── */
+        .cd-market-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.2s ease !important;
+            display: flex !important;
+            flex-direction: column !important;
+            font-family: 'Poppins', sans-serif !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .cd-market-card:hover {
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+            border-color: #cbd5e1 !important;
+        }
+        .cd-market-card.jc-accent-green {
+            border-left: 3.5px solid #10b981 !important;
+        }
+        .cd-market-card.jc-accent-yellow {
+            border-left: 3.5px solid #f59e0b !important;
+        }
+        .cd-market-card.jc-accent-orange {
+            border-left: 3.5px solid #ea580c !important;
+        }
+        .cd-market-card.jc-accent-blue {
+            border-left: 3.5px solid #2563eb !important;
+        }
+        .cd-market-card-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1.35fr) !important;
+            gap: 8px !important;
+            padding: 10px 12px 6px 12px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            align-items: stretch !important;
+        }
+        .cd-market-subcard {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .cd-subcard-actions .cd-subcard-body {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            padding: 8px 10px !important;
+            gap: 6px !important;
+            min-height: 105px !important;
+        }
+        .cd-subcard-header {
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            padding: 6px 9px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 6px !important;
+            flex-wrap: nowrap !important;
+        }
+        .cd-subcard-label {
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            color: #475569 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.4px !important;
+            white-space: nowrap !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .cd-badges-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+        .cd-subcard-body {
+            padding: 8px 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+        }
+        .cd-market-job-title {
+            font-size: 13.5px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            margin: 0 0 2px 0 !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+        .cd-market-job-title:hover {
+            color: #009ef7 !important;
+        }
+        .cd-market-job-dept {
+            font-size: 11px !important;
+            color: #009ef7 !important;
+            font-weight: 500 !important;
+            margin-bottom: 5px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            display: flex;
+            align-items: center;
+        }
+        .cd-role-mandate-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: auto;
+        }
+        .cd-mandate-tag {
+            display: inline-flex;
+            align-items: center;
+            font-weight: 600;
+            color: #059669;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 10px;
+        }
+        .cd-openings-count {
+            font-size: 10.5px;
+            color: #475569;
+            font-weight: 500;
+        }
+        .cd-comp-highlight {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.25;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cd-comp-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #475569;
+            font-weight: 500;
+            line-height: 1.35;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+        .cd-location-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .cd-subcard-bench {
+            cursor: pointer;
+            transition: background-color 0.15s, border-color 0.15s;
+        }
+        .cd-subcard-bench:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .cd-bench-kpi-num {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin: 2px 0 1px 0;
+            font-variant-numeric: tabular-nums;
+            text-align: center;
+        }
+        .cd-bench-kpi-sub {
+            font-size: 10px;
+            color: #64748b;
+            line-height: 1.2;
+            text-align: center;
+        }
+        .cd-subcard-link {
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            color: #009ef7 !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            margin-top: 4px !important;
+            cursor: pointer !important;
+        }
+        .cd-subcard-link:hover {
+            text-decoration: underline !important;
+            color: #0081c7 !important;
+        }
+        .cd-terms-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            font-size: 10px;
+            line-height: 1.3;
+        }
+        .jc-ct-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .jc-ct-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+        .jc-ct-val {
+            color: #0f172a;
+            font-weight: 600;
+            text-align: right;
+        }
+        .jc-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 4px;
+            white-space: nowrap;
+            line-height: 1.3;
+        }
+        .jc-dot-mini {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+            display: inline-block;
+        }
+        .jc-badge-open    { background: #dcfce7; color: #15803d; }
+        .jc-badge-hold    { background: #fef9c3; color: #a16207; }
+        .jc-badge-ft      { background: #eff6ff; color: #1d4ed8; }
+        .jc-badge-ct      { background: #fef3c7; color: #d97706; }
+        .jc-badge-fl      { background: #f5f3ff; color: #6d28d9; }
+        .jc-badge-pt      { background: #e0e7ff; color: #4338ca; }
+        .jc-badge-bench   { background: #fff7ed; color: #c2410c; }
+        .jc-req-id {
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 1px 6px;
+            white-space: nowrap;
+        }
+        .cd-market-card-bottom {
+            border-top: 1px solid #f1f5f9 !important;
+            padding: 6px 14px !important;
+            background: #ffffff !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            border-radius: 0 0 10px 10px !important;
+            font-family: 'Poppins', sans-serif !important;
+        }
+        .cd-bottom-telemetry {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 10.5px;
+            color: #64748b;
+        }
+        .cd-bottom-telemetry strong {
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .cd-bottom-skills {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+            flex: 1 1 auto;
+            justify-content: flex-end;
+            overflow: hidden;
+        }
+        .skill-tag {
+            font-size: 10px;
+            font-weight: 500;
+            padding: 2px 6px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            color: #334155;
+            white-space: nowrap;
+        }
+        .skill-tag.skill-matched {
+            background: #dcfce7 !important;
+            color: #15803d !important;
+            border-color: #bbf7d0 !important;
+            font-weight: 600 !important;
+        }
+        .skill-more {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #009ef7;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        @media (max-width: 1100px) {
+            .cd-market-card-grid {
+                grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.4fr) !important;
+            }
+        }
+        @media (max-width: 640px) {
+            .cd-market-card-grid {
+                grid-template-columns: 1fr !important;
+            }
         }
 
         /* Table */
@@ -1642,54 +2045,169 @@
         </div>
     </div>
 
-    <!-- Similar Clients Drawer (Rule 20 Modern Card + Sub-Card Enterprise Standard) -->
+    <!-- Redesigned Similar Clients → Related Job Listing Drawer (Rule 20 Modern Card + Sub-Card Enterprise Standard) -->
     <div id="kt_activitiesSimilarClients_toggle" class="d-none"></div>
     <div id="kt_activitiesSimilarClients" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="similar_clients"
         data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-        data-kt-drawer-width="{default:'95%', 'sm': '650px', 'lg': '880px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-width="{default:'100%', 'md': '85%', 'lg': '70%'}" data-kt-drawer-direction="end"
         data-kt-drawer-toggle="#kt_activitiesSimilarClients_toggle" data-kt-drawer-close="#kt_activitiesSimilarClients_close">
         <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column" style="font-family: 'Poppins', sans-serif;">
-            <!-- Header (Mandatory #f8fafc Background per Rule 20) -->
-            <div class="card-header px-6 py-3 d-flex align-items-center justify-content-between" style="background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; min-height: 60px;">
-                <div class="d-flex align-items-center gap-3">
-                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 15px;">
-                        <i class="fa fa-handshake"></i>
+            
+            <!-- Tier 1 Topbar Header (Mandatory #f8fafc Background per Rule 20) -->
+            <div class="card-header px-6 py-3.5 d-flex align-items-center justify-content-between" style="background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; min-height: 64px;">
+                <div class="d-flex align-items-center gap-3 min-w-0">
+                    <div style="width: 38px; height: 38px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid #bfdbfe; flex-shrink: 0;">
+                        <i class="fa fa-briefcase"></i>
                     </div>
-                    <div>
-                        <h3 class="card-title fw-bolder text-dark m-0" style="font-size: 15px !important; letter-spacing: -0.2px;">Similar Potential Clients</h3>
-                        <p class="text-muted m-0" style="font-size: 11px !important;" id="sc_drawer_subtitle">Matching direct client mandates and internal client requisitions</p>
+                    <div class="min-w-0">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h3 class="card-title fw-bolder text-dark m-0 fs-5" style="letter-spacing: -0.2px;">Related Jobs</h3>
+                            <span class="badge badge-light-primary fw-bolder py-0.5 px-2 fs-9 border border-primary-subtle">
+                                <i class="fa fa-handshake me-1" style="font-size: 8.5px;"></i>Similar Client Jobs
+                            </span>
+                        </div>
+                        <div class="text-muted m-0 fs-7 text-truncate" id="sc_drawer_candidate_wrap" style="max-width: 480px;">
+                            Candidate: <strong class="text-dark" id="sc_drawer_candidate_name">—</strong>
+                            <span class="text-muted fs-8" id="sc_drawer_candidate_role"></span>
+                        </div>
                     </div>
                 </div>
                 <div class="card-toolbar d-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_activitiesSimilarClients_close">
-                        <i class="fa fa-times fs-4"></i>
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_activitiesSimilarClients_close" title="Close Drawer" style="border-radius: 8px; border: 1px solid #e2e8f0; width: 34px; height: 34px; background: #ffffff;">
+                        <i class="fa fa-times fs-4 text-gray-600"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Tab Navigation for Direct vs Internal Clients (Rule 25 Canonical Tagging) -->
-            <div class="px-6 py-2 border-bottom" style="background: #ffffff; border-color: #e2e8f0 !important;">
-                <ul class="nav nav-pills nav-pills-custom gap-2" id="similarClientsTabs">
-                    <li class="nav-item">
-                        <a class="nav-link active sc-tab-pill" id="tab_similar_direct" data-type="direct" href="javascript:void(0);" style="padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #e2e8f0; color: #475569;">
-                            <i class="fa fa-shield-alt text-success me-1"></i> Direct Clients
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link sc-tab-pill" id="tab_similar_internal" data-type="internal" href="javascript:void(0);" style="padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #e2e8f0; color: #475569;">
-                            <i class="fa fa-building text-primary me-1"></i> Internal Clients
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Drawer Body -->
-            <div class="card-body position-relative p-6 flex-grow-1 overflow-auto" id="kt_activitiesSimilarClients_body">
-                <div class="text-center py-20 text-muted">
-                    <i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"></i>
-                    <div>Loading similar client opportunities...</div>
+            <!-- Tier 2 Category Sub-Tabs Card (Rule 25 Canonical Amber/Blue/Emerald Tagging) -->
+            <div class="px-6 py-2.5 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: #ffffff; border-color: #e2e8f0 !important;">
+                <div class="d-flex align-items-center gap-2 flex-wrap" id="similarClientsTabs">
+                    <button type="button" class="sc-category-tab active" id="tab_similar_direct" data-type="direct">
+                        <i class="fa fa-shield-alt text-success me-1"></i>
+                        <span>Direct Client</span>
+                        <span class="sc-tab-badge" id="sc_badge_direct">0</span>
+                    </button>
+                    <button type="button" class="sc-category-tab" id="tab_similar_internal" data-type="internal">
+                        <i class="fa fa-building text-primary me-1"></i>
+                        <span>Internal Client</span>
+                        <span class="sc-tab-badge" id="sc_badge_internal">0</span>
+                    </button>
+                    <button type="button" class="sc-category-tab" id="tab_similar_my_org" data-type="my_org">
+                        <i class="fa fa-id-badge text-warning me-1"></i>
+                        <span>My Organization</span>
+                        <span class="sc-tab-badge" id="sc_badge_my_org">0</span>
+                    </button>
+                </div>
+                <div>
+                    <a href="javascript:void(0);" id="sc_btn_full_page" target="_blank" class="btn btn-sm btn-light-primary fw-bold fs-8 py-1.5 px-3 d-inline-flex align-items-center gap-1.5" title="Open Full View">
+                        <i class="fa fa-arrow-up-right-from-square"></i>
+                        <span class="d-none d-sm-inline">Full View</span>
+                    </a>
                 </div>
             </div>
+
+            <!-- Tier 1 Search & Sorting Toolbar (Mandatory #f8fafc Background per Rule 20) -->
+            <div class="px-6 py-2.5 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2.5" style="background: #f8fafc; border-color: #e2e8f0 !important;">
+                <!-- Search Input with Clear Button -->
+                <div class="position-relative flex-grow-1" style="max-width: 440px; min-width: 220px;">
+                    <i class="fa fa-search text-gray-400 position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 12px;"></i>
+                    <input type="text" id="sc_search_input" class="form-control form-control-sm form-control-solid" placeholder="Search by job title, client or location" style="padding-left: 34px; padding-right: 32px; height: 36px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; background: #ffffff;" autocomplete="off" />
+                    <button type="button" id="sc_search_clear" class="btn btn-icon btn-sm position-absolute d-none" style="right: 6px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; color: #94a3b8; background: transparent; border: none; padding: 0;" title="Clear search">
+                        <i class="fa fa-times-circle fs-6"></i>
+                    </button>
+                </div>
+
+                <!-- Sorting Select -->
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <label class="fs-8 fw-semibold text-muted text-nowrap m-0 d-none d-md-inline" for="sc_sort_select">
+                        <i class="fa fa-arrow-down-short-wide me-1"></i>Sort:
+                    </label>
+                    <select id="sc_sort_select" class="form-select form-select-sm form-select-solid" style="height: 36px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; background: #ffffff; width: 160px; cursor: pointer;">
+                        <option value="relevance" selected>Best Match (% Match)</option>
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="title_asc">Job Title A–Z</option>
+                        <option value="title_desc">Job Title Z–A</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Drawer Body: Scrollable Job Listing Area -->
+            <div class="card-body position-relative p-6 flex-grow-1 overflow-auto" id="kt_activitiesSimilarClients_body" style="background: #fafbfc;">
+                <div class="text-center py-20 text-muted">
+                    <i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                    <div>Loading related job opportunities...</div>
+                </div>
+            </div>
+
+            <!-- Drawer Sticky Footer: Server-Side Pagination Bar (Rule 20 Standard) -->
+            <div class="card-footer px-6 py-3 d-flex align-items-center justify-content-between flex-wrap gap-2" id="sc_drawer_footer" style="background: #f8fafc !important; border-top: 1px solid #e2e8f0 !important; min-height: 54px;">
+                <div class="text-gray-600 fs-8 fw-semibold" id="sc_pagination_info">
+                    Showing 0 to 0 of 0 jobs
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-light py-1 px-3 fs-8 fw-bold" id="sc_page_prev" disabled style="border-radius: 6px; border: 1px solid #e2e8f0;">
+                        <i class="fa fa-chevron-left me-1 fs-9"></i> Prev
+                    </button>
+                    <span class="badge badge-light-secondary text-gray-800 fw-bold fs-8 py-1.5 px-3 border border-gray-200" id="sc_page_current" style="border-radius: 6px;">
+                        Page 1 / 1
+                    </span>
+                    <button type="button" class="btn btn-sm btn-light py-1 px-3 fs-8 fw-bold" id="sc_page_next" disabled style="border-radius: 6px; border: 1px solid #e2e8f0;">
+                        Next <i class="fa fa-chevron-right ms-1 fs-9"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Job Requisition Details Drawer (Overlayed over Similar Clients Drawer) -->
+    <div id="kt_activitiesClientjob_toggle" class="d-none"></div>
+    <div id="kt_activitiesClientjob" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="client_job_details"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'100%', 'md': '85%', 'lg': '1150px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_activitiesClientjob_toggle" data-kt-drawer-close="#kt_activitiesClientjob_close"
+        style="z-index: 1000005 !important;">
+        <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column" style="font-family: 'Poppins', sans-serif;">
+            <div class="card-header px-6 py-3 d-flex align-items-center justify-content-between" style="background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; min-height: 58px;">
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width: 32px; height: 32px; border-radius: 6px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                        <i class="fa fa-file-lines"></i>
+                    </div>
+                    <h3 class="card-title fw-bolder text-dark m-0 fs-6">Job Requisition Details</h3>
+                </div>
+                <div class="card-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_activitiesClientjob_close" title="Close" style="border-radius: 6px; border: 1px solid #e2e8f0; width: 32px; height: 32px; background: #ffffff;">
+                        <i class="fa fa-times fs-4 text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body position-relative px-0 py-0 overflow-auto flex-grow-1" id="kt_activitiesclientjob_body"></div>
+        </div>
+    </div>
+
+    <!-- Commercial Terms Drawer (Overlayed with z-index: 1000006) -->
+    <div id="kt_activitiesTermsFindjob_toggle" class="d-none"></div>
+    <div id="kt_activitiesTermsFindjob" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="terms_details"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'100%', 'md': '85%', 'lg': '800px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_activitiesTermsFindjob_toggle" data-kt-drawer-close="#kt_activitiesTermsFindJob_close"
+        style="z-index: 1000006 !important;">
+        <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column" style="font-family: 'Poppins', sans-serif;">
+            <div class="card-header px-6 py-3 d-flex align-items-center justify-content-between" style="background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; min-height: 58px;">
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width: 32px; height: 32px; border-radius: 6px; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <h3 class="card-title fw-bolder text-dark m-0 fs-6">Commercial Terms &amp; Conditions</h3>
+                </div>
+                <div class="card-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_activitiesTermsFindJob_close" title="Close" style="border-radius: 6px; border: 1px solid #e2e8f0; width: 32px; height: 32px; background: #ffffff;">
+                        <i class="fa fa-times fs-4 text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body position-relative px-6 py-5 overflow-auto flex-grow-1" id="kt_activitiesTermsFindJob_body"></div>
         </div>
     </div>
 @endsection
@@ -1967,73 +2485,161 @@
             filtersdataget();
         });
 
-        // Similar Clients Drawer AJAX Handler (Direct & Internal Client Tabs)
-        var _activeSimilarCandidateId = null;
-        var _activeSimilarType = 'direct';
+        // =========================================================================
+        // REDESIGNED SIMILAR CLIENTS → RELATED JOBS DRAWER (Rule 20 Enterprise Standard)
+        // =========================================================================
+        var _relatedJobsState = {
+            candidateId: null,
+            candidateName: '',
+            candidateRole: '',
+            category: 'direct', // 'direct' | 'internal' | 'my_org'
+            search: '',
+            sort: 'relevance',
+            page: 1,
+            limit: 10,
+            totalPages: 1,
+            totalCount: 0,
+            counts: { direct: 0, internal: 0, my_org: 0 },
+            xhr: null
+        };
 
-        function loadSimilarClients(candidateId, type) {
-            _activeSimilarCandidateId = candidateId;
-            _activeSimilarType = type || 'direct';
+        var _scSearchDebounceTimer = null;
 
-            $('.sc-tab-pill').removeClass('active');
-            if (_activeSimilarType === 'internal') {
+        function fetchRelatedJobs() {
+            if (!_relatedJobsState.candidateId) return;
+
+            // Cancel any in-flight request to prevent race conditions
+            if (_relatedJobsState.xhr && typeof _relatedJobsState.xhr.abort === 'function') {
+                _relatedJobsState.xhr.abort();
+            }
+
+            // Sync Tab Active State
+            $('.sc-category-tab').removeClass('active');
+            if (_relatedJobsState.category === 'internal') {
                 $('#tab_similar_internal').addClass('active');
+            } else if (_relatedJobsState.category === 'my_org') {
+                $('#tab_similar_my_org').addClass('active');
             } else {
                 $('#tab_similar_direct').addClass('active');
             }
 
+            // Sync Full Page View link
+            var fullPageUrl = (_relatedJobsState.category === 'direct')
+                ? "{{ url('service_company/bench-candidates/recommend_req') }}/" + _relatedJobsState.candidateId
+                : "{{ url('service_company/bench-candidates/recommend_internal_req') }}/" + _relatedJobsState.candidateId + '?client_type=' + _relatedJobsState.category;
+            $('#sc_btn_full_page').attr('href', fullPageUrl);
+
+            // Loading Skeleton
             var $body = $('#kt_activitiesSimilarClients_body');
-            $body.html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"></i><div>Loading opportunities...</div></div>');
+            $body.html(
+                '<div class="text-center py-20 text-muted">' +
+                '  <i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"></i>' +
+                '  <div class="fw-bold fs-7 text-gray-700">Loading related job opportunities...</div>' +
+                '  <div class="fs-8 text-muted mt-1">Filtering authoritative marketplace and organization mandates</div>' +
+                '</div>'
+            );
 
-            var endpoint = (_activeSimilarType === 'internal') 
-                ? "{{ route('service_company.recommend.all_internal_data_ajax') }}" 
-                : "{{ route('service_company.recommend.all_data_ajax') }}";
+            // Scroll drawer body to top
+            $body.scrollTop(0);
 
-            var fullPageUrl = (_activeSimilarType === 'internal')
-                ? "{{ url('service_company/bench-candidates/recommend_internal_req') }}/" + candidateId
-                : "{{ url('service_company/bench-candidates/recommend_req') }}/" + candidateId;
-
-            $.ajax({
+            _relatedJobsState.xhr = $.ajax({
                 type: 'GET',
-                url: endpoint,
-                data: { condidate_id: candidateId, page: 1, limit: 10 },
+                url: "{{ route('service_company.bench-candidates.similar_clients_drawer_ajax') }}",
+                data: {
+                    candidate_id: _relatedJobsState.candidateId,
+                    category: _relatedJobsState.category,
+                    search: _relatedJobsState.search,
+                    sort: _relatedJobsState.sort,
+                    page: _relatedJobsState.page,
+                    limit: _relatedJobsState.limit
+                },
                 dataType: 'json',
                 success: function(res) {
-                    var html = '';
-                    if (res && res.html) {
-                        html += '<div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">';
-                        html += '  <span class="text-muted fs-7">Found <strong>' + (res.total || 0) + '</strong> matching ' + (_activeSimilarType === 'internal' ? 'Internal Client' : 'Direct Client') + ' mandates</span>';
-                        html += '  <a href="' + fullPageUrl + '" target="_blank" class="btn btn-sm btn-light-primary fw-bold fs-8">';
-                        html += '    <i class="fa fa-arrow-up-right-from-square me-1"></i> Open Full View';
-                        html += '  </a>';
-                        html += '</div>';
-                        html += '<div class="similar-clients-content">' + res.html + '</div>';
-                        if (res.pagination) {
-                            html += '<div class="mt-4">' + res.pagination + '</div>';
+                    _relatedJobsState.xhr = null;
+                    if (res && res.status === 'success') {
+                        $body.html(res.html);
+
+                        // Update authoritative category tab counts
+                        if (res.counts) {
+                            _relatedJobsState.counts = res.counts;
+                            $('#sc_badge_direct').text(res.counts.direct || 0);
+                            $('#sc_badge_internal').text(res.counts.internal || 0);
+                            $('#sc_badge_my_org').text(res.counts.my_org || 0);
+                        }
+
+                        // Update Pagination State
+                        _relatedJobsState.totalPages = res.last_page || 1;
+                        _relatedJobsState.totalCount = res.total || 0;
+                        _relatedJobsState.page = res.current_page || 1;
+
+                        if (res.total > 0) {
+                            $('#sc_pagination_info').html('Showing <strong>' + res.from + '</strong> to <strong>' + res.to + '</strong> of <strong>' + res.total + '</strong> jobs');
+                            $('#sc_page_current').text('Page ' + res.current_page + ' / ' + res.last_page);
+                            $('#sc_page_prev').prop('disabled', res.current_page <= 1);
+                            $('#sc_page_next').prop('disabled', res.current_page >= res.last_page);
+                            $('#sc_drawer_footer').show();
+                        } else {
+                            $('#sc_pagination_info').text('0 matching jobs');
+                            $('#sc_page_current').text('Page 1 / 1');
+                            $('#sc_page_prev').prop('disabled', true);
+                            $('#sc_page_next').prop('disabled', true);
                         }
                     } else {
-                        html = '<div class="text-center py-20 text-muted"><i class="fa fa-briefcase fa-3x mb-3 text-gray-300"></i><p class="fs-6 fw-bold">No similar client mandates found</p><p class="fs-7">We couldn\'t find any active matching client requisitions for this candidate\'s primary skills.</p></div>';
+                        $body.html('<div class="text-center py-20 text-muted"><i class="fa fa-briefcase fa-3x mb-3 text-gray-300"></i><p class="fs-6 fw-bold">No opportunities found</p></div>');
+                        $('#sc_drawer_footer').hide();
                     }
-                    $body.html(html);
                 },
-                error: function(xhr) {
-                    $body.html('<div class="text-center py-20 text-danger"><i class="fa fa-triangle-exclamation fa-2x mb-2"></i><div>Failed to load client opportunities. Please try again.</div></div>');
+                error: function(xhr, status) {
+                    if (status === 'abort') return;
+                    _relatedJobsState.xhr = null;
+                    $body.html(
+                        '<div class="text-center py-20 text-danger">' +
+                        '  <i class="fa fa-triangle-exclamation fa-2x mb-2"></i>' +
+                        '  <div class="fw-bold fs-7">Failed to load opportunities</div>' +
+                        '  <div class="fs-8 text-muted mt-1">Please check your connection and try again.</div>' +
+                        '  <button type="button" class="btn btn-sm btn-light-primary mt-3" onclick="fetchRelatedJobs()"><i class="fa fa-rotate-right me-1"></i> Retry</button>' +
+                        '</div>'
+                    );
                 }
             });
         }
 
+        // Trigger Related Jobs Drawer from Candidate Card
         $(document).on('click', '.btn-similar-clients', function(e) {
             e.preventDefault();
             e.stopPropagation();
+
             var candidateId = $(this).data('bench-id') || $(this).data('candidate-id');
             var candidateName = $(this).data('bench-name') || '';
             var candidateRole = $(this).data('bench-role') || '';
             var clientType = $(this).data('client-type') || 'direct';
 
-            if (candidateName) {
-                $('#sc_drawer_subtitle').html('Matching opportunities for <strong>' + candidateName + '</strong>' + (candidateRole ? ' (' + candidateRole + ')' : ''));
+            if (!candidateId) return;
+
+            // Reset search/sort if candidate changed
+            if (_relatedJobsState.candidateId !== candidateId) {
+                _relatedJobsState.search = '';
+                _relatedJobsState.sort = 'relevance';
+                _relatedJobsState.page = 1;
+                $('#sc_search_input').val('');
+                $('#sc_search_clear').addClass('d-none');
+                $('#sc_sort_select').val('relevance');
             }
 
+            _relatedJobsState.candidateId = candidateId;
+            _relatedJobsState.candidateName = candidateName;
+            _relatedJobsState.candidateRole = candidateRole;
+            _relatedJobsState.category = clientType;
+
+            // Update Header Display
+            $('#sc_drawer_candidate_name').text(candidateName || 'Talent');
+            if (candidateRole) {
+                $('#sc_drawer_candidate_role').text(' • ' + candidateRole);
+            } else {
+                $('#sc_drawer_candidate_role').text('');
+            }
+
+            // Open Drawer
             var drawerEl = document.querySelector('#kt_activitiesSimilarClients');
             if (typeof KTDrawer !== 'undefined' && drawerEl) {
                 var drawer = KTDrawer.getInstance(drawerEl);
@@ -2045,15 +2651,268 @@
                 $('#kt_activitiesSimilarClients_toggle').trigger('click');
             }
 
-            loadSimilarClients(candidateId, clientType);
+            fetchRelatedJobs();
         });
 
-        $(document).on('click', '.sc-tab-pill', function(e) {
+        // Category Tab Switcher
+        $(document).on('click', '.sc-category-tab', function(e) {
             e.preventDefault();
-            var type = $(this).data('type');
-            if (_activeSimilarCandidateId) {
-                loadSimilarClients(_activeSimilarCandidateId, type);
+            var targetCategory = $(this).data('type');
+            if (_relatedJobsState.category !== targetCategory) {
+                _relatedJobsState.category = targetCategory;
+                _relatedJobsState.page = 1;
+                fetchRelatedJobs();
             }
+        });
+
+        // Search Input with 300ms Debounce
+        $(document).on('input keyup', '#sc_search_input', function(e) {
+            var val = $(this).val().trim();
+            if (val.length > 0) {
+                $('#sc_search_clear').removeClass('d-none');
+            } else {
+                $('#sc_search_clear').addClass('d-none');
+            }
+
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                if (_scSearchDebounceTimer) clearTimeout(_scSearchDebounceTimer);
+                _relatedJobsState.search = val;
+                _relatedJobsState.page = 1;
+                fetchRelatedJobs();
+                return;
+            }
+
+            if (_scSearchDebounceTimer) clearTimeout(_scSearchDebounceTimer);
+            _scSearchDebounceTimer = setTimeout(function() {
+                _relatedJobsState.search = val;
+                _relatedJobsState.page = 1;
+                fetchRelatedJobs();
+            }, 300);
+        });
+
+        // Clear Search Button
+        $(document).on('click', '#sc_search_clear, #sc_btn_clear_search_empty', function(e) {
+            e.preventDefault();
+            $('#sc_search_input').val('');
+            $('#sc_search_clear').addClass('d-none');
+            _relatedJobsState.search = '';
+            _relatedJobsState.page = 1;
+            fetchRelatedJobs();
+        });
+
+        // Sort Selection Change
+        $(document).on('change', '#sc_sort_select', function(e) {
+            var sortVal = $(this).val();
+            _relatedJobsState.sort = sortVal;
+            _relatedJobsState.page = 1;
+            fetchRelatedJobs();
+        });
+
+        // Pagination Prev / Next
+        $(document).on('click', '#sc_page_prev', function(e) {
+            e.preventDefault();
+            if (_relatedJobsState.page > 1) {
+                _relatedJobsState.page--;
+                fetchRelatedJobs();
+            }
+        });
+
+        $(document).on('click', '#sc_page_next', function(e) {
+            e.preventDefault();
+            if (_relatedJobsState.page < _relatedJobsState.totalPages) {
+                _relatedJobsState.page++;
+                fetchRelatedJobs();
+            }
+        });
+
+        // View Job Action (Opens Job Details Drawer without full page reload)
+        $(document).on('click', '.btn-view-job', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var jobId = $(this).data('job-id');
+            if (!jobId) return;
+
+            var drawerEl = document.querySelector('#kt_activitiesClientjob');
+            if (typeof KTDrawer !== 'undefined' && drawerEl) {
+                var drawer = KTDrawer.getInstance(drawerEl);
+                if (!drawer) {
+                    drawer = new KTDrawer(drawerEl);
+                }
+                drawer.show();
+            } else {
+                $('#kt_activitiesClientjob_toggle').trigger('click');
+            }
+
+            var url = "{{ route('service_company.jobs.clientviewmore', ':id') }}".replace(':id', jobId);
+            var $body = $('#kt_activitiesclientjob_body');
+            $body.html(
+                '<div class="text-center py-20 text-muted">' +
+                '  <i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"></i>' +
+                '  <div class="fw-bold fs-7 text-gray-700">Loading job details...</div>' +
+                '</div>'
+            );
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                dataType: 'json',
+                success: function(response) {
+                    if (response && response.view) {
+                        $body.html(response.view);
+                    } else if (response && response.html) {
+                        $body.html(response.html);
+                    } else {
+                        $body.html('<div class="text-center py-20 text-muted">Unable to load job details.</div>');
+                    }
+                },
+                error: function() {
+                    $body.html(
+                        '<div class="text-center py-20 text-danger">' +
+                        '  <i class="fa fa-triangle-exclamation fa-2x mb-2"></i>' +
+                        '  <div class="fw-bold fs-7">Failed to load job details</div>' +
+                        '</div>'
+                    );
+                }
+            });
+        });
+
+        // Candidate Submission Alert (Candidate not in bench status)
+        $(document).on("click", ".checkrequestsend", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: "Bench Request Alert",
+                    text: "Please move the candidate to Bench status before sending bench request",
+                    icon: "warning",
+                    confirmButtonColor: "#009ef7"
+                });
+            } else if (typeof swal !== 'undefined') {
+                swal("Bench Request Alert", "Please move the candidate to Bench status before sending bench request", "warning");
+            } else {
+                alert("Please move the candidate to Bench status before sending bench request");
+            }
+        });
+
+        // Submit Candidate Request
+        $(document).on("click", ".request-send", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var ele = $(this);
+            if (ele.hasClass('disabled') || ele.prop('disabled')) return;
+
+            var jobId = ele.attr('data-jobId') || ele.data('jobid') || ele.attr('data-jobid');
+            var conId = ele.attr('data-conId') || ele.data('conid') || ele.attr('data-conid');
+            if (!jobId || !conId) return;
+
+            var originalHtml = ele.html();
+            ele.addClass('disabled').prop('disabled', true).css('pointer-events', 'none')
+               .html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Submitting...');
+
+            var idempotencyKey = 'bench-req-' + conId + '-' + jobId + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            var url = "{{ route('service_company.jobs.recommandedrequestcondidate', ':id') }}".replace(':id', jobId) + "?conId=" + conId;
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                headers: {
+                    'X-Idempotency-Key': idempotencyKey
+                },
+                data: {
+                    action: 'recommend_req',
+                    tab: 'internal_bench'
+                },
+                success: function(response) {
+                    if (response && (response.status === 'success' || response.status === true)) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: "Request Sent!",
+                                text: "Bench request successfully sent for this job requirement!",
+                                icon: "success",
+                                confirmButtonColor: "#009ef7"
+                            });
+                        } else if (typeof swal !== 'undefined') {
+                            swal("Request Sent!", "Bench request successfully sent for this job requirement!", "success");
+                        } else {
+                            alert("Bench request successfully sent for this job requirement!");
+                        }
+                        ele.replaceWith('<span class="badge w-100 text-center py-1.5 px-2 disabled" style="font-size:11px; font-weight:600; background:#fef3c7; color:#b45309; border:1px solid #fde68a; border-radius:6px; display:block; pointer-events:none;"><i class="fa-regular fa-clock me-1"></i> Request Sent</span>');
+                    } else {
+                        ele.removeClass('disabled').prop('disabled', false).css('pointer-events', 'auto').html(originalHtml);
+                        var msg = (response && response.message) ? response.message : "Failed to send request.";
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire("Request Failed", msg, "warning");
+                        } else if (typeof swal !== 'undefined') {
+                            swal("Request Failed", msg, "warning");
+                        } else {
+                            alert(msg);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    ele.removeClass('disabled').prop('disabled', false).css('pointer-events', 'auto').html(originalHtml);
+                    var errorMsg = "Something went wrong while sending request.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire("Request Failed", errorMsg, "error");
+                    } else if (typeof swal !== 'undefined') {
+                        swal("Request Failed", errorMsg, "error");
+                    } else {
+                        alert(errorMsg);
+                    }
+                }
+            });
+        });
+
+        // Commercial Terms Drawer Handler
+        $(document).on('click', '.client-terms-listing-find-job', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $btn = $(this);
+            var id = $btn.data('row-id') || $btn.attr('data-row-id');
+            var recommendation_relation_id = $btn.data('row-recommendation_relation_id') || $btn.attr('data-row-recommendation_relation_id') || '';
+            if (!id) {
+                id = $btn.closest('[data-row-id]').attr('data-row-id');
+            }
+
+            var drawerElement = document.querySelector('#kt_activitiesTermsFindjob');
+            if (drawerElement && typeof KTDrawer !== 'undefined') {
+                var drawer = KTDrawer.getInstance(drawerElement) || new KTDrawer(drawerElement);
+                if (drawer) { drawer.show(); } else { $('#kt_activitiesTermsFindjob_toggle').trigger('click'); }
+            } else {
+                $('#kt_activitiesTermsFindjob_toggle').trigger('click');
+            }
+
+            if (!id) {
+                $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">Unable to find job requirement ID.</div>');
+                return;
+            }
+            var url = "{{ route('service_company.jobs.termshmlisting', ':id') }}".replace(':id', id) + "?id=" + id;
+            $.ajax({
+                type: 'GET',
+                url: url,
+                data: {
+                    recommendation_relation_id: recommendation_relation_id
+                },
+                beforeSend: function() {
+                    $('#kt_activitiesTermsFindJob_body').html('<div class="text-center py-20"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+                },
+                success: function(response) {
+                    if (response && (response.terms || response.view)) {
+                        $('#kt_activitiesTermsFindJob_body').html(response.terms || response.view);
+                    } else if (typeof response === 'string') {
+                        $('#kt_activitiesTermsFindJob_body').html(response);
+                    } else {
+                        $('#kt_activitiesTermsFindJob_body').html('<div class="text-center text-muted py-10">No specific commercial terms configured for this job requirement.</div>');
+                    }
+                },
+                error: function() {
+                    $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">Unable to load terms and conditions at this time.</div>');
+                }
+            });
         });
 
         $(document).on('click', '#AddInternalPoolEmpty', function() {

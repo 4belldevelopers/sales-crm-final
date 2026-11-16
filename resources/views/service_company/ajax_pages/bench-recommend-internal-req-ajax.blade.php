@@ -98,7 +98,7 @@
             } else {
                 $clientTypeKey = 'internal';
                 $isSelf = isset($cDetails) ? (((int) ($cDetails->self_company ?? 0)) === 1) : false;
-                $clientBadgeLabel = $isSelf ? 'Internal' : 'Internal Client';
+                $clientBadgeLabel = $isSelf ? 'My Organization' : 'Internal Client';
             }
             // Job Reference ID displayed next to client/internal badge (e.g. "Internal Client • 3" or "Internal • 3")
             $clientTypeId = (string) ($row->id ?? '');
@@ -304,7 +304,7 @@
                     <span class="bxr-col-hm-name hmlisting" data-row-id="{{ $row->id }}" style="font-size:12.5px;font-weight:700;color:#0F172A;cursor:pointer;">{{ $hiringManager }}</span>
                     <span class="bxr-col-hm-role" style="font-size:11px;color:#64748B;">{{ $hiringDesig ?: 'HR / Recruiter' }}</span>
                     <div style="margin-top:3px;">
-                        <span style="font-size:11.5px;font-weight:600;color:{{ $clientTypeKey === 'direct' ? '#16A34A' : '#2563EB' }};">
+                        <span style="font-size:11.5px;font-weight:600;color:{{ $clientTypeKey === 'direct' ? '#16A34A' : ($isSelf ? '#D97706' : '#2563EB') }};">
                             {{ $clientBadgeLabel }}
                         </span>
                         @if($clientTypeId)

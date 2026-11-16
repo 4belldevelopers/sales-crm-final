@@ -6352,7 +6352,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // dd($request->id);
         $this->bench_id = $request->id;
         $this->bench_detail = cache()->remember('ats:bench_candidate_detail:'.$this->bench_id, 300, function () {
-            return JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
+            return JobApplication::select('job_applications.id', 'job_applications.company_id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
                 ->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
                 ->join('countries', 'countries.id', '=', 'job_applications.country')
                 ->join('state_list', 'state_list.id', '=', 'job_applications.state')
@@ -6425,7 +6425,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // dd($request->id);
         $this->bench_id = $request->id;
         $this->bench_detail = cache()->remember('ats:bench_candidate_detail:'.$this->bench_id, 300, function () {
-            return JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
+            return JobApplication::select('job_applications.id', 'job_applications.company_id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
                 ->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
                 ->join('countries', 'countries.id', '=', 'job_applications.country')
                 ->join('state_list', 'state_list.id', '=', 'job_applications.state')
@@ -6470,6 +6470,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'custom_status' => 'active',
             'custom_hiringtype' => '10',
             'cus_search' => $initialCusSearch,
+            'client_type' => $request->input('client_type'),
         ]);
 
         try {
@@ -7118,6 +7119,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $custom_status = $request->input('custom_status');
         $custom_hiringtype = $request->input('custom_hiringtype') ?? $request->input('app_int_outsource');
         $work_mode = $request->input('work_mode');
+        $client_type = $request->input('client_type');
 
         $cachePayload = [
             'condidate_id' => $condidate_id,
@@ -7139,6 +7141,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'user_id' => $currentUserId,
             'custom_hiringtype' => $custom_hiringtype,
             'work_mode' => $work_mode,
+            'client_type' => $client_type,
         ];
 
         $versionKey = 'allbenchrecommendinternalreq_version_user_'.$currentUserId;
@@ -7360,6 +7363,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ],
         ];
 
+        // Classification filter: My Organization vs Internal Client (Rule 25)
+        if ($client_type === 'my_org') {
+            $filter[] = ['term' => ['self_company' => 1]];
+        } elseif ($client_type === 'internal') {
+            $must[] = [
+                'bool' => [
+                    'must_not' => [
+                        ['term' => ['self_company' => 1]],
+                    ],
+                ],
+            ];
+        }
+
         if (! empty($requiredSkills)) {
 
             $should = [];
@@ -7541,6 +7557,407 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         return response()->json($responseData);
 
+    }
+
+    /**
+     * Intent: AJAX endpoint for the redesigned "Similar Clients → Related Job Listing Drawer"
+     * on /service_company/bench-candidates.
+     * 100% CQRS: Elasticsearch strictly for reads (0% MySQL reads on search path).
+     * Server-side pagination, debounced multi-field search (title, client, company, location),
+     * 5 sorting options, and live authoritative category counts (Direct, Internal, My Org).
+     * Rule 14, 17, 20, 24, 25 compliant.
+     */
+    public function similar_clients_drawer_ajax(Request $request)
+    {
+        abort_if(Gate::denies('view_jobs'), 403);
+
+        $company_id = (int) auth()->user()->company_id;
+        $currentUserId = (int) (auth()->id() ?? $this->user->id ?? 0);
+        $candidate_id = (int) ($request->input('candidate_id') ?: $request->input('condidate_id'));
+
+        if ($candidate_id <= 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Candidate ID is required.',
+                'html' => '<div class="text-center py-10 text-danger"><i class="fa fa-circle-exclamation fa-2x mb-2"></i><div>Invalid candidate requested.</div></div>',
+                'total' => 0,
+            ], 400);
+        }
+
+        // Multi-tenant isolation: verify candidate belongs to current tenant company
+        $currentRowJob = cache()->remember("ats:bench_candidate_detail:{$candidate_id}", 300, function () use ($candidate_id) {
+            return JobApplication::withoutGlobalScopes()->find($candidate_id);
+        });
+
+        // Resolve company_id safely if the cached object was constructed without company_id
+        $candidateCompanyId = (int) ($currentRowJob->company_id ?? 0);
+        if ($candidateCompanyId === 0 && $currentRowJob) {
+            $candidateCompanyId = (int) DB::table('job_applications')->where('id', $candidate_id)->value('company_id');
+            $currentRowJob->company_id = $candidateCompanyId;
+        }
+
+        if (! $currentRowJob || $candidateCompanyId !== $company_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Candidate not found or access denied.',
+                'html' => '<div class="text-center py-10 text-muted"><i class="fa fa-user-slash fa-2x mb-2"></i><div>Candidate profile not found or unauthorized.</div></div>',
+                'total' => 0,
+            ], 404);
+        }
+
+        $category = (string) $request->input('category', 'direct');
+        if (! in_array($category, ['direct', 'internal', 'my_org'], true)) {
+            $category = 'direct';
+        }
+
+        $search = trim((string) $request->input('search', ''));
+        $sortOption = (string) $request->input('sort', 'newest');
+        $page = max((int) $request->input('page', 1), 1);
+        $limit = max(1, min((int) ($request->input('limit') ?: 10), 50));
+        $from = ($page - 1) * $limit;
+
+        // Authoritative counts for all 3 categories (cached 180s per candidate/skills)
+        $recomCounts = $this->benchjobAndRecomCount($candidate_id, $currentRowJob);
+        $counts = [
+            'direct' => (int) ($recomCounts['recommend_req_counter'] ?? 0),
+            'internal' => (int) ($recomCounts['recommend_internal_req_counter'] ?? 0),
+            'my_org' => (int) ($recomCounts['recommend_my_org_req_counter'] ?? 0),
+        ];
+
+        // Candidate skills
+        $skillsRaw = explode(',', (string) ($currentRowJob->skills ?? ''));
+        $candidateSkills = [];
+        $shouldSkills = [];
+        foreach ($skillsRaw as $s) {
+            $clean = strtolower(trim($s));
+            if ($clean !== '') {
+                $candidateSkills[] = $clean;
+                $shouldSkills[] = [
+                    'match' => [
+                        'job_metronics_skills.skill_name' => [
+                            'query' => $clean,
+                            'operator' => 'and',
+                        ],
+                    ],
+                ];
+            }
+        }
+
+        $must = [];
+        $filter = [['term' => ['status' => 'active']]];
+
+        // Category conditions
+        if ($category === 'direct') {
+            $must[] = [
+                'bool' => [
+                    'must_not' => [
+                        ['term' => ['comId' => $company_id]],
+                    ],
+                ],
+            ];
+        } elseif ($category === 'internal') {
+            $must[] = [
+                'term' => ['comId' => $company_id],
+            ];
+            $must[] = [
+                'bool' => [
+                    'must_not' => [
+                        ['term' => ['self_company' => 1]],
+                    ],
+                ],
+            ];
+        } elseif ($category === 'my_org') {
+            $must[] = [
+                'term' => ['comId' => $company_id],
+            ];
+            $filter[] = [
+                'term' => ['self_company' => 1],
+            ];
+        }
+
+        // Skill filtering (must match candidate skills if candidate has skills)
+        if (! empty($shouldSkills)) {
+            $filter[] = [
+                'nested' => [
+                    'path' => 'job_metronics_skills',
+                    'query' => [
+                        'bool' => [
+                            'should' => $shouldSkills,
+                            'minimum_should_match' => 1,
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        // Live multi-field search (title, client, company, location)
+        if ($search !== '') {
+            $cleanSearch = $search;
+            $wildcardPattern = '*' . strtolower($cleanSearch) . '*';
+            $searchShould = [
+                [
+                    'match' => [
+                        'title' => [
+                            'query' => $cleanSearch,
+                            'operator' => 'and',
+                            'fuzziness' => 'AUTO',
+                        ],
+                    ],
+                ],
+                [
+                    'match_phrase_prefix' => [
+                        'title' => [
+                            'query' => $cleanSearch,
+                        ],
+                    ],
+                ],
+                [
+                    'wildcard' => [
+                        'client_name' => [
+                            'value' => $wildcardPattern,
+                            'case_insensitive' => true,
+                        ],
+                    ],
+                ],
+                [
+                    'wildcard' => [
+                        'company_name' => [
+                            'value' => $wildcardPattern,
+                            'case_insensitive' => true,
+                        ],
+                    ],
+                ],
+                [
+                    'nested' => [
+                        'path' => 'client_city_jobs',
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    [
+                                        'match' => [
+                                            'client_city_jobs.city_name' => [
+                                                'query' => $cleanSearch,
+                                                'operator' => 'and',
+                                            ],
+                                        ],
+                                    ],
+                                    [
+                                        'match_phrase_prefix' => [
+                                            'client_city_jobs.city_name' => [
+                                                'query' => $cleanSearch,
+                                            ],
+                                        ],
+                                    ],
+                                    [
+                                        'wildcard' => [
+                                            'client_city_jobs.city_name.keyword' => [
+                                                'value' => $wildcardPattern,
+                                                'case_insensitive' => true,
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+
+            $must[] = [
+                'bool' => [
+                    'should' => $searchShould,
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
+
+        // Sorting
+        $sort = [];
+        $scoreShould = [];
+        switch ($sortOption) {
+            case 'relevance':
+                // Best match scoring based on skills matched
+                foreach ($candidateSkills as $bmSkill) {
+                    $scoreShould[] = [
+                        'nested' => [
+                            'path' => 'job_metronics_skills',
+                            'score_mode' => 'max',
+                            'query' => [
+                                'constant_score' => [
+                                    'filter' => [
+                                        'match' => [
+                                            'job_metronics_skills.skill_name' => [
+                                                'query' => $bmSkill,
+                                                'operator' => 'and',
+                                            ],
+                                        ],
+                                    ],
+                                    'boost' => 1,
+                                ],
+                            ],
+                        ],
+                    ];
+                }
+                $sort = [
+                    ['_score' => ['order' => 'desc']],
+                    ['id' => ['order' => 'desc']],
+                ];
+                break;
+            case 'oldest':
+                $sort = [
+                    ['id' => ['order' => 'asc']],
+                ];
+                break;
+            case 'title_asc':
+                $sort = [
+                    ['title.keyword' => ['order' => 'asc', 'unmapped_type' => 'keyword']],
+                    ['id' => ['order' => 'desc']],
+                ];
+                break;
+            case 'title_desc':
+                $sort = [
+                    ['title.keyword' => ['order' => 'desc', 'unmapped_type' => 'keyword']],
+                    ['id' => ['order' => 'desc']],
+                ];
+                break;
+            case 'newest':
+            default:
+                $sort = [
+                    ['id' => ['order' => 'desc']],
+                ];
+                break;
+        }
+
+        $boolQuery = ['must' => $must, 'filter' => $filter];
+        if (! empty($scoreShould)) {
+            $boolQuery['should'] = $scoreShould;
+        }
+
+        $params = [
+            'index' => ELASTIC_JOBS,
+            'body' => [
+                'from' => $from,
+                'size' => $limit,
+                'query' => ['bool' => $boolQuery],
+                'sort' => $sort,
+            ],
+        ];
+
+        $total = 0;
+        $jobs = [];
+        if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+            try {
+                $response = $this->elasticService->getClient()->search($params);
+                $total = (int) ($response['hits']['total']['value'] ?? 0);
+                $jobs = array_map(fn ($h) => $h['_source'] ?? [], $response['hits']['hits'] ?? []);
+
+                // Compute exact candidate-job skill match percentage for every job
+                foreach ($jobs as &$j) {
+                    $matchResult = GeneralMethod::calculateSkillMatch($j['job_metronics_skills'] ?? [], $candidateSkills);
+                    $j['match_percentage'] = (int) ($matchResult['percentage'] ?? 0);
+                    $j['match_result'] = $matchResult;
+                }
+                unset($j);
+
+                // Strictly keep jobs that match the candidate at the top of the list
+                usort($jobs, function ($a, $b) use ($sortOption) {
+                    $pctA = (int) ($a['match_percentage'] ?? 0);
+                    $pctB = (int) ($b['match_percentage'] ?? 0);
+
+                    if ($sortOption === 'relevance') {
+                        // Relevance: highest match percentage first
+                        if ($pctA !== $pctB) {
+                            return $pctB <=> $pctA;
+                        }
+                        $countA = (int) ($a['match_result']['matched_count'] ?? 0);
+                        $countB = (int) ($b['match_result']['matched_count'] ?? 0);
+                        if ($countA !== $countB) {
+                            return $countB <=> $countA;
+                        }
+                        return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
+                    }
+
+                    // In any other sort option, keep matching jobs (pct > 0) above 0% match jobs
+                    $hasMatchA = $pctA > 0 ? 1 : 0;
+                    $hasMatchB = $pctB > 0 ? 1 : 0;
+                    if ($hasMatchA !== $hasMatchB) {
+                        return $hasMatchB <=> $hasMatchA;
+                    }
+
+                    // Secondary sort per user selection
+                    switch ($sortOption) {
+                        case 'oldest':
+                            return ($a['id'] ?? 0) <=> ($b['id'] ?? 0);
+                        case 'title_asc':
+                            return strcasecmp($a['title'] ?? '', $b['title'] ?? '');
+                        case 'title_desc':
+                            return strcasecmp($b['title'] ?? '', $a['title'] ?? '');
+                        case 'newest':
+                        default:
+                            return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
+                    }
+                });
+            } catch (\Throwable $e) {
+                \Log::error('similar_clients_drawer_ajax ES error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            }
+        }
+
+        $lastPage = max(1, (int) ceil($total / $limit));
+
+        // Timezone per Rule 24
+        $tenantTimezone = GeneralMethod::defaultTimeZone($company_id) ?: 'Asia/Kolkata';
+
+        // Mappings
+        $salaryMode = GeneralMethod::salaryMode();
+        $employmentType = GeneralMethod::employmentType();
+        $currencySymbole = GeneralMethod::currencySymbole();
+
+        // Bulk fetch bench candidate request statuses and commercial relations (0% MySQL read strain on ES hits)
+        $jobIds = array_values(array_filter(array_map(function ($j) {
+            return (int) ($j['id'] ?? 0);
+        }, $jobs)));
+
+        $benchReqMap = [];
+        $relationMap = [];
+        if (!empty($jobIds)) {
+            $relationMap = GeneralMethod::getrRcommendationRelationDataBulk($company_id, $jobIds);
+            if (!empty($currentRowJob->id)) {
+                $benchReqMap = GeneralMethod::benchRequestCheckBulk($currentRowJob->id, $jobIds);
+            }
+        }
+
+        $html = view('service_company.ajax_pages.bench-related-jobs-cards-ajax', [
+            'jobs' => $jobs,
+            'total' => $total,
+            'category' => $category,
+            'candidate' => $currentRowJob,
+            'candidateSkills' => $candidateSkills,
+            'tenantTimezone' => $tenantTimezone,
+            'salaryMode' => $salaryMode,
+            'employmentType' => $employmentType,
+            'currencySymbole' => $currencySymbole,
+            'company_id' => $company_id,
+            'search' => $search,
+            'benchReqMap' => $benchReqMap,
+            'relationMap' => $relationMap,
+        ])->render();
+
+        return response()->json([
+            'status' => 'success',
+            'html' => $html,
+            'total' => $total,
+            'current_page' => $page,
+            'last_page' => $lastPage,
+            'per_page' => $limit,
+            'from' => $total > 0 ? $from + 1 : 0,
+            'to' => min($from + $limit, $total),
+            'counts' => $counts,
+            'candidate' => [
+                'id' => $currentRowJob->id,
+                'name' => ucwords($currentRowJob->full_name ?? 'Talent'),
+                'role' => ucwords($currentRowJob->current_designation ?? ''),
+            ],
+        ]);
     }
 
     public function recommandedrequestcondidate(Request $request)
@@ -8155,11 +8572,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'bench_explore_counter' => 0,
                 'recommend_req_counter' => 0,
                 'recommend_internal_req_counter' => 0,
+                'recommend_my_org_req_counter' => 0,
             ];
         }
 
         $skillsHash = md5($currentRowJob->skills ?? '');
-        $cacheKey = "ats:bench_recommend_counts:{$condidate_id}:{$company_id}:{$skillsHash}";
+        $cacheKey = "ats:bench_recommend_counts_v2:{$condidate_id}:{$company_id}:{$skillsHash}";
 
         return cache()->remember($cacheKey, 180, function () use ($id, $company_id, $currentRowJob) {
             $currentJobSkill = explode(',', $currentRowJob->skills);
@@ -8316,10 +8734,18 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $paramsInternal = [
                 'index' => ELASTIC_JOBS,
                 'body' => [
+                    'size' => 0,
                     'query' => [
                         'bool' => [
                             'must' => $mustInternal,
                             'filter' => $filterInternal,
+                        ],
+                    ],
+                    'aggs' => [
+                        'by_self_company' => [
+                            'terms' => [
+                                'field' => 'self_company',
+                            ],
                         ],
                     ],
                 ],
@@ -8327,15 +8753,29 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
             if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
                 $totalInternal = 0;
+                $internalClientCount = 0;
+                $myOrgCount = 0;
             } else {
-                $responseInternal = $this->elasticService->getClient()->count($paramsInternal);
-                $totalInternal = $responseInternal['count'] ?? 0;
+                $responseInternal = $this->elasticService->getClient()->search($paramsInternal);
+                $totalInternal = $responseInternal['hits']['total']['value'] ?? 0;
+                $internalClientCount = 0;
+                $myOrgCount = 0;
+                $buckets = $responseInternal['aggregations']['by_self_company']['buckets'] ?? [];
+                foreach ($buckets as $b) {
+                    if ((int) $b['key'] === 1) {
+                        $myOrgCount = (int) $b['doc_count'];
+                    } else {
+                        $internalClientCount += (int) $b['doc_count'];
+                    }
+                }
             }
 
             return [
                 'bench_explore_counter' => count($jobIds),
                 'recommend_req_counter' => $total,
-                'recommend_internal_req_counter' => $totalInternal,
+                'recommend_internal_req_counter' => $internalClientCount,
+                'recommend_my_org_req_counter' => $myOrgCount,
+                'recommend_total_internal_counter' => $totalInternal,
             ];
         });
     }
