@@ -5284,7 +5284,23 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->CaptainCompanyid = auth()->user()->company_id;
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
+
+        $requestedJobId = (int) (request()->input('job_id') ?: request()->input('jobId') ?: session()->get('job_id') ?: 0);
         $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
+
+        // If find($id) returned a record for a different job than requested, or if $id is a candidate_id,
+        // resolve to the record matching the requested job:
+        if ($requestedJobId > 0 && (! $AddJobWiseCondidate || (int) ($AddJobWiseCondidate->job_id ?? 0) !== $requestedJobId)) {
+            $matchingCandidate = AddJobWiseCondidate::withoutGlobalScopes()
+                ->where('job_application_id', $id)
+                ->where('job_id', $requestedJobId)
+                ->first();
+            if ($matchingCandidate) {
+                $AddJobWiseCondidate = $matchingCandidate;
+                $id = $AddJobWiseCondidate->id;
+            }
+        }
+
         if (! $AddJobWiseCondidate) {
             $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->where('job_application_id', $id)->first();
             if ($AddJobWiseCondidate) {
@@ -5302,7 +5318,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
-        $jobId = @$AddJobWiseCondidate->job_id;
+        $jobId = ! empty($AddJobWiseCondidate->job_id) ? (int) $AddJobWiseCondidate->job_id : $requestedJobId;
         // dd($id,$jobId,$AddJobWiseCondidate);
         $this->intModeArr = GeneralMethod::interview_mode();
 
@@ -5339,28 +5355,65 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $response = $this->elasticService->getClient()->get($params);
             $this->application = (object) $response['_source'];
 
+            $this->application->id = $this->application->id ?? $this->application->candidate_id ?? $id;
+            $this->application->candidate_id = $this->application->candidate_id ?? $this->application->id;
+            $this->application->master_status_name = $this->application->master_status_name ?? $this->application->name ?? 'Available';
+            $this->application->offer_currency = $this->application->of_offer_currency ?? ($this->application->pay_rate_currency ?? '');
+            $this->application->offer_mode = $this->application->of_offer_mode ?? ($this->application->pay_rate_mode ?? '');
+            $this->application->offer_amount = $this->application->of_offer_amount ?? ($this->application->pay_rate_amount ?? '');
+            $this->application->joined_date = $this->application->of_joined_date ?? null;
+            $this->application->hashname = ! empty($this->application->hashname) ? $this->application->hashname : ($this->application->resume ?? '');
+            $this->application->child_status_id = $this->application->childStatus ?? 0;
+            $this->application->master_status_id = $this->application->job_master_status_id ?? ($this->application->master_status_id ?? 1);
+            $this->application->condidate_type = $this->application->condidate_type ?? 'bench_condidate';
+            $this->application->ClientComID = $this->application->ClientComID ?? 0;
+            $this->application->posted_by = $this->application->posted_by ?? '';
+            $this->application->posted_by_image = $this->application->posted_by_image ?? '';
+            $this->application->other_company = $this->application->other_company ?? ($this->application->company_id ?? 0);
+            $this->application->wiseId = $this->application->wiseId ?? $this->application->id ?? $id;
+            $this->application->rjobid = $this->application->rjobid ?? 0;
+            $this->application->from_company_id = $this->application->from_company_id ?? 0;
+            $this->application->to_company_id = $this->application->to_company_id ?? 0;
+
         }
 
-        $params = [
-            'index' => ELASTIC_JOBS,
-            'id' => $jobId,
-        ];
+        $this->job = null;
+        if (! empty($jobId) && $jobId > 0) {
+            try {
+                $params = [
+                    'index' => ELASTIC_JOBS,
+                    'id' => $jobId,
+                ];
 
-        $response = $this->elasticService->getClient()->get($params);
-        $this->job = (object) $response['_source'];
+                $response = $this->elasticService->getClient()->get($params);
+                $this->job = (object) $response['_source'];
+            } catch (\Throwable $e) {
+                \Log::warning('Elasticsearch job lookup fallback in show()', ['job_id' => $jobId]);
+            }
+        }
+
+        if (! $this->job) {
+            $this->job = (object) [
+                'id' => $jobId ?: null,
+                'client_contact_info_jobs' => [],
+                'job_assign' => [],
+                'comId' => 0,
+                'user_name' => '',
+            ];
+        }
 
         // Intent: V4 CQRS Read Optimization - Eradicate legacy write-on-read loops during candidate drawer GET request.
         // Un-scored skills and un-answered questions are handled as virtual in-memory projections on the read path.
         // Database mutations are strictly deferred until a recruiter explicitly scores skills or submits answers.
 
-        $this->client_contuser_arr = ($this->job->client_contact_info_jobs);
+        $this->client_contuser_arr = $this->job->client_contact_info_jobs ?? [];
         $this->clientjobAssignListCaptain = '';
-        if ($this->job->comId != $company_id) {
-            $job_assign = $this->job->job_assign;
+        if (($this->job->comId ?? 0) != $company_id) {
+            $job_assign = $this->job->job_assign ?? [];
             $jobAssign = collect($job_assign);
             $this->jobAssignListCaptain = $jobAssign
                 ->where('spok_user_id', '>', 0)
-                ->where('company_id', $this->job->comId)
+                ->where('company_id', $this->job->comId ?? 0)
                 ->filter()
                 ->values()
                 ->all();
@@ -5524,11 +5577,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->interviewFeedbackMap = $interviewFeedbackMap;
         $this->interviewSkillsFeedbackCountMap = $interviewSkillsFeedbackCountMap;
 
-        $sel_app_id = $id;
+        $sel_app_id = $this->application->id ?? $id;
         $sel_job_id = $job_id;
-        $this->benchStatusCnt = DB::table('rec_candidate_assign')->where('source_application_id', '=', $sel_app_id)->where('source_jobid', '=', $sel_job_id)->where('source_from_type', '!=', 0)->count();
+        $this->benchStatusCnt = DB::table('rec_candidate_assign')
+            ->where(function ($q) use ($sel_app_id, $id) {
+                $q->where('source_application_id', '=', $sel_app_id)
+                    ->orWhere('source_application_id', '=', $id);
+            })
+            ->where('source_jobid', '=', $sel_job_id)
+            ->where('source_from_type', '!=', 0)
+            ->count();
         if ($this->benchStatusCnt > 0) {
-            $benchAssignRow = DB::table('rec_candidate_assign')->select('rec_candidate_assign.*')->where('source_application_id', '=', $sel_app_id)->first();
+            $benchAssignRow = DB::table('rec_candidate_assign')
+                ->select('rec_candidate_assign.*')
+                ->where(function ($q) use ($sel_app_id, $id) {
+                    $q->where('source_application_id', '=', $sel_app_id)
+                        ->orWhere('source_application_id', '=', $id);
+                })
+                ->where('source_jobid', '=', $sel_job_id)
+                ->first();
             $source_from_company_id = @$benchAssignRow->source_from_company_id;
             $source_from_user_id = @$benchAssignRow->source_from_user_id;
             $source_from_id = @$benchAssignRow->source_from_id;
@@ -5563,7 +5630,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         }
 
-        if (! in_array('salary_view', $this->userPermissions)) {
+        if (! in_array('salary_view', (array) ($this->userPermissions ?? []))) {
             $this->application->ctc = 'N/A';
             $this->application->ectc = 'N/A';
             $this->application->pay_rate_amount = 'N/A';
@@ -6397,11 +6464,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // dd(	$this->updateTimeLine);
 
-        $sel_app_id = $id;
+        $sel_app_id = $this->application->id ?? $id;
         $sel_job_id = $job_id;
-        $this->benchStatusCnt = DB::table('rec_candidate_assign')->where('source_application_id', '=', $sel_app_id)->where('source_jobid', '=', $sel_job_id)->where('source_from_type', '!=', 0)->count();
+        $this->benchStatusCnt = DB::table('rec_candidate_assign')
+            ->where(function ($q) use ($sel_app_id, $id) {
+                $q->where('source_application_id', '=', $sel_app_id)
+                    ->orWhere('source_application_id', '=', $id);
+            })
+            ->where('source_jobid', '=', $sel_job_id)
+            ->where('source_from_type', '!=', 0)
+            ->count();
         if ($this->benchStatusCnt > 0) {
-            $benchAssignRow = DB::table('rec_candidate_assign')->select('rec_candidate_assign.*')->where('source_application_id', '=', $sel_app_id)->first();
+            $benchAssignRow = DB::table('rec_candidate_assign')
+                ->select('rec_candidate_assign.*')
+                ->where(function ($q) use ($sel_app_id, $id) {
+                    $q->where('source_application_id', '=', $sel_app_id)
+                        ->orWhere('source_application_id', '=', $id);
+                })
+                ->where('source_jobid', '=', $sel_job_id)
+                ->first();
 
             $source_from_company_id = @$benchAssignRow->source_from_company_id;
             $source_from_user_id = @$benchAssignRow->source_from_user_id;
@@ -6436,7 +6517,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         }
 
-        if (! in_array('salary_view', $this->userPermissions)) {
+        if (! in_array('salary_view', (array) ($this->userPermissions ?? []))) {
             $this->application->ctc = 'N/A';
             $this->application->ectc = 'N/A';
             $this->application->pay_rate_amount = 'N/A';
