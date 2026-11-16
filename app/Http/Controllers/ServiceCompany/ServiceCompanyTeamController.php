@@ -4033,6 +4033,118 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         ])->header('Server-Timing', "team_joiningdata;dur={$durMs};desc=\"Team Joining Data AJAX\"");
     }
 
+    public function offerdata_ajax(Request $request)
+    {
+        // Phase 0 Performance Telemetry: Baseline timing start
+        $startTime = microtime(true);
+        $currency = GeneralMethod::currency();
+        $salaryMode = GeneralMethod::salaryMode();
+        $job_status = GeneralMethod::job_status();
+        $userId = (int) ($request->input('userId') ?? $this->user->id);
+        $targetUser = $this->authorizeTeamMemberAccess($userId);
+        $company_id = auth()->user()->company_id;
+
+        $searchTerms = request('cus_search');
+        $custom_search = $searchTerms;
+        $country = request('country');
+        $valCheck = $request->input('sortingfilter');
+        $page = max((int) $request->input('page', 1), 1);
+        $size = (int) $request->input('size', 10);
+        $from = ($page - 1) * $size;
+        $sort = [];
+
+        switch ($valCheck) {
+            case 12:
+                $sort[] = ['of_created_date' => ['order' => 'desc', 'unmapped_type' => 'date']];
+                break;
+            case 13:
+                $sort[] = ['of_created_date' => ['order' => 'asc', 'unmapped_type' => 'date']];
+                break;
+            case 14:
+                $sort[] = ['of_offer_amount' => ['order' => 'asc', 'unmapped_type' => 'float']];
+                break;
+            case 15:
+                $sort[] = ['of_offer_amount' => ['order' => 'desc', 'unmapped_type' => 'float']];
+                break;
+            default:
+                $sort[] = ['wiseId' => ['order' => 'desc', 'unmapped_type' => 'long']];
+                break;
+        }
+
+        $boolQuery = [
+            'bool' => [
+                'should' => [
+                    [
+                        'bool' => [
+                            'must' => array_merge([
+                                ['term' => ['submitted_by' => $userId]],
+                                ['term' => ['job_master_status_id' => 5]],
+                            ], $this->getSearchConditions($custom_search, $country)),
+                        ],
+                    ],
+                ],
+                'minimum_should_match' => 1,
+                'filter' => [],
+            ],
+        ];
+
+        if (\request('country') != '') {
+            $boolQuery['bool']['filter'][] = [
+                'terms' => [
+                    'country' => [$country],
+                ],
+            ];
+        }
+
+        $params = [
+            'index' => ELASTIC_CANDIDATES,
+            'request_cache' => true,
+            'body' => [
+                '_source' => [
+                    'id', 'wiseId', 'full_name', 'email', 'phone', 'current_designation', 'ctc', 'ectc',
+                    'notice_period', 'np_id', 'created_at', 'jobId', 'title', 'client_name', 'posted_by',
+                    'company_name', 'job_master_status_id', 'name', 'master_status_id', 'master_status_name', 'child_status_id',
+                    'css_style', 'country', 'state', 'city', 'city_id', 'thirdparty_company_id',
+                    'client_comapny_id', 'of_joined_date', 'of_created_date', 'of_offer_amount', 'of_offer_currency', 'of_offer_mode',
+                    'of_currency', 'of_mode', 'employment_type',
+                ],
+                'from' => $from,
+                'size' => $size,
+                'sort' => $sort,
+                'track_total_hits' => true,
+                'query' => $boolQuery,
+            ],
+        ];
+
+        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+            $total = 0;
+            $data = [];
+        } else {
+            $response = $this->elasticService->getClient()->search($params);
+            $total = $response['hits']['total']['value'] ?? 0;
+            $data = array_map(function ($hit) {
+                return $hit['_source'];
+            }, $response['hits']['hits']);
+        }
+
+        $pagination = [
+            'total' => $total,
+            'current_page' => $page,
+            'last_page' => ceil($total / $size),
+            'listType' => 'allcandidate',
+        ];
+
+        $userPermissions = $this->userPermissions;
+        $durMs = round((microtime(true) - $startTime) * 1000, 2);
+
+        return response()->json([
+            'html' => $this->sanitizeHtmlPayload(view('service_company.ajax_pages.team-candidate-offer-ajax', compact('data', 'userPermissions', 'company_id', 'currency', 'salaryMode', 'job_status'))->render()),
+            'total' => $total,
+            'pagination' => $this->sanitizeHtmlPayload(view('service_company.ajax_pages.pagination', compact('pagination'))->render()),
+            '_telemetry' => ['dur_ms' => $durMs, 'endpoint' => 'team.offerdata_ajax'],
+        ])->header('Server-Timing', "team_offerdata;dur={$durMs};desc=\"Team Offer Data AJAX\"");
+    }
+
     public function joiningdata(Request $request)
     {
         $currency = GeneralMethod::currency();

@@ -166,7 +166,9 @@ class JobApplyService
         $hasResume = $request->filled('resume_session_uuid')
             || $request->hasFile('resume')
             || ($request->filled('uploaded_file_path') && $request->filled('resume_original_name'))
-            || $request->filled('existing_resume_path');
+            || $request->filled('existing_resume_path')
+            || ($request->input('resumeCheck') === '1' || $request->input('resumeCheck') === 1)
+            || in_array($request->input('resume_intent'), ['KEEP', 'ATTACH_IF_AVAILABLE']);
         if (! $hasResume) {
             return Reply::dataOnly([
                 'status' => 'mailcheck',

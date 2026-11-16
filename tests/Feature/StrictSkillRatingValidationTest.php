@@ -486,4 +486,62 @@ class StrictSkillRatingValidationTest extends TestCase
         $this->assertEmpty($status['unrated'], 'No unrated skills should be reported.');
         $this->assertTrue($this->controller->checkCandidateHasValidSkillRating($candidatePayload));
     }
+
+    /**
+     * Test checkCandidateSourcingMissingFields does not flag Upload Resume when resume exists in MySQL job_applications table.
+     */
+    public function test_check_candidate_sourcing_missing_fields_accepts_resume_from_mysql_fallback(): void
+    {
+        $appId = DB::table('job_applications')->insertGetId([
+            'full_name' => 'Resume Candidate',
+            'email' => 'resume@test.com',
+            'phone' => '9999999999',
+            'city_id' => 1,
+            'qualification' => 'B.Tech',
+            'nationality' => 'Indian',
+            'gender' => 'Male',
+            'skills' => 'Java',
+            'total_exp' => '0',
+            'rel_exp' => '0',
+            'wm' => 'Remote',
+            'recruiter_note' => 'Good candidate',
+            'resume' => 'https://file.jero.works/Companies/test/Resumes/test.docx',
+            'careersummary' => 'Summary of experience',
+        ]);
+
+        $skill1 = DB::table('job_metronics_skills')->insertGetId(['job_id' => 60, 'skill_name' => 'Java']);
+        DB::table('candidate_job_skill_exp')->insert([
+            'job_skill_id' => $skill1,
+            'skill_value' => '0.0 Year',
+            'job_id' => 60,
+            'candidate_id' => $appId,
+            'rating' => 5,
+        ]);
+
+        // Elasticsearch payload where resume field is empty/null (e.g. sync delay)
+        $candidatePayload = (object) [
+            'candidate_id' => $appId,
+            'jobId' => 60,
+            'full_name' => 'Resume Candidate',
+            'email' => 'resume@test.com',
+            'phone' => '9999999999',
+            'city_id' => 1,
+            'qualification' => 'B.Tech',
+            'nationality' => 'Indian',
+            'gender' => 'Male',
+            'skills' => 'Java',
+            'total_exp' => '0',
+            'rel_exp' => '0',
+            'wm' => 'Remote',
+            'recruiter_note' => 'Good candidate',
+            'resume' => null, // empty in ES
+            'careersummary' => 'Summary of experience',
+        ];
+
+        $ref = new \ReflectionMethod($this->controller, 'checkCandidateSourcingMissingFields');
+        $ref->setAccessible(true);
+        $missing = $ref->invoke($this->controller, $candidatePayload);
+
+        $this->assertNotContains('Upload Resume', $missing);
+    }
 }
