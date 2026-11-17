@@ -9874,18 +9874,23 @@ var KTAddCandidate = function () {
                 ? ('{{ url("service_company/job-applications/update") }}/' + candidateEditId + '?_token=' + '{{ csrf_token() }}')
                 : ('{{ route("service_company.job-applications.store") }}' + '?_token=' + '{{ csrf_token() }}');
 
-            $.ajax({
-                url: submitUrl,
-                type: 'POST',
-                headers: {
-                    'X-Correlation-ID': window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('cid-' + Date.now() + '-' + Math.random().toString(36).slice(2))
-                },
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                redirect: true,
-                success: function (response) {
+            var attemptCount = 0;
+            var maxGatewayRetries = 2;
+
+            function doAjaxSubmit() {
+                attemptCount++;
+                $.ajax({
+                    url: submitUrl,
+                    type: 'POST',
+                    headers: {
+                        'X-Correlation-ID': window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('cid-' + Date.now() + '-' + Math.random().toString(36).slice(2))
+                    },
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    redirect: true,
+                    success: function (response) {
                     if (typeof response === 'string') {
                         try { response = JSON.parse(response); } catch (e) {}
                     }
@@ -10113,6 +10118,18 @@ var KTAddCandidate = function () {
                     }, 600);
                 },
                 error: function (xhr, textStatus, errorThrown) {
+                    // Gateway timeout / bad gateway / upstream restart resilience
+                    if ((xhr.status === 502 || xhr.status === 503 || xhr.status === 504) && attemptCount <= maxGatewayRetries) {
+                        console.warn('[Candidate Submit] Upstream HTTP ' + xhr.status + ' received (attempt ' + attemptCount + '/' + maxGatewayRetries + '). Retrying in 1.5s...');
+                        if (typeof toastr !== 'undefined' && toastr.info) {
+                            toastr.info('Server is reconnecting. Automatically retrying submission...', '', { timeOut: 2000 });
+                        }
+                        setTimeout(function () {
+                            doAjaxSubmit();
+                        }, 1500);
+                        return;
+                    }
+
                     window.__candidateIsSubmitting = false;
                     $btn.prop('disabled', false).removeClass('disabled').html(resetBtnHtml);
                     if (submitButton) { submitButton.removeAttribute('data-kt-indicator'); submitButton.disabled = false; }
@@ -10157,10 +10174,24 @@ var KTAddCandidate = function () {
                         $('#client_update_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('upd_' + Math.random().toString(36).slice(2) + Date.now()));
                     }
 
+                    if (xhr.status === 502 || xhr.status === 503 || xhr.status === 504) {
+                        Swal.fire({
+                            title: "Server Reconnecting",
+                            text: "The server was momentarily restarting. Please click " + (isEdit ? "Update Candidate" : "Submit Candidate") + " again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok, got it!",
+                            customClass: { confirmButton: "btn btn-primary" }
+                        });
+                        return;
+                    }
+
                     var display = serverMsg || (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
                     Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
                 }
             });
+            }
+
+            doAjaxSubmit();
         };
 
         var handleCandidateSubmit = async function (e) {

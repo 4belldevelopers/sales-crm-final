@@ -7303,82 +7303,110 @@ var KTAddCandidate = function () {
             }
             window.normalizeCreateTalentPhones();
             var formData = new FormData($('#createForm')[0]);
-            $.ajax({
-                url: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                redirect: true,
-                success: function (response) {
-                    if (response.status === 'coinCheck') {
+            var attemptCount = 0;
+            var maxGatewayRetries = 2;
+
+            function doBenchAjaxSubmit() {
+                attemptCount++;
+                $.ajax({
+                    url: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    redirect: true,
+                    success: function (response) {
+                        if (response.status === 'coinCheck') {
+                            window.__talentIsSubmitting = false;
+                            $("#save-form").prop("disabled", false).removeClass('disabled');
+                            if (submitButton) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                            }
+                            if (typeof window.syncTalentStageAction === 'function') {
+                                window.syncTalentStageAction();
+                            }
+                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                            $('#client_submission_uuid').val(freshUuid);
+                            Swal.fire("Warning", ` ${response.message}`, "warning");
+                            return false;
+                        }
+
+                        if (response.status === 'mailcheck') {
+                            window.__talentIsSubmitting = false;
+                            $("#save-form").prop("disabled", false).removeClass('disabled');
+                            if (submitButton) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                            }
+                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                            $('#client_submission_uuid').val(freshUuid);
+                            if (!navigator.onLine) {
+                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                return;
+                            }
+                            if (typeof window.syncTalentStageAction === 'function') {
+                                window.syncTalentStageAction();
+                            }
+                            Swal.fire("Warning", response.message, "warning").then(function(){});
+                            return false;
+                        }
+
+                        // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
+                        handleTalentSubmissionSuccess(response);
+                    },
+                    error: function (xhr) {
+                        // Gateway timeout / bad gateway / upstream restart resilience
+                        if ((xhr.status === 502 || xhr.status === 503 || xhr.status === 504) && attemptCount <= maxGatewayRetries) {
+                            console.warn('[Talent Submit] Upstream HTTP ' + xhr.status + ' received (attempt ' + attemptCount + '/' + maxGatewayRetries + '). Retrying in 1.5s...');
+                            if (typeof toastr !== 'undefined' && toastr.info) {
+                                toastr.info('Server is reconnecting. Automatically retrying submission...', '', { timeOut: 2000 });
+                            }
+                            setTimeout(function () {
+                                doBenchAjaxSubmit();
+                            }, 1500);
+                            return;
+                        }
+
+                        // If server returns HTTP 409 IN_FLIGHT, do not stomp with error modal!
+                        if (xhr.status === 409) {
+                            var errCode = (xhr.responseJSON && (xhr.responseJSON.error || xhr.responseJSON.status)) || '';
+                            if (errCode === 'IN_FLIGHT') {
+                                console.info('[Talent Submit] Submission actively processing on server. Awaiting completion.');
+                                return;
+                            }
+                        }
+
                         window.__talentIsSubmitting = false;
                         $("#save-form").prop("disabled", false).removeClass('disabled');
-                        if (submitButton) {
-                            submitButton.removeAttribute('data-kt-indicator');
-                            submitButton.disabled = false;
-                        }
                         if (typeof window.syncTalentStageAction === 'function') {
                             window.syncTalentStageAction();
                         }
-                        const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                        $('#client_submission_uuid').val(freshUuid);
-                        Swal.fire("Warning", ` ${response.message}`, "warning");
-                        return false;
-                    }
-
-                    if (response.status === 'mailcheck') {
-                        window.__talentIsSubmitting = false;
-                        $("#save-form").prop("disabled", false).removeClass('disabled');
                         if (submitButton) {
                             submitButton.removeAttribute('data-kt-indicator');
                             submitButton.disabled = false;
                         }
                         const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
                         $('#client_submission_uuid').val(freshUuid);
-                        if (!navigator.onLine) {
+                        if (xhr.status === 0 || !navigator.onLine) {
                             Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            return;
+                        } else if (xhr.status === 502 || xhr.status === 503 || xhr.status === 504) {
+                            Swal.fire({
+                                title: "Server Reconnecting",
+                                text: "The server was momentarily restarting. Please click Save Talent again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok, got it!",
+                                customClass: { confirmButton: "btn btn-primary" }
+                            });
+                        } else {
+                            var errMsg = (xhr.responseJSON && xhr.responseJSON.message) || "Something went wrong. Please try again.";
+                            Swal.fire("Error", errMsg, "error");
                         }
-                        if (typeof window.syncTalentStageAction === 'function') {
-                            window.syncTalentStageAction();
-                        }
-                        Swal.fire("Warning", response.message, "warning").then(function(){});
-                        return false;
                     }
+                });
+            }
 
-                    // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
-                    handleTalentSubmissionSuccess(response);
-                },
-                error: function (xhr) {
-                    // If server returns HTTP 409 IN_FLIGHT, do not stomp with error modal!
-                    if (xhr.status === 409) {
-                        var errCode = (xhr.responseJSON && (xhr.responseJSON.error || xhr.responseJSON.status)) || '';
-                        if (errCode === 'IN_FLIGHT') {
-                            console.info('[Talent Submit] Submission actively processing on server. Awaiting completion.');
-                            return;
-                        }
-                    }
-
-                    window.__talentIsSubmitting = false;
-                    $("#save-form").prop("disabled", false).removeClass('disabled');
-                    if (typeof window.syncTalentStageAction === 'function') {
-                        window.syncTalentStageAction();
-                    }
-                    if (submitButton) {
-                        submitButton.removeAttribute('data-kt-indicator');
-                        submitButton.disabled = false;
-                    }
-                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                    $('#client_submission_uuid').val(freshUuid);
-                    if (xhr.status === 0 || !navigator.onLine) {
-                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                    } else {
-                        var errMsg = (xhr.responseJSON && xhr.responseJSON.message) || "Something went wrong. Please try again.";
-                        Swal.fire("Error", errMsg, "error");
-                    }
-                }
-            });
+            doBenchAjaxSubmit();
         };
 
         var handleCandidateSubmit = async function (e) {

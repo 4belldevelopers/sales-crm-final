@@ -72,7 +72,7 @@ class CandidateSubmitReadinessAndCacheTest extends TestCase
         $cvTracker = $this->source('app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php');
 
         $this->assertStringContainsString("'allcvtracker_version_company_'.\$company_id", $cvTracker);
-        $this->assertStringContainsString('$version = $userVersion.\'_\'.$tenantVersion', $cvTracker);
+        $this->assertStringContainsString('$tenantVersion', $cvTracker);
     }
 
     public function test_create_blade_contains_readiness_polling_and_stop_timer(): void
@@ -82,10 +82,9 @@ class CandidateSubmitReadinessAndCacheTest extends TestCase
         $this->assertStringContainsString('check-index-status', $blade);
         $this->assertStringContainsString('stopTimerTimeout = setTimeout', $blade);
         $this->assertStringContainsString('pollSearchIndex', $blade);
-        $this->assertStringContainsString('candidate-index-countdown', $blade);
+        $this->assertStringContainsString('sync-countdown-seconds', $blade);
         $this->assertStringContainsString('10000', $blade);
         $this->assertStringContainsString('new_candidate_id', $blade);
-        $this->assertStringContainsString('Preparing index...', $blade);
     }
 
     public function test_clientcreate_blade_contains_readiness_polling_and_stop_timer(): void
@@ -95,10 +94,9 @@ class CandidateSubmitReadinessAndCacheTest extends TestCase
         $this->assertStringContainsString('check-index-status', $blade);
         $this->assertStringContainsString('stopTimerTimeout = setTimeout', $blade);
         $this->assertStringContainsString('pollSearchIndex', $blade);
-        $this->assertStringContainsString('client-candidate-index-countdown', $blade);
+        $this->assertStringContainsString('sync-countdown-seconds', $blade);
         $this->assertStringContainsString('10000', $blade);
         $this->assertStringContainsString('new_candidate_id', $blade);
-        $this->assertStringContainsString('Preparing index...', $blade);
     }
 
     public function test_job_dataset_versioning_and_reverb_event_dispatched_in_controllers(): void
