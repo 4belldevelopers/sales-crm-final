@@ -4201,17 +4201,43 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ->first();
 
             if (! $resumeSession) {
+                if ($redisLockKey && $redisLockAcquired) {
+                    try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                }
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload session not found. Please upload the resume again.']);
             }
 
-            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+            // Self-healing check: if session is still Pending or Uploading, but file exists in R2, finalize it JIT
+            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
+                $existsInR2 = false;
+                try {
+                    $existsInR2 = Storage::disk('r2')->exists('resumes/'.$resumeSession->uuid);
+                } catch (\Throwable) {
+                }
+
+                if ($existsInR2) {
+                    try {
+                        app(\App\Services\ResumeUploadSession::class)->finalize($resumeSession->uuid, $company_id);
+                        $resumeSession->refresh();
+                    } catch (\Throwable) {
+                    }
+                }
+            }
+
+            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
+                if ($redisLockKey && $redisLockAcquired) {
+                    try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                }
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
             }
 
             // Ownership check: session must belong to this tenant and not be linked to another candidate/application
             if ($resumeSession->linked_candidate_id && (int) $resumeSession->linked_candidate_id !== (int) $jobApplication->id) {
+                if ($redisLockKey && $redisLockAcquired) {
+                    try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                }
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload session has already been associated with another application. Please upload the resume again.']);
             }
@@ -4225,6 +4251,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             } catch (\Throwable) {
             }
             if (! $r2Exists) {
+                if ($redisLockKey && $redisLockAcquired) {
+                    try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                }
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Uploaded file not found in storage. Please upload the resume again.']);
             }
@@ -4307,23 +4336,28 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         ->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
 
                     if ($claimed === 0) {
-                        DB::rollBack();
-                        if ($redisLockKey && $redisLockAcquired) {
-                            try {
-                                Redis::del($redisLockKey);
-                            } catch (\Throwable) {
-                            }
-                        }
                         $existing = ResumeUpload::byUuid($resumeSession->uuid)->forCompany($company_id)->first();
-                        if ($existing && $existing->linked_candidate_id) {
-                            return Reply::redirect(
-                                url('/service_company/apptracker/'.GeneralMethod::value_encrypt($request->job_id).'/all'),
-                                'Candidate already saved from this upload.'
-                            );
-                        }
+                        if ($existing && $existing->status === ResumeUploadStatus::Completed->value &&
+                            (! $existing->linked_candidate_id || (int) $existing->linked_candidate_id === (int) $jobApplication->id)) {
+                            $claimed = 1;
+                        } else {
+                            DB::rollBack();
+                            if ($redisLockKey && $redisLockAcquired) {
+                                try {
+                                    Redis::del($redisLockKey);
+                                } catch (\Throwable) {
+                                }
+                            }
+                            if ($existing && $existing->linked_candidate_id) {
+                                return Reply::redirect(
+                                    url('/service_company/apptracker/'.GeneralMethod::value_encrypt($request->job_id).'/all'),
+                                    'Candidate already saved from this upload.'
+                                );
+                            }
 
-                        return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-                            'message' => 'Resume upload session is no longer valid. Please upload again.']);
+                            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                                'message' => 'Resume upload session is no longer valid. Please upload again.']);
+                        }
                     }
 
                     $finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
@@ -8838,7 +8872,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload session not found. Please upload the resume again.']);
             }
-            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+
+            // Self-healing check: if session is still Pending or Uploading, but file exists in R2, finalize it JIT
+            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
+                $existsInR2 = false;
+                try {
+                    $existsInR2 = Storage::disk('r2')->exists('resumes/'.$resumeSession->uuid);
+                } catch (\Throwable) {
+                }
+
+                if ($existsInR2) {
+                    try {
+                        app(\App\Services\ResumeUploadSession::class)->finalize($resumeSession->uuid, $company_id);
+                        $resumeSession->refresh();
+                    } catch (\Throwable) {
+                    }
+                }
+            }
+
+            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
             }
@@ -8987,10 +9039,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ->where('status', ResumeUploadStatus::Uploaded->value)
                     ->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
                 if ($claimed === 0) {
-                    DB::rollBack();
+                    $existing = ResumeUpload::byUuid($resumeSession->uuid)->forCompany($company_id)->first();
+                    if ($existing && $existing->status === ResumeUploadStatus::Completed->value &&
+                        (! $existing->linked_candidate_id || (int) $existing->linked_candidate_id === (int) $jobApplication->id)) {
+                        $claimed = 1;
+                    } else {
+                        DB::rollBack();
 
-                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-                        'message' => 'Resume upload session is no longer valid. Please upload again.']);
+                        return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                            'message' => 'Resume upload session is no longer valid. Please upload again.']);
+                    }
                 }
                 $r2Exists = false;
                 try {
@@ -14132,10 +14190,34 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
                 ->forCompany($company_id)->first();
             if (! $resumeSession) {
+                if ($redisLockKey && $redisLockAcquired) {
+                    try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                }
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload session not found. Please upload the resume again.']);
             }
-            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+
+            // Self-healing check: if session is still Pending or Uploading, but file exists in R2, finalize it JIT
+            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
+                $existsInR2 = false;
+                try {
+                    $existsInR2 = Storage::disk('r2')->exists('resumes/'.$resumeSession->uuid);
+                } catch (\Throwable) {
+                }
+
+                if ($existsInR2) {
+                    try {
+                        app(\App\Services\ResumeUploadSession::class)->finalize($resumeSession->uuid, $company_id);
+                        $resumeSession->refresh();
+                    } catch (\Throwable) {
+                    }
+                }
+            }
+
+            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
+                if ($redisLockKey && $redisLockAcquired) {
+                    try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                }
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
             }
@@ -14206,10 +14288,22 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ->where('status', ResumeUploadStatus::Uploaded->value)
                     ->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
                 if ($claimed === 0) {
-                    DB::rollBack();
+                    $existing = ResumeUpload::byUuid($resumeSession->uuid)->forCompany($company_id)->first();
+                    if ($existing && $existing->status === ResumeUploadStatus::Completed->value &&
+                        (! $existing->linked_candidate_id || (int) $existing->linked_candidate_id === (int) $application_id)) {
+                        $claimed = 1;
+                    } else {
+                        DB::rollBack();
+                        if ($redisLockKey && $redisLockAcquired) {
+                            try {
+                                Redis::del($redisLockKey);
+                            } catch (\Throwable) {
+                            }
+                        }
 
-                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-                        'message' => 'Resume session was already claimed. Please upload the resume again.']);
+                        return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                            'message' => 'Resume session was already claimed. Please upload the resume again.']);
+                    }
                 }
                 $r2Exists = false;
                 try {

@@ -38,6 +38,7 @@ window.ResumePresign = (function () {
     let _state         = STATE.IDLE;
     let _sessionUuid   = null;
     let _uploadXHR     = null;
+    let _activeUploadPromise = null;
     const _listeners   = [];
 
     // Runtime config — blade can inject overrides via window.RESUMES_CONFIG.
@@ -55,8 +56,11 @@ window.ResumePresign = (function () {
      * @param {string} [contextKey] - Optional tenant/job/application context key (e.g. "comp1_job2_app3").
      * Returns a Promise that resolves with the session object on success.
      */
-    async function startUpload(file, contextKey) {
+    function startUpload(file, contextKey) {
         if (_state === STATE.UPLOADING) {
+            if (_activeUploadPromise) {
+                return _activeUploadPromise;
+            }
             throw new Error('Upload already in progress');
         }
 
@@ -65,26 +69,35 @@ window.ResumePresign = (function () {
         _setState(STATE.UPLOADING, 0);
 
         const idempotencyKey = crypto.randomUUID();
-        const sha256Hex = await _sha256(file).catch(() => null);
 
-        try {
-            const session = await _presign(file, sha256Hex, idempotencyKey);
-            _sessionUuid = session.uuid;
-            _setSessionUuidGlobal(session.uuid);
-            _persistSession(session.uuid, idempotencyKey, contextKey);
+        var promise = (async function () {
+            try {
+                const sha256Hex = await _sha256(file).catch(() => null);
+                const session = await _presign(file, sha256Hex, idempotencyKey);
+                _sessionUuid = session.uuid;
+                _persistSession(session.uuid, idempotencyKey, contextKey);
 
-            await _putToR2(file, session.upload_url);
+                await _putToR2(file, session.upload_url);
 
-            // Notify PHP that R2 PUT completed → transitions session Pending→Uploaded in DB.
-            // Required before the submit handler's atomic claim (Injection 1 status check).
-            await _finalize(session.uuid);
+                // Notify PHP that R2 PUT completed → transitions session Pending→Uploaded in DB.
+                // Required before the submit handler's atomic claim (Injection 1 status check).
+                await _finalize(session.uuid);
 
-            _setState(STATE.UPLOADED, 100);
-            return session;
-        } catch (err) {
-            _setState(STATE.FAILED, 0, err.message);
-            throw err;
-        }
+                _setSessionUuidGlobal(session.uuid);
+                _setState(STATE.UPLOADED, 100, null, 'Method A');
+                return session;
+            } catch (err) {
+                _sessionUuid = null;
+                _setSessionUuidGlobal(null);
+                _setState(STATE.FAILED, 0, err.message);
+                throw err;
+            } finally {
+                _activeUploadPromise = null;
+            }
+        })();
+
+        _activeUploadPromise = promise;
+        return promise;
     }
 
     /**
@@ -97,6 +110,7 @@ window.ResumePresign = (function () {
             _uploadXHR.abort();
             _uploadXHR = null;
         }
+        _activeUploadPromise = null;
         _sessionUuid = null;
         _setSessionUuidGlobal(null);
         _clearPersistedSession(contextKey);
@@ -106,6 +120,21 @@ window.ResumePresign = (function () {
     /** Returns the session UUID of the last successful upload, or null. */
     function getSessionUuid() {
         return _sessionUuid;
+    }
+
+    /** Returns true if an upload or finalize is currently actively executing. */
+    function isUploading() {
+        return _state === STATE.UPLOADING || !!_activeUploadPromise;
+    }
+
+    /** Returns the active upload promise to allow the form submission to await completion. */
+    function waitForUpload() {
+        return _activeUploadPromise || Promise.resolve(null);
+    }
+
+    /** Returns current internal state string. */
+    function getState() {
+        return _state;
     }
 
     /**
@@ -159,7 +188,7 @@ window.ResumePresign = (function () {
                 // File is in R2 — restore state so the submit handler can claim it.
                 _sessionUuid = storedUuid;
                 _setSessionUuidGlobal(storedUuid);
-                _setState(STATE.UPLOADED, 100);
+                _setState(STATE.UPLOADED, 100, null, 'Method c');
                 return body;
             }
 
@@ -380,9 +409,15 @@ window.ResumePresign = (function () {
             .join('');
     }
 
-    function _setState(state, progress, error) {
+    function _setState(state, progress, error, method) {
         _state = state;
-        var payload = { state: state, progress: progress || 0, error: error || null, sessionUuid: _sessionUuid };
+        var payload = {
+            state: state,
+            progress: progress || 0,
+            error: error || null,
+            sessionUuid: _sessionUuid,
+            method: method || (state === STATE.UPLOADED ? 'Method A' : null),
+        };
         _listeners.forEach(function (fn) { try { fn(payload); } catch (_) {} });
     }
 
@@ -428,6 +463,9 @@ window.ResumePresign = (function () {
         getSessionUuid: getSessionUuid,
         onStateChange:  onStateChange,
         recover:        recover,        // Phase 6: page-refresh session recovery
+        isUploading:    isUploading,
+        waitForUpload:  waitForUpload,
+        getState:       getState,
         STATE:          STATE,
     };
 })();

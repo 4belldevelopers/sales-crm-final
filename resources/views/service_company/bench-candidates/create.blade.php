@@ -6389,7 +6389,7 @@ function detectMissingFields(formEl, validatorInstance) {
 
     // 1. Upload Resume (Mandatory)
     var hasResume = false;
-    if ($('#resumeCheck').val() === '1' || ($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) || ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim())) {
+    if ($('#resumeCheck').val() === '1' || ($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) || ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim()) || ($('#resume_session_uuid').val() && String($('#resume_session_uuid').val()).trim())) {
         hasResume = true;
     } else {
         var ri = document.getElementById('resume');
@@ -7415,6 +7415,32 @@ var KTAddCandidate = function () {
                 return false;
             }
 
+            if (window.ResumePresign && typeof window.ResumePresign.isUploading === 'function' && window.ResumePresign.isUploading()) {
+                $("#save-form").prop("disabled", true).addClass('disabled');
+                $("#save-form").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading Resume...');
+                try {
+                    await window.ResumePresign.waitForUpload();
+                } catch (upErr) {
+                    window.__talentIsSubmitting = false;
+                    $("#save-form").prop("disabled", false).removeClass('disabled');
+                    if (typeof window.syncTalentStageAction === 'function') {
+                        window.syncTalentStageAction();
+                    }
+                    Swal.fire({
+                        title: "Upload Failed",
+                        text: (upErr && upErr.message) ? upErr.message : "Resume upload failed. Please remove and re-upload before submitting.",
+                        icon: "error",
+                        confirmButtonText: "Ok, got it!"
+                    });
+                    return false;
+                } finally {
+                    $("#save-form").prop("disabled", false).removeClass('disabled');
+                    if (typeof window.syncTalentStageAction === 'function') {
+                        window.syncTalentStageAction();
+                    }
+                }
+            }
+
             var missing = detectMissingFields(form, validator);
             if (missing && missing.length > 0) {
                 window.__talentIsSubmitting = false;
@@ -7678,6 +7704,32 @@ var KTEditCandidate = function () {
                     }
                 });
                 return false;
+            }
+
+            if (window.ResumePresign && typeof window.ResumePresign.isUploading === 'function' && window.ResumePresign.isUploading()) {
+                $("#save-form").prop("disabled", true).addClass('disabled');
+                $("#save-form").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading Resume...');
+                try {
+                    await window.ResumePresign.waitForUpload();
+                } catch (upErr) {
+                    window.__talentIsSubmitting = false;
+                    $("#save-form").prop("disabled", false).removeClass('disabled');
+                    if (typeof window.syncTalentStageAction === 'function') {
+                        window.syncTalentStageAction();
+                    }
+                    Swal.fire({
+                        title: "Upload Failed",
+                        text: (upErr && upErr.message) ? upErr.message : "Resume upload failed. Please remove and re-upload before submitting.",
+                        icon: "error",
+                        confirmButtonText: "Ok, got it!"
+                    });
+                    return false;
+                } finally {
+                    $("#save-form").prop("disabled", false).removeClass('disabled');
+                    if (typeof window.syncTalentStageAction === 'function') {
+                        window.syncTalentStageAction();
+                    }
+                }
             }
 
             var missing = detectMissingFields(form, validator);
