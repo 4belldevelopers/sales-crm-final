@@ -133,35 +133,289 @@
         #offer_create_show_right_bar .is-invalid { border-color: #f1416c !important; box-shadow: 0 0 0 0.15rem rgba(241, 65, 108, 0.18) !important; }
 
         /* Drawer root is the positioning context for the floated close (X) button */
-        #offer_create_show_right_bar { position: relative; }
+        #offer_create_show_right_bar { position: relative; background: #f8fafc; }
 
-        /* ── 5-step timeline stepper = the header (circle + title/sub-label, minimal font) ── */
-        .co-stepper { display: flex; align-items: center; padding: 12px 60px 12px 22px; background: #fff; border-bottom: 1px solid #eff2f5; }
+        /* ── Modern Drawer Topbar Header (Rule 20 Dedicated Header Background) ── */
+        .co-drawer-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            padding: 12px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            min-height: 60px;
+        }
+
+        /* ── 5-step timeline stepper = modern interactive flow ── */
+        .co-stepper { display: flex; align-items: center; padding: 0; background: transparent; border: none; flex: 1 1 auto; min-width: 0; }
         .co-step { flex: 1 1 0; display: flex; align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
         .co-step:last-child { flex: 0 0 auto; }
         /* connector line fills the space after each step's label, up to the next circle */
-        .co-step:not(:last-child)::after { content: ''; flex: 1 1 auto; height: 2px; background: #e4e6ef; min-width: 16px; margin: 0 4px; }
-        .co-step--done:not(:last-child)::after { background: #50cd89; }
+        .co-step:not(:last-child)::after { content: ''; flex: 1 1 auto; height: 2px; background: #e2e8f0; min-width: 16px; margin: 0 8px; transition: background .2s; }
+        .co-step--done:not(:last-child)::after { background: #10b981; }
         .co-step-node {
             width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 12px !important; background: #fff; border: 2px solid #e4e6ef; color: #b5b5c3;
-            flex-shrink: 0; transition: all .2s;
+            font-weight: 700; font-size: 11.5px !important; background: #fff; border: 2px solid #cbd5e1; color: #64748b;
+            flex-shrink: 0; transition: all .2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .co-step-check { display: none; }
         .co-step-num { display: inline; }
-        .co-step--current .co-step-node { background: #3699ff; border-color: #3699ff; color: #fff; }
-        .co-step--done .co-step-node { background: #50cd89; border-color: #50cd89; color: #fff; }
+        .co-step--current .co-step-node { background: #009ef7; border-color: #009ef7; color: #fff; box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.2); }
+        .co-step--done .co-step-node { background: #10b981; border-color: #10b981; color: #fff; }
         .co-step--done .co-step-check { display: inline; }
         .co-step--done .co-step-num { display: none; }
         .co-step-label { flex-shrink: 0; min-width: 0; }
-        .co-step-title { font-size: 13px !important; font-weight: 600; color: #b5b5c3; white-space: nowrap; line-height: 1.2; }
-        .co-step-status { font-size: 10px !important; color: #a1a5b7; white-space: nowrap; margin-top: 1px; }
-        .co-step--current .co-step-title { color: #3699ff; }
-        .co-step--done .co-step-title { color: #181c32; }
+        .co-step-title { font-size: 13px !important; font-weight: 600; color: #64748b; white-space: nowrap; line-height: 1.2; }
+        .co-step-status { font-size: 10.5px !important; color: #94a3b8; white-space: nowrap; margin-top: 1px; }
+        .co-step--current .co-step-title { color: #009ef7; font-weight: 700; }
+        .co-step--current .co-step-status { color: #009ef7; opacity: .85; }
+        .co-step--done .co-step-title { color: #0f172a; font-weight: 600; }
+        .co-drawer-actions { flex-shrink: 0; margin-left: 16px; }
+        .co-close-btn {
+            width: 32px; height: 32px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;
+            color: #64748b; display: flex; align-items: center; justify-content: center; transition: all .15s ease; cursor: pointer; padding: 0;
+        }
+        .co-close-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #ef4444; }
         @media (max-width: 900px) {
-            .co-stepper { padding: 12px 44px 12px 14px; }
+            .co-stepper { padding: 0; }
             .co-step-status { display: none; }
             .co-step-title { font-size: 11px !important; }
+        }
+
+        /* ── Modern Enterprise Card & Sub-Card Design System (Rule 20) ── */
+        .co-main-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+            margin-bottom: 18px !important;
+            overflow: hidden !important;
+        }
+        .co-card-header {
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            padding: 14px 20px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+            min-height: auto !important;
+        }
+        .co-card-header--emerald {
+            background: linear-gradient(90deg, #f8fafc 0%, #f0fdf4 100%) !important;
+            border-bottom: 1px solid #bbf7d0 !important;
+        }
+        .co-card-header-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .co-card-header-icon svg { width: 16px; height: 16px; }
+        .co-card-header-icon--blue   { background: #eff6ff; color: #2563eb; }
+        .co-card-header-icon--indigo { background: #eef2ff; color: #4f46e5; }
+        .co-card-header-icon--purple { background: #f5f3ff; color: #7c3aed; }
+        .co-card-header-icon--green  { background: #ecfdf5; color: #059669; }
+        .co-card-header-icon--amber  { background: #fef3c7; color: #d97706; }
+
+        .co-section-title { font-size: 14px !important; font-weight: 700 !important; color: #0f172a !important; margin: 0 !important; line-height: 1.3 !important; }
+        .co-section-note { font-size: 11.5px; font-weight: 500; color: #64748b; }
+        .co-section-sub { font-size: 11.5px !important; color: #64748b !important; margin-top: 2px !important; line-height: 1.4 !important; }
+
+        /* ── Sub-Cards (Tier 3 Discrete Sub-Panels) ── */
+        .co-subcard {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all .15s ease;
+        }
+        .co-subcard:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        }
+        .co-subcard-header {
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .co-subcard-title {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: #475569 !important;
+            text-transform: uppercase !important;
+            letter-spacing: .5px !important;
+            display: flex;
+            align-items: center;
+        }
+        .co-subcard-badge {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            padding: 2px 8px;
+            border-radius: 99px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+        }
+        .co-subcard-body {
+            padding: 16px;
+            background: #ffffff;
+        }
+
+        /* ── Table Sub-Card Shell ── */
+        .co-table-subcard {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .co-table-subcard table { margin-bottom: 0 !important; }
+
+        /* ── Confidentiality Header Control ── */
+        .co-conf-header-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 3px;
+        }
+        .co-flabel-inline {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #475569 !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .co-conf-select {
+            width: 90px !important;
+            height: 32px !important;
+            min-height: 32px !important;
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #1e293b !important;
+            padding: 4px 8px !important;
+        }
+        .co-conf-hint {
+            font-size: 10.5px !important;
+            color: #009ef7 !important;
+            font-weight: 500 !important;
+            text-decoration: none !important;
+        }
+        .co-conf-hint:hover { text-decoration: underline !important; }
+
+        /* ── Action Pills and Badges ── */
+        .co-btn-add-pill {
+            background: #009ef7 !important;
+            border-color: #009ef7 !important;
+            color: #fff !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+            border-radius: 8px !important;
+            padding: 7px 14px !important;
+            box-shadow: 0 1px 3px rgba(0, 158, 247, 0.25) !important;
+            transition: all .15s ease !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        .co-btn-add-pill:hover {
+            background: #008be3 !important;
+            border-color: #008be3 !important;
+            box-shadow: 0 2px 6px rgba(0, 158, 247, 0.35) !important;
+        }
+        .co-finalctc-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: #065f46;
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            border-radius: 99px;
+            padding: 4px 12px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* ── Guidance Sub-Cards ── */
+        .co-guidance-subcard {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px 16px;
+            height: 100%;
+        }
+        .co-guidance-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+        .co-guidance-icon--blue { background: #eff6ff; color: #2563eb; }
+        .co-guidance-icon--amber { background: #fffbeb; color: #d97706; }
+        .co-guidance-title { font-size: 12px !important; font-weight: 700 !important; color: #1e293b !important; margin-bottom: 4px; }
+        .co-guidance-text { font-size: 11px !important; color: #64748b !important; line-height: 1.5 !important; }
+
+        /* ── Footer Actions Card ── */
+        .co-footer-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 20px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .co-footer-status { font-size: 11.5px; color: #64748b; display: flex; align-items: center; }
+        .co-btn-close-ghost {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #475569 !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+            padding: 8px 18px !important;
+            border-radius: 8px !important;
+            transition: all .15s ease !important;
+            cursor: pointer;
+        }
+        .co-btn-close-ghost:hover {
+            background: #f1f5f9 !important;
+            color: #1e293b !important;
+            border-color: #94a3b8 !important;
+        }
+        .co-btn-save-primary {
+            background: #009ef7 !important;
+            border: 1px solid #009ef7 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+            padding: 8px 24px !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
+            transition: all .15s ease !important;
+            cursor: pointer;
+        }
+        .co-btn-save-primary:hover:not(:disabled) {
+            background: #008be3 !important;
+            border-color: #008be3 !important;
+            box-shadow: 0 3px 8px rgba(0, 158, 247, 0.3) !important;
         }
 
         /* ── Colored square field/component icons (closest-match line icons) ── */
@@ -174,42 +428,33 @@
         .co-ic--red    { background: #fdeef0; color: #e24b4a; }
         .co-ic--purple { background: #f3ecfe; color: #7239ea; }
 
-        /* ── Compensation Details card ── */
-        .co-details-card { border: 1px solid #f1f1f4; border-radius: 12px; }
-        .co-details-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
-        .co-conf-wrap { min-width: 240px; }
-        .co-conf-hint { display: block; font-size: 11px; color: #3699ff; margin-top: 3px; text-align: right; text-decoration: none; }
-        .co-conf-hint:hover { text-decoration: underline; }
-        .co-field-grid { margin: 0; }
-        .co-field { margin-bottom: 14px; }
-        .co-flabel { font-size: 12px !important; font-weight: 600; color: #3f4254; display: flex; align-items: center; margin-bottom: 5px; }
-        .co-field-hint { font-size: 10px; color: #a1a5b7; margin-top: 3px; }
-        #offer_create_show_right_bar .co-details-card .form-control,
-        #offer_create_show_right_bar .co-details-card .form-select {
-            background: #fff !important; border: 1px solid #e4e6ef !important; border-radius: 8px !important;
-            min-height: 42px; height: 42px; font-size: 13px !important; color: #3f4254 !important; box-shadow: none !important;
+        /* Form input enhancements inside subcards */
+        .co-flabel { font-size: 12px !important; font-weight: 600; color: #334155; display: flex; align-items: center; margin-bottom: 6px; }
+        .co-field-hint { font-size: 10.5px; color: #64748b; margin-top: 4px; }
+        #offer_create_show_right_bar .form-control,
+        #offer_create_show_right_bar .form-select {
+            background: #fff !important; border: 1px solid #cbd5e1 !important; border-radius: 7px !important;
+            min-height: 40px; height: 40px; font-size: 13px !important; color: #1e293b !important; box-shadow: none !important;
+            font-variant-numeric: tabular-nums; transition: border-color .15s ease, box-shadow .15s ease;
         }
-        #offer_create_show_right_bar .co-details-card .form-control:focus,
-        #offer_create_show_right_bar .co-details-card .form-select:focus { border-color: #3699ff !important; }
-        @media (max-width: 700px) { .co-field { flex: 0 0 100%; max-width: 100%; } }
+        #offer_create_show_right_bar .form-control:focus,
+        #offer_create_show_right_bar .form-select:focus {
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+        }
 
         /* ── Components card section headings + validation banner ── */
-        .co-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-        .co-section-title { font-size: 14px !important; font-weight: 700; color: #181c32; margin: 0; }
-        .co-section-note { font-size: 12px; font-weight: 500; color: #a1a5b7; }
-        .co-section-sub { font-size: 11px; color: #a1a5b7; margin-top: 2px; }
         .co-valid-banner {
-            display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
-            font-size: 12px; font-weight: 600; margin: 8px 0 12px;
+            display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 8px;
+            font-size: 12px; font-weight: 600; margin: 4px 0 14px;
         }
         .co-valid-banner .co-valid-ico { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-        /* Below 100% → red (per spec); exactly 100% → green */
-        .co-valid-banner--warn { background: #fff5f8; color: #f1416c; }
-        .co-valid-banner--warn .co-valid-ico { background: #f1416c; }
-        .co-valid-banner--ok { background: #e8fff3; color: #17a673; }
-        .co-valid-banner--ok .co-valid-ico { background: #50cd89; }
-        /* Row numbering via CSS counter — no markup column added (keeps the
-           salary-component array order + calc selectors untouched) */
+        /* Below 100% → soft red/rose alert; exactly 100% → soft green alert */
+        .co-valid-banner--warn { background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239; }
+        .co-valid-banner--warn .co-valid-ico { background: #e11d48; }
+        .co-valid-banner--ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+        .co-valid-banner--ok .co-valid-ico { background: #10b981; }
+        /* Row numbering via CSS counter — no markup column added */
         #pointList tbody, #bonusList tbody { counter-reset: co-rownum; }
         #pointList tbody tr.row-template:not(.d-none), #bonusList tbody tr.row-template:not(.d-none) { counter-increment: co-rownum; }
 
@@ -258,25 +503,25 @@
             .co-preview-col .co-preview-grid { grid-template-columns: 1fr 1fr 1fr; }
         }
 
-        /* ── Clean, modern component tables (calc reads by class, so restyle is safe) ── */
-        .co-components-card { border: 1px solid #f1f1f4; border-radius: 12px; }
+        /* ── Clean, modern component tables (Rule 20 Mandatory Table Header Standard) ── */
+        .co-components-card { border: 1px solid #e2e8f0; border-radius: 10px; }
         #pointList, #bonusList { border-collapse: separate; border-spacing: 0; width: 100%; }
         #pointList thead th, #bonusList thead th {
-            text-transform: none !important; color: #a1a5b7 !important; font-size: 11px !important;
-            font-weight: 600 !important; padding: 8px 8px !important; background: transparent !important;
-            border-bottom: 1px solid #f1f1f4 !important; letter-spacing: .2px;
+            text-transform: uppercase !important; color: #475569 !important; font-size: 11px !important;
+            font-weight: 700 !important; padding: 10px 12px !important; background: #f1f5f9 !important;
+            border-bottom: 1px solid #e2e8f0 !important; letter-spacing: .5px; vertical-align: middle;
         }
         #pointList tbody td, #bonusList tbody td {
-            padding: 6px 8px !important; border-bottom: 1px solid #f4f4f6 !important; vertical-align: middle;
-            width: revert !important;
+            padding: 8px 12px !important; border-bottom: 1px solid #f1f5f9 !important; vertical-align: middle;
+            width: revert !important; background: #ffffff;
         }
-        #pointList tbody tr:hover, #bonusList tbody tr:hover { background: #fbfcfe; }
+        #pointList tbody tr:hover td, #bonusList tbody tr:hover td { background: #f8fafc !important; }
         /* inputs & selects read like clean inline cells */
         #pointList .form-control, #bonusList .form-control,
         #pointList .form-select, #bonusList .form-select {
-            background: #fff !important; border: 1px solid #e4e6ef !important; border-radius: 7px !important;
-            box-shadow: none !important; min-height: 36px; height: 36px; font-size: 13px !important;
-            color: #3f4254 !important; padding: 4px 10px !important;
+            background: #fff !important; border: 1px solid #cbd5e1 !important; border-radius: 7px !important;
+            box-shadow: none !important; min-height: 38px; height: 38px; font-size: 13px !important;
+            color: #1e293b !important; padding: 4px 10px !important;
         }
         #pointList .offer_points, #bonusList .offer_points,
         #pointList .bonus_points, #bonusList .bonus_points {
@@ -296,43 +541,47 @@
         /* Monthly / Annually preview inputs — muted, right-aligned */
         #pointList .offer_monthly, #pointList .offer_yearly,
         #bonusList .bonus_offer_monthly, #bonusList .bonus_offer_yearly {
-            background: #f9fafd !important; color: #7e8299 !important; text-align: right;
+            background: #f8fafc !important; color: #475569 !important; text-align: right; font-weight: 600;
         }
         /* delete → red trash button */
         #pointList .remove_points, #bonusList .remove_points {
-            background: #fff5f8 !important; color: #f1416c !important; border: none !important;
+            background: #fff5f8 !important; color: #f1416c !important; border: 1px solid #fecdd3 !important;
             border-radius: 7px !important; width: 34px; height: 34px; padding: 0 !important; margin: 0 !important;
-            display: inline-flex; align-items: center; justify-content: center;
+            display: inline-flex; align-items: center; justify-content: center; transition: all .15s ease;
         }
-        #pointList .remove_points:hover, #bonusList .remove_points:hover { background: #f1416c !important; color: #fff !important; }
+        #pointList .remove_points:hover, #bonusList .remove_points:hover { background: #f1416c !important; border-color: #f1416c !important; color: #fff !important; }
         #pointList .remove_points svg, #bonusList .remove_points svg { width: 16px; height: 16px; }
         /* Total Main (indigo tint) — whole row, incl. empty gap cells, so every box lines up */
-        #pointList tfoot tr.co-total-row > th { background: #eef3ff !important; }
-        #pointList tfoot tr.co-total-row input { background: transparent !important; color: #4f46e5 !important; font-weight: 700 !important; border-color: transparent !important; }
+        #pointList tfoot tr.co-total-row > th { background: #eff6ff !important; border-top: 2px solid #bfdbfe !important; border-bottom: 1px solid #bfdbfe !important; padding: 8px 12px !important; }
+        #pointList tfoot tr.co-total-row input { background: transparent !important; color: #2563eb !important; font-weight: 700 !important; border-color: transparent !important; }
         /* Main Components percentage total: flip blue → red when it isn't exactly 100%, so the
            mismatch is obvious at a glance (JS toggles .co-pct-invalid in updateTotalpercentage*). */
         #pointList tfoot tr.co-total-row input.co-pct-invalid { color: #f1416c !important; }
         #pointList tfoot tr.co-total-row th:has(> input.co-pct-invalid)::after { color: #f1416c !important; }
         /* Total Additional (violet tint — distinct from Main's indigo) — whole row, incl. empty gap cells */
-        #bonusList tfoot tr.co-total-row > th { background: #f5f0ff !important; }
+        #bonusList tfoot tr.co-total-row > th { background: #f5f3ff !important; border-top: 2px solid #ddd6fe !important; border-bottom: 1px solid #ddd6fe !important; padding: 8px 12px !important; }
         #bonusList tfoot tr.co-total-row input { background: transparent !important; color: #7c3aed !important; font-weight: 700 !important; border-color: transparent !important; }
         /* Final CTC: header sits OUTSIDE the colour block; only the total row is tinted GREEN.
            Same box height/font-size as Total Main/Additional (reuse their input + th rules). */
-        .co-finalctc-card { border: 1px solid #b7ebc6 !important; border-radius: 12px; }
+        .co-finalctc-card { border: 1px solid #b7ebc6 !important; border-radius: 10px; }
         /* table-layout:fixed makes the declared column widths authoritative (not content-based),
            so Allocation/Currency/Monthly/Annually line up exactly under Total Main/Additional's columns. */
-        #final_pay { background: transparent; border: none; margin-top: 4px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
-        #final_pay thead th { background: transparent !important; }
-        #final_pay .form-control, #final_pay .form-select {
-            background: #fff !important; border: 1px solid #e4e6ef !important; border-radius: 7px !important;
-            box-shadow: none !important; min-height: 36px; height: 36px; font-size: 13px !important;
-            color: #3f4254 !important; padding: 4px 10px !important;
+        #final_pay { background: transparent; border: none; margin-top: 0; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+        #final_pay thead th {
+            background: #f1f5f9 !important; border-bottom: 1px solid #e2e8f0 !important; color: #475569 !important;
+            font-size: 11px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: .5px !important;
+            padding: 10px 12px !important;
         }
-        #final_pay tfoot th { vertical-align: middle; background: #e3f7e9 !important; }
+        #final_pay .form-control, #final_pay .form-select {
+            background: #fff !important; border: 1px solid #cbd5e1 !important; border-radius: 7px !important;
+            box-shadow: none !important; min-height: 38px; height: 38px; font-size: 13px !important;
+            color: #1e293b !important; padding: 4px 10px !important;
+        }
+        #final_pay tfoot th { vertical-align: middle; background: #ecfdf5 !important; border-top: 2px solid #a7f3d0 !important; border-bottom: 1px solid #a7f3d0 !important; padding: 8px 12px !important; }
         /* Must out-specificity "#final_pay .form-control" above (id+class) — add tfoot to the
            selector so this transparent override actually wins and the green shows through. */
-        #final_pay tfoot .form-control, #final_pay tfoot .form-select { background: transparent !important; color: #0f7a3d !important; font-weight: 700 !important; border-color: transparent !important; box-shadow: none !important; }
-        #final_pay tfoot input[value*="Total CTC"] { color: #0b5c2e !important; }
+        #final_pay tfoot .form-control, #final_pay tfoot .form-select { background: transparent !important; color: #065f46 !important; font-weight: 700 !important; border-color: transparent !important; box-shadow: none !important; }
+        #final_pay tfoot input[value*="Total CTC"] { color: #065f46 !important; }
 
         /* Applicable column: widen so "Annually & Monthly" shows fully */
         #pointList .basic_view, #bonusList .bonus_view { min-width: 150px !important; width: auto !important; }
@@ -437,7 +686,19 @@
            No extra server round-trips: search/tabs/zoom/preview/download all run client-side. */
         .co-tpl-title { font-size: 14px !important; font-weight: 700; color: #181c32; margin: 0; }
         .co-tpl-sub { font-size: 11px; color: #7e8299; margin-top: 2px; }
-        .co-tpl-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+        .co-tpl-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 18px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
 
         /* Templates dropdown — same row as the "Offer Letter Template" heading (was a whole sidebar
            card with a search box for what is always exactly one template). */
@@ -1007,99 +1268,85 @@
 
 
 
-    {{-- Header title "Compensation" removed — the 5-step timeline is the header. The close
-         (X) button is floated to the top-right corner so the header bar takes NO height. --}}
-    <div class="card-header border-0" id="kt_activities_header" style="min-height:0;padding:0;position:absolute;top:8px;right:12px;z-index:6;">
-          
-        @php
-            // Guard: $userPermissions is normally provided by middleware; default to []
-            // so an undefined-variable warning can never become a 500 for this AJAX view.
-            $userPermissions = $userPermissions ?? [];
-            $dnone = 'd-none';
-            if (
-                $application->master_status_id == 8 &&
-                $application->rjobid > 0 &&
-                $application->from_company_id == auth()->user()->company_id
-            ) {
-                $dnone = '';
-            } elseif (
-                $application->master_status_id != 8 &&
-                $application->rjobid > 0 &&
-                $application->from_company_id == auth()->user()->company_id
-            ) {
-                $dnone = '';
-            } elseif (in_array('add_schedule', $userPermissions) && $application->rjobid < 0) {
-                $dnone = '';
-            } elseif (
-                in_array('add_schedule', $userPermissions) &&
-                $application->company_id == auth()->user()->company_id
-            ) {
-                $dnone = '';
-            } elseif (
-                in_array('add_schedule', $userPermissions) &&
-                $application->master_status_id == 8 &&
-                $application->submitted_by == auth()->user()->id
-            ) {
-                $dnone = '';
-            }
-        @endphp
+    @php
+        // Guard: $userPermissions is normally provided by middleware; default to []
+        // so an undefined-variable warning can never become a 500 for this AJAX view.
+        $userPermissions = $userPermissions ?? [];
+        $dnone = 'd-none';
+        if (
+            $application->master_status_id == 8 &&
+            $application->rjobid > 0 &&
+            $application->from_company_id == auth()->user()->company_id
+        ) {
+            $dnone = '';
+        } elseif (
+            $application->master_status_id != 8 &&
+            $application->rjobid > 0 &&
+            $application->from_company_id == auth()->user()->company_id
+        ) {
+            $dnone = '';
+        } elseif (in_array('add_schedule', $userPermissions) && $application->rjobid < 0) {
+            $dnone = '';
+        } elseif (
+            in_array('add_schedule', $userPermissions) &&
+            $application->company_id == auth()->user()->company_id
+        ) {
+            $dnone = '';
+        } elseif (
+            in_array('add_schedule', $userPermissions) &&
+            $application->master_status_id == 8 &&
+            $application->submitted_by == auth()->user()->id
+        ) {
+            $dnone = '';
+        }
+    @endphp
 
-        <div class="card-toolbar">
-            <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_offercreate_close">
-                <span class="svg-icon svg-icon-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                        height="24px" viewBox="0 0 24 24" version="1.1">
-                        <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                            fill="currentColor">
-                            <rect x="0" y="7" width="16" height="2" rx="1"></rect>
-                            <rect opacity="0.5"
-                                transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                x="0" y="7" width="16" height="2" rx="1"></rect>
-                        </g>
-                    </svg>
-                </span> </button>
-        </div>
-    </div>
-
-    {{-- ── 5-step timeline stepper (Compensation → Templates → Preview Offer → Approvals → Offer Sent) ──
-         Purely reflects which .tab-content-section is .active; painted by syncStepHeader().
-         Backward nav is free; forward nav is gated to the furthest step actually reached
-         (via the real Save/Preview AJAX flow), so the header can't skip those steps. --}}
-    <div class="co-stepper" id="co_offer_stepper">
-        <div class="co-step co-step--current" data-step="1" onclick="goToStepNav(1)">
-            <div class="co-step-node"><span class="co-step-num">1</span><span class="co-step-check">&#10003;</span></div>
-            <div class="co-step-label">
-                <div class="co-step-title">Compensation</div>
-                <div class="co-step-status">Build salary structure</div>
+    {{-- ── Drawer Topbar Header Card with Dedicated Background Color (Rule 20) ── --}}
+    <div class="co-drawer-topbar" id="kt_activities_header">
+        <div class="co-stepper" id="co_offer_stepper">
+            <div class="co-step co-step--current" data-step="1" onclick="goToStepNav(1)">
+                <div class="co-step-node"><span class="co-step-num">1</span><span class="co-step-check">&#10003;</span></div>
+                <div class="co-step-label">
+                    <div class="co-step-title">Compensation</div>
+                    <div class="co-step-status">Build salary structure</div>
+                </div>
+            </div>
+            <div class="co-step co-step--pending" data-step="2" onclick="goToStepNav(2)">
+                <div class="co-step-node"><span class="co-step-num">2</span><span class="co-step-check">&#10003;</span></div>
+                <div class="co-step-label">
+                    <div class="co-step-title">Template</div>
+                    <div class="co-step-status">Select offer template</div>
+                </div>
+            </div>
+            <div class="co-step co-step--pending" data-step="3" onclick="goToStepNav(3)">
+                <div class="co-step-node"><span class="co-step-num">3</span><span class="co-step-check">&#10003;</span></div>
+                <div class="co-step-label">
+                    <div class="co-step-title">Preview Offer</div>
+                    <div class="co-step-status">Review before approval</div>
+                </div>
+            </div>
+            <div class="co-step co-step--pending" data-step="4" onclick="goToStepNav(4)">
+                <div class="co-step-node"><span class="co-step-num">4</span><span class="co-step-check">&#10003;</span></div>
+                <div class="co-step-label">
+                    <div class="co-step-title">Approval</div>
+                    <div class="co-step-status">Get approver sign-off</div>
+                </div>
+            </div>
+            <div class="co-step co-step--pending" data-step="5" onclick="goToStepNav(5)">
+                <div class="co-step-node"><span class="co-step-num">5</span><span class="co-step-check">&#10003;</span></div>
+                <div class="co-step-label">
+                    <div class="co-step-title">Offer Sent</div>
+                    <div class="co-step-status">Send to candidate</div>
+                </div>
             </div>
         </div>
-        <div class="co-step co-step--pending" data-step="2" onclick="goToStepNav(2)">
-            <div class="co-step-node"><span class="co-step-num">2</span><span class="co-step-check">&#10003;</span></div>
-            <div class="co-step-label">
-                <div class="co-step-title">Template</div>
-                <div class="co-step-status">Select offer template</div>
-            </div>
-        </div>
-        <div class="co-step co-step--pending" data-step="3" onclick="goToStepNav(3)">
-            <div class="co-step-node"><span class="co-step-num">3</span><span class="co-step-check">&#10003;</span></div>
-            <div class="co-step-label">
-                <div class="co-step-title">Preview Offer</div>
-                <div class="co-step-status">Review before approval</div>
-            </div>
-        </div>
-        <div class="co-step co-step--pending" data-step="4" onclick="goToStepNav(4)">
-            <div class="co-step-node"><span class="co-step-num">4</span><span class="co-step-check">&#10003;</span></div>
-            <div class="co-step-label">
-                <div class="co-step-title">Approval</div>
-                <div class="co-step-status">Get approver sign-off</div>
-            </div>
-        </div>
-        <div class="co-step co-step--pending" data-step="5" onclick="goToStepNav(5)">
-            <div class="co-step-node"><span class="co-step-num">5</span><span class="co-step-check">&#10003;</span></div>
-            <div class="co-step-label">
-                <div class="co-step-title">Offer Sent</div>
-                <div class="co-step-status">Send to candidate</div>
-            </div>
+        <div class="co-drawer-actions">
+            <button type="button" class="btn btn-sm btn-icon co-close-btn" id="kt_offercreate_close" title="Close drawer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
         </div>
     </div>
 
@@ -1242,94 +1489,166 @@
                                             <input type="hidden" name="offer_id" value="{{ $offer_id }}">
                                         
                                             <div class="col-lg-12">
-                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-details-card">
-                                                    {{-- Header: title + subtitle (left) · Confidentiality Status (right) --}}
-                                                    <div class="co-details-head">
-                                                        <div>
-                                                            <h5 class="co-section-title">Compensation Details</h5>
-                                                            <div class="co-section-sub">Enter the offer details to generate the compensation structure</div>
+                                                <div class="card mb-5 mx-2 co-main-card co-details-card">
+                                                    {{-- Card Header with Dedicated Background Color (Rule 20) --}}
+                                                    <div class="card-header co-card-header">
+                                                        <div class="d-flex align-items-center gap-3">
+                                                            <div class="co-card-header-icon co-card-header-icon--blue">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="16" cy="14" r="2"/><path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/></svg>
+                                                            </div>
+                                                            <div>
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <h5 class="co-section-title mb-0">Compensation Details</h5>
+                                                                    <span class="badge badge-light-primary fw-bold fs-8">Offer Setup</span>
+                                                                </div>
+                                                                <div class="co-section-sub">Enter the candidate salary package and core employment parameters</div>
+                                                            </div>
                                                         </div>
-                                                        <div class="co-conf-wrap">
-                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/></svg></span> Confidentiality Status</label>
-                                                            <select class="form-select form-select-solid" arial-label="Select Confidential" id="confidential" name="confidential">
-                                                                <option value="0" {{ $confidential == 0 ? 'selected' : '' }}>No</option>
-                                                                <option value="1" {{ $confidential == 1 ? 'selected' : '' }}>Yes</option>
-                                                            </select>
+                                                        <div class="co-conf-header-box">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <label class="co-flabel-inline mb-0" for="confidential">
+                                                                    <span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/></svg></span>
+                                                                    Confidentiality Status <span class="text-danger">*</span>:
+                                                                </label>
+                                                                <select class="form-select form-select-sm co-conf-select" arial-label="Select Confidential" id="confidential" name="confidential">
+                                                                    <option value="0" {{ $confidential == 0 ? 'selected' : '' }}>No</option>
+                                                                    <option value="1" {{ $confidential == 1 ? 'selected' : '' }}>Yes</option>
+                                                                </select>
+                                                            </div>
                                                             <a href="javascript:void(0);" class="co-conf-hint">Who can view the Salary</a>
                                                         </div>
                                                     </div>
 
-                                                    <div class="row co-field-grid">
-                                                        <div class="col-lg-4 co-field">
-                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1.1 2 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2.5 0 0 1 9.5 15M12 6v1.5M12 16.5V18"/></svg></span> Currency</label>
-                                                            @php
-                                                                $defaultTenantCurrencyKey = GeneralMethod::defaultCurrencyKey();
-                                                                $selectedCurrency = ($currency !== '' && $currency !== null) ? (int)$currency : $defaultTenantCurrencyKey;
-                                                            @endphp
-                                                            <select class="form-select form-select-solid" arial-label="Select Currency" id="current_ctc_cur" name="current_ctc_cur">
-                                                                <option value="0" {{ $selectedCurrency === 0 ? 'selected' : '' }}>INR - Indian Rupee</option>
-                                                                <option value="1" {{ $selectedCurrency === 1 ? 'selected' : '' }}>EUR</option>
-                                                                <option value="2" {{ $selectedCurrency === 2 ? 'selected' : '' }}>JPY</option>
-                                                                <option value="3" {{ $selectedCurrency === 3 ? 'selected' : '' }}>GBP</option>
-                                                                <option value="4" {{ $selectedCurrency === 4 ? 'selected' : '' }}>USD</option>
-                                                                <option value="5" {{ $selectedCurrency === 5 ? 'selected' : '' }}>AED</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 co-field">
-                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/></svg></span> Enter Amount (CTC)</label>
-                                                            <input type="text" class="form-control form-control-solid" name="ctc" id="ctc" placeholder="Enter current CTC" value="{{ @$salary_ctc }}">
-                                                            <div class="fv-plugins-message-container invalid-feedback"></div>
-                                                        </div>
-                                                        <div class="col-lg-4 co-field">
-                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span> Salary Breakdown Format</label>
-                                                            <select class="form-select form-select-solid" arial-label="Select Annual Salary" id="current_ctc_mode" name="current_ctc_mode">
-                                                                <option value="2" {{ $salary_mode == 2 ? 'selected' : '' }}>Hourly</option>
-                                                                <option value="1" {{ $salary_mode == 1 ? 'selected' : '' }}>Monthly</option>
-                                                                <option value="3" {{ $salary_mode == 3 ? 'selected' : '' }}>Annually</option>
-                                                                <option value="0" {{ empty($salary_mode) || $salary_mode == 0 ? 'selected' : '' }}>Monthly/Annually</option>
-                                                                <option value="4" {{ $salary_mode == 4 ? 'selected' : '' }}>Hourly/Annually</option>
-                                                            </select>
-                                                            <div class="co-field-hint">Annually / Monthly</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row co-field-grid">
-                                                        <div class="col-lg-4 co-field">
-                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span> Offered Designation</label>
-                                                            <input type="text" class="form-control form-control-solid" name="current_designation" id="current_designation" placeholder="Enter designation" value="{{ @$designation }}">
-                                                        </div>
-                                                        <div class="col-lg-4 co-field">
-                                                            <label class="form-label co-flabel"><span class="co-ic co-ic--amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span> Date of Joining (DOJ)</label>
-                                                            <input type="datetime-local" class="form-control form-control-solid" name="dob" id="dob" placeholder="Enter dob" value="{{ @$joined_date }}" onclick="this.showPicker()">
-                                                        </div>
-                                                        <div class="col-lg-4 co-field">
-                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 0 0 0-6M21 20a5 5 0 0 0-3.5-4.8"/></svg></span> Employment Type</label>
-                                                            <select class="form-select form-select-solid" arial-label="Select Job Type" id="employment_type" name="employment_type">
-                                                                <option value="0" {{ $employment_type == 0 ? 'selected' : '' }}>Full Time</option>
-                                                                <option value="1" {{ $employment_type == 1 ? 'selected' : '' }}>Contract</option>
-                                                                <option value="3" {{ $employment_type == 3 ? 'selected' : '' }}>Part Time</option>
-                                                            </select>
+                                                    <div class="card-body p-5">
+                                                        <div class="row g-4">
+                                                            {{-- SUB-CARD 1: Salary & Currency Package --}}
+                                                            <div class="col-lg-6">
+                                                                <div class="co-subcard h-100">
+                                                                    <div class="co-subcard-header">
+                                                                        <span class="co-subcard-title">
+                                                                            <i class="fas fa-coins text-warning me-2"></i>
+                                                                            Salary & Currency Package
+                                                                        </span>
+                                                                        <span class="co-subcard-badge">Base CTC</span>
+                                                                    </div>
+                                                                    <div class="co-subcard-body">
+                                                                        <div class="mb-4">
+                                                                            <label class="form-label required co-flabel">
+                                                                                <span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1.1 2 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2.5 0 0 1 9.5 15M12 6v1.5M12 16.5V18"/></svg></span> Currency
+                                                                            </label>
+                                                                            @php
+                                                                                $defaultTenantCurrencyKey = GeneralMethod::defaultCurrencyKey();
+                                                                                $selectedCurrency = ($currency !== '' && $currency !== null) ? (int)$currency : $defaultTenantCurrencyKey;
+                                                                            @endphp
+                                                                            <select class="form-select form-select-solid" arial-label="Select Currency" id="current_ctc_cur" name="current_ctc_cur">
+                                                                                <option value="0" {{ $selectedCurrency === 0 ? 'selected' : '' }}>INR - Indian Rupee</option>
+                                                                                <option value="1" {{ $selectedCurrency === 1 ? 'selected' : '' }}>EUR</option>
+                                                                                <option value="2" {{ $selectedCurrency === 2 ? 'selected' : '' }}>JPY</option>
+                                                                                <option value="3" {{ $selectedCurrency === 3 ? 'selected' : '' }}>GBP</option>
+                                                                                <option value="4" {{ $selectedCurrency === 4 ? 'selected' : '' }}>USD</option>
+                                                                                <option value="5" {{ $selectedCurrency === 5 ? 'selected' : '' }}>AED</option>
+                                                                            </select>
+                                                                        </div>
+
+                                                                        <div class="mb-4">
+                                                                            <label class="form-label required co-flabel">
+                                                                                <span class="co-ic co-ic--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/></svg></span> Enter Amount (CTC)
+                                                                            </label>
+                                                                            <input type="text" class="form-control form-control-solid" name="ctc" id="ctc" placeholder="Enter current CTC" value="{{ @$salary_ctc }}">
+                                                                            <div class="fv-plugins-message-container invalid-feedback"></div>
+                                                                        </div>
+
+                                                                        <div>
+                                                                            <label class="form-label required co-flabel">
+                                                                                <span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span> Salary Breakdown Format
+                                                                            </label>
+                                                                            <select class="form-select form-select-solid" arial-label="Select Annual Salary" id="current_ctc_mode" name="current_ctc_mode">
+                                                                                <option value="2" {{ $salary_mode == 2 ? 'selected' : '' }}>Hourly</option>
+                                                                                <option value="1" {{ $salary_mode == 1 ? 'selected' : '' }}>Monthly</option>
+                                                                                <option value="3" {{ $salary_mode == 3 ? 'selected' : '' }}>Annually</option>
+                                                                                <option value="0" {{ empty($salary_mode) || $salary_mode == 0 ? 'selected' : '' }}>Monthly/Annually</option>
+                                                                                <option value="4" {{ $salary_mode == 4 ? 'selected' : '' }}>Hourly/Annually</option>
+                                                                            </select>
+                                                                            <div class="co-field-hint">Frequency mode used for component calculations</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {{-- SUB-CARD 2: Role & Joining Timeline --}}
+                                                            <div class="col-lg-6">
+                                                                <div class="co-subcard h-100">
+                                                                    <div class="co-subcard-header">
+                                                                        <span class="co-subcard-title">
+                                                                            <i class="fas fa-briefcase text-primary me-2"></i>
+                                                                            Role & Joining Schedule
+                                                                        </span>
+                                                                        <span class="co-subcard-badge">Position Terms</span>
+                                                                    </div>
+                                                                    <div class="co-subcard-body">
+                                                                        <div class="mb-4">
+                                                                            <label class="form-label required co-flabel">
+                                                                                <span class="co-ic co-ic--purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span> Offered Designation
+                                                                            </label>
+                                                                            <input type="text" class="form-control form-control-solid" name="current_designation" id="current_designation" placeholder="Enter designation" value="{{ @$designation }}">
+                                                                        </div>
+
+                                                                        <div class="mb-4">
+                                                                            <label class="form-label co-flabel">
+                                                                                <span class="co-ic co-ic--amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span> Date of Joining (DOJ)
+                                                                            </label>
+                                                                            <input type="datetime-local" class="form-control form-control-solid" name="dob" id="dob" placeholder="Enter dob" value="{{ @$joined_date }}" onclick="this.showPicker()">
+                                                                        </div>
+
+                                                                        <div>
+                                                                            <label class="form-label required co-flabel">
+                                                                                <span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 0 0 0-6M21 20a5 5 0 0 0-3.5-4.8"/></svg></span> Employment Type
+                                                                            </label>
+                                                                            <select class="form-select form-select-solid" arial-label="Select Job Type" id="employment_type" name="employment_type">
+                                                                                <option value="0" {{ $employment_type == 0 ? 'selected' : '' }}>Full Time</option>
+                                                                                <option value="1" {{ $employment_type == 1 ? 'selected' : '' }}>Contract</option>
+                                                                                <option value="3" {{ $employment_type == 3 ? 'selected' : '' }}>Part Time</option>
+                                                                            </select>
+                                                                            <div class="co-field-hint">Defines contract nature & legal template association</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div class="col-lg-12">
-                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-components-card">
-                                                    <div class="co-section-head co-section-head--flex">
-                                                        <div>
-                                                            <h5 class="co-section-title">Main Components <span class="co-section-note">(Must Total 100%)</span></h5>
-                                                            <div class="co-section-sub">These are core components. Total percentage must be exactly 100%.</div>
+                                                <div class="card mb-5 mb-xl-5 mx-2 co-main-card co-components-card">
+                                                    <div class="card-header co-card-header">
+                                                        <div class="d-flex align-items-center gap-3">
+                                                            <span class="co-card-header-icon co-card-header-icon--indigo">
+                                                                <i class="fas fa-layer-group"></i>
+                                                            </span>
+                                                            <div>
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <h5 class="co-section-title mb-0">Main Components</h5>
+                                                                    <span class="badge badge-light-primary fw-bolder fs-8 px-2 py-1">Must Total 100%</span>
+                                                                </div>
+                                                                <div class="co-section-sub">Core compensation salary elements configured to aggregate to exactly 100% of Base CTC</div>
+                                                            </div>
                                                         </div>
-                                                        <button type="button" class="co-add-btn" onclick="$('#pointList').find('.addRowBtn').first().trigger('click')">+ Add Main Component</button>
+                                                        <div>
+                                                            <button type="button" class="btn btn-sm btn-primary co-btn-add-pill" onclick="$('#pointList').find('.addRowBtn').first().trigger('click')">
+                                                                <i class="fas fa-plus fs-8 me-1"></i> Add Main Component
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div id="co_validation_banner" class="co-valid-banner co-valid-banner--warn">
-                                                        <i class="co-valid-ico"></i>
-                                                        <span id="co_validation_text">Total of main components: 0.00%</span>
-                                                    </div>
-                                                    <div class="row co-components-rows">
-                                                        <table class="table-row-dashed fs-6 gy-5 no-footer" id="pointList"
-                                                            role="grid" aria-describedby="myTable_info"
-                                                            style="width: 100%;">
+                                                    <div class="card-body p-5">
+                                                        <div id="co_validation_banner" class="co-valid-banner co-valid-banner--warn mb-4">
+                                                            <i class="co-valid-ico"></i>
+                                                            <span id="co_validation_text">Total of main components: 0.00%</span>
+                                                        </div>
+                                                        <div class="co-table-subcard">
+                                                            <table class="table-row-dashed fs-6 gy-5 no-footer" id="pointList"
+                                                                role="grid" aria-describedby="myTable_info"
+                                                                style="width: 100%;">
                                                             <thead>
                                                                 <tr class="fw-bolder text-muted other_section {{ $section_other }}"
                                                                     role="row">
@@ -1917,16 +2236,30 @@
                                                         </table>
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-components-card">
-                                                    <div class="co-section-head co-section-head--flex">
+                                            <div class="card mb-5 mb-xl-5 mx-2 co-main-card co-components-card">
+                                                <div class="card-header co-card-header">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <span class="co-card-header-icon co-card-header-icon--purple">
+                                                            <i class="fas fa-gift"></i>
+                                                        </span>
                                                         <div>
-                                                            <h5 class="co-section-title">Additional Components <span class="co-section-note">(Above 100% - Optional)</span></h5>
-                                                            <div class="co-section-sub">These components are additional and will be added on top of the main 100%.</div>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <h5 class="co-section-title mb-0">Additional Components</h5>
+                                                                <span class="badge badge-light-info fw-bolder fs-8 px-2 py-1">Above 100% Optional</span>
+                                                            </div>
+                                                            <div class="co-section-sub">Bonuses, performance incentives, and benefits added above the 100% base package</div>
                                                         </div>
-                                                        <button type="button" class="co-add-btn" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">+ Add Additional Component</button>
                                                     </div>
-                                                    <div id="co_additional_total" class="co-info-line">Total additional components: 0.00% (Allowed above 100%)</div>
+                                                    <div>
+                                                        <button type="button" class="btn btn-sm btn-primary co-btn-add-pill" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">
+                                                            <i class="fas fa-plus fs-8 me-1"></i> Add Additional Component
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body p-5">
+                                                    <div id="co_additional_total" class="co-info-line mb-3">Total additional components: 0.00% (Allowed above 100%)</div>
 
                                                     {{-- Empty state — shown (via JS) only when there are no additional components --}}
                                                     <div id="co_additional_empty" class="co-empty-state" style="display:none;">
@@ -1940,7 +2273,7 @@
                                                         <button type="button" class="co-add-btn" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">+ Add Additional Component</button>
                                                     </div>
 
-                                                    <div class="row">
+                                                    <div class="co-table-subcard">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="bonusList"
                                                             role="grid" aria-describedby="bonusList_info"
                                                             style="width: 100%;">
@@ -2530,15 +2863,30 @@
                                                         </table>
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-finalctc-card">
-                                                    <div class="co-section-head">
+                                            <div class="card mb-5 mb-xl-5 mx-2 co-main-card co-finalctc-card">
+                                                <div class="card-header co-card-header co-card-header--emerald">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <span class="co-card-header-icon co-card-header-icon--emerald">
+                                                            <i class="fas fa-calculator"></i>
+                                                        </span>
                                                         <div>
-                                                            <h5 class="co-section-title">Final CTC <span class="co-section-note">(Cost to Company)</span></h5>
-                                                            <div class="co-section-sub">Summary of the total cost including main and additional components.</div>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <h5 class="co-section-title mb-0">Final CTC</h5>
+                                                                <span class="co-finalctc-badge">Total Cost to Company</span>
+                                                            </div>
+                                                            <div class="co-section-sub">Comprehensive compensation summary aggregating main and additional components</div>
                                                         </div>
                                                     </div>
-                                                    <div class="row">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="badge badge-light-success fw-bolder fs-7 px-3 py-2">
+                                                            <i class="fas fa-check-circle text-success me-1"></i> Net Offer Value
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body p-5">
+                                                    <div class="co-table-subcard co-table-subcard--final">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer"
                                                             id="final_pay" role="grid"
                                                             aria-describedby="final_pay_info" style="width: 100%;">
@@ -2630,32 +2978,62 @@
                                                         </table>
                                                     </div>
                                                 </div>
-                                                <div id="text_for_hourly_annually" class="d-none"><br>
-                                                    <p><b>Note:</b>*The per-hour salary is calculated based on 8 hours per day, 5 days per week, and 2,080 hours per year. The annual salary is subject to adjustments based on the actual number of hours worked</p> </div>
+                                            </div>
 
-                                                {{-- Static/decorative footer (no backing calc source) --}}
-                                                <div class="co-howit-box">
-                                                    <div class="co-howit-col">
-                                                        <div class="co-howit-title"><i class="co-howit-ico"></i> How it works?</div>
-                                                        <div class="co-howit-text">Main components must total exactly 100%. Additional components can exceed 100% and will be added on top of the main 100%.</div>
-                                                    </div>
-                                                    <div class="co-howit-col">
-                                                        <div class="co-howit-title"><i class="co-howit-ico co-howit-ico--amber"></i> Before you proceed</div>
-                                                        <div class="co-howit-text">Double-check the currency, condition (Amount/Basic) and allocation of every component — these values drive the offer letter and cannot be edited once the offer is generated.</div>
+                                            <div id="text_for_hourly_annually" class="alert alert-dismissible bg-light-warning border border-warning border-dashed d-none flex-column flex-sm-row w-100 p-4 mb-5 mx-2">
+                                                <div class="d-flex flex-column pe-0 pe-sm-10">
+                                                    <h6 class="mb-1 text-warning fw-bolder"><i class="fas fa-exclamation-triangle text-warning me-2"></i> Hourly Rate Calculation Basis</h6>
+                                                    <span class="fs-8 text-gray-700">The per-hour salary is calculated based on 8 hours per day, 5 days per week, and 2,080 hours per year. The annual salary is subject to adjustments based on the actual number of hours worked.</span>
+                                                </div>
+                                            </div>
+
+                                            {{-- Rule 20 Guidance Sub-Card Grid --}}
+                                            <div class="row g-4 mb-5 mx-0">
+                                                <div class="col-md-6 px-2">
+                                                    <div class="co-guidance-subcard">
+                                                        <div class="d-flex align-items-start gap-3">
+                                                            <span class="co-guidance-icon co-guidance-icon--blue">
+                                                                <i class="fas fa-info-circle"></i>
+                                                            </span>
+                                                            <div>
+                                                                <div class="co-guidance-title">How it works?</div>
+                                                                <div class="co-guidance-text">Main components must total exactly 100%. Additional components can exceed 100% and will be added on top of the main 100% base package.</div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <div class="col-md-6 px-2">
+                                                    <div class="co-guidance-subcard">
+                                                        <div class="d-flex align-items-start gap-3">
+                                                            <span class="co-guidance-icon co-guidance-icon--amber">
+                                                                <i class="fas fa-shield-alt"></i>
+                                                            </span>
+                                                            <div>
+                                                                <div class="co-guidance-title">Before you proceed</div>
+                                                                <div class="co-guidance-text">Double-check currency, conditions and allocations — these drive the offer letter calculations and become immutable upon offer issuance.</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                                <hr>
-
-                                                <div class="co-footer-actions">
-                                                    <button type="button" class="btn co-btn-close" onclick="$('#kt_offercreate_close').trigger('click')">Close</button>
+                                            {{-- Rule 20 Modern Footer Card --}}
+                                            <div class="co-footer-card d-flex align-items-center justify-content-between mx-2 mb-5">
+                                                <div class="co-footer-status">
+                                                    <i class="fas fa-shield-check text-primary me-2"></i>
+                                                    <span>Real-time component validation enabled</span>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <button type="button" class="btn co-btn-close-ghost" onclick="$('#kt_offercreate_close').trigger('click')">
+                                                        <i class="fas fa-times me-1"></i> Close
+                                                    </button>
                                                     <input type="submit" name="save"
                                                         value="Save & {{($section_change_value) ? 'Next' : 'Generate'}}" id="save-form"
-                                                        class="btn co-btn-save">
+                                                        class="btn co-btn-save-primary">
                                                 </div>
-
-
                                             </div>
+
+                                        </div>
                                         </div>
                                     </form>
                                 </div>
