@@ -35,6 +35,21 @@ The root cause was a Redis cache collision and direct un-coalesced array access 
 3. **Strict MySQL Integer Typing on `city_id` and `state`:**
    Raw empty string values `''` assigned to `$jobApplication->city_id` or `$jobApplication->state` can cause strict mode SQL errors (`Incorrect integer value: '' for column 'city_id'`).
 
+4. **Edit Candidate Scope Resolution (Premature `$jobApplication->id` Access):**
+   In commit `f554a795` ("resume upload"), lines 8587-8608 in `ServiceCompanyJobApplicationController::update` added a fallback check for candidates with existing resumes in MySQL:
+   ```php
+   $hasDbResume = DB::table('job_applications')->where('id', $jobApplication->id)->...
+   ```
+   However, `$jobApplication` was not initialized until line 8653. If a user updated an existing candidate (in stage $\ge$ Sourcing) without uploading a new resume file, PHP 8.2 threw `ErrorException: Attempt to read property "id" on null`, crashing the update with HTTP 500.
+
+### Why the Issue Appeared Intermittent ("Time to Time" and "Auto Fix"):
+- **In Edit Candidate:**
+  - **Succeeded ("Auto Fix"):** If the user uploaded a new resume during the edit session, `$hasResume` was `true`, skipping lines 8590-8608 entirely. Also, if editing a candidate in InReview (stage 8), the Sourcing validation block was bypassed.
+  - **Failed ("500 Server Error"):** If the user edited profile fields (e.g. Current Company, CTC, or Location) without re-uploading a resume for a candidate in stage $\ge$ Sourcing, line 8593 was entered, triggering the fatal property access on undefined `$jobApplication`.
+- **In Add Candidate:**
+  - **Succeeded ("Auto Fix"):** If the selected city was not yet cached in Redis, or after the 24-hour Redis TTL expired, the database fallback generated all keys properly.
+  - **Failed ("500 Undefined array key 'city_id'"):** As soon as another workflow cached an incomplete location object in Redis for that city, subsequent submissions for that city crashed on `$locAuth['city_id']`.
+
 ---
 
 ## 3. Implemented Fixes

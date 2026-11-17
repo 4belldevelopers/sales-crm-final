@@ -98,6 +98,24 @@ class CandidateCommentsAndNoticePeriodRegressionTest extends TestCase
         $this->assertStringContainsString("'last_working_date' => \$applications_up->last_working_date", $indexJob);
     }
 
+    public function test_candidate_update_loads_job_application_and_company_id_before_resume_validation(): void
+    {
+        $controller = $this->source('app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php');
+        $update = $this->between($controller, 'public function update(Request $request, $id)', 'public function formatInterviewDateTime');
+
+        $jobAppPos = strpos($update, '$jobApplication = JobApplication::with(');
+        $this->assertNotFalse($jobAppPos, 'update() must initialize $jobApplication upfront');
+
+        $companyIdPos = strpos($update, '$company_id = $authCompanyId;');
+        $this->assertNotFalse($companyIdPos, 'update() must initialize $company_id upfront');
+
+        $hasResumePos = strpos($update, '$hasResume =');
+        $this->assertNotFalse($hasResumePos, 'update() must check $hasResume');
+
+        $this->assertLessThan($hasResumePos, $jobAppPos, '$jobApplication must be loaded BEFORE checking $hasResume to avoid fatal property access on null');
+        $this->assertLessThan($hasResumePos, $companyIdPos, '$company_id must be loaded BEFORE checking $hasResume');
+    }
+
     private function source(string $relativePath): string
     {
         $source = file_get_contents(base_path($relativePath));

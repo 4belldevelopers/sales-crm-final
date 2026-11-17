@@ -8431,6 +8431,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // and only within the same company (tenancy).
         $authUserId = auth()->id();
         $authCompanyId = auth()->user()->company_id;
+        $company_id = $authCompanyId;
+
+        $jobApplication = JobApplication::with(['documents'])->withoutGlobalScopes()->find($id);
+        if (! $jobApplication) {
+            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning', 'message' => 'Candidate application not found']);
+        }
         $canEditCandidate = DB::table('add_job_wise_condidates as ajwc')
             ->leftJoin('job_assign as ja', function ($join) {
                 $join->on('ja.job_id', '=', 'ajwc.job_id')
@@ -8650,8 +8656,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         abort_if(Gate::denies('edit_job_applications'), 403);
 
-        $jobApplication = JobApplication::with(['documents'])->withoutGlobalScopes()->find($id);
-        // dd($jobApplication,$id);
         $fullName = trim((string) $request->full_name);
         $jobApplication->full_name = preg_replace_callback(
             '/(^|[\s\-\'])([a-zA-Z\p{L}])/u',

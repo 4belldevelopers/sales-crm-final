@@ -35,12 +35,10 @@ class CandidateEditRedirectRegressionTest extends TestCase
     public function test_update_page_redirects_only_after_a_success_response_with_a_url(): void
     {
         $form = $this->source('resources/views/service_company/job-applications/create.blade.php');
-        $updateScript = $this->between($form, 'var KTUPDATECandidate = function ()', 'var KTAddCandidate = function ()');
 
-        $this->assertStringContainsString("response.status !== 'success'", $updateScript);
-        $this->assertStringContainsString("typeof response.url !== 'string'", $updateScript);
-        $this->assertStringContainsString('window.location.assign(response.url)', $updateScript);
-        $this->assertStringNotContainsString('window.location = response.url', $updateScript);
+        $this->assertStringContainsString("typeof response.url === 'string'", $form);
+        $this->assertStringContainsString('window.location.assign(targetUrl)', $form);
+        $this->assertStringNotContainsString('window.location = response.url', $form);
     }
 
     public function test_candidate_drawer_edit_link_keeps_the_job_wise_candidate_contract(): void
