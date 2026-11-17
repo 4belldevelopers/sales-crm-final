@@ -433,6 +433,20 @@ class PrescreenReportDataIntegrityTest extends TestCase
         $this->assertSame('Haryana', $healedGurgaon['state']);
         $this->assertSame('India', $healedGurgaon['country']);
         $this->assertSame('Gurgaon/Gurugram, Haryana, India', $healedGurgaon['location_text']);
+
+        // Verify Resilient Normalization against legacy cache entries missing city_id
+        \Illuminate\Support\Facades\Redis::setex('ref_authoritative_loc_v2:99999', 300, json_encode([
+            'city_name' => 'LegacyCity',
+            'state_name' => 'LegacyState',
+            'country_name' => 'LegacyCountry',
+        ]));
+        $legacyNormalized = \App\Helper\GeneralMethod::resolveAuthoritativeLocationHierarchy(99999, 4001, 101);
+        $this->assertArrayHasKey('city_id', $legacyNormalized);
+        $this->assertSame(99999, $legacyNormalized['city_id']);
+        $this->assertSame('LegacyCity', $legacyNormalized['city_name']);
+        $this->assertSame(4001, $legacyNormalized['state_id']);
+        $this->assertSame(101, $legacyNormalized['country_id']);
+        \Illuminate\Support\Facades\Redis::del('ref_authoritative_loc_v2:99999');
     }
 
     public function test_prescreen_report_skills_fallback_and_decoupled_contract(): void

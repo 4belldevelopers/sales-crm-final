@@ -576,47 +576,54 @@ class JobApplyService
         $cityID = '';
         $stateId = '';
         $countryID = '';
-        if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
-            $locAuth = GeneralMethod::resolveAuthoritativeLocationHierarchy(
-                $request->location_city_id,
-                $request->location_state_id,
-                $request->location_country_id
-            );
-            $cityID = $locAuth['city_id'];
-            $stateId = $locAuth['state_id'];
-            $countryID = $locAuth['country_id'];
-        } else {
-            $work_city = $request->input('kt_tagify_work_location');
-            if (! empty($work_city)) {
-                $work_city_all = json_decode($work_city, true);
-                if (! empty($work_city_all)) {
-                    foreach ($work_city_all as $cityVal) {
-                        $parts = explode('|', $cityVal['value']);
-                        $cityName = trim($parts[0] ?? '');
-                        $countrName = trim($parts[2] ?? '');
+        try {
+            if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
+                $locAuth = GeneralMethod::resolveAuthoritativeLocationHierarchy(
+                    $request->location_city_id,
+                    $request->location_state_id,
+                    $request->location_country_id
+                );
+                $cityID = (int) ($locAuth['city_id'] ?? $request->location_city_id);
+                $stateId = (int) ($locAuth['state_id'] ?? $request->location_state_id);
+                $countryID = (int) ($locAuth['country_id'] ?? ($request->location_country_id ?: 101));
+            } else {
+                $work_city = $request->input('kt_tagify_work_location');
+                if (! empty($work_city)) {
+                    $work_city_all = json_decode($work_city, true);
+                    if (! empty($work_city_all)) {
+                        foreach ($work_city_all as $cityVal) {
+                            $parts = explode('|', $cityVal['value']);
+                            $cityName = trim($parts[0] ?? '');
+                            $countrName = trim($parts[2] ?? '');
 
-                        $city_row = DB::table('city_list')
-                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                            ->select('city_list.city_id', 'countries.id as country_id')
-                            ->where('city_list.city', '!=', '')
-                            ->where('city_list.city', '=', $cityName)
-                            ->where('countries.country_name', '=', $countrName)
-                            ->first();
+                            $city_row = DB::table('city_list')
+                                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                                ->select('city_list.city_id', 'countries.id as country_id')
+                                ->where('city_list.city', '!=', '')
+                                ->where('city_list.city', '=', $cityName)
+                                ->where('countries.country_name', '=', $countrName)
+                                ->first();
 
-                        if ($city_row) {
-                            $cityID = $city_row->city_id;
-                            $countryID = $city_row->country_id;
-                            $stateId = GeneralMethod::stateId($cityID);
+                            if ($city_row) {
+                                $cityID = (int) $city_row->city_id;
+                                $countryID = (int) $city_row->country_id;
+                                $stateId = (int) GeneralMethod::stateId($cityID);
+                            }
                         }
                     }
                 }
             }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Location resolution fallback in JobApplyService: '.$e->getMessage());
+            $cityID = (int) ($request->location_city_id ?: 0);
+            $stateId = (int) ($request->location_state_id ?: 0);
+            $countryID = (int) ($request->location_country_id ?: 101);
         }
 
-        $jobApplication->country = $countryID;
-        $jobApplication->state = $stateId;
-        $jobApplication->city_id = $cityID;
+        $jobApplication->country = ! empty($countryID) ? (int) $countryID : 101;
+        $jobApplication->state = ! empty($stateId) ? (int) $stateId : null;
+        $jobApplication->city_id = ! empty($cityID) ? (int) $cityID : null;
 
         /* Standard photo upload to S3 */
         if ($request->hasFile('photo')) {

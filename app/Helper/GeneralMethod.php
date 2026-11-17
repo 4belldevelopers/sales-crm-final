@@ -5957,12 +5957,20 @@ END:VCALENDAR";
         }
 
         try {
-            $cacheKey = "ref_city_state_country:{$cityId}";
+            $cacheKey = "ref_authoritative_loc_v2:{$cityId}";
             $cached = \Illuminate\Support\Facades\Redis::get($cacheKey);
             if ($cached) {
                 $data = json_decode($cached, true);
-                if (is_array($data) && ! empty($data['city_name'])) {
-                    return $data;
+                if (is_array($data) && (! empty($data['city_name']) || ! empty($data['city']))) {
+                    return [
+                        'city_id' => (int) ($data['city_id'] ?? $cityId),
+                        'city' => (string) ($data['city'] ?? $data['city_name'] ?? ''),
+                        'state_id' => (int) ($data['state_id'] ?? $fallbackStateId),
+                        'country_id' => (int) ($data['country_id'] ?? $fallbackCountryId),
+                        'city_name' => (string) ($data['city_name'] ?? $data['city'] ?? ''),
+                        'state_name' => (string) ($data['state_name'] ?? ''),
+                        'country_name' => (string) ($data['country_name'] ?? ''),
+                    ];
                 }
             }
 
