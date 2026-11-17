@@ -437,7 +437,25 @@ class JobApplyService
                     'message' => 'Resume upload session not found. Please upload the resume again.',
                 ]);
             }
-            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+
+            // Self-healing check: if session is still Pending or Uploading, but file exists in R2, finalize it JIT
+            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
+                $existsInR2 = false;
+                try {
+                    $existsInR2 = Storage::disk('r2')->exists('resumes/'.$resumeSession->uuid);
+                } catch (\Throwable) {
+                }
+
+                if ($existsInR2) {
+                    try {
+                        app(\App\Services\ResumeUploadSession::class)->finalize($resumeSession->uuid, $company_id);
+                        $resumeSession->refresh();
+                    } catch (\Throwable) {
+                    }
+                }
+            }
+
+            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
                 return Reply::dataOnly([
                     'status' => 'error',
                     'msgType' => 'warning',
@@ -660,14 +678,20 @@ class JobApplyService
                     ->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
 
                 if ($claimed === 0) {
-                    DB::rollBack();
-                    if ($slotReserved) {
-                        $this->capacityService->releaseSlot($jobId);
-                        $slotReserved = false;
-                    }
+                    $existing = ResumeUpload::byUuid($resumeSession->uuid)->forCompany($company_id)->first();
+                    if ($existing && $existing->status === ResumeUploadStatus::Completed->value &&
+                        (! $existing->linked_candidate_id || (int) $existing->linked_candidate_id === (int) $jobApplication->id)) {
+                        $claimed = 1;
+                    } else {
+                        DB::rollBack();
+                        if ($slotReserved) {
+                            $this->capacityService->releaseSlot($jobId);
+                            $slotReserved = false;
+                        }
 
-                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-                        'message' => 'Resume session was already claimed. Please upload the resume again.']);
+                        return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                            'message' => 'Resume session was already claimed. Please upload the resume again.']);
+                    }
                 }
 
                 $r2Exists = false;

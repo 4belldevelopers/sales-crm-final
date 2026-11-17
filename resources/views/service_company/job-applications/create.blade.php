@@ -6582,14 +6582,22 @@ $(document).ready(function () {
         };
     }
 
+    window._resumeUploadState = (function () {
+        var isEditMode = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
+        var hasExisting = Boolean($('#existing_resume_path').val() || $('#uploaded_file_path').val() || $('#resume_session_uuid').val());
+        return (isEditMode && hasExisting) ? 'uploaded' : 'idle';
+    })();
+
     // ── v2 state → existing progress bar UI bridge ───────────────────────────
     if (RESUMES_FEATURE_BROWSER_UPLOAD) {
         window.ResumePresign.onStateChange(function (data) {
             if (data.state === 'uploading') {
+                window._resumeUploadState = 'uploading';
                 $('#upWrap').show();
                 $('#upBar').css('width', data.progress + '%');
                 $('#upStats').html(data.progress + '% &middot; Uploading to cloud&hellip;');
             } else if (data.state === 'uploaded') {
+                window._resumeUploadState = 'uploaded';
                 $('#upBar').css('width', '100%');
                 $('#upStats').html('100% &middot; Upload complete');
                 $('#upPill').css('display', 'inline-flex');
@@ -6607,9 +6615,12 @@ $(document).ready(function () {
                 $('#resumeCheck').val('1');
                 // Storage upload is isolated: do NOT clear ri.value or re-call showUploadedCard to avoid parser conflicts
             } else if (data.state === 'failed') {
+                window._resumeUploadState = 'failed';
                 if (typeof _showUploadError === 'function') {
                     _showUploadError(data.error || 'Upload failed. Please remove and try again.');
                 }
+            } else if (data.state === 'cancelled') {
+                window._resumeUploadState = 'idle';
             }
         });
     }
@@ -6692,6 +6703,7 @@ $(document).ready(function () {
         const ext = file.name.split('.').pop().toLowerCase();
 
         if ($.inArray(ext, ['pdf', 'doc', 'docx']) === -1) {
+            window._resumeUploadState = 'failed';
             alert('Only PDF, DOC and DOCX files are allowed.');
             return;
         }
@@ -6700,6 +6712,7 @@ $(document).ready(function () {
 
         // Server is `max:6048` KB = 6 MB. Keep the JS check in sync.
         if (sizeMB > 6) {
+            window._resumeUploadState = 'failed';
             alert('Maximum file size is 6 MB.');
             return;
         }
@@ -6724,6 +6737,7 @@ $(document).ready(function () {
         window.__upXhrChannelClaimed = true;
         window._currentActiveResumeFile = selectedFile;
         window._clientParserState = 'parsing';
+        window._resumeUploadState = 'uploading';
 
         // Immediately display the Resume Card so the recruiter sees file info and live parser progress
         showUploadedCard(selectedFile, null);
@@ -6832,6 +6846,8 @@ $(document).ready(function () {
     function backToDropzone() {
         resumeUploadGeneration++;
         resetProgress();
+        window._resumeUploadState = 'idle';
+        window._methodBUploadPromise = null;
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload(getUpContextKey());
@@ -6952,6 +6968,7 @@ $(document).ready(function () {
         window.__upXhrChannelClaimed = true;
         resetProgress();
         window.__upXhrChannelClaimed = true;
+        window._resumeUploadState = 'uploading';
         if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
         _resumeUploadId = null;
 
@@ -6984,39 +7001,49 @@ $(document).ready(function () {
             $('#upStats').text(pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(file.size));
         };
 
-        upXhr.onload = function () {
-            var r = null;
-            try { r = JSON.parse(upXhr.responseText); } catch (_) {}
-            upXhr = null;
+        var methodBPromise = new Promise(function (resolve, reject) {
+            upXhr.onload = function () {
+                var r = null;
+                try { r = JSON.parse(upXhr.responseText); } catch (_) {}
+                upXhr = null;
 
-            if (this.status >= 200 && this.status < 300 && r && r.success) {
-                $('#upBar').css('width', '100%');
-                $('#upStats').text('100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size));
-                $('#upPill').css('display', 'inline-flex');
-                $('#resume_upload_method').val('Method B');
-                $('#upBanner').removeClass('err').addClass('ok').html(
-                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
-                    + '<span><strong>Upload complete!</strong> Resume uploaded successfully using Method B</span>'
-                ).show();
-                $('#upInfoBannerTitle').text('Resume uploaded successfully using Method B');
+                if (this.status >= 200 && this.status < 300 && r && r.success) {
+                    window._resumeUploadState = 'uploaded';
+                    $('#upBar').css('width', '100%');
+                    $('#upStats').text('100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size));
+                    $('#upPill').css('display', 'inline-flex');
+                    $('#resume_upload_method').val('Method B');
+                    $('#upBanner').removeClass('err').addClass('ok').html(
+                        '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                        + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
+                        + '<span><strong>Upload complete!</strong> Resume uploaded successfully using Method B</span>'
+                    ).show();
+                    $('#upInfoBannerTitle').text('Resume uploaded successfully using Method B');
 
-                $('#uploaded_file_path').val(r.file_path || '');
-                $('#resume_original_name').val(r.original_name || file.name || '');
-                // Ensure uploadBox remains completely hidden and upInfo remains shown
-                $('#uploadBox').attr('style', 'display: none !important').addClass('d-none');
-                $('.resume-card').addClass('has-uploaded-resume');
-                $('#upInfo').addClass('show');
+                    $('#uploaded_file_path').val(r.file_path || '');
+                    $('#resume_original_name').val(r.original_name || file.name || '');
+                    // Ensure uploadBox remains completely hidden and upInfo remains shown
+                    $('#uploadBox').attr('style', 'display: none !important').addClass('d-none');
+                    $('.resume-card').addClass('has-uploaded-resume');
+                    $('#upInfo').addClass('show');
 
-                // Zero server polling: 100% of resume parsing runs client-side
-            } else {
-                _showUploadError((r && r.message) ? r.message : 'Upload failed. Try again.');
-            }
-        };
+                    // Zero server polling: 100% of resume parsing runs client-side
+                    resolve(r);
+                } else {
+                    window._resumeUploadState = 'failed';
+                    var errMsg = (r && r.message) ? r.message : 'Upload failed. Try again.';
+                    _showUploadError(errMsg);
+                    reject(new Error(errMsg));
+                }
+            };
 
-        upXhr.onerror = function () {
-            _showUploadError('Network error during upload. Click Remove and try again.');
-        };
+            upXhr.onerror = function () {
+                window._resumeUploadState = 'failed';
+                _showUploadError('Network error during upload. Click Remove and try again.');
+                reject(new Error('Network error during upload. Click Remove and try again.'));
+            };
+        });
+        window._methodBUploadPromise = methodBPromise;
 
         upXhr.send(file); // raw bytes → php://input → R2, zero local temp
     }
@@ -9512,24 +9539,29 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
     if (!rn) addMissing('recruiter_note');
 
     // 12. Upload Resume
-    var hasResume = false;
-    if (($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) ||
-        ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim()) ||
-        ($('#resume_session_uuid').val() && String($('#resume_session_uuid').val()).trim()) ||
-        ($('#resumeCheck').val() === '1') ||
-        ($('#resume_intent').val() === 'KEEP' || $('#existing_resume_path').val())) {
-        hasResume = true;
+    if (window._resumeUploadState === 'uploading') {
+        addMissing('resume', 'Upload Resume', '#uploadBox', 'Resume upload is still in progress. Please wait for upload to complete before submitting.');
+    } else if (window._resumeUploadState === 'failed') {
+        addMissing('resume', 'Upload Resume', '#uploadBox', 'Resume upload failed. Please remove and re-upload a valid resume file (PDF or Word, max 6MB).');
     } else {
-        var ri = document.getElementById('resume');
-        if (ri && ri.files && ri.files.length > 0) {
+        var hasResume = false;
+        if (($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) ||
+            ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim()) ||
+            ($('#resume_session_uuid').val() && String($('#resume_session_uuid').val()).trim()) ||
+            ($('#resume_intent').val() === 'KEEP' || $('#existing_resume_path').val())) {
             hasResume = true;
-        } else if ($('#fileInfo').is(':visible') && $('#fileName').text().trim()) {
-            hasResume = true;
-        } else if ($('#upInfo').is(':visible') && $('#upFileName').text().trim()) {
-            hasResume = true;
+        } else {
+            var ri = document.getElementById('resume');
+            if (ri && ri.files && ri.files.length > 0) {
+                hasResume = true;
+            } else if ($('#fileInfo').is(':visible') && $('#fileName').text().trim()) {
+                hasResume = true;
+            } else if ($('#upInfo').is(':visible') && $('#upFileName').text().trim()) {
+                hasResume = true;
+            }
         }
+        if (!hasResume) addMissing('resume', 'Upload Resume', '#uploadBox', 'Please upload a resume file (PDF or Word, max 6MB).');
     }
-    if (!hasResume) addMissing('resume');
 
     // 13. Career Summary *
     var cs = ($('#careersummary').val() || '').trim();
@@ -9875,6 +9907,11 @@ var KTAddCandidate = function () {
                         window.__candidateIsSubmitting = false;
                         $btn.prop('disabled', false).removeClass('disabled').html(resetBtnHtml);
                         if (submitButton) { submitButton.removeAttribute('data-kt-indicator'); submitButton.disabled = false; }
+                        if (!isEdit) {
+                            $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+                        } else {
+                            $('#client_update_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('upd_' + Math.random().toString(36).slice(2) + Date.now()));
+                        }
                         Swal.fire(isEdit ? "Update Failed" : "Submission Failed", response.message || (isEdit ? "The candidate could not be updated. Please try again." : "The candidate could not be saved. Please try again."), "error");
                         return false;
                     }
@@ -10114,6 +10151,12 @@ var KTAddCandidate = function () {
                         return;
                     }
 
+                    if (!isEdit) {
+                        $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+                    } else {
+                        $('#client_update_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('upd_' + Math.random().toString(36).slice(2) + Date.now()));
+                    }
+
                     var display = serverMsg || (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
                     Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
                 }
@@ -10135,6 +10178,34 @@ var KTAddCandidate = function () {
             if (!$btn.length) { $btn = $('#save-form, #update-form').first(); }
             if ($btn.length && $btn.prop('disabled')) {
                 return false;
+            }
+
+            var resetBtnHtml = isEdit
+                ? '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>'
+                : '<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>';
+
+            // 0. If resume upload is currently in progress, wait for it to complete smoothly
+            if (window._resumeUploadState === 'uploading' || (window.ResumePresign && typeof window.ResumePresign.isUploading === 'function' && window.ResumePresign.isUploading())) {
+                $btn.prop('disabled', true).addClass('disabled');
+                $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading Resume...');
+                try {
+                    if (window.ResumePresign && typeof window.ResumePresign.waitForUpload === 'function') {
+                        await window.ResumePresign.waitForUpload();
+                    } else if (window._methodBUploadPromise) {
+                        await window._methodBUploadPromise;
+                    }
+                } catch (upErr) {
+                    $btn.prop('disabled', false).removeClass('disabled').html(resetBtnHtml);
+                    Swal.fire({
+                        title: "Upload Failed",
+                        text: (upErr && upErr.message) ? upErr.message : "Resume upload failed. Please remove and re-upload before submitting.",
+                        icon: "error",
+                        confirmButtonText: "Ok, got it!"
+                    });
+                    return false;
+                } finally {
+                    $btn.prop('disabled', false).removeClass('disabled').html(resetBtnHtml);
+                }
             }
 
             var connected = true;
