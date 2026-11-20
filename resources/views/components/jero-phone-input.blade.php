@@ -85,6 +85,20 @@
     ];
 
     $rawCode = trim((string) old($countryCodeName, $countryCode));
+    $rawVal = trim((string) old($name, $value));
+
+    // Auto-detect calling code from phone value if countryCode is empty and phone value starts with '+'
+    if ($rawCode === '' && str_starts_with($rawVal, '+')) {
+        $sortedDials = array_keys($dialToIso);
+        usort($sortedDials, fn ($a, $b) => strlen($b) <=> strlen($a));
+        foreach ($sortedDials as $testDial) {
+            if (str_starts_with($rawVal, $testDial)) {
+                $rawCode = $testDial;
+                break;
+            }
+        }
+    }
+
     $upperRaw = strtoupper($rawCode);
     if (isset($aliasToIso[$upperRaw])) {
         $upperRaw = $aliasToIso[$upperRaw];
@@ -95,7 +109,12 @@
         $initialIso = $upperRaw;
     } elseif ($rawCode && preg_match('/^\+?\d+$/', $rawCode)) {
         $initialCode = str_starts_with($rawCode, '+') ? $rawCode : ('+' . $rawCode);
-        $initialIso = $dialToIso[$initialCode] ?? ($tenantHqIso ?: 'IN');
+        // Disambiguate shared dial codes (+1 for US/CA, +7 for RU/KZ) if defaultIso matches
+        if ($tenantHqIso && isset($isoToDial[$tenantHqIso]) && $isoToDial[$tenantHqIso] === $initialCode) {
+            $initialIso = $tenantHqIso;
+        } else {
+            $initialIso = $dialToIso[$initialCode] ?? ($tenantHqIso ?: 'IN');
+        }
     } else {
         $initialCode = $isoToDial[$tenantHqIso] ?? '+91';
         $initialIso = $tenantHqIso ?: 'IN';

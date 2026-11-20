@@ -17886,11 +17886,12 @@ END:VCALENDAR";
      * Standardized phone number formatter with country flag and calling code.
      * Formats contact person phone numbers across Client Details drawers and tables.
      *
-     * @param  string|null  $callingCode  ISO country code ('in', 'US') or dial code ('+91', '1')
-     * @param  string|null  $phoneNumber  Raw phone number
+     * @param  string|null  $callingCode   ISO country code ('in', 'US') or dial code ('+91', '1')
+     * @param  string|null  $phoneNumber   Raw phone number
+     * @param  mixed        $countryContext Optional country hint (ID, ISO code, or country name, e.g. Canada)
      * @return string Safe HTML rendering flag, dial code, and clean phone number
      */
-    public static function formatContactPhoneHtml(?string $callingCode, ?string $phoneNumber): string
+    public static function formatContactPhoneHtml(?string $callingCode, ?string $phoneNumber, $countryContext = null): string
     {
         $rawPhone = trim((string) ($phoneNumber ?: ''));
         if ($rawPhone === '') {
@@ -17907,7 +17908,7 @@ END:VCALENDAR";
             'BD' => '+880', 'LK' => '+94', 'NP' => '+977', 'NG' => '+234', 'KE' => '+254',
             'EG' => '+20', 'TR' => '+90', 'PL' => '+48', 'RO' => '+40', 'UA' => '+380',
             'VN' => '+84', 'TH' => '+66', 'HK' => '+852', 'TW' => '+886', 'IL' => '+972',
-            'RU' => '+7', 'MV' => '+960', 'YE' => '+967', 'SY' => '+963', 'IR' => '+98',
+            'RU' => '+7', 'KZ' => '+7', 'MV' => '+960', 'YE' => '+967', 'SY' => '+963', 'IR' => '+98',
         ];
 
         static $dialToIso = [
@@ -17923,6 +17924,21 @@ END:VCALENDAR";
             '+48' => 'PL', '+40' => 'RO', '+380' => 'UA', '+84' => 'VN',
             '+66' => 'TH', '+852' => 'HK', '+886' => 'TW', '+972' => 'IL',
             '+7' => 'RU', '+960' => 'MV', '+967' => 'YE', '+963' => 'SY', '+98' => 'IR',
+        ];
+
+        static $dialToLen = [
+            '+91' => 10, '+1' => 10, '+44' => 10, '+971' => 9,
+            '+61' => 9, '+65' => 8, '+966' => 9, '+49' => 11,
+            '+33' => 9, '+974' => 8, '+965' => 8, '+968' => 8,
+            '+973' => 8, '+60' => 10, '+63' => 10, '+62' => 11,
+            '+64' => 9, '+27' => 9, '+353' => 9, '+31' => 9,
+            '+46' => 9, '+41' => 9, '+34' => 9, '+39' => 10,
+            '+55' => 11, '+52' => 10, '+81' => 10, '+82' => 10,
+            '+92' => 10, '+880' => 10, '+94' => 9, '+977' => 10,
+            '+234' => 10, '+254' => 9, '+20' => 10, '+90' => 10,
+            '+48' => 9, '+40' => 9, '+380' => 9, '+84' => 9,
+            '+66' => 9, '+852' => 8, '+886' => 9, '+972' => 9,
+            '+7' => 10, '+960' => 7, '+967' => 9, '+963' => 9, '+98' => 10,
         ];
 
         static $svgFlags = [
@@ -17941,6 +17957,41 @@ END:VCALENDAR";
             'ES' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="120" fill="#aa151b"/><rect y="120" width="640" height="240" fill="#f1bf00"/><rect y="360" width="640" height="120" fill="#aa151b"/></svg>',
             'NL' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ae1c28"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#21468b"/></svg>',
             'CH' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#d52b1e"/><rect x="270" y="100" width="100" height="280" fill="#ffffff"/><rect x="180" y="190" width="280" height="100" fill="#ffffff"/></svg>',
+            'QA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#8d1b3d"/><polygon points="0,0 200,0 260,26 200,53 260,80 200,106 260,133 200,160 260,186 200,213 260,240 200,266 260,293 200,320 260,346 200,373 260,400 200,426 260,453 200,480 0,480" fill="#ffffff"/></svg>',
+            'KW' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#007a3d"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#ce1126"/><polygon points="0,0 180,140 180,340 0,480" fill="#000000"/></svg>',
+            'OM' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ffffff"/><rect y="160" width="640" height="160" fill="#db161b"/><rect y="320" width="640" height="160" fill="#008000"/><rect width="180" height="480" fill="#db161b"/><circle cx="90" cy="90" r="30" fill="#ffffff"/></svg>',
+            'BH' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ce1126"/><polygon points="0,0 180,0 250,48 180,96 250,144 180,192 250,240 180,288 250,336 180,384 250,432 180,480 0,480" fill="#ffffff"/></svg>',
+            'MY' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#cc0000"/><path d="M0,34h640M0,102h640M0,170h640M0,238h640M0,306h640M0,374h640M0,442h640" stroke="#ffffff" stroke-width="34"/><rect width="320" height="272" fill="#000066"/><circle cx="150" cy="136" r="60" fill="#ffcc00"/><circle cx="170" cy="136" r="50" fill="#000066"/><circle cx="205" cy="136" r="30" fill="#ffcc00"/></svg>',
+            'PH' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#0038a8"/><rect y="240" width="640" height="240" fill="#ce1126"/><polygon points="0,0 280,240 0,480" fill="#ffffff"/><circle cx="90" cy="240" r="28" fill="#fcd116"/></svg>',
+            'ID' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#ce1126"/><rect y="240" width="640" height="240" fill="#ffffff"/></svg>',
+            'NZ' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#00247d"/><g transform="scale(0.5)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g><circle cx="480" cy="120" r="14" fill="#cc142b" stroke="#ffffff" stroke-width="4"/><circle cx="430" cy="200" r="14" fill="#cc142b" stroke="#ffffff" stroke-width="4"/><circle cx="530" cy="220" r="14" fill="#cc142b" stroke="#ffffff" stroke-width="4"/><circle cx="470" cy="300" r="14" fill="#cc142b" stroke="#ffffff" stroke-width="4"/></svg>',
+            'ZA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#e03c31"/><rect y="240" width="640" height="240" fill="#001489"/><polygon points="0,0 260,240 0,480" fill="#000000"/><path d="M0,0 L260,240 L640,240 M0,480 L260,240" stroke="#007749" stroke-width="80" fill="none"/><path d="M0,0 L260,240 L640,240 M0,480 L260,240" stroke="#ffb81c" stroke-width="25" fill="none"/></svg>',
+            'IE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#169b62"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ff883e"/></svg>',
+            'SE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#006aa7"/><rect x="200" width="80" height="480" fill="#fecc00"/><rect y="200" width="640" height="80" fill="#fecc00"/></svg>',
+            'BR' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#009c3b"/><polygon points="320,60 580,240 320,420 60,240" fill="#ffdf00"/><circle cx="320" cy="240" r="85" fill="#002776"/><path d="M236,240 Q320,210 404,240" stroke="#ffffff" stroke-width="12" fill="none"/></svg>',
+            'MX' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#006847"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ce1126"/><circle cx="320" cy="240" r="30" fill="#9c7a40"/></svg>',
+            'KR' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffffff"/><circle cx="320" cy="240" r="90" fill="#cd2e3a"/><path d="M230,240 A90,90 0 0,0 410,240 A45,45 0 0,0 320,240 A45,45 0 0,1 230,240 Z" fill="#0047a0"/></svg>',
+            'PK' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="160" height="480" fill="#ffffff"/><rect x="160" width="480" height="480" fill="#01411c"/><circle cx="400" cy="240" r="90" fill="#ffffff"/><circle cx="430" cy="220" r="80" fill="#01411c"/><circle cx="450" cy="190" r="22" fill="#ffffff"/></svg>',
+            'BD' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#006a4e"/><circle cx="280" cy="240" r="120" fill="#f42a41"/></svg>',
+            'LK' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffbe29"/><rect x="40" y="40" width="60" height="400" fill="#00534e"/><rect x="110" y="40" width="60" height="400" fill="#eb7400"/><rect x="190" y="40" width="410" height="400" fill="#8d153a"/><circle cx="400" cy="240" r="70" fill="#ffbe29"/></svg>',
+            'NP' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffffff"/><polygon points="40,20 400,220 180,220 420,440 40,440" fill="#dc143c" stroke="#003893" stroke-width="20"/><circle cx="160" cy="140" r="30" fill="#ffffff"/><circle cx="180" cy="340" r="40" fill="#ffffff"/></svg>',
+            'NG' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#008751"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#008751"/></svg>',
+            'KE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="140" fill="#000000"/><rect y="140" width="640" height="20" fill="#ffffff"/><rect y="160" width="640" height="160" fill="#bb0000"/><rect y="320" width="640" height="20" fill="#ffffff"/><rect y="340" width="640" height="140" fill="#006600"/><ellipse cx="320" cy="240" rx="45" ry="90" fill="#bb0000" stroke="#ffffff" stroke-width="8"/></svg>',
+            'EG' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ce1126"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/><circle cx="320" cy="240" r="28" fill="#c09338"/></svg>',
+            'TR' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#e30a17"/><circle cx="280" cy="240" r="90" fill="#ffffff"/><circle cx="305" cy="240" r="72" fill="#e30a17"/><polygon points="370,240 395,248 375,263 382,288 360,272 338,288 345,263 325,248 350,240 360,215" fill="#ffffff"/></svg>',
+            'PL' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#ffffff"/><rect y="240" width="640" height="240" fill="#dc143c"/></svg>',
+            'RO' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#002b7f"/><rect x="213" width="214" height="480" fill="#fcd116"/><rect x="427" width="213" height="480" fill="#ce1126"/></svg>',
+            'UA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#0057b7"/><rect y="240" width="640" height="240" fill="#ffd700"/></svg>',
+            'VN' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#da251d"/><polygon points="320,130 348,217 439,217 365,271 393,358 320,304 247,358 275,271 201,217 292,217" fill="#ffff00"/></svg>',
+            'TH' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="80" fill="#a51931"/><rect y="80" width="640" height="80" fill="#f4f5f8"/><rect y="160" width="640" height="160" fill="#2d2a4a"/><rect y="320" width="640" height="80" fill="#f4f5f8"/><rect y="400" width="640" height="80" fill="#a51931"/></svg>',
+            'HK' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#de2910"/><circle cx="320" cy="240" r="90" fill="#ffffff"/><circle cx="320" cy="240" r="70" fill="#de2910"/><circle cx="320" cy="240" r="30" fill="#ffffff"/></svg>',
+            'TW' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#fe0000"/><rect width="320" height="240" fill="#000095"/><circle cx="160" cy="120" r="60" fill="#ffffff"/><circle cx="160" cy="120" r="45" fill="#000095"/><circle cx="160" cy="120" r="30" fill="#ffffff"/></svg>',
+            'IL' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffffff"/><rect y="50" width="640" height="60" fill="#0038b8"/><rect y="370" width="640" height="60" fill="#0038b8"/><polygon points="320,180 370,270 270,270" stroke="#0038b8" stroke-width="12" fill="none"/><polygon points="320,300 370,210 270,210" stroke="#0038b8" stroke-width="12" fill="none"/></svg>',
+            'RU' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ffffff"/><rect y="160" width="640" height="160" fill="#0039a6"/><rect y="320" width="640" height="160" fill="#d52b1e"/></svg>',
+            'MV' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#d21034"/><rect x="120" y="90" width="400" height="300" fill="#007e3a"/><circle cx="340" cy="240" r="75" fill="#ffffff"/><circle cx="365" cy="240" r="75" fill="#007e3a"/></svg>',
+            'YE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ce1126"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/></svg>',
+            'SY' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ce1126"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/><circle cx="240" cy="240" r="24" fill="#007a3d"/><circle cx="400" cy="240" r="24" fill="#007a3d"/></svg>',
+            'IR' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#239f40"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#da0000"/><circle cx="320" cy="240" r="30" fill="#da0000"/></svg>',
         ];
 
         $cleanCalling = trim((string) ($callingCode ?: ''));
@@ -17977,15 +18028,59 @@ END:VCALENDAR";
             }
         }
 
+        // Country context disambiguation for shared dial codes (+1, +7) or missing calling code
+        if ($countryContext !== null && $countryContext !== '') {
+            $normContext = strtoupper(trim((string) $countryContext));
+            if ($dial === '+1') {
+                if (in_array($normContext, ['CA', 'CAN', 'CANADA', '39'], true)) {
+                    $iso = 'CA';
+                } elseif (in_array($normContext, ['US', 'USA', 'UNITED STATES', '233'], true)) {
+                    $iso = 'US';
+                }
+            } elseif ($dial === '+7') {
+                if (in_array($normContext, ['KZ', 'KAZ', 'KAZAKHSTAN', '112'], true)) {
+                    $iso = 'KZ';
+                } elseif (in_array($normContext, ['RU', 'RUS', 'RUSSIA', '182'], true)) {
+                    $iso = 'RU';
+                }
+            } elseif ($dial === null) {
+                static $contextCountryMap = [
+                    '101' => 'IN', 'IN' => 'IN', 'IND' => 'IN', 'INDIA' => 'IN',
+                    '233' => 'US', 'US' => 'US', 'USA' => 'US', 'UNITED STATES' => 'US',
+                    '39' => 'CA', 'CA' => 'CA', 'CAN' => 'CA', 'CANADA' => 'CA',
+                    '232' => 'GB', 'GB' => 'GB', 'UK' => 'GB', 'GBR' => 'GB', 'UNITED KINGDOM' => 'GB',
+                    '231' => 'AE', 'AE' => 'AE', 'ARE' => 'AE', 'UAE' => 'AE', 'UNITED ARAB EMIRATES' => 'AE',
+                    '14' => 'AU', 'AU' => 'AU', 'AUS' => 'AU', 'AUSTRALIA' => 'AU',
+                    '199' => 'SG', 'SG' => 'SG', 'SGP' => 'SG', 'SINGAPORE' => 'SG',
+                    '194' => 'SA', 'SA' => 'SA', 'SAU' => 'SA', 'SAUDI ARABIA' => 'SA',
+                    '82' => 'DE', 'DE' => 'DE', 'DEU' => 'DE', 'GERMANY' => 'DE',
+                    '75' => 'FR', 'FR' => 'FR', 'FRA' => 'FR', 'FRANCE' => 'FR',
+                ];
+                if (isset($contextCountryMap[$normContext])) {
+                    $iso = $contextCountryMap[$normContext];
+                    $dial = $isoToDial[$iso] ?? null;
+                }
+            }
+        }
+
         $cleanPhone = $rawPhone;
         if ($dial !== null) {
-            // Strip leading dial code from phone number to prevent duplicate display
-            if (str_starts_with($cleanPhone, $dial)) {
+            $dialDigits = ltrim($dial, '+');
+            $expectedLen = $dialToLen[$dial] ?? 10;
+            $rawDigits = preg_replace('/[^\d]/', '', $cleanPhone);
+
+            // Strip leading dial code ONLY when:
+            // 1. Phone explicitly starts with '+' (e.g. "+91 9177920670" -> "9177920670")
+            // 2. OR phone digits count strictly exceeds expected national length (e.g. 12 digits "919177920670" -> "9177920670")
+            // If digits <= expectedLen (e.g. 10 digits in India), NEVER strip: digits are part of the subscriber's mobile number!
+            if (str_starts_with($cleanPhone, '+'.$dialDigits)) {
+                $cleanPhone = trim(substr($cleanPhone, strlen('+'.$dialDigits)));
+            } elseif (str_starts_with($cleanPhone, $dial)) {
                 $cleanPhone = trim(substr($cleanPhone, strlen($dial)));
-            } elseif (str_starts_with($cleanPhone, '+'.ltrim($dial, '+'))) {
-                $cleanPhone = trim(substr($cleanPhone, strlen('+'.ltrim($dial, '+'))));
-            } elseif (str_starts_with($cleanPhone, ltrim($dial, '+')) && strlen(substr($cleanPhone, strlen(ltrim($dial, '+')))) >= 7) {
-                $cleanPhone = trim(substr($cleanPhone, strlen(ltrim($dial, '+'))));
+            } elseif (strlen($rawDigits) > $expectedLen && str_starts_with($rawDigits, $dialDigits)) {
+                if (str_starts_with($cleanPhone, $dialDigits)) {
+                    $cleanPhone = trim(substr($cleanPhone, strlen($dialDigits)));
+                }
             }
         }
 
@@ -18013,9 +18108,12 @@ END:VCALENDAR";
     /**
      * Standardized international telephone URI generator for tel: links.
      *
+     * @param  string|null  $callingCode   ISO country code ('in', 'US') or dial code ('+91', '1')
+     * @param  string|null  $phoneNumber   Raw phone number
+     * @param  mixed        $countryContext Optional country hint (ID, ISO code, or country name, e.g. Canada)
      * @return string E.164 compliant phone string or digits
      */
-    public static function formatContactPhoneForTel(?string $callingCode, ?string $phoneNumber): string
+    public static function formatContactPhoneForTel(?string $callingCode, ?string $phoneNumber, $countryContext = null): string
     {
         $rawPhone = trim((string) ($phoneNumber ?: ''));
         if ($rawPhone === '') {
@@ -18025,6 +18123,44 @@ END:VCALENDAR";
         static $isoToDial = [
             'IN' => '+91', 'US' => '+1', 'GB' => '+44', 'AE' => '+971', 'CA' => '+1',
             'AU' => '+61', 'SG' => '+65', 'SA' => '+966', 'DE' => '+49', 'FR' => '+33',
+            'QA' => '+974', 'KW' => '+965', 'OM' => '+968', 'BH' => '+973', 'MY' => '+60',
+            'PH' => '+63', 'ID' => '+62', 'NZ' => '+64', 'ZA' => '+27', 'IE' => '+353',
+            'NL' => '+31', 'SE' => '+46', 'CH' => '+41', 'ES' => '+34', 'IT' => '+39',
+            'BR' => '+55', 'MX' => '+52', 'JP' => '+81', 'KR' => '+82', 'PK' => '+92',
+            'BD' => '+880', 'LK' => '+94', 'NP' => '+977', 'NG' => '+234', 'KE' => '+254',
+            'EG' => '+20', 'TR' => '+90', 'PL' => '+48', 'RO' => '+40', 'UA' => '+380',
+            'VN' => '+84', 'TH' => '+66', 'HK' => '+852', 'TW' => '+886', 'IL' => '+972',
+            'RU' => '+7', 'KZ' => '+7', 'MV' => '+960', 'YE' => '+967', 'SY' => '+963', 'IR' => '+98',
+        ];
+
+        static $dialToIso = [
+            '+91' => 'IN', '+1' => 'US', '+44' => 'GB', '+971' => 'AE',
+            '+61' => 'AU', '+65' => 'SG', '+966' => 'SA', '+49' => 'DE',
+            '+33' => 'FR', '+974' => 'QA', '+965' => 'KW', '+968' => 'OM',
+            '+973' => 'BH', '+60' => 'MY', '+63' => 'PH', '+62' => 'ID',
+            '+64' => 'NZ', '+27' => 'ZA', '+353' => 'IE', '+31' => 'NL',
+            '+46' => 'SE', '+41' => 'CH', '+34' => 'ES', '+39' => 'IT',
+            '+55' => 'BR', '+52' => 'MX', '+81' => 'JP', '+82' => 'KR',
+            '+92' => 'PK', '+880' => 'BD', '+94' => 'LK', '+977' => 'NP',
+            '+234' => 'NG', '+254' => 'KE', '+20' => 'EG', '+90' => 'TR',
+            '+48' => 'PL', '+40' => 'RO', '+380' => 'UA', '+84' => 'VN',
+            '+66' => 'TH', '+852' => 'HK', '+886' => 'TW', '+972' => 'IL',
+            '+7' => 'RU', '+960' => 'MV', '+967' => 'YE', '+963' => 'SY', '+98' => 'IR',
+        ];
+
+        static $dialToLen = [
+            '+91' => 10, '+1' => 10, '+44' => 10, '+971' => 9,
+            '+61' => 9, '+65' => 8, '+966' => 9, '+49' => 11,
+            '+33' => 9, '+974' => 8, '+965' => 8, '+968' => 8,
+            '+973' => 8, '+60' => 10, '+63' => 10, '+62' => 11,
+            '+64' => 9, '+27' => 9, '+353' => 9, '+31' => 9,
+            '+46' => 9, '+41' => 9, '+34' => 9, '+39' => 10,
+            '+55' => 11, '+52' => 10, '+81' => 10, '+82' => 10,
+            '+92' => 10, '+880' => 10, '+94' => 9, '+977' => 10,
+            '+234' => 10, '+254' => 9, '+20' => 10, '+90' => 10,
+            '+48' => 9, '+40' => 9, '+380' => 9, '+84' => 9,
+            '+66' => 9, '+852' => 8, '+886' => 9, '+972' => 9,
+            '+7' => 10, '+960' => 7, '+967' => 9, '+963' => 9, '+98' => 10,
         ];
 
         $cleanCalling = trim((string) ($callingCode ?: ''));
@@ -18038,10 +18174,50 @@ END:VCALENDAR";
             }
         }
 
+        // If calling code is absent, detect embedded international prefix from phone number
+        if ($dial === '' && str_starts_with($rawPhone, '+')) {
+            static $sortedDials = null;
+            if ($sortedDials === null) {
+                $sortedDials = array_keys($dialToIso);
+                usort($sortedDials, fn ($a, $b) => strlen($b) <=> strlen($a));
+            }
+            foreach ($sortedDials as $testDial) {
+                if (str_starts_with($rawPhone, $testDial)) {
+                    $dial = $testDial;
+                    break;
+                }
+            }
+        }
+
+        // Infer dial code from country context if calling code is absent and phone lacks '+'
+        if ($dial === '' && $countryContext !== null && $countryContext !== '') {
+            $normContext = strtoupper(trim((string) $countryContext));
+            static $contextCountryMap = [
+                '101' => 'IN', 'IN' => 'IN', 'IND' => 'IN', 'INDIA' => 'IN',
+                '233' => 'US', 'US' => 'US', 'USA' => 'US', 'UNITED STATES' => 'US',
+                '39' => 'CA', 'CA' => 'CA', 'CAN' => 'CA', 'CANADA' => 'CA',
+                '232' => 'GB', 'GB' => 'GB', 'UK' => 'GB', 'GBR' => 'GB', 'UNITED KINGDOM' => 'GB',
+                '231' => 'AE', 'AE' => 'AE', 'ARE' => 'AE', 'UAE' => 'AE', 'UNITED ARAB EMIRATES' => 'AE',
+                '14' => 'AU', 'AU' => 'AU', 'AUS' => 'AU', 'AUSTRALIA' => 'AU',
+                '199' => 'SG', 'SG' => 'SG', 'SGP' => 'SG', 'SINGAPORE' => 'SG',
+                '194' => 'SA', 'SA' => 'SA', 'SAU' => 'SA', 'SAUDI ARABIA' => 'SA',
+                '82' => 'DE', 'DE' => 'DE', 'DEU' => 'DE', 'GERMANY' => 'DE',
+                '75' => 'FR', 'FR' => 'FR', 'FRA' => 'FR', 'FRANCE' => 'FR',
+            ];
+            if (isset($contextCountryMap[$normContext])) {
+                $cIso = $contextCountryMap[$normContext];
+                $dial = $isoToDial[$cIso] ?? '';
+            }
+        }
+
         $cleanDigits = preg_replace('/[^\d]/', '', $rawPhone);
         if ($dial !== '') {
             $cleanDialDigits = ltrim($dial, '+');
-            if (str_starts_with($cleanDigits, $cleanDialDigits)) {
+            $expectedLen = $dialToLen[$dial] ?? 10;
+
+            if (str_starts_with($rawPhone, '+'.$cleanDialDigits)) {
+                $cleanDigits = substr($cleanDigits, strlen($cleanDialDigits));
+            } elseif (strlen($cleanDigits) > $expectedLen && str_starts_with($cleanDigits, $cleanDialDigits)) {
                 $cleanDigits = substr($cleanDigits, strlen($cleanDialDigits));
             }
 
