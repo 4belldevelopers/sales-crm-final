@@ -4356,7 +4356,7 @@
                   <div class="cnt-label">Contact Number-1</div>
                   <div class="cnt-phone-val">
                     @if(!empty(@$application->phone))
-                      {!! GeneralMethod::formatContactPhoneHtml(!empty($application->phone_code) ? $application->phone_code : '+91', @$application->phone) !!}
+                      {!! GeneralMethod::formatContactPhoneHtml(@$application->phone_code, @$application->phone, @$application->country_name ?: @$application->country) !!}
                     @else
                       -
                     @endif
@@ -4364,7 +4364,7 @@
                 </div>
                 @if(!empty(@$application->phone))
                   @php
-                    $copyPhone1 = GeneralMethod::formatContactPhoneForTel(!empty($application->phone_code) ? $application->phone_code : '+91', @$application->phone);
+                    $copyPhone1 = GeneralMethod::formatContactPhoneForTel(@$application->phone_code, @$application->phone, @$application->country_name ?: @$application->country);
                   @endphp
                   <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes($copyPhone1) }}', this)" title="Copy Phone Number">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4386,7 +4386,7 @@
                   <div class="cnt-label">Contact Number-2</div>
                   <div class="cnt-phone-val">
                     @if(!empty(@$application->secondary_mobile))
-                      {!! GeneralMethod::formatContactPhoneHtml(!empty($application->second_phone_code) ? $application->second_phone_code : '+91', @$application->secondary_mobile) !!}
+                      {!! GeneralMethod::formatContactPhoneHtml(@$application->second_phone_code, @$application->secondary_mobile, @$application->country_name ?: @$application->country) !!}
                     @else
                       -
                     @endif
@@ -4394,7 +4394,7 @@
                 </div>
                 @if(!empty(@$application->secondary_mobile))
                   @php
-                    $copyPhone2 = GeneralMethod::formatContactPhoneForTel(!empty($application->second_phone_code) ? $application->second_phone_code : '+91', @$application->secondary_mobile);
+                    $copyPhone2 = GeneralMethod::formatContactPhoneForTel(@$application->second_phone_code, @$application->secondary_mobile, @$application->country_name ?: @$application->country);
                   @endphp
                   <button type="button" class="cnt-copy-btn" onclick="copyContactText('{{ addslashes($copyPhone2) }}', this)" title="Copy Secondary Phone">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4409,7 +4409,7 @@
             {{-- 5. WhatsApp & LinkedIn Actions --}}
             @if(!empty(@$application->phone))
               @php
-                $waPhone = GeneralMethod::formatContactPhoneForTel(!empty($application->phone_code) ? $application->phone_code : '+91', @$application->phone);
+                $waPhone = GeneralMethod::formatContactPhoneForTel(@$application->phone_code, @$application->phone, @$application->country_name ?: @$application->country);
                 $waDigits = ltrim($waPhone, '+');
               @endphp
               <a href="https://api.whatsapp.com/send?phone={{ $waDigits }}" target="_blank" class="cnt-whatsapp-banner" title="Chat on WhatsApp">
