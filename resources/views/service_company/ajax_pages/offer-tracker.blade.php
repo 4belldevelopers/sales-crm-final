@@ -360,14 +360,9 @@
             <div class="ot-subcard ot-subcard-comp-status">
                 <div class="ot-subcard-head">
                     <span class="ot-subcard-label">Compensation &amp; Status</span>
-                    @if($offerStatusDate)
-                        <span class="ot-micro-date" title="Status date: {{ $offerStatusDate }}">{{ $offerStatusDate }}</span>
-                    @elseif($empLabel)
-                        <span class="ot-micro-pill ot-pill-neutral">{{ $empLabel }}</span>
-                    @endif
                 </div>
                 <div class="ot-comp-status-body">
-                    <!-- Compensation Amount Row -->
+                    <!-- Row 1: Compensation Amount & Quick Action -->
                     <div class="ot-comp-row">
                         @if($hasPendingOffer)
                             @if($isOwnJob)
@@ -383,38 +378,41 @@
                                 <span class="ot-pending-pill">
                                     <i class="far fa-clock"></i> Offer Pending
                                 </span>
+                                <span class="ot-comp-hint">Client offer</span>
                             @endif
                         @else
-                            <div class="ot-comp-amount-wrap">
-                                @if($isOwnJob)
-                                    <a href="javascript:void(0);"
-                                       class="create_offer ot-comp-link"
-                                       data-row-offerid="{{ $row->offer_id ?? '' }}"
-                                       title="Click to edit compensation or offer details">
-                                        <span class="ot-comp-amount">{{ $compDisplay }}</span>
-                                        <span class="ot-comp-edit-pill"><i class="fas fa-pen"></i> Change</span>
-                                    </a>
-                                @else
-                                    <a href="javascript:void(0);"
-                                       class="ot-client-offer-warn ot-comp-link"
-                                       title="Client-owned offer">
-                                        <span class="ot-comp-amount">{{ $compDisplay }}</span>
-                                        <span class="ot-comp-edit-pill is-locked"><i class="fas fa-lock"></i> Client</span>
-                                    </a>
-                                @endif
-                            </div>
+                            <span class="ot-comp-amount" title="Proposed Compensation: {{ $compDisplay }}">{{ $compDisplay }}</span>
+                            @if($isOwnJob)
+                                <a href="javascript:void(0);"
+                                   class="create_offer ot-comp-edit-pill"
+                                   data-row-offerid="{{ $row->offer_id ?? '' }}"
+                                   title="Click to edit compensation or offer details">
+                                    <i class="fas fa-pen"></i>
+                                    <span>Change</span>
+                                </a>
+                            @else
+                                <span class="ot-comp-edit-pill is-locked" title="Client-owned offer">
+                                    <i class="fas fa-lock"></i>
+                                    <span>Client</span>
+                                </span>
+                            @endif
                         @endif
                     </div>
 
-                    <!-- Offer Lifecycle Status Row -->
+                    <!-- Row 2: Offer Lifecycle Status Badge -->
                     <div class="ot-status-row">
                         <span class="ot-offer-badge" style="background:{{ $offerBadgeBg }};color:{{ $offerBadgeColor }};border:1px solid {{ $offerBadgeBorder }};">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $offerIconPath }}"/></svg>
                             <span>{{ $offerBadgeLabel }}</span>
                         </span>
-                        @if($offerStatusText)
-                            <span class="ot-offer-sub" title="{{ $offerStatusText }}">{{ $offerStatusText }}</span>
-                        @endif
+                    </div>
+
+                    <!-- Row 3: Status Context Subtitle -->
+                    <div class="ot-status-sub-row">
+                        <span class="ot-offer-sub" title="{{ $offerStatusText }}">
+                            <i class="far fa-check-circle me-1" style="color: {{ $offerBadgeColor }}; font-size: 8.5px;"></i>
+                            <span>{{ $offerStatusText }}</span>
+                        </span>
                     </div>
                 </div>
             </div>

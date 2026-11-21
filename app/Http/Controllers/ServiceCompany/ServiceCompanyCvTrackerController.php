@@ -1070,6 +1070,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         break;
                     case 'accepted':     $offerTabFilterClause = ['term' => ['of_offer_acceptance' => 2]];
                         break;
+                    case 'rejected':     $offerTabFilterClause = ['term' => ['of_offer_acceptance' => 3]];
+                        break;
                     case 'joining_soon': $offerTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]];
                         break;
                     case 'expired':      $offerTabFilterClause = ['term' => ['of_offer_acceptance' => 4]];

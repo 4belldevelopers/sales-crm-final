@@ -95,6 +95,7 @@ class ServiceCompanyApplicationOfferController extends ServiceCompanyBaseControl
 			'pending'      => (int)($offerStats->pending ?? 0),
 			'sent'         => $sn,
 			'accepted'     => $ac,
+			'rejected'     => $rj,
 			'expired'      => (int)($offerStats->expired ?? 0),
 			'joining_soon' => (int)($offerStats->joining_soon ?? 0),
 		];
