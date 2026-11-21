@@ -370,16 +370,18 @@ class FindAgencyService
             ];
         }
 
+        $domesticCountryId = (int) \App\Helper\GeneralMethod::defaultCountryId($company_id);
+
         $countryFilter = [];
         if (! empty($country_id_job)) {
             $countryFilter[] = ['term' => ['commericial_countries.country_id' => $country_id_job]];
-        } elseif ($tab === 'india') {
-            $countryFilter[] = ['term' => ['commericial_countries.country_id' => 101]];
+        } elseif ($tab === 'domestic' || $tab === 'india') {
+            $countryFilter[] = ['term' => ['commericial_countries.country_id' => $domesticCountryId]];
         } elseif ($tab === 'global') {
             $countryFilter[] = [
                 'bool' => [
                     'must_not' => [
-                        ['term' => ['commericial_countries.country_id' => 101]],
+                        ['term' => ['commericial_countries.country_id' => $domesticCountryId]],
                     ],
                 ],
             ];
@@ -513,14 +515,14 @@ class FindAgencyService
                     'fulltime' => [
                         'filter' => ['term' => ['commericials.commtype' => 2]],
                     ],
-                    'indian' => [
-                        'filter' => ['term' => ['commericial_countries.country_id' => 101]],
+                    'domestic' => [
+                        'filter' => ['term' => ['commericial_countries.country_id' => $domesticCountryId]],
                     ],
                     'global' => [
                         'filter' => [
                             'bool' => [
                                 'must_not' => [
-                                    ['term' => ['commericial_countries.country_id' => 101]],
+                                    ['term' => ['commericial_countries.country_id' => $domesticCountryId]],
                                 ],
                             ],
                         ],
@@ -746,11 +748,30 @@ class FindAgencyService
         $hiringtype = $app_int_outsource;
         $jobid = '';
 
+        $domesticDocCount = (int) ($companyResponse['aggregations']['domestic']['doc_count'] ?? ($companyResponse['aggregations']['indian']['doc_count'] ?? 0));
+
+        $domesticCountryIso = strtolower(trim(GeneralMethod::countryCodeFun($company_id)));
+        $domesticCountryAdjective = 'Domestic';
+        if ($domesticCountryId === 101 || $domesticCountryIso === 'in') {
+            $domesticCountryAdjective = 'Indian';
+        } elseif ($domesticCountryId === 233 || $domesticCountryIso === 'us') {
+            $domesticCountryAdjective = 'US';
+        } else {
+            $cRow = DB::table('countries')->where('id', $domesticCountryId)->first();
+            if ($cRow) {
+                $domesticCountryAdjective = ! empty($cRow->country_code) ? strtoupper($cRow->country_code) : $cRow->country_name;
+            }
+        }
+        $domesticSubtext = $domesticDocCount . ' ' . $domesticCountryAdjective . ($domesticDocCount === 1 ? ' agency' : ' agencies');
+
         $kpiCounts = [
             'total_agencies' => $companyResponse['aggregations']['total']['value'] ?? $total,
             'contract_staffing' => $companyResponse['aggregations']['contract']['doc_count'] ?? 0,
             'fulltime_hiring' => $companyResponse['aggregations']['fulltime']['doc_count'] ?? 0,
-            'indian_agencies' => $companyResponse['aggregations']['indian']['doc_count'] ?? 0,
+            'domestic_agencies' => $domesticDocCount,
+            'indian_agencies' => $domesticDocCount,
+            'domestic_subtext' => $domesticSubtext,
+            'domestic_country_adjective' => $domesticCountryAdjective,
             'global_agencies' => $companyResponse['aggregations']['global']['doc_count'] ?? 0,
             'bench_agencies' => $companyResponse['aggregations']['bench']['doc_count'] ?? 0,
         ];
