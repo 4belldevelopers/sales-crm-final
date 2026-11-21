@@ -123,7 +123,7 @@
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 11px;
-    padding: 10px 11px;
+    padding: 11px 12px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -133,6 +133,7 @@
     min-width: 0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
     position: relative;
+    min-height: 66px;
 }
 .cl-card:hover {
     transform: translateY(-1px);
@@ -143,20 +144,20 @@
 .cl-card-top {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
     margin-bottom: 6px;
     min-width: 0;
 }
 .cl-card-icon {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 14px;
+    font-size: 13.5px;
     transition: all 0.15s ease;
 }
 .cl-card-icon.blue   { background: #eff6ff; color: #2563eb; }
@@ -171,28 +172,24 @@
     flex: 1;
     overflow: hidden;
 }
-.cl-card-num {
-    font-size: 19px;
-    font-weight: 700;
-    color: #0f172a;
-    line-height: 1.1;
-    white-space: nowrap;
+.cl-card-title, .cl-card-lbl {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
 }
-.cl-card-lbl {
-    font-size: 11px;
-    font-weight: 600;
-    color: #64748b;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.2;
+.cl-card:hover .cl-card-title, .cl-card:hover .cl-card-lbl {
+    color: #009ef7 !important;
 }
 .cl-card-sub {
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 500;
     line-height: 1.2;
     white-space: nowrap;
@@ -209,7 +206,7 @@
     box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
 }
 .cl-card.active[data-tab="all"] .cl-card-icon { background: #ffffff !important; color: #2563eb !important; }
-.cl-card.active[data-tab="all"] .cl-card-num { color: #1d4ed8 !important; }
+.cl-card.active[data-tab="all"] .cl-card-title,
 .cl-card.active[data-tab="all"] .cl-card-lbl { color: #1e40af !important; font-weight: 700 !important; }
 
 .cl-card.active[data-tab="bench"] {
@@ -218,7 +215,7 @@
     box-shadow: 0 0 0 1.5px #4f46e5, 0 4px 14px rgba(79, 70, 229, 0.12) !important;
 }
 .cl-card.active[data-tab="bench"] .cl-card-icon { background: #ffffff !important; color: #4f46e5 !important; }
-.cl-card.active[data-tab="bench"] .cl-card-num { color: #3730a3 !important; }
+.cl-card.active[data-tab="bench"] .cl-card-title,
 .cl-card.active[data-tab="bench"] .cl-card-lbl { color: #4338ca !important; font-weight: 700 !important; }
 
 .cl-card.active[data-tab="contract"] {
@@ -227,7 +224,7 @@
     box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
 }
 .cl-card.active[data-tab="contract"] .cl-card-icon { background: #ffffff !important; color: #059669 !important; }
-.cl-card.active[data-tab="contract"] .cl-card-num { color: #065f46 !important; }
+.cl-card.active[data-tab="contract"] .cl-card-title,
 .cl-card.active[data-tab="contract"] .cl-card-lbl { color: #047857 !important; font-weight: 700 !important; }
 
 .cl-card.active[data-tab="fulltime"] {
@@ -236,16 +233,20 @@
     box-shadow: 0 0 0 1.5px #9333ea, 0 4px 14px rgba(147, 51, 234, 0.12) !important;
 }
 .cl-card.active[data-tab="fulltime"] .cl-card-icon { background: #ffffff !important; color: #9333ea !important; }
-.cl-card.active[data-tab="fulltime"] .cl-card-num { color: #6b21a8 !important; }
+.cl-card.active[data-tab="fulltime"] .cl-card-title,
 .cl-card.active[data-tab="fulltime"] .cl-card-lbl { color: #7e22ce !important; font-weight: 700 !important; }
 
+.cl-card.active[data-tab="domestic"],
 .cl-card.active[data-tab="india"] {
     background: #fffbeb !important;
     border-color: #facc15 !important;
     box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.12) !important;
 }
+.cl-card.active[data-tab="domestic"] .cl-card-icon,
 .cl-card.active[data-tab="india"] .cl-card-icon { background: #ffffff !important; color: #d97706 !important; }
-.cl-card.active[data-tab="india"] .cl-card-num { color: #92400e !important; }
+.cl-card.active[data-tab="domestic"] .cl-card-title,
+.cl-card.active[data-tab="domestic"] .cl-card-lbl,
+.cl-card.active[data-tab="india"] .cl-card-title,
 .cl-card.active[data-tab="india"] .cl-card-lbl { color: #b45309 !important; font-weight: 700 !important; }
 
 .cl-card.active[data-tab="global"] {
@@ -254,7 +255,7 @@
     box-shadow: 0 0 0 1.5px #0d9488, 0 4px 14px rgba(13, 148, 136, 0.12) !important;
 }
 .cl-card.active[data-tab="global"] .cl-card-icon { background: #ffffff !important; color: #0d9488 !important; }
-.cl-card.active[data-tab="global"] .cl-card-num { color: #115e59 !important; }
+.cl-card.active[data-tab="global"] .cl-card-title,
 .cl-card.active[data-tab="global"] .cl-card-lbl { color: #0f766e !important; font-weight: 700 !important; }
 
 /* ── TIER 2.5: Filter Bar ── */
@@ -548,18 +549,19 @@
 }
 .cl-reset-filters-btn:hover { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
 
-/* ── POINT 7: Live Marketplace Velocity Ticker ── */
+/* ── Live Marketplace Velocity Ticker (Point 2) ── */
 .fa-velocity-ticker {
     background: linear-gradient(90deg, #ecfdf5 0%, #f0f9ff 50%, #f5f3ff 100%);
     border: 1px solid #a7f3d0;
     border-radius: 10px;
     padding: 7px 14px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     font-size: 11.5px;
     box-shadow: 0 1px 2px rgba(16, 185, 129, 0.05);
+    gap: 12px;
 }
 .ticker-left {
     display: flex;
@@ -567,17 +569,29 @@
     gap: 10px;
     overflow: hidden;
     color: #334155;
+    flex: 1;
+    min-width: 0;
 }
 .ticker-pill {
     font-size: 9.5px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    background: #10b981;
-    color: #ffffff;
-    padding: 2px 7px;
+    padding: 2.5px 8px;
     border-radius: 20px;
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    line-height: 1;
+}
+.ticker-pill.live {
+    background: #10b981 !important;
+    color: #ffffff !important;
+}
+.ticker-pill.static {
+    background: #64748b !important;
+    color: #ffffff !important;
 }
 .ticker-content {
     display: flex;
@@ -586,22 +600,42 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1;
+}
+.ticker-item {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
 }
 .ticker-item strong { color: #0f172a; font-weight: 600; }
-.ticker-sep { color: #cbd5e1; }
+.ticker-item em { font-style: normal; font-weight: 600; color: #0284c7; }
+.ticker-sep { color: #cbd5e1; flex-shrink: 0; }
 .ticker-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #10b981;
+    background: #ffffff;
     display: inline-block;
-    margin-right: 4px;
+    flex-shrink: 0;
+}
+.ticker-dot.live-pulse {
+    background: #ffffff;
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0.4);
+    animation: liveDotPulse 2s infinite;
+}
+@keyframes liveDotPulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.7; }
 }
 .ticker-right {
     font-size: 10.5px;
     color: #64748b;
     flex-shrink: 0;
     font-family: inherit;
+    white-space: nowrap;
+    margin-left: auto;
 }
 
 /* ── POINT 1: "Match With My Open Jobs" Instant AI Job Matcher ── */
@@ -1710,11 +1744,11 @@
 @endpush
 
 @section('content')
-<div class="content d-flex flex-column flex-column-fluid pt-4 kt_content_find_agency" id="kt_content" style="margin-top: -70px;">
+<div class="content d-flex flex-column flex-column-fluid pt-2 kt_content_find_agency" id="kt_content">
     <div class="post d-flex flex-column-fluid" id="kt_post">
         <div id="kt_content_container" class="container-fluid px-3">
 
-            <!-- ── TIER 1: Header Card (Inspired by Client Tracker Header Design) ── -->
+            <!-- ── TIER 1: Header Card (Consistent JeroATS Spacing & Hierarchy - Point 1) ── -->
             <div class="fa-header-card cl-header-card">
                 <div class="fa-header-left cl-header-left">
                     <div class="fa-header-icon-box cl-header-icon-box">
@@ -1743,35 +1777,44 @@
                 </div>
             </div>
 
-            <!-- ── POINT 7: Live Marketplace Velocity Ticker ── -->
-            <div class="fa-velocity-ticker">
+            <!-- ── TIER 1.5: Authentic Live Marketplace Velocity Ticker (Point 2) ── -->
+            <div class="fa-velocity-ticker" id="faLiveTicker">
                 <div class="ticker-left">
-                    <span class="ticker-pill">LIVE TICKER</span>
-                    <div class="ticker-content">
-                        <span class="ticker-item"><i class="fas fa-fire text-warning me-1"></i><strong>TechHire Solutions</strong> placed <em>Senior DevOps Lead</em> @ ₹28 LPA</span>
-                        <span class="ticker-sep">•</span>
-                        <span class="ticker-item"><span class="ticker-dot"></span><strong>8 Verified Agencies</strong> actively reviewing mandates now</span>
-                        <span class="ticker-sep">•</span>
-                        <span class="ticker-item"><i class="fas fa-bolt text-warning me-1"></i><strong>14 Immediate Bench Joiners</strong> ready to deploy</span>
+                    <span class="ticker-pill {{ !empty($liveTickerIsLive) ? 'live' : 'static' }}">
+                        <span class="ticker-dot {{ !empty($liveTickerIsLive) ? 'live-pulse' : '' }}"></span>
+                        <span>{{ !empty($liveTickerIsLive) ? 'LIVE TICKER' : 'MARKETPLACE FEED' }}</span>
+                    </span>
+                    <div class="ticker-content" id="faTickerContent">
+                        @if(!empty($liveTickerItems) && count($liveTickerItems) > 0)
+                            @foreach($liveTickerItems as $idx => $tItem)
+                                @if($idx > 0)<span class="ticker-sep">•</span>@endif
+                                <span class="ticker-item">{!! $tItem['html'] !!}</span>
+                            @endforeach
+                        @else
+                            <span class="ticker-item">
+                                <i class="fas fa-satellite-dish text-success me-1"></i>
+                                <strong>Marketplace Feed Active</strong> • 
+                                <strong>{{ $activeAgenciesCount ?? 0 }} Verified Agencies</strong> ready to review mandates
+                            </span>
+                        @endif
                     </div>
                 </div>
                 <div class="ticker-right">
-                    <span class="font-mono text-muted">Updated Just Now</span>
+                    <span class="font-mono text-muted" id="faTickerTimestamp">{{ $liveTickerUpdatedAt ?? 'Updated Just Now' }}</span>
                 </div>
             </div>
 
-            <!-- ── TIER 2: 6 Stat KPI Cards Row (Single Horizontal Row) ── -->
+            <!-- ── TIER 2: 6 Category Filter Tabs Row (Minimal Design - Counters Removed - Points 3, 4, 5) ── -->
             <div class="cl-stat-grid" id="agencyKpiGrid">
                 
-                <!-- 01 Total Agencies -->
+                <!-- Total Agencies -->
                 <div class="cl-card active" data-tab="all" onclick="selectAgencyTab('all', this)" role="button" tabindex="0">
                     <div class="cl-card-top">
                         <div class="cl-card-icon blue">
                             <i class="fas fa-building"></i>
                         </div>
                         <div class="cl-card-meta">
-                            <div class="cl-card-num" id="kpi_total_agencies">{{ $kpiCounts['total_agencies'] ?? $allCompanies }}</div>
-                            <div class="cl-card-lbl">01 Total Agencies</div>
+                            <div class="cl-card-title">Total Agencies</div>
                         </div>
                     </div>
                     <div class="cl-card-sub">
@@ -1780,15 +1823,14 @@
                     </div>
                 </div>
 
-                <!-- 02 Bench Agencies -->
+                <!-- Bench Agencies -->
                 <div class="cl-card" data-tab="bench" onclick="selectAgencyTab('bench', this)" role="button" tabindex="0">
                     <div class="cl-card-top">
                         <div class="cl-card-icon indigo">
                             <i class="fas fa-bolt"></i>
                         </div>
                         <div class="cl-card-meta">
-                            <div class="cl-card-num" id="kpi_bench_agencies">{{ $kpiCounts['bench_agencies'] ?? 0 }}</div>
-                            <div class="cl-card-lbl">02 Bench Agencies</div>
+                            <div class="cl-card-title">Bench Agencies</div>
                         </div>
                     </div>
                     <div class="cl-card-sub">
@@ -1797,15 +1839,14 @@
                     </div>
                 </div>
 
-                <!-- 03 Contract Staffing -->
+                <!-- Contract Staffing -->
                 <div class="cl-card" data-tab="contract" onclick="selectAgencyTab('contract', this)" role="button" tabindex="0">
                     <div class="cl-card-top">
                         <div class="cl-card-icon green">
                             <i class="fas fa-clock"></i>
                         </div>
                         <div class="cl-card-meta">
-                            <div class="cl-card-num" id="kpi_contract_staffing">{{ $kpiCounts['contract_staffing'] ?? 0 }}</div>
-                            <div class="cl-card-lbl">03 Contract Staffing</div>
+                            <div class="cl-card-title">Contract Staffing</div>
                         </div>
                     </div>
                     <div class="cl-card-sub">
@@ -1814,15 +1855,14 @@
                     </div>
                 </div>
 
-                <!-- 04 Full-Time Hiring -->
+                <!-- Full-Time Hiring -->
                 <div class="cl-card" data-tab="fulltime" onclick="selectAgencyTab('fulltime', this)" role="button" tabindex="0">
                     <div class="cl-card-top">
                         <div class="cl-card-icon purple">
                             <i class="fas fa-user-tie"></i>
                         </div>
                         <div class="cl-card-meta">
-                            <div class="cl-card-num" id="kpi_fulltime_hiring">{{ $kpiCounts['fulltime_hiring'] ?? 0 }}</div>
-                            <div class="cl-card-lbl">04 Full-Time Hiring</div>
+                            <div class="cl-card-title">Full-Time Hiring</div>
                         </div>
                     </div>
                     <div class="cl-card-sub">
@@ -1831,32 +1871,30 @@
                     </div>
                 </div>
 
-                <!-- 05 Indian Agencies -->
-                <div class="cl-card" data-tab="india" onclick="selectAgencyTab('india', this)" role="button" tabindex="0">
+                <!-- Domestic Agencies (Renamed from Indian Agencies & Dynamic Country Subtext) -->
+                <div class="cl-card" data-tab="domestic" onclick="selectAgencyTab('domestic', this)" role="button" tabindex="0" title="{{ $domesticTooltip ?? 'Domestic hiring partners' }}">
                     <div class="cl-card-top">
                         <div class="cl-card-icon orange">
                             <i class="fas fa-map-marked-alt"></i>
                         </div>
                         <div class="cl-card-meta">
-                            <div class="cl-card-num" id="kpi_indian_agencies">{{ $kpiCounts['indian_agencies'] ?? 0 }}</div>
-                            <div class="cl-card-lbl">05 Indian Agencies</div>
+                            <div class="cl-card-title">Domestic Agencies</div>
                         </div>
                     </div>
                     <div class="cl-card-sub">
                         <i class="fas fa-flag text-warning font-size-11"></i>
-                        <span>Domestic India coverage</span>
+                        <span id="kpi_domestic_agencies_sub">{{ $domesticSubtext }}</span>
                     </div>
                 </div>
 
-                <!-- 06 Global Agencies -->
+                <!-- Global Agencies -->
                 <div class="cl-card" data-tab="global" onclick="selectAgencyTab('global', this)" role="button" tabindex="0">
                     <div class="cl-card-top">
                         <div class="cl-card-icon teal">
                             <i class="fas fa-globe"></i>
                         </div>
                         <div class="cl-card-meta">
-                            <div class="cl-card-num" id="kpi_global_agencies">{{ $kpiCounts['global_agencies'] ?? 0 }}</div>
-                            <div class="cl-card-lbl">06 Global Agencies</div>
+                            <div class="cl-card-title">Global Agencies</div>
                         </div>
                     </div>
                     <div class="cl-card-sub">
@@ -2294,6 +2332,7 @@
 
     // ── Tab Selection ──
     function selectAgencyTab(tabKey, element) {
+        if (tabKey === 'india') tabKey = 'domestic';
         window.agencyState.tab = tabKey;
         window.agencyState.page = 1;
 
@@ -2563,14 +2602,15 @@
         var total = response.total !== undefined ? response.total : 0;
         $('#agencyMatchCount').text(total + (total === 1 ? ' agency' : ' agencies')).show();
 
-        // Update KPI counters if returned
+        // Update Domestic Agencies subtext dynamically based on HQ country (Point 5)
         if (response.kpi_counts) {
-            if (response.kpi_counts.total_agencies !== undefined) $('#kpi_total_agencies').text(response.kpi_counts.total_agencies);
-            if (response.kpi_counts.bench_agencies !== undefined) $('#kpi_bench_agencies').text(response.kpi_counts.bench_agencies);
-            if (response.kpi_counts.contract_staffing !== undefined) $('#kpi_contract_staffing').text(response.kpi_counts.contract_staffing);
-            if (response.kpi_counts.fulltime_hiring !== undefined) $('#kpi_fulltime_hiring').text(response.kpi_counts.fulltime_hiring);
-            if (response.kpi_counts.indian_agencies !== undefined) $('#kpi_indian_agencies').text(response.kpi_counts.indian_agencies);
-            if (response.kpi_counts.global_agencies !== undefined) $('#kpi_global_agencies').text(response.kpi_counts.global_agencies);
+            if (response.kpi_counts.domestic_subtext) {
+                $('#kpi_domestic_agencies_sub').text(response.kpi_counts.domestic_subtext);
+            } else if (response.kpi_counts.domestic_agencies !== undefined) {
+                var dCount = response.kpi_counts.domestic_agencies;
+                var adj = response.kpi_counts.domestic_country_adjective || 'Domestic';
+                $('#kpi_domestic_agencies_sub').text(dCount + ' ' + adj + (dCount === 1 ? ' agency' : ' agencies'));
+            }
         }
 
         // Apply dynamic AI job matching to rendered cards
@@ -2914,16 +2954,25 @@
             },
             success: function(response) {
                 if (response.status === "success") {
+                    var $card = $('.cl-primary-card[data-agency-id="' + id + '"]');
+                    var agencyName = $card.find('.cl-identity-name').text().trim() || 'Partner Agency';
+
                     if (event_id == 1) {
                         $('#sp_list_' + id).removeClass('btn-primary')
                                       .addClass('btn-light-danger')
                                       .attr('data-row-event', '-1')
                                       .html('<i class="fas fa-times-circle me-1"></i>Cancel Request');
+                        if (typeof prependLiveTickerItem === 'function') {
+                            prependLiveTickerItem('<i class="fas fa-paper-plane text-info me-1"></i>Mandate request dispatched to <strong>' + agencyName + '</strong>');
+                        }
                     } else {
                         $('#sp_list_' + id).removeClass('btn-light-danger')
                                       .addClass('btn-primary')
                                       .attr('data-row-event', '1')
                                       .html('<i class="fas fa-paper-plane me-1"></i>Send Request');
+                        if (typeof prependLiveTickerItem === 'function') {
+                            prependLiveTickerItem('<i class="fas fa-times-circle text-danger me-1"></i>Mandate request canceled for <strong>' + agencyName + '</strong>');
+                        }
                     }
 
                     // Invalidate caches
@@ -2970,12 +3019,64 @@
             }
         });
 
+    // ── Real-Time Live Ticker Engine (Point 2) ──
+    function prependLiveTickerItem(htmlContent) {
+        if (!htmlContent) return;
+        var $content = $('#faTickerContent');
+        var $item = $('<span class="ticker-item">' + htmlContent + '</span>');
+        var $existing = $content.find('.ticker-item');
+
+        if ($existing.length > 0) {
+            var $sep = $('<span class="ticker-sep">•</span>');
+            $content.prepend($sep).prepend($item);
+            if ($content.find('.ticker-item').length > 5) {
+                $content.find('.ticker-item:gt(4)').remove();
+                $content.find('.ticker-sep:gt(4)').remove();
+            }
+        } else {
+            $content.html($item);
+        }
+
+        $('#faLiveTicker .ticker-pill').removeClass('static').addClass('live');
+        $('#faLiveTicker .ticker-pill span:last-child').text('LIVE TICKER');
+        $('#faLiveTicker .ticker-dot').addClass('live-pulse');
+        $('#faTickerTimestamp').text('Just Now');
+    }
+    window.prependLiveTickerItem = prependLiveTickerItem;
+
+    function refreshLiveTicker() {
+        if (document.hidden) return; // Zero background CPU/strain when inactive (Rule 22)
+        $.ajax({
+            url: "{!! route('service_company.find.findAgencyTicker') !!}",
+            type: 'GET',
+            success: function(res) {
+                if (res && res.items && res.items.length > 0) {
+                    var html = '';
+                    res.items.forEach(function(item, idx) {
+                        if (idx > 0) html += '<span class="ticker-sep">•</span>';
+                        html += '<span class="ticker-item">' + item.html + '</span>';
+                    });
+                    $('#faTickerContent').html(html);
+                    if (res.is_live) {
+                        $('#faLiveTicker .ticker-pill').removeClass('static').addClass('live');
+                        $('#faLiveTicker .ticker-pill span:last-child').text('LIVE TICKER');
+                        $('#faLiveTicker .ticker-dot').addClass('live-pulse');
+                    }
+                    if (res.updated_at) {
+                        $('#faTickerTimestamp').text(res.updated_at);
+                    }
+                }
+            }
+        });
+    }
+    window.refreshLiveTicker = refreshLiveTicker;
+
     // ── Keyboard & Lifecycle Handlers ──
     $(document).ready(function() {
         // Initial Fetch
         fetchAgencies(1);
 
-        // Search Input with Debounce (30ms for instant client-first responsiveness)
+        // Search Input with Debounce (300ms for instant client-first responsiveness)
         $('#agencySearchInp').on('input', function() {
             var val = ($(this).val() || '').trim();
             if (val.length > 0) {
@@ -3023,17 +3124,45 @@
             }
         });
 
-        // Realtime Echo Subscription for agency.request.delta
+        // Realtime Echo Subscription for agency.request.delta, activity, and placements
         @php
             $currentEchoCompanyId = $company_id ?? (auth()->check() ? auth()->user()->company_id : 0);
         @endphp
         if (typeof window.Echo !== 'undefined' && window.Echo && {{ $currentEchoCompanyId }} > 0) {
             window.Echo.private('company.' + {{ $currentEchoCompanyId }})
                 .listen('.agency.request.delta', function(e) {
-                    if (window.JeroFindAgencyRAM) window.JeroFindAgencyRAM.clear();
+                    if (window.JeroAgencyRAM) window.JeroAgencyRAM.clear();
+                    if (e && e.ticker_html) {
+                        prependLiveTickerItem(e.ticker_html);
+                    } else if (e && e.agency_name) {
+                        prependLiveTickerItem('<i class="fas fa-handshake text-primary me-1"></i>Partnership update with <strong>' + e.agency_name + '</strong>');
+                    } else {
+                        refreshLiveTicker();
+                    }
                     fetchAgencies(window.agencyState.page || 1);
+                })
+                .listen('.agency.activity.logged', function(e) {
+                    if (e && e.html) {
+                        prependLiveTickerItem(e.html);
+                    } else {
+                        refreshLiveTicker();
+                    }
+                })
+                .listen('.placement.record.updated', function(e) {
+                    if (e && e.html) {
+                        prependLiveTickerItem(e.html);
+                    } else {
+                        refreshLiveTicker();
+                    }
                 });
         }
+
+        // Periodic Background Safety Refresh (Every 90s, only if page is visible, Rule 22 & Rule 4 compliant)
+        setInterval(function() {
+            if (!document.hidden && document.visibilityState === 'visible') {
+                refreshLiveTicker();
+            }
+        }, 90000);
     });
 </script>
 @endpush

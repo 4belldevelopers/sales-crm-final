@@ -312,11 +312,37 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
         $allCompanies = 0;
         $activeCompanies = 0;
         $superAdminCompanyIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
+
+        // Resolve tenant headquarters country context for Domestic Agencies Tab & Subtext (Points 4 & 5)
+        $domesticCountryId = (int) \App\Helper\GeneralMethod::defaultCountryId($company_id);
+        $domesticCountryIso = strtolower(trim(\App\Helper\GeneralMethod::countryCodeFun($company_id)));
+
+        $domesticCountryName = 'Domestic';
+        $domesticCountryAdjective = 'Domestic';
+        if ($domesticCountryId === 101 || $domesticCountryIso === 'in') {
+            $domesticCountryName = 'India';
+            $domesticCountryAdjective = 'Indian';
+        } elseif ($domesticCountryId === 233 || $domesticCountryIso === 'us') {
+            $domesticCountryName = 'United States';
+            $domesticCountryAdjective = 'US';
+        } else {
+            $cRow = DB::table('countries')->where('id', $domesticCountryId)->first();
+            if ($cRow) {
+                $domesticCountryName = $cRow->country_name;
+                $domesticCountryAdjective = ! empty($cRow->country_code) ? strtoupper($cRow->country_code) : $cRow->country_name;
+            }
+        }
+
+        $this->domesticCountryId = $domesticCountryId;
+        $this->domesticCountryName = $domesticCountryName;
+        $this->domesticCountryAdjective = $domesticCountryAdjective;
+
         $kpiCounts = [
             'total_agencies' => 0,
             'bench_agencies' => 0,
             'contract_staffing' => 0,
             'fulltime_hiring' => 0,
+            'domestic_agencies' => 0,
             'indian_agencies' => 0,
             'global_agencies' => 0,
         ];
@@ -361,14 +387,14 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
                         'fulltime' => [
                             'filter' => ['term' => ['commericials.commtype' => 2]],
                         ],
-                        'indian' => [
-                            'filter' => ['term' => ['commericial_countries.country_id' => 101]],
+                        'domestic' => [
+                            'filter' => ['term' => ['commericial_countries.country_id' => $domesticCountryId]],
                         ],
                         'global' => [
                             'filter' => [
                                 'bool' => [
                                     'must_not' => [
-                                        ['term' => ['commericial_countries.country_id' => 101]],
+                                        ['term' => ['commericial_countries.country_id' => $domesticCountryId]],
                                     ],
                                 ],
                             ],
@@ -388,10 +414,12 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
             ];
 
             $response = $this->elasticService->getClient()->search($params);
+            $domesticDocCount = (int) ($response['aggregations']['domestic']['doc_count'] ?? 0);
             $kpiCounts['total_agencies'] = $response['aggregations']['total']['value'] ?? 0;
             $kpiCounts['contract_staffing'] = $response['aggregations']['contract']['doc_count'] ?? 0;
             $kpiCounts['fulltime_hiring'] = $response['aggregations']['fulltime']['doc_count'] ?? 0;
-            $kpiCounts['indian_agencies'] = $response['aggregations']['indian']['doc_count'] ?? 0;
+            $kpiCounts['domestic_agencies'] = $domesticDocCount;
+            $kpiCounts['indian_agencies'] = $domesticDocCount;
             $kpiCounts['global_agencies'] = $response['aggregations']['global']['doc_count'] ?? 0;
             $kpiCounts['bench_agencies'] = $response['aggregations']['bench']['doc_count'] ?? 0;
         } catch (\Throwable $e) {
@@ -403,21 +431,150 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
                 ->whereIn('company_type', [1, 2]);
 
             $total = (clone $baseQuery)->count();
+            $domesticDocCount = (clone $baseQuery)->whereExists(function ($q) use ($domesticCountryId) {
+                $q->selectRaw('1')->from('commericial_countries')->whereColumn('commericial_countries.company_id', 'companies.id')->where('country_id', $domesticCountryId);
+            })->count();
+
             $kpiCounts['total_agencies'] = $total;
             $kpiCounts['contract_staffing'] = $total;
             $kpiCounts['fulltime_hiring'] = $total;
             $kpiCounts['bench_agencies'] = $total;
-            $kpiCounts['indian_agencies'] = (clone $baseQuery)->whereExists(function ($q) {
-                $q->selectRaw('1')->from('commericial_countries')->whereColumn('commericial_countries.company_id', 'companies.id')->where('country_id', 101);
-            })->count();
-            $kpiCounts['global_agencies'] = max(0, $total - $kpiCounts['indian_agencies']);
+            $kpiCounts['domestic_agencies'] = $domesticDocCount;
+            $kpiCounts['indian_agencies'] = $domesticDocCount;
+            $kpiCounts['global_agencies'] = max(0, $total - $domesticDocCount);
         }
+
+        $this->domesticSubtext = "{$kpiCounts['domestic_agencies']} {$domesticCountryAdjective} " . ($kpiCounts['domestic_agencies'] === 1 ? 'agency' : 'agencies');
+        $this->domesticTooltip = "Verified recruitment partners operating in {$domesticCountryName}";
 
         $this->kpiCounts = $kpiCounts;
         $this->allCompanies = $kpiCounts['total_agencies'];
         $this->activeCompanies = $kpiCounts['total_agencies'];
 
+        // Live Velocity Ticker Authentic Data Pipeline (Point 2)
+        $tickerPayload = $this->getLiveTickerPayload($company_id);
+        $this->liveTickerItems = $tickerPayload['items'];
+        $this->liveTickerIsLive = $tickerPayload['is_live'];
+        $this->liveTickerUpdatedAt = $tickerPayload['updated_at'];
+        $this->activeAgenciesCount = $tickerPayload['active_agencies'];
+
         return view('service_company.common.find-agency', $this->data);
+    }
+
+    /**
+     * Build authentic marketplace live ticker payload.
+     * Complies with Rule 1, 2, 4, and 22 (Zero-Cron & Just-In-Time Evaluation).
+     */
+    public function getLiveTickerPayload(int $companyId): array
+    {
+        $superAdminCompanyIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
+
+        // 1. Real Active Verified Agencies Count
+        $activeAgenciesCount = DB::table('companies')
+            ->whereNotIn('id', $superAdminCompanyIds)
+            ->where('status', 'active')
+            ->whereIn('company_type', [1, 2])
+            ->count();
+
+        // 2. Fetch real placement records (if any authentic placed candidate exists)
+        $placements = DB::table('offer_job_applications')
+            ->join('companies', 'companies.id', '=', 'offer_job_applications.company_id')
+            ->join('jobs', 'jobs.id', '=', 'offer_job_applications.job_id')
+            ->where('offer_job_applications.offer_acceptance', 2)
+            ->select('companies.company_name', 'jobs.title as job_title', 'offer_job_applications.updated_at')
+            ->latest('offer_job_applications.updated_at')
+            ->take(3)
+            ->get();
+
+        // 3. Fetch real recent agency invitations / connections
+        $recentInvitations = DB::table('staffing_company_invitation')
+            ->join('companies as from_c', 'from_c.id', '=', 'staffing_company_invitation.from_company_id')
+            ->join('companies as to_c', 'to_c.id', '=', 'staffing_company_invitation.to_company_id')
+            ->select(
+                'from_c.company_name as from_company',
+                'to_c.company_name as to_company',
+                'staffing_company_invitation.to_invitation_status',
+                'staffing_company_invitation.from_created_at'
+            )
+            ->latest('staffing_company_invitation.id')
+            ->take(3)
+            ->get();
+
+        // 4. Fetch real agency activity logs
+        $activityLogs = \App\Models\AgencyActivityLog::latest('id')
+            ->take(3)
+            ->get();
+
+        // 5. Assemble authentic live ticker items
+        $items = [];
+
+        // Real placement items
+        foreach ($placements as $p) {
+            $items[] = [
+                'type' => 'placement',
+                'html' => '<i class="fas fa-check-circle text-success me-1"></i><strong>' . e($p->company_name) . '</strong> placed <em>' . e($p->job_title) . '</em>',
+            ];
+        }
+
+        // Real agency invitation items
+        foreach ($recentInvitations as $inv) {
+            if ((int) $inv->to_invitation_status === 1) {
+                $items[] = [
+                    'type' => 'partnership',
+                    'html' => '<i class="fas fa-handshake text-primary me-1"></i><strong>' . e($inv->from_company) . '</strong> partnered with <strong>' . e($inv->to_company) . '</strong>',
+                ];
+            } elseif ((int) $inv->to_invitation_status === 0) {
+                $items[] = [
+                    'type' => 'request',
+                    'html' => '<i class="fas fa-paper-plane text-info me-1"></i><strong>' . e($inv->from_company) . '</strong> sent mandate request to <strong>' . e($inv->to_company) . '</strong>',
+                ];
+            }
+        }
+
+        // Real activity log items (e.g. commercials updated, job shared)
+        foreach ($activityLogs as $log) {
+            if ($log->event_type === 'services.commercials_updated') {
+                $items[] = [
+                    'type' => 'commercials',
+                    'html' => '<i class="fas fa-file-invoice-dollar text-warning me-1"></i><strong>' . e($log->actor_name ?: 'Partner Agency') . '</strong> updated commercial terms',
+                ];
+            } elseif ($log->event_type === 'job.shared') {
+                $items[] = [
+                    'type' => 'job_shared',
+                    'html' => '<i class="fas fa-briefcase text-primary me-1"></i>New mandate shared: <em>' . e($log->related_job_title ?: 'Active Job') . '</em>',
+                ];
+            }
+        }
+
+        // Real verified agency network status
+        if ($activeAgenciesCount > 0) {
+            $items[] = [
+                'type' => 'network',
+                'html' => '<span class="ticker-dot live-pulse"></span><strong>' . $activeAgenciesCount . ' Verified Agencies</strong> actively reviewing mandates now',
+            ];
+        }
+
+        $isLive = ! empty($items);
+
+        return [
+            'status' => 'success',
+            'is_live' => $isLive,
+            'items' => array_slice($items, 0, 5),
+            'active_agencies' => $activeAgenciesCount,
+            'updated_at' => 'Updated ' . now()->format('h:i A'),
+        ];
+    }
+
+    /**
+     * Endpoint to fetch dynamic real-time live ticker payload via AJAX.
+     * Complies with Rule 4 & 22.
+     */
+    public function findAgencyTicker(Request $request)
+    {
+        $company_id = (int) auth()->user()->company_id;
+        $payload = $this->getLiveTickerPayload($company_id);
+
+        return response()->json($payload);
     }
 
     /**
