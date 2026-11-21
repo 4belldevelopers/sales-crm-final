@@ -50,48 +50,48 @@
         .bench-dash .kpi-vs { color: #a1a5b7; font-weight: 500; }
 
         /* ============================================================
-           Bench Candidates — Page-Isolated Compact Header Spacing
-           Removes excessive ghost toolbar whitespace (CV Tracker Standard)
+           Bench Candidates — Page-Isolated Header Spacing (Job Tracker Standard)
+           Clean vertical spacing preventing top navigation bar overlap
         ============================================================ */
         .kt_content_bench,
         #kt_content.kt_content_bench {
-            margin-top: -65px !important;
-            padding-top: 10px !important;
+            margin-top: 0 !important;
+            padding-top: 14px !important;
         }
         @media (max-width: 991.98px) {
             .kt_content_bench,
             #kt_content.kt_content_bench {
-                margin-top: -55px !important;
-                padding-top: 8px !important;
+                margin-top: 0 !important;
+                padding-top: 10px !important;
             }
         }
 
         /* ============================================================
-           Bench Candidates — Enterprise Header Card (.cl-header-card)
-           Client Tracker & CV Tracker Design System
+           Bench Candidates — Enterprise Header Card (.cd-jobs-header-card / .cl-header-card)
+           Job Tracker Design System Parity (Rule 20)
         ============================================================ */
-        .cl-header, .cl-header-card {
+        .cd-jobs-header-card, .cl-header, .cl-header-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 12px !important;
-            padding: 10px 18px !important;
+            padding: 14px 20px !important;
             margin-top: 0 !important;
-            margin-bottom: 12px !important;
+            margin-bottom: 14px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
             gap: 16px !important;
             flex-wrap: wrap !important;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
             font-family: 'Poppins', sans-serif !important;
         }
-        .cl-header-left {
+        .cd-jobs-header-left, .cl-header-left {
             display: flex !important;
             align-items: center !important;
             gap: 12px !important;
             min-width: 0 !important;
         }
-        .cl-header-icon-box {
+        .cd-jobs-header-icon, .cl-header-icon-box {
             width: 44px !important;
             height: 44px !important;
             border-radius: 10px !important;
@@ -101,40 +101,84 @@
             align-items: center !important;
             justify-content: center !important;
             color: #2563eb !important;
-            flex-shrink: 0 !important;
+            font-size: 18px !important;
             box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06) !important;
+            flex-shrink: 0 !important;
         }
-        .cl-header-title-row {
+        .cd-jobs-header-title-row, .cl-header-title-row {
             display: flex !important;
             align-items: center !important;
             gap: 8px !important;
+            flex-wrap: wrap !important;
         }
-        .cl-header-title {
-            font-size: 19px !important;
+        .cd-jobs-header-title, .cl-header-title {
+            font-size: 20px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
             letter-spacing: -0.015em !important;
             margin: 0 !important;
             line-height: 1.2 !important;
         }
-        .cl-verified-badge {
+        .cd-jobs-verified-badge, .cl-verified-badge {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             color: #16a34a !important;
+            flex-shrink: 0 !important;
         }
-        .cl-header-subtitle {
-            font-size: 12.5px !important;
-            font-weight: 400 !important;
-            color: #64748b !important;
-            margin-top: 2px !important;
+        .cd-jobs-header-count-pill {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            padding: 2px 9px !important;
+            border-radius: 9999px !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #dbeafe !important;
+            font-variant-numeric: tabular-nums !important;
             line-height: 1.35 !important;
         }
-        .cl-header-actions {
+        .cd-jobs-header-sub, .cl-header-subtitle {
+            font-size: 13px !important;
+            font-weight: 400 !important;
+            color: #64748b !important;
+            margin-top: 3px !important;
+            line-height: 1.35 !important;
+        }
+        .cd-jobs-header-right, .cl-header-actions {
             display: flex !important;
             align-items: center !important;
-            gap: 10px !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
             flex-shrink: 0 !important;
+        }
+        .cd-jobs-add-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            border-radius: 8px !important;
+            padding: 8px 16px !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            line-height: 1.25 !important;
+            background: #009ef7 !important;
+            color: #ffffff !important;
+            border: none !important;
+            box-shadow: 0 1px 3px rgba(0, 158, 247, 0.25) !important;
+            transition: all 0.15s ease !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+        }
+        .cd-jobs-add-btn:hover {
+            background: #0086d4 !important;
+            color: #ffffff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 158, 247, 0.35) !important;
+        }
+        .cd-jobs-export-btn {
+            border-radius: 8px !important;
+            padding: 8px 14px !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
         }
 
         /* Legacy fallback */
@@ -258,11 +302,11 @@
         .cl-card-sub.amber  { color: #d97706 !important; }
         .cl-card-sub.slate  { color: #64748b !important; }
 
-        /* ── KPI Selected States (Client Tracker Standard) ── */
-        /* 1. All Talents (Blue) */
+        /* ── KPI Selected States (Stage Color Parity Standard) ── */
+        /* 1. All Talents (Blue #2563eb) */
         .cl-card.active[data-tab="all"] {
             background: #eff6ff !important;
-            border-color: #60a5fa !important;
+            border-color: #2563eb !important;
             box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
         }
         .cl-card.active[data-tab="all"] .cl-card-icon {
@@ -270,14 +314,19 @@
             color: #2563eb !important;
             box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
         }
-        .cl-card.active[data-tab="all"] .cl-card-num { color: #1d4ed8 !important; }
-        .cl-card.active[data-tab="all"] .cl-card-lbl { color: #1e40af !important; font-weight: 700 !important; }
+        .cl-card.active[data-tab="all"] .cl-card-num,
+        .cl-card.active[data-tab="all"] .cl-card-lbl,
+        .cl-card.active[data-tab="all"] .cl-card-sub,
+        .cl-card.active[data-tab="all"] .cl-card-sub svg {
+            color: #2563eb !important;
+        }
+        .cl-card.active[data-tab="all"] .cl-card-lbl { font-weight: 700 !important; }
 
-        /* 2. Pool (Purple) */
+        /* 2. Pool (Purple #7c3aed) */
         .cl-card.active[data-tab="1"],
         .cl-card.active[data-tab="pool"] {
             background: #faf5ff !important;
-            border-color: #c084fc !important;
+            border-color: #7c3aed !important;
             box-shadow: 0 0 0 1.5px #7c3aed, 0 4px 14px rgba(124, 58, 237, 0.12) !important;
         }
         .cl-card.active[data-tab="1"] .cl-card-icon,
@@ -287,15 +336,23 @@
             box-shadow: 0 1px 3px rgba(124, 58, 237, 0.15) !important;
         }
         .cl-card.active[data-tab="1"] .cl-card-num,
-        .cl-card.active[data-tab="pool"] .cl-card-num { color: #6d28d9 !important; }
+        .cl-card.active[data-tab="pool"] .cl-card-num,
         .cl-card.active[data-tab="1"] .cl-card-lbl,
-        .cl-card.active[data-tab="pool"] .cl-card-lbl { color: #581c87 !important; font-weight: 700 !important; }
+        .cl-card.active[data-tab="pool"] .cl-card-lbl,
+        .cl-card.active[data-tab="1"] .cl-card-sub,
+        .cl-card.active[data-tab="pool"] .cl-card-sub,
+        .cl-card.active[data-tab="1"] .cl-card-sub svg,
+        .cl-card.active[data-tab="pool"] .cl-card-sub svg {
+            color: #7c3aed !important;
+        }
+        .cl-card.active[data-tab="1"] .cl-card-lbl,
+        .cl-card.active[data-tab="pool"] .cl-card-lbl { font-weight: 700 !important; }
 
-        /* 3. Bench (Blue) */
+        /* 3. Bench (Blue #2563eb) */
         .cl-card.active[data-tab="2"],
         .cl-card.active[data-tab="bench"] {
             background: #eff6ff !important;
-            border-color: #60a5fa !important;
+            border-color: #2563eb !important;
             box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
         }
         .cl-card.active[data-tab="2"] .cl-card-icon,
@@ -305,15 +362,23 @@
             box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
         }
         .cl-card.active[data-tab="2"] .cl-card-num,
-        .cl-card.active[data-tab="bench"] .cl-card-num { color: #1d4ed8 !important; }
+        .cl-card.active[data-tab="bench"] .cl-card-num,
         .cl-card.active[data-tab="2"] .cl-card-lbl,
-        .cl-card.active[data-tab="bench"] .cl-card-lbl { color: #1e40af !important; font-weight: 700 !important; }
+        .cl-card.active[data-tab="bench"] .cl-card-lbl,
+        .cl-card.active[data-tab="2"] .cl-card-sub,
+        .cl-card.active[data-tab="bench"] .cl-card-sub,
+        .cl-card.active[data-tab="2"] .cl-card-sub svg,
+        .cl-card.active[data-tab="bench"] .cl-card-sub svg {
+            color: #2563eb !important;
+        }
+        .cl-card.active[data-tab="2"] .cl-card-lbl,
+        .cl-card.active[data-tab="bench"] .cl-card-lbl { font-weight: 700 !important; }
 
-        /* 4. Hold (Orange) */
+        /* 4. Hold (Orange #ea580c) */
         .cl-card.active[data-tab="4"],
         .cl-card.active[data-tab="hold"] {
             background: #fff7ed !important;
-            border-color: #fb923c !important;
+            border-color: #ea580c !important;
             box-shadow: 0 0 0 1.5px #ea580c, 0 4px 14px rgba(234, 88, 12, 0.12) !important;
         }
         .cl-card.active[data-tab="4"] .cl-card-icon,
@@ -323,15 +388,23 @@
             box-shadow: 0 1px 3px rgba(234, 88, 12, 0.15) !important;
         }
         .cl-card.active[data-tab="4"] .cl-card-num,
-        .cl-card.active[data-tab="hold"] .cl-card-num { color: #c2410c !important; }
+        .cl-card.active[data-tab="hold"] .cl-card-num,
         .cl-card.active[data-tab="4"] .cl-card-lbl,
-        .cl-card.active[data-tab="hold"] .cl-card-lbl { color: #9a3412 !important; font-weight: 700 !important; }
+        .cl-card.active[data-tab="hold"] .cl-card-lbl,
+        .cl-card.active[data-tab="4"] .cl-card-sub,
+        .cl-card.active[data-tab="hold"] .cl-card-sub,
+        .cl-card.active[data-tab="4"] .cl-card-sub svg,
+        .cl-card.active[data-tab="hold"] .cl-card-sub svg {
+            color: #ea580c !important;
+        }
+        .cl-card.active[data-tab="4"] .cl-card-lbl,
+        .cl-card.active[data-tab="hold"] .cl-card-lbl { font-weight: 700 !important; }
 
-        /* 5. Placed (Green) */
+        /* 5. Placed (Green #059669) */
         .cl-card.active[data-tab="3"],
         .cl-card.active[data-tab="placed"] {
             background: #ecfdf5 !important;
-            border-color: #34d399 !important;
+            border-color: #059669 !important;
             box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
         }
         .cl-card.active[data-tab="3"] .cl-card-icon,
@@ -341,15 +414,23 @@
             box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
         }
         .cl-card.active[data-tab="3"] .cl-card-num,
-        .cl-card.active[data-tab="placed"] .cl-card-num { color: #065f46 !important; }
+        .cl-card.active[data-tab="placed"] .cl-card-num,
         .cl-card.active[data-tab="3"] .cl-card-lbl,
-        .cl-card.active[data-tab="placed"] .cl-card-lbl { color: #047857 !important; font-weight: 700 !important; }
+        .cl-card.active[data-tab="placed"] .cl-card-lbl,
+        .cl-card.active[data-tab="3"] .cl-card-sub,
+        .cl-card.active[data-tab="placed"] .cl-card-sub,
+        .cl-card.active[data-tab="3"] .cl-card-sub svg,
+        .cl-card.active[data-tab="placed"] .cl-card-sub svg {
+            color: #059669 !important;
+        }
+        .cl-card.active[data-tab="3"] .cl-card-lbl,
+        .cl-card.active[data-tab="placed"] .cl-card-lbl { font-weight: 700 !important; }
 
-        /* 6. Exited (Red) */
+        /* 6. Exited (Red #dc2626) */
         .cl-card.active[data-tab="5"],
         .cl-card.active[data-tab="exited"] {
             background: #fef2f2 !important;
-            border-color: #f87171 !important;
+            border-color: #dc2626 !important;
             box-shadow: 0 0 0 1.5px #dc2626, 0 4px 14px rgba(220, 38, 38, 0.12) !important;
         }
         .cl-card.active[data-tab="5"] .cl-card-icon,
@@ -359,9 +440,17 @@
             box-shadow: 0 1px 3px rgba(220, 38, 38, 0.15) !important;
         }
         .cl-card.active[data-tab="5"] .cl-card-num,
-        .cl-card.active[data-tab="exited"] .cl-card-num { color: #b91c1c !important; }
+        .cl-card.active[data-tab="exited"] .cl-card-num,
         .cl-card.active[data-tab="5"] .cl-card-lbl,
-        .cl-card.active[data-tab="exited"] .cl-card-lbl { color: #991b1b !important; font-weight: 700 !important; }
+        .cl-card.active[data-tab="exited"] .cl-card-lbl,
+        .cl-card.active[data-tab="5"] .cl-card-sub,
+        .cl-card.active[data-tab="exited"] .cl-card-sub,
+        .cl-card.active[data-tab="5"] .cl-card-sub svg,
+        .cl-card.active[data-tab="exited"] .cl-card-sub svg {
+            color: #dc2626 !important;
+        }
+        .cl-card.active[data-tab="5"] .cl-card-lbl,
+        .cl-card.active[data-tab="exited"] .cl-card-lbl { font-weight: 700 !important; }
 
         @media (max-width: 1200px) {
             .cl-stat-grid {
@@ -934,7 +1023,7 @@
             gap: 4px;
             flex-wrap: wrap;
             flex: 1 1 auto;
-            justify-content: flex-end;
+            justify-content: flex-start;
             overflow: hidden;
         }
         .skill-tag {
@@ -1631,11 +1720,20 @@
             flex-direction: column !important;
             justify-content: space-between !important;
             min-width: 0 !important;
-            transition: border-color 0.15s ease, background-color 0.15s ease !important;
+            transition: all 0.15s ease !important;
             font-family: 'Poppins', sans-serif !important;
         }
         .cd-talent-card:hover .cd-talent-subcard {
             border-color: #cbd5e1 !important;
+        }
+        .cd-talent-subcard.cursor-pointer {
+            cursor: pointer !important;
+        }
+        .cd-talent-subcard.cursor-pointer:hover {
+            background: #ffffff !important;
+            border-color: #93c5fd !important;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08) !important;
+            transform: translateY(-1px);
         }
         /* Header & Label standard matching All Candidates Tracker */
         .cd-subcard-header {
@@ -1776,59 +1874,84 @@
         }
         .cd-rm-change-btn:hover { text-decoration: underline !important; color: #0077b6 !important; }
 
-        /* Clients Pipeline Micro Grid */
-        .cd-pipe-grid {
-            display: grid !important;
-            grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
-            gap: 3px !important;
+        /* Candidate Tracker Standard Notice Period / SNP LWD Typography */
+        .simf-notice-txt { font-weight: 600 !important; }
+        .simf-notice-immediate { color: #16a34a !important; }
+        .simf-notice-days { color: #d97706 !important; }
+        .simf-notice-snp { color: #7c3aed !important; }
+        .simf-notice-default { color: #64748b !important; }
+
+        /* Clients Pipeline Track (Job Tracker Hiring Pipeline Standard) */
+        .cd-pipeline-track {
+            display: flex !important;
+            align-items: center !important;
+            gap: 2px !important;
+            margin-bottom: 4px !important;
             width: 100% !important;
         }
-        .cd-pipe-col {
+        .cd-track-stage {
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
-            justify-content: center !important;
-            background: #ffffff !important;
-            border: 1px solid #eef2f6 !important;
-            border-radius: 4px !important;
-            padding: 3px 1px !important;
+            gap: 1px !important;
+            flex: 1 !important;
             min-width: 0 !important;
-            transition: all 0.15s ease-in-out;
         }
-        .cd-pipe-col:hover {
-            background: #eef3ff !important;
-            border-color: #009ef7 !important;
-        }
-        .cd-pipe-col .h {
-            font-size: 8px !important;
+        .cd-track-label {
+            font-size: 7.5px !important;
             font-weight: 700 !important;
             color: #64748b !important;
-            line-height: 1.1 !important;
+            text-transform: uppercase !important;
+            line-height: 1 !important;
+            letter-spacing: 0.2px !important;
         }
-        .cd-pipe-col .v {
-            font-size: 10.5px !important;
-            font-weight: 700 !important;
-            color: #0f172a !important;
-            line-height: 1.2 !important;
-            margin-top: 1px !important;
-        }
-        .cd-pipe-col .v a {
-            color: #0f172a !important;
-            text-decoration: none !important;
-            display: inline-block !important;
-        }
-        .cd-pipe-col .v a:hover {
-            color: #009ef7 !important;
-        }
-        .cd-pipe-summary {
-            font-size: 10px !important;
-            line-height: 1.2 !important;
+        .cd-track-badge {
             width: 100% !important;
-            min-width: 0 !important;
+            max-width: 20px !important;
+            height: 16px !important;
+            border-radius: 4px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+            text-decoration: none !important;
+            transition: transform 0.1s ease, box-shadow 0.1s ease !important;
         }
-        .cd-pipe-summary .pipe-stat {
-            font-size: 10px !important;
+        .cd-track-badge:hover {
+            transform: scale(1.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+        }
+        .s-inw { background: #fef9c3 !important; color: #854d0e !important; }
+        .s-sou { background: #f1f5f9 !important; color: #334155 !important; }
+        .s-scr { background: #fae8ff !important; color: #86198f !important; }
+        .s-eva { background: #e0f2fe !important; color: #0369a1 !important; }
+        .s-neg { background: #fce7f3 !important; color: #9d174d !important; }
+        .s-off { background: #ffedd5 !important; color: #9a3412 !important; }
+        .s-joi { background: #dcfce7 !important; color: #166534 !important; }
+        .s-rej { background: #fee2e2 !important; color: #991b1b !important; }
+
+        .cd-track-summary {
+            font-size: 9.5px !important;
+            color: #64748b !important;
+            font-weight: 500 !important;
             white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 4px !important;
+            line-height: 1.2 !important;
+            margin-top: 4px !important;
+            padding-top: 3px !important;
+            border-top: 1px solid #eef2f6 !important;
+            width: 100% !important;
+        }
+        .cd-track-summary strong {
+            color: #0f172a !important;
+            font-weight: 700 !important;
         }
 
         /* Sub-Card 7 / Bottom Activity Strip */
@@ -1848,7 +1971,17 @@
         .cd-bottom-skills {
             display: flex !important;
             align-items: center !important;
+            justify-content: flex-start !important;
             gap: 4px !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            white-space: nowrap !important;
+            flex-wrap: nowrap !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
             overflow-x: auto !important;
             overflow-y: hidden !important;
             white-space: nowrap !important;
@@ -1929,11 +2062,11 @@
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-3">
 
-                <!-- ── HEADER CARD (CV Tracker Design Standard) ── -->
-                <div class="cl-header cl-header-card">
-                    <div class="cl-header-left">
-                        <div class="cl-header-icon-box">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <!-- ── HEADER CARD (Job Tracker Design Standard) ── -->
+                <div class="cd-jobs-header-card">
+                    <div class="cd-jobs-header-left">
+                        <div class="cd-jobs-header-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                                 <circle cx="9" cy="7" r="4"/>
                                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -1941,26 +2074,31 @@
                             </svg>
                         </div>
                         <div>
-                            <div class="cl-header-title-row">
-                                <h1 class="cl-header-title">In-House Talent</h1>
-                                <span class="cl-verified-badge" title="Verified Talent Pool">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                            <div class="cd-jobs-header-title-row">
+                                <h1 class="cd-jobs-header-title">In-House Talent</h1>
+                                <span class="cd-jobs-verified-badge" title="Verified Talent Pool">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                        <path d="m9 12 2 2 4-4" stroke-width="2.5"/>
                                     </svg>
                                 </span>
+                                <span class="cd-jobs-header-count-pill" id="all_talents_count">{{ $counts->all_records ?? 0 }}</span>
                             </div>
-                            <div class="cl-header-subtitle">Manage your talent pool, bench availability, marketplace activity and placements</div>
+                            <div class="cd-jobs-header-sub">Manage your talent pool, bench availability, marketplace activity and placements</div>
                         </div>
                     </div>
-                    <div class="cl-header-actions">
+                    <div class="cd-jobs-header-right">
                         <input type="hidden" id="inputSearch" name="inputSearch" />
                         @if (in_array('view_bench', $userPermissions))
-                            <a href="javascript:void(0);" class="btn btn-sm btn-primary fw-bolder" id="AddInternalPool">
-                                <i class="fa fa-plus me-1"></i> Add In-house Talent
-                            </a>
+                            <button type="button" class="btn btn-sm btn-primary fw-bold cd-jobs-add-btn" id="AddInternalPool">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                <span>Add In-house Talent</span>
+                            </button>
                         @endif
-                        <button type="button" class="btn btn-sm btn-light-primary fw-bolder" id="exportTalents" title="Export talent records to CSV">
+                        <button type="button" class="btn btn-sm btn-light-primary fw-bolder cd-jobs-export-btn" id="exportTalents" title="Export talent records to CSV">
                             <i class="fa fa-file-export me-1"></i> Export
                         </button>
                         <div class="dropdown">
@@ -1998,14 +2136,14 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                                 </svg>
-                                <span>Total talent roster</span>
+                                <span>Total Inhouse Talents</span>
                             </div>
                         </a>
 
                         {{-- Card 2: On Pool --}}
                         <a href="javascript:void(0);" class="cl-card cv-kpi-card application_sttus_nav" rel="1" data-tab="1" title="View Pool Talents">
                             <div class="cl-card-top">
-                                <div class="cl-card-icon cyan">
+                                <div class="cl-card-icon purple">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                                         <circle cx="9" cy="7" r="4" />
@@ -2017,7 +2155,7 @@
                                     <div class="cl-card-lbl">On Pool</div>
                                 </div>
                             </div>
-                            <div class="cl-card-sub cyan">
+                            <div class="cl-card-sub purple">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="10"/>
                                     <polyline points="12 6 12 12 14 14"/>
@@ -2029,7 +2167,7 @@
                         {{-- Card 3: Bench --}}
                         <a href="javascript:void(0);" class="cl-card cv-kpi-card application_sttus_nav" rel="2" data-tab="2" title="View Bench Talents">
                             <div class="cl-card-top">
-                                <div class="cl-card-icon amber">
+                                <div class="cl-card-icon blue">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
                                         <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
@@ -2040,20 +2178,20 @@
                                     <div class="cl-card-lbl">Bench</div>
                                 </div>
                             </div>
-                            <div class="cl-card-sub amber">
+                            <div class="cl-card-sub blue">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="10"/>
                                     <line x1="12" y1="8" x2="12" y2="12"/>
                                     <line x1="12" y1="16" x2="12.01" y2="16"/>
                                 </svg>
-                                <span>Active on Bench</span>
+                                <span>Active on Marketplace</span>
                             </div>
                         </a>
 
                         {{-- Card 4: On Hold --}}
                         <a href="javascript:void(0);" class="cl-card cv-kpi-card application_sttus_nav" rel="4" data-tab="4" title="View On Hold Talents">
                             <div class="cl-card-top">
-                                <div class="cl-card-icon slate">
+                                <div class="cl-card-icon orange">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <circle cx="12" cy="12" r="10" />
                                         <line x1="10" x2="10" y1="15" y2="9" />
@@ -2065,7 +2203,7 @@
                                     <div class="cl-card-lbl">On Hold</div>
                                 </div>
                             </div>
-                            <div class="cl-card-sub slate">
+                            <div class="cl-card-sub orange">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="10"/>
                                     <line x1="8" y1="12" x2="16" y2="12"/>
@@ -3255,6 +3393,30 @@
                 }
             }
         };
+
+        // Sub-Cards 1, 2, 3: Full-card click to open Candidate Drawer (Requirements 8)
+        $(document).on('click', '.js-open-cand-drawer', function(e) {
+            if ($(e.target).closest('.chk_list_item, .stage_sub_stage').length) {
+                return;
+            }
+            var id = $(this).data('row-id');
+            if (!id) return;
+
+            var $trigger = $('<a class="bench_show_application_detail" style="display:none;" data-row-id="' + id + '"></a>').appendTo('body');
+            $trigger.trigger('click');
+            $trigger.remove();
+        });
+
+        // Sub-Card 6: Full-card click to navigate to Pipeline Explore (Requirements 11)
+        $(document).on('click', '.js-open-pipe-explore', function(e) {
+            if ($(e.target).closest('a').length) {
+                return;
+            }
+            var url = $(this).data('explore-url');
+            if (url) {
+                window.location.href = url;
+            }
+        });
 
         $(document).on('click', '.hmb-listing', function() {
             $('#kt_activitiesHMB_toggle').trigger('click');

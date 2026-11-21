@@ -17,6 +17,57 @@ Last updated: 2026-11-12 (Service Company Interview Tracker Rule 20 6-Subcard En
 - **Scale goal:** 10,000 companies, 100M+ records/year. See [docs/SCALABILITY.md](../docs/SCALABILITY.md).
 - **Active code folder:** `testing.jero.works` (NOT `hire.jero.works`).
 - **Current focus:** Forward Resume & Prescreen Report Data Consistency Audit & Permanent SSOT Fix (100% COMPLETED and VERIFIED).
+- **AI Agent Browser Tooling:** Microsoft Playwright CLI (`@playwright/cli`) is globally installed and registered via `.agents/skills/playwright-cli/SKILL.md`. Use for token-efficient browser automation, DOM accessibility tree snapshots, element ref interaction, and 15.6" screen layout/screenshot verification.
+
+- *2026-11-22* — **GreenSock Animation Platform (GSAP) Official Skills Suite Integration (COMPLETED)**:
+  - **Skills Installed**:
+    1. `.agents/skills/gsap-core/` & `~/.gemini/config/skills/gsap-core/` (Core tweens, transforms, `autoAlpha`, `gsap.matchMedia()`).
+    2. `.agents/skills/gsap-timeline/` & `~/.gemini/config/skills/gsap-timeline/` (Sequencing, relative offsets, labels, timeline playback).
+    3. `.agents/skills/gsap-scrolltrigger/` & `~/.gemini/config/skills/gsap-scrolltrigger/` (Scroll-linked scrub, pin, trigger coordination).
+    4. `.agents/skills/gsap-plugins/` & `~/.gemini/config/skills/gsap-plugins/` (Plugin registration, `Flip`, `Draggable`, `SplitText`, `MorphSVG`, `ScrollToPlugin`).
+    5. `.agents/skills/gsap-react/` & `~/.gemini/config/skills/gsap-react/` (`@gsap/react`, `useGSAP()` hook, StrictMode lifecycle safety, context scoping).
+    6. `.agents/skills/gsap-performance/` & `~/.gemini/config/skills/gsap-performance/` (Hardware acceleration, compositor-only transforms, zero layout thrashing).
+    7. `.agents/skills/gsap-frameworks/` & `~/.gemini/config/skills/gsap-frameworks/` (Vue 3, Nuxt, Svelte 5, vanilla JS integration & cleanup).
+    8. `.agents/skills/gsap-utils/` & `~/.gemini/config/skills/gsap-utils/` (`clamp`, `mapRange`, `interpolate`, `pipe`, `random`, `snap`, `wrap`).
+  - **AI Brain Decision Boundary (GSAP vs. Transitions.dev)**:
+    - **`transitions.dev` (CSS)**: Strictly for isolated micro-interactions, button hover/press, badges pop-in, tab slides, and simple dialog open/close (pure CSS GPU compositor, zero JS runtime cost).
+    - **`gsap-skills` (GSAP)**: Strictly for multi-step choreographed timelines (`gsap.timeline()`), scrubbed/pinned scroll interactions (`ScrollTrigger`), dynamic SVG path morphing (`MorphSVG`), coordinate flip animations (`Flip`), draggable elements (`Draggable`), and framework lifecycle-safe animation unmounting (React `useGSAP()`).
+  - **Core Directives & Rules**: Rule 28 in `AGENTS.md` and Directive 20 in `CLAUDE.md`. Enforces 100% free public npm plugins (`npm install gsap`, zero Club GSAP tokens/hallucinations), compositor-only transforms (`x`, `y`, `scale`), `autoAlpha` over `opacity`, and mandatory `@media (prefers-reduced-motion: reduce)` via `gsap.matchMedia()`.
+  - **Audit & Architecture Spec**: [`docs/audit documents/ui_motion/2026-11-22-greensock-gsap-skills-suite-installation-and-animation-standards.md`](../docs/audit%20documents/ui_motion/2026-11-22-greensock-gsap-skills-suite-installation-and-animation-standards.md).
+
+- *2026-11-22* — **Unslop UI/UX Craft Engine Integration & AI Memory Upgrade (COMPLETED)**:
+  - **Tool & Scope**: [`heydamir/unslop`](https://github.com/heydamir/unslop) multi-platform skill installed globally in `~/.gemini/config/skills/unslop/` and `~/.claude/skills/unslop/`, and project-locally in `.agents/skills/unslop/`.
+  - **Purpose & Mandate**: Codifies senior product design taste and redline reviews into deterministic agent execution. Mandated across `AGENTS.md` (Rule 26), `CLAUDE.md` (Rule 21), `docs/AI_RULES.md` (Rule 25), and [`docs/audit documents/ui_ux/2026-11-22-unslop-design-engine-integration.md`](../docs/audit%20documents/ui_ux/2026-11-22-unslop-design-engine-integration.md).
+  - **Key Directives**:
+    1. *Eliminate AI Slop Hallmarks*: Zero neon or violet/pink gradients, zero colored glowing shadows (`shadow-[0_0_20px_...]`), zero emoji labels in navigation, counts, or status badges, zero arbitrary spacing (`mt-[13px]`), zero marketing hype copy (*"Supercharge"*), zero floating 3D glossy blobs/orbs, and zero unneeded looping animations (`animate-pulse`).
+    2. *9-Pass Redline Sequence*: Spacing (4px grid) → Color (quiet neutral chrome, anchored `#f8fafc` headers, rare accents) → Icons (semantic FontAwesome) → Copy (concise B2B statements) → Type (Poppins, max 14px, `tabular-nums`) → Layout (15.6" screen fit, Rule 20 Card + Sub-Card) → Details (nested radius math: $r_{inner} = r_{outer} - padding$) → Visuals (concrete product previews) → Motion (150ms–200ms ease-out).
+
+
+- *2026-11-22* — **Transitions.dev UI Motion Suite & Agent Skill Integration (COMPLETED)**:
+  - **Skills Installed**:
+    1. `.agents/skills/transitions-dev/` & `~/.gemini/config/skills/transitions-dev/` (43+ crafted, production-ready CSS transition recipes & motion catalog).
+    2. `.agents/skills/transitions-polish/` & `~/.gemini/config/skills/transitions-polish/` (Automated scan & alignment of ad-hoc CSS transitions to tokenized motion scales).
+    3. `.agents/skills/transitions-ui-generation/` & `~/.gemini/config/skills/transitions-ui-generation/` (Motion-first UI component generation).
+  - **Shared Motion Tokens**: Built-in CSS custom properties (`:root` definitions for `--duration-*`, `--ease-smooth-out`, `--ease-bounce`, `--distance-*`, `--scale-*`, `--blur-*`) with compositor-only execution (`transform`, `opacity`, `filter`).
+  - **Mandate & Rules**: Rule 27 in `AGENTS.md` and Directive 19 in `CLAUDE.md`. Strictly enforces zero layout thrashing properties (`height`, `top`, `left`, `margin`), elimination of generic `transition: all 0.3s ease`, and mandatory `@media (prefers-reduced-motion: reduce)` accessibility guards.
+  - **Audit & Architecture Spec**: [`docs/audit documents/ui_motion/2026-11-22-transitions-dev-ui-motion-skill-installation-and-design-system-integration.md`](../docs/audit%20documents/ui_motion/2026-11-22-transitions-dev-ui-motion-skill-installation-and-design-system-integration.md).
+
+- *2026-11-22* — **Playwright CLI Agent Skill Integration (@playwright/cli)**:
+  - **Tool & Scope**: Microsoft Playwright CLI (`@playwright/cli`) installed globally (`npm i -g @playwright/cli@latest`).
+  - **Skill Saved**: Dedicated skill registered at [`.agents/skills/playwright-cli/SKILL.md`](../.agents/skills/playwright-cli/SKILL.md).
+  - **Purpose**: Enables AI coding agents to perform deterministic, token-efficient browser actions (`open`, `snapshot`, `click <ref>`, `fill <ref>`, `screenshot`, `close`) over persistent daemon IPC with near-zero token bloat. Ideal for responsive 15.6" screen layout verification, Card+Subcard UI testing, and smoke tests without heavy MCP server context overhead.
+
+- *2026-11-22* — **In-House Talent (Bench Candidates) Header Spacing, Stage Colors, Pipeline Activity & Clickable Subcard Standard (COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Service Company Bench Candidates (`resources/views/service_company/bench-candidates/index.blade.php`, `resources/views/service_company/ajax_pages/bench-candidate-list-ajax.blade.php`), Audit Document (`docs/audit documents/bench_candidates/2026-11-22-inhouse-talent-ui-ux-refinements-and-interaction-standard.md`).
+  - **Key Implementations**:
+    1. *Header Spacing & Alignment*: Eliminated negative margin on `.kt_content_bench` (set to `0 !important`, `padding-top: 14px !important;`) to completely resolve navigation bar overlap. Redesigned header card and Add In-house Talent CTA to match Job Tracker design (`.cd-jobs-header-card`, `.cd-jobs-add-btn`).
+    2. *Renamed KPI Text*: `Total talent roster` $\rightarrow$ `Total Inhouse Talents`, `Active on Bench` $\rightarrow$ `Active on Marketplace`.
+    3. *Stage Tab Color Sync*: Synchronized icon, typography, and active indicator/border across all 6 tabs to exact stage colors (All: Blue `#2563eb`, Pool: Purple `#7c3aed`, Bench: Blue `#2563eb`, Hold: Orange `#ea580c`, Placed: Green `#059669`, Exited: Red `#dc2626`).
+    4. *Relationship Manager Designation*: Replaced static `In-House Talent` label with dynamic RM designation from user profile (`users_profile.designation` via `$firstHr->designation` or `$hmEntry['designation']`) with fallback to `Relationship Manager`.
+    5. *Hiring Pipeline Activity Track*: Rebuilt Sub-Card 6 with Job Tracker standard `.cd-pipeline-track`, 8 colored stage badges (`s-inw` to `s-rej`), and compact summary row (`Interviews: X • Views: Y`).
+    6. *Notice Period & SNP LWD Colors*: Candidate Tracker standard via `AppTrackerCardPresenter::resolveNoticePeriod` (`NP: Immediate` green, `NP: X Days` orange, `SNP LWD` purple).
+    7. *Skills Placement*: Bottom-left aligned directly under Candidate Info; zero match % badge.
+    8. *Clickable Subcards*: Candidate Info, Bill Rate, and Location & Degree open Candidate Drawer (`.js-open-cand-drawer`); Relationship Manager opens RM Drawer (`.hmb-listing`); Similar Clients opens Similar Clients Drawer (`.btn-similar-clients`); Client Pipeline Activity navigates to `bench_explore/{id}/all` (`.js-open-pipe-explore`).
 
 - *2026-11-21* — **Bench Candidates Stage Colors, Bottom Strip Interchange & Tab Redesign (COMPLETED & VERIFIED)**:
   - **Module & Scope**: Service Company Bench Candidates (`resources/views/service_company/bench-candidates/index.blade.php`, `resources/views/service_company/ajax_pages/bench-candidate-list-ajax.blade.php`), Design Standard (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`), Audit Document (`docs/audit documents/bench_candidates/2026-11-21-bench-candidates-stage-colors-and-card-layout-standard.md`).
