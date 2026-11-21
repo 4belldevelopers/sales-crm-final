@@ -42,30 +42,73 @@
     --ot-bg-subcard: #f8fafc;
 }
 
-/* Header Spacing: Guarantee zero overlap with main header & 0% horizontal page scroll */
+/* Header Spacing: Snug fit removing empty gap with main header & 0% horizontal page scroll */
 #kt_toolbar { display: none !important; }
 .kt_content_offertracker,
 #kt_content.kt_content_offertracker,
 #kt_content {
-    margin-top: 0 !important;
-    padding-top: 14px !important;
+    margin-top: -48px !important;
+    padding-top: 0 !important;
 }
 @media (max-width: 991.98px) {
     .kt_content_offertracker,
     #kt_content.kt_content_offertracker,
     #kt_content {
-        margin-top: 0 !important;
-        padding-top: 10px !important;
+        margin-top: -38px !important;
+        padding-top: 0 !important;
     }
 }
 #kt_post { margin-top: 0 !important; }
 #kt_content_container,
 body { overflow-x: hidden !important; }
 
+/* Font definitions: Protect FontAwesome icon fonts from Poppins universal override */
 .ot-dashboard,
-.ot-dashboard * {
+.ot-dashboard button,
+.ot-dashboard input,
+.ot-dashboard select,
+.ot-dashboard textarea,
+.ot-dashboard h1,
+.ot-dashboard h2,
+.ot-dashboard h3,
+.ot-dashboard h4,
+.ot-dashboard h5,
+.ot-dashboard h6,
+.ot-dashboard p,
+.ot-dashboard a,
+.ot-dashboard span:not([class*="fa-"]):not([class^="fa-"]),
+.ot-dashboard div {
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.ot-dashboard * {
     box-sizing: border-box !important;
+}
+
+/* Explicit FontAwesome Icon font preservation */
+.ot-dashboard i.fa,
+.ot-dashboard i.fas,
+.ot-dashboard i.far,
+.ot-dashboard i.fal,
+.ot-dashboard i.fab,
+.ot-dashboard [class*="fa-"],
+.ot-dashboard [class^="fa-"] {
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    line-height: 1 !important;
+}
+.ot-dashboard i.fab {
+    font-family: "Font Awesome 6 Brands", "Font Awesome 5 Brands" !important;
+}
+.ot-dashboard i.fa-solid,
+.ot-dashboard i.fas {
+    font-weight: 900 !important;
+}
+.ot-dashboard i.fa-regular,
+.ot-dashboard i.far {
+    font-weight: 400 !important;
 }
 
 .ot-dashboard {
@@ -906,7 +949,7 @@ body { overflow-x: hidden !important; }
 
 .ot-entity-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.75fr) minmax(0, 1.65fr) minmax(0, 1.1fr) minmax(0, 1.55fr) minmax(0, 1.3fr) !important;
+    grid-template-columns: minmax(0, 2.35fr) minmax(0, 1.75fr) minmax(0, 1.15fr) minmax(0, 1.05fr) minmax(0, 1.45fr) minmax(0, 1.25fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -973,6 +1016,23 @@ body { overflow-x: hidden !important; }
 .ot-pill-bench   { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
 
 /* Sub-Card 1: Candidate */
+.ot-subcard-cand.ot-clickable-subcard {
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-subcard-cand.ot-clickable-subcard:hover,
+.ot-subcard-cand.ot-clickable-subcard:focus-visible {
+    border-color: #93c5fd !important;
+    background: #f0f9ff !important;
+    outline: none !important;
+}
+
+.ot-subcard-cand.ot-clickable-subcard:hover .ot-cand-name {
+    color: var(--ot-primary-deep) !important;
+    text-decoration: underline !important;
+}
+
 .ot-cand-body {
     display: flex !important;
     align-items: center !important;
@@ -1686,7 +1746,7 @@ body { overflow-x: hidden !important; }
     .ot-pipe-card-v2 { padding: 8px 10px 9px 20px !important; min-width: 132px !important; }
 
     .ot-entity-grid {
-        grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.75fr) minmax(0, 1.65fr) minmax(0, 1.1fr) minmax(0, 1.55fr) minmax(0, 1.3fr) !important;
+        grid-template-columns: minmax(0, 2.35fr) minmax(0, 1.75fr) minmax(0, 1.15fr) minmax(0, 1.05fr) minmax(0, 1.45fr) minmax(0, 1.25fr) !important;
         gap: 6px !important;
         padding: 8px 10px !important;
     }
