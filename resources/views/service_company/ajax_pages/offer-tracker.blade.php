@@ -298,8 +298,12 @@
         <!-- Upper 6 Discrete Sub-Cards Grid (Rule 20 Card + Sub-Card System) -->
         <div class="ot-entity-grid">
 
-            <!-- SUB-CARD 1: CANDIDATE IDENTITY -->
-            <div class="ot-subcard ot-subcard-cand">
+            <!-- SUB-CARD 1: CANDIDATE IDENTITY (Clickable to open Candidate Profile Drawer) -->
+            <div class="ot-subcard ot-subcard-cand {{ $profile_sidebar_css }} ot-clickable-subcard"
+                 data-row-id="{{ $row->wiseId }}"
+                 role="button"
+                 tabindex="0"
+                 title="Click anywhere to view candidate profile">
                 <div class="ot-subcard-head">
                     <span class="ot-subcard-label">Candidate</span>
                     <div class="ot-subcard-badges">
@@ -489,19 +493,7 @@
         <!-- SUB-CARD 7 / BOTTOM STRIP: REFERENCE & PRIMARY ACTIONS -->
         <div class="ot-entity-bottom">
             <div class="ot-bottom-left">
-                @if(!empty($row->offer_id))
-                    <div class="ot-bottom-item">
-                        <span class="ot-bottom-lbl">Offer Ref:</span>
-                        <strong class="ot-bottom-strong">#OFF-{{ str_pad((string) $row->offer_id, 4, '0', STR_PAD_LEFT) }}</strong>
-                    </div>
-                    <span class="ot-dot-sep">&bull;</span>
-                @endif
-                <div class="ot-bottom-item">
-                    <span class="ot-bottom-lbl">Candidate ID:</span>
-                    <span class="ot-bottom-muted">#APP-{{ $row->wiseId }}</span>
-                </div>
                 @if($offerStatusDate)
-                    <span class="ot-dot-sep">&bull;</span>
                     <div class="ot-bottom-item">
                         <span class="ot-bottom-lbl">Status Date:</span>
                         <span class="ot-bottom-muted">{{ $offerStatusDate }}</span>

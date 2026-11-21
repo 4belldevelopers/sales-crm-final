@@ -28,17 +28,27 @@ This update completes two major enhancements to the Service Company Offer Tracke
      - **Row 3:** Action Cue Link (`Update Offer >` or `Create Offer >` in primary blue `#009ef7` with chevron `>`).
    - **Clickable Subcard Interaction:** The entire Subcard 3 has `create_offer` and `data-row-offerid`, with hover state `#f0f9ff` and cue underline, allowing recruiters to click anywhere on the card to open the Offer Drawer.
 
-3. **Candidate Subcard: Replaced Location with Current Company:**
-   - In Subcard 1 (`Candidate`), replaced the location row (`Alwar, India`) with the candidate's **Current Company Name** (`$candCompany`, e.g. `<i class="fas fa-building"></i> 4Bell Technology`), with fallback to `—` if not specified.
+3. **Candidate Subcard Width Expansion, Current Company & Click-to-Drawer:**
+   - **Width Expansion:** Increased Candidate column fraction to **`2.35fr`** (was `1.70fr`), completely eliminating role truncation (`PHP / Laravel Developer` displays in full).
+   - **Company Display:** Replaced location row with candidate's **Current Company Name** (`$candCompany`, e.g. `<i class="fas fa-building"></i> 4Bell Technology`, fallback `—`).
+   - **Clickable Candidate Drawer:** The entire Candidate subcard has `show-application-detail ot-clickable-subcard` with `data-row-id="{{ $row->wiseId }}"`. Clicking anywhere on the candidate subcard smoothly opens the Candidate Profile Drawer.
 
-4. **Header Spacing & Alignment Fix (Zero Overlap):**
-   - Eliminated `-65px` negative margin on `#kt_content`.
-   - Set `margin-top: 0 !important; padding-top: 14px !important;` (and `padding-top: 10px !important;` on tablet/mobile).
-   - Guarantees comfortable vertical breathing room, zero header overlap, and polished alignment adhering strictly to Metronic & JeroATS typography.
+4. **Compensation Subcard Width Optimization (Wasted Space Eliminated):**
+   - Reduced Compensation subcard column fraction from `1.65fr` down to **`1.15fr`**, eliminating the vast empty background and reallocating it to candidate details.
 
-5. **Grid Rebalancing & Zero-Truncation Geometry:**
-   - Rebalanced `.ot-entity-grid` column fractions to `1.70fr (Candidate) 1.75fr (Job & Client) 1.65fr (Comp & Status) 1.10fr (Joining) 1.55fr (Ownership) 1.30fr (Stage)`.
-   - All 6 subcards share a balanced 3-row layout, establishing unified horizontal and vertical rhythm.
+5. **Fixed FontAwesome Icons Loading (Resolved Square Boxes `□`):**
+   - Root Cause: `.ot-dashboard * { font-family: 'Poppins' !important; }` was overriding FontAwesome's font family across all `<i>` tags.
+   - Fix: Removed universal `*` font override and added explicit FontAwesome declarations for `i.fa, i.fas, i.far, i.fab` with `"Font Awesome 6 Free", "FontAwesome" !important`. All icons now render with 100% precision.
+
+6. **Snug Header Spacing (Eliminated Empty Gap):**
+   - Configured `margin-top: -48px !important; padding-top: 0 !important;` (and `-38px` on mobile/tablet).
+   - Removes the empty gap between the main navigation bar and the Offer Tracker header card, ensuring clean, snug vertical alignment.
+
+7. **Removed Offer Ref & Candidate ID from Bottom Strip:**
+   - Cleaned up the bottom strip metadata, removing `#OFF-xxxx` and `#APP-xxxx` per user instruction to keep the card sleek and focused on `Status Date` and actions.
+
+8. **Grid Geometry (9.0fr Total):**
+   - `2.35fr (Candidate) 1.75fr (Job & Client) 1.15fr (Comp & Status) 1.05fr (Joining) 1.45fr (Ownership) 1.25fr (Stage)`.
 
 ---
 
