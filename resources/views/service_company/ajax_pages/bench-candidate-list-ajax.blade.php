@@ -258,10 +258,8 @@
                                     style="width: 15px; height: 15px; margin: 0; flex-shrink: 0; border: 1.5px solid #94a3b8 !important; border-radius: 4px !important; background-color: #ffffff !important;"
                                     title="Select candidate" />
                             </label>
-                            <!-- Hiring Category: Full-Time / Contract -->
-                            <span class="badge" title="Hiring Category" style="font-size: 8.5px !important; font-weight: 700 !important; padding: 1.5px 6px !important; border-radius: 4px !important; background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; text-transform: uppercase !important; line-height: 1.3 !important;">
-                                <i class="fa-solid fa-briefcase me-1" style="font-size: 8px !important;"></i>{{ $outsourcing_type }}
-                            </span>
+                            <!-- Candidate Info (Replaced full-time per user request) -->
+                            <span class="cd-subcard-label text-uppercase text-truncate" title="Candidate Info ({{ $outsourcing_type }})">Candidate Info</span>
                         </div>
                         <div class="d-flex align-items-center gap-1">
                             @if($isAds)
@@ -297,11 +295,11 @@
                                     style="font-size: 11px !important; font-weight: 500 !important; color: #475569 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; line-height: 1.25 !important; margin-top: 1px !important;">
                                     {{ $displayDesignation !== '' ? $displayDesignation : '—' }}
                                 </div>
-                                <!-- 3. Bench Company Name -->
+                                <!-- 3. Bench Company Name (Reduced per candidate tracker standard) -->
                                 <div class="cd-talent-company text-truncate"
                                     title="Bench Company: {{ $benchCompanyName }}"
-                                    style="font-size: 10.5px !important; font-weight: 500 !important; color: #64748b !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; line-height: 1.25 !important; margin-top: 2px !important;">
-                                    <i class="fa-regular fa-building me-1 text-muted" style="width: 12px; text-align: center; font-size: 9.5px;"></i>
+                                    style="font-size: 10px !important; font-weight: 500 !important; color: #64748b !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; line-height: 1.25 !important; margin-top: 2px !important;">
+                                    <i class="fa-regular fa-building me-1 text-muted" style="width: 12px; text-align: center; font-size: 9px !important;"></i>
                                     <span>{{ $displayBenchCompany !== '' ? $displayBenchCompany : '—' }}</span>
                                 </div>
                             </div>
@@ -309,80 +307,80 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 2: Compensation & Experience (All Candidates Tracker Standard) -->
+                <!-- Sub-Card 2: Bill Rate (Compensation & Experience) -->
                 <div class="cd-talent-subcard cd-subcard-comp-exp">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label text-uppercase text-truncate">COMPENSATION &amp; EXP</span>
-                        <!-- Service Category: Paid / Free Services -->
-                        <span class="badge" title="Service Category" style="font-size: 8.5px !important; font-weight: 700 !important; padding: 1.5px 6px !important; border-radius: 4px !important; {{ @$row->comission_type == 2 ? 'background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important;' : 'background: #f1f5f9 !important; color: #64748b !important; border: 1px solid #e2e8f0 !important;' }}">
-                            <i class="fa-solid fa-circle-check me-1" style="font-size: 8px !important;"></i>{{ $serviceType }}
+                        <span class="cd-subcard-label text-uppercase text-truncate">BILL RATE</span>
+                        <!-- Service Category: Paid / Free -->
+                        <span class="badge" title="Service Category: {{ @$row->comission_type == 2 ? 'Paid Services' : 'Free Services' }}" style="font-size: 8.5px !important; font-weight: 700 !important; padding: 1.5px 6px !important; border-radius: 4px !important; {{ @$row->comission_type == 2 ? 'background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important;' : 'background: #f1f5f9 !important; color: #64748b !important; border: 1px solid #e2e8f0 !important;' }}">
+                            <i class="fa-solid fa-circle-check me-1" style="font-size: 8px !important;"></i>{{ @$row->comission_type == 2 ? 'Paid' : 'Free' }}
                         </span>
                     </div>
                     <div class="cd-subcard-body pt-1">
                         <!-- 1. Bill Rate (All Candidates Tracker Salary Typography) -->
                         <div class="cd-val-salary d-flex align-items-baseline gap-1" title="Bill Rate: {{ $plainCurrencySymbol }}{{ $billAmountClean }} / {{ $bill_rate_mode }}">
-                            <span style="font-size: 10.5px; color: #64748b; font-weight: 500;">Bill Rate:</span>
-                            <strong style="font-size: 12px; font-weight: 700; color: #0f172a; line-height: 1.25;">{{ $plainCurrencySymbol }}{{ $billAmountClean }}</strong>
-                            <span style="font-size: 10px; color: #64748b; font-weight: 500;">/{{ mb_substr($bill_rate_mode, 0, 1) }}</span>
+                            <span style="font-size: 10px !important; color: #64748b !important; font-weight: 500 !important;">Bill Rate:</span>
+                            <strong style="font-size: 12px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.25 !important;">{{ $plainCurrencySymbol }}{{ $billAmountClean }}</strong>
+                            <span style="font-size: 9.5px !important; color: #64748b !important; font-weight: 500 !important;">/{{ mb_substr($bill_rate_mode, 0, 1) }}</span>
                         </div>
-                        <!-- 2. Total Experience & Relevant Experience -->
-                        <div class="cd-val-exp d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Total Experience: {{ $formattedExperience }} Yrs{{ (!empty($formattedRelExperience) && $formattedRelExperience > 0) ? ' | Rel: ' . $formattedRelExperience . ' Yrs' : '' }}" style="font-size: 10.5px; font-weight: 500; color: #475569; line-height: 1.3;">
-                            <i class="fa-solid fa-briefcase me-1 text-muted" style="width: 12px; text-align: center; font-size: 10px;"></i>
-                            <span><strong style="color: #0f172a;">{{ $formattedExperience !== '' ? $formattedExperience : '0' }} Y</strong> Total</span>
+                        <!-- 2. Total Experience & Relevant Experience (Reduced font size of numbers) -->
+                        <div class="cd-val-exp d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Total Experience: {{ $formattedExperience }} Yrs{{ (!empty($formattedRelExperience) && $formattedRelExperience > 0) ? ' | Rel: ' . $formattedRelExperience . ' Yrs' : '' }}" style="font-size: 10px !important; font-weight: 500 !important; color: #475569 !important; line-height: 1.3 !important;">
+                            <i class="fa-solid fa-briefcase me-1 text-muted" style="width: 12px; text-align: center; font-size: 9px !important;"></i>
+                            <span><strong style="color: #0f172a !important; font-size: 10px !important; font-weight: 700 !important;">{{ $formattedExperience !== '' ? $formattedExperience : '0' }} Y</strong> Total</span>
                             @if (!empty($formattedRelExperience) && $formattedRelExperience > 0)
-                                <span class="ms-1" style="color: #64748b; font-size: 10px;">(Rel <strong style="color: #334155;">{{ $formattedRelExperience }} Y</strong>)</span>
+                                <span class="ms-1" style="color: #64748b !important; font-size: 9.5px !important;">(Rel <strong style="color: #334155 !important; font-size: 9.5px !important; font-weight: 600 !important;">{{ $formattedRelExperience }} Y</strong>)</span>
                             @endif
                         </div>
-                        <!-- 3. Notice Period -->
-                        <div class="cd-val-avail {{ $availClass }} d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Notice Period: {{ $availLine }}" style="font-size: 10.5px; font-weight: 500; color: #475569; line-height: 1.3;">
-                            <i class="fa-regular fa-clock me-1 text-muted" style="width: 12px; text-align: center; font-size: 10px;"></i>
-                            <span style="color: #64748b; font-weight: 500;">Notice:</span>
-                            <strong class="{{ $availClass }}" style="font-weight: 600;">{{ $availLine }}</strong>
+                        <!-- 3. Notice Period (Changed from Notice to NP) -->
+                        <div class="cd-val-avail {{ $availClass }} d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Notice Period: {{ $availLine }}" style="font-size: 10px !important; font-weight: 500 !important; color: #475569 !important; line-height: 1.3 !important;">
+                            <i class="fa-regular fa-clock me-1 text-muted" style="width: 12px; text-align: center; font-size: 9.5px !important;"></i>
+                            <span style="color: #64748b !important; font-weight: 500 !important; font-size: 10px !important;">NP:</span>
+                            <strong class="{{ $availClass }}" style="font-size: 10px !important; font-weight: 600 !important;">{{ $availLine }}</strong>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sub-Card 3: Location & Education (All Candidates Tracker Standard) -->
+                <!-- Sub-Card 3: Location & Education (Reduced text size per Candidate Tracker standard) -->
                 <div class="cd-talent-subcard cd-subcard-avail-loc">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label text-uppercase text-truncate">LOCATION &amp; DEGREE</span>
                     </div>
                     <div class="cd-subcard-body pt-1">
                         <!-- First Row: City, State, Country -->
-                        <div class="cd-val-location text-truncate d-flex align-items-center" style="font-size: 11.5px; font-weight: 600; line-height: 1.3; color: #0f172a;" title="{{ $fullLocation }}">
-                            <i class="fa-solid fa-location-dot me-1 text-muted" style="width: 13px; text-align: center; font-size: 10px;"></i>
+                        <div class="cd-val-location text-truncate d-flex align-items-center" style="font-size: 11px !important; font-weight: 600 !important; line-height: 1.25 !important; color: #0f172a !important;" title="{{ $fullLocation }}">
+                            <i class="fa-solid fa-location-dot me-1 text-muted" style="width: 13px; text-align: center; font-size: 9.5px !important;"></i>
                             <span class="text-truncate">{{ $fullLocation }}</span>
                         </div>
                         <!-- Second Row: Work Mode (High contrast - WCAG AAA) -->
-                        <div class="cd-val-wm text-truncate d-flex align-items-center mt-1" style="font-size: 10.5px; font-weight: 500; color: #475569; line-height: 1.3;" title="Work Mode: {{ $wmLabel }}">
-                            <i class="{{ $wmIcon }} me-1 text-primary" style="width: 13px; text-align: center; font-size: 9.5px;"></i>
+                        <div class="cd-val-wm text-truncate d-flex align-items-center mt-1" style="font-size: 10px !important; font-weight: 500 !important; color: #475569 !important; line-height: 1.25 !important;" title="Work Mode: {{ $wmLabel }}">
+                            <i class="{{ $wmIcon }} me-1 text-primary" style="width: 13px; text-align: center; font-size: 9px !important;"></i>
                             <span class="text-truncate {{ $wmClass }} fw-semibold">{{ $wmLabel }}</span>
                         </div>
                         <!-- Third Row: Qualification / Degree in Uppercase -->
-                        <div class="cd-val-edu text-truncate d-flex align-items-center mt-1" style="font-size: 10.5px; font-weight: 500; color: #64748b; line-height: 1.3; text-transform: uppercase;" title="{{ !empty($qualificationName) ? strtoupper($qualificationName) : 'Education: —' }}">
-                            <i class="fa-solid fa-graduation-cap me-1 text-muted" style="width: 13px; text-align: center; font-size: 10px;"></i>
+                        <div class="cd-val-edu text-truncate d-flex align-items-center mt-1" style="font-size: 10px !important; font-weight: 500 !important; color: #64748b !important; line-height: 1.25 !important; text-transform: uppercase !important;" title="{{ !empty($qualificationName) ? strtoupper($qualificationName) : 'Education: —' }}">
+                            <i class="fa-solid fa-graduation-cap me-1 text-muted" style="width: 13px; text-align: center; font-size: 9.5px !important;"></i>
                             <span class="text-truncate">{{ !empty($qualificationName) ? strtoupper($qualificationName) : '—' }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sub-Card 4: Relationship Manager (All Candidates Tracker Standard) -->
+                <!-- Sub-Card 4: Relationship Manager (Reduced font size per user instruction) -->
                 <div class="cd-talent-subcard cd-subcard-manager">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label text-uppercase text-truncate"><i class="fa-solid fa-user-tie me-1 text-primary"></i>Relationship Mgr</span>
                     </div>
                     <div class="cd-subcard-body pt-1">
-                        <div class="cd-manager-name text-truncate d-flex align-items-center" style="font-size: 11.5px; font-weight: 600; line-height: 1.3; min-height: 18px; color: #0f172a;" title="{{ $managerName }}{{ $extra }}">
-                            <i class="fa-regular fa-circle-user me-1 text-primary" style="width: 13px; text-align: center; font-size: 10.5px;"></i>
-                            <span class="text-dark text-truncate" style="color: #0f172a !important; font-weight: 600;">{{ $displayManagerName }}</span>
+                        <div class="cd-manager-name text-truncate d-flex align-items-center" style="font-size: 11px !important; font-weight: 600 !important; line-height: 1.25 !important; min-height: 18px; color: #0f172a !important;" title="{{ $managerName }}{{ $extra }}">
+                            <i class="fa-regular fa-circle-user me-1 text-primary" style="width: 13px; text-align: center; font-size: 9.5px !important;"></i>
+                            <span class="text-dark text-truncate" style="color: #0f172a !important; font-weight: 600 !important;">{{ $displayManagerName }}</span>
                         </div>
-                        <div class="text-truncate d-flex align-items-center mt-1" style="font-size: 10.5px; font-weight: 500; color: #475569; line-height: 1.35;">
-                            <i class="fa-regular fa-building me-1 text-muted" style="width: 13px; text-align: center; font-size: 9.5px;"></i>
+                        <div class="text-truncate d-flex align-items-center mt-1" style="font-size: 10px !important; font-weight: 500 !important; color: #64748b !important; line-height: 1.25 !important;">
+                            <i class="fa-regular fa-building me-1 text-muted" style="width: 13px; text-align: center; font-size: 9px !important;"></i>
                             <span class="text-truncate">In-House Talent</span>
                         </div>
                         <div class="mt-1 d-flex align-items-center">
-                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing cd-rm-change-btn d-inline-flex align-items-center" style="font-size: 10.5px !important; font-weight: 600 !important; color: #009ef7 !important; line-height: 1.35 !important;">
-                                <i class="fa-solid fa-pen-to-square me-1" style="font-size: 9.5px;"></i>Change
+                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing cd-rm-change-btn d-inline-flex align-items-center" style="font-size: 10px !important; font-weight: 600 !important; color: #009ef7 !important; line-height: 1.25 !important;">
+                                <i class="fa-solid fa-pen-to-square me-1" style="font-size: 9px !important;"></i>Change
                             </a>
                         </div>
                     </div>
