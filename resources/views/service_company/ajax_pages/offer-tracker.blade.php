@@ -78,6 +78,12 @@
         $candCountry  = trim((string) ($row->country_name ?? ''));
         $candLocation = implode(', ', array_filter([ucwords($candCity), ucwords($candCountry)]));
 
+        $candCompanyRaw = trim((string) ($row->current_company ?? $row->cur_companyname ?? $row->cur_company_name ?? $row->apl_company_name ?? ''));
+        if ($isBench && !empty($row->apl_company_name)) {
+            $candCompanyRaw = trim((string) $row->apl_company_name);
+        }
+        $candCompany = ucwords($candCompanyRaw);
+
         $expRaw = trim((string) ($row->total_exp ?? ''));
         if ($expRaw !== '' && str_contains($expRaw, '.')) {
             [$expW, $expD] = array_pad(explode('.', $expRaw), 2, '');
@@ -322,12 +328,10 @@
                            class="ot-cand-name {{ $profile_sidebar_css }}"
                            title="{{ $fullName }}">{{ $fullName }}</a>
                         <div class="ot-cand-role" title="{{ $designation ?: 'Role not specified' }}">{{ $designation ?: '—' }}</div>
-                        @if($candLocation)
-                            <div class="ot-cand-loc" title="{{ $candLocation }}">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span>{{ $candLocation }}</span>
-                            </div>
-                        @endif
+                        <div class="ot-cand-company" title="{{ $candCompany !== '' ? ('Current Company: ' . $candCompany) : 'Current Company: Not specified' }}">
+                            <i class="fas fa-building"></i>
+                            <span>{{ $candCompany !== '' ? $candCompany : '—' }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -356,63 +360,53 @@
                 </div>
             </div>
 
-            <!-- SUB-CARD 3: COMBINED COMPENSATION & OFFER STATUS -->
-            <div class="ot-subcard ot-subcard-comp-status">
+            <!-- SUB-CARD 3: COMPENSATION & STATUS (Mirrors Sub-Card 6 Pipeline & Stage Layout) -->
+            <div class="ot-subcard ot-subcard-comp-status {{ $isOwnJob ? 'create_offer ot-clickable-subcard' : '' }}"
+                 @if($isOwnJob)
+                 data-row-offerid="{{ $row->offer_id ?? '' }}"
+                 role="button"
+                 tabindex="0"
+                 title="Click anywhere on this card to {{ $hasPendingOffer ? 'create' : 'update' }} offer"
+                 @else
+                 title="Client Managed Offer"
+                 @endif>
                 <div class="ot-subcard-head">
                     <span class="ot-subcard-label">Compensation &amp; Status</span>
                 </div>
                 <div class="ot-comp-status-body">
-                    <!-- Row 1: Compensation Amount & Quick Action -->
-                    <div class="ot-comp-row">
+                    <!-- 1st Row: Amount -->
+                    <div class="ot-cs-amount-row">
                         @if($hasPendingOffer)
-                            @if($isOwnJob)
-                                <a href="javascript:void(0);"
-                                   class="create_offer ot-create-offer-cta"
-                                   data-row-offerid="{{ $row->offer_id ?? '' }}"
-                                   title="Create compensation & offer letter">
-                                    <i class="fas fa-plus-circle"></i>
-                                    <span>Create Offer</span>
-                                </a>
-                                <span class="ot-comp-hint">Salary pending</span>
-                            @else
-                                <span class="ot-pending-pill">
-                                    <i class="far fa-clock"></i> Offer Pending
-                                </span>
-                                <span class="ot-comp-hint">Client offer</span>
-                            @endif
+                            <span class="ot-cs-amount is-pending" title="Salary Pending">
+                                <i class="fas fa-coins me-1"></i>Salary Pending
+                            </span>
                         @else
-                            <span class="ot-comp-amount" title="Proposed Compensation: {{ $compDisplay }}">{{ $compDisplay }}</span>
-                            @if($isOwnJob)
-                                <a href="javascript:void(0);"
-                                   class="create_offer ot-comp-edit-pill"
-                                   data-row-offerid="{{ $row->offer_id ?? '' }}"
-                                   title="Click to edit compensation or offer details">
-                                    <i class="fas fa-pen"></i>
-                                    <span>Change</span>
-                                </a>
-                            @else
-                                <span class="ot-comp-edit-pill is-locked" title="Client-owned offer">
-                                    <i class="fas fa-lock"></i>
-                                    <span>Client</span>
-                                </span>
-                            @endif
+                            <span class="ot-cs-amount" title="Proposed Compensation: {{ $compDisplay }}">
+                                {{ $compDisplay }}
+                            </span>
                         @endif
                     </div>
 
-                    <!-- Row 2: Offer Lifecycle Status Badge -->
-                    <div class="ot-status-row">
-                        <span class="ot-offer-badge" style="background:{{ $offerBadgeBg }};color:{{ $offerBadgeColor }};border:1px solid {{ $offerBadgeBorder }};">
+                    <!-- 2nd Row: Offer Status Badge (Offer Created, Released, Accepted, Rejected, Expired) -->
+                    <div class="ot-cs-status-row">
+                        <span class="ot-offer-badge" style="background:{{ $offerBadgeBg }};color:{{ $offerBadgeColor }};border:1px solid {{ $offerBadgeBorder }};" title="{{ $offerBadgeLabel }} — {{ $offerStatusText }}">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $offerIconPath }}"/></svg>
                             <span>{{ $offerBadgeLabel }}</span>
                         </span>
                     </div>
 
-                    <!-- Row 3: Status Context Subtitle -->
-                    <div class="ot-status-sub-row">
-                        <span class="ot-offer-sub" title="{{ $offerStatusText }}">
-                            <i class="far fa-check-circle me-1" style="color: {{ $offerBadgeColor }}; font-size: 8.5px;"></i>
-                            <span>{{ $offerStatusText }}</span>
-                        </span>
+                    <!-- 3rd Row: Change or Update Action Cue -->
+                    <div class="ot-cs-cue-row">
+                        @if($isOwnJob)
+                            <span class="ot-cs-cue">
+                                <span>{{ $hasPendingOffer ? 'Create Offer' : 'Update Offer' }}</span>
+                                <i class="fas fa-chevron-right ms-1"></i>
+                            </span>
+                        @else
+                            <span class="ot-cs-cue locked" title="Client Mandate Offer">
+                                <i class="fas fa-lock me-1"></i>Client Managed
+                            </span>
+                        @endif
                     </div>
                 </div>
             </div>
