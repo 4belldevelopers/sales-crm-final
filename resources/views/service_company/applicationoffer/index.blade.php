@@ -42,20 +42,20 @@
     --ot-bg-subcard: #f8fafc;
 }
 
-/* Remove legacy toolbar gap & guarantee 0% horizontal page scroll (Standardized Compact Spacing) */
+/* Header Spacing: Guarantee zero overlap with main header & 0% horizontal page scroll */
 #kt_toolbar { display: none !important; }
 .kt_content_offertracker,
 #kt_content.kt_content_offertracker,
 #kt_content {
-    margin-top: -65px !important;
-    padding-top: 10px !important;
+    margin-top: 0 !important;
+    padding-top: 14px !important;
 }
 @media (max-width: 991.98px) {
     .kt_content_offertracker,
     #kt_content.kt_content_offertracker,
     #kt_content {
-        margin-top: -55px !important;
-        padding-top: 8px !important;
+        margin-top: 0 !important;
+        padding-top: 10px !important;
     }
 }
 #kt_post { margin-top: 0 !important; }
@@ -906,7 +906,7 @@ body { overflow-x: hidden !important; }
 
 .ot-entity-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1.8fr) minmax(0, 1.95fr) minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 1.2fr) !important;
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.75fr) minmax(0, 1.65fr) minmax(0, 1.1fr) minmax(0, 1.55fr) minmax(0, 1.3fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -1052,6 +1052,32 @@ body { overflow-x: hidden !important; }
     text-overflow: ellipsis !important;
 }
 
+.ot-cand-company {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4.5px !important;
+    font-size: 10.5px !important;
+    color: var(--ot-text-muted) !important;
+    font-weight: 500 !important;
+    margin-top: 1.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+}
+
+.ot-cand-company i {
+    font-size: 9.5px !important;
+    color: var(--ot-text-light) !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-cand-company span {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
 /* Sub-Card 2: Job & Client */
 .ot-scope-pill {
     font-size: 8px !important;
@@ -1144,27 +1170,42 @@ body { overflow-x: hidden !important; }
     padding: 1px 6px !important;
 }
 
-/* Sub-Card 3: Combined Compensation & Offer Status */
+/* Sub-Card 3: Compensation & Status (Mirrors Sub-Card 6 Pipeline & Stage Layout) */
+.ot-subcard-comp-status.ot-clickable-subcard {
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-subcard-comp-status.ot-clickable-subcard:hover,
+.ot-subcard-comp-status.ot-clickable-subcard:focus-visible {
+    border-color: #93c5fd !important;
+    background: #f0f9ff !important;
+    outline: none !important;
+}
+
+.ot-subcard-comp-status.ot-clickable-subcard:hover .ot-cs-cue {
+    text-decoration: underline !important;
+}
+
 .ot-comp-status-body {
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
-    gap: 3.5px !important;
+    justify-content: flex-start !important;
+    gap: 3px !important;
     min-width: 0 !important;
     width: 100% !important;
 }
 
-.ot-comp-row {
+.ot-cs-amount-row {
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
-    gap: 6px !important;
     width: 100% !important;
     min-width: 0 !important;
+    line-height: 1.25 !important;
 }
 
-.ot-comp-amount {
-    font-size: 12px !important;
+.ot-cs-amount {
+    font-size: 12.5px !important;
     font-weight: 700 !important;
     color: var(--ot-text-main) !important;
     line-height: 1.25 !important;
@@ -1174,84 +1215,15 @@ body { overflow-x: hidden !important; }
     font-variant-numeric: tabular-nums !important;
 }
 
-.ot-comp-edit-pill {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 3.5px !important;
-    font-size: 9.5px !important;
+.ot-cs-amount.is-pending {
+    color: #d97706 !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
-    color: var(--ot-primary-deep) !important;
-    white-space: nowrap !important;
-    background: #eff6ff !important;
-    border: 1px solid #bfdbfe !important;
-    padding: 1.5px 5.5px !important;
-    border-radius: 4px !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
-    text-decoration: none !important;
-    line-height: 1.3 !important;
-    transition: all 0.15s ease !important;
-}
-
-.ot-comp-edit-pill:hover:not(.is-locked) {
-    background: #dbeafe !important;
-    border-color: #93c5fd !important;
-    color: #1d4ed8 !important;
-}
-
-.ot-comp-edit-pill.is-locked {
-    background: #f1f5f9 !important;
-    border-color: #e2e8f0 !important;
-    color: var(--ot-text-muted) !important;
-    cursor: default !important;
-}
-
-.ot-create-offer-cta {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    width: fit-content !important;
-    padding: 2px 7px !important;
-    border-radius: 4px !important;
-    background: #fffbeb !important;
-    border: 1px solid #fcd34d !important;
-    color: #b45309 !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    text-decoration: none !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    line-height: 1.3 !important;
 }
 
-.ot-create-offer-cta:hover {
-    background: #f59e0b !important;
-    border-color: #f59e0b !important;
-    color: #ffffff !important;
-}
-
-.ot-pending-pill {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 3.5px !important;
-    width: fit-content !important;
-    padding: 1.5px 6px !important;
-    border-radius: 4px !important;
-    background: #fef3c7 !important;
-    color: #b45309 !important;
-    font-size: 9.5px !important;
-    font-weight: 600 !important;
-    line-height: 1.3 !important;
-}
-
-.ot-comp-hint {
-    font-size: 9px !important;
-    color: var(--ot-text-light) !important;
-    font-weight: 500 !important;
-    white-space: nowrap !important;
-}
-
-.ot-status-row {
+.ot-cs-status-row {
     display: flex !important;
     align-items: center !important;
     width: 100% !important;
@@ -1275,30 +1247,33 @@ body { overflow-x: hidden !important; }
 }
 
 .ot-offer-badge svg {
-    width: 10.5px !important;
-    height: 10.5px !important;
+    width: 11px !important;
+    height: 11px !important;
     flex-shrink: 0 !important;
 }
 
-.ot-status-sub-row {
+.ot-cs-cue-row {
     display: flex !important;
     align-items: center !important;
     width: 100% !important;
     min-width: 0 !important;
-    line-height: 1.25 !important;
+    margin-top: 1px !important;
 }
 
-.ot-offer-sub {
-    font-size: 9.5px !important;
-    color: var(--ot-text-muted) !important;
-    font-weight: 500 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+.ot-cs-cue {
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    color: #009ef7 !important;
+    line-height: 1.2 !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    max-width: 100% !important;
+    gap: 3px !important;
+}
+
+.ot-cs-cue.locked {
+    color: var(--ot-text-muted) !important;
+    font-weight: 500 !important;
+    font-size: 10px !important;
 }
 
 /* Sub-Card 4: Joining */
@@ -1711,7 +1686,7 @@ body { overflow-x: hidden !important; }
     .ot-pipe-card-v2 { padding: 8px 10px 9px 20px !important; min-width: 132px !important; }
 
     .ot-entity-grid {
-        grid-template-columns: minmax(0, 1.65fr) minmax(0, 1.8fr) minmax(0, 1.95fr) minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 1.2fr) !important;
+        grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.75fr) minmax(0, 1.65fr) minmax(0, 1.1fr) minmax(0, 1.55fr) minmax(0, 1.3fr) !important;
         gap: 6px !important;
         padding: 8px 10px !important;
     }

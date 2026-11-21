@@ -21,16 +21,24 @@ This update completes two major enhancements to the Service Company Offer Tracke
      - `ServiceCompanyCvTrackerController` handles `case 'rejected': $offerTabFilterClause = ['term' => ['of_offer_acceptance' => 3]]; break;` to filter rejected offers via Elasticsearch.
      - Real-time client JavaScript updates `[data-kpi="rejected"]` from `c.rejected` in the size:0 aggregation, guaranteeing 100% dynamic counts without page reloads.
 
-2. **Redesigned Compensation & Status Sub-Card (Clean 3-Tier Vertical Rhythm):**
-   - **Header:** Clean `Compensation & Status` label without crowding dates, eliminating the truncated `COMPENSATION & S...` bug.
-   - **Row 1 (Compensation Tier):** Amount (`INR 157,279/A`) and `Change` pill (or `Create Offer` CTA) sit on a single baseline with `justify-content: space-between`.
-   - **Row 2 (Offer Status Badge Tier):** Dedicated full-width row for the lifecycle status badge (`Offer Created`, `Offer Released`, `Accepted`, `Pending`, etc.) with semantic icon and zero horizontal crowding.
-   - **Row 3 (Status Context & Subtitle Tier):** Dedicated full-width row for the descriptive context (`Compensation saved`, `Offer emailed to candidate`, etc.) preceded by a matching status icon (`fa-circle-check`, `fa-clock`). Completely eliminates the truncated `Compensa...` overflow bug.
+2. **Redesigned Compensation & Status Sub-Card (Mirrors Pipeline & Stage Sub-Card):**
+   - **Order of Information:**
+     - **Row 1:** Compensation Amount (`INR 157,279/A` or `Salary Pending` in amber text).
+     - **Row 2:** Offer Status Badge (`Offer Created`, `Offer Released`, `Accepted`, `Offer Rejected`, `Expired`) with full width and matching semantic SVG icon.
+     - **Row 3:** Action Cue Link (`Update Offer >` or `Create Offer >` in primary blue `#009ef7` with chevron `>`).
+   - **Clickable Subcard Interaction:** The entire Subcard 3 has `create_offer` and `data-row-offerid`, with hover state `#f0f9ff` and cue underline, allowing recruiters to click anywhere on the card to open the Offer Drawer.
 
-3. **Grid Rebalancing & Zero-Truncation Geometry:**
-   - Rebalanced `.ot-entity-grid` column fractions to `1.65fr (Candidate) 1.80fr (Job & Client) 1.95fr (Comp & Status) 1.05fr (Joining) 1.35fr (Ownership) 1.20fr (Stage)`.
-   - Compacted `Job & Client` header badges (`8px` font, `1px 5px` padding) so `JOB & CLIENT` never truncates to `JOB & CL...`.
-   - All 6 subcards now have **matching 3-line body heights (~58px)**, establishing unified horizontal and vertical alignment across the entire card.
+3. **Candidate Subcard: Replaced Location with Current Company:**
+   - In Subcard 1 (`Candidate`), replaced the location row (`Alwar, India`) with the candidate's **Current Company Name** (`$candCompany`, e.g. `<i class="fas fa-building"></i> 4Bell Technology`), with fallback to `—` if not specified.
+
+4. **Header Spacing & Alignment Fix (Zero Overlap):**
+   - Eliminated `-65px` negative margin on `#kt_content`.
+   - Set `margin-top: 0 !important; padding-top: 14px !important;` (and `padding-top: 10px !important;` on tablet/mobile).
+   - Guarantees comfortable vertical breathing room, zero header overlap, and polished alignment adhering strictly to Metronic & JeroATS typography.
+
+5. **Grid Rebalancing & Zero-Truncation Geometry:**
+   - Rebalanced `.ot-entity-grid` column fractions to `1.70fr (Candidate) 1.75fr (Job & Client) 1.65fr (Comp & Status) 1.10fr (Joining) 1.55fr (Ownership) 1.30fr (Stage)`.
+   - All 6 subcards share a balanced 3-row layout, establishing unified horizontal and vertical rhythm.
 
 ---
 
@@ -66,8 +74,8 @@ This update completes two major enhancements to the Service Company Offer Tracke
 |-----------|--------|-------------|
 | `app/Http/Controllers/ServiceCompany/ServiceCompanyApplicationOfferController.php` | Modify | Added `'rejected' => $rj` to `$this->offerStats` so initial rejected counts load dynamically on initial page render. |
 | `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` | Modify | Added `case 'rejected': $offerTabFilterClause = ['term' => ['of_offer_acceptance' => 3]];` to switch statement. |
-| `resources/views/service_company/applicationoffer/index.blade.php` | Modify | 1. Replaced "Joining Soon" KPI card with "Offer Rejected" (`data-tab="rejected"`, `data-kpi="rejected"`).<br>2. Added `.ot-kpi-icon.red`, `.ot-kpi-sub.red`, and `.ot-kpi-card.active[data-tab="rejected"]` CSS.<br>3. Updated `updateOfferCounts` in JS to dynamically sync `rejected: n(c.rejected)`.<br>4. Rebalanced 6-column grid proportions. |
-| `resources/views/service_company/ajax_pages/offer-tracker.blade.php` | Modify | Redesigned `ot-subcard-comp-status` into 3 dedicated vertical tiers (Amount + Change, Status Badge, Context Subtitle) with zero text truncation. |
+| `resources/views/service_company/applicationoffer/index.blade.php` | Modify | 1. Fixed header vertical spacing: removed `-65px` negative margin on `#kt_content` to guarantee zero overlap with the main navbar.<br>2. Redesigned Subcard 3 CSS mirroring Pipeline & Stage (Row 1: Amount, Row 2: Status Badge, Row 3: `Update Offer >` cue).<br>3. Added `.ot-cand-company` styling.<br>4. Replaced "Joining Soon" KPI card with dynamic "Offer Rejected" tab. |
+| `resources/views/service_company/ajax_pages/offer-tracker.blade.php` | Modify | 1. Redesigned Subcard 3 to mirror Subcard 6 (Amount, Status Badge, `Update Offer >` action cue) and enabled card click-to-edit via `.create_offer`.<br>2. Replaced candidate location with current company name in Subcard 1 (`Candidate`). |
 
 ---
 
