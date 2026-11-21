@@ -135,27 +135,13 @@
             }
             $displayBenchCompany = $limitWords($benchCompanyName, 25);
 
-            // Notice / Availability line
-            if ($row->serving_notice_period_mode == 2) {
-                $availLine = 'Immediate';
-                $availClass = 'text-success';
-            } elseif ($row->serving_notice_period_mode == 0) {
-                $days = (int) $row->np_id;
-                $availLine = ($days > 0 ? $days : 0) . ' Days';
-                $availClass = 'text-warning';
-            } elseif ($row->serving_notice_period_mode == 1) {
-                $lwdDate = $row->np_id ? date('d M y', strtotime($row->np_id)) : '';
-                if ($row->np_id && strtotime($row->np_id) < strtotime('today')) {
-                    $availLine = 'Immediate';
-                    $availClass = 'text-success';
-                } else {
-                    $availLine = 'Date ' . $lwdDate;
-                    $availClass = 'text-warning';
-                }
-            } else {
-                $availLine = 'Immediate';
-                $availClass = 'text-success';
+            // Notice Period resolution via AppTrackerCardPresenter (Requirement 6)
+            $noticeData = \App\Services\AppTrackerCardPresenter::resolveNoticePeriod($row);
+            $npDisplay = $noticeData['display'] ?: 'NP: Immediate';
+            if (($noticeData['classSuffix'] ?? '') === 'snp') {
+                $npDisplay = str_replace('SNP LWD ', 'SNP LWD: ', $npDisplay);
             }
+            $npClass = 'simf-notice-' . ($noticeData['classSuffix'] ?? 'immediate');
 
             // Location formatting (First Row: City, State, Country)
             $locParts = array_filter([
@@ -221,17 +207,20 @@
             }
             $benchDaysClass = ($benchDaysCount !== null && $benchDaysCount > 30) ? 'text-danger' : 'text-warning';
 
-            // Relationship Manager resolution
+            // Relationship Manager resolution & Designation (Requirement 4)
+            $rmDesignation = '';
             if (!empty($row->hiring_hr)) {
                 $hiringHr = (array) $row->hiring_hr;
                 $hmCount = count($hiringHr);
                 $firstHr = (object) ($hiringHr[0] ?? []);
                 $managerName = !empty($firstHr->name) ? ucwords($firstHr->name) : 'Unassigned';
+                $rmDesignation = !empty($firstHr->designation) ? ucwords($firstHr->designation) : '';
                 $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
             } elseif (isset($benchManagersMap) && is_array($benchManagersMap)) {
                 $hmEntry = $benchManagersMap[$row->id] ?? null;
                 $hmCount = (int) ($hmEntry['count'] ?? 0);
                 $managerName = !empty($hmEntry['first_name']) ? ucwords($hmEntry['first_name']) : 'Unassigned';
+                $rmDesignation = !empty($hmEntry['designation']) ? ucwords($hmEntry['designation']) : '';
                 $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
             } else {
                 $hmCount = 0;
@@ -239,6 +228,7 @@
                 $extra = '';
             }
             $displayManagerName = $limitWords($managerName . $extra, 20);
+            $displayRmDesignation = !empty($rmDesignation) ? $limitWords($rmDesignation, 20) : 'Relationship Manager';
         @endphp
 
         <!-- Master Primary Talent Card (Rule 20 Modern 6-Subcard + Strip Layout) -->
@@ -246,27 +236,28 @@
             <!-- Upper Sub-Cards Grid (6 Spacious Discrete Sections) -->
             <div class="cd-talent-card-grid">
 
-                <!-- Sub-Card 1: Talent Profile & Status (All Candidates Tracker Standard) -->
-                <div class="cd-talent-subcard cd-subcard-talent">
+                <!-- Sub-Card 1: Talent Profile & Status (Clickable for Candidate Drawer - Req 8) -->
+                <div class="cd-talent-subcard cd-subcard-talent js-open-cand-drawer cursor-pointer" data-row-id="{{ $row->id }}" title="Click to view Candidate Details">
                     <div class="cd-subcard-header">
                         <div class="d-flex align-items-center gap-1.5 min-w-0">
-                            <label class="form-check form-check-sm form-check-custom m-0" style="cursor: pointer;" title="Select candidate">
+                            <label class="form-check form-check-sm form-check-custom m-0" style="cursor: pointer;" title="Select candidate" onclick="event.stopPropagation();">
                                 <input class="form-check-input chk_list_item cursor-pointer" name="chk_list_item[]" type="checkbox"
                                     data-skills="{{ e($row->skills ?? '') }}"
                                     data-cname="{{ e($row->full_name ?? '') }}"
                                     value="{{ $row->id }}"
+                                    onclick="event.stopPropagation();"
                                     style="width: 15px; height: 15px; margin: 0; flex-shrink: 0; border: 1.5px solid #94a3b8 !important; border-radius: 4px !important; background-color: #ffffff !important;"
                                     title="Select candidate" />
                             </label>
                             <!-- Candidate Info (Replaced full-time per user request) -->
                             <span class="cd-subcard-label text-uppercase text-truncate" title="Candidate Info ({{ $outsourcing_type }})">Candidate Info</span>
                         </div>
-                        <div class="d-flex align-items-center gap-1">
+                        <div class="d-flex align-items-center gap-1" onclick="event.stopPropagation();">
                             @if($isAds)
                                 <span class="badge" style="font-size: 8.5px !important; font-weight: 700 !important; padding: 1.5px 6px !important; border-radius: 4px !important; background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fecaca !important; text-transform: uppercase !important;">Ads</span>
                             @endif
                             <!-- Candidate Availability Status (Bench Talent Canonical Palette) -->
-                            <span class="cd-status-badge {{ $statusPillClass }} stage_sub_stage cursor-pointer" data-row-id="{{ $row->id }}" title="Click to change status" style="{{ $statusPillStyle }} font-size: 8.5px !important; font-weight: 700 !important; padding: 1.5px 6px !important; border-radius: 4px !important; text-transform: uppercase !important; letter-spacing: 0.3px !important;">
+                            <span class="cd-status-badge {{ $statusPillClass }} stage_sub_stage cursor-pointer" data-row-id="{{ $row->id }}" onclick="event.stopPropagation();" title="Click to change status" style="{{ $statusPillStyle }} font-size: 8.5px !important; font-weight: 700 !important; padding: 1.5px 6px !important; border-radius: 4px !important; text-transform: uppercase !important; letter-spacing: 0.3px !important;">
                                 {{ $statusName }}
                             </span>
                         </div>
@@ -274,7 +265,7 @@
                     <div class="cd-subcard-body pt-1">
                         <div class="d-flex align-items-start gap-2.5 min-w-0">
                             <!-- Refined Visual Profile Avatar Icon -->
-                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="{{ $profile_sidebar_css }} cd-talent-avatar flex-shrink-0" title="{{ ucwords(@$row->full_name) }}" style="width: 36px !important; height: 36px !important; min-width: 36px !important; border-radius: 8px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-weight: 700 !important; font-size: 13.5px !important; text-decoration: none !important; overflow: hidden !important; flex-shrink: 0 !important; border: 1px solid rgba(15, 23, 42, 0.08) !important; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;">
+                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="cd-talent-avatar flex-shrink-0" title="{{ ucwords(@$row->full_name) }}" style="width: 36px !important; height: 36px !important; min-width: 36px !important; border-radius: 8px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-weight: 700 !important; font-size: 13.5px !important; text-decoration: none !important; overflow: hidden !important; flex-shrink: 0 !important; border: 1px solid rgba(15, 23, 42, 0.08) !important; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;">
                                 @if (!empty($row->photo))
                                     <img src="{{ $row->photo }}" alt="{{ e($displayFullName) }}" style="width: 100% !important; height: 100% !important; border-radius: 8px !important; object-fit: cover !important;" />
                                 @else
@@ -284,7 +275,7 @@
                             <div class="d-flex flex-column min-w-0 flex-grow-1 overflow-hidden">
                                 <!-- 1. Candidate Name (All Candidates Tracker Typography) -->
                                 <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                                    class="cd-talent-name {{ $profile_sidebar_css }}"
+                                    class="cd-talent-name"
                                     title="{{ ucwords(@$row->full_name) }}"
                                     style="font-size: 12.5px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.25 !important; display: block !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; text-decoration: none !important;">
                                     {{ $displayFullName }}
@@ -307,8 +298,8 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 2: Bill Rate (Compensation & Experience) -->
-                <div class="cd-talent-subcard cd-subcard-comp-exp">
+                <!-- Sub-Card 2: Bill Rate (Clickable for Candidate Drawer - Req 8) -->
+                <div class="cd-talent-subcard cd-subcard-comp-exp js-open-cand-drawer cursor-pointer" data-row-id="{{ $row->id }}" title="Click to view Candidate Details">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label text-uppercase text-truncate">BILL RATE</span>
                         <!-- Service Category: Paid / Free -->
@@ -330,17 +321,16 @@
                                 <span class="ms-1" style="color: #64748b !important; font-size: 9.5px !important;">(Rel <strong style="color: #334155 !important; font-size: 9.5px !important; font-weight: 600 !important;">{{ $formattedRelExperience }} Y</strong>)</span>
                             @endif
                         </div>
-                        <!-- 3. Notice Period (Changed from Notice to NP) -->
-                        <div class="cd-val-avail {{ $availClass }} d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Notice Period: {{ $availLine }}" style="font-size: 10px !important; font-weight: 500 !important; color: #475569 !important; line-height: 1.3 !important;">
+                        <!-- 3. Notice Period (Candidate Tracker Standard Colors & LWD - Req 6) -->
+                        <div class="cd-val-avail d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Notice Period: {{ $npDisplay }}" style="font-size: 10px !important; font-weight: 500 !important; color: #475569 !important; line-height: 1.3 !important;">
                             <i class="fa-regular fa-clock me-1 text-muted" style="width: 12px; text-align: center; font-size: 9.5px !important;"></i>
-                            <span style="color: #64748b !important; font-weight: 500 !important; font-size: 10px !important;">NP:</span>
-                            <strong class="{{ $availClass }}" style="font-size: 10px !important; font-weight: 600 !important;">{{ $availLine }}</strong>
+                            <span class="simf-notice-txt {{ $npClass }}" style="font-size: 10px !important; font-weight: 600 !important;">{{ $npDisplay }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sub-Card 3: Location & Education (Reduced text size per Candidate Tracker standard) -->
-                <div class="cd-talent-subcard cd-subcard-avail-loc">
+                <!-- Sub-Card 3: Location & Degree (Clickable for Candidate Drawer - Req 8) -->
+                <div class="cd-talent-subcard cd-subcard-avail-loc js-open-cand-drawer cursor-pointer" data-row-id="{{ $row->id }}" title="Click to view Candidate Details">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label text-uppercase text-truncate" style="font-size: 9.5px !important; font-weight: 700 !important;">LOCATION &amp; DEGREE</span>
                     </div>
@@ -363,8 +353,8 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 4: Relationship Manager (Reduced font size per user instruction) -->
-                <div class="cd-talent-subcard cd-subcard-manager">
+                <!-- Sub-Card 4: Relationship Manager (Clickable for RM Drawer - Req 4 & 9) -->
+                <div class="cd-talent-subcard cd-subcard-manager hmb-listing cursor-pointer" data-row-id="{{ $row->id }}" title="Click to change Relationship Manager">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label text-uppercase text-truncate" style="font-size: 9.5px !important; font-weight: 700 !important;"><i class="fa-solid fa-user-tie me-1 text-primary"></i>Relationship Mgr</span>
                     </div>
@@ -373,20 +363,26 @@
                             <i class="fa-regular fa-circle-user me-1 text-primary" style="width: 13px; text-align: center; font-size: 9.5px !important;"></i>
                             <span class="text-dark text-truncate" style="font-size: 11px !important; color: #0f172a !important; font-weight: 600 !important;">{{ $displayManagerName }}</span>
                         </div>
-                        <div class="text-truncate d-flex align-items-center mt-1" style="font-size: 10px !important; font-weight: 500 !important; color: #64748b !important; line-height: 1.25 !important;">
-                            <i class="fa-regular fa-building me-1 text-muted" style="width: 13px; text-align: center; font-size: 9px !important;"></i>
-                            <span class="text-truncate" style="font-size: 10px !important; font-weight: 500 !important; color: #64748b !important;">In-House Talent</span>
+                        <!-- RM Actual Designation (Replaced In-House Talent label - Req 4) -->
+                        <div class="text-truncate d-flex align-items-center mt-1" style="font-size: 10px !important; font-weight: 500 !important; color: #64748b !important; line-height: 1.25 !important;" title="Designation: {{ $displayRmDesignation }}">
+                            <i class="fa-solid fa-briefcase me-1 text-muted" style="width: 13px; text-align: center; font-size: 9px !important;"></i>
+                            <span class="text-truncate" style="font-size: 10px !important; font-weight: 500 !important; color: #64748b !important;">{{ $displayRmDesignation }}</span>
                         </div>
                         <div class="mt-1 d-flex align-items-center">
-                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing cd-rm-change-btn d-inline-flex align-items-center" style="font-size: 10px !important; font-weight: 600 !important; color: #009ef7 !important; line-height: 1.25 !important;">
+                            <span class="manager-change cd-rm-change-btn d-inline-flex align-items-center" style="font-size: 10px !important; font-weight: 600 !important; color: #009ef7 !important; line-height: 1.25 !important;">
                                 <i class="fa-solid fa-pen-to-square me-1" style="font-size: 9px !important;"></i>Change
-                            </a>
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sub-Card 5: Similar Clients (Direct, Internal Clients & My Organization) -->
-                <div class="cd-talent-subcard cd-subcard-similar-clients">
+                <!-- Sub-Card 5: Similar Clients (Clickable for Similar Clients Drawer - Req 10) -->
+                <div class="cd-talent-subcard cd-subcard-similar-clients btn-similar-clients cursor-pointer"
+                    data-bench-id="{{ $row->id }}"
+                    data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
+                    data-bench-role="{{ e($row->current_designation ?? '') }}"
+                    data-client-type="direct"
+                    title="Click to view Similar Clients">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label text-uppercase text-truncate"><i class="fa-solid fa-handshake me-1 text-primary"></i>Similar Clients</span>
                     </div>
@@ -457,25 +453,49 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 6: Clients Pipeline Activity (All Candidates Tracker Standard) -->
-                <div class="cd-talent-subcard cd-subcard-pipeline">
+                <!-- Sub-Card 6: Clients Pipeline Activity (Job Tracker Hiring Pipeline Standard - Req 5 & 11) -->
+                <div class="cd-talent-subcard cd-subcard-pipeline js-open-pipe-explore cursor-pointer" data-explore-url="{{ $exploreBase }}/all" title="Click to view all pipeline activity">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label text-uppercase text-truncate">Clients Pipeline Activity</span>
+                        <span class="cd-subcard-label text-uppercase text-truncate"><i class="fa-solid fa-chart-line me-1 text-primary"></i>Pipeline Activity</span>
                     </div>
-                    <div class="cd-subcard-body p-1">
-                        <div class="cd-pipe-grid">
-                            <div class="cd-pipe-col"><span class="h">INW</span><span class="v"><a href="{{ $exploreBase }}/all" class="text-hover-primary" data-bench-pipe="inreview">{{ $row->InReview }}</a></span></div>
-                            <div class="cd-pipe-col"><span class="h">SOU</span><span class="v"><a href="{{ $exploreBase }}/1" class="text-hover-primary" data-bench-pipe="sourcing">{{ $row->Sourcing }}</a></span></div>
-                            <div class="cd-pipe-col"><span class="h">SCR</span><span class="v"><a href="{{ $exploreBase }}/2" class="text-hover-primary" data-bench-pipe="screening">{{ $row->Screening }}</a></span></div>
-                            <div class="cd-pipe-col"><span class="h">EVA</span><span class="v"><a href="{{ $exploreBase }}/3" class="text-hover-primary" data-bench-pipe="evaluation">{{ $row->Evaluation }}</a></span></div>
-                            <div class="cd-pipe-col"><span class="h">NEG</span><span class="v"><a href="{{ $exploreBase }}/4" class="text-hover-primary" data-bench-pipe="negotiation">{{ $row->Negotiation }}</a></span></div>
-                            <div class="cd-pipe-col"><span class="h">OFF</span><span class="v"><a href="{{ $exploreBase }}/5" class="text-hover-primary" data-bench-pipe="offered">{{ $row->Offered }}</a></span></div>
-                            <div class="cd-pipe-col"><span class="h">JOI</span><span class="v"><a href="{{ $exploreBase }}/6" class="text-hover-primary" data-bench-pipe="joined">{{ $row->Joined }}</a></span></div>
-                            <div class="cd-pipe-col"><span class="h">REJ</span><span class="v"><a href="{{ $exploreBase }}/7" class="text-hover-primary" data-bench-pipe="rejected">{{ $row->Rejected }}</a></span></div>
+                    <div class="cd-subcard-body p-0">
+                        <div class="cd-pipeline-track">
+                            <div class="cd-track-stage" title="In Review: {{ $row->InReview }}">
+                                <span class="cd-track-label">INW</span>
+                                <a href="{{ $exploreBase }}/all" class="cd-track-badge s-inw" data-bench-pipe="inreview">{{ $row->InReview }}</a>
+                            </div>
+                            <div class="cd-track-stage" title="Sourcing: {{ $row->Sourcing }}">
+                                <span class="cd-track-label">SOU</span>
+                                <a href="{{ $exploreBase }}/1" class="cd-track-badge s-sou" data-bench-pipe="sourcing">{{ $row->Sourcing }}</a>
+                            </div>
+                            <div class="cd-track-stage" title="Screening: {{ $row->Screening }}">
+                                <span class="cd-track-label">SCR</span>
+                                <a href="{{ $exploreBase }}/2" class="cd-track-badge s-scr" data-bench-pipe="screening">{{ $row->Screening }}</a>
+                            </div>
+                            <div class="cd-track-stage" title="Evaluation: {{ $row->Evaluation }}">
+                                <span class="cd-track-label">EVA</span>
+                                <a href="{{ $exploreBase }}/3" class="cd-track-badge s-eva" data-bench-pipe="evaluation">{{ $row->Evaluation }}</a>
+                            </div>
+                            <div class="cd-track-stage" title="Negotiation: {{ $row->Negotiation }}">
+                                <span class="cd-track-label">NEG</span>
+                                <a href="{{ $exploreBase }}/4" class="cd-track-badge s-neg" data-bench-pipe="negotiation">{{ $row->Negotiation }}</a>
+                            </div>
+                            <div class="cd-track-stage" title="Offered: {{ $row->Offered }}">
+                                <span class="cd-track-label">OFF</span>
+                                <a href="{{ $exploreBase }}/5" class="cd-track-badge s-off" data-bench-pipe="offered">{{ $row->Offered }}</a>
+                            </div>
+                            <div class="cd-track-stage" title="Joined: {{ $row->Joined }}">
+                                <span class="cd-track-label">JOI</span>
+                                <a href="{{ $exploreBase }}/6" class="cd-track-badge s-joi" data-bench-pipe="joined">{{ $row->Joined }}</a>
+                            </div>
+                            <div class="cd-track-stage" title="Rejected: {{ $row->Rejected }}">
+                                <span class="cd-track-label">REJ</span>
+                                <a href="{{ $exploreBase }}/7" class="cd-track-badge s-rej" data-bench-pipe="rejected">{{ $row->Rejected }}</a>
+                            </div>
                         </div>
-                        <div class="cd-pipe-summary d-flex align-items-center justify-content-between mt-1.5 pt-1 border-top border-gray-200">
-                            <span class="pipe-stat text-primary fw-bold" style="font-size: 10px;">Interviews: <strong data-bench-pipe-interview="{{ $row->id }}" class="ms-1">{{ $row->InReview }}</strong></span>
-                            <span class="pipe-stat text-muted" style="font-size: 10px;">Views: <strong class="ms-1 text-dark">{{ $viewCount }}</strong></span>
+                        <div class="cd-track-summary">
+                            <span class="pipe-stat text-primary fw-bold" style="font-size: 9.5px;">Interviews: <strong data-bench-pipe-interview="{{ $row->id }}">{{ $row->InReview }}</strong></span>
+                            <span class="pipe-stat text-muted" style="font-size: 9.5px;">Views: <strong class="text-dark">{{ $viewCount }}</strong></span>
                         </div>
                     </div>
                 </div>
