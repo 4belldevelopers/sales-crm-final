@@ -196,11 +196,13 @@
             height: 17px !important;
         }
         .cl-card-icon.blue   { background: #eff6ff !important; color: #2563eb !important; }
+        .cl-card-icon.purple { background: #faf5ff !important; color: #7c3aed !important; }
+        .cl-card-icon.orange { background: #fff7ed !important; color: #ea580c !important; }
+        .cl-card-icon.green  { background: #ecfdf5 !important; color: #059669 !important; }
+        .cl-card-icon.red    { background: #fef2f2 !important; color: #dc2626 !important; }
         .cl-card-icon.cyan   { background: #f0f9ff !important; color: #0284c7 !important; }
         .cl-card-icon.amber  { background: #fffbeb !important; color: #d97706 !important; }
         .cl-card-icon.slate  { background: #f1f5f9 !important; color: #64748b !important; }
-        .cl-card-icon.green  { background: #ecfdf5 !important; color: #16a34a !important; }
-        .cl-card-icon.red    { background: #fef2f2 !important; color: #dc2626 !important; }
 
         .cl-card-meta {
             min-width: 0 !important;
@@ -247,12 +249,14 @@
             width: 11px !important;
             height: 11px !important;
         }
-        .cl-card-sub.blue  { color: #2563eb !important; }
-        .cl-card-sub.cyan  { color: #0284c7 !important; }
-        .cl-card-sub.amber { color: #d97706 !important; }
-        .cl-card-sub.slate { color: #64748b !important; }
-        .cl-card-sub.green { color: #16a34a !important; }
-        .cl-card-sub.red   { color: #dc2626 !important; }
+        .cl-card-sub.blue   { color: #2563eb !important; }
+        .cl-card-sub.purple { color: #7c3aed !important; }
+        .cl-card-sub.orange { color: #ea580c !important; }
+        .cl-card-sub.green  { color: #059669 !important; }
+        .cl-card-sub.red    { color: #dc2626 !important; }
+        .cl-card-sub.cyan   { color: #0284c7 !important; }
+        .cl-card-sub.amber  { color: #d97706 !important; }
+        .cl-card-sub.slate  { color: #64748b !important; }
 
         /* ── KPI Selected States (Client Tracker Standard) ── */
         /* 1. All Talents (Blue) */
@@ -269,59 +273,59 @@
         .cl-card.active[data-tab="all"] .cl-card-num { color: #1d4ed8 !important; }
         .cl-card.active[data-tab="all"] .cl-card-lbl { color: #1e40af !important; font-weight: 700 !important; }
 
-        /* 2. On Pool (Cyan) */
+        /* 2. Pool (Purple) */
         .cl-card.active[data-tab="1"],
         .cl-card.active[data-tab="pool"] {
-            background: #f0f9ff !important;
-            border-color: #38bdf8 !important;
-            box-shadow: 0 0 0 1.5px #0284c7, 0 4px 14px rgba(2, 132, 199, 0.12) !important;
+            background: #faf5ff !important;
+            border-color: #c084fc !important;
+            box-shadow: 0 0 0 1.5px #7c3aed, 0 4px 14px rgba(124, 58, 237, 0.12) !important;
         }
         .cl-card.active[data-tab="1"] .cl-card-icon,
         .cl-card.active[data-tab="pool"] .cl-card-icon {
             background: #ffffff !important;
-            color: #0284c7 !important;
-            box-shadow: 0 1px 3px rgba(2, 132, 199, 0.15) !important;
+            color: #7c3aed !important;
+            box-shadow: 0 1px 3px rgba(124, 58, 237, 0.15) !important;
         }
         .cl-card.active[data-tab="1"] .cl-card-num,
-        .cl-card.active[data-tab="pool"] .cl-card-num { color: #0369a1 !important; }
+        .cl-card.active[data-tab="pool"] .cl-card-num { color: #6d28d9 !important; }
         .cl-card.active[data-tab="1"] .cl-card-lbl,
-        .cl-card.active[data-tab="pool"] .cl-card-lbl { color: #075985 !important; font-weight: 700 !important; }
+        .cl-card.active[data-tab="pool"] .cl-card-lbl { color: #581c87 !important; font-weight: 700 !important; }
 
-        /* 3. Bench (Amber) */
+        /* 3. Bench (Blue) */
         .cl-card.active[data-tab="2"],
         .cl-card.active[data-tab="bench"] {
-            background: #fffbeb !important;
-            border-color: #fbbf24 !important;
-            box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.12) !important;
+            background: #eff6ff !important;
+            border-color: #60a5fa !important;
+            box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
         }
         .cl-card.active[data-tab="2"] .cl-card-icon,
         .cl-card.active[data-tab="bench"] .cl-card-icon {
             background: #ffffff !important;
-            color: #d97706 !important;
-            box-shadow: 0 1px 3px rgba(217, 119, 6, 0.15) !important;
+            color: #2563eb !important;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
         }
         .cl-card.active[data-tab="2"] .cl-card-num,
-        .cl-card.active[data-tab="bench"] .cl-card-num { color: #b45309 !important; }
+        .cl-card.active[data-tab="bench"] .cl-card-num { color: #1d4ed8 !important; }
         .cl-card.active[data-tab="2"] .cl-card-lbl,
-        .cl-card.active[data-tab="bench"] .cl-card-lbl { color: #92400e !important; font-weight: 700 !important; }
+        .cl-card.active[data-tab="bench"] .cl-card-lbl { color: #1e40af !important; font-weight: 700 !important; }
 
-        /* 4. On Hold (Slate) */
+        /* 4. Hold (Orange) */
         .cl-card.active[data-tab="4"],
         .cl-card.active[data-tab="hold"] {
-            background: #f8fafc !important;
-            border-color: #94a3b8 !important;
-            box-shadow: 0 0 0 1.5px #64748b, 0 4px 14px rgba(100, 116, 139, 0.12) !important;
+            background: #fff7ed !important;
+            border-color: #fb923c !important;
+            box-shadow: 0 0 0 1.5px #ea580c, 0 4px 14px rgba(234, 88, 12, 0.12) !important;
         }
         .cl-card.active[data-tab="4"] .cl-card-icon,
         .cl-card.active[data-tab="hold"] .cl-card-icon {
             background: #ffffff !important;
-            color: #475569 !important;
-            box-shadow: 0 1px 3px rgba(100, 116, 139, 0.15) !important;
+            color: #ea580c !important;
+            box-shadow: 0 1px 3px rgba(234, 88, 12, 0.15) !important;
         }
         .cl-card.active[data-tab="4"] .cl-card-num,
-        .cl-card.active[data-tab="hold"] .cl-card-num { color: #334155 !important; }
+        .cl-card.active[data-tab="hold"] .cl-card-num { color: #c2410c !important; }
         .cl-card.active[data-tab="4"] .cl-card-lbl,
-        .cl-card.active[data-tab="hold"] .cl-card-lbl { color: #1e293b !important; font-weight: 700 !important; }
+        .cl-card.active[data-tab="hold"] .cl-card-lbl { color: #9a3412 !important; font-weight: 700 !important; }
 
         /* 5. Placed (Green) */
         .cl-card.active[data-tab="3"],

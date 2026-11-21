@@ -179,28 +179,28 @@
             $serviceClass = @$row->comission_type == 2 ? 'text-success' : 'text-muted';
             $billAmountClean = number_format((float) $billFormatViewSalary->amount, 0);
 
-            // Status Badge & Border Theme Accent (Synchronized with CV Tracker & Status KPI grid)
+            // Status Badge & Border Theme Accent (Synchronized with Bench Talent Stage Palette)
             $statusId = (int) ($row->status ?? 0);
             $statusName = $row->master_status_name ?? 'Bench';
-            if ($statusId == 1) { // Pool (Cyan)
+            if ($statusId == 1) { // Pool (Purple)
                 $statusPillClass = 'status-pool';
-                $statusBorderAccent = '#0284c7';
-                $statusPillStyle = 'background: #f0f9ff !important; color: #0284c7 !important; border: 1px solid #bae6fd !important;';
+                $statusBorderAccent = '#7c3aed';
+                $statusPillStyle = 'background: #faf5ff !important; color: #7c3aed !important; border: 1px solid #ddd6fe !important;';
                 $subS = 'Newly added';
-            } elseif ($statusId == 2) { // Bench (Amber)
+            } elseif ($statusId == 2) { // Bench (Blue)
                 $statusPillClass = 'status-bench';
-                $statusBorderAccent = '#d97706';
-                $statusPillStyle = 'background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important;';
+                $statusBorderAccent = '#2563eb';
+                $statusPillStyle = 'background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important;';
                 $subS = optional(GeneralMethod::bench_status_subline($row->status))->name ?? 'Open For Work';
-            } elseif ($statusId == 4) { // On Hold / Paused (Slate)
+            } elseif ($statusId == 4) { // On Hold / Paused (Orange)
                 $statusPillClass = 'status-hold';
-                $statusBorderAccent = '#64748b';
-                $statusPillStyle = 'background: #f8fafc !important; color: #64748b !important; border: 1px solid #cbd5e1 !important;';
+                $statusBorderAccent = '#ea580c';
+                $statusPillStyle = 'background: #fff7ed !important; color: #ea580c !important; border: 1px solid #fed7aa !important;';
                 $subS = optional(GeneralMethod::bench_status_subline($row->status))->name ?? 'On Hold';
             } elseif ($statusId == 3) { // Placed (Green)
                 $statusPillClass = 'status-placed';
-                $statusBorderAccent = '#16a34a';
-                $statusPillStyle = 'background: #ecfdf5 !important; color: #16a34a !important; border: 1px solid #a7f3d0 !important;';
+                $statusBorderAccent = '#059669';
+                $statusPillStyle = 'background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important;';
                 $subS = optional(GeneralMethod::bench_status_subline($row->status))->name ?? 'Placed';
             } elseif ($statusId == 5) { // Exited (Red)
                 $statusPillClass = 'status-exited';
@@ -209,8 +209,8 @@
                 $subS = optional(GeneralMethod::bench_status_subline($row->status))->name ?? 'Exited';
             } else {
                 $statusPillClass = 'status-bench';
-                $statusBorderAccent = '#d97706';
-                $statusPillStyle = 'background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important;';
+                $statusBorderAccent = '#2563eb';
+                $statusPillStyle = 'background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important;';
                 $subS = 'Bench';
             }
 
@@ -482,9 +482,23 @@
 
             </div>
 
-            <!-- Sub-Card 7 / Bottom Activity Strip -->
+            <!-- Sub-Card 7 / Bottom Activity Strip: Keywords on Left, Timestamp & Status on Right -->
             <div class="cd-talent-card-bottom" style="display:flex !important; align-items:center !important; justify-content:space-between !important; min-height:38px !important; width:100% !important; overflow:hidden !important; gap:12px !important; padding:6px 12px !important; background:#fafcff !important; border-top:1px solid #e2e8f0 !important;">
-                <div class="cd-bottom-left d-flex align-items-center gap-2 flex-wrap min-w-0 flex-grow-1 overflow-hidden">
+                <!-- Left: Skills Keywords Tags -->
+                <div class="cd-bottom-skills d-flex align-items-center gap-1 flex-wrap min-w-0 flex-grow-1 overflow-hidden" style="overflow-x: auto; white-space: nowrap; scrollbar-width: none;">
+                    @if (!empty($skillArr))
+                        @foreach ($skillArr as $sval)
+                            @if (trim($sval) !== '')
+                                <span class="cd-skill-pill" style="font-size: 10px !important; font-weight: 500 !important; padding: 2px 7px !important; border-radius: 4px !important; background: #f1f5f9 !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; line-height: 1.35 !important; white-space: nowrap !important; flex-shrink: 0 !important; display: inline-block !important;">{{ ucfirst(trim($sval)) }}</span>
+                            @endif
+                        @endforeach
+                    @else
+                        <span class="text-muted fs-8" style="font-style: italic;">No specific skills listed</span>
+                    @endif
+                </div>
+
+                <!-- Right: Added Date & Time (Rule 24), Days on Bench & Change Status Button -->
+                <div class="cd-bottom-right d-flex align-items-center gap-2 flex-shrink-0" style="white-space: nowrap;">
                     @if ($stageDateLabel)
                         <span class="cd-bottom-date text-dark fw-bold" style="font-size: 11px; white-space: nowrap;">
                             <i class="fa-regular fa-calendar-alt text-muted me-1"></i>Added: <strong>{{ $stageDateLabel }}</strong>
@@ -495,33 +509,7 @@
                         <span class="badge badge-light-warning {{ $benchDaysClass }} fw-bold fs-8 py-1 px-2" title="Days on Bench" style="white-space: nowrap;">
                             <i class="fa-regular fa-hourglass me-1"></i>{{ $benchDaysCount }} Days on Bench
                         </span>
-                        <span class="text-muted">&bull;</span>
                     @endif
-                    <div class="cd-bottom-skills d-flex align-items-center gap-1 flex-wrap min-w-0 flex-grow-1 overflow-hidden" style="overflow-x: auto; white-space: nowrap; scrollbar-width: none;">
-                        @if (!empty($skillArr))
-                            @foreach ($skillArr as $sval)
-                                @if (trim($sval) !== '')
-                                    <span class="cd-skill-pill" style="font-size: 10px !important; font-weight: 500 !important; padding: 2px 7px !important; border-radius: 4px !important; background: #f1f5f9 !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; line-height: 1.35 !important; white-space: nowrap !important; flex-shrink: 0 !important; display: inline-block !important;">{{ ucfirst(trim($sval)) }}</span>
-                                @endif
-                            @endforeach
-                        @else
-                            <span class="text-muted fs-8" style="font-style: italic;">No specific skills listed</span>
-                        @endif
-                    </div>
-                </div>
-                <div class="cd-bottom-actions d-flex align-items-center gap-2 flex-shrink-0" style="white-space: nowrap;">
-                    <button type="button" class="btn btn-sm btn-light-info py-1 px-2.5 fs-8 fw-bold btn-similar-clients"
-                        data-bench-id="{{ $row->id }}"
-                        data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
-                        data-bench-role="{{ e($row->current_designation ?? '') }}"
-                        data-client-type="direct"
-                        style="height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;">
-                        <i class="fa-solid fa-handshake me-1"></i>Similar Clients
-                    </button>
-                    <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8 fw-bold {{ $profile_sidebar_css }}" data-row-id="{{ $row->id }}"
-                        style="height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;">
-                        <i class="fa-solid fa-user me-1"></i>View Profile
-                    </button>
                     <button type="button" class="btn btn-sm btn-light-success py-1 px-3 fs-8 fw-bold stage_sub_stage" data-row-id="{{ $row->id }}"
                         style="height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;">
                         <i class="fa-solid fa-pen-to-square me-1"></i>Change Status

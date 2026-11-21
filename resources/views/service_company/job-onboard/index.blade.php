@@ -271,6 +271,7 @@ body { overflow-x: hidden !important; }
     border: 1px solid var(--jt-border) !important;
     border-radius: 11px !important;
     padding: 10px 11px !important;
+    min-height: 82px !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
@@ -1343,7 +1344,7 @@ body { overflow-x: hidden !important; }
    ========================================================================== */
 @media (max-width: 1440px) {
     .jt-kpi-grid { gap: 7px !important; }
-    .jt-kpi-card { padding: 9px 9px !important; }
+    .jt-kpi-card { padding: 9px 9px !important; min-height: 78px !important; }
     .jt-kpi-top  { gap: 7px !important; margin-bottom: 5px !important; }
     .jt-kpi-icon { width: 30px !important; height: 30px !important; min-width: 30px !important; border-radius: 7px !important; }
     .jt-kpi-icon svg { width: 15px !important; height: 15px !important; }
@@ -1712,35 +1713,35 @@ body { overflow-x: hidden !important; }
         <div class="jt-tabs-group" id="jt_tabs">
             <button type="button" class="jt-tab-btn active" data-filter="all">
                 <span>All</span>
-                <span class="jt-tab-badge" data-tab="total">—</span>
+                <span class="jt-tab-badge" data-tab-count="total">{{ $totalJoinInit }}</span>
             </button>
             <button type="button" class="jt-tab-btn" data-filter="joining_today">
                 <span>Joining Today</span>
-                <span class="jt-tab-badge badge-today" data-tab="today">—</span>
+                <span class="jt-tab-badge badge-today" data-tab-count="today">{{ $todayJoinInit }}</span>
             </button>
             <button type="button" class="jt-tab-btn" data-filter="this_week">
                 <span>This Week</span>
-                <span class="jt-tab-badge badge-week" data-tab="this_week">—</span>
+                <span class="jt-tab-badge badge-week" data-tab-count="this_week">{{ $thisWeekInit }}</span>
             </button>
             <button type="button" class="jt-tab-btn" data-filter="delayed">
                 <span>Delayed</span>
-                <span class="jt-tab-badge badge-delayed" data-tab="delayed">—</span>
+                <span class="jt-tab-badge badge-delayed" data-tab-count="delayed">{{ $delayedInit }}</span>
             </button>
             <button type="button" class="jt-tab-btn" data-filter="no_show">
                 <span>No Show</span>
-                <span class="jt-tab-badge badge-noshow" data-tab="no_show">—</span>
+                <span class="jt-tab-badge badge-noshow" data-tab-count="no_show">{{ $noShowInit }}</span>
             </button>
             <button type="button" class="jt-tab-btn" data-filter="pending_docs">
                 <span>Pending Docs</span>
-                <span class="jt-tab-badge badge-docs" data-tab="pending_docs">—</span>
+                <span class="jt-tab-badge badge-docs" data-tab-count="pending_docs">{{ $pendingDocsInit }}</span>
             </button>
             <button type="button" class="jt-tab-btn" data-filter="onboarded">
                 <span>Onboarded</span>
-                <span class="jt-tab-badge badge-onboarded" data-tab="onboarded">—</span>
+                <span class="jt-tab-badge badge-onboarded" data-tab-count="onboarded">{{ $onboardedInit }}</span>
             </button>
             <button type="button" class="jt-tab-btn" data-filter="backed_out">
                 <span>Backed Out</span>
-                <span class="jt-tab-badge badge-backedout" data-tab="backed_out">—</span>
+                <span class="jt-tab-badge badge-backedout" data-tab-count="backed_out">{{ $backedOutInit }}</span>
             </button>
         </div>
 
@@ -2159,12 +2160,16 @@ body { overflow-x: hidden !important; }
         var n = function (v) { return (v != null ? Number(v) : 0); };
         var total = n(c.total);
 
-        document.querySelectorAll('[data-tab]').forEach(function (el) {
-            var k = el.getAttribute('data-tab');
-            el.textContent = n(c[k]);
+        // Update sub-tab badges inside #jt_tabs (never touch KPI cards or parent buttons)
+        document.querySelectorAll('#jt_tabs .jt-tab-badge').forEach(function (el) {
+            var k = el.getAttribute('data-tab-count') || el.getAttribute('data-tab');
+            if (k && c[k] != null) {
+                el.textContent = n(c[k]);
+            }
         });
 
-        document.querySelectorAll('[data-kpi]').forEach(function (el) {
+        // Update numeric metric elements inside KPI cards only
+        document.querySelectorAll('#jtKpiGrid [data-kpi]').forEach(function (el) {
             var k = el.getAttribute('data-kpi');
             if (c[k] != null) el.textContent = n(c[k]);
         });
