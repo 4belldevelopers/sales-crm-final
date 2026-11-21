@@ -334,6 +334,7 @@ body { overflow-x: hidden !important; }
 .ot-kpi-icon.green  { background: #ecfdf5 !important; color: #16a34a !important; }
 .ot-kpi-icon.cyan   { background: #ecfeff !important; color: #0891b2 !important; }
 .ot-kpi-icon.rose   { background: #fdf2f8 !important; color: #db2777 !important; }
+.ot-kpi-icon.red    { background: #fef2f2 !important; color: #dc2626 !important; }
 
 .ot-kpi-meta {
     min-width: 0 !important;
@@ -416,6 +417,7 @@ body { overflow-x: hidden !important; }
 .ot-kpi-sub.green  { color: #16a34a !important; }
 .ot-kpi-sub.cyan   { color: #0891b2 !important; }
 .ot-kpi-sub.rose   { color: #db2777 !important; }
+.ot-kpi-sub.red    { color: #dc2626 !important; }
 
 /* ── Client Tracker Style Active KPI Highlight States ── */
 .ot-kpi-card.active[data-tab="all"] {
@@ -462,6 +464,15 @@ body { overflow-x: hidden !important; }
 .ot-kpi-card.active[data-tab="joining_soon"] .ot-kpi-icon { background: #ffffff !important; color: #0891b2 !important; box-shadow: 0 1px 3px rgba(8, 145, 178, 0.16) !important; }
 .ot-kpi-card.active[data-tab="joining_soon"] .ot-kpi-num  { color: #0e7490 !important; }
 .ot-kpi-card.active[data-tab="joining_soon"] .ot-kpi-lbl  { color: #155e75 !important; font-weight: 700 !important; }
+
+.ot-kpi-card.active[data-tab="rejected"] {
+    background: #fef2f2 !important;
+    border-color: #fca5a5 !important;
+    box-shadow: 0 0 0 1.5px #dc2626, 0 4px 14px rgba(220, 38, 38, 0.14) !important;
+}
+.ot-kpi-card.active[data-tab="rejected"] .ot-kpi-icon { background: #ffffff !important; color: #dc2626 !important; box-shadow: 0 1px 3px rgba(220, 38, 38, 0.16) !important; }
+.ot-kpi-card.active[data-tab="rejected"] .ot-kpi-num  { color: #b91c1c !important; }
+.ot-kpi-card.active[data-tab="rejected"] .ot-kpi-lbl  { color: #991b1b !important; font-weight: 700 !important; }
 
 .ot-kpi-card.active[data-tab="expired"] {
     background: #fdf2f8 !important;
@@ -895,7 +906,7 @@ body { overflow-x: hidden !important; }
 
 .ot-entity-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1.6fr) minmax(0, 1.6fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.25fr) !important;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1.8fr) minmax(0, 1.95fr) minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 1.2fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -1043,10 +1054,10 @@ body { overflow-x: hidden !important; }
 
 /* Sub-Card 2: Job & Client */
 .ot-scope-pill {
-    font-size: 8.5px !important;
+    font-size: 8px !important;
     font-weight: 700 !important;
-    padding: 1.5px 6px !important;
-    border-radius: 4px !important;
+    padding: 1px 5px !important;
+    border-radius: 3px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.2px !important;
     white-space: nowrap !important;
@@ -1056,10 +1067,10 @@ body { overflow-x: hidden !important; }
 .ot-scope-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
 
 .ot-job-status-pill {
-    font-size: 8.5px !important;
+    font-size: 8px !important;
     font-weight: 700 !important;
-    padding: 1.5px 6px !important;
-    border-radius: 4px !important;
+    padding: 1px 5px !important;
+    border-radius: 3px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.2px !important;
     white-space: nowrap !important;
@@ -1137,9 +1148,10 @@ body { overflow-x: hidden !important; }
 .ot-comp-status-body {
     display: flex !important;
     flex-direction: column !important;
-    gap: 4px !important;
-    min-width: 0 !important;
     justify-content: center !important;
+    gap: 3.5px !important;
+    min-width: 0 !important;
+    width: 100% !important;
 }
 
 .ot-comp-row {
@@ -1147,39 +1159,25 @@ body { overflow-x: hidden !important; }
     align-items: center !important;
     justify-content: space-between !important;
     gap: 6px !important;
-    min-width: 0 !important;
-}
-
-.ot-comp-amount-wrap {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    min-width: 0 !important;
-}
-
-.ot-comp-link {
-    display: flex !important;
-    align-items: center !important;
-    gap: 5px !important;
-    text-decoration: none !important;
-    color: inherit !important;
+    width: 100% !important;
     min-width: 0 !important;
 }
 
 .ot-comp-amount {
-    font-size: 12.5px !important;
+    font-size: 12px !important;
     font-weight: 700 !important;
     color: var(--ot-text-main) !important;
-    line-height: 1.2 !important;
+    line-height: 1.25 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    font-variant-numeric: tabular-nums !important;
 }
 
 .ot-comp-edit-pill {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 3px !important;
+    gap: 3.5px !important;
     font-size: 9.5px !important;
     font-weight: 600 !important;
     color: var(--ot-primary-deep) !important;
@@ -1190,10 +1188,14 @@ body { overflow-x: hidden !important; }
     border-radius: 4px !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
+    text-decoration: none !important;
+    line-height: 1.3 !important;
+    transition: all 0.15s ease !important;
 }
 
 .ot-comp-edit-pill:hover:not(.is-locked) {
     background: #dbeafe !important;
+    border-color: #93c5fd !important;
     color: #1d4ed8 !important;
 }
 
@@ -1201,23 +1203,25 @@ body { overflow-x: hidden !important; }
     background: #f1f5f9 !important;
     border-color: #e2e8f0 !important;
     color: var(--ot-text-muted) !important;
+    cursor: default !important;
 }
 
 .ot-create-offer-cta {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 5px !important;
+    gap: 4px !important;
     width: fit-content !important;
-    padding: 3px 8px !important;
-    border-radius: 5px !important;
+    padding: 2px 7px !important;
+    border-radius: 4px !important;
     background: #fffbeb !important;
     border: 1px solid #fcd34d !important;
     color: #b45309 !important;
-    font-size: 10.5px !important;
+    font-size: 10px !important;
     font-weight: 700 !important;
     text-decoration: none !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
+    line-height: 1.3 !important;
 }
 
 .ot-create-offer-cta:hover {
@@ -1229,28 +1233,29 @@ body { overflow-x: hidden !important; }
 .ot-pending-pill {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: 3.5px !important;
     width: fit-content !important;
-    padding: 2px 7px !important;
-    border-radius: 5px !important;
+    padding: 1.5px 6px !important;
+    border-radius: 4px !important;
     background: #fef3c7 !important;
     color: #b45309 !important;
-    font-size: 10px !important;
+    font-size: 9.5px !important;
     font-weight: 600 !important;
+    line-height: 1.3 !important;
 }
 
 .ot-comp-hint {
-    font-size: 9.5px !important;
+    font-size: 9px !important;
     color: var(--ot-text-light) !important;
     font-weight: 500 !important;
+    white-space: nowrap !important;
 }
 
 .ot-status-row {
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    width: 100% !important;
     min-width: 0 !important;
-    flex-wrap: nowrap !important;
 }
 
 .ot-offer-badge {
@@ -1258,28 +1263,42 @@ body { overflow-x: hidden !important; }
     align-items: center !important;
     gap: 4px !important;
     width: fit-content !important;
+    max-width: 100% !important;
     padding: 2px 7px !important;
-    border-radius: 5px !important;
-    font-size: 10px !important;
+    border-radius: 4px !important;
+    font-size: 9.5px !important;
     font-weight: 700 !important;
-    line-height: 1.25 !important;
+    line-height: 1.3 !important;
     white-space: nowrap !important;
-    flex-shrink: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 .ot-offer-badge svg {
-    width: 11px !important;
-    height: 11px !important;
+    width: 10.5px !important;
+    height: 10.5px !important;
     flex-shrink: 0 !important;
 }
 
+.ot-status-sub-row {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    line-height: 1.25 !important;
+}
+
 .ot-offer-sub {
-    font-size: 10px !important;
+    font-size: 9.5px !important;
     color: var(--ot-text-muted) !important;
     font-weight: 500 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    max-width: 100% !important;
 }
 
 /* Sub-Card 4: Joining */
@@ -1692,7 +1711,7 @@ body { overflow-x: hidden !important; }
     .ot-pipe-card-v2 { padding: 8px 10px 9px 20px !important; min-width: 132px !important; }
 
     .ot-entity-grid {
-        grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.5fr) minmax(0, 1.55fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.2fr) !important;
+        grid-template-columns: minmax(0, 1.65fr) minmax(0, 1.8fr) minmax(0, 1.95fr) minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 1.2fr) !important;
         gap: 6px !important;
         padding: 8px 10px !important;
     }
@@ -1818,11 +1837,11 @@ body { overflow-x: hidden !important; }
                         </a>
                     </li>
                     <li>
-                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="selectOfferTab('joining_soon')">
-                            <span class="ot-drop-ico act"><i class="far fa-calendar-check"></i></span>
+                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="selectOfferTab('rejected')">
+                            <span class="ot-drop-ico rst"><i class="fas fa-times-circle"></i></span>
                             <span>
-                                <span class="ot-drop-title">View Joining Soon (7d)</span>
-                                <span class="ot-drop-sub">Upcoming onboarding candidates</span>
+                                <span class="ot-drop-title">Filter Rejected Offers</span>
+                                <span class="ot-drop-sub">Review candidate declined offers</span>
                             </span>
                         </a>
                     </li>
@@ -1849,7 +1868,7 @@ body { overflow-x: hidden !important; }
         $pendingOffersInit = (int) ($offerStats['pending'] ?? 0);
         $sentOffersInit    = (int) ($offerStats['sent'] ?? 0);
         $acceptedInit      = (int) ($offerStats['accepted'] ?? 0);
-        $joiningSoonInit   = (int) ($offerStats['joining_soon'] ?? 0);
+        $rejectedInit      = (int) ($offerStats['rejected'] ?? 0);
         $expiredInit       = (int) ($offerStats['expired'] ?? 0);
         $acceptedPctInit   = $totalOffersInit > 0 ? round(($acceptedInit / $totalOffersInit) * 100) : 0;
     @endphp
@@ -1942,25 +1961,24 @@ body { overflow-x: hidden !important; }
             </div>
         </button>
 
-        {{-- Card 5: Joining Soon --}}
-        <button type="button" class="ot-kpi-card ot-kpi-filter" data-tab="joining_soon" onclick="selectOfferTab('joining_soon')">
+        {{-- Card 5: Offer Rejected --}}
+        <button type="button" class="ot-kpi-card ot-kpi-filter" data-tab="rejected" onclick="selectOfferTab('rejected')">
             <div class="ot-kpi-top">
-                <div class="ot-kpi-icon cyan">
+                <div class="ot-kpi-icon red">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
                     </svg>
                 </div>
                 <div class="ot-kpi-meta">
-                    <div class="ot-kpi-num" data-kpi="joining_soon">{{ $joiningSoonInit }}</div>
-                    <div class="ot-kpi-lbl">Joining Soon</div>
+                    <div class="ot-kpi-num" data-kpi="rejected">{{ $rejectedInit }}</div>
+                    <div class="ot-kpi-lbl">Offer Rejected</div>
                 </div>
             </div>
-            <div class="ot-kpi-sub cyan">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span>Next 7 days</span>
+            <div class="ot-kpi-sub red">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <span>Candidate declined</span>
             </div>
         </button>
 
@@ -2462,7 +2480,7 @@ body { overflow-x: hidden !important; }
 
         var badges = {
             tab_total: c.total, tab_pending: c.pending, tab_sent: c.sent,
-            tab_accepted: c.accepted, tab_joining: c.joining_soon, tab_expired: c.expired
+            tab_accepted: c.accepted, tab_rejected: c.rejected, tab_expired: c.expired
         };
         Object.keys(badges).forEach(function (id) {
             var el = document.getElementById(id);
@@ -2474,6 +2492,7 @@ body { overflow-x: hidden !important; }
             pending: n(c.pending),
             sent: n(c.sent),
             accepted: n(c.accepted),
+            rejected: n(c.rejected),
             expired: n(c.expired),
             joining_soon: n(c.joining_soon)
         };
