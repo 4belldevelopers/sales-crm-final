@@ -25,73 +25,88 @@
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #1e293b;
 }
+@media (min-width: 992px) {
+    .kt_content_find_agency {
+        margin-top: -42px !important;
+    }
+}
+@media (max-width: 991px) {
+    .kt_content_find_agency {
+        margin-top: 10px !important;
+    }
+}
 
-/* ── TIER 1: Top Header Toolbar Card (Inspiration from Client Tracker Header) ── */
+/* ── TIER 1: Top Header Toolbar Card (Standard JeroATS Design System - Rule 20) ── */
 .fa-header-card, .cl-header-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 12px !important;
-    padding: 14px 20px !important;
-    margin-bottom: 14px !important;
+    border-radius: 11px !important;
+    padding: 10px 18px !important;
+    margin-bottom: 12px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 16px !important;
+    gap: 14px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    position: relative !important;
+    z-index: 1 !important;
 }
 .fa-header-left, .cl-header-left {
     display: flex !important;
     align-items: center !important;
-    gap: 14px !important;
+    gap: 12px !important;
     min-width: 0 !important;
 }
 .fa-header-text-wrap {
     min-width: 0 !important;
 }
 .fa-header-icon-box, .cl-header-icon-box {
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 10px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 9px !important;
     background: #eff6ff !important;
-    border: 1px solid #dbeafe !important;
+    border: 1px solid #bfdbfe !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     color: #2563eb !important;
-    font-size: 20px !important;
+    font-size: 16px !important;
     flex-shrink: 0 !important;
     box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06) !important;
 }
 .fa-header-icon-box svg, .cl-header-icon-box svg {
     color: #2563eb !important;
     stroke: #2563eb !important;
+    width: 18px !important;
+    height: 18px !important;
 }
 .fa-header-title-row, .cl-header-title-row {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 8px !important;
     flex-wrap: wrap !important;
 }
 .fa-header-title, .cl-header-title {
-    font-size: 20px !important;
+    font-size: 16px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
-    letter-spacing: -0.015em !important;
+    letter-spacing: -0.01em !important;
     margin: 0 !important;
-    line-height: 1.2 !important;
+    line-height: 1.25 !important;
 }
 .fa-trust-pill {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     background: #ecfdf5 !important;
     border: 1px solid #a7f3d0 !important;
     color: #065f46 !important;
-    border-radius: 20px !important;
-    padding: 3px 10px !important;
-    font-size: 11.5px !important;
+    border-radius: 12px !important;
+    padding: 2px 8px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
-    line-height: 1.4 !important;
+    line-height: 1.3 !important;
     letter-spacing: 0.01em !important;
 }
 .fa-trust-pill svg {
@@ -99,31 +114,31 @@
     stroke: #059669 !important;
 }
 .fa-trust-pill i {
-    font-size: 11px !important;
+    font-size: 10px !important;
     color: #059669 !important;
 }
 .fa-header-subtitle, .cl-header-subtitle {
-    font-size: 13px !important;
+    font-size: 12px !important;
     font-weight: 400 !important;
     color: #64748b !important;
-    margin-top: 3px !important;
+    margin-top: 2px !important;
     line-height: 1.35 !important;
 }
 
-/* ── TIER 2: 6 Stat Cards Row (Strictly 1 Single Horizontal Row) ── */
+/* ── TIER 2: 6 Stat Cards Row (Strictly 1 Single Horizontal Row, Fits Domestic Agencies) ── */
 .cl-stat-grid {
     display: grid !important;
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    margin-bottom: 16px !important;
+    gap: 6px !important;
+    margin-bottom: 12px !important;
     width: 100% !important;
     box-sizing: border-box !important;
 }
 .cl-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 11px;
-    padding: 11px 12px;
+    border-radius: 10px;
+    padding: 8px 10px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -133,7 +148,7 @@
     min-width: 0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
     position: relative;
-    min-height: 66px;
+    min-height: 56px;
 }
 .cl-card:hover {
     transform: translateY(-1px);
@@ -144,20 +159,20 @@
 .cl-card-top {
     display: flex;
     align-items: center;
-    gap: 9px;
-    margin-bottom: 6px;
+    gap: 6px;
+    margin-bottom: 4px;
     min-width: 0;
 }
 .cl-card-icon {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    border-radius: 8px;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 13.5px;
+    font-size: 11px;
     transition: all 0.15s ease;
 }
 .cl-card-icon.blue   { background: #eff6ff; color: #2563eb; }
@@ -173,13 +188,14 @@
     overflow: hidden;
 }
 .cl-card-title, .cl-card-lbl {
-    font-size: 12.5px !important;
-    font-weight: 700 !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
     color: #1e293b !important;
-    line-height: 1.25 !important;
+    line-height: 1.2 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    letter-spacing: -0.015em !important;
     margin: 0 !important;
 }
 .cl-card:hover .cl-card-title, .cl-card:hover .cl-card-lbl {
@@ -195,7 +211,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-top: 2px;
+    margin-top: 1px;
     color: #64748b;
 }
 
@@ -531,31 +547,13 @@
 }
 .cl-quick-chip:hover { border-color: #009ef7; color: #009ef7; background: #f0f9ff; }
 
-/* Reset Button */
-.cl-reset-filters-btn {
-    height: 42px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0 14px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-.cl-reset-filters-btn:hover { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
-
 /* ── Live Marketplace Velocity Ticker (Point 2) ── */
 .fa-velocity-ticker {
     background: linear-gradient(90deg, #ecfdf5 0%, #f0f9ff 50%, #f5f3ff 100%);
     border: 1px solid #a7f3d0;
     border-radius: 10px;
-    padding: 7px 14px;
-    margin-bottom: 14px;
+    padding: 6px 14px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -596,7 +594,7 @@
 .ticker-content {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -605,12 +603,11 @@
 }
 .ticker-item {
     white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
 }
 .ticker-item strong { color: #0f172a; font-weight: 600; }
 .ticker-item em { font-style: normal; font-weight: 600; color: #0284c7; }
-.ticker-sep { color: #cbd5e1; flex-shrink: 0; }
+.ticker-sep { color: #cbd5e1; flex-shrink: 0; margin: 0 4px; }
 .ticker-dot {
     width: 6px;
     height: 6px;
@@ -1705,7 +1702,25 @@
 .cl-empty-sub { font-size: 12.5px; color: #64748b; max-width: 480px; margin: 0 auto 16px auto; }
 
 /* ── 15.6" Screen Responsive Breakpoints (Rule 14 & Rule 20) ── */
-@media (max-width: 1400px) {
+@media (max-width: 1440px) {
+    .cl-card {
+        padding: 7px 8px !important;
+    }
+    .cl-card-top {
+        gap: 5px !important;
+    }
+    .cl-card-icon {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        font-size: 10.5px !important;
+    }
+    .cl-card-title, .cl-card-lbl {
+        font-size: 11px !important;
+    }
+    .cl-card-sub {
+        font-size: 10px !important;
+    }
     .cl-subcards-grid {
         grid-template-columns: minmax(0, 1.75fr) minmax(0, 0.72fr) minmax(0, 1.25fr) minmax(0, 1.18fr) minmax(0, 1.1fr) !important;
         gap: 6px !important;
@@ -2058,12 +2073,6 @@
                     </div>
                     <input type="hidden" id="selected_sort" value="best" />
                 </div>
-
-                <!-- Reset Filters Button -->
-                <button type="button" class="cl-reset-filters-btn" onclick="resetAllAgencyFilters()">
-                    <i class="fas fa-redo font-size-11"></i>
-                    <span>Reset</span>
-                </button>
 
             </div>
 

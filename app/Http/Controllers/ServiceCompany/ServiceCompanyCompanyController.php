@@ -512,7 +512,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
         foreach ($placements as $p) {
             $items[] = [
                 'type' => 'placement',
-                'html' => '<i class="fas fa-check-circle text-success me-1"></i><strong>' . e($p->company_name) . '</strong> placed <em>' . e($p->job_title) . '</em>',
+                'html' => '<i class="fas fa-check-circle text-success me-1"></i><strong>' . e($p->company_name) . '</strong>&nbsp;placed&nbsp;<em>' . e($p->job_title) . '</em>',
             ];
         }
 
@@ -521,12 +521,12 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
             if ((int) $inv->to_invitation_status === 1) {
                 $items[] = [
                     'type' => 'partnership',
-                    'html' => '<i class="fas fa-handshake text-primary me-1"></i><strong>' . e($inv->from_company) . '</strong> partnered with <strong>' . e($inv->to_company) . '</strong>',
+                    'html' => '<i class="fas fa-handshake text-primary me-1"></i><strong>' . e($inv->from_company) . '</strong>&nbsp;partnered with&nbsp;<strong>' . e($inv->to_company) . '</strong>',
                 ];
             } elseif ((int) $inv->to_invitation_status === 0) {
                 $items[] = [
                     'type' => 'request',
-                    'html' => '<i class="fas fa-paper-plane text-info me-1"></i><strong>' . e($inv->from_company) . '</strong> sent mandate request to <strong>' . e($inv->to_company) . '</strong>',
+                    'html' => '<i class="fas fa-paper-plane text-info me-1"></i><strong>' . e($inv->from_company) . '</strong>&nbsp;sent mandate request to&nbsp;<strong>' . e($inv->to_company) . '</strong>',
                 ];
             }
         }
@@ -536,12 +536,12 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
             if ($log->event_type === 'services.commercials_updated') {
                 $items[] = [
                     'type' => 'commercials',
-                    'html' => '<i class="fas fa-file-invoice-dollar text-warning me-1"></i><strong>' . e($log->actor_name ?: 'Partner Agency') . '</strong> updated commercial terms',
+                    'html' => '<i class="fas fa-file-invoice-dollar text-warning me-1"></i><strong>' . e($log->actor_name ?: 'Partner Agency') . '</strong>&nbsp;updated commercial terms',
                 ];
             } elseif ($log->event_type === 'job.shared') {
                 $items[] = [
                     'type' => 'job_shared',
-                    'html' => '<i class="fas fa-briefcase text-primary me-1"></i>New mandate shared: <em>' . e($log->related_job_title ?: 'Active Job') . '</em>',
+                    'html' => '<i class="fas fa-briefcase text-primary me-1"></i>New mandate shared:&nbsp;<em>' . e($log->related_job_title ?: 'Active Job') . '</em>',
                 ];
             }
         }
