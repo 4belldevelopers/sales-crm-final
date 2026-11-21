@@ -1500,10 +1500,22 @@
             width: 100%;
             min-width: 0;
         }
+        /* ============================================================
+           Candidate Stream & Master Card + Sub-Card Architecture
+           Parity with All Candidates Tracker (Rule 20 Modern Card + Sub-Card)
+        ============================================================ */
+        .cv-cards-stream {
+            font-family: 'Poppins', sans-serif !important;
+            width: 100%;
+            min-width: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
         .cd-talent-card {
+            font-family: 'Poppins', sans-serif !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-left: 3.5px solid #009ef7 !important;
+            border-left: 3.5px solid #2563eb !important;
             border-radius: 10px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
             transition: all 0.2s ease !important;
@@ -1523,13 +1535,14 @@
         }
         .cd-talent-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.55fr) minmax(0, 1.45fr) minmax(0, 1.35fr) minmax(0, 1.5fr) minmax(0, 1.75fr) !important;
+            grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.35fr) minmax(0, 1.25fr) minmax(0, 1.25fr) minmax(0, 1.35fr) minmax(0, 1.65fr) !important;
             gap: 8px !important;
             padding: 10px 12px !important;
             width: 100% !important;
+            max-width: 100% !important;
             align-items: stretch !important;
         }
-        /* Checkbox styling — high visibility standard */
+        /* Checkbox styling — All Candidates Tracker Standard */
         .cd-talent-card .chk_list_item {
             border: 1.5px solid #94a3b8 !important;
             background-color: #ffffff !important;
@@ -1539,6 +1552,8 @@
             cursor: pointer !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
             transition: all 0.15s ease !important;
+            margin: 0 !important;
+            flex-shrink: 0 !important;
         }
         .cd-talent-card .chk_list_item:hover {
             border-color: #009ef7 !important;
@@ -1550,11 +1565,25 @@
         .cd-talent-avatar {
             width: 36px !important;
             height: 36px !important;
+            min-width: 36px !important;
             border-radius: 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: 700 !important;
+            font-size: 13.5px !important;
+            text-decoration: none !important;
+            overflow: hidden !important;
+            position: relative !important;
+            flex-shrink: 0 !important;
             border: 1px solid rgba(15, 23, 42, 0.08) !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
-            flex-shrink: 0 !important;
-            overflow: hidden !important;
+            text-transform: uppercase !important;
+        }
+        .cd-talent-avatar img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
         }
         .cd-talent-avatar .symbol-label {
             width: 100% !important;
@@ -1567,17 +1596,21 @@
             justify-content: center !important;
         }
         .cd-talent-company {
-            font-size: 11px !important;
+            font-size: 10.5px !important;
             font-weight: 500 !important;
             color: #64748b !important;
             display: flex !important;
             align-items: center !important;
             gap: 4px !important;
-            line-height: 1.3 !important;
+            line-height: 1.25 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
         }
         .cd-talent-company i {
-            color: #64748b !important;
-            font-size: 10px !important;
+            color: #94a3b8 !important;
+            font-size: 9.5px !important;
         }
         .cd-subcard-similar-clients {
             width: 100% !important;
@@ -1590,20 +1623,21 @@
         }
         .cd-talent-subcard {
             background: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
+            border: 1px solid #edf2f7 !important;
             border-radius: 8px !important;
-            padding: 8px 10px !important;
+            padding: 7px 9px !important;
             overflow: hidden !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
             min-width: 0 !important;
             transition: border-color 0.15s ease, background-color 0.15s ease !important;
+            font-family: 'Poppins', sans-serif !important;
         }
         .cd-talent-card:hover .cd-talent-subcard {
             border-color: #cbd5e1 !important;
         }
-        /* Header & Label standard matching CV Tracker */
+        /* Header & Label standard matching All Candidates Tracker */
         .cd-subcard-header {
             display: flex !important;
             align-items: center !important;
@@ -1664,32 +1698,82 @@
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
-            line-height: 1.3 !important;
+            line-height: 1.25 !important;
+            margin-top: 1px !important;
         }
         .cd-status-badge {
-            font-size: 9px !important;
+            font-size: 8.5px !important;
             font-weight: 700 !important;
-            padding: 2px 7px;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
+            padding: 1.5px 6px !important;
+            border-radius: 4px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            white-space: nowrap !important;
         }
-        .status-bench { background: #fff4de; color: #f6a609; border: 1px solid #ffe2a8; }
-        .status-pool { background: #f3effe; color: #7239ea; border: 1px solid #dfcffc; }
-        .status-hold { background: #fff8dd; color: #f59e0b; border: 1px solid #fde68a; }
-        .status-placed { background: #eef3ff; color: #009ef7; border: 1px solid #cfe2ff; }
-        .status-exited { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+        .status-bench { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+        .status-pool { background: #faf5ff !important; color: #7c3aed !important; border: 1px solid #ddd6fe !important; }
+        .status-hold { background: #fff7ed !important; color: #ea580c !important; border: 1px solid #fed7aa !important; }
+        .status-placed { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+        .status-exited { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fecaca !important; }
 
-        .cd-val-salary { font-size: 12.5px; color: #0f172a; font-weight: 700; line-height: 1.2; }
-        .cd-val-service { font-size: 10.5px; font-weight: 600; }
-        .cd-val-exp { font-size: 11px; }
-        .cd-val-avail { font-size: 11.5px; line-height: 1.2; }
-        .cd-val-wm { font-size: 10.5px; }
-        .cd-val-location { font-size: 11px; line-height: 1.2; }
-        .cd-manager-name { font-size: 11.5px; line-height: 1.25; }
-        .cd-rm-change-btn { font-size: 10.5px !important; font-weight: 600 !important; color: #009ef7 !important; cursor: pointer; text-decoration: none; }
-        .cd-rm-change-btn:hover { text-decoration: underline; color: #0077b6 !important; }
+        .cd-val-salary {
+            font-size: 12px !important;
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            line-height: 1.25 !important;
+            font-variant-numeric: tabular-nums !important;
+        }
+        .cd-val-service { font-size: 8.5px !important; font-weight: 700 !important; }
+        .cd-val-exp {
+            font-size: 10.5px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            line-height: 1.3 !important;
+            font-variant-numeric: tabular-nums !important;
+        }
+        .cd-val-avail {
+            font-size: 10.5px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            line-height: 1.3 !important;
+        }
+        .cd-val-wm {
+            font-size: 10.5px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            line-height: 1.3 !important;
+            margin-top: 2px !important;
+        }
+        .cd-val-location {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            line-height: 1.3 !important;
+        }
+        .cd-val-edu {
+            font-size: 10.5px !important;
+            font-weight: 500 !important;
+            color: #64748b !important;
+            line-height: 1.3 !important;
+            margin-top: 2px !important;
+            text-transform: uppercase !important;
+        }
+        .cd-manager-name {
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            line-height: 1.3 !important;
+        }
+        .cd-rm-change-btn {
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            color: #009ef7 !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            line-height: 1.35 !important;
+            margin-top: 2px !important;
+        }
+        .cd-rm-change-btn:hover { text-decoration: underline !important; color: #0077b6 !important; }
 
         /* Clients Pipeline Micro Grid */
         .cd-pipe-grid {
@@ -1736,13 +1820,13 @@
             color: #009ef7 !important;
         }
         .cd-pipe-summary {
-            font-size: 9.5px !important;
+            font-size: 10px !important;
             line-height: 1.2 !important;
             width: 100% !important;
             min-width: 0 !important;
         }
         .cd-pipe-summary .pipe-stat {
-            font-size: 9.5px !important;
+            font-size: 10px !important;
             white-space: nowrap !important;
         }
 
@@ -1817,16 +1901,24 @@
         /* 15.6" Screen responsiveness */
         @media only screen and (max-width: 1440px) {
             .cd-talent-card-grid {
-                grid-template-columns: minmax(0, 1.75fr) minmax(0, 1.5fr) minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1.45fr) minmax(0, 1.7fr) !important;
+                grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.35fr) minmax(0, 1.25fr) minmax(0, 1.25fr) minmax(0, 1.35fr) minmax(0, 1.65fr) !important;
                 gap: 6px !important;
                 padding: 8px 10px !important;
             }
+            .cd-talent-subcard { padding: 6px 8px !important; }
             .cd-subcard-header { padding: 0 !important; min-height: 18px !important; }
             .cd-subcard-body { padding: 0 !important; font-size: 11px !important; }
             .cd-subcard-label { font-size: 9px !important; }
             .cd-pipe-col .h { font-size: 7.5px !important; }
             .cd-pipe-col .v { font-size: 10px !important; }
             .cd-bench-sort-select { width: 160px !important; }
+        }
+        @media only screen and (max-width: 1180px) {
+            .cd-talent-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
+        }
+        @media only screen and (max-width: 640px) {
+            .cd-talent-card-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+            .cd-talent-card-bottom { flex-direction: column !important; align-items: flex-start !important; gap: 6px !important; }
         }
     </style>
 @endpush
