@@ -71,7 +71,7 @@
            Client Tracker & CV Tracker Design System
         ============================================================ */
         .cl-header, .cl-header-card {
-            background: #f8fafc !important;
+            background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 12px !important;
             padding: 10px 18px !important;
@@ -1519,11 +1519,29 @@
         }
         .cd-talent-card-grid {
             display: grid !important;
-            grid-template-columns: minmax(0, 1.95fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 2.15fr) !important;
+            grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.55fr) minmax(0, 1.45fr) minmax(0, 1.35fr) minmax(0, 1.5fr) minmax(0, 1.75fr) !important;
             gap: 8px !important;
             padding: 10px 12px !important;
             width: 100% !important;
             align-items: stretch !important;
+        }
+        /* Checkbox styling — high visibility standard */
+        .cd-talent-card .chk_list_item {
+            border: 1.5px solid #94a3b8 !important;
+            background-color: #ffffff !important;
+            border-radius: 4px !important;
+            width: 15px !important;
+            height: 15px !important;
+            cursor: pointer !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+            transition: all 0.15s ease !important;
+        }
+        .cd-talent-card .chk_list_item:hover {
+            border-color: #009ef7 !important;
+        }
+        .cd-talent-card .chk_list_item:checked {
+            background-color: #009ef7 !important;
+            border-color: #009ef7 !important;
         }
         .cd-talent-avatar {
             width: 36px !important;
@@ -1568,9 +1586,9 @@
         }
         .cd-talent-subcard {
             background: #f8fafc !important;
-            border: 1px solid #edf2f7 !important;
+            border: 1px solid #e2e8f0 !important;
             border-radius: 8px !important;
-            padding: 7px 9px !important;
+            padding: 8px 10px !important;
             overflow: hidden !important;
             display: flex !important;
             flex-direction: column !important;
@@ -1579,7 +1597,7 @@
             transition: border-color 0.15s ease, background-color 0.15s ease !important;
         }
         .cd-talent-card:hover .cd-talent-subcard {
-            border-color: #e2e8f0 !important;
+            border-color: #cbd5e1 !important;
         }
         /* Header & Label standard matching CV Tracker */
         .cd-subcard-header {
@@ -1795,15 +1813,15 @@
         /* 15.6" Screen responsiveness */
         @media only screen and (max-width: 1440px) {
             .cd-talent-card-grid {
-                grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.3fr) minmax(0, 1.4fr) minmax(0, 1.0fr) minmax(0, 1.3fr) minmax(0, 2.1fr) !important;
+                grid-template-columns: minmax(0, 1.75fr) minmax(0, 1.5fr) minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1.45fr) minmax(0, 1.7fr) !important;
                 gap: 6px !important;
                 padding: 8px 10px !important;
             }
-            .cd-subcard-header { padding: 4px 6px !important; min-height: 26px; }
-            .cd-subcard-body { padding: 6px 8px !important; font-size: 11px !important; }
+            .cd-subcard-header { padding: 0 !important; min-height: 18px !important; }
+            .cd-subcard-body { padding: 0 !important; font-size: 11px !important; }
             .cd-subcard-label { font-size: 9px !important; }
             .cd-pipe-col .h { font-size: 7.5px !important; }
-            .cd-pipe-col .v { font-size: 9.5px !important; }
+            .cd-pipe-col .v { font-size: 10px !important; }
             .cd-bench-sort-select { width: 160px !important; }
         }
     </style>
