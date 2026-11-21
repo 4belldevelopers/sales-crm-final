@@ -12,49 +12,19 @@
 
 ## Executive Summary
 
-This standard establishes exact visual and typographic balance between the **In-House Talent (Bench Candidates)** modern card + sub-card layout and the **All Candidates Tracker** (`cvtracker`) design standard, eliminating all clipping, premature truncation, and text-overflow issues.
+This standard establishes exact visual and typographic balance between the **In-House Talent (Bench Candidates)** modern card + sub-card layout and the **All Candidates Tracker** (`cvtracker`) design standard, eliminating all clipping, premature truncation, text-overflow issues, and CSS inheritance leaks.
 
-### Refined Typography, Sizing & Label Adjustments
-1. **Sub-Card 1 (Candidate Info & Identity):**
-   - **Candidate Info Label:** Replaced the previous `Full-time` pill next to the selection checkbox with `<span class="cd-subcard-label">Candidate Info</span>` (`font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: #64748b;`).
-   - **Candidate Name:** `12.5px`, `font-weight: 700`, `color: #0f172a`, `line-height: 1.25`.
-   - **Designation / Role:** `11px`, `font-weight: 500`, `color: #475569`, `line-height: 1.25`.
-   - **Bench Company Name:** Reduced to `10px` (`font-weight: 500; color: #64748b; line-height: 1.25;`), with building icon `9px #94a3b8`, providing proper visual hierarchy below role and name.
-   - **Avatar Box:** `36×36px`, `border-radius: 8px`, `font-size: 13.5px`, `font-weight: 700`.
-   - **Status Badge:** `8.5px`, `font-weight: 700`, `padding: 1.5px 6px`, `border-radius: 4px`, uppercase (`BENCH`, `POOL`, `HOLD`, `PLACED`, `EXITED`).
+### Root Cause Analysis: Universal CSS Selector Leak (`.bench-dash *`)
+- **The Bug:** Line 22 of `bench-candidates/index.blade.php` contained `.bench-dash, .bench-dash * { font-family: 'Poppins', sans-serif !important; font-size: 13px; }`.
+- **The Impact:** The universal selector `*` has element-level targeting that beats normal CSS inheritance on nested child elements. Even though parent containers had `font-size: 10px !important;` or `11px !important;`, any nested `<span>` (such as `span.text-truncate.text-gray-700.fw-semibold` for Work Mode) was forcibly targeted and styled at `13px` by Chrome DevTools.
+- **The Fix:**
+  1. Removed `*` from line 22, changing it to `.bench-dash { font-family: 'Poppins', sans-serif !important; font-size: 13px; }`. Base 13px applies to the page via inheritance, without overriding child component typography.
+  2. Targeted both the container and inner elements in CSS (`.cd-val-wm, .cd-val-wm *`, `.cd-val-location, .cd-val-location *`, etc.).
+  3. Applied explicit `style="font-size: 10px !important;"` (and `11px !important;`) directly onto all inner `<span>` and `<a>` elements in `bench-candidate-list-ajax.blade.php`.
 
-2. **Sub-Card 2 (Bill Rate / Compensation & Exp):**
-   - **Header Label:** Updated from `COMPENSATION & EXP` to **`BILL RATE`** (`font-size: 9.5px; font-weight: 700; uppercase; color: #64748b;`).
-   - **Service Category Badge:** Shortened from `Paid Services` / `Free Services` to **`Paid`** / **`Free`** (`font-size: 8.5px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px;`), freeing 45px+ of horizontal room in the header.
-   - **Bill Rate Row:** `Bill Rate:` label `10px fw-500 #64748b`, Amount `12px fw-700 #0f172a`, Suffix `9.5px fw-500 #64748b`.
-   - **Experience Numbers:** Total experience reduced to `10px fw-700 #0f172a` (with `Total` in `10px fw-500 #475569`), Relevant experience reduced to `9.5px fw-600 #334155`.
-   - **Notice Period Label:** Changed from `Notice:` to **`NP:`** (`font-size: 10px; font-weight: 500; color: #64748b;`), value `10px fw-600` with semantic status color.
-
-3. **Sub-Card 3 (Location & Degree):**
-   - **City / Location:** Reduced to `11px` (`font-weight: 600; color: #0f172a; line-height: 1.25;`), icon `9.5px #94a3b8`.
-   - **Work Mode:** Reduced to `10px` (`font-weight: 500; color: #475569; line-height: 1.25;`), icon `9px text-primary`.
-   - **Education / Degree:** Reduced to `10px` (`font-weight: 500; color: #64748b; line-height: 1.25; text-transform: uppercase;`), icon `9.5px #94a3b8`.
-
-4. **Sub-Card 4 (Relationship Manager):**
-   - **Manager Name:** Reduced to `11px` (`font-weight: 600; color: #0f172a; line-height: 1.25; min-height: 18px;`), icon `9.5px text-primary`.
-   - **Scope Line:** Reduced to `10px` (`font-weight: 500; color: #64748b; line-height: 1.25;`), icon `9px #94a3b8`.
-   - **Change Button:** Reduced to `10px` (`font-weight: 600; color: #009ef7; line-height: 1.25;`), icon `9px`.
-
-5. **Sub-Card 5 (Similar Clients):**
-   - Header: `9.5px fw-700 uppercase`.
-   - Badges (`Direct Client`, `Internal Client`, `My Organization`): `9.5px fw-700`, `padding: 1.5px 6px`.
-   - Counts: `11px fw-700 #0f172a`.
-
-6. **Sub-Card 6 (Clients Pipeline Activity):**
-   - 8-col Headers (`INW`, `SOU`, `SCR`, `EVA`, `NEG`, `OFF`, `JOI`, `REJ`): `8px fw-700 #64748b`.
-   - 8-col Counts: `10.5px fw-700 #0f172a`.
-   - Summary Row: Interviews `10px` (`#009ef7`), Views `10px` (`#0f172a`).
-
-7. **Sub-Card 7 (Bottom Activity Strip):**
-   - Skills Pills (Left): `10px fw-500`, `padding: 2px 7px`, `border-radius: 4px`, `background: #f1f5f9`, `color: #475569`.
-   - Added Timestamp (Rule 24): Label `10.5px fw-500 #64748b`, Date/Time `10.5px fw-700 #0f172a`.
-   - Days on Bench Badge: `10px fw-600`, `padding: 2px 7px`, `background: #fffbeb`, `color: #d97706`.
-   - Change Status Button: `10.5px fw-600`, `height: 26px`, `padding: 3px 10px`, `background: #ecfdf5`, `color: #059669`.
+### Sub-Card 2: Redundant "Bill Rate" Text Removal
+- **Previous:** Displayed `Bill Rate: $1 /H` inside Sub-Card 2 body, directly below the header label which already read `BILL RATE`.
+- **Refactored:** Removed the redundant `Bill Rate:` prefix label from the body row. It now displays clean **`$1 /H`** (Amount `12px fw-700 #0f172a`, Suffix `10px fw-500 #64748b`), identical to Candidate Tracker's clean salary display (`$80/H` / `₹15L/yr`).
 
 ---
 
@@ -66,15 +36,16 @@ This standard establishes exact visual and typographic balance between the **In-
 | Company Name | `10.5px` (fw: 500) | `10px` (fw: 500, icon `9px`) | Perfectly proportional |
 | Sub-Card 2 Header Label | `COMPENSATION & EXP` (truncated to `COMPENSAT`) | **`BILL RATE`** (`9.5px 700`) | 100% fits, zero truncation |
 | Sub-Card 2 Service Badge | `Paid Services` / `Free Services` | **`Paid`** / **`Free`** (`8.5px 700`) | Clean, compact |
+| Sub-Card 2 Amount Line | `Bill Rate: $1 /H` | **`$1 /H`** (zero repeated "Bill Rate" words) | Clean, identical to `$80/H` |
 | Total Exp Number | `10.5px 700` | **`10px 700`** | Proportional to label |
 | Relevant Exp Number | `10px 700` | **`9.5px 600`** | Clean subordinate format |
 | Notice Period Label | `Notice: Immediate` | **`NP: Immediate`** (`10px 600`) | Matches Candidate Tracker `NP:` |
-| Location City | `11.5px 600` | **`11px 600`** | Fits without early ellipsis |
-| Work Mode | `10.5px 500` | **`10px 500`** | Compact & legible |
-| Education / Degree | `10.5px 500` uppercase | **`10px 500`** uppercase | Compact & legible |
-| Relationship Mgr Name | `11.5px 600` | **`11px 600`** | Fits without early ellipsis |
-| Relationship Mgr Scope | `10.5px 500` | **`10px 500`** | Clean subordinate format |
-| Relationship Mgr Change | `10.5px 600` | **`10px 600`** | Crisp interactive CTA |
+| Location City | `13px` (via `.bench-dash *` leak) | **`11px 600`** | Fits without early ellipsis |
+| Work Mode | `13px` (via `.bench-dash *` leak) | **`10px 600`** | Compact & legible |
+| Education / Degree | `13px` (via `.bench-dash *` leak) | **`10px 500`** uppercase | Compact & legible |
+| Relationship Mgr Name | `13px` (via `.bench-dash *` leak) | **`11px 600`** | Fits without early ellipsis |
+| Relationship Mgr Scope | `13px` (via `.bench-dash *` leak) | **`10px 500`** | Clean subordinate format |
+| Relationship Mgr Change | `13px` (via `.bench-dash *` leak) | **`10px 600`** | Crisp interactive CTA |
 
 ---
 
@@ -82,16 +53,8 @@ This standard establishes exact visual and typographic balance between the **In-
 
 | File Path | Changes Made |
 |---|---|
-| `resources/views/service_company/bench-candidates/index.blade.php` | 1. Updated `.cd-talent-company` font-size to `10px` and icon to `9px`.<br>2. Updated `.cd-val-exp`, `.cd-val-avail`, `.cd-val-wm`, `.cd-val-edu`, `.cd-rm-change-btn` to `10px`.<br>3. Updated `.cd-val-location` and `.cd-manager-name` to `11px`. |
-| `resources/views/service_company/ajax_pages/bench-candidate-list-ajax.blade.php` | 1. Sub-Card 1: Replaced `Full-time` pill with `Candidate Info` label (`9.5px fw-700 uppercase`); reduced Company name font size to `10px`.<br>2. Sub-Card 2: Changed header label to `BILL RATE`; changed service badge text to `Paid` / `Free`; reduced Exp numbers to `10px` / `9.5px`; changed label `Notice:` to `NP:`.<br>3. Sub-Card 3: Reduced City to `11px`, Work Mode to `10px`, Degree to `10px`.<br>4. Sub-Card 4: Reduced Manager Name to `11px`, In-House Talent to `10px`, Change button to `10px`. |
-
----
-
-## 15.6" Screen Fit & Responsiveness (Rule 14 & Rule 20)
-
-- **Zero Truncation on Card Headers:** Shorter, punchier header labels (`BILL RATE` + `Paid` instead of `COMPENSATION & EXP` + `Paid Services`) completely eliminate the `COMPENSAT` truncation bug.
-- **Enhanced Horizontal Breathing Room:** Reduced typography on Location (`11px`/`10px`) and Relationship Manager (`11px`/`10px`) gives names and cities more character space before requiring ellipsis.
-- **Consistent Visual Hierarchy:** Bold candidate name (`12.5px 700`) remains the primary anchor, followed by designation (`11px 500`), company (`10px 500`), and metadata (`10px`).
+| `resources/views/service_company/bench-candidates/index.blade.php` | 1. Removed destructive universal selector `*` from line 22 (`.bench-dash { ... }`).<br>2. Added compound selectors `.cd-val-wm, .cd-val-wm *`, `.cd-val-location, .cd-val-location *`, `.cd-val-edu, .cd-val-edu *`, `.cd-val-exp, .cd-val-exp *`, `.cd-manager-name, .cd-manager-name *`, `.cd-rm-change-btn, .cd-rm-change-btn *` to enforce exact typography on all descendant nodes. |
+| `resources/views/service_company/ajax_pages/bench-candidate-list-ajax.blade.php` | 1. Removed repeated `Bill Rate:` prefix label in Sub-Card 2 body, showing clean `$1 /H`.<br>2. Placed explicit `style="font-size: 10px !important;"` (and `11px !important;`) on all inner `<span>` and `<a>` elements for Work Mode, Degree, Manager Name, In-House Talent, and Company Name. |
 
 ---
 
@@ -102,6 +65,5 @@ This standard establishes exact visual and typographic balance between the **In-
    - `php -l resources/views/service_company/ajax_pages/bench-candidate-list-ajax.blade.php` -> Passed (0 errors).
 2. **Compiled View Cache:**
    - `php artisan view:clear` -> Compiled views cleared successfully.
-3. **Tenancy & Security Verification:**
-   - Tenancy isolation by `company_id` maintained without mutation.
-   - All interactive drawer bindings (`chk_list_item`, `stage_sub_stage`, `hmb-listing`, `btn-similar-clients`) preserved.
+3. **Chrome DevTools Computed Value Invariant:**
+   - Verified that inner `<span>` elements now compute to `10px` or `11px` instead of leaking `13px` from `.bench-dash *`.

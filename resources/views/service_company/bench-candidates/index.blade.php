@@ -19,7 +19,7 @@
         /* +10% pass applied to every size below; page-title/.num/.money were already at/above the
            project's hard 16px ceiling (docs/UI_UX_STANDARDS.md) so they're clamped at 16px instead
            of growing further. */
-        .bench-dash, .bench-dash * { font-family: 'Poppins', sans-serif !important; font-size: 13px; }
+        .bench-dash { font-family: 'Poppins', sans-serif !important; font-size: 13px; }
         .bench-dash { color: #3f4254; }
         .bench-dash .tiny { font-size: 11px !important; }
         .bench-dash .xtiny { font-size: 10px !important; }
@@ -1724,54 +1724,55 @@
             font-variant-numeric: tabular-nums !important;
         }
         .cd-val-service { font-size: 8.5px !important; font-weight: 700 !important; }
-        .cd-val-exp {
+        .cd-val-exp, .cd-val-exp * {
             font-size: 10px !important;
             font-weight: 500 !important;
             color: #475569 !important;
             line-height: 1.3 !important;
             font-variant-numeric: tabular-nums !important;
         }
-        .cd-val-avail {
+        .cd-val-exp strong {
+            font-weight: 700 !important;
+            color: #0f172a !important;
+        }
+        .cd-val-avail, .cd-val-avail * {
             font-size: 10px !important;
             font-weight: 500 !important;
             color: #475569 !important;
             line-height: 1.3 !important;
         }
-        .cd-val-wm {
+        .cd-val-wm, .cd-val-wm * {
             font-size: 10px !important;
             font-weight: 500 !important;
             color: #475569 !important;
             line-height: 1.25 !important;
-            margin-top: 2px !important;
         }
-        .cd-val-location {
+        .cd-val-location, .cd-val-location * {
             font-size: 11px !important;
             font-weight: 600 !important;
             color: #0f172a !important;
             line-height: 1.25 !important;
         }
-        .cd-val-edu {
+        .cd-val-edu, .cd-val-edu * {
             font-size: 10px !important;
             font-weight: 500 !important;
             color: #64748b !important;
             line-height: 1.25 !important;
-            margin-top: 2px !important;
             text-transform: uppercase !important;
         }
-        .cd-manager-name {
+        .cd-manager-name, .cd-manager-name * {
             font-size: 11px !important;
             font-weight: 600 !important;
             color: #0f172a !important;
             line-height: 1.25 !important;
         }
-        .cd-rm-change-btn {
+        .cd-rm-change-btn, .cd-rm-change-btn * {
             font-size: 10px !important;
             font-weight: 600 !important;
             color: #009ef7 !important;
             cursor: pointer !important;
             text-decoration: none !important;
             line-height: 1.25 !important;
-            margin-top: 2px !important;
         }
         .cd-rm-change-btn:hover { text-decoration: underline !important; color: #0077b6 !important; }
 
