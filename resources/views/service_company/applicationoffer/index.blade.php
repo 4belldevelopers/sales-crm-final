@@ -895,7 +895,7 @@ body { overflow-x: hidden !important; }
 
 .ot-entity-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.9fr) minmax(0, 1.35fr) minmax(0, 1.5fr) minmax(0, 1.35fr) !important;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.6fr) minmax(0, 1.6fr) minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1.25fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -946,6 +946,14 @@ body { overflow-x: hidden !important; }
     font-weight: 700 !important;
     padding: 1.5px 6px !important;
     border-radius: 4px !important;
+    white-space: nowrap !important;
+    line-height: 1.3 !important;
+}
+
+.ot-micro-date {
+    font-size: 9.5px !important;
+    font-weight: 500 !important;
+    color: var(--ot-text-light) !important;
     white-space: nowrap !important;
     line-height: 1.3 !important;
 }
@@ -1125,13 +1133,74 @@ body { overflow-x: hidden !important; }
     padding: 1px 6px !important;
 }
 
-/* Sub-Card 3: Compensation */
-.ot-comp-body {
+/* Sub-Card 3: Combined Compensation & Offer Status */
+.ot-comp-status-body {
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
     gap: 4px !important;
     min-width: 0 !important;
+    justify-content: center !important;
+}
+
+.ot-comp-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+}
+
+.ot-comp-amount-wrap {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+}
+
+.ot-comp-link {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    text-decoration: none !important;
+    color: inherit !important;
+    min-width: 0 !important;
+}
+
+.ot-comp-amount {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: var(--ot-text-main) !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.ot-comp-edit-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    color: var(--ot-primary-deep) !important;
+    white-space: nowrap !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    padding: 1.5px 5.5px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-comp-edit-pill:hover:not(.is-locked) {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+}
+
+.ot-comp-edit-pill.is-locked {
+    background: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+    color: var(--ot-text-muted) !important;
 }
 
 .ot-create-offer-cta {
@@ -1139,12 +1208,12 @@ body { overflow-x: hidden !important; }
     align-items: center !important;
     gap: 5px !important;
     width: fit-content !important;
-    padding: 4px 10px !important;
-    border-radius: 6px !important;
+    padding: 3px 8px !important;
+    border-radius: 5px !important;
     background: #fffbeb !important;
     border: 1px solid #fcd34d !important;
     color: #b45309 !important;
-    font-size: 11px !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
     text-decoration: none !important;
     cursor: pointer !important;
@@ -1162,88 +1231,50 @@ body { overflow-x: hidden !important; }
     align-items: center !important;
     gap: 4px !important;
     width: fit-content !important;
-    padding: 3px 8px !important;
-    border-radius: 6px !important;
+    padding: 2px 7px !important;
+    border-radius: 5px !important;
     background: #fef3c7 !important;
     color: #b45309 !important;
-    font-size: 10.5px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
 }
 
 .ot-comp-hint {
-    font-size: 10px !important;
+    font-size: 9.5px !important;
     color: var(--ot-text-light) !important;
     font-weight: 500 !important;
 }
 
-.ot-comp-link {
+.ot-status-row {
     display: flex !important;
-    flex-direction: column !important;
-    gap: 3px !important;
-    text-decoration: none !important;
-    color: inherit !important;
-}
-
-.ot-comp-amount {
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    color: var(--ot-text-main) !important;
-    line-height: 1.2 !important;
-}
-
-.ot-comp-edit-pill {
-    display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    width: fit-content !important;
-    font-size: 10px !important;
-    font-weight: 600 !important;
-    color: var(--ot-primary-deep) !important;
-}
-
-.ot-comp-link:hover .ot-comp-edit-pill:not(.is-locked) {
-    text-decoration: underline !important;
-}
-
-.ot-comp-edit-pill.is-locked {
-    color: var(--ot-text-muted) !important;
-}
-
-/* Sub-Card 4: Offer Status */
-.ot-date-chip {
-    font-size: 9.5px !important;
-    font-weight: 600 !important;
-    color: var(--ot-text-muted) !important;
-    white-space: nowrap !important;
-}
-
-.ot-status-body {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
+    gap: 6px !important;
     min-width: 0 !important;
+    flex-wrap: nowrap !important;
 }
 
 .ot-offer-badge {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 5px !important;
+    gap: 4px !important;
     width: fit-content !important;
-    padding: 3px 9px !important;
-    border-radius: 6px !important;
-    font-size: 10.5px !important;
+    padding: 2px 7px !important;
+    border-radius: 5px !important;
+    font-size: 10px !important;
     font-weight: 700 !important;
-    line-height: 1.3 !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
 }
 
 .ot-offer-badge svg {
-    width: 12px !important;
-    height: 12px !important;
+    width: 11px !important;
+    height: 11px !important;
     flex-shrink: 0 !important;
 }
 
 .ot-offer-sub {
-    font-size: 10.5px !important;
+    font-size: 10px !important;
     color: var(--ot-text-muted) !important;
     font-weight: 500 !important;
     white-space: nowrap !important;
@@ -1251,7 +1282,7 @@ body { overflow-x: hidden !important; }
     text-overflow: ellipsis !important;
 }
 
-/* Sub-Card 5: Joining */
+/* Sub-Card 4: Joining */
 .ot-joining-body {
     display: flex !important;
     flex-direction: column !important;
@@ -1286,7 +1317,141 @@ body { overflow-x: hidden !important; }
     line-height: 1.2 !important;
 }
 
-/* Sub-Card 6: Bottom Strip */
+/* Sub-Card 5: Ownership & Recruiter (Reference Image 2) */
+.ot-owner-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+}
+
+.ot-owner-name {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+.ot-owner-name i {
+    color: #2563eb !important;
+    font-size: 11px !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-owner-company {
+    font-size: 10.5px !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+.ot-owner-company i {
+    color: #94a3b8 !important;
+    font-size: 10px !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-owner-submitted {
+    font-size: 10px !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+.ot-owner-submitted i {
+    color: #94a3b8 !important;
+    font-size: 10px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Sub-Card 6: Pipeline & Stage (Reference Image 3, Entire Card Clickable) */
+.ot-subcard-stage {
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-subcard-stage:hover,
+.ot-subcard-stage:focus-visible {
+    border-color: #93c5fd !important;
+    background: #f0f9ff !important;
+    outline: none !important;
+}
+
+.ot-subcard-stage:hover .ot-stage-cue {
+    text-decoration: underline !important;
+}
+
+.ot-stage-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2.5px !important;
+    min-width: 0 !important;
+}
+
+.ot-stage-trigger {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2.5px !important;
+    text-decoration: none !important;
+    min-width: 0 !important;
+}
+
+.ot-stage-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    padding: 2px 8px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.ot-substage-txt {
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+}
+
+.ot-substage-txt strong {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+}
+
+.ot-stage-cue {
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    color: #009ef7 !important;
+    line-height: 1.2 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+}
+
+/* Bottom Strip */
 .ot-entity-bottom {
     background: #ffffff !important;
     border-top: 1px solid var(--ot-border-soft) !important;
@@ -1527,9 +1692,9 @@ body { overflow-x: hidden !important; }
     .ot-pipe-card-v2 { padding: 8px 10px 9px 20px !important; min-width: 132px !important; }
 
     .ot-entity-grid {
-        grid-template-columns: minmax(0, 2fr) minmax(0, 1.85fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 1.35fr) !important;
-        gap: 7px !important;
-        padding: 9px 11px !important;
+        grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.5fr) minmax(0, 1.55fr) minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, 1.2fr) !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
     }
     .ot-subcard { padding: 7px 9px !important; }
     .ot-search-kbd { display: none !important; }

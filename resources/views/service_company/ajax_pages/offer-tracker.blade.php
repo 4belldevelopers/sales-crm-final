@@ -241,6 +241,38 @@
             $stageClass = ($row->master_status_id ?? 0) == 8 ? 'stage_sub_stage' : '';
         }
         $stageIsOffered = strtolower(trim((string) ($row->name ?? ''))) === 'offered';
+
+        /* Stage theme palette (Matches AppTracker & Reference Design) */
+        $stageTheme = match(strtolower(trim((string) ($row->name ?? '')))) {
+            'offered'             => ['bg' => '#fffbeb', 'color' => '#b45309', 'border' => '#fde68a'],
+            'inreview', 'review'  => ['bg' => '#eff6ff', 'color' => '#1d4ed8', 'border' => '#bfdbfe'],
+            'interview'           => ['bg' => '#faf5ff', 'color' => '#7c3aed', 'border' => '#ddd6fe'],
+            'accepted', 'joined'  => ['bg' => '#ecfdf5', 'color' => '#059669', 'border' => '#a7f3d0'],
+            'rejected', 'declined'=> ['bg' => '#fef2f2', 'color' => '#dc2626', 'border' => '#fecaca'],
+            default               => ['bg' => '#fffbeb', 'color' => '#b45309', 'border' => '#fde68a'],
+        };
+        $stagePillBg     = $stageTheme['bg'];
+        $stagePillColor  = $stageTheme['color'];
+        $stagePillBorder = $stageTheme['border'];
+
+        /* Relative submission time (e.g. "22 days ago", "Today") */
+        $rawCreated = $row->created_at ?? $row->of_stage_date ?? null;
+        $submittedAgoText = '–';
+        if (!empty($rawCreated) && date('d-m-Y', strtotime($rawCreated)) !== '01-01-1970') {
+            try {
+                $cDate = \Carbon\Carbon::parse($rawCreated);
+                $days = (int) $cDate->diffInDays($now);
+                if ($days === 0) {
+                    $submittedAgoText = 'Today';
+                } elseif ($days < 30) {
+                    $submittedAgoText = $days . ' ' . ($days === 1 ? 'day' : 'days') . ' ago';
+                } else {
+                    $submittedAgoText = $cDate->diffForHumans();
+                }
+            } catch (\Throwable $e) {
+                $submittedAgoText = '–';
+            }
+        }
     @endphp
 
     <!-- Master Primary Offer Card (Rule 20 Card + Sub-Card System) -->
@@ -257,7 +289,7 @@
          data-owner="{{ $ownerRecruiter ?: '—' }}"
          style="border-left: 3.5px solid {{ $cardAccentColor }} !important;">
 
-        <!-- Upper 5 Discrete Sub-Cards Grid -->
+        <!-- Upper 6 Discrete Sub-Cards Grid (Rule 20 Card + Sub-Card System) -->
         <div class="ot-entity-grid">
 
             <!-- SUB-CARD 1: CANDIDATE IDENTITY -->
@@ -324,74 +356,70 @@
                 </div>
             </div>
 
-            <!-- SUB-CARD 3: COMPENSATION & OFFER ACTION -->
-            <div class="ot-subcard ot-subcard-comp">
+            <!-- SUB-CARD 3: COMBINED COMPENSATION & OFFER STATUS -->
+            <div class="ot-subcard ot-subcard-comp-status">
                 <div class="ot-subcard-head">
-                    <span class="ot-subcard-label">Compensation</span>
-                    <span class="ot-micro-pill ot-pill-neutral">{{ $empLabel }}</span>
-                </div>
-                <div class="ot-comp-body">
-                    @if($hasPendingOffer)
-                        @if($isOwnJob)
-                            <a href="javascript:void(0);"
-                               class="create_offer ot-create-offer-cta"
-                               data-row-offerid="{{ $row->offer_id ?? '' }}"
-                               title="Create compensation & offer letter">
-                                <i class="fas fa-plus-circle"></i>
-                                <span>Create Offer</span>
-                            </a>
-                            <span class="ot-comp-hint">Salary not entered yet</span>
-                        @else
-                            <span class="ot-pending-pill">
-                                <i class="far fa-clock"></i> Offer Pending
-                            </span>
-                            <span class="ot-comp-hint">Managed by client</span>
-                        @endif
-                    @else
-                        @if($isOwnJob)
-                            <a href="javascript:void(0);"
-                               class="create_offer ot-comp-link"
-                               data-row-offerid="{{ $row->offer_id ?? '' }}"
-                               title="Click to edit compensation or offer details">
-                                <span class="ot-comp-amount">{{ $compDisplay }}</span>
-                                <span class="ot-comp-edit-pill">
-                                    <i class="fas fa-pen"></i> Change
-                                </span>
-                            </a>
-                        @else
-                            <a href="javascript:void(0);"
-                               class="ot-client-offer-warn ot-comp-link"
-                               title="Client-owned offer">
-                                <span class="ot-comp-amount">{{ $compDisplay }}</span>
-                                <span class="ot-comp-edit-pill is-locked">
-                                    <i class="fas fa-lock"></i> Client Offer
-                                </span>
-                            </a>
-                        @endif
-                    @endif
-                </div>
-            </div>
-
-            <!-- SUB-CARD 4: OFFER LIFECYCLE STATUS -->
-            <div class="ot-subcard ot-subcard-status">
-                <div class="ot-subcard-head">
-                    <span class="ot-subcard-label">Offer Status</span>
+                    <span class="ot-subcard-label">Compensation &amp; Status</span>
                     @if($offerStatusDate)
-                        <span class="ot-date-chip" title="Status Date">{{ $offerStatusDate }}</span>
+                        <span class="ot-micro-date" title="Status date: {{ $offerStatusDate }}">{{ $offerStatusDate }}</span>
+                    @elseif($empLabel)
+                        <span class="ot-micro-pill ot-pill-neutral">{{ $empLabel }}</span>
                     @endif
                 </div>
-                <div class="ot-status-body">
-                    <span class="ot-offer-badge" style="background:{{ $offerBadgeBg }};color:{{ $offerBadgeColor }};border:1px solid {{ $offerBadgeBorder }};">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $offerIconPath }}"/></svg>
-                        <span>{{ $offerBadgeLabel }}</span>
-                    </span>
-                    @if($offerStatusText)
-                        <span class="ot-offer-sub">{{ $offerStatusText }}</span>
-                    @endif
+                <div class="ot-comp-status-body">
+                    <!-- Compensation Amount Row -->
+                    <div class="ot-comp-row">
+                        @if($hasPendingOffer)
+                            @if($isOwnJob)
+                                <a href="javascript:void(0);"
+                                   class="create_offer ot-create-offer-cta"
+                                   data-row-offerid="{{ $row->offer_id ?? '' }}"
+                                   title="Create compensation & offer letter">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <span>Create Offer</span>
+                                </a>
+                                <span class="ot-comp-hint">Salary pending</span>
+                            @else
+                                <span class="ot-pending-pill">
+                                    <i class="far fa-clock"></i> Offer Pending
+                                </span>
+                            @endif
+                        @else
+                            <div class="ot-comp-amount-wrap">
+                                @if($isOwnJob)
+                                    <a href="javascript:void(0);"
+                                       class="create_offer ot-comp-link"
+                                       data-row-offerid="{{ $row->offer_id ?? '' }}"
+                                       title="Click to edit compensation or offer details">
+                                        <span class="ot-comp-amount">{{ $compDisplay }}</span>
+                                        <span class="ot-comp-edit-pill"><i class="fas fa-pen"></i> Change</span>
+                                    </a>
+                                @else
+                                    <a href="javascript:void(0);"
+                                       class="ot-client-offer-warn ot-comp-link"
+                                       title="Client-owned offer">
+                                        <span class="ot-comp-amount">{{ $compDisplay }}</span>
+                                        <span class="ot-comp-edit-pill is-locked"><i class="fas fa-lock"></i> Client</span>
+                                    </a>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Offer Lifecycle Status Row -->
+                    <div class="ot-status-row">
+                        <span class="ot-offer-badge" style="background:{{ $offerBadgeBg }};color:{{ $offerBadgeColor }};border:1px solid {{ $offerBadgeBorder }};">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $offerIconPath }}"/></svg>
+                            <span>{{ $offerBadgeLabel }}</span>
+                        </span>
+                        @if($offerStatusText)
+                            <span class="ot-offer-sub" title="{{ $offerStatusText }}">{{ $offerStatusText }}</span>
+                        @endif
+                    </div>
                 </div>
             </div>
 
-            <!-- SUB-CARD 5: JOINING & STAGE -->
+            <!-- SUB-CARD 4: JOINING -->
             <div class="ot-subcard ot-subcard-joining">
                 <div class="ot-subcard-head">
                     <span class="ot-subcard-label">Joining</span>
@@ -417,41 +445,74 @@
                 </div>
             </div>
 
-        </div>
-        <!-- End Upper 5 Sub-Cards Grid -->
+            <!-- SUB-CARD 5: OWNERSHIP & RECRUITER (Reference Design Match) -->
+            <div class="ot-subcard ot-subcard-owner">
+                <div class="ot-subcard-head">
+                    <span class="ot-subcard-label"><i class="fas fa-user-tie me-1"></i>Ownership &amp; Recruiter</span>
+                </div>
+                <div class="ot-owner-body">
+                    <div class="ot-owner-name" title="{{ $ownerRecruiter !== '' ? e($ownerRecruiter) : 'Recruiter: —' }}">
+                        <i class="fas fa-user-circle text-primary me-1"></i><span>{{ $ownerRecruiter !== '' ? $ownerRecruiter : '—' }}</span>
+                    </div>
+                    <div class="ot-owner-company" title="{{ $ownerCompany !== '' ? e($ownerCompany) : 'Company: —' }}">
+                        <i class="fas fa-building me-1"></i><span>{{ $ownerCompany !== '' ? $ownerCompany : '—' }}</span>
+                    </div>
+                    <div class="ot-owner-submitted" title="Submitted: {{ $submittedAgoText }}">
+                        <i class="far fa-calendar-alt me-1"></i><span>Submitted: {{ $submittedAgoText }}</span>
+                    </div>
+                </div>
+            </div>
 
-        <!-- SUB-CARD 6: BOTTOM ACTIVITY, OWNERSHIP & QUICK ACTIONS STRIP -->
+            <!-- SUB-CARD 6: PIPELINE & STAGE (Reference Design Match) -->
+            <div class="ot-subcard ot-subcard-stage {{ $stageClass }}"
+                 data-row-id="{{ $row->wiseId }}"
+                 data-toggle="modal"
+                 data-target="#{{ $stageClass }}"
+                 role="button"
+                 tabindex="0"
+                 title="Click anywhere on this stage card to update candidate stage">
+                <div class="ot-subcard-head">
+                    <span class="ot-subcard-label">Pipeline &amp; Stage</span>
+                </div>
+                <div class="ot-stage-body">
+                    <div class="ot-stage-trigger">
+                        <span class="ot-stage-pill" style="background:{{ $stagePillBg }};color:{{ $stagePillColor }};border:1px solid {{ $stagePillBorder }};">
+                            {{ $masterStatusName }}
+                        </span>
+                        @if($childStageName)
+                            <span class="ot-substage-txt" title="Sub-Stage: {{ $childStageName }}">
+                                Sub: <strong>{{ $childStageName }}</strong>
+                            </span>
+                        @else
+                            <span class="ot-substage-txt">Sub: <strong>Standard</strong></span>
+                        @endif
+                        <span class="ot-stage-cue">Update Stage <i class="fas fa-chevron-right ms-1"></i></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- End Upper 6 Sub-Cards Grid -->
+
+        <!-- SUB-CARD 7 / BOTTOM STRIP: REFERENCE & PRIMARY ACTIONS -->
         <div class="ot-entity-bottom">
             <div class="ot-bottom-left">
-                <div class="ot-bottom-item">
-                    <span class="ot-bottom-lbl">Owner:</span>
-                    <strong class="ot-bottom-strong">{{ $ownerRecruiter ?: '—' }}</strong>
-                    @if($ownerCompany)
-                        <span class="ot-bottom-muted">({{ $ownerCompany }})</span>
-                    @endif
-                </div>
-                <span class="ot-dot-sep">&bull;</span>
-                <div class="ot-bottom-item">
-                    <span class="ot-bottom-lbl">Stage:</span>
-                    @if(!empty($stageClass))
-                        <a href="javascript:void(0);"
-                           data-row-id="{{ $row->wiseId }}"
-                           class="ot-stage-btn {{ $stageClass }} {{ $stageIsOffered ? 'ot-stage-offered' : '' }}"
-                           data-toggle="modal"
-                           data-target="#{{ $stageClass }}"
-                           title="Update candidate stage">{{ $masterStatusName }}</a>
-                    @else
-                        <span class="ot-stage-btn ot-stage-disabled {{ $stageIsOffered ? 'ot-stage-offered' : '' }}">{{ $masterStatusName }}</span>
-                    @endif
-                    @if($childStageName)
-                        <span class="ot-substage-pill">{{ $childStageName }}</span>
-                    @endif
-                </div>
                 @if(!empty($row->offer_id))
+                    <div class="ot-bottom-item">
+                        <span class="ot-bottom-lbl">Offer Ref:</span>
+                        <strong class="ot-bottom-strong">#OFF-{{ str_pad((string) $row->offer_id, 4, '0', STR_PAD_LEFT) }}</strong>
+                    </div>
+                    <span class="ot-dot-sep">&bull;</span>
+                @endif
+                <div class="ot-bottom-item">
+                    <span class="ot-bottom-lbl">Candidate ID:</span>
+                    <span class="ot-bottom-muted">#APP-{{ $row->wiseId }}</span>
+                </div>
+                @if($offerStatusDate)
                     <span class="ot-dot-sep">&bull;</span>
                     <div class="ot-bottom-item">
-                        <span class="ot-bottom-lbl">Ref:</span>
-                        <span class="ot-bottom-muted">#OFF-{{ str_pad((string) $row->offer_id, 4, '0', STR_PAD_LEFT) }}</span>
+                        <span class="ot-bottom-lbl">Status Date:</span>
+                        <span class="ot-bottom-muted">{{ $offerStatusDate }}</span>
                     </div>
                 @endif
             </div>
@@ -464,17 +525,6 @@
                             title="{{ $hasPendingOffer ? 'Create Offer' : 'Edit Offer Details' }}">
                         <i class="fas {{ $hasPendingOffer ? 'fa-plus' : 'fa-file-signature' }}"></i>
                         <span>{{ $hasPendingOffer ? 'Create Offer' : 'Manage Offer' }}</span>
-                    </button>
-                @endif
-                @if(!empty($stageClass))
-                    <button type="button"
-                            class="ot-action-ghost {{ $stageClass }}"
-                            data-row-id="{{ $row->wiseId }}"
-                            data-toggle="modal"
-                            data-target="#{{ $stageClass }}"
-                            title="Move candidate stage">
-                        <i class="fas fa-random"></i>
-                        <span>Stage</span>
                     </button>
                 @endif
                 <button type="button"
