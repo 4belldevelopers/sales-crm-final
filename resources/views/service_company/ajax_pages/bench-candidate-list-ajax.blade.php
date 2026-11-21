@@ -165,32 +165,38 @@
             $serviceClass = @$row->comission_type == 2 ? 'text-success' : 'text-muted';
             $billAmountClean = number_format((float) $billFormatViewSalary->amount, 0);
 
-            // Status Badge & Border Theme Accent
+            // Status Badge & Border Theme Accent (Synchronized with CV Tracker & Status KPI grid)
             $statusId = (int) ($row->status ?? 0);
             $statusName = $row->master_status_name ?? 'Bench';
-            if ($statusId == 1) { // Pool
+            if ($statusId == 1) { // Pool (Cyan)
                 $statusPillClass = 'status-pool';
-                $statusBorderAccent = '#7c3aed';
+                $statusBorderAccent = '#0284c7';
+                $statusPillStyle = 'background: #f0f9ff !important; color: #0284c7 !important; border: 1px solid #bae6fd !important;';
                 $subS = 'Newly added';
-            } elseif ($statusId == 2) { // Bench
+            } elseif ($statusId == 2) { // Bench (Amber)
                 $statusPillClass = 'status-bench';
-                $statusBorderAccent = '#10b981';
+                $statusBorderAccent = '#d97706';
+                $statusPillStyle = 'background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important;';
                 $subS = optional(GeneralMethod::bench_status_subline($row->status))->name ?? 'Open For Work';
-            } elseif ($statusId == 4) { // On Hold / Paused
+            } elseif ($statusId == 4) { // On Hold / Paused (Slate)
                 $statusPillClass = 'status-hold';
-                $statusBorderAccent = '#f59e0b';
+                $statusBorderAccent = '#64748b';
+                $statusPillStyle = 'background: #f8fafc !important; color: #64748b !important; border: 1px solid #cbd5e1 !important;';
                 $subS = optional(GeneralMethod::bench_status_subline($row->status))->name ?? 'On Hold';
-            } elseif ($statusId == 3) { // Placed
+            } elseif ($statusId == 3) { // Placed (Green)
                 $statusPillClass = 'status-placed';
-                $statusBorderAccent = '#009ef7';
+                $statusBorderAccent = '#16a34a';
+                $statusPillStyle = 'background: #ecfdf5 !important; color: #16a34a !important; border: 1px solid #a7f3d0 !important;';
                 $subS = optional(GeneralMethod::bench_status_subline($row->status))->name ?? 'Placed';
-            } elseif ($statusId == 5) { // Exited
+            } elseif ($statusId == 5) { // Exited (Red)
                 $statusPillClass = 'status-exited';
-                $statusBorderAccent = '#94a3b8';
+                $statusBorderAccent = '#dc2626';
+                $statusPillStyle = 'background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fecaca !important;';
                 $subS = optional(GeneralMethod::bench_status_subline($row->status))->name ?? 'Exited';
             } else {
                 $statusPillClass = 'status-bench';
-                $statusBorderAccent = '#10b981';
+                $statusBorderAccent = '#d97706';
+                $statusPillStyle = 'background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important;';
                 $subS = 'Bench';
             }
 
@@ -221,62 +227,68 @@
             $displayManagerName = $limitWords($managerName . $extra, 20);
         @endphp
 
-        <!-- Master Primary Talent Card (Rule 20 Modern 5-Subcard Layout) -->
-        <article class="cd-talent-card" data-bench-row-id="{{ $row->id }}" data-candidate-id="{{ $row->id }}" style="border-left-color: {{ $statusBorderAccent }} !important;">
-            <!-- Upper Sub-Cards Grid (5 Spacious Discrete Sections) -->
+        <!-- Master Primary Talent Card (Rule 20 Modern 6-Subcard + Strip Layout) -->
+        <article class="cd-talent-card" data-bench-row-id="{{ $row->id }}" data-candidate-id="{{ $row->id }}" style="border-left: 3.5px solid {{ $statusBorderAccent }} !important;">
+            <!-- Upper Sub-Cards Grid (6 Spacious Discrete Sections) -->
             <div class="cd-talent-card-grid">
 
                 <!-- Sub-Card 1: Talent Profile & Status (Rule 20 Standard) -->
                 <div class="cd-talent-subcard cd-subcard-talent">
                     <div class="cd-subcard-header">
                         <div class="d-flex align-items-center gap-1.5 min-w-0">
-                            <div class="form-check form-check-sm form-check-custom form-check-solid m-0">
-                                <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox"
+                            <label class="form-check form-check-sm form-check-custom form-check-solid m-0" style="cursor: pointer;" title="Select candidate">
+                                <input class="form-check-input chk_list_item cursor-pointer" name="chk_list_item[]" type="checkbox"
                                     data-skills="{{ e($row->skills ?? '') }}"
                                     data-cname="{{ e($row->full_name ?? '') }}"
                                     value="{{ $row->id }}"
+                                    style="width: 15px; height: 15px; margin: 0; flex-shrink: 0;"
                                     title="Select candidate" />
-                            </div>
+                            </label>
                             <!-- Hiring Category: Full-Time / Contract -->
                             <span class="badge badge-light-primary text-primary fs-9 py-0.5 px-1.5 fw-bold border border-primary-subtle text-truncate" title="Hiring Category">
-                                <i class="fas fa-briefcase me-1" style="font-size: 8.5px;"></i>{{ $outsourcing_type }}
+                                <i class="fa-solid fa-briefcase me-1" style="font-size: 8.5px;"></i>{{ $outsourcing_type }}
                             </span>
                         </div>
                         <div class="d-flex align-items-center gap-1">
                             @if($isAds)
-                                <span class="badge badge-light-danger fs-9 py-0 px-1">Ads</span>
+                                <span class="badge badge-light-danger fs-9 py-0.5 px-1.5 fw-bold border border-danger-subtle">Ads</span>
                             @endif
                             <!-- Candidate Availability Status (Bench) -->
-                            <span class="cd-status-badge {{ $statusPillClass }} stage_sub_stage" data-row-id="{{ $row->id }}" title="Click to change status" style="cursor: pointer;">
+                            <span class="cd-status-badge {{ $statusPillClass }} stage_sub_stage cursor-pointer" data-row-id="{{ $row->id }}" title="Click to change status" style="{{ $statusPillStyle }}">
                                 {{ $statusName }}
                             </span>
                         </div>
                     </div>
-                    <div class="cd-subcard-body">
-                        <div class="d-flex align-items-start gap-2.5">
+                    <div class="cd-subcard-body pt-1">
+                        <div class="d-flex align-items-start gap-2.5 min-w-0">
                             <!-- Refined Visual Profile Avatar Icon -->
-                            <div class="cd-talent-avatar symbol symbol-38px flex-shrink-0" style="overflow:hidden; border-radius:10px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15,23,42,0.04);">
-                                <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="{{ $profile_sidebar_css }} d-flex w-100 h-100" title="{{ ucwords(@$row->full_name) }}">
-                                    <div class="symbol-label {{ $bgTextDecore }} w-100 h-100 d-flex align-items-center justify-content-center fw-bolder" style="border-radius:10px; font-size: 13.5px;">{{ $strVal }}</div>
-                                </a>
-                            </div>
-                            <div class="d-flex flex-column min-w-0 flex-grow-1">
+                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="{{ $profile_sidebar_css }} cd-talent-avatar flex-shrink-0" title="{{ ucwords(@$row->full_name) }}" style="width: 36px !important; height: 36px !important; min-width: 36px !important; border-radius: 8px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-weight: 700 !important; font-size: 13.5px !important; text-decoration: none !important; overflow: hidden !important; flex-shrink: 0 !important; border: 1px solid rgba(15, 23, 42, 0.08) !important; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;">
+                                @if (!empty($row->photo))
+                                    <img src="{{ $row->photo }}" alt="{{ e($displayFullName) }}" style="width: 100% !important; height: 100% !important; border-radius: 8px !important; object-fit: cover !important;" />
+                                @else
+                                    <div class="symbol-label {{ $bgTextDecore }} w-100 h-100 d-flex align-items-center justify-content-center fw-bolder" style="border-radius: 8px; font-size: 13.5px;">{{ $strVal }}</div>
+                                @endif
+                            </a>
+                            <div class="d-flex flex-column min-w-0 flex-grow-1 overflow-hidden">
                                 <!-- 1. Candidate Name -->
                                 <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                                    class="cd-talent-name text-dark fw-bolder text-hover-primary fs-6 {{ $profile_sidebar_css }} text-truncate"
-                                    data-toggle="tooltip" title="{{ ucwords(@$row->full_name) }}">
+                                    class="cd-talent-name {{ $profile_sidebar_css }}"
+                                    title="{{ ucwords(@$row->full_name) }}"
+                                    style="font-size: 12.5px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.25 !important; display: block !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; text-decoration: none !important;">
                                     {{ $displayFullName }}
                                 </a>
                                 <!-- 2. Designation -->
-                                <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                                    class="cd-talent-role text-muted fw-bold d-block fs-7 text-hover-primary {{ $profile_sidebar_css }} text-truncate"
-                                    data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}">
-                                    {{ $displayDesignation }}
-                                </a>
+                                <div class="cd-talent-role"
+                                    title="{{ ucwords(@$row->current_designation) }}"
+                                    style="font-size: 11px !important; font-weight: 500 !important; color: #475569 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; line-height: 1.3 !important; margin-top: 2px !important;">
+                                    {{ $displayDesignation !== '' ? $displayDesignation : '—' }}
+                                </div>
                                 <!-- 3. Bench Company Name -->
-                                <div class="cd-talent-company d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Bench Company: {{ $benchCompanyName }}">
-                                    <i class="fa fa-building text-primary" style="font-size: 9.5px;"></i>
-                                    <span class="fs-8 fw-semibold text-gray-700 text-truncate">{{ $displayBenchCompany }}</span>
+                                <div class="cd-talent-company text-truncate"
+                                    title="Bench Company: {{ $benchCompanyName }}"
+                                    style="font-size: 11px !important; font-weight: 500 !important; color: #64748b !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; line-height: 1.3 !important; margin-top: 2px !important;">
+                                    <i class="fa-regular fa-building me-1 text-muted" style="width: 12px; text-align: center;"></i>
+                                    <span>{{ $displayBenchCompany !== '' ? $displayBenchCompany : '—' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -286,30 +298,31 @@
                 <!-- Sub-Card 2: Compensation & Experience -->
                 <div class="cd-talent-subcard cd-subcard-comp-exp">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">COMP &amp; EXP</span>
+                        <span class="cd-subcard-label text-uppercase text-truncate">COMP &amp; EXP</span>
                         <!-- Service Category: Paid / Free Services -->
                         <span class="badge {{ @$row->comission_type == 2 ? 'badge-light-success text-success border border-success-subtle' : 'badge-light-secondary text-muted border border-gray-300' }} fs-9 py-0.5 px-1.5 fw-bold" title="Service Category">
-                            <i class="fa fa-circle-check me-1" style="font-size: 8.5px;"></i>{{ $serviceType }}
+                            <i class="fa-solid fa-circle-check me-1" style="font-size: 8.5px;"></i>{{ $serviceType }}
                         </span>
                     </div>
-                    <div class="cd-subcard-body">
+                    <div class="cd-subcard-body pt-1">
                         <!-- 1. Bill Rate -->
-                        <div class="cd-val-salary d-flex align-items-center gap-1">
-                            <span class="fs-8 text-muted fw-semibold">Bill Rate:</span>
-                            <strong class="fs-6 text-dark">{!! $bill_rate_currency !!}{{ $billAmountClean }} /{{ mb_substr($bill_rate_mode, 0, 1) }}</strong>
+                        <div class="cd-val-salary d-flex align-items-baseline gap-1" title="Bill Rate: {!! $bill_rate_currency !!}{{ $billAmountClean }} / {{ $bill_rate_mode }}">
+                            <span style="font-size: 10px; color: #64748b; font-weight: 500;">Bill Rate:</span>
+                            <strong style="font-size: 13.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">{!! $bill_rate_currency !!}{{ $billAmountClean }}</strong>
+                            <span style="font-size: 10px; color: #64748b; font-weight: 500;">/{{ mb_substr($bill_rate_mode, 0, 1) }}</span>
                         </div>
-                        <!-- 2. Total Experience & Relevant Experience (4 Y Rel format) -->
-                        <div class="cd-val-exp text-dark fw-bold fs-7 d-flex align-items-center gap-1 mt-0.5">
-                            <i class="far fa-clock text-muted" style="font-size: 11px;"></i>
-                            <span>{{ $formattedExperience }} Y Total</span>
+                        <!-- 2. Total Experience & Relevant Experience -->
+                        <div class="cd-val-exp d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Total: {{ $formattedExperience }} Yrs{{ (!empty($formattedRelExperience) && $formattedRelExperience > 0) ? ' | Rel: ' . $formattedRelExperience . ' Yrs' : '' }}" style="font-size: 11px; line-height: 1.35;">
+                            <i class="fa-solid fa-briefcase me-1 text-muted" style="width: 12px; text-align: center; font-size: 10px;"></i>
+                            <span style="color: #0f172a; font-weight: 600;"><strong>{{ $formattedExperience !== '' ? $formattedExperience : '0' }} Y</strong> Total</span>
                             @if (!empty($formattedRelExperience) && $formattedRelExperience > 0)
-                                <span class="badge badge-light-primary text-primary fs-9 py-0 px-1.5 fw-bolder" title="Relevant Experience">{{ $formattedRelExperience }} Y Rel</span>
+                                <span class="ms-1" style="color: #64748b; font-size: 10px;">(Rel <strong>{{ $formattedRelExperience }} Y</strong>)</span>
                             @endif
                         </div>
                         <!-- 3. Notice Period -->
-                        <div class="cd-val-avail {{ $availClass }} fw-bold fs-8 d-flex align-items-center gap-1 mt-0.5" title="Notice Period">
-                            <i class="far fa-calendar-check" style="font-size: 11px;"></i>
-                            <span>Notice: <strong>{{ $availLine }}</strong></span>
+                        <div class="cd-val-avail {{ $availClass }} d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Notice Period: {{ $availLine }}" style="font-size: 11px; font-weight: 600; line-height: 1.35;">
+                            <i class="fa-regular fa-clock me-1 text-muted" style="width: 12px; text-align: center; font-size: 10px;"></i>
+                            <span>Notice: <strong class="{{ $availClass }}">{{ $availLine }}</strong></span>
                         </div>
                     </div>
                 </div>
@@ -317,24 +330,23 @@
                 <!-- Sub-Card 3: Location & Education -->
                 <div class="cd-talent-subcard cd-subcard-avail-loc">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">LOCATION &amp; EDUCATION</span>
+                        <span class="cd-subcard-label text-uppercase text-truncate">LOCATION &amp; DEGREE</span>
                     </div>
-                    <div class="cd-subcard-body">
+                    <div class="cd-subcard-body pt-1">
                         <!-- First Row: City, State, Country -->
-                        <div class="cd-val-location text-dark fw-bold fs-8 text-truncate mb-1" data-toggle="tooltip" title="{{ $fullLocation }}">
-                            <i class="fas fa-map-marker-alt text-danger me-1" style="font-size: 11px;"></i>
-                            <span>{{ $fullLocation }}</span>
+                        <div class="cd-val-location text-truncate d-flex align-items-center" style="font-size: 11.5px; font-weight: 600; line-height: 1.35; color: #0f172a;" title="{{ $fullLocation }}">
+                            <i class="fa-solid fa-location-dot me-1 text-muted" style="width: 13px; text-align: center; font-size: 10px;"></i>
+                            <span class="text-truncate">{{ $fullLocation }}</span>
                         </div>
-                        <!-- Second Row: Work Mode & Education / Qualification -->
-                        <div class="d-flex align-items-center gap-1.5 flex-wrap">
-                            <span class="cd-val-wm {{ $wmClass }} fw-bold fs-8 d-inline-flex align-items-center">
-                                <i class="fas fa-building me-1" style="font-size: 10px;"></i>{{ $wmLabel }}
-                            </span>
-                            @if (!empty($qualificationName))
-                                <span class="badge badge-light-secondary text-gray-700 fs-9 py-0.5 px-1.5 border border-gray-200 text-truncate" title="Qualification: {{ $qualificationName }}" style="max-width: 130px;">
-                                    <i class="fas fa-graduation-cap me-1 text-primary" style="font-size: 9px;"></i>{{ \Illuminate\Support\Str::limit($qualificationName, 15) }}
-                                </span>
-                            @endif
+                        <!-- Second Row: Work Mode -->
+                        <div class="cd-val-wm text-truncate d-flex align-items-center mt-1" style="font-size: 11px; font-weight: 500; color: #475569; line-height: 1.35;" title="Work Mode: {{ $wmLabel }}">
+                            <i class="fa-solid fa-building me-1 text-primary" style="width: 13px; text-align: center; font-size: 10px;"></i>
+                            <span class="text-truncate {{ $wmClass }} fw-semibold">{{ $wmLabel }}</span>
+                        </div>
+                        <!-- Third Row: Qualification / Degree in Uppercase -->
+                        <div class="cd-val-edu text-truncate d-flex align-items-center mt-1" style="font-size: 11px; font-weight: 500; color: #64748b; line-height: 1.35;" title="{{ !empty($qualificationName) ? strtoupper($qualificationName) : 'Education: —' }}">
+                            <i class="fa-solid fa-graduation-cap me-1 text-muted" style="width: 13px; text-align: center; font-size: 10px;"></i>
+                            <span class="text-truncate">{{ !empty($qualificationName) ? strtoupper($qualificationName) : '—' }}</span>
                         </div>
                     </div>
                 </div>
@@ -342,15 +354,20 @@
                 <!-- Sub-Card 4: Relationship Manager -->
                 <div class="cd-talent-subcard cd-subcard-manager">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label"><i class="fa fa-user-tie me-1"></i>Relationship Mgr</span>
+                        <span class="cd-subcard-label text-uppercase text-truncate"><i class="fa-solid fa-user-tie me-1 text-primary"></i>Relationship Mgr</span>
                     </div>
-                    <div class="cd-subcard-body">
-                        <div class="cd-manager-name text-dark fw-bolder wrap-2 fs-7" data-toggle="tooltip" title="{{ $managerName }}{{ $extra }}">
-                            {{ $displayManagerName }}
+                    <div class="cd-subcard-body pt-1">
+                        <div class="cd-manager-name text-truncate d-flex align-items-center" style="font-size: 11.5px; font-weight: 600; line-height: 1.35; min-height: 18px;" title="{{ $managerName }}{{ $extra }}">
+                            <i class="fa-regular fa-circle-user me-1 text-primary" style="width: 13px; text-align: center; font-size: 10.5px;"></i>
+                            <span class="text-dark text-truncate">{{ $displayManagerName }}</span>
                         </div>
-                        <div class="mt-1">
-                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing cd-rm-change-btn">
-                                <i class="fa fa-pen me-1"></i>Change
+                        <div class="text-truncate d-flex align-items-center mt-1" style="font-size: 11px; font-weight: 500; color: #64748b; line-height: 1.35;">
+                            <i class="fa-regular fa-building me-1 text-muted" style="width: 13px; text-align: center; font-size: 10px;"></i>
+                            <span class="text-truncate">In-House Talent</span>
+                        </div>
+                        <div class="mt-1 d-flex align-items-center">
+                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing cd-rm-change-btn d-inline-flex align-items-center" style="font-size: 11px !important; font-weight: 600 !important; color: #009ef7 !important;">
+                                <i class="fa-solid fa-pen-to-square me-1" style="font-size: 9.5px;"></i>Change
                             </a>
                         </div>
                     </div>
@@ -359,19 +376,19 @@
                 <!-- Sub-Card 5: Similar Clients (Direct, Internal Clients & My Organization) -->
                 <div class="cd-talent-subcard cd-subcard-similar-clients">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label"><i class="fa fa-handshake me-1 text-primary"></i>Similar Clients</span>
+                        <span class="cd-subcard-label text-uppercase text-truncate"><i class="fa-solid fa-handshake me-1 text-primary"></i>Similar Clients</span>
                     </div>
-                    <div class="cd-subcard-body">
-                        <!-- Direct Client Mandates -->
+                    <div class="cd-subcard-body pt-1">
+                        <!-- Direct Client Mandates (Emerald) -->
                         <div class="d-flex align-items-center justify-content-between mb-1">
-                            <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center gap-1"
+                            <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center"
                                 data-bench-id="{{ $row->id }}"
                                 data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
                                 data-bench-role="{{ e($row->current_designation ?? '') }}"
                                 data-client-type="direct"
                                 title="View Potential Direct Clients">
-                                <span class="badge badge-light-success py-1 px-1.5 fs-9 fw-bold border border-success-subtle d-inline-flex align-items-center">
-                                    <i class="fa fa-shield-alt text-success me-1" style="font-size: 8.5px;"></i>Direct Client
+                                <span class="badge py-1 px-1.5 fs-9 fw-bold border d-inline-flex align-items-center" style="background-color: #ecfdf5 !important; color: #059669 !important; border-color: #a7f3d0 !important;">
+                                    <i class="fa-solid fa-shield-alt me-1" style="color: #059669 !important; font-size: 8.5px;"></i>Direct Client
                                 </span>
                             </a>
                             <a href="javascript:void(0);" class="btn-similar-clients fs-8 fw-bolder text-dark text-hover-primary"
@@ -379,19 +396,19 @@
                                 data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
                                 data-bench-role="{{ e($row->current_designation ?? '') }}"
                                 data-client-type="direct">
-                                {{ $recomDirectCount }} <i class="fa fa-chevron-right text-muted fs-9 ms-0.5"></i>
+                                {{ $recomDirectCount }} <i class="fa-solid fa-chevron-right text-muted fs-9 ms-0.5"></i>
                             </a>
                         </div>
-                        <!-- Internal Client Mandates -->
+                        <!-- Internal Client Mandates (Blue) -->
                         <div class="d-flex align-items-center justify-content-between mb-1">
-                            <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center gap-1"
+                            <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center"
                                 data-bench-id="{{ $row->id }}"
                                 data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
                                 data-bench-role="{{ e($row->current_designation ?? '') }}"
                                 data-client-type="internal"
                                 title="View Potential Internal Clients">
-                                <span class="badge badge-light-primary py-1 px-1.5 fs-9 fw-bold border border-primary-subtle d-inline-flex align-items-center">
-                                    <i class="fa fa-building text-primary me-1" style="font-size: 8.5px;"></i>Internal Client
+                                <span class="badge py-1 px-1.5 fs-9 fw-bold border d-inline-flex align-items-center" style="background-color: #eff6ff !important; color: #2563eb !important; border-color: #bfdbfe !important;">
+                                    <i class="fa-solid fa-building me-1" style="color: #2563eb !important; font-size: 8.5px;"></i>Internal Client
                                 </span>
                             </a>
                             <a href="javascript:void(0);" class="btn-similar-clients fs-8 fw-bolder text-dark text-hover-primary"
@@ -399,19 +416,19 @@
                                 data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
                                 data-bench-role="{{ e($row->current_designation ?? '') }}"
                                 data-client-type="internal">
-                                {{ $recomInternalCount }} <i class="fa fa-chevron-right text-muted fs-9 ms-0.5"></i>
+                                {{ $recomInternalCount }} <i class="fa-solid fa-chevron-right text-muted fs-9 ms-0.5"></i>
                             </a>
                         </div>
-                        <!-- My Organization Mandates (Rule 25 Canonical Amber Theme) -->
+                        <!-- My Organization Mandates (Amber - Rule 25) -->
                         <div class="d-flex align-items-center justify-content-between">
-                            <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center gap-1"
+                            <a href="javascript:void(0);" class="btn-similar-clients text-hover-primary d-inline-flex align-items-center"
                                 data-bench-id="{{ $row->id }}"
                                 data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
                                 data-bench-role="{{ e($row->current_designation ?? '') }}"
                                 data-client-type="my_org"
                                 title="View Potential My Organization Mandates">
                                 <span class="badge py-1 px-1.5 fs-9 fw-bold border d-inline-flex align-items-center" style="background-color: #fef3c7 !important; color: #92400e !important; border-color: #fcd34d !important;">
-                                    <i class="fa fa-id-badge me-1" style="color: #d97706 !important; font-size: 8.5px;"></i>My Organization
+                                    <i class="fa-solid fa-id-badge me-1" style="color: #d97706 !important; font-size: 8.5px;"></i>My Organization
                                 </span>
                             </a>
                             <a href="javascript:void(0);" class="btn-similar-clients fs-8 fw-bolder text-dark text-hover-primary"
@@ -419,7 +436,7 @@
                                 data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
                                 data-bench-role="{{ e($row->current_designation ?? '') }}"
                                 data-client-type="my_org">
-                                {{ $recomMyOrgCount }} <i class="fa fa-chevron-right text-muted fs-9 ms-0.5"></i>
+                                {{ $recomMyOrgCount }} <i class="fa-solid fa-chevron-right text-muted fs-9 ms-0.5"></i>
                             </a>
                         </div>
                     </div>
@@ -428,9 +445,9 @@
                 <!-- Sub-Card 6: Clients Pipeline Activity -->
                 <div class="cd-talent-subcard cd-subcard-pipeline">
                     <div class="cd-subcard-header">
-                        <span class="cd-subcard-label">Clients Pipeline Activity</span>
+                        <span class="cd-subcard-label text-uppercase text-truncate">Clients Pipeline Activity</span>
                     </div>
-                    <div class="cd-subcard-body p-2">
+                    <div class="cd-subcard-body p-1">
                         <div class="cd-pipe-grid">
                             <div class="cd-pipe-col"><span class="h">INW</span><span class="v"><a href="{{ $exploreBase }}/all" class="text-hover-primary" data-bench-pipe="inreview">{{ $row->InReview }}</a></span></div>
                             <div class="cd-pipe-col"><span class="h">SOU</span><span class="v"><a href="{{ $exploreBase }}/1" class="text-hover-primary" data-bench-pipe="sourcing">{{ $row->Sourcing }}</a></span></div>
@@ -441,7 +458,7 @@
                             <div class="cd-pipe-col"><span class="h">JOI</span><span class="v"><a href="{{ $exploreBase }}/6" class="text-hover-primary" data-bench-pipe="joined">{{ $row->Joined }}</a></span></div>
                             <div class="cd-pipe-col"><span class="h">REJ</span><span class="v"><a href="{{ $exploreBase }}/7" class="text-hover-primary" data-bench-pipe="rejected">{{ $row->Rejected }}</a></span></div>
                         </div>
-                        <div class="cd-pipe-summary d-flex align-items-center justify-content-between mt-2 pt-1 border-top border-gray-200">
+                        <div class="cd-pipe-summary d-flex align-items-center justify-content-between mt-1.5 pt-1 border-top border-gray-200">
                             <span class="pipe-stat text-primary fw-bold" style="font-size: 10px;">Interviews: <strong data-bench-pipe-interview="{{ $row->id }}" class="ms-1">{{ $row->InReview }}</strong></span>
                             <span class="pipe-stat text-muted" style="font-size: 10px;">Views: <strong class="ms-1 text-dark">{{ $viewCount }}</strong></span>
                         </div>
@@ -451,45 +468,48 @@
             </div>
 
             <!-- Sub-Card 7 / Bottom Activity Strip -->
-            <div class="cd-talent-card-bottom">
-                <div class="cd-bottom-left d-flex align-items-center gap-2 flex-wrap">
+            <div class="cd-talent-card-bottom" style="display:flex !important; align-items:center !important; justify-content:space-between !important; min-height:38px !important; width:100% !important; overflow:hidden !important; gap:12px !important; padding:6px 12px !important; background:#fafcff !important; border-top:1px solid #edf2f7 !important;">
+                <div class="cd-bottom-left d-flex align-items-center gap-2 flex-wrap min-w-0 flex-grow-1 overflow-hidden">
                     @if ($stageDateLabel)
-                        <span class="cd-bottom-date text-dark fw-bold">
-                            <i class="far fa-calendar-alt text-muted me-1"></i>Added: <strong>{{ $stageDateLabel }}</strong>
+                        <span class="cd-bottom-date text-dark fw-bold" style="font-size: 11px; white-space: nowrap;">
+                            <i class="fa-regular fa-calendar-alt text-muted me-1"></i>Added: <strong>{{ $stageDateLabel }}</strong>
                         </span>
                         <span class="text-muted">&bull;</span>
                     @endif
                     @if ($benchDaysCount !== null)
-                        <span class="badge badge-light-warning {{ $benchDaysClass }} fw-bold fs-8 py-1 px-2" title="Days on Bench">
-                            <i class="far fa-hourglass me-1"></i>{{ $benchDaysCount }} Days on Bench
+                        <span class="badge badge-light-warning {{ $benchDaysClass }} fw-bold fs-8 py-1 px-2" title="Days on Bench" style="white-space: nowrap;">
+                            <i class="fa-regular fa-hourglass me-1"></i>{{ $benchDaysCount }} Days on Bench
                         </span>
                         <span class="text-muted">&bull;</span>
                     @endif
-                    <div class="cd-bottom-skills d-flex align-items-center gap-1 flex-wrap">
+                    <div class="cd-bottom-skills d-flex align-items-center gap-1 flex-wrap min-w-0 flex-grow-1 overflow-hidden" style="overflow-x: auto; white-space: nowrap; scrollbar-width: none;">
                         @if (!empty($skillArr))
                             @foreach ($skillArr as $sval)
                                 @if (trim($sval) !== '')
-                                    <span class="cd-skill-pill">{{ ucfirst(trim($sval)) }}</span>
+                                    <span class="cd-skill-pill" style="font-size: 10px !important; font-weight: 500 !important; padding: 2px 7px !important; border-radius: 4px !important; background: #f1f5f9 !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; line-height: 1.35 !important; white-space: nowrap !important; flex-shrink: 0 !important; display: inline-block !important;">{{ ucfirst(trim($sval)) }}</span>
                                 @endif
                             @endforeach
                         @else
-                            <span class="text-muted fs-8">No specific skills listed</span>
+                            <span class="text-muted fs-8" style="font-style: italic;">No specific skills listed</span>
                         @endif
                     </div>
                 </div>
-                <div class="cd-bottom-actions d-flex align-items-center gap-2">
+                <div class="cd-bottom-actions d-flex align-items-center gap-2 flex-shrink-0" style="white-space: nowrap;">
                     <button type="button" class="btn btn-sm btn-light-info py-1 px-2.5 fs-8 fw-bold btn-similar-clients"
                         data-bench-id="{{ $row->id }}"
                         data-bench-name="{{ e($row->full_name ?? 'Talent') }}"
                         data-bench-role="{{ e($row->current_designation ?? '') }}"
-                        data-client-type="direct">
-                        <i class="fa fa-handshake me-1"></i>Similar Clients
+                        data-client-type="direct"
+                        style="height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;">
+                        <i class="fa-solid fa-handshake me-1"></i>Similar Clients
                     </button>
-                    <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8 fw-bold {{ $profile_sidebar_css }}" data-row-id="{{ $row->id }}">
-                        <i class="fa fa-user me-1"></i>View Profile
+                    <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8 fw-bold {{ $profile_sidebar_css }}" data-row-id="{{ $row->id }}"
+                        style="height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;">
+                        <i class="fa-solid fa-user me-1"></i>View Profile
                     </button>
-                    <button type="button" class="btn btn-sm btn-light-success py-1 px-3 fs-8 fw-bold stage_sub_stage" data-row-id="{{ $row->id }}">
-                        <i class="fa fa-pen-to-square me-1"></i>Change Status
+                    <button type="button" class="btn btn-sm btn-light-success py-1 px-3 fs-8 fw-bold stage_sub_stage" data-row-id="{{ $row->id }}"
+                        style="height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;">
+                        <i class="fa-solid fa-pen-to-square me-1"></i>Change Status
                     </button>
                 </div>
             </div>
