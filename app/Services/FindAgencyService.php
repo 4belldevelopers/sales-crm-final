@@ -666,8 +666,8 @@ class FindAgencyService
 
             $recTier = 'marketplace';
             $isDirectMatch = false;
-            $recLabel = 'Recommended Partner';
-            $recReason = 'Verified marketplace partner with active recruitment capacity';
+            $recLabel = '';
+            $recReason = '';
             $matchPct = 0;
 
             if ($matchedSkillCount >= 2 && $hasLocationMatch && $hasCommMatch) {
@@ -691,39 +691,11 @@ class FindAgencyService
                 $recLabel = 'Skill Match';
                 $recReason = 'Skill overlap in '.implode(', ', array_slice($commonSkills, 0, 2));
                 $matchPct = min(74, max(50, round(($matchedSkillCount / max(1, count($skillsList))) * 100)));
-            } elseif (! empty($source['industry']) && ! empty($source['industry']['industry_name'])) {
-                // Tier 3: Industry Match
-                $recTier = 'industry';
-                $isDirectMatch = false;
-                $recLabel = 'Industry Match';
-                $recReason = 'Industry specialist in '.$source['industry']['industry_name'];
-                $matchPct = 45;
-            } elseif ($hasLocationMatch) {
-                // Tier 4: Location-Based Match
-                $recTier = 'location';
-                $isDirectMatch = false;
-                $recLabel = 'Location Match';
-                $recReason = 'Active partner operating in '.($locTarget ?: 'target region');
-                $matchPct = 40;
-            } elseif ($hasCommMatch && $jobHiringType == 1) {
-                // Tier 5: Similar Hiring Category Agencies
-                $recTier = 'hiring_category';
-                $isDirectMatch = false;
-                $recLabel = 'C2H & Contract Specialist';
-                $recReason = 'Specializes in C2H, C2C & Contract Staffing';
-                $matchPct = 35;
-            } elseif ($benchCount > 0) {
-                // Bench Strength Recommendation
-                $recTier = 'bench';
-                $isDirectMatch = false;
-                $recLabel = 'Bench Talent Partner';
-                $recReason = "Has {$benchCount} pre-vetted bench candidates ready for deployment";
-                $matchPct = 35;
             } else {
                 $recTier = 'marketplace';
                 $isDirectMatch = false;
-                $recLabel = 'Recommended Partner';
-                $recReason = 'Verified marketplace partner with active recruitment capacity';
+                $recLabel = '';
+                $recReason = '';
                 $matchPct = 0;
             }
 

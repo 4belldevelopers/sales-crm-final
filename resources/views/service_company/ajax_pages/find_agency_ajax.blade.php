@@ -273,8 +273,8 @@
 
         @php
             $isDirectMatch = (bool) ($row->is_direct_match ?? false);
-            $recLabel = $row->recommendation_label ?? 'Recommended Partner';
-            $recReason = $row->recommendation_reason ?? 'Verified marketplace recruitment partner';
+            $recLabel = $row->recommendation_label ?? '';
+            $recReason = $row->recommendation_reason ?? '';
             $recTier = $row->recommendation_tier ?? 'marketplace';
             $rowMatchPct = (int) ($row->match_pct ?? 0);
         @endphp
@@ -290,21 +290,6 @@
                     <div class="cl-subcard-head">
                         <span class="cl-subcard-title" title="Agency">Agency</span>
                         <div class="cl-subcard-badges">
-                            @if($isDirectMatch)
-                                <span class="cl-match-type-pill pill-direct-match" title="{{ $recReason }}">
-                                    <i class="fas fa-check-circle font-size-7 me-0.5"></i>{{ $recLabel }}
-                                </span>
-                            @elseif(!empty($recLabel) && $recTier !== 'marketplace')
-                                <span class="cl-match-type-pill pill-recommended" title="{{ $recReason }}">
-                                    <i class="fas fa-lightbulb font-size-7 me-0.5"></i>{{ $recLabel }}
-                                </span>
-                            @endif
-
-                            @if($isConnected)
-                                <span class="cl-scope-pill pill-connected" title="Connected Agency Partner">Connected</span>
-                            @else
-                                <span class="cl-scope-pill pill-marketplace" title="Marketplace Talent Partner">Marketplace</span>
-                            @endif
                             <span class="cl-status-pill pill-active" title="Active on JERO Platform">
                                 <span class="cl-status-pill-dot"></span>
                                 <span>Active</span>
@@ -462,10 +447,6 @@
                         @if($isDirectMatch && $rowMatchPct > 0)
                             <span class="cl-card-match-badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
                                 <i class="fas fa-bolt text-success me-1"></i><strong>{{ $rowMatchPct }}% Match</strong> • <span class="text-muted font-weight-500 ms-1">{{ $recReason }}</span>
-                            </span>
-                        @elseif(!empty($recReason) && $recTier !== 'marketplace')
-                            <span class="cl-card-match-badge badge-light-primary font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
-                                <i class="fas fa-lightbulb text-primary me-1"></i><strong>{{ $recLabel }}</strong> • <span class="text-muted font-weight-500 ms-1">{{ $recReason }}</span>
                             </span>
                         @else
                             <span class="cl-card-match-badge d-none badge-light-success font-size-10 font-weight-700 py-0.5 px-2"></span>
