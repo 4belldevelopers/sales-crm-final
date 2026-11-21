@@ -42,9 +42,22 @@
     --ot-bg-subcard: #f8fafc;
 }
 
-/* Remove legacy toolbar gap & guarantee 0% horizontal page scroll */
+/* Remove legacy toolbar gap & guarantee 0% horizontal page scroll (Standardized Compact Spacing) */
 #kt_toolbar { display: none !important; }
-#kt_content { margin-top: 0 !important; padding-top: 12px !important; }
+.kt_content_offertracker,
+#kt_content.kt_content_offertracker,
+#kt_content {
+    margin-top: -65px !important;
+    padding-top: 10px !important;
+}
+@media (max-width: 991.98px) {
+    .kt_content_offertracker,
+    #kt_content.kt_content_offertracker,
+    #kt_content {
+        margin-top: -55px !important;
+        padding-top: 8px !important;
+    }
+}
 #kt_post { margin-top: 0 !important; }
 #kt_content_container,
 body { overflow-x: hidden !important; }
@@ -581,7 +594,7 @@ body { overflow-x: hidden !important; }
     border: 1px solid var(--ot-border) !important;
     border-radius: 10px !important;
     padding: 10px 14px !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 12px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     display: flex !important;
     align-items: center !important;
@@ -643,26 +656,7 @@ body { overflow-x: hidden !important; }
 }
 
 .ot-search-clear-btn {
-    border: none !important;
-    background: #e2e8f0 !important;
-    color: #64748b !important;
-    width: 19px !important;
-    height: 19px !important;
-    border-radius: 50% !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
-    padding: 0 !important;
-    transition: all 0.15s ease !important;
-}
-
-.ot-search-clear-btn:hover {
-    background: #cbd5e1 !important;
-    color: #0f172a !important;
+    display: none !important;
 }
 
 .ot-search-kbd {
@@ -1571,7 +1565,7 @@ body { overflow-x: hidden !important; }
 
 @section('content')
 
-<div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-0 kt_content_offertracker" id="kt_content">
 <div class="post d-flex flex-column-fluid" id="kt_post">
 <div class="container-fluid px-0" id="kt_content_container">
 
@@ -1828,57 +1822,12 @@ body { overflow-x: hidden !important; }
     </div>
 
     {{-- ══════════════════════════════════════════════════════════════
-         OFFERS PIPELINE FUNNEL CARD
-         ══════════════════════════════════════════════════════════════ --}}
-    <div class="ot-pipeline-wrap">
-        <div class="ot-pipeline-head">
-            <div class="ot-pipeline-title-wrap">
-                <h5>Offers Pipeline</h5>
-                <span class="ot-pipeline-sub-tag">Conversion Funnel</span>
-            </div>
-            <select class="ot-pipeline-range" id="ot_pipeline_range" aria-label="Offers pipeline date window">
-                <option value="current">This Month</option>
-                <option value="6m">Last 6 Months</option>
-                <option value="all">All Time</option>
-            </select>
-        </div>
-        <div class="ot-pipeline-rail">
-            <div class="ot-pipeline-flow">
-                @foreach($offerPipeline as $p)
-                <div class="ot-pipe-card-v2" data-pipe="{{ $p['key'] ?? '' }}" style="background:{{ $p['icon_bg'] ?? '#f8fafc' }}">
-                    <div class="ot-pipe-head-row">
-                        <span class="ot-pipe-icon-sm">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="{{ $p['icon_clr'] ?? $p['color'] }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="{{ $p['icon'] ?? '' }}"/>
-                            </svg>
-                        </span>
-                        <span class="ot-pipe-lbl" style="color:{{ $p['color'] }}">{{ $p['label'] }}</span>
-                    </div>
-                    @if(isset($p['sub']))
-                        <div class="ot-pipe-data-row">
-                            <span class="ot-pipe-big">{{ $p['pct'] }}%</span>
-                            <span class="ot-pipe-sub-v2">{{ $p['sub'] }}</span>
-                        </div>
-                    @else
-                        <div class="ot-pipe-data-row">
-                            <span class="ot-pipe-big">{{ $p['count'] }}</span>
-                            <span class="ot-pipe-pct-v2">{{ $p['pct'] }}%</span>
-                        </div>
-                    @endif
-                </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-
-    {{-- ══════════════════════════════════════════════════════════════
          RULE 20 TIER 1: SEARCH & FILTER TOOLBAR CARD
          ══════════════════════════════════════════════════════════════ --}}
     <div class="ot-toolbar-card">
         <div class="ot-search-subcard">
             <i class="fas fa-search"></i>
             <input type="text" id="ot_search" placeholder="Search by candidate name, job title, client, recruiter, or ID..." autocomplete="off" />
-            <button type="button" class="ot-search-clear-btn" id="otSearchClear" style="display:none;" title="Clear search (Esc)" aria-label="Clear search">✕</button>
             <kbd class="ot-search-kbd" id="otSearchKbd" title="Press Ctrl+K to search">Ctrl+K</kbd>
         </div>
 
@@ -1905,51 +1854,6 @@ body { overflow-x: hidden !important; }
                     <option value="15">High → Low (Amount)</option>
                 </select>
             </div>
-
-            <button type="button" class="ot-reset-btn" id="otResetBtn" onclick="window.jeroOfferTracker && window.jeroOfferTracker.resetFilters()" title="Reset all filters">
-                <i class="fas fa-undo-alt"></i>
-                <span>Reset</span>
-            </button>
-        </div>
-    </div>
-
-    {{-- ══════════════════════════════════════════════════════════════
-         RULE 20 TIER 2: DEDICATED WHITE SUB-TABS CARD
-         ══════════════════════════════════════════════════════════════ --}}
-    <div class="ot-tabs-card">
-        <div class="ot-tabs-group" id="ot_tabs">
-            <button type="button" class="ot-tab-btn active" data-filter="all">
-                <span>All Offers</span>
-                <span class="ot-tab-badge" id="tab_total">—</span>
-            </button>
-            <button type="button" class="ot-tab-btn" data-filter="pending">
-                <span>Pending</span>
-                <span class="ot-tab-badge badge-pending" id="tab_pending">—</span>
-            </button>
-            <button type="button" class="ot-tab-btn" data-filter="sent">
-                <span>Offer Released</span>
-                <span class="ot-tab-badge badge-sent" id="tab_sent">—</span>
-            </button>
-            <button type="button" class="ot-tab-btn" data-filter="accepted">
-                <span>Accepted</span>
-                <span class="ot-tab-badge badge-accepted" id="tab_accepted">—</span>
-            </button>
-            <button type="button" class="ot-tab-btn" data-filter="joining_soon">
-                <span>Joining Soon</span>
-                <span class="ot-tab-badge badge-joining" id="tab_joining">—</span>
-            </button>
-            <button type="button" class="ot-tab-btn" data-filter="expired">
-                <span>Expired</span>
-                <span class="ot-tab-badge badge-expired" id="tab_expired">—</span>
-            </button>
-        </div>
-
-        <div class="ot-tabs-right-meta">
-            <span id="otShowingSummary">Loading offers...</span>
-            <span class="ot-live-chip" title="Real-time Elasticsearch + Reverb projection">
-                <span class="ot-live-dot"></span>
-                <span>Live</span>
-            </span>
         </div>
     </div>
 
