@@ -2264,11 +2264,6 @@
                     $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
                     $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong>' + highestMatchPct + '% Match</strong> <span class="text-muted font-weight-500 ms-1">• Matches ' + jobCount + (jobCount === 1 ? ' Job' : ' Jobs') + ' (' + jobTitlesList + ')</span>');
                     $cardMatchBadge.attr('title', 'Matches ' + jobCount + ' open jobs: ' + matchingJobs.map(function(mj) { return mj.title + ' (' + mj.pct + '%)'; }).join(', '));
-                } else if (recReason && recTier !== 'marketplace') {
-                    // Fallback Recommendation Display (Never leave empty per Rule 4)
-                    $cardMatchBadge.removeClass('d-none badge-light-success').addClass('badge-light-primary');
-                    $cardMatchBadge.html('<i class="fas fa-lightbulb text-primary me-1"></i><strong>' + recLabel + '</strong> <span class="text-muted font-weight-500 ms-1">• ' + recReason + '</span>');
-                    $cardMatchBadge.attr('title', recReason);
                 } else {
                     $cardMatchBadge.addClass('d-none').empty();
                 }
@@ -2290,11 +2285,6 @@
                     $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
                     $cardMatchBadge.html('<i class="fas fa-fire text-danger me-1"></i><strong>' + matchPct + '% Match</strong> <span class="text-muted font-weight-500 ms-1">• Matches requirement (' + overlap.slice(0, 3).join(', ') + ')</span>');
                     $cardMatchBadge.attr('title', 'Matching Skills: ' + overlap.join(', '));
-                } else if (recReason && recTier !== 'marketplace') {
-                    // Fallback Recommendation for specific requirement
-                    $cardMatchBadge.removeClass('d-none badge-light-success').addClass('badge-light-primary');
-                    $cardMatchBadge.html('<i class="fas fa-lightbulb text-primary me-1"></i><strong>' + recLabel + '</strong> <span class="text-muted font-weight-500 ms-1">• ' + recReason + '</span>');
-                    $cardMatchBadge.attr('title', recReason);
                 } else {
                     $cardMatchBadge.addClass('d-none').empty();
                 }
