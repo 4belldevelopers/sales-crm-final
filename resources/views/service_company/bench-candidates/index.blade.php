@@ -49,40 +49,96 @@
         .bench-dash .kpi-delta i { font-size: 9px !important; }
         .bench-dash .kpi-vs { color: #a1a5b7; font-weight: 500; }
 
-        /* In-House Talent hero: one compact connected journey, scoped to this page. */
-        /* In-House Talent hero: page header & actions (Card Design) */
-        .bench-dash .talent-hero-card {
-            background: #ffffff;
-            border: 1px solid #eef0f4;
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        /* ============================================================
+           Bench Candidates — Page-Isolated Compact Header Spacing
+           Removes excessive ghost toolbar whitespace (CV Tracker Standard)
+        ============================================================ */
+        .kt_content_bench,
+        #kt_content.kt_content_bench {
+            margin-top: -65px !important;
+            padding-top: 10px !important;
         }
-        .bench-dash .talent-hero-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            padding: 0;
+        @media (max-width: 991.98px) {
+            .kt_content_bench,
+            #kt_content.kt_content_bench {
+                margin-top: -55px !important;
+                padding-top: 8px !important;
+            }
         }
-        .bench-dash .talent-hero-heading { min-width: 0; }
-        .bench-dash .talent-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .bench-dash .talent-title { margin: 0; color: #181c32; font-size: 22px !important; font-weight: 700; line-height: 1.2; }
-        .bench-dash .talent-info { color: #8e9bb2; font-size: 14px !important; cursor: pointer; }
-        .bench-dash .talent-subtitle { margin: 4px 0 0; color: #7e8299; font-size: 12.5px !important; }
-        .bench-dash .talent-hero-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .bench-dash .talent-hero-actions .btn-add { background: #006ae6; color: #fff; border-radius: 8px; padding: 0 16px; font-size: 12.5px !important; font-weight: 600; height: 38px; display: inline-flex; align-items: center; gap: 7px; border: none; transition: background 0.15s ease; }
-        .bench-dash .talent-hero-actions .btn-add:hover { background: #0056b3; color: #fff; }
-        .bench-dash .talent-hero-actions .btn-ghost { border: 1px solid #dce6f5; background: #fff; color: #5e6278; border-radius: 8px; padding: 0 14px; font-size: 12.5px !important; font-weight: 500; height: 38px; display: inline-flex; align-items: center; gap: 7px; transition: all 0.15s ease; }
-        .bench-dash .talent-hero-actions .btn-ghost:hover { border-color: #b9d5fb; color: #006ae6; }
-        .bench-dash .hero-more { position: relative; }
-        .bench-dash .hero-more summary { list-style: none; cursor: pointer; width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid #dce6f5; border-radius: 8px; background: #fff; color: #5e6278; transition: border-color 0.15s ease; }
-        .bench-dash .hero-more summary::-webkit-details-marker { display: none; }
-        .bench-dash .hero-more summary:hover { border-color: #b9d5fb; color: #006ae6; }
-        .bench-dash .hero-more-menu { position: absolute; z-index: 15; right: 0; top: 44px; min-width: 160px; border: 1px solid #dce6f5; border-radius: 8px; background: #fff; box-shadow: 0 10px 25px rgba(24, 39, 75, .12); padding: 5px; }
-        .bench-dash .hero-more-menu a { display: block; padding: 8px 12px; color: #263b67; font-size: 12px !important; text-decoration: none; border-radius: 6px; }
-        .bench-dash .hero-more-menu a:hover { background: #f4f8ff; color: #006ae6; }
+
+        /* ============================================================
+           Bench Candidates — Enterprise Header Card (.cl-header-card)
+           Client Tracker & CV Tracker Design System
+        ============================================================ */
+        .cl-header, .cl-header-card {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            padding: 10px 18px !important;
+            margin-top: 0 !important;
+            margin-bottom: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 16px !important;
+            flex-wrap: wrap !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            font-family: 'Poppins', sans-serif !important;
+        }
+        .cl-header-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            min-width: 0 !important;
+        }
+        .cl-header-icon-box {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 10px !important;
+            background: #eff6ff !important;
+            border: 1px solid #bfdbfe !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #2563eb !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06) !important;
+        }
+        .cl-header-title-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+        .cl-header-title {
+            font-size: 19px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            letter-spacing: -0.015em !important;
+            margin: 0 !important;
+            line-height: 1.2 !important;
+        }
+        .cl-verified-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #16a34a !important;
+        }
+        .cl-header-subtitle {
+            font-size: 12.5px !important;
+            font-weight: 400 !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            line-height: 1.35 !important;
+        }
+        .cl-header-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Legacy fallback */
+        .bench-dash .talent-hero-card { display: none; }
 
         /* ===== Rule 20: 6 Stat Cards Row — Client Tracker .cl-stat-grid Enterprise Standard ===== */
         .cl-stat-grid {
@@ -314,48 +370,57 @@
             }
         }
 
-        /* Toolbar Card (Rule 20 Sharp White Card Surface from ClientAppTracker) */
-        .caf-toolbar-card {
+        /* Toolbar Card (Rule 20 Modern Card + Sub-Card Enterprise Standard — CV Tracker Pattern) */
+        .caf-toolbar-card, .cvh-tb-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 10px !important;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-            margin-bottom: 12px !important;
+            margin-bottom: 14px !important;
         }
         .caf-toolbar-card .card-body {
-            padding: 10px 14px !important;
+            padding: 12px 16px !important;
         }
-        .caf-search-wrap,
-        .caf-sort-wrap {
-            background: #f8fafc !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 8px !important;
-            height: 38px !important;
+        .caf-search-wrap {
+            background: #ffffff !important;
+            border: 1px solid #e4e6ef !important;
+            border-radius: 10px !important;
+            height: 44px !important;
             transition: all 0.15s ease !important;
             display: flex !important;
             align-items: center !important;
-            gap: 8px !important;
-            padding: 0 12px !important;
+            gap: 10px !important;
+            padding: 0 14px !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+            flex: 1 1 auto;
+            min-width: 240px;
         }
-        .caf-search-wrap:hover,
-        .caf-sort-wrap:hover {
-            background: #ffffff !important;
-            border-color: #94a3b8 !important;
+        .caf-search-wrap:hover {
+            border-color: #cbd5e1 !important;
         }
-        .caf-search-wrap:focus-within,
-        .caf-sort-wrap:focus-within {
+        .caf-search-wrap:focus-within {
             background: #ffffff !important;
             border-color: #009ef7 !important;
             box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
         }
-        .caf-search-wrap {
-            flex: 1 1 auto;
-            min-width: 0;
-        }
         .caf-sort-wrap {
+            background: #ffffff !important;
+            border: 1px solid #e4e6ef !important;
+            border-radius: 10px !important;
+            height: 44px !important;
+            transition: all 0.15s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 0 14px !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
             flex-shrink: 0;
-            width: 210px;
+            width: 220px;
             position: relative;
+        }
+        .caf-sort-wrap:hover {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
         }
         .caf-search-icon,
         .caf-sort-icon {
@@ -370,10 +435,11 @@
             box-shadow: none !important;
             padding: 0 !important;
             margin: 0 !important;
-            font-size: 12.5px;
-            line-height: 36px;
-            height: 36px;
-            color: #1e293b;
+            font-size: 13px !important;
+            line-height: 44px !important;
+            height: 44px !important;
+            color: #0f172a !important;
+            font-family: 'Poppins', sans-serif !important;
         }
         .caf-search-clear {
             border: none;
@@ -395,9 +461,9 @@
             background: transparent;
             border: none;
             padding: 0;
-            font-size: 12.5px;
-            font-weight: 500;
-            color: #334155;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
             text-align: left;
             cursor: pointer;
         }
@@ -423,8 +489,8 @@
             max-width: 280px;
             background: #fff;
             border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px -5px rgba(16,24,40,.12);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(16,24,40,.12), 0 4px 6px -2px rgba(16,24,40,.06);
             padding: 6px;
             z-index: 60;
             max-height: 300px;
@@ -432,42 +498,47 @@
         }
         .caf-sort-item {
             padding: 8px 12px;
-            font-size: 12px;
+            font-size: 12.5px;
             font-weight: 500;
-            color: #334155;
-            border-radius: 6px;
+            color: #3f4254;
+            border-radius: 8px;
             cursor: pointer;
             white-space: nowrap;
+            transition: all 0.15s ease;
         }
-        .caf-sort-item:hover { background: #f8fafc; color: #009ef7; }
-        .caf-sort-item.active { background: #eff6ff; color: #009ef7; font-weight: 600; }
+        .caf-sort-item:hover { background: #f8f9fb; color: #009ef7; }
+        .caf-sort-item.active { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
         .caf-refresh-btn {
-            height: 38px;
-            padding: 0 14px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            background: #f8fafc;
+            height: 44px;
+            padding: 0 16px;
+            border-radius: 10px;
+            border: 1px solid #e4e6ef;
+            background: #ffffff;
             color: #475569;
-            font-size: 12px;
+            font-size: 12.5px;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 7px;
             cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
             transition: all 0.15s ease;
         }
         .caf-refresh-btn:hover {
-            background: #ffffff;
+            background: #f8fafc;
             border-color: #009ef7;
             color: #009ef7;
         }
-        .cd-bench-export-btn {
-            height: 38px !important;
-            padding: 0 16px !important;
-            font-size: 12px !important;
-            border-radius: 8px !important;
+        .cd-bench-export-btn, #exportTalents {
+            height: 44px !important;
+            padding: 0 18px !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            border-radius: 10px !important;
             display: inline-flex !important;
             align-items: center !important;
+            gap: 7px !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
         }
 
         /* Similar Clients / Related Jobs Drawer (Rule 20 Modern Card + Sub-Card Enterprise Standard) */
@@ -1428,10 +1499,10 @@
         .cd-talent-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-left: 4px solid #009ef7 !important;
+            border-left: 3.5px solid #009ef7 !important;
             border-radius: 10px !important;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            transition: all 0.2s ease !important;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -1439,7 +1510,12 @@
         }
         .cd-talent-card:hover {
             border-color: #cbd5e1 !important;
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08) !important;
+        }
+        .cd-talent-card.is-selected {
+            background-color: #f8fbff !important;
+            border-color: #009ef7 !important;
+            box-shadow: 0 2px 10px rgba(0, 158, 247, 0.12) !important;
         }
         .cd-talent-card-grid {
             display: grid !important;
@@ -1450,10 +1526,10 @@
             align-items: stretch !important;
         }
         .cd-talent-avatar {
-            width: 38px !important;
-            height: 38px !important;
-            border-radius: 10px !important;
-            border: 1px solid #e2e8f0 !important;
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 8px !important;
+            border: 1px solid rgba(15, 23, 42, 0.08) !important;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
             flex-shrink: 0 !important;
             overflow: hidden !important;
@@ -1461,7 +1537,7 @@
         .cd-talent-avatar .symbol-label {
             width: 100% !important;
             height: 100% !important;
-            border-radius: 9px !important;
+            border-radius: 8px !important;
             font-size: 13.5px !important;
             font-weight: 700 !important;
             display: flex !important;
@@ -1470,13 +1546,15 @@
         }
         .cd-talent-company {
             font-size: 11px !important;
-            color: #475569 !important;
+            font-weight: 500 !important;
+            color: #64748b !important;
             display: flex !important;
             align-items: center !important;
             gap: 4px !important;
+            line-height: 1.3 !important;
         }
         .cd-talent-company i {
-            color: #009ef7 !important;
+            color: #64748b !important;
             font-size: 10px !important;
         }
         .cd-subcard-similar-clients {
@@ -1489,65 +1567,82 @@
             flex-grow: 1 !important;
         }
         .cd-talent-subcard {
-            background: #ffffff;
-            border: 1px solid #edf2f7;
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-        /* Mandatory Header Background Color Standard */
-        .cd-subcard-header {
             background: #f8fafc !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-            padding: 5px 9px !important;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            min-height: 28px;
-            flex-shrink: 0;
+            border: 1px solid #edf2f7 !important;
+            border-radius: 8px !important;
+            padding: 7px 9px !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-width: 0 !important;
+            transition: border-color 0.15s ease, background-color 0.15s ease !important;
+        }
+        .cd-talent-card:hover .cd-talent-subcard {
+            border-color: #e2e8f0 !important;
+        }
+        /* Header & Label standard matching CV Tracker */
+        .cd-subcard-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 4px !important;
+            margin-bottom: 5px !important;
+            line-height: 1 !important;
+            min-height: 18px !important;
+            background: transparent !important;
+            border-bottom: none !important;
+            padding: 0 !important;
+            flex-shrink: 0 !important;
         }
         .cd-subcard-label {
             font-size: 9.5px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.4px !important;
-            color: #475569 !important;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            letter-spacing: 0.35px !important;
+            color: #64748b !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.1 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
         }
         .cd-subcard-body {
-            padding: 8px 10px !important;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 4px;
-            font-size: 11.5px;
-            min-width: 0;
-            overflow: hidden;
+            padding: 0 !important;
+            flex-grow: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 3px !important;
+            font-size: 11.5px !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
         }
         .cd-talent-name {
             font-size: 12.5px !important;
             font-weight: 700 !important;
-            line-height: 1.25;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            word-break: break-word;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+            display: block !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            text-decoration: none !important;
+            transition: color 0.15s ease !important;
+        }
+        .cd-talent-name:hover {
+            color: #009ef7 !important;
         }
         .cd-talent-role {
             font-size: 11px !important;
-            color: #64748b !important;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            word-break: break-word;
-            line-height: 1.2;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.3 !important;
         }
         .cd-status-badge {
             font-size: 9px !important;
@@ -1586,7 +1681,7 @@
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
-            background: #f8fafc !important;
+            background: #ffffff !important;
             border: 1px solid #eef2f6 !important;
             border-radius: 4px !important;
             padding: 3px 1px !important;
@@ -1629,42 +1724,48 @@
             white-space: nowrap !important;
         }
 
-        /* Sub-Card 6 / Bottom Activity Strip */
+        /* Sub-Card 7 / Bottom Activity Strip */
         .cd-talent-card-bottom {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 7px 14px;
-            background: #fafbfc;
-            border-top: 1px solid #f1f5f9;
-            flex-wrap: wrap;
-            font-size: 11px;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            min-height: 38px !important;
+            width: 100% !important;
+            overflow: hidden !important;
+            gap: 12px !important;
+            padding: 6px 12px !important;
+            background: #fafcff !important;
+            border-top: 1px solid #edf2f7 !important;
+            font-size: 11px !important;
         }
         .cd-bottom-skills {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            max-width: 580px;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            white-space: nowrap !important;
+            flex-wrap: nowrap !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
         }
-        .cd-bottom-skills::-webkit-scrollbar { display: none; }
+        .cd-bottom-skills::-webkit-scrollbar { display: none !important; }
         .cd-skill-pill {
-            display: inline-flex;
-            align-items: center;
-            background: #f1f5f9;
-            color: #475569;
-            border-radius: 5px;
-            padding: 2px 7px;
             font-size: 10px !important;
-            font-weight: 500;
-            white-space: nowrap;
-            flex-shrink: 0;
-            line-height: 1.25;
+            font-weight: 500 !important;
+            padding: 2px 7px !important;
+            border-radius: 4px !important;
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0 !important;
+            line-height: 1.35 !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            display: inline-block !important;
         }
-        .cd-bottom-date { font-size: 11px; color: #64748b; white-space: nowrap; }
+        .cd-bottom-date { font-size: 11px !important; color: #64748b !important; white-space: nowrap !important; }
 
         /* Empty state */
         .cd-talent-empty {
@@ -1709,46 +1810,61 @@
 @endpush
 
 @section('content')
-    <div class="bench-dash content d-flex flex-column flex-column-fluid pt-4" id="kt_content" style="margin-top: -60px;">
+    <div class="bench-dash content d-flex flex-column flex-column-fluid pt-0 kt_content_bench" id="kt_content">
         <div class="post d-flex flex-column-fluid" id="kt_post">
-            <div id="kt_content_container" class="container-fluid px-5">
+            <div id="kt_content_container" class="container-fluid px-3">
 
-                <!-- In-House Talent hero card -->
-                <div class="jw-card talent-hero-card mb-3">
-                    <div class="talent-hero-header">
-                        <div class="talent-hero-heading">
-                            <div class="talent-title-row">
-                                <h1 class="talent-title">In-House Talent</h1>
-                                <i class="fa fa-circle-info talent-info" title="Manage your talent pool, bench availability, marketplace activity and placements."></i>
-                            </div>
-                            <p class="talent-subtitle">Manage your talent pool, bench availability, marketplace activity and placements.</p>
+                <!-- ── HEADER CARD (CV Tracker Design Standard) ── -->
+                <div class="cl-header cl-header-card">
+                    <div class="cl-header-left">
+                        <div class="cl-header-icon-box">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
                         </div>
-                        <div class="talent-hero-actions">
-                            <input type="hidden" id="inputSearch" name="inputSearch" />
-                            @if (in_array('view_bench', $userPermissions))
-                                <a href="javascript:void(0);" class="btn-add" id="AddInternalPool">
-                                    <i class="fa fa-plus"></i> Add In-house Talent
-                                </a>
-                            @endif
-                            <button type="button" class="btn-ghost" id="exportTalents">
-                                <i class="fa fa-file-export"></i> Export
+                        <div>
+                            <div class="cl-header-title-row">
+                                <h1 class="cl-header-title">In-House Talent</h1>
+                                <span class="cl-verified-badge" title="Verified Talent Pool">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="cl-header-subtitle">Manage your talent pool, bench availability, marketplace activity and placements</div>
+                        </div>
+                    </div>
+                    <div class="cl-header-actions">
+                        <input type="hidden" id="inputSearch" name="inputSearch" />
+                        @if (in_array('view_bench', $userPermissions))
+                            <a href="javascript:void(0);" class="btn btn-sm btn-primary fw-bolder" id="AddInternalPool">
+                                <i class="fa fa-plus me-1"></i> Add In-house Talent
+                            </a>
+                        @endif
+                        <button type="button" class="btn btn-sm btn-light-primary fw-bolder" id="exportTalents" title="Export talent records to CSV">
+                            <i class="fa fa-file-export me-1"></i> Export
+                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-icon btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="More options">
+                                <i class="fa fa-ellipsis-v"></i>
                             </button>
-                            <details class="hero-more">
-                                <summary aria-label="More actions"><i class="fa fa-ellipsis"></i></summary>
-                                <div class="hero-more-menu">
-                                    <a href="{{ route('service_company.bench-candidates.index', ['hero_month' => $heroMonth, 'performance_window' => $performanceWindow]) }}">Refresh performance</a>
-                                    <a href="{{ route('service_company.bench-candidates.index') }}">Reset period</a>
-                                </div>
-                            </details>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="font-size: 12px;">
+                                <li><a class="dropdown-item" href="{{ route('service_company.bench-candidates.index', ['hero_month' => $heroMonth, 'performance_window' => $performanceWindow]) }}"><i class="fa fa-rotate me-2 text-muted"></i>Refresh performance</a></li>
+                                <li><a class="dropdown-item" href="{{ route('service_company.bench-candidates.index') }}"><i class="fa fa-arrow-rotate-left me-2 text-muted"></i>Reset period</a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
 
                 @if (in_array('view_bench', $userPermissions))
-                    <!-- ── 6 KPI STAT CARDS (Client Tracker Design Standard) ── -->
-                    <div class="cl-stat-grid" id="benchKpiGrid">
+                    <!-- ── 6 KPI STAT CARDS (CV Tracker KPI Design System) ── -->
+                    <div class="cv-kpi-grid cl-stat-grid mb-4" id="benchKpiGrid">
                         {{-- Card 1: All Talents --}}
-                        <a href="javascript:void(0);" class="cl-card application_sttus_nav active" rel="all" data-tab="all" title="View All Talents">
+                        <a href="javascript:void(0);" class="cl-card cv-kpi-card application_sttus_nav active" rel="all" data-tab="all" title="View All Talents">
                             <div class="cl-card-top">
                                 <div class="cl-card-icon blue">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1767,12 +1883,12 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                                 </svg>
-                                <span>Total Talent Roster</span>
+                                <span>Total talent roster</span>
                             </div>
                         </a>
 
                         {{-- Card 2: On Pool --}}
-                        <a href="javascript:void(0);" class="cl-card application_sttus_nav" rel="1" data-tab="1" title="View Pool Talents">
+                        <a href="javascript:void(0);" class="cl-card cv-kpi-card application_sttus_nav" rel="1" data-tab="1" title="View Pool Talents">
                             <div class="cl-card-top">
                                 <div class="cl-card-icon cyan">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1796,7 +1912,7 @@
                         </a>
 
                         {{-- Card 3: Bench --}}
-                        <a href="javascript:void(0);" class="cl-card application_sttus_nav" rel="2" data-tab="2" title="View Bench Talents">
+                        <a href="javascript:void(0);" class="cl-card cv-kpi-card application_sttus_nav" rel="2" data-tab="2" title="View Bench Talents">
                             <div class="cl-card-top">
                                 <div class="cl-card-icon amber">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1820,7 +1936,7 @@
                         </a>
 
                         {{-- Card 4: On Hold --}}
-                        <a href="javascript:void(0);" class="cl-card application_sttus_nav" rel="4" data-tab="4" title="View On Hold Talents">
+                        <a href="javascript:void(0);" class="cl-card cv-kpi-card application_sttus_nav" rel="4" data-tab="4" title="View On Hold Talents">
                             <div class="cl-card-top">
                                 <div class="cl-card-icon slate">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1844,7 +1960,7 @@
                         </a>
 
                         {{-- Card 5: Placed --}}
-                        <a href="javascript:void(0);" class="cl-card application_sttus_nav" rel="3" data-tab="3" title="View Placed Talents">
+                        <a href="javascript:void(0);" class="cl-card cv-kpi-card application_sttus_nav" rel="3" data-tab="3" title="View Placed Talents">
                             <div class="cl-card-top">
                                 <div class="cl-card-icon green">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1870,7 +1986,7 @@
                         </a>
 
                         {{-- Card 6: Exited --}}
-                        <a href="javascript:void(0);" class="cl-card application_sttus_nav" rel="5" data-tab="5" title="View Exited Talents">
+                        <a href="javascript:void(0);" class="cl-card cv-kpi-card application_sttus_nav" rel="5" data-tab="5" title="View Exited Talents">
                             <div class="cl-card-top">
                                 <div class="cl-card-icon red">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1895,15 +2011,15 @@
                         </a>
                     </div>
 
-                    <!-- Tier 1: Toolbar Card with Search, Sort & Refresh (Client App Tracker Standard) -->
-                    <div class="card mb-3 caf-toolbar-card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <div class="caf-search-wrap" style="position: relative;">
+                    <!-- Tier 1: Toolbar Card with Search, Sort & Refresh (CV Tracker Standard) -->
+                    <div class="card mb-4 caf-toolbar-card cvh-tb-card">
+                        <div class="card-body py-3 px-4">
+                            <div class="d-flex align-items-center gap-3 flex-wrap flex-xl-nowrap">
+                                <div class="caf-search-wrap position-relative flex-grow-1" style="min-width: 240px;">
                                     <span class="caf-search-icon">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
                                     </span>
-                                    <input type="text" class="form-control caf-search-input" name="inputJobSearch"
+                                    <input type="text" class="form-control caf-search-input pe-8" name="inputJobSearch"
                                         placeholder="Search by name, skills, role, experience, location..."
                                         id="kt_tagify_2" onkeyup="debouncedBenchSearch(event)" autocomplete="off" />
                                     <button type="button" class="caf-search-clear" id="btnCafSearchClear" title="Clear search">
@@ -1930,11 +2046,8 @@
                                     </select>
                                     <div class="caf-sort-panel d-none" id="caf_sort_panel"></div>
                                 </div>
-                                <button type="button" class="btn btn-sm caf-refresh-btn" id="btnCafRefreshList" title="Refresh List">
+                                <button type="button" class="btn caf-refresh-btn flex-shrink-0" id="btnCafRefreshList" title="Refresh List">
                                     <i class="fa fa-rotate"></i> Refresh
-                                </button>
-                                <button type="button" class="btn btn-sm btn-primary fw-bold flex-shrink-0" id="exportTalents" title="Export talent records to CSV">
-                                    <i class="fa fa-file-export me-1"></i> Export
                                 </button>
                             </div>
                         </div>
