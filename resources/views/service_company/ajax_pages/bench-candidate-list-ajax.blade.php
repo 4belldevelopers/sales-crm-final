@@ -5,6 +5,7 @@
     $salaryMode = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
     $company_id = auth()->user()->company_id;
+    $tenantTimezone = GeneralMethod::defaultTimeZone($company_id) ?: config('app.timezone', 'UTC');
 @endphp
 @if (count($data) > 0)
     @php
@@ -41,9 +42,19 @@
             // Work preference (Remote/Hybrid/Work from office)
             $wm = strtolower((string) @$row->wm);
             $wmMap = ['remote' => 'Remote', 'hybrid' => 'Hybrid', 'office' => 'Work from office'];
-            $wmClassMap = ['remote' => 'text-success', 'hybrid' => 'text-primary', 'office' => 'text-warning'];
+            $wmClassMap = [
+                'remote' => 'text-success',
+                'hybrid' => 'text-primary',
+                'office' => 'text-gray-700',
+            ];
+            $wmIconMap = [
+                'remote' => 'fa-solid fa-house-laptop text-success',
+                'hybrid' => 'fa-solid fa-building-user text-primary',
+                'office' => 'fa-solid fa-building text-primary',
+            ];
             $wmLabel = $wmMap[$wm] ?? 'Work from office';
-            $wmClass = $wmClassMap[$wm] ?? 'text-warning';
+            $wmClass = $wmClassMap[$wm] ?? 'text-gray-700';
+            $wmIcon = $wmIconMap[$wm] ?? 'fa-solid fa-building text-primary';
 
             // Employment type (Full-time/Contract)
             $outsourcing_type = $row->outsourcing_type == 2 ? 'Contract' : 'Full-time';
@@ -84,7 +95,7 @@
             // Skill chips & Stage date
             $skillArr = array_values(array_filter(array_map('trim', explode(',', (string) ($row->skills ?? '')))));
             $stageMovedAt = $row->updated_at ?? $row->created_at ?? null;
-            $stageDateLabel = $stageMovedAt ? Carbon::parse($stageMovedAt)->format('d M y') : '';
+            $stageDateLabel = $stageMovedAt ? Carbon::parse($stageMovedAt)->setTimezone($tenantTimezone)->format('d M y, h:i A T') : '';
             $isAds = (@$row->ads_switch == 'Yes');
             $displayFullName = $limitWords(ucwords(@$row->full_name ?: 'Unnamed Talent'), 25);
             $displayDesignation = $limitWords(ucwords(@$row->current_designation ?: 'Talent'), 25);
@@ -160,6 +171,9 @@
             $currencyBenchMode = $companyCurrencyBenchshowMode ?? GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
             $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly, $currencyBenchMode->currency_code, $currencyBenchMode->show_mode);
             $bill_rate_currency = $currencySymbole[$billFormatViewSalary->currency] ?? '$';
+            $plainCurrencySymbol = !empty($billFormatViewSalary->symbol)
+                ? $billFormatViewSalary->symbol
+                : (trim(strip_tags($bill_rate_currency)) ?: '$');
             $bill_rate_mode = $salaryMode[$billFormatViewSalary->mode] ?? 'Hourly';
             $serviceType = @$row->comission_type == 2 ? 'Paid Services' : (@$row->comission_type == 1 ? 'Free Services' : '—');
             $serviceClass = @$row->comission_type == 2 ? 'text-success' : 'text-muted';
@@ -236,12 +250,12 @@
                 <div class="cd-talent-subcard cd-subcard-talent">
                     <div class="cd-subcard-header">
                         <div class="d-flex align-items-center gap-1.5 min-w-0">
-                            <label class="form-check form-check-sm form-check-custom form-check-solid m-0" style="cursor: pointer;" title="Select candidate">
+                            <label class="form-check form-check-sm form-check-custom m-0" style="cursor: pointer;" title="Select candidate">
                                 <input class="form-check-input chk_list_item cursor-pointer" name="chk_list_item[]" type="checkbox"
                                     data-skills="{{ e($row->skills ?? '') }}"
                                     data-cname="{{ e($row->full_name ?? '') }}"
                                     value="{{ $row->id }}"
-                                    style="width: 15px; height: 15px; margin: 0; flex-shrink: 0;"
+                                    style="width: 15px; height: 15px; margin: 0; flex-shrink: 0; border: 1.5px solid #94a3b8 !important; border-radius: 4px !important; background-color: #ffffff !important;"
                                     title="Select candidate" />
                             </label>
                             <!-- Hiring Category: Full-Time / Contract -->
@@ -274,7 +288,7 @@
                                 <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
                                     class="cd-talent-name {{ $profile_sidebar_css }}"
                                     title="{{ ucwords(@$row->full_name) }}"
-                                    style="font-size: 12.5px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.25 !important; display: block !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; text-decoration: none !important;">
+                                    style="font-size: 13px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.25 !important; display: block !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; text-decoration: none !important;">
                                     {{ $displayFullName }}
                                 </a>
                                 <!-- 2. Designation -->
@@ -306,13 +320,13 @@
                     </div>
                     <div class="cd-subcard-body pt-1">
                         <!-- 1. Bill Rate -->
-                        <div class="cd-val-salary d-flex align-items-baseline gap-1" title="Bill Rate: {!! $bill_rate_currency !!}{{ $billAmountClean }} / {{ $bill_rate_mode }}">
+                        <div class="cd-val-salary d-flex align-items-baseline gap-1" title="Bill Rate: {{ $plainCurrencySymbol }}{{ $billAmountClean }} / {{ $bill_rate_mode }}">
                             <span style="font-size: 10px; color: #64748b; font-weight: 500;">Bill Rate:</span>
-                            <strong style="font-size: 13.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">{!! $bill_rate_currency !!}{{ $billAmountClean }}</strong>
+                            <strong style="font-size: 13.5px; font-weight: 700; color: #0f172a; line-height: 1.2;">{{ $plainCurrencySymbol }}{{ $billAmountClean }}</strong>
                             <span style="font-size: 10px; color: #64748b; font-weight: 500;">/{{ mb_substr($bill_rate_mode, 0, 1) }}</span>
                         </div>
                         <!-- 2. Total Experience & Relevant Experience -->
-                        <div class="cd-val-exp d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Total: {{ $formattedExperience }} Yrs{{ (!empty($formattedRelExperience) && $formattedRelExperience > 0) ? ' | Rel: ' . $formattedRelExperience . ' Yrs' : '' }}" style="font-size: 11px; line-height: 1.35;">
+                        <div class="cd-val-exp d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Total Experience: {{ $formattedExperience }} Yrs{{ (!empty($formattedRelExperience) && $formattedRelExperience > 0) ? ' | Rel: ' . $formattedRelExperience . ' Yrs' : '' }}" style="font-size: 11px; line-height: 1.35; color: #334155;">
                             <i class="fa-solid fa-briefcase me-1 text-muted" style="width: 12px; text-align: center; font-size: 10px;"></i>
                             <span style="color: #0f172a; font-weight: 600;"><strong>{{ $formattedExperience !== '' ? $formattedExperience : '0' }} Y</strong> Total</span>
                             @if (!empty($formattedRelExperience) && $formattedRelExperience > 0)
@@ -322,7 +336,8 @@
                         <!-- 3. Notice Period -->
                         <div class="cd-val-avail {{ $availClass }} d-flex align-items-center gap-1 mt-0.5 text-truncate" title="Notice Period: {{ $availLine }}" style="font-size: 11px; font-weight: 600; line-height: 1.35;">
                             <i class="fa-regular fa-clock me-1 text-muted" style="width: 12px; text-align: center; font-size: 10px;"></i>
-                            <span>Notice: <strong class="{{ $availClass }}">{{ $availLine }}</strong></span>
+                            <span style="color: #64748b; font-weight: 500;">Notice:</span>
+                            <strong class="{{ $availClass }}">{{ $availLine }}</strong>
                         </div>
                     </div>
                 </div>
@@ -338,9 +353,9 @@
                             <i class="fa-solid fa-location-dot me-1 text-muted" style="width: 13px; text-align: center; font-size: 10px;"></i>
                             <span class="text-truncate">{{ $fullLocation }}</span>
                         </div>
-                        <!-- Second Row: Work Mode -->
-                        <div class="cd-val-wm text-truncate d-flex align-items-center mt-1" style="font-size: 11px; font-weight: 500; color: #475569; line-height: 1.35;" title="Work Mode: {{ $wmLabel }}">
-                            <i class="fa-solid fa-building me-1 text-primary" style="width: 13px; text-align: center; font-size: 10px;"></i>
+                        <!-- Second Row: Work Mode (High contrast - WCAG AAA) -->
+                        <div class="cd-val-wm text-truncate d-flex align-items-center mt-1" style="font-size: 11px; font-weight: 600; color: #475569; line-height: 1.35;" title="Work Mode: {{ $wmLabel }}">
+                            <i class="{{ $wmIcon }} me-1" style="width: 13px; text-align: center; font-size: 10px;"></i>
                             <span class="text-truncate {{ $wmClass }} fw-semibold">{{ $wmLabel }}</span>
                         </div>
                         <!-- Third Row: Qualification / Degree in Uppercase -->
@@ -357,9 +372,9 @@
                         <span class="cd-subcard-label text-uppercase text-truncate"><i class="fa-solid fa-user-tie me-1 text-primary"></i>Relationship Mgr</span>
                     </div>
                     <div class="cd-subcard-body pt-1">
-                        <div class="cd-manager-name text-truncate d-flex align-items-center" style="font-size: 11.5px; font-weight: 600; line-height: 1.35; min-height: 18px;" title="{{ $managerName }}{{ $extra }}">
+                        <div class="cd-manager-name text-truncate d-flex align-items-center" style="font-size: 11.5px; font-weight: 600; line-height: 1.35; min-height: 18px; color: #0f172a;" title="{{ $managerName }}{{ $extra }}">
                             <i class="fa-regular fa-circle-user me-1 text-primary" style="width: 13px; text-align: center; font-size: 10.5px;"></i>
-                            <span class="text-dark text-truncate">{{ $displayManagerName }}</span>
+                            <span class="text-dark text-truncate" style="color: #0f172a !important; font-weight: 600;">{{ $displayManagerName }}</span>
                         </div>
                         <div class="text-truncate d-flex align-items-center mt-1" style="font-size: 11px; font-weight: 500; color: #64748b; line-height: 1.35;">
                             <i class="fa-regular fa-building me-1 text-muted" style="width: 13px; text-align: center; font-size: 10px;"></i>
@@ -468,7 +483,7 @@
             </div>
 
             <!-- Sub-Card 7 / Bottom Activity Strip -->
-            <div class="cd-talent-card-bottom" style="display:flex !important; align-items:center !important; justify-content:space-between !important; min-height:38px !important; width:100% !important; overflow:hidden !important; gap:12px !important; padding:6px 12px !important; background:#fafcff !important; border-top:1px solid #edf2f7 !important;">
+            <div class="cd-talent-card-bottom" style="display:flex !important; align-items:center !important; justify-content:space-between !important; min-height:38px !important; width:100% !important; overflow:hidden !important; gap:12px !important; padding:6px 12px !important; background:#fafcff !important; border-top:1px solid #e2e8f0 !important;">
                 <div class="cd-bottom-left d-flex align-items-center gap-2 flex-wrap min-w-0 flex-grow-1 overflow-hidden">
                     @if ($stageDateLabel)
                         <span class="cd-bottom-date text-dark fw-bold" style="font-size: 11px; white-space: nowrap;">
