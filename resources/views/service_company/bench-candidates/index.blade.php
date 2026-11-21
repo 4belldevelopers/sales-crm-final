@@ -2068,9 +2068,6 @@
                                     </select>
                                     <div class="caf-sort-panel d-none" id="caf_sort_panel"></div>
                                 </div>
-                                <button type="button" class="btn caf-refresh-btn flex-shrink-0" id="btnCafRefreshList" title="Refresh List">
-                                    <i class="fa fa-rotate"></i> Refresh
-                                </button>
                             </div>
                         </div>
                     </div>

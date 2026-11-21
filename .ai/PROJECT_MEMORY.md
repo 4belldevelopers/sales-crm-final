@@ -18,7 +18,20 @@ Last updated: 2026-11-12 (Service Company Interview Tracker Rule 20 6-Subcard En
 - **Active code folder:** `testing.jero.works` (NOT `hire.jero.works`).
 - **Current focus:** Forward Resume & Prescreen Report Data Consistency Audit & Permanent SSOT Fix (100% COMPLETED and VERIFIED).
 
-- *2026-11-12* — **Forward Resume Drawer — Prescreen Report Data Consistency Audit & Permanent SSOT Fix (COMPLETED & VERIFIED)**:
+- *2026-11-21* — **Bench Candidates Stage Colors, Bottom Strip Interchange & Tab Redesign (COMPLETED & VERIFIED)**:
+  - **Module & Scope**: Service Company Bench Candidates (`resources/views/service_company/bench-candidates/index.blade.php`, `resources/views/service_company/ajax_pages/bench-candidate-list-ajax.blade.php`), Design Standard (`docs/UI_UX_CARD_SUB_CARD_DESIGN_STANDARD.md`), Audit Document (`docs/audit documents/bench_candidates/2026-11-21-bench-candidates-stage-colors-and-card-layout-standard.md`).
+  - **Key Implementations**:
+    1. *Sub-Card 7 Layout Alignment*: Interchanged positions so technical skills keywords (`.cd-bottom-skills`) render on the left flex column and Added Date & Time (`d M y, h:i A T` per Rule 24), Days on Bench badge, and Change Status button render on the right (`.cd-bottom-right`).
+    2. *Action Tags Cleanup*: Completely removed redundant `Similar Clients` and `View Profile` buttons from Sub-Card 7 (Similar Clients is cleanly integrated in Sub-Card 5, and Profile View is bound to Sub-Card 1 name/avatar).
+    3. *Toolbar Refresh Button Removal*: Completely removed `#btnCafRefreshList` from `.caf-toolbar-card` for a sleeker, unencumbered search/sort toolbar.
+    4. *Canonical Bench Talent Stage Palette (Unique from Candidate Job Pipeline Stages)*:
+       - **Pool**: **Purple** (Royal Violet `#7c3aed`, bg `#faf5ff`, border `#ddd6fe` / `#c084fc`, num `#6d28d9`, label `#581c87`)
+       - **Bench**: **Blue** (Cobalt Royal Blue `#2563eb`, bg `#eff6ff`, border `#bfdbfe` / `#60a5fa`, num `#1d4ed8`, label `#1e40af`)
+       - **Hold**: **Orange** (Coral Tangerine Orange `#ea580c`, bg `#fff7ed`, border `#fed7aa` / `#fb923c`, num `#c2410c`, label `#9a3412`)
+       - **Placed**: **Green** (Forest Jade Green `#059669`, bg `#ecfdf5`, border `#a7f3d0` / `#34d399`, num `#065f46`, label `#047857`)
+       - **Exited**: **Red** (Crimson Ruby Red `#dc2626`, bg `#fef2f2`, border `#fecaca` / `#f87171`, num `#b91c1c`, label `#991b1b`)
+       - **All Talents**: **Cobalt Blue / Neutral Slate** (`#2563eb`, bg `#eff6ff`, border `#60a5fa`, num `#1d4ed8`, label `#1e40af`)
+
   - **Module & Scope**: New [`PrescreenDossierService`](../app/Services/PrescreenDossierService.php), `ForwardResumeAuthorizationService`, `CandidateSkillSyncService`, `CandidateJobAlignmentService`, `ProcessOutboxEventJob`, `ServiceCompanyCvTrackerController`, `ServiceCompanyJobApplicationController`, `ServiceCompanyBenchCandidatesController`, `ForwardResumeManager.js`, `CandidateSnapshotResolver.js`, OpenDoc/Forward Resume JS engines (`engine.v4.js`, `AgyForwardResumeEngine.js`, `AgyResumeRenderer.js`, `_forward_resume_engine.blade.php`), `test_fwd_resume.blade.php`, `showdetail.blade.php`, Audit Document ([`docs/audit documents/forward_resume/2026-11-12-prescreen-report-data-inconsistency-audit-and-fix.md`](../docs/audit%20documents/forward_resume/2026-11-12-prescreen-report-data-inconsistency-audit-and-fix.md)), and Test Suite (`tests/Feature/PrescreenReportDataIntegrityTest.php`).
   - **Root Causes & Permanent Fixes**:
     1. *Verified Skills Only & Zero Placeholder Injection*: Eliminated injection of unpossessed job requirements and `(skill_value=0, rating=0)` alignment placeholder rows from `candidate_job_skill_exp`. Prescreen dossiers strictly resolve verified candidate profile skills + explicitly evaluated `(candidate_id, job_id)` rows while preserving mixed-case skill names (`PHP`, `MySQL`, `TypeScript`).

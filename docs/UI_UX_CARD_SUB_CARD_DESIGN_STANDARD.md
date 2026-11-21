@@ -331,3 +331,19 @@ All modules, drawers, headers, and cards across JERO **MUST** reuse the followin
 10. **Consistent Work Mode Wording:** Always use `"Work From Office"` (never just `"Office"`) across all entity views and tabs.
 11. **Client Scope & Source Classification (No Bare `"Internal"`):** Sub-Card 1 header must render the unambiguous pill beside the status badge: **`My Organization`** (`.type-my-org`, Warm Amber/Yellow `#fef3c7` / `#92400e` / `#fcd34d` for own-company hiring), **`Internal Client`** (`.type-internal`, Blue `#eff6ff` / `#2563eb` / `#bfdbfe` for managed clients), **`Direct Client`** (`.type-direct`, Emerald `#ecfdf5` / `#059669` / `#a7f3d0` for marketplace clients), and for pending requests both **`Direct Client`** + **`Job Request`** (`.type-request`, Violet `#f5f3ff` / `#7c3aed` / `#ddd6fe`). Never shorten or replace `My Organization` or `Internal Client` with bare `"Internal"`.
 12. **Multi-Tenant Scoping:** All client-side storage, caches, and requests must carry explicit tenant scoping (`company_id`).
+
+### D. Canonical Bench Talent Stage Palettes & Visual Tokens (Bench / Pool Roster System)
+
+To ensure zero cross-domain confusion, Bench Talent roster stages use a dedicated, unique set of color tokens and visual treatments completely distinct from candidate recruitment pipeline stages (e.g. Sourcing cyan, Screening sky, Evaluation yellow/amber, Negotiation indigo, Offer soft violet, Joined emerald, Rejected rose):
+
+| Bench Stage | Canonical Label | Accent Color | Hex Code | Background Tint | Border Tint | Distinguishing Visual Identity |
+|---|---|---|---|---|---|---|
+| **Pool** | **`Pool`** | Royal Violet | `#7c3aed` | `#faf5ff` | `#ddd6fe` / `#c084fc` | Deep royal purple (distinguished from Job Offer `#8b5cf6`) |
+| **Bench** | **`Bench`** | Cobalt Royal Blue | `#2563eb` | `#eff6ff` | `#bfdbfe` / `#60a5fa` | Vibrant electric cobalt (distinguished from Job Screening sky `#38bdf8`) |
+| **Hold** | **`Hold`** | Tangerine Orange | `#ea580c` | `#fff7ed` | `#fed7aa` / `#fb923c` | Pure citrus orange (distinguished from Job Evaluation amber `#f59e0b`) |
+| **Placed** | **`Placed`** | Forest Jade Green | `#059669` | `#ecfdf5` | `#a7f3d0` / `#34d399` | Deep forest emerald (distinguished from Job Joined `#10b981`) |
+| **Exited** | **`Exited`** | Crimson Ruby Red | `#dc2626` | `#fef2f2` | `#fecaca` / `#f87171` | Ruby crimson red (distinguished from Job Rejected rose `#f43f5e`) |
+| **All Talents** | **`All Talents`** | Cobalt Royal Blue | `#2563eb` | `#eff6ff` | `#60a5fa` | System active primary |
+
+- **Sub-Card 7 Layout Standard for Bench Cards:** Keywords / technical skills tags (`.cd-bottom-skills`) are positioned on the **left**, and Added Date & Time (`d M y, h:i A T` per Rule 24), Days on Bench badge, and Change Status button are grouped on the **right** (`.cd-bottom-right`). "Similar Clients" and "View Profile" are not rendered in Sub-Card 7 to prevent redundancy with Sub-Card 5 and Sub-Card 1.
+
