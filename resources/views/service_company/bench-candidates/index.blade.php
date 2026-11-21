@@ -1596,7 +1596,7 @@
             justify-content: center !important;
         }
         .cd-talent-company {
-            font-size: 10.5px !important;
+            font-size: 10px !important;
             font-weight: 500 !important;
             color: #64748b !important;
             display: flex !important;
@@ -1610,7 +1610,7 @@
         }
         .cd-talent-company i {
             color: #94a3b8 !important;
-            font-size: 9.5px !important;
+            font-size: 9px !important;
         }
         .cd-subcard-similar-clients {
             width: 100% !important;
@@ -1725,52 +1725,52 @@
         }
         .cd-val-service { font-size: 8.5px !important; font-weight: 700 !important; }
         .cd-val-exp {
-            font-size: 10.5px !important;
+            font-size: 10px !important;
             font-weight: 500 !important;
             color: #475569 !important;
             line-height: 1.3 !important;
             font-variant-numeric: tabular-nums !important;
         }
         .cd-val-avail {
-            font-size: 10.5px !important;
+            font-size: 10px !important;
             font-weight: 500 !important;
             color: #475569 !important;
             line-height: 1.3 !important;
         }
         .cd-val-wm {
-            font-size: 10.5px !important;
+            font-size: 10px !important;
             font-weight: 500 !important;
             color: #475569 !important;
-            line-height: 1.3 !important;
+            line-height: 1.25 !important;
             margin-top: 2px !important;
         }
         .cd-val-location {
-            font-size: 11.5px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
             color: #0f172a !important;
-            line-height: 1.3 !important;
+            line-height: 1.25 !important;
         }
         .cd-val-edu {
-            font-size: 10.5px !important;
+            font-size: 10px !important;
             font-weight: 500 !important;
             color: #64748b !important;
-            line-height: 1.3 !important;
+            line-height: 1.25 !important;
             margin-top: 2px !important;
             text-transform: uppercase !important;
         }
         .cd-manager-name {
-            font-size: 11.5px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
             color: #0f172a !important;
-            line-height: 1.3 !important;
+            line-height: 1.25 !important;
         }
         .cd-rm-change-btn {
-            font-size: 10.5px !important;
+            font-size: 10px !important;
             font-weight: 600 !important;
             color: #009ef7 !important;
             cursor: pointer !important;
             text-decoration: none !important;
-            line-height: 1.35 !important;
+            line-height: 1.25 !important;
             margin-top: 2px !important;
         }
         .cd-rm-change-btn:hover { text-decoration: underline !important; color: #0077b6 !important; }
