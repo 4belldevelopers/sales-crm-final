@@ -45,9 +45,22 @@
     --jt-bg-subcard: #f8fafc;
 }
 
-/* Remove legacy toolbar gap & guarantee 0% horizontal page scroll */
+/* Remove legacy toolbar gap & guarantee 0% horizontal page scroll (Standardized Compact Spacing) */
 #kt_toolbar { display: none !important; }
-#kt_content { margin-top: 0 !important; padding-top: 12px !important; }
+.kt_content_joiningtracker,
+#kt_content.kt_content_joiningtracker,
+#kt_content {
+    margin-top: -65px !important;
+    padding-top: 10px !important;
+}
+@media (max-width: 991.98px) {
+    .kt_content_joiningtracker,
+    #kt_content.kt_content_joiningtracker,
+    #kt_content {
+        margin-top: -55px !important;
+        padding-top: 8px !important;
+    }
+}
 #kt_post { margin-top: 0 !important; }
 #kt_content_container,
 body { overflow-x: hidden !important; }
@@ -318,9 +331,10 @@ body { overflow-x: hidden !important; }
 }
 
 .jt-kpi-icon.blue   { background: #eff6ff !important; color: #2563eb !important; }
+.jt-kpi-icon.teal   { background: #f0fdfa !important; color: #0d9488 !important; }
+.jt-kpi-icon.amber  { background: #fffbeb !important; color: #d97706 !important; }
 .jt-kpi-icon.indigo { background: #eef2ff !important; color: #4f46e5 !important; }
 .jt-kpi-icon.green  { background: #ecfdf5 !important; color: #16a34a !important; }
-.jt-kpi-icon.amber  { background: #fffbeb !important; color: #d97706 !important; }
 .jt-kpi-icon.orange { background: #fff7ed !important; color: #ea580c !important; }
 .jt-kpi-icon.rose   { background: #fdf2f8 !important; color: #db2777 !important; }
 
@@ -400,9 +414,10 @@ body { overflow-x: hidden !important; }
 
 .jt-kpi-sub svg { width: 11px !important; height: 11px !important; flex-shrink: 0 !important; }
 .jt-kpi-sub.slate  { color: #64748b !important; }
+.jt-kpi-sub.teal   { color: #0d9488 !important; }
+.jt-kpi-sub.amber  { color: #d97706 !important; }
 .jt-kpi-sub.indigo { color: #4f46e5 !important; }
 .jt-kpi-sub.green  { color: #16a34a !important; }
-.jt-kpi-sub.amber  { color: #d97706 !important; }
 .jt-kpi-sub.orange { color: #ea580c !important; }
 .jt-kpi-sub.rose   { color: #db2777 !important; }
 
@@ -415,6 +430,24 @@ body { overflow-x: hidden !important; }
 .jt-kpi-card.active[data-tab="all"] .jt-kpi-icon { background: #ffffff !important; color: #2563eb !important; box-shadow: 0 1px 3px rgba(37, 99, 235, 0.16) !important; }
 .jt-kpi-card.active[data-tab="all"] .jt-kpi-num  { color: #1d4ed8 !important; }
 .jt-kpi-card.active[data-tab="all"] .jt-kpi-lbl  { color: #1e40af !important; font-weight: 700 !important; }
+
+.jt-kpi-card.active[data-tab="last_3_months"] {
+    background: #f0fdfa !important;
+    border-color: #5eead4 !important;
+    box-shadow: 0 0 0 1.5px #0d9488, 0 4px 14px rgba(13, 148, 136, 0.12) !important;
+}
+.jt-kpi-card.active[data-tab="last_3_months"] .jt-kpi-icon { background: #ffffff !important; color: #0d9488 !important; box-shadow: 0 1px 3px rgba(13, 148, 136, 0.16) !important; }
+.jt-kpi-card.active[data-tab="last_3_months"] .jt-kpi-num  { color: #0f766e !important; }
+.jt-kpi-card.active[data-tab="last_3_months"] .jt-kpi-lbl  { color: #115e59 !important; font-weight: 700 !important; }
+
+.jt-kpi-card.active[data-tab="this_month"] {
+    background: #fffbeb !important;
+    border-color: #fde047 !important;
+    box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.12) !important;
+}
+.jt-kpi-card.active[data-tab="this_month"] .jt-kpi-icon { background: #ffffff !important; color: #d97706 !important; box-shadow: 0 1px 3px rgba(217, 119, 6, 0.16) !important; }
+.jt-kpi-card.active[data-tab="this_month"] .jt-kpi-num  { color: #b45309 !important; }
+.jt-kpi-card.active[data-tab="this_month"] .jt-kpi-lbl  { color: #92400e !important; font-weight: 700 !important; }
 
 .jt-kpi-card.active[data-tab="joining_today"] {
     background: #eef2ff !important;
@@ -433,24 +466,6 @@ body { overflow-x: hidden !important; }
 .jt-kpi-card.active[data-tab="onboarded"] .jt-kpi-icon { background: #ffffff !important; color: #16a34a !important; box-shadow: 0 1px 3px rgba(22, 163, 74, 0.16) !important; }
 .jt-kpi-card.active[data-tab="onboarded"] .jt-kpi-num  { color: #15803d !important; }
 .jt-kpi-card.active[data-tab="onboarded"] .jt-kpi-lbl  { color: #166534 !important; font-weight: 700 !important; }
-
-.jt-kpi-card.active[data-tab="pending_docs"] {
-    background: #fffbeb !important;
-    border-color: #fbbf24 !important;
-    box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.13) !important;
-}
-.jt-kpi-card.active[data-tab="pending_docs"] .jt-kpi-icon { background: #ffffff !important; color: #d97706 !important; box-shadow: 0 1px 3px rgba(217, 119, 6, 0.18) !important; }
-.jt-kpi-card.active[data-tab="pending_docs"] .jt-kpi-num  { color: #b45309 !important; }
-.jt-kpi-card.active[data-tab="pending_docs"] .jt-kpi-lbl  { color: #92400e !important; font-weight: 700 !important; }
-
-.jt-kpi-card.active[data-tab="delayed"] {
-    background: #fff7ed !important;
-    border-color: #fb923c !important;
-    box-shadow: 0 0 0 1.5px #ea580c, 0 4px 14px rgba(234, 88, 12, 0.13) !important;
-}
-.jt-kpi-card.active[data-tab="delayed"] .jt-kpi-icon { background: #ffffff !important; color: #ea580c !important; box-shadow: 0 1px 3px rgba(234, 88, 12, 0.18) !important; }
-.jt-kpi-card.active[data-tab="delayed"] .jt-kpi-num  { color: #c2410c !important; }
-.jt-kpi-card.active[data-tab="delayed"] .jt-kpi-lbl  { color: #9a3412 !important; font-weight: 700 !important; }
 
 .jt-kpi-card.active[data-tab="backed_out"] {
     background: #fdf2f8 !important;
@@ -531,26 +546,15 @@ body { overflow-x: hidden !important; }
 }
 
 .jt-search-clear-btn {
-    border: none !important;
-    background: #e2e8f0 !important;
-    color: #64748b !important;
-    width: 19px !important;
-    height: 19px !important;
-    border-radius: 50% !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
-    padding: 0 !important;
-    transition: all 0.15s ease !important;
+    display: none !important;
 }
 
-.jt-search-clear-btn:hover {
-    background: #cbd5e1 !important;
-    color: #0f172a !important;
+.jt-search-subcard input::-webkit-search-decoration,
+.jt-search-subcard input::-webkit-search-cancel-button,
+.jt-search-subcard input::-webkit-search-results-button,
+.jt-search-subcard input::-webkit-search-results-decoration {
+    display: none !important;
+    -webkit-appearance: none;
 }
 
 .jt-search-kbd {
@@ -1392,7 +1396,7 @@ body { overflow-x: hidden !important; }
 
 @section('content')
 
-<div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-0 kt_content_joiningtracker" id="kt_content">
 <div class="post d-flex flex-column-fluid" id="kt_post">
 <div class="container-fluid px-0" id="kt_content_container">
 
@@ -1517,12 +1521,10 @@ body { overflow-x: hidden !important; }
          ══════════════════════════════════════════════════════════════ --}}
     @php
         $totalJoinInit      = (int) ($joiningStats['total'] ?? 0);
-        $todayJoinInit      = (int) ($joiningStats['today'] ?? 0);
-        $thisWeekInit       = (int) ($joiningStats['this_week'] ?? 0);
+        $last3MonthsInit    = (int) ($joiningStats['last_3_months'] ?? 0);
         $thisMonthInit      = (int) ($joiningStats['this_month'] ?? 0);
+        $todayJoinInit      = (int) ($joiningStats['today'] ?? 0);
         $onboardedInit      = (int) ($joiningStats['onboarded'] ?? 0);
-        $pendingDocsInit    = (int) ($joiningStats['pending_docs'] ?? 0);
-        $delayedInit        = (int) ($joiningStats['delayed'] ?? 0);
         $backedOutInit      = (int) ($joiningStats['backed_out'] ?? 0);
         $noShowInit         = (int) ($joiningStats['no_show'] ?? 0);
         $onboardedPctInit   = $totalJoinInit > 0 ? round(($onboardedInit / $totalJoinInit) * 100) : 0;
@@ -1544,21 +1546,60 @@ body { overflow-x: hidden !important; }
                 <div class="jt-kpi-meta">
                     <div class="jt-kpi-num-row">
                         <div class="jt-kpi-num" data-kpi="total">{{ $totalJoinInit }}</div>
-                        <span class="jt-kpi-pulse-badge" id="kpiTodayPill" style="{{ $todayJoinInit > 0 ? '' : 'display:none;' }}">
-                            <span class="jt-kpi-dot-pulse"></span>
-                            <span id="kpiTodayPillText">{{ $todayJoinInit }} today</span>
-                        </span>
                     </div>
                     <div class="jt-kpi-lbl">Total Joinings</div>
                 </div>
             </div>
             <div class="jt-kpi-sub slate">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <span id="kpiThisMonthSub" data-month="{{ $thisMonthShort }}">{{ $thisMonthInit }} this month ({{ $thisMonthShort }})</span>
+                <span>All scheduled &amp; completed</span>
             </div>
         </button>
 
-        {{-- Card 2: Joining Today --}}
+        {{-- Card 2: Joining Last 3 Months --}}
+        <button type="button" class="jt-kpi-card jt-kpi-filter" data-tab="last_3_months" onclick="selectJoiningTab('last_3_months')">
+            <div class="jt-kpi-top">
+                <div class="jt-kpi-icon teal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 14 14"/>
+                        <path d="M12 2a10 10 0 0 0-7 3l-3-1v5h5l-2-2a8 8 0 1 1-1.3 7.8"/>
+                    </svg>
+                </div>
+                <div class="jt-kpi-meta">
+                    <div class="jt-kpi-num" data-kpi="last_3_months">{{ $last3MonthsInit }}</div>
+                    <div class="jt-kpi-lbl">Joining Last 3 Months</div>
+                </div>
+            </div>
+            <div class="jt-kpi-sub teal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                <span>Past 90 days joinings</span>
+            </div>
+        </button>
+
+        {{-- Card 3: Joining This Month --}}
+        <button type="button" class="jt-kpi-card jt-kpi-filter" data-tab="this_month" onclick="selectJoiningTab('this_month')">
+            <div class="jt-kpi-top">
+                <div class="jt-kpi-icon amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </div>
+                <div class="jt-kpi-meta">
+                    <div class="jt-kpi-num" data-kpi="this_month">{{ $thisMonthInit }}</div>
+                    <div class="jt-kpi-lbl">Joining This Month</div>
+                </div>
+            </div>
+            <div class="jt-kpi-sub amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span id="kpiThisMonthSub" data-month="{{ $thisMonthShort }}">{{ $thisMonthShort }} schedule</span>
+            </div>
+        </button>
+
+        {{-- Card 4: Joining Today --}}
         <button type="button" class="jt-kpi-card jt-kpi-filter" data-tab="joining_today" onclick="selectJoiningTab('joining_today')">
             <div class="jt-kpi-top">
                 <div class="jt-kpi-icon indigo">
@@ -1577,11 +1618,11 @@ body { overflow-x: hidden !important; }
             </div>
             <div class="jt-kpi-sub indigo">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m18 15-6-6-6 6"/></svg>
-                <span id="kpiThisWeekSub">{{ $thisWeekInit }} this week</span>
+                <span>Scheduled for today</span>
             </div>
         </button>
 
-        {{-- Card 3: Onboarded --}}
+        {{-- Card 5: Joined & Onboarded --}}
         <button type="button" class="jt-kpi-card jt-kpi-filter" data-tab="onboarded" onclick="selectJoiningTab('onboarded')">
             <div class="jt-kpi-top">
                 <div class="jt-kpi-icon green">
@@ -1592,7 +1633,7 @@ body { overflow-x: hidden !important; }
                 </div>
                 <div class="jt-kpi-meta">
                     <div class="jt-kpi-num" data-kpi="onboarded">{{ $onboardedInit }}</div>
-                    <div class="jt-kpi-lbl">Onboarded</div>
+                    <div class="jt-kpi-lbl">Joined &amp; Onboarded</div>
                 </div>
             </div>
             <div class="jt-kpi-sub green">
@@ -1601,49 +1642,7 @@ body { overflow-x: hidden !important; }
             </div>
         </button>
 
-        {{-- Card 4: Pending Docs --}}
-        <button type="button" class="jt-kpi-card jt-kpi-filter" data-tab="pending_docs" onclick="selectJoiningTab('pending_docs')">
-            <div class="jt-kpi-top">
-                <div class="jt-kpi-icon amber">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                    </svg>
-                </div>
-                <div class="jt-kpi-meta">
-                    <div class="jt-kpi-num" data-kpi="pending_docs">{{ $pendingDocsInit }}</div>
-                    <div class="jt-kpi-lbl">Pending Docs</div>
-                </div>
-            </div>
-            <div class="jt-kpi-sub amber">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span>Docs in progress</span>
-            </div>
-        </button>
-
-        {{-- Card 5: Delayed --}}
-        <button type="button" class="jt-kpi-card jt-kpi-filter" data-tab="delayed" onclick="selectJoiningTab('delayed')">
-            <div class="jt-kpi-top">
-                <div class="jt-kpi-icon orange">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                </div>
-                <div class="jt-kpi-meta">
-                    <div class="jt-kpi-num" data-kpi="delayed">{{ $delayedInit }}</div>
-                    <div class="jt-kpi-lbl">Delayed</div>
-                </div>
-            </div>
-            <div class="jt-kpi-sub orange">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
-                <span>Reschedule pending</span>
-            </div>
-        </button>
-
-        {{-- Card 6: Backed Out --}}
+        {{-- Card 6: Joined & Backedout --}}
         <button type="button" class="jt-kpi-card jt-kpi-filter" data-tab="backed_out" onclick="selectJoiningTab('backed_out')">
             <div class="jt-kpi-top">
                 <div class="jt-kpi-icon rose">
@@ -1656,7 +1655,7 @@ body { overflow-x: hidden !important; }
                 </div>
                 <div class="jt-kpi-meta">
                     <div class="jt-kpi-num" data-kpi="backed_out">{{ $backedOutInit }}</div>
-                    <div class="jt-kpi-lbl">Backed Out</div>
+                    <div class="jt-kpi-lbl">Joined &amp; Backedout</div>
                 </div>
             </div>
             <div class="jt-kpi-sub rose">
@@ -1673,7 +1672,6 @@ body { overflow-x: hidden !important; }
         <div class="jt-search-subcard">
             <i class="fas fa-search"></i>
             <input type="text" id="jt_search" placeholder="Search by candidate name, job title, client, recruiter, or ID..." autocomplete="off" />
-            <button type="button" class="jt-search-clear-btn" id="jtSearchClear" style="display:none;" title="Clear search (Esc)" aria-label="Clear search">✕</button>
             <kbd class="jt-search-kbd" id="jtSearchKbd" title="Press Ctrl+K to search">Ctrl+K</kbd>
         </div>
 
@@ -1698,59 +1696,6 @@ body { overflow-x: hidden !important; }
                     <option value="10">Newest (Offer Date)</option>
                 </select>
             </div>
-
-            <button type="button" class="jt-reset-btn" id="jtResetBtn" onclick="window.jeroJoiningTracker && window.jeroJoiningTracker.resetFilters()" title="Reset all filters">
-                <i class="fas fa-undo-alt"></i>
-                <span>Reset</span>
-            </button>
-        </div>
-    </div>
-
-    {{-- ══════════════════════════════════════════════════════════════
-         RULE 20 TIER 2: DEDICATED WHITE SUB-TABS CARD
-         ══════════════════════════════════════════════════════════════ --}}
-    <div class="jt-tabs-card">
-        <div class="jt-tabs-group" id="jt_tabs">
-            <button type="button" class="jt-tab-btn active" data-filter="all">
-                <span>All</span>
-                <span class="jt-tab-badge" data-tab-count="total">{{ $totalJoinInit }}</span>
-            </button>
-            <button type="button" class="jt-tab-btn" data-filter="joining_today">
-                <span>Joining Today</span>
-                <span class="jt-tab-badge badge-today" data-tab-count="today">{{ $todayJoinInit }}</span>
-            </button>
-            <button type="button" class="jt-tab-btn" data-filter="this_week">
-                <span>This Week</span>
-                <span class="jt-tab-badge badge-week" data-tab-count="this_week">{{ $thisWeekInit }}</span>
-            </button>
-            <button type="button" class="jt-tab-btn" data-filter="delayed">
-                <span>Delayed</span>
-                <span class="jt-tab-badge badge-delayed" data-tab-count="delayed">{{ $delayedInit }}</span>
-            </button>
-            <button type="button" class="jt-tab-btn" data-filter="no_show">
-                <span>No Show</span>
-                <span class="jt-tab-badge badge-noshow" data-tab-count="no_show">{{ $noShowInit }}</span>
-            </button>
-            <button type="button" class="jt-tab-btn" data-filter="pending_docs">
-                <span>Pending Docs</span>
-                <span class="jt-tab-badge badge-docs" data-tab-count="pending_docs">{{ $pendingDocsInit }}</span>
-            </button>
-            <button type="button" class="jt-tab-btn" data-filter="onboarded">
-                <span>Onboarded</span>
-                <span class="jt-tab-badge badge-onboarded" data-tab-count="onboarded">{{ $onboardedInit }}</span>
-            </button>
-            <button type="button" class="jt-tab-btn" data-filter="backed_out">
-                <span>Backed Out</span>
-                <span class="jt-tab-badge badge-backedout" data-tab-count="backed_out">{{ $backedOutInit }}</span>
-            </button>
-        </div>
-
-        <div class="jt-tabs-right-meta">
-            <span id="jtShowingSummary">Loading joinings...</span>
-            <span class="jt-live-chip" title="Real-time Elasticsearch + Reverb projection">
-                <span class="jt-live-dot"></span>
-                <span>Live</span>
-            </span>
         </div>
     </div>
 
@@ -2025,11 +1970,8 @@ body { overflow-x: hidden !important; }
         stream: document.getElementById('joining-tracker'),
         pagination: document.getElementById('jt_pagination'),
         search: document.getElementById('jt_search'),
-        searchClear: document.getElementById('jtSearchClear'),
         country: document.getElementById('jt_country'),
         sort: document.getElementById('jt_sort'),
-        tabs: document.getElementById('jt_tabs'),
-        summary: document.getElementById('jtShowingSummary'),
         refreshBtn: document.getElementById('jtRefreshBtn')
     };
 
@@ -2043,11 +1985,8 @@ body { overflow-x: hidden !important; }
         }
     }
 
-    /* ── Sync Active Sub-Tab & KPI Card Highlight ── */
+    /* ── Sync Active KPI Card Highlight ── */
     function syncActiveTabUI(tabKey) {
-        document.querySelectorAll('#jt_tabs .jt-tab-btn').forEach(function (btn) {
-            btn.classList.toggle('active', btn.dataset.filter === tabKey);
-        });
         document.querySelectorAll('#jtKpiGrid .jt-kpi-filter').forEach(function (card) {
             card.classList.toggle('active', card.dataset.tab === tabKey);
         });
@@ -2071,10 +2010,6 @@ body { overflow-x: hidden !important; }
         }
         if (els.pagination) {
             els.pagination.innerHTML = resp.pagination || '';
-        }
-        if (els.summary && resp.total !== undefined) {
-            var totalVal = Number(resp.total) || 0;
-            els.summary.textContent = totalVal + (totalVal === 1 ? ' candidate matching' : ' candidates matching');
         }
         if (resp.joiningCounts) {
             updateCounts(resp.joiningCounts);
@@ -2154,19 +2089,11 @@ body { overflow-x: hidden !important; }
         });
     }
 
-    /* ── Sync KPI cards + tab badges + header pill ── */
+    /* ── Sync KPI cards + header pill ── */
     function updateCounts(c) {
         if (!c) return;
         var n = function (v) { return (v != null ? Number(v) : 0); };
         var total = n(c.total);
-
-        // Update sub-tab badges inside #jt_tabs (never touch KPI cards or parent buttons)
-        document.querySelectorAll('#jt_tabs .jt-tab-badge').forEach(function (el) {
-            var k = el.getAttribute('data-tab-count') || el.getAttribute('data-tab');
-            if (k && c[k] != null) {
-                el.textContent = n(c[k]);
-            }
-        });
 
         // Update numeric metric elements inside KPI cards only
         document.querySelectorAll('#jtKpiGrid [data-kpi]').forEach(function (el) {
@@ -2176,29 +2103,6 @@ body { overflow-x: hidden !important; }
 
         var headerBadge = document.getElementById('jtHeaderTotalBadge');
         if (headerBadge) headerBadge.textContent = total;
-
-        var todayPill = document.getElementById('kpiTodayPill');
-        var todayPillText = document.getElementById('kpiTodayPillText');
-        var todayCount = n(c.today);
-        if (todayPill && todayPillText) {
-            if (todayCount > 0) {
-                todayPill.style.display = 'inline-flex';
-                todayPillText.textContent = todayCount + ' today';
-            } else {
-                todayPill.style.display = 'none';
-            }
-        }
-
-        var thisMonthEl = document.getElementById('kpiThisMonthSub');
-        if (thisMonthEl) {
-            var monthTag = thisMonthEl.getAttribute('data-month') || '';
-            thisMonthEl.textContent = n(c.this_month) + ' this month' + (monthTag ? ' (' + monthTag + ')' : '');
-        }
-
-        var thisWeekEl = document.getElementById('kpiThisWeekSub');
-        if (thisWeekEl) {
-            thisWeekEl.textContent = n(c.this_week) + ' this week';
-        }
 
         document.querySelectorAll('[data-kpi-pct]').forEach(function (el) {
             var k = el.getAttribute('data-kpi-pct');
@@ -2221,7 +2125,6 @@ body { overflow-x: hidden !important; }
         state.tab = 'all';
 
         if (els.search) els.search.value = '';
-        if (els.searchClear) els.searchClear.style.display = 'none';
         if (els.country) els.country.value = '';
         if (els.sort) els.sort.value = '12';
 
@@ -2235,7 +2138,6 @@ body { overflow-x: hidden !important; }
         els.search.addEventListener('input', function () {
             clearTimeout(searchTimer);
             var val = this.value;
-            if (els.searchClear) els.searchClear.style.display = val.length > 0 ? 'inline-flex' : 'none';
             searchTimer = setTimeout(function () {
                 state.search = val;
                 fetchTable(true);
@@ -2244,19 +2146,9 @@ body { overflow-x: hidden !important; }
         els.search.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && this.value) {
                 this.value = '';
-                if (els.searchClear) els.searchClear.style.display = 'none';
                 state.search = '';
                 fetchTable(true);
             }
-        });
-    }
-
-    if (els.searchClear) {
-        els.searchClear.addEventListener('click', function () {
-            if (els.search) els.search.value = '';
-            this.style.display = 'none';
-            state.search = '';
-            fetchTable(true);
         });
     }
 
@@ -2281,12 +2173,6 @@ body { overflow-x: hidden !important; }
             fetchTable(true);
         });
     }
-
-    document.querySelectorAll('#jt_tabs .jt-tab-btn').forEach(function (tab) {
-        tab.addEventListener('click', function () {
-            selectJoiningTab(this.dataset.filter);
-        });
-    });
 
     /* Pagination (delegated) */
     if (els.pagination) {

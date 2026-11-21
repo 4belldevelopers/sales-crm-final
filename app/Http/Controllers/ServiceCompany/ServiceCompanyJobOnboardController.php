@@ -40,12 +40,13 @@ class ServiceCompanyJobOnboardController extends ServiceCompanyBaseController
         // avoidable MySQL read load on page loads while maintaining zero flash of 0.
         $this->joiningStats = [
             'total' => (int) $this->appCounter,
+            'last_3_months' => 0,
+            'this_month' => 0,
             'today' => 0,
             'joined' => 0,
             'backed_out' => 0,
             'onboarded' => 0,
             'this_week' => 0,
-            'this_month' => 0,
             'delayed' => 0,
             'no_show' => 0,
             'pending_docs' => 0,

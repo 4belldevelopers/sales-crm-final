@@ -1113,6 +1113,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $joiningTabFilterClause = null;
             if ($status_cus == 6 && ! empty($joining_tab_filter) && $joining_tab_filter !== 'all') {
                 switch ($joining_tab_filter) {
+                    case 'last_3_months': $joiningTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now-90d/d', 'lte' => 'now']]];
+                        break;
+                    case 'this_month':    $joiningTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/M', 'lt' => 'now+1M/M']]];
+                        break;
                     case 'joining_today': $joiningTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]];
                         break;
                     case 'this_week':     $joiningTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]];
@@ -1383,6 +1387,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                             'today' => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
                             'this_week' => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
                             'this_month' => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/M', 'lt' => 'now+1M/M']]]],
+                            'last_3_months' => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now-90d/d', 'lte' => 'now']]]],
                             'delayed' => ['filter' => $fDelayed],
                             'no_show' => ['filter' => ['term' => ['of_offer_acceptance' => 3]]],
                             'pending_docs' => ['filter' => ['term' => ['of_offer_acceptance' => 1]]],
@@ -1394,12 +1399,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $ja = $jResp['aggregations'] ?? [];
                 $joiningCounts = [
                     'total' => (int) ($jResp['hits']['total']['value'] ?? 0),
+                    'last_3_months' => (int) ($ja['last_3_months']['doc_count'] ?? 0),
+                    'this_month' => (int) ($ja['this_month']['doc_count'] ?? 0),
                     'today' => (int) ($ja['today']['doc_count'] ?? 0),
                     'joined' => (int) ($ja['joined']['doc_count'] ?? 0),
                     'backed_out' => (int) ($ja['backed_out']['doc_count'] ?? 0),
                     'onboarded' => (int) ($ja['onboarded']['doc_count'] ?? 0),
                     'this_week' => (int) ($ja['this_week']['doc_count'] ?? 0),
-                    'this_month' => (int) ($ja['this_month']['doc_count'] ?? 0),
                     'delayed' => (int) ($ja['delayed']['doc_count'] ?? 0),
                     'no_show' => (int) ($ja['no_show']['doc_count'] ?? 0),
                     'pending_docs' => (int) ($ja['pending_docs']['doc_count'] ?? 0),
