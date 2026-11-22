@@ -336,8 +336,109 @@ input[type="radio"]:checked {
 .atc-editor { border:1px solid #eef0f5; border-radius:11px; padding:16px 18px; max-height:520px; overflow:auto; background:#fff; }
 .atc-editor, .atc-editor * { font-size:13px; line-height:1.6; color:#334155; }
 .atc-editor h1,.atc-editor h2,.atc-editor h3 { font-size:14px !important; }
-.agency-agreement,.agency-agreement *{box-sizing:border-box;font-family:'Poppins',sans-serif!important}.agency-agreement{color:#151b3b;font-size:12px}.aat-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin:0 2px 16px}.aat-title-wrap{display:flex;gap:14px;min-width:0}.aat-hero-icon,.aat-sec-icon,.aat-flow-icon{display:inline-flex;align-items:center;justify-content:center;color:#6c3ff2;background:#f1ecff;border-radius:10px;flex:0 0 auto}.aat-hero-icon{width:50px;height:50px}.aat-hero-icon svg{width:27px;height:27px}.aat-title{margin:0;color:#111733;font-size:20px!important;font-weight:600!important;line-height:1.25}.aat-sub{max-width:650px;margin:6px 0 0;color:#53617f;font-size:12px;line-height:1.55}.aat-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;min-width:245px}.aat-status-row{display:flex;align-items:center;gap:8px;color:#53617f;font-size:11px;grid-column:1/-1}.aat-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:600}.aat-pill.ok{color:#0c8f52;background:#e8f9ef}.aat-pill.v{color:#6941c6;background:#f0e9ff}.aat-card{margin:0 2px 16px;padding:18px;background:#fff;border:1px solid #e8edf5;border-radius:14px;box-shadow:0 2px 6px rgba(15,23,42,.035)}.aat-sec-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.aat-sec-title{display:flex;gap:12px;align-items:flex-start}.aat-sec-icon{width:34px;height:34px}.aat-sec-icon svg{width:18px;height:18px}.aat-sec-t{font-size:14px;font-weight:600;color:#111733}.aat-sec-s{margin-top:2px;color:#73809a;font-size:11px}.aat-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:8px 14px;border:1px solid #d8c9ff;border-radius:7px;background:#fff;color:#6941c6;font-size:11px;font-weight:600;text-decoration:none}.aat-btn.primary{background:linear-gradient(135deg,#7c4dff,#673ab7);border-color:#673ab7;color:#fff}.aat-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}.aat-commercial-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.aat-commercial{padding:18px;border:1px solid #e5ebf3;border-radius:12px;background:#fff}.aat-commercial.purple{background:linear-gradient(135deg,#fff,#fbf8ff)}.aat-commercial.orange{background:linear-gradient(135deg,#fff,#fff9f1)}.aat-service-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.aat-service-title{display:flex;align-items:center;gap:12px;color:#5f3bd5;font-size:13px;font-weight:600}.aat-service-title.orange{color:#d56a00}.aat-avatar{width:48px;height:48px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#f1ecff;color:#6c3ff2}.aat-avatar.orange{background:#fff0de;color:#d56a00}.aat-avatar svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2}.aat-tag{padding:6px 9px;border-radius:7px;background:#f1ecff;color:#6c3ff2;font-size:10px;font-weight:600}.aat-tag.orange{background:#fff0de;color:#d56a00}.aat-rows{display:grid;gap:0}.aat-row{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;min-height:36px;border-bottom:1px solid #edf1f6;color:#24304d;font-size:11.5px}.aat-row:last-child{border-bottom:0}.aat-row .label{display:flex;align-items:center;gap:9px;color:#53617f}.aat-row .label svg{width:14px;height:14px;color:#7c4dff;fill:none;stroke:currentColor;stroke-width:2}.aat-row .value{font-weight:600;color:#1b2440}.aat-note{margin-top:14px;padding:10px 12px;border:1px solid #ddd1ff;border-radius:7px;background:#fbf9ff;color:#5f3bd5;font-size:11px}.aat-note.orange{border-color:#ffd9a8;background:#fffaf2;color:#c45f00}.aat-two-col{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.35fr);gap:16px}.aat-rule-grid{display:grid;gap:10px}.aat-rule{display:grid;grid-template-columns:190px 1fr;gap:12px;font-size:11.5px}.aat-rule .k{color:#53617f}.aat-rule .v{font-weight:600;color:#1b2440}.aat-yes{color:#12935a}.aat-no{color:#dc3545}.aat-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start;text-align:center}.aat-flow-step{position:relative}.aat-flow-step:not(:last-child):after{content:'→';position:absolute;right:-12px;top:27px;color:#a293d6;font-weight:600}.aat-flow-icon{width:56px;height:56px;margin:0 auto 10px;border:1px solid #dcd2ff;border-radius:50%;background:#fbf9ff}.aat-flow-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9}.aat-flow-n{font-size:13px;font-weight:700;color:#111733}.aat-flow-t{margin-top:5px;color:#111733;font-size:11.5px;font-weight:600}.aat-flow-s{margin-top:3px;color:#65718d;font-size:10.5px;line-height:1.45}.aat-vars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.aat-var{padding:12px;border:1px solid #e8edf5;border-radius:9px;background:#fff}.aat-var code{display:block;color:#6941c6;font-size:10.5px;font-weight:700;background:transparent}.aat-var span{display:block;margin-top:5px;color:#65718d;font-size:10.5px}.aat-editor-card .atc-editor{border-radius:0 0 10px 10px;max-height:410px}.aat-editor-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 12px}.aat-important{display:flex;gap:10px;margin:0 2px 18px;padding:14px 16px;border:1px solid #ddd1ff;border-radius:10px;background:#fbf9ff;color:#4d3a91;font-size:11.5px;line-height:1.5}.aat-form{display:none;margin-top:12px;padding:14px;border:1px dashed #d8c9ff;border-radius:10px;background:#fbf9ff}.aat-form.open{display:block}.aat-form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.aat-form label{display:block;color:#34405f;font-size:10.5px;font-weight:600}.aat-form input,.aat-form select{width:100%;height:34px;margin-top:5px;padding:6px 9px;border:1px solid #dbe3ee;border-radius:7px;background:#fff;color:#17203a;font-size:11px}
-.aat-drawer-overlay{position:fixed;top:0;right:0;bottom:0;left:220px;background:rgba(15,23,42,.34);opacity:0;visibility:hidden;z-index:1060;transition:opacity .18s ease}.aat-drawer-overlay.show{opacity:1;visibility:visible}.aat-drawer{position:fixed;top:0;right:0;bottom:0;width:min(1260px,calc((100vw - 220px)*.9));max-width:calc(100vw - 220px);background:#f8fafc;box-shadow:-18px 0 42px rgba(15,23,42,.18);z-index:1061;transform:translateX(105%);transition:transform .22s ease;overflow:auto;font-family:'Poppins',sans-serif}.aat-drawer.open{transform:translateX(0)}.aat-drawer-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;background:#fff;border-bottom:1px solid #e6ebf3}.aat-drawer-title{display:flex;gap:14px;align-items:center}.aat-drawer-title h3{margin:0;color:#111733;font-size:20px!important;font-weight:600!important}.aat-drawer-title p{margin:5px 0 0;color:#53617f;font-size:12px}.aat-drawer-close{width:34px;height:34px;border:1px solid #dce3ee;border-radius:8px;background:#fff;color:#64748b;font-size:22px;line-height:1}.aat-drawer-meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;color:#53617f;font-size:11px}.aat-drawer-body{padding:18px 22px 86px}.aat-drawer-tabs{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding:0 6px;border-bottom:1px solid #e6ebf3;background:#fff;border-radius:12px 12px 0 0}.aat-drawer-tab{min-height:52px;padding:0 18px;border:0;border-bottom:3px solid transparent;background:transparent;color:#31405f;font-size:13px;font-weight:600}.aat-drawer-tab.active{color:#6938ef;border-color:#6938ef}.aat-edit-alert{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding:13px 16px;border:1px solid #b9c7ff;border-radius:8px;background:#f6f8ff;color:#53617f;font-size:12px}.aat-edit-section{margin-bottom:16px;border:1px solid #e5ebf3;border-radius:12px;background:#fff;overflow:hidden}.aat-edit-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px;border-bottom:1px solid #eef2f7}.aat-edit-section-title{display:flex;align-items:center;gap:12px}.aat-edit-section-title h4{margin:0;color:#111733;font-size:16px!important;font-weight:600!important}.aat-edit-section-title p{margin:3px 0 0;color:#697797;font-size:11px}.aat-edit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 28px;padding:18px}.aat-field label{display:flex;align-items:center;gap:6px;margin:0 0 8px;color:#1f2a44;font-size:11px;font-weight:600}.aat-field label .req{color:#f04438}.aat-control,.aat-field select,.aat-field input{width:100%;height:42px;padding:9px 12px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#24304d;font-size:12px;font-weight:500}.aat-input-group{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center}.aat-input-group select,.aat-input-group input{border-radius:0}.aat-input-group select:first-child,.aat-input-group input:first-child{border-radius:7px 0 0 7px}.aat-input-group select:last-child,.aat-input-group input:last-child{border-radius:0 7px 7px 0;border-left:0}.aat-input-suffix{display:grid;grid-template-columns:minmax(0,1fr) 62px}.aat-input-suffix input{border-radius:7px 0 0 7px}.aat-input-suffix span{display:flex;align-items:center;justify-content:center;border:1px solid #dce3ee;border-left:0;border-radius:0 7px 7px 0;color:#53617f;background:#fff;font-size:12px}.aat-checks{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:42px}.aat-checks label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:8px 9px;border:1px solid #e5ebf3;border-radius:7px;color:#5138b8;background:#fff;font-size:11px}.aat-checks input{width:14px;height:14px;accent-color:#6d3df2}.aat-calc{grid-column:1/-1;margin-top:4px;padding:14px;border:1px solid #e3d7ff;border-radius:8px;background:#fbf8ff}.aat-calc.orange{border-color:#ffd59c;background:#fffaf2}.aat-calc h5{margin:0 0 12px;color:#6d3df2;font-size:13px;font-weight:600}.aat-calc.orange h5{color:#e16b00}.aat-calc-row{display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:center;gap:10px;max-width:980px;margin:0 auto;padding:12px;border:1px solid #eee7ff;border-radius:8px;background:#fff}.aat-calc-cell{color:#53617f;font-size:11px}.aat-calc-cell b{display:block;margin-top:4px;color:#111733;font-size:14px}.aat-general-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;padding:18px}.aat-drawer-footer{position:sticky;bottom:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;background:#fff;border-top:1px solid #e5ebf3}.aat-footer-actions{display:flex;gap:10px}.aat-btn.ghost{border-color:#dce3ee;color:#34405f}.aat-btn.save{min-width:150px}
+/* ===== Agency Terms & Conditions / Modern Card + Sub-Card Enterprise Standard (Rule 20) ===== */
+.agency-agreement, .agency-agreement * { box-sizing:border-box; font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif !important; }
+.agency-agreement { color:#0f172a; font-size:12px; }
+
+/* Tier 1: Toolbar Header Card */
+.cd-terms-header-card, .aat-hero { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin:0 0 16px 0 !important; padding:14px 18px !important; background:#f8fafc !important; border:1px solid #e2e8f0 !important; border-radius:10px !important; box-shadow:0 1px 3px rgba(15,23,42,0.04) !important; }
+.cd-terms-branding, .aat-title-wrap { display:flex; align-items:center; gap:14px; min-width:0; }
+.cd-terms-icon-box, .aat-hero-icon { width:42px; height:42px; border-radius:8px; background:#eff6ff !important; color:#2563eb !important; display:inline-flex; align-items:center; justify-content:center; flex:0 0 42px; }
+.cd-terms-icon-box svg, .aat-hero-icon svg { width:22px; height:22px; }
+.cd-terms-title, .aat-title { margin:0; font-size:15px !important; font-weight:700 !important; color:#0f172a !important; line-height:1.3; }
+.cd-terms-sub, .aat-sub { margin:4px 0 0; color:#64748b !important; font-size:11.5px !important; line-height:1.45; max-width:680px; }
+.cd-terms-badge { font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:5px; line-height:1.2; }
+.cd-terms-badge-success { background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; }
+.cd-terms-badge-primary { background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; }
+.cd-terms-badge-neutral { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+.cd-terms-dot { width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block; }
+.cd-terms-actions, .aat-actions { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.cd-btn-outline, .aat-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; height:34px; min-height:34px; padding:0 14px; border:1px solid #e2e8f0; border-radius:8px; background:#ffffff; color:#334155; font-size:11.5px; font-weight:600; text-decoration:none; cursor:pointer; transition:all 0.16s cubic-bezier(0.16, 1, 0.3, 1); }
+.cd-btn-outline:hover, .aat-btn:hover { background:#f8fafc; border-color:#cbd5e1; color:#0f172a; text-decoration:none; }
+.cd-btn-primary, .aat-btn.primary { background:#2563eb !important; border-color:#2563eb !important; color:#ffffff !important; box-shadow:0 1px 2px rgba(37,99,235,0.15); }
+.cd-btn-primary:hover, .aat-btn.primary:hover { background:#1d4ed8 !important; border-color:#1d4ed8 !important; color:#ffffff !important; }
+.cd-btn-outline svg, .cd-btn-primary svg, .aat-btn svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; }
+
+/* Tier 3: Modern Cards & Mandatory Header Background */
+.cd-terms-card, .aat-card { margin:0 0 16px 0 !important; background:#ffffff !important; border:1px solid #e2e8f0 !important; border-radius:10px !important; box-shadow:0 1px 3px rgba(15,23,42,0.04) !important; overflow:hidden !important; }
+.cd-card-header, .aat-sec-head { background:#f8fafc !important; border-bottom:1px solid #e2e8f0 !important; padding:12px 18px !important; margin:0 !important; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.cd-card-header-left, .aat-sec-title { display:flex; align-items:center; gap:12px; }
+.cd-card-icon-blue, .aat-sec-icon { width:32px; height:32px; border-radius:6px; background:#eff6ff !important; color:#2563eb !important; display:inline-flex; align-items:center; justify-content:center; flex:0 0 32px; }
+.cd-card-icon-blue svg, .aat-sec-icon svg { width:17px; height:17px; }
+.cd-card-title, .aat-sec-t { font-size:13.5px !important; font-weight:700 !important; color:#0f172a !important; line-height:1.25; margin:0; }
+.cd-card-sub, .aat-sec-s { margin:2px 0 0 !important; color:#64748b !important; font-size:11px !important; }
+.cd-tag-framework { display:inline-flex; align-items:center; padding:4px 9px; border-radius:6px; background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-size:11px; font-weight:600; }
+.cd-card-body { padding:16px; background:#ffffff; }
+
+/* Sub-Cards: Commercial Grid */
+.cd-commercial-grid, .aat-commercial-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; }
+.cd-commercial-subcard, .aat-commercial { background:#ffffff !important; border:1px solid #e2e8f0 !important; border-radius:8px !important; overflow:hidden !important; padding:0 !important; box-shadow:0 1px 2px rgba(15,23,42,0.02); transition:border-color 0.16s ease, box-shadow 0.16s ease; }
+.cd-commercial-subcard:hover, .aat-commercial:hover { border-color:#cbd5e1 !important; box-shadow:0 2px 6px rgba(15,23,42,0.04); }
+.cd-subcard-header, .aat-service-head { padding:10px 14px !important; border-bottom:1px solid #e2e8f0 !important; display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 !important; background:#f8fafc !important; }
+.cd-subcard-title-blue, .aat-service-title { display:flex; align-items:center; gap:10px; color:#0f172a !important; }
+.cd-subcard-title-amber, .aat-service-title.orange { display:flex; align-items:center; gap:10px; color:#0f172a !important; }
+.cd-avatar-blue, .aat-avatar { width:32px; height:32px; border-radius:6px; background:#eff6ff !important; color:#2563eb !important; display:inline-flex; align-items:center; justify-content:center; flex:0 0 32px; }
+.cd-avatar-amber, .aat-avatar.orange { width:32px; height:32px; border-radius:6px; background:#fffbeb !important; color:#d97706 !important; display:inline-flex; align-items:center; justify-content:center; flex:0 0 32px; }
+.cd-avatar-blue svg, .cd-avatar-amber svg, .aat-avatar svg { width:17px; height:17px; }
+.cd-subcard-title-text { font-size:13px; font-weight:700; color:#0f172a; line-height:1.2; }
+.cd-subcard-subtitle-text { font-size:10.5px; color:#64748b; margin-top:1px; }
+
+/* Sub-card Edit Pill Buttons */
+.cd-edit-pill, .aat-tag.aat-edit-pill { padding:5px 11px !important; border-radius:6px !important; font-size:11px !important; font-weight:600 !important; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:5px; transition:all 0.16s cubic-bezier(0.16, 1, 0.3, 1); }
+.cd-edit-pill-blue, .aat-tag.aat-edit-pill:not(.orange) { background:#ffffff !important; border:1px solid #bfdbfe !important; color:#2563eb !important; }
+.cd-edit-pill-blue:hover, .aat-tag.aat-edit-pill:not(.orange):hover { background:#eff6ff !important; border-color:#93c5fd !important; color:#1d4ed8 !important; text-decoration:none; }
+.cd-edit-pill-amber, .aat-tag.orange.aat-edit-pill { background:#ffffff !important; border:1px solid #fde68a !important; color:#d97706 !important; }
+.cd-edit-pill-amber:hover, .aat-tag.orange.aat-edit-pill:hover { background:#fffbeb !important; border-color:#fcd34d !important; color:#b45309 !important; text-decoration:none; }
+.cd-edit-pill svg, .aat-tag.aat-edit-pill svg { width:12px; height:12px; }
+
+/* Key-Value Matrix Rows */
+.cd-matrix-rows, .aat-rows { display:grid; gap:0; padding:4px 14px; }
+.cd-matrix-row, .aat-row { display:grid; grid-template-columns:190px minmax(0, 1fr); gap:12px; align-items:center; min-height:38px; border-bottom:1px solid #f1f5f9; font-size:11.5px; }
+.cd-matrix-row:last-child, .aat-row:last-child { border-bottom:0; }
+.cd-matrix-label, .aat-row .label { display:flex; align-items:center; gap:8px; color:#64748b !important; font-weight:500; }
+.cd-matrix-label i, .aat-row .label svg { width:14px; height:14px; font-size:13px; text-align:center; }
+.cd-matrix-value, .aat-row .value { font-weight:600; color:#0f172a !important; font-variant-numeric:tabular-nums; word-break:break-word; }
+.cd-tabular-val { font-variant-numeric:tabular-nums; }
+
+/* Sub-card Notes */
+.cd-subcard-note, .aat-note { margin:10px 14px 14px !important; padding:8px 12px !important; border-radius:6px !important; font-size:11px !important; font-weight:500; display:flex; align-items:center; gap:8px; line-height:1.4; }
+.cd-subcard-note-blue, .aat-note:not(.orange) { background:#eff6ff !important; border:1px solid #bfdbfe !important; color:#1e40af !important; }
+.cd-subcard-note-amber, .aat-note.orange { background:#fffbeb !important; border:1px solid #fde68a !important; color:#92400e !important; }
+
+/* Section 2 & 3: Two Column Layout */
+.cd-terms-two-col, .aat-two-col { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.15fr); gap:16px; margin:0 0 16px 0; }
+.cd-rules-grid, .aat-rule-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
+.cd-rule-cell, .aat-rule { background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; display:flex; flex-direction:column; gap:3px; }
+.cd-rule-key, .aat-rule .k { font-size:10.5px; color:#64748b; font-weight:500; }
+.cd-rule-val, .aat-rule .v { font-size:11.5px; color:#0f172a; font-weight:600; font-variant-numeric:tabular-nums; display:flex; align-items:center; gap:5px; }
+.cd-pill-status { display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:4px; font-size:10.5px; font-weight:600; }
+.cd-pill-status.ok, .aat-yes { background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; }
+.cd-pill-status.danger, .aat-no { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+
+/* Section 3: Acceptance Workflow */
+.cd-flow-grid, .aat-flow { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; align-items:stretch; position:relative; }
+.cd-flow-step, .aat-flow-step { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px 10px; text-align:center; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:120px; }
+.cd-flow-step-badge { position:absolute; top:6px; left:8px; width:18px; height:18px; border-radius:50%; background:#e2e8f0; color:#475569; font-size:9.5px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
+.cd-flow-icon, .aat-flow-icon { width:38px; height:38px; border-radius:50%; background:#eff6ff !important; color:#2563eb !important; display:inline-flex; align-items:center; justify-content:center; font-size:15px; margin:4px 0 8px; border:1px solid #bfdbfe; flex:0 0 38px; }
+.cd-flow-title, .aat-flow-t { font-size:11.5px; font-weight:700; color:#0f172a; margin-bottom:3px; }
+.cd-flow-desc, .aat-flow-s { font-size:10px; color:#64748b; line-height:1.35; }
+
+/* Section 4: Dynamic Variables */
+.cd-vars-grid, .aat-vars { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; }
+.cd-var-card, .aat-var { background:#f8fafc !important; border:1px solid #e2e8f0 !important; border-radius:6px !important; padding:8px 10px !important; display:flex; flex-direction:column; gap:4px; transition:border-color 0.15s ease, background-color 0.15s ease; }
+.cd-var-card:hover, .aat-var:hover { border-color:#cbd5e1 !important; background:#ffffff !important; }
+.cd-var-code, .aat-var code { font-size:10.5px !important; font-weight:700 !important; color:#2563eb !important; background:#eff6ff !important; border:1px solid #dbeafe !important; padding:2px 6px !important; border-radius:4px !important; width:fit-content; font-family:SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }
+.cd-var-desc, .aat-var span { font-size:10.5px !important; color:#64748b !important; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px !important; }
+
+/* Section 5: Agreement Content & Document Preview */
+.cd-agreement-document-box, .aat-editor-card .atc-editor { background:#ffffff !important; border:1px solid #e2e8f0 !important; border-radius:8px !important; padding:20px 24px !important; max-height:480px !important; overflow-y:auto !important; font-size:12.5px !important; line-height:1.65 !important; color:#334155 !important; }
+
+/* Bottom Important Banner */
+.cd-terms-bottom-banner, .aat-important { background:#f8fafc !important; border:1px solid #e2e8f0 !important; border-left:3.5px solid #2563eb !important; border-radius:8px !important; padding:12px 16px !important; color:#475569 !important; font-size:11.5px !important; display:flex; align-items:center; gap:12px; margin:0 0 16px 0 !important; line-height:1.5; }
+
+/* Mandatory Drawer & Modal Header Background Standard (Rule 20) */
+.apv-head, .avd-head, .aga-head, .aat-drawer-head, .aat-edit-section-head { background:#f8fafc !important; border-bottom:1px solid #e2e8f0 !important; }
+.aat-drawer-overlay{position:fixed;top:0;right:0;bottom:0;left:220px;background:rgba(15,23,42,.34);opacity:0;visibility:hidden;z-index:1060;transition:opacity .18s ease}.aat-drawer-overlay.show{opacity:1;visibility:visible}.aat-drawer{position:fixed;top:0;right:0;bottom:0;width:min(1260px,calc((100vw - 220px)*.9));max-width:calc(100vw - 220px);background:#f8fafc;box-shadow:-18px 0 42px rgba(15,23,42,.18);z-index:1061;transform:translateX(105%);transition:transform .22s ease;overflow:auto;font-family:'Poppins',sans-serif}.aat-drawer.open{transform:translateX(0)}.aat-drawer-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 22px;background:#f8fafc;border-bottom:1px solid #e2e8f0}.aat-drawer-title{display:flex;gap:14px;align-items:center}.aat-drawer-title h3{margin:0;color:#111733;font-size:20px!important;font-weight:600!important}.aat-drawer-title p{margin:5px 0 0;color:#53617f;font-size:12px}.aat-drawer-close{width:34px;height:34px;border:1px solid #dce3ee;border-radius:8px;background:#fff;color:#64748b;font-size:22px;line-height:1}.aat-drawer-meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;color:#53617f;font-size:11px}.aat-drawer-body{padding:18px 22px 86px}.aat-drawer-tabs{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding:0 6px;border-bottom:1px solid #e6ebf3;background:#fff;border-radius:12px 12px 0 0}.aat-drawer-tab{min-height:52px;padding:0 18px;border:0;border-bottom:3px solid transparent;background:transparent;color:#31405f;font-size:13px;font-weight:600}.aat-drawer-tab.active{color:#6938ef;border-color:#6938ef}.aat-edit-alert{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding:13px 16px;border:1px solid #b9c7ff;border-radius:8px;background:#f6f8ff;color:#53617f;font-size:12px}.aat-edit-section{margin-bottom:16px;border:1px solid #e5ebf3;border-radius:12px;background:#fff;overflow:hidden}.aat-edit-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px;border-bottom:1px solid #eef2f7}.aat-edit-section-title{display:flex;align-items:center;gap:12px}.aat-edit-section-title h4{margin:0;color:#111733;font-size:16px!important;font-weight:600!important}.aat-edit-section-title p{margin:3px 0 0;color:#697797;font-size:11px}.aat-edit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 28px;padding:18px}.aat-field label{display:flex;align-items:center;gap:6px;margin:0 0 8px;color:#1f2a44;font-size:11px;font-weight:600}.aat-field label .req{color:#f04438}.aat-control,.aat-field select,.aat-field input{width:100%;height:42px;padding:9px 12px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#24304d;font-size:12px;font-weight:500}.aat-input-group{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center}.aat-input-group select,.aat-input-group input{border-radius:0}.aat-input-group select:first-child,.aat-input-group input:first-child{border-radius:7px 0 0 7px}.aat-input-group select:last-child,.aat-input-group input:last-child{border-radius:0 7px 7px 0;border-left:0}.aat-input-suffix{display:grid;grid-template-columns:minmax(0,1fr) 62px}.aat-input-suffix input{border-radius:7px 0 0 7px}.aat-input-suffix span{display:flex;align-items:center;justify-content:center;border:1px solid #dce3ee;border-left:0;border-radius:0 7px 7px 0;color:#53617f;background:#fff;font-size:12px}.aat-checks{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:42px}.aat-checks label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:8px 9px;border:1px solid #e5ebf3;border-radius:7px;color:#5138b8;background:#fff;font-size:11px}.aat-checks input{width:14px;height:14px;accent-color:#6d3df2}.aat-calc{grid-column:1/-1;margin-top:4px;padding:14px;border:1px solid #e3d7ff;border-radius:8px;background:#fbf8ff}.aat-calc.orange{border-color:#ffd59c;background:#fffaf2}.aat-calc h5{margin:0 0 12px;color:#6d3df2;font-size:13px;font-weight:600}.aat-calc.orange h5{color:#e16b00}.aat-calc-row{display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:center;gap:10px;max-width:980px;margin:0 auto;padding:12px;border:1px solid #eee7ff;border-radius:8px;background:#fff}.aat-calc-cell{color:#53617f;font-size:11px}.aat-calc-cell b{display:block;margin-top:4px;color:#111733;font-size:14px}.aat-general-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;padding:18px}.aat-drawer-footer{position:sticky;bottom:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;background:#fff;border-top:1px solid #e5ebf3}.aat-footer-actions{display:flex;gap:10px}.aat-btn.ghost{border-color:#dce3ee;color:#34405f}.aat-btn.save{min-width:150px}
 .aga-drawer-overlay{position:fixed;top:0;right:0;bottom:0;left:220px;background:rgba(15,23,42,.35);opacity:0;visibility:hidden;z-index:1070;transition:opacity .18s ease}.aga-drawer-overlay.show{opacity:1;visibility:visible}.aga-drawer{position:fixed;top:0;right:0;bottom:0;width:min(1380px,calc((100vw - 220px)*.9));max-width:calc(100vw - 220px);background:#f8fafc;box-shadow:-18px 0 46px rgba(15,23,42,.2);z-index:1071;transform:translateX(105%);transition:transform .22s ease;overflow:auto;font-family:'Poppins',sans-serif;color:#101833}.aga-drawer.open{transform:translateX(0)}.aga-head{position:sticky;top:0;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;background:#fff;border-bottom:1px solid #e6ebf3}.aga-title-wrap{display:flex;align-items:center;gap:14px}.aga-title-wrap h3{margin:0;font-size:20px!important;font-weight:600!important;color:#101833}.aga-title-wrap p{margin:5px 0 0;color:#53617f;font-size:12px}.aga-head-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}.aga-meta{display:grid;gap:4px;margin-right:12px;color:#52607b;font-size:11px}.aga-info{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 22px 0;padding:12px 14px;border:1px solid #d8d3ff;border-radius:8px;background:#fbfaff;color:#4d35b0;font-size:12px}.aga-shell{display:grid;grid-template-columns:230px minmax(0,1fr) 245px;gap:14px;padding:14px 22px 22px}.aga-side,.aga-main,.aga-right{background:#fff;border:1px solid #e5ebf3;border-radius:12px}.aga-side{padding:14px}.aga-side h4,.aga-right h4{margin:0 0 12px;font-size:13px!important;font-weight:600!important;color:#101833}.aga-search{width:100%;height:35px;margin-bottom:10px;padding:8px 10px;border:1px solid #dce3ee;border-radius:7px;color:#53617f;font-size:11px}.aga-outline{display:grid;gap:2px;margin:0;padding:0;list-style:none}.aga-outline li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 7px;border-radius:7px;color:#101833;font-size:11px;font-weight:600}.aga-outline li.active{background:#f1ecff;color:#6338e8;border-left:3px solid #6338e8}.aga-sublist{margin:3px 0 9px 14px;padding:0;list-style:none;color:#53617f;font-size:10.5px}.aga-sublist li{padding:4px 0}.aga-add-section{width:100%;margin:12px 0;padding:9px;border:1px solid #d8c9ff;border-radius:7px;background:#fff;color:#6338e8;font-size:11px;font-weight:600}.aga-settings{margin-top:12px;padding-top:12px;border-top:1px solid #edf1f6}.aga-settings label{display:block;margin:9px 0 5px;color:#53617f;font-size:10.5px}.aga-settings select{width:100%;height:34px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#24304d;font-size:11px}.aga-main{overflow:hidden}.aga-tabs{display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid #eef2f7}.aga-tabs-left{display:flex;gap:18px}.aga-tab{display:inline-flex;align-items:center;gap:7px;min-height:48px;border:0;border-bottom:3px solid transparent;background:transparent;color:#31405f;font-size:12px;font-weight:600}.aga-tab.active{color:#6338e8;border-color:#6338e8}.aga-tools{display:flex;gap:8px;flex-wrap:wrap}.aga-toolbar{display:flex;align-items:center;gap:7px;padding:12px 14px;border-bottom:1px solid #eef2f7;background:#fff}.aga-toolbar select,.aga-toolbar button{height:34px;border:1px solid #dce3ee;border-radius:6px;background:#fff;color:#24304d;font-size:11px}.aga-toolbar select{padding:0 10px}.aga-toolbar button{min-width:34px;font-weight:700}.aga-editor-wrap{padding:12px 14px}.aga-editor-card{border:1px solid #e5ebf3;border-radius:10px;overflow:hidden;background:#fff}.aga-editor-card textarea{min-height:560px}.aga-editor-card .cke{border:0!important}.aga-editor-card .cke_contents{min-height:560px!important}.aga-editor-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid #eef2f7;color:#53617f;font-size:10.5px}.aga-right{padding:14px}.aga-var-tabs{display:grid;grid-template-columns:1fr 1fr;margin-bottom:10px;border-bottom:1px solid #e5ebf3}.aga-var-tabs span{padding:8px;text-align:center;color:#53617f;font-size:11px;font-weight:600}.aga-var-tabs .active{color:#6338e8;border-bottom:3px solid #6338e8}.aga-var-list{display:grid;gap:7px;max-height:285px;overflow:auto;padding-right:4px}.aga-var-item{display:flex;align-items:center;justify-content:space-between;gap:8px}.aga-var-item code{padding:4px 7px;border:1px solid #ded6ff;border-radius:5px;background:#fbf9ff;color:#6338e8;font-size:10px}.aga-var-item span{color:#53617f;font-size:10px}.aga-card{margin-top:12px;padding:13px;border:1px solid #e5ebf3;border-radius:10px;background:#fff}.aga-meta-list{display:grid;gap:9px}.aga-meta-row{display:flex;justify-content:space-between;gap:10px;color:#53617f;font-size:11px}.aga-meta-row b{color:#17203a;font-weight:600}.aga-tips{border-color:#ffd9a8;background:#fffaf2;color:#9a4f00}.aga-tips ul{margin:0;padding-left:18px}.aga-tips li{margin:6px 0;font-size:11px}.aga-close{width:34px;height:34px;border:1px solid #dce3ee;border-radius:8px;background:#fff;color:#64748b;font-size:22px;line-height:1}
 .avd-overlay{position:fixed;top:0;right:0;bottom:0;left:220px;background:rgba(15,23,42,.34);opacity:0;visibility:hidden;z-index:1080;transition:opacity .18s ease}.avd-overlay.show{opacity:1;visibility:visible}.avd-drawer{position:fixed;top:0;right:0;bottom:0;width:min(1380px,calc((100vw - 220px)*.9));max-width:calc(100vw - 220px);background:#f8fafc;box-shadow:-18px 0 46px rgba(15,23,42,.2);z-index:1081;transform:translateX(105%);transition:transform .22s ease;overflow:auto;font-family:'Poppins',sans-serif;color:#101833}.avd-drawer.open{transform:translateX(0)}.avd-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;background:#fff;border-bottom:1px solid #e6ebf3}.avd-title{display:flex;align-items:center;gap:14px}.avd-title h3{margin:0;color:#101833;font-size:22px!important;font-weight:600!important}.avd-title p{margin:6px 0 0;color:#53617f;font-size:12px;line-height:1.5}.avd-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-left:auto}.avd-body{display:grid;grid-template-columns:235px minmax(0,1fr);gap:14px;padding:14px 22px 22px}.avd-card{background:#fff;border:1px solid #e5ebf3;border-radius:12px;box-shadow:0 2px 6px rgba(15,23,42,.025)}.avd-pad{padding:16px}.avd-card h4{margin:0 0 14px;color:#101833;font-size:14px!important;font-weight:600!important}.avd-cat{display:grid;gap:5px}.avd-cat button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:40px;padding:9px 10px;border:0;border-radius:8px;background:transparent;color:#20304f;font-size:12px;font-weight:500;text-align:left}.avd-cat button.active{background:#f2ecff;color:#6338e8;font-weight:600}.avd-cat span{display:inline-flex;align-items:center;gap:8px}.avd-help{display:grid;gap:16px;margin-top:14px;padding:16px;background:linear-gradient(180deg,#fff,#fbfaff)}.avd-help-item{display:flex;gap:10px;color:#53617f;font-size:11px;line-height:1.45}.avd-help-item b{display:block;color:#101833;font-size:12px}.avd-filter{display:grid;grid-template-columns:minmax(0,1fr) 160px 145px 190px;gap:12px;padding:14px;border-bottom:1px solid #edf1f6}.avd-input,.avd-select{height:38px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#34405f;font-size:11px;padding:8px 10px}.avd-check{display:flex;align-items:center;gap:8px;color:#34405f;font-size:11px}.avd-table{width:100%;border-collapse:collapse}.avd-table th{padding:11px 12px;background:#f8fafc;border-bottom:1px solid #e5ebf3;color:#52617e;font-size:10px;font-weight:700;text-align:left}.avd-table td{padding:11px 12px;border-bottom:1px solid #edf1f6;color:#17203a;font-size:11.5px;vertical-align:middle}.avd-code{display:inline-flex;padding:4px 7px;border:1px solid #ded6ff;border-radius:5px;background:#fbf9ff;color:#6338e8;font-size:10px;font-weight:700}.avd-badge{display:inline-flex;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:600}.avd-badge.agency{background:#f1ecff;color:#6338e8}.avd-badge.company{background:#eaf3ff;color:#0b6ff0}.avd-badge.job{background:#fff0de;color:#c75d00}.avd-badge.commercial{background:#e7f8f1;color:#07895c}.avd-badge.system{background:#fff7d6;color:#a36c00}.avd-status{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;background:#e9f8f1;color:#068752;font-size:10px;font-weight:600}.avd-status:before{content:'';width:5px;height:5px;border-radius:50%;background:#09a76f}.avd-row-actions{display:flex;gap:9px;color:#34405f}.avd-row-actions button{border:0;background:transparent;color:#34405f;font-size:15px}.avd-foot{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:#52617e;font-size:11px}.avd-pages{display:flex;gap:6px}.avd-pages span{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border:1px solid #e5ebf3;border-radius:6px;background:#fff;color:#34405f}.avd-pages .active{background:#6338e8;color:#fff}.avd-info{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:4px 22px 22px;padding:14px 16px;border:1px solid #ddd1ff;border-radius:10px;background:#fbf9ff;color:#4d3a91;font-size:11.5px;line-height:1.5}.avd-empty{display:none;padding:24px;text-align:center;color:#53617f;font-size:12px}
 .apv-overlay{position:fixed;top:0;right:0;bottom:0;left:220px;background:rgba(15,23,42,.34);opacity:0;visibility:hidden;z-index:1090;transition:opacity .18s ease}.apv-overlay.show{opacity:1;visibility:visible}.apv-drawer{position:fixed;top:0;right:0;bottom:0;width:min(1380px,calc((100vw - 220px)*.9));max-width:calc(100vw - 220px);background:#f8fafc;box-shadow:-18px 0 46px rgba(15,23,42,.2);z-index:1091;transform:translateX(105%);transition:transform .22s ease;overflow:auto;font-family:'Poppins',sans-serif;color:#101833}.apv-drawer.open{transform:translateX(0)}.apv-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;background:#fff;border-bottom:1px solid #e6ebf3}.apv-title{display:flex;align-items:center;gap:14px}.apv-title h3{margin:0;color:#101833;font-size:22px!important;font-weight:600!important}.apv-title p{margin:6px 0 0;color:#53617f;font-size:12px;line-height:1.5}.apv-meta{display:grid;gap:6px;margin-left:auto;color:#53617f;font-size:11px}.apv-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.apv-body{display:grid;grid-template-columns:270px minmax(0,1fr) 270px;gap:14px;padding:14px 22px 22px}.apv-card{background:#fff;border:1px solid #e5ebf3;border-radius:12px;box-shadow:0 2px 6px rgba(15,23,42,.025)}.apv-pad{padding:16px}.apv-card h4{margin:0 0 12px;color:#101833;font-size:14px!important;font-weight:600!important}.apv-card p{color:#53617f;font-size:11px;line-height:1.45}.apv-select{width:100%;height:38px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#24304d;font-size:11px;padding:8px 10px}.apv-detail{display:grid;gap:14px}.apv-detail-row{display:flex;gap:10px;color:#101833;font-size:11.5px;line-height:1.45}.apv-detail-row span:first-child{width:24px;height:24px;border-radius:7px;background:#f2ecff;color:#6338e8;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}.apv-detail-row b{display:block;margin-bottom:3px;color:#53617f;font-size:10.5px;font-weight:500}.apv-other{margin-top:16px;padding-top:14px;border-top:1px solid #edf1f6}.apv-other-row{display:flex;justify-content:space-between;gap:12px;margin:9px 0;color:#53617f;font-size:11px}.apv-other-row b{color:#101833;font-weight:600}.apv-main{overflow:hidden}.apv-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;border-bottom:1px solid #eef2f7}.apv-tabs{display:flex;gap:18px}.apv-tab{min-height:50px;border:0;border-bottom:3px solid transparent;background:transparent;color:#31405f;font-size:12px;font-weight:600}.apv-tab.active{color:#6338e8;border-color:#6338e8}.apv-tools{display:flex;gap:9px;align-items:center}.apv-alert{margin:16px;padding:11px 13px;border:1px solid #bed0ff;border-radius:7px;background:#f6f9ff;color:#3155c9;font-size:11.5px}.apv-document{margin:0 16px 16px;padding:28px 46px;max-height:610px;overflow:auto;border:1px solid #dfe6f1;border-radius:8px;background:#fff;color:#111733;font-size:13px;line-height:1.75}.apv-document h1,.apv-document h2,.apv-document h3{text-align:center;color:#111733;font-size:18px!important;font-weight:700!important}.apv-document .apv-party-grid{display:grid;grid-template-columns:1fr 80px 1fr;gap:18px;align-items:center;text-align:center;margin:24px 0}.apv-document .apv-party-name{color:#4f2bd5;font-size:15px;font-weight:700}.apv-document hr{border:0;border-top:1px solid #dfe6f1;margin:24px 0}.apv-summary-list{display:grid;gap:13px}.apv-summary-row{display:flex;justify-content:space-between;gap:12px;color:#53617f;font-size:11px}.apv-summary-row b{color:#101833}.apv-commercial{margin-top:14px;padding:15px;border-radius:10px;background:#fbfaff}.apv-commercial.orange{background:#fffaf2}.apv-commercial h5{margin:0 0 12px;color:#6338e8;font-size:13px;font-weight:600}.apv-commercial.orange h5{color:#d56a00}.apv-readonly{margin-top:14px;padding:14px;border:1px solid #ddd1ff;border-radius:10px;background:#fbf9ff;color:#4d3a91;font-size:11.5px;line-height:1.5}.apv-info{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 22px 22px;padding:14px 16px;border:1px solid #ddd1ff;border-radius:10px;background:#fbf9ff;color:#4d3a91;font-size:11.5px}.apv-plain{display:none;white-space:pre-wrap;font-family:'Poppins',sans-serif}
@@ -2752,17 +2853,23 @@ input[type="radio"]:checked {
   @endphp
   <div class="agency-agreement">
     <!-- Intent: dynamic agency-facing agreement UI; client Services/Commercials remain separate. -->
-    <div class="aat-hero">
-      <div class="aat-title-wrap">
-        <span class="aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/><path d="m5 8-2 2 2 2"/></svg></span>
+    <!-- Tier 1: Top Header Toolbar Card (Rule 20 Modern Enterprise Standard) -->
+    <div class="cd-terms-header-card aat-hero">
+      <div class="cd-terms-branding aat-title-wrap">
+        <span class="cd-terms-icon-box aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/><path d="m5 8-2 2 2 2"/></svg></span>
         <div>
-          <h3 class="aat-title">Agency Agreement &amp; Commercial Terms</h3>
-          <p class="aat-sub">Define agency-facing commercial terms and the standard agreement that governs agency participation and candidate submissions.</p>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <h3 class="cd-terms-title aat-title">Agency Agreement &amp; Commercial Terms</h3>
+            <span class="cd-terms-badge cd-terms-badge-success"><span class="cd-terms-dot"></span> Active</span>
+            <span class="cd-terms-badge cd-terms-badge-primary">Master Agreement</span>
+            <span class="cd-terms-badge cd-terms-badge-neutral">Version {{ $aatVersion }}</span>
+          </div>
+          <p class="cd-terms-sub aat-sub">Define agency-facing commercial terms and the standard agreement that governs agency participation and candidate submissions.</p>
         </div>
       </div>
-      <div class="aat-actions">
-        <a href="javascript:;" class="aat-btn" id="agencyAgreementPreview"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>Preview as Agency</a>
-        <a href="javascript:;" id="editBtn" class="aat-btn primary"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit Agreement</a>
+      <div class="cd-terms-actions aat-actions">
+        <a href="javascript:;" class="cd-btn-outline aat-btn" id="agencyAgreementPreview"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>Preview as Agency</a>
+        <a href="javascript:;" id="editBtn" class="cd-btn-primary aat-btn primary"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit Agreement</a>
       </div>
     </div>
     <div class="apv-overlay" id="agencyPreviewDrawerOverlay"></div>
@@ -2829,32 +2936,101 @@ input[type="radio"]:checked {
       <div class="apv-info"><span>This is how the agreement will be presented to the agency. Agencies must accept this agreement before they can submit candidates.</span></div>
     </div>
 
-    <div class="aat-card">
-      <div class="aat-sec-head">
-        <div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span><div><div class="aat-sec-t">1. Commercial Terms for Agencies</div><div class="aat-sec-s">Default agency commercial structure reflected in the agreement and marketplace job terms.</div></div></div>
-        <span></span>
-      </div>
-      <div class="aat-commercial-grid">
-        <div class="aat-commercial purple">
-          <div class="aat-service-head"><div class="aat-service-title"><span class="aat-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>Full-Time Hiring</div><button type="button" class="aat-tag aat-edit-pill" data-agency-commercial-open="fulltime">Edit Fulltime Commercials</button></div>
-          <div class="aat-rows">
-            <div class="aat-row"><span class="label">Success Fee</span><span class="value">{{ $aatFulltimeFeeLabel }}</span></div>
-            <div class="aat-row"><span class="label">Payment Timeline</span><span class="value">{{ (int) (@$aatTerms->fulltime_payment_terms_days ?? 30) }} Days from Invoice</span></div>
-            <div class="aat-row"><span class="label">Replacement Period</span><span class="value">{{ (int) (@$aatTerms->fulltime_replacement_period_days ?? 90) }} Days</span></div>
-            <div class="aat-row"><span class="label">Basis</span><span class="value">Annual Fixed CTC</span></div>
+    <!-- Tier 3: Primary Card 1 - Commercial Terms for Agencies (Rule 20 Card + Sub-Card Standard) -->
+    <div class="cd-terms-card aat-card">
+      <div class="cd-card-header aat-sec-head">
+        <div class="cd-card-header-left aat-sec-title">
+          <span class="cd-card-icon-blue aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+          <div>
+            <div class="cd-card-title aat-sec-t">1. Commercial Terms for Agencies</div>
+            <div class="cd-card-sub aat-sec-s">Default agency commercial structure reflected in the agreement and marketplace job terms.</div>
           </div>
-          <div class="aat-note">Fee is applicable on confirmed joiners only.</div>
         </div>
-        <div class="aat-commercial orange">
-          <div class="aat-service-head"><div class="aat-service-title orange"><span class="aat-avatar orange"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>Contract Hiring</div><button type="button" class="aat-tag orange aat-edit-pill" data-agency-commercial-open="contract">Edit Contract Commercials</button></div>
-          <div class="aat-rows">
-            <div class="aat-row"><span class="label">Billing Model</span><span class="value">{{ ucfirst(@$aatTerms->contract_billing_model ?: 'monthly') }} Rate</span></div>
-            <div class="aat-row"><span class="label">Agency Rate</span><span class="value">{{ $aatContractRateDisplay }}</span></div>
-            <div class="aat-row"><span class="label">Payment Timeline</span><span class="value">{{ (int) (@$aatTerms->contract_payment_terms_days ?? 30) }} Days from Invoice</span></div>
-            <div class="aat-row"><span class="label">Minimum Contract Duration</span><span class="value">{{ (int) (@$aatTerms->contract_min_duration_months ?? 3) }} Months</span></div>
-            <div class="aat-row"><span class="label">Replacement Policy</span><span class="value">{{ @$aatTerms->contract_replacement_policy ?: 'As per Contract Terms' }}</span></div>
+        <span class="cd-tag-framework">Standard Commercial Framework</span>
+      </div>
+      <div class="cd-card-body">
+        <div class="cd-commercial-grid aat-commercial-grid">
+          <!-- Sub-Card 1: Full-Time Hiring Commercials -->
+          <div class="cd-commercial-subcard aat-commercial purple">
+            <div class="cd-subcard-header aat-service-head">
+              <div class="cd-subcard-title-blue aat-service-title">
+                <span class="cd-avatar-blue aat-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>
+                <div>
+                  <div class="cd-subcard-title-text">Full-Time Hiring</div>
+                  <div class="cd-subcard-subtitle-text">Permanent placement commercial model</div>
+                </div>
+              </div>
+              <button type="button" class="cd-edit-pill cd-edit-pill-blue aat-tag aat-edit-pill" data-agency-commercial-open="fulltime">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Edit Fulltime Commercials
+              </button>
+            </div>
+            <div class="cd-matrix-rows aat-rows">
+              <div class="cd-matrix-row aat-row">
+                <span class="cd-matrix-label label"><i class="fas fa-percentage text-primary"></i> Success Fee</span>
+                <span class="cd-matrix-value value cd-tabular-val">{{ $aatFulltimeFeeLabel }}</span>
+              </div>
+              <div class="cd-matrix-row aat-row">
+                <span class="cd-matrix-label label"><i class="far fa-calendar-alt text-primary"></i> Payment Timeline</span>
+                <span class="cd-matrix-value value cd-tabular-val">{{ (int) (@$aatTerms->fulltime_payment_terms_days ?? 30) }} Days from Invoice</span>
+              </div>
+              <div class="cd-matrix-row aat-row">
+                <span class="cd-matrix-label label"><i class="fas fa-redo-alt text-primary"></i> Replacement Period</span>
+                <span class="cd-matrix-value value cd-tabular-val">{{ (int) (@$aatTerms->fulltime_replacement_period_days ?? 90) }} Days</span>
+              </div>
+              <div class="cd-matrix-row aat-row">
+                <span class="cd-matrix-label label"><i class="fas fa-file-invoice-dollar text-primary"></i> Basis</span>
+                <span class="cd-matrix-value value">Annual Fixed CTC</span>
+              </div>
+            </div>
+            <div class="cd-subcard-note cd-subcard-note-blue aat-note">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex:0 0 14px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              Fee is applicable on confirmed joiners only.
+            </div>
           </div>
-          <div class="aat-note orange">Rates may vary job-wise if custom terms are defined.</div>
+
+          <!-- Sub-Card 2: Contract Hiring Commercials -->
+          <div class="cd-commercial-subcard aat-commercial orange">
+            <div class="cd-subcard-header aat-service-head">
+              <div class="cd-subcard-title-amber aat-service-title orange">
+                <span class="cd-avatar-amber aat-avatar orange"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+                <div>
+                  <div class="cd-subcard-title-text">Contract Hiring</div>
+                  <div class="cd-subcard-subtitle-text">Contingent staffing &amp; monthly billing model</div>
+                </div>
+              </div>
+              <button type="button" class="cd-edit-pill cd-edit-pill-amber aat-tag orange aat-edit-pill" data-agency-commercial-open="contract">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Edit Contract Commercials
+              </button>
+            </div>
+            <div class="cd-matrix-rows aat-rows">
+              <div class="cd-matrix-row aat-row">
+                <span class="cd-matrix-label label"><i class="fas fa-layer-group text-warning"></i> Billing Model</span>
+                <span class="cd-matrix-value value">{{ ucfirst(@$aatTerms->contract_billing_model ?: 'monthly') }} Rate</span>
+              </div>
+              <div class="cd-matrix-row aat-row">
+                <span class="cd-matrix-label label"><i class="fas fa-coins text-warning"></i> Agency Rate</span>
+                <span class="cd-matrix-value value cd-tabular-val">{{ $aatContractRateDisplay }}</span>
+              </div>
+              <div class="cd-matrix-row aat-row">
+                <span class="cd-matrix-label label"><i class="far fa-clock text-warning"></i> Payment Timeline</span>
+                <span class="cd-matrix-value value cd-tabular-val">{{ (int) (@$aatTerms->contract_payment_terms_days ?? 30) }} Days from Invoice</span>
+              </div>
+              <div class="cd-matrix-row aat-row">
+                <span class="cd-matrix-label label"><i class="fas fa-hourglass-half text-warning"></i> Minimum Contract Duration</span>
+                <span class="cd-matrix-value value cd-tabular-val">{{ (int) (@$aatTerms->contract_min_duration_months ?? 3) }} Months</span>
+              </div>
+              <div class="cd-matrix-row aat-row">
+                <span class="cd-matrix-label label"><i class="fas fa-user-shield text-warning"></i> Replacement Policy</span>
+                <span class="cd-matrix-value value">{{ @$aatTerms->contract_replacement_policy ?: 'As per Contract Terms' }}</span>
+              </div>
+            </div>
+            <div class="cd-subcard-note cd-subcard-note-amber aat-note orange">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex:0 0 14px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              Rates may vary job-wise if custom terms are defined.
+            </div>
+          </div>
         </div>
       </div>
       <div class="aat-drawer-overlay" id="agencyCommercialDrawerOverlay"></div>
@@ -2917,38 +3093,127 @@ input[type="radio"]:checked {
       @include('service_company.account.agency_commercials_drawer', $aatPartialVars)
     </div>
 
-    <div class="aat-two-col">
-      <div class="aat-card">
-        <div class="aat-sec-head"><div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></span><div><div class="aat-sec-t">2. Agreement Rules</div><div class="aat-sec-s">Define when and how this agreement applies.</div></div></div></div>
-        <div class="aat-rule-grid">
-          <div class="aat-rule"><span class="k">Applies To</span><span class="v">{{ @$aatTerms->applies_to ?: 'All Agencies' }}</span></div>
-          <div class="aat-rule"><span class="k">Acceptance Required</span><span class="v aat-yes">{{ (@$aatTerms->acceptance_required ?? 1) ? 'Yes' : 'No' }}</span></div>
-          <div class="aat-rule"><span class="k">Acceptance Trigger</span><span class="v">{{ @$aatTerms->acceptance_trigger ?: 'Before Candidate Submission' }}</span></div>
-          <div class="aat-rule"><span class="k">Submission Before Acceptance</span><span class="v {{ (@$aatTerms->submission_before_acceptance ?? 0) ? 'aat-yes' : 'aat-no' }}">{{ (@$aatTerms->submission_before_acceptance ?? 0) ? 'Yes' : 'No' }}</span></div>
-          <div class="aat-rule"><span class="k">Effective From</span><span class="v">{{ @$aatTerms->effective_from ?: 'Agency Acceptance Date' }}</span></div>
-          <div class="aat-rule"><span class="k">Agreement Duration</span><span class="v">{{ (int) (@$aatTerms->agreement_duration_months ?? 12) }} Months</span></div>
-          <div class="aat-rule"><span class="k">Auto Renewal</span><span class="v aat-yes">{{ (@$aatTerms->auto_renewal ?? 1) ? 'Yes' : 'No' }}</span></div>
-          <div class="aat-rule"><span class="k">Agency Can Reject</span><span class="v aat-yes">{{ (@$aatTerms->agency_can_reject ?? 1) ? 'Yes' : 'No' }}</span></div>
+    <!-- Tier 3: Primary Cards 2 & 3 - Agreement Rules and Acceptance Workflow (Rule 20 Two-Column Layout) -->
+    <div class="cd-terms-two-col aat-two-col">
+      <!-- Card 2: Agreement Rules -->
+      <div class="cd-terms-card aat-card">
+        <div class="cd-card-header aat-sec-head">
+          <div class="cd-card-header-left aat-sec-title">
+            <span class="cd-card-icon-blue aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></span>
+            <div>
+              <div class="cd-card-title aat-sec-t">2. Agreement Rules</div>
+              <div class="cd-card-sub aat-sec-s">Define when and how this agreement applies.</div>
+            </div>
+          </div>
+        </div>
+        <div class="cd-card-body">
+          <div class="cd-rules-grid aat-rule-grid">
+            <div class="cd-rule-cell aat-rule">
+              <span class="cd-rule-key k">Applies To</span>
+              <span class="cd-rule-val v">{{ @$aatTerms->applies_to ?: 'All Agencies' }}</span>
+            </div>
+            <div class="cd-rule-cell aat-rule">
+              <span class="cd-rule-key k">Acceptance Required</span>
+              <span class="cd-rule-val v"><span class="cd-pill-status ok aat-yes">{{ (@$aatTerms->acceptance_required ?? 1) ? 'Yes' : 'No' }}</span></span>
+            </div>
+            <div class="cd-rule-cell aat-rule">
+              <span class="cd-rule-key k">Acceptance Trigger</span>
+              <span class="cd-rule-val v">{{ @$aatTerms->acceptance_trigger ?: 'Before Candidate Submission' }}</span>
+            </div>
+            <div class="cd-rule-cell aat-rule">
+              <span class="cd-rule-key k">Submission Before Acceptance</span>
+              <span class="cd-rule-val v"><span class="cd-pill-status {{ (@$aatTerms->submission_before_acceptance ?? 0) ? 'ok aat-yes' : 'danger aat-no' }}">{{ (@$aatTerms->submission_before_acceptance ?? 0) ? 'Yes' : 'No' }}</span></span>
+            </div>
+            <div class="cd-rule-cell aat-rule">
+              <span class="cd-rule-key k">Effective From</span>
+              <span class="cd-rule-val v">{{ @$aatTerms->effective_from ?: 'Agency Acceptance Date' }}</span>
+            </div>
+            <div class="cd-rule-cell aat-rule">
+              <span class="cd-rule-key k">Agreement Duration</span>
+              <span class="cd-rule-val v cd-tabular-val">{{ (int) (@$aatTerms->agreement_duration_months ?? 12) }} Months</span>
+            </div>
+            <div class="cd-rule-cell aat-rule">
+              <span class="cd-rule-key k">Auto Renewal</span>
+              <span class="cd-rule-val v"><span class="cd-pill-status ok aat-yes">{{ (@$aatTerms->auto_renewal ?? 1) ? 'Yes' : 'No' }}</span></span>
+            </div>
+            <div class="cd-rule-cell aat-rule">
+              <span class="cd-rule-key k">Agency Can Reject</span>
+              <span class="cd-rule-val v"><span class="cd-pill-status ok aat-yes">{{ (@$aatTerms->agency_can_reject ?? 1) ? 'Yes' : 'No' }}</span></span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="aat-card">
-        <div class="aat-sec-head"><div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span><div><div class="aat-sec-t">3. Acceptance Workflow</div><div class="aat-sec-s">How this agreement flows in the system.</div></div></div></div>
-        <div class="aat-flow">
-          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M8 6V4h8v2"/></svg></span><div class="aat-flow-n">1</div><div class="aat-flow-t">Job Assigned</div><div class="aat-flow-s">Job is assigned to the agency.</div></div>
-          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 13h6M9 17h4"/></svg></span><div class="aat-flow-n">2</div><div class="aat-flow-t">T&amp;C Shared</div><div class="aat-flow-s">Agreement is shared with agency.</div></div>
-          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="m9 12 2 2 4-4"/></svg></span><div class="aat-flow-n">3</div><div class="aat-flow-t">Agency Accepts</div><div class="aat-flow-s">Agency reviews and accepts the agreement.</div></div>
-          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg></span><div class="aat-flow-n">4</div><div class="aat-flow-t">Submission Enabled</div><div class="aat-flow-s">Candidate submission is enabled.</div></div>
+
+      <!-- Card 3: Acceptance Workflow -->
+      <div class="cd-terms-card aat-card">
+        <div class="cd-card-header aat-sec-head">
+          <div class="cd-card-header-left aat-sec-title">
+            <span class="cd-card-icon-blue aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
+            <div>
+              <div class="cd-card-title aat-sec-t">3. Acceptance Workflow</div>
+              <div class="cd-card-sub aat-sec-s">How this agreement flows across the system.</div>
+            </div>
+          </div>
         </div>
-        <div class="aat-note orange">Agencies cannot submit candidates until applicable Terms &amp; Conditions are accepted.</div>
+        <div class="cd-card-body">
+          <div class="cd-flow-grid aat-flow">
+            <div class="cd-flow-step aat-flow-step">
+              <span class="cd-flow-step-badge aat-flow-n">1</span>
+              <span class="cd-flow-icon aat-flow-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M8 6V4h8v2"/></svg></span>
+              <div class="cd-flow-title aat-flow-t">Job Assigned</div>
+              <div class="cd-flow-desc aat-flow-s">Job is assigned to the partner agency.</div>
+            </div>
+            <div class="cd-flow-step aat-flow-step">
+              <span class="cd-flow-step-badge aat-flow-n">2</span>
+              <span class="cd-flow-icon aat-flow-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M9 13h6M9 17h4"/></svg></span>
+              <div class="cd-flow-title aat-flow-t">T&amp;C Shared</div>
+              <div class="cd-flow-desc aat-flow-s">Standard terms shared with agency.</div>
+            </div>
+            <div class="cd-flow-step aat-flow-step">
+              <span class="cd-flow-step-badge aat-flow-n">3</span>
+              <span class="cd-flow-icon aat-flow-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="m9 12 2 2 4-4"/></svg></span>
+              <div class="cd-flow-title aat-flow-t">Agency Accepts</div>
+              <div class="cd-flow-desc aat-flow-s">Agency reviews and accepts the agreement.</div>
+            </div>
+            <div class="cd-flow-step aat-flow-step">
+              <span class="cd-flow-step-badge aat-flow-n">4</span>
+              <span class="cd-flow-icon aat-flow-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg></span>
+              <div class="cd-flow-title aat-flow-t">Submissions Active</div>
+              <div class="cd-flow-desc aat-flow-s">Candidate submission unlocked.</div>
+            </div>
+          </div>
+          <div class="cd-subcard-note cd-subcard-note-amber aat-note orange" style="margin:12px 0 0 !important;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="flex:0 0 14px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Agencies cannot submit candidates until applicable Terms &amp; Conditions are formally accepted.
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="aat-card">
-      <div class="aat-sec-head"><div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h5"/></svg></span><div><div class="aat-sec-t">4. Dynamic Variables</div><div class="aat-sec-s">These variables are automatically replaced with actual values.</div></div></div><button type="button" class="aat-btn" id="openAgencyVariablesDrawer"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>View All Variables</button></div>
-      <div class="aat-vars">
-        @foreach($atcVars as $code => $desc)
-          <div class="aat-var"><code>{{ $code }}</code><span>{{ $desc }}</span></div>
-        @endforeach
+    <!-- Tier 3: Primary Card 4 - Dynamic Variables (Rule 20 High-Density Matrix) -->
+    <div class="cd-terms-card aat-card">
+      <div class="cd-card-header aat-sec-head">
+        <div class="cd-card-header-left aat-sec-title">
+          <span class="cd-card-icon-blue aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h5"/></svg></span>
+          <div>
+            <div class="cd-card-title aat-sec-t">4. Dynamic Variables</div>
+            <div class="cd-card-sub aat-sec-s">These dynamic placeholders are automatically populated with real tenant &amp; agency data upon presentation.</div>
+          </div>
+        </div>
+        <button type="button" class="cd-btn-outline aat-btn" id="openAgencyVariablesDrawer">
+          <svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+          View All Variables
+        </button>
+      </div>
+      <div class="cd-card-body">
+        <div class="cd-vars-grid aat-vars">
+          @foreach($atcVars as $code => $desc)
+            <div class="cd-var-card aat-var">
+              <code class="cd-var-code">{{ $code }}</code>
+              <span class="cd-var-desc" title="{{ $desc }}">{{ $desc }}</span>
+            </div>
+          @endforeach
+        </div>
       </div>
       <div class="avd-overlay" id="agencyVariablesDrawerOverlay"></div>
       <div class="avd-drawer" id="agencyVariablesDrawer" aria-hidden="true">
@@ -2999,17 +3264,28 @@ input[type="radio"]:checked {
       </div>
     </div>
 
-    <div class="aat-card aat-editor-card">
-      <div class="aat-editor-toolbar">
-        <div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><div><div class="aat-sec-t">5. Agreement Content</div><div class="aat-sec-s">Edit the terms and conditions that will be shared with agencies.</div></div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;"><a href="javascript:;" id="setToDefaultCompanyTermsTop" class="aat-btn setToDefaultCompanyTermsTop">Load Default</a><a href="javascript:;" id="updateCompanyTermsTop" class="aat-btn primary updateCompanyTermsTop">Save Agreement</a></div>
+    <!-- Tier 3: Primary Card 5 - Agreement Content & Editor (Rule 20 Structured Editor Standard) -->
+    <div class="cd-terms-card aat-card aat-editor-card">
+      <div class="cd-card-header aat-sec-head aat-editor-toolbar">
+        <div class="cd-card-header-left aat-sec-title">
+          <span class="cd-card-icon-blue aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span>
+          <div>
+            <div class="cd-card-title aat-sec-t">5. Agreement Content</div>
+            <div class="cd-card-sub aat-sec-s">Review and publish the master terms and conditions that govern all partner agency engagements.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <a href="javascript:;" id="setToDefaultCompanyTermsTop" class="cd-btn-outline aat-btn setToDefaultCompanyTermsTop"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Load Default</a>
+          <a href="javascript:;" id="updateCompanyTermsTop" class="cd-btn-primary aat-btn primary updateCompanyTermsTop"><svg viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save Agreement</a>
+        </div>
       </div>
-      <form id="terms_content" name="terms_content" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
-        <meta name="csrf-token" content="{{ csrf_token() }}" />
-        <input type="hidden" name="pageterms" id="pageterms" value="terms" />
-        @csrf
-        @method('POST')
-        <div class="atc-editor view-terms" id="viewTerms"> {!! (@$account->terms) ? @$account->terms :  $global_settings->terms !!} </div>
+      <div class="cd-card-body">
+        <form id="terms_content" name="terms_content" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
+          <meta name="csrf-token" content="{{ csrf_token() }}" />
+          <input type="hidden" name="pageterms" id="pageterms" value="terms" />
+          @csrf
+          @method('POST')
+          <div class="cd-agreement-document-box atc-editor view-terms" id="viewTerms"> {!! (@$account->terms) ? @$account->terms :  $global_settings->terms !!} </div>
         <div class="aga-drawer-overlay" id="agencyAgreementDrawerOverlay"></div>
         <div class="edit-terms aga-drawer" id="editTerms" style="display:none;" aria-hidden="true">
           <!-- Intent: present the existing company terms editor in an agency-focused drawer while reusing the current save/reset business flow. -->
@@ -3078,10 +3354,15 @@ input[type="radio"]:checked {
             <button class="btn btn-primary me-2 setToDefaultCompanyTerms" type="button" id="setToDefaultCompanyTerms">Set to Default</button>
           </div>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
 
-    <div class="aat-important"><b>Important:</b> Existing agencies who have already accepted a previous version will continue to be governed by the version they accepted until they accept a newer version.</div>
+    <!-- Important Legal Notice Banner (Rule 20 Left-Border Accent Standard) -->
+    <div class="cd-terms-bottom-banner aat-important">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" style="flex:0 0 18px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div><b>Important Notice:</b> Existing agencies who have already accepted a previous version will continue to be governed by the version they accepted until a newer version is formally executed.</div>
+    </div>
   </div>
 </div>
 <!--end::Terms & Canditions Content-->
