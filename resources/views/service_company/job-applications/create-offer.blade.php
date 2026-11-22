@@ -1882,62 +1882,8 @@
         #step4 h1, #step4 h2, #step4 h3, #step4 h4, #step4 h5 { font-size: 12px !important; font-weight: 700; color: #181c32; margin: 0; }
 
         /* ══════════════════════════ Step 4 — Approval (Rule 20 Card + Sub-Card Standard) ══════════════════════════ */
-        #step4, #step4 * { font-family: 'Poppins', sans-serif; }
-        #step4 { background: transparent; font-size: 12px; }
-
-        .co-appr-summary-grid {
-            display: grid !important;
-            grid-template-columns: repeat(4, 1fr) !important;
-            gap: 10px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-        }
-
-        .co-appr-card-val {
-            font-size: 12.5px !important;
-            font-weight: 700 !important;
-            color: #1e293b !important;
-            line-height: 1.25 !important;
-        }
-
-        .co-appr-card-sub {
-            font-size: 10.5px !important;
-            color: #64748b !important;
-            line-height: 1.25 !important;
-        }
-
-        .co-appr-avatar-mini {
-            width: 30px !important;
-            height: 30px !important;
-            border-radius: 50% !important;
-            background: #eff6ff !important;
-            color: #2563eb !important;
-            border: 1px solid #bfdbfe !important;
-            font-size: 12px !important;
-            font-weight: 700 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            flex-shrink: 0 !important;
-        }
-
-        .co-appr-ctc-symbol {
-            font-size: 14px !important;
-            font-weight: 800 !important;
-            color: #d97706 !important;
-            line-height: 1 !important;
-        }
-
-        .co-appr-mandate-badge {
-            display: inline-flex !important;
-            align-items: center !important;
-            font-size: 9.5px !important;
-            font-weight: 700 !important;
-            padding: 2px 7px !important;
-            border-radius: 99px !important;
-            white-space: nowrap !important;
-            line-height: 1.2 !important;
-        }
+        #step4 { background: transparent; font-size: 12px; font-family: 'Poppins', sans-serif; }
+        #step4 svg { vertical-align: middle; }
 
         .co-appr-layout {
             display: flex !important;
@@ -1954,11 +1900,11 @@
         }
 
         .co-appr-side {
-            width: 290px !important;
-            flex: 0 0 290px !important;
+            width: 300px !important;
+            flex: 0 0 300px !important;
             display: flex !important;
             flex-direction: column !important;
-            gap: 10px !important;
+            gap: 12px !important;
         }
 
         .co-appr-side-card {
@@ -1969,9 +1915,9 @@
         }
 
         .co-subcard-status-desc {
-            font-size: 10.5px !important;
+            font-size: 11px !important;
             color: #64748b !important;
-            margin-top: 2px !important;
+            margin-top: 1px !important;
         }
 
         .co-appr-add-btn {
@@ -1992,62 +1938,33 @@
             background: #f1f5f9 !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 6px !important;
-            padding: 5px 10px !important;
+            padding: 7px 14px !important;
             margin-bottom: 8px !important;
         }
-        .co-appr-tl-cols-spacer { width: 44px !important; flex-shrink: 0 !important; }
         .co-appr-tl-grid {
             display: grid !important;
-            grid-template-columns: minmax(170px, 1.2fr) minmax(110px, 0.8fr) minmax(130px, 1fr) minmax(130px, 0.9fr) !important;
+            grid-template-columns: minmax(210px, 1.4fr) minmax(140px, 1fr) minmax(140px, 0.9fr) !important;
             align-items: center !important;
-            gap: 8px !important;
+            gap: 12px !important;
+            width: 100% !important;
         }
         .co-appr-tl-col-hd {
-            font-size: 10px !important;
+            font-size: 10.5px !important;
             font-weight: 700 !important;
             color: #64748b !important;
             text-transform: uppercase !important;
-            letter-spacing: .4px !important;
+            letter-spacing: .5px !important;
         }
 
-        /* ── Timeline Entry & Cards ── */
-        .co-appr-tl-entry {
-            display: flex !important;
-            align-items: stretch !important;
-            margin-bottom: 8px !important;
-        }
-        .co-appr-tl-dot {
-            width: 30px !important;
-            height: 30px !important;
-            border-radius: 50% !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            flex-shrink: 0 !important;
-            z-index: 1 !important;
-            font-size: 11px !important;
-            transition: all 0.15s ease !important;
-        }
-        .co-appr-tl-dot--approved { background: #10b981 !important; color: #fff !important; box-shadow: 0 0 0 3px #d1fae5 !important; }
-        .co-appr-tl-dot--active   { background: #f59e0b !important; color: #fff !important; box-shadow: 0 0 0 3px #fef3c7 !important; }
-        .co-appr-tl-dot--waiting  { background: #3b82f6 !important; color: #fff !important; box-shadow: 0 0 0 3px #dbeafe !important; }
-        .co-appr-tl-dot--rejected { background: #ef4444 !important; color: #fff !important; box-shadow: 0 0 0 3px #fee2e2 !important; }
-
-        .co-appr-tl-connector {
-            width: 2px !important;
-            flex: 1 1 auto !important;
-            min-height: 12px !important;
-            background: repeating-linear-gradient(to bottom, #94a3b8 0 4px, transparent 4px 8px) !important;
-            margin: 3px 0 !important;
-        }
-
+        /* ── Timeline Entry & Cards (Clean Card Stream — Zero Timeline Nodes) ── */
         .co-appr-tl-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-left: 3.5px solid #94a3b8 !important;
             border-radius: 8px !important;
-            padding: 8px 12px !important;
+            padding: 10px 14px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+            margin-bottom: 8px !important;
             transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
         }
         .co-appr-tl-card:hover {
@@ -2057,10 +1974,10 @@
         .co-appr-tl-card--approved { border-color: #e2e8f0 !important; border-left-color: #10b981 !important; background: #ffffff !important; }
         .co-appr-tl-card--rejected { border-color: #e2e8f0 !important; border-left-color: #ef4444 !important; background: #fff8f8 !important; }
 
-        .co-appr-tl-appr { display: flex !important; align-items: center !important; gap: 8px !important; min-width: 0 !important; }
+        .co-appr-tl-appr { display: flex !important; align-items: center !important; gap: 10px !important; min-width: 0 !important; }
         .co-appr-tl-avatar {
-            width: 30px !important;
-            height: 30px !important;
+            width: 32px !important;
+            height: 32px !important;
             border-radius: 50% !important;
             background: #eff6ff !important;
             color: #2563eb !important;
@@ -2072,24 +1989,40 @@
             font-weight: 700 !important;
             flex-shrink: 0 !important;
         }
-        .co-appr-tl-name { font-size: 11.5px !important; font-weight: 700 !important; color: #1e293b !important; line-height: 1.2 !important; }
-        .co-appr-tl-sub  { font-size: 10px !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 1px !important; }
+        .co-appr-tl-name { font-size: 12px !important; font-weight: 700 !important; color: #1e293b !important; line-height: 1.25 !important; }
+        .co-appr-tl-sub  { font-size: 10.5px !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 2px !important; }
 
-        .co-appr-tl-role { font-size: 11px !important; color: #475569 !important; }
-        .co-appr-tl-status { display: flex !important; flex-direction: column !important; gap: 2px !important; }
-        .co-appr-tl-badge { display: inline-flex !important; align-items: center !important; font-size: 9.5px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 99px !important; width: fit-content !important; }
+        .co-appr-tl-status { display: flex !important; flex-direction: column !important; gap: 3px !important; }
+        .co-appr-tl-badge { display: inline-flex !important; align-items: center !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 99px !important; width: fit-content !important; line-height: 1.2 !important; }
         .co-appr-tl-badge--approved { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
         .co-appr-tl-badge--active   { background: #fef3c7 !important; color: #d97706 !important; border: 1px solid #fcd34d !important; }
         .co-appr-tl-badge--waiting  { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
         .co-appr-tl-badge--rejected { background: #fee2e2 !important; color: #dc2626 !important; border: 1px solid #fecaca !important; }
-        .co-appr-tl-date { font-size: 9.5px !important; color: #94a3b8 !important; }
+        .co-appr-tl-date { font-size: 10px !important; color: #64748b !important; }
 
-        .co-appr-tl-rem { display: flex !important; flex-direction: column !important; gap: 3px !important; }
-        .co-appr-tl-rem-row { display: flex !important; align-items: center !important; gap: 5px !important; }
-        .co-appr-tl-rem-btn { font-size: 10px !important; font-weight: 600 !important; padding: 3px 8px !important; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; }
-        .co-appr-tl-kebab { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 22px !important; height: 22px !important; border-radius: 5px !important; color: #94a3b8 !important; border: 1px solid #e2e8f0 !important; background: #ffffff !important; cursor: pointer !important; }
-        .co-appr-tl-kebab:hover { background: #f8fafc !important; color: #1e293b !important; }
-        .co-appr-tl-last-sent { font-size: 9.5px !important; color: #94a3b8 !important; }
+        .co-appr-tl-rem { display: flex !important; flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; }
+        .co-appr-remind-send {
+            background: #009ef7 !important;
+            border: 1px solid #009ef7 !important;
+            color: #ffffff !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            padding: 5px 12px !important;
+            border-radius: 6px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            box-shadow: 0 1px 3px rgba(0, 158, 247, 0.2) !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+        }
+        .co-appr-remind-send:hover {
+            background: #0086d1 !important;
+            border-color: #0086d1 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(0, 158, 247, 0.35) !important;
+        }
+        .co-appr-tl-last-sent { font-size: 10px !important; color: #94a3b8 !important; margin-top: 3px !important; text-align: right !important; }
 
         .co-appr-note {
             display: flex !important;
@@ -2098,19 +2031,19 @@
             background: #eff6ff !important;
             border: 1px solid #bfdbfe !important;
             border-radius: 7px !important;
-            padding: 7px 10px !important;
-            font-size: 10.5px !important;
+            padding: 8px 12px !important;
+            font-size: 11px !important;
             color: #1e40af !important;
-            line-height: 1.35 !important;
+            line-height: 1.4 !important;
         }
 
         .co-appr-status-note {
-            font-size: 10.5px !important;
+            font-size: 11px !important;
             color: #991b1b !important;
             background: #fef2f2 !important;
             border: 1px solid #fecaca !important;
             border-radius: 7px !important;
-            padding: 6px 10px !important;
+            padding: 7px 12px !important;
             margin-top: 8px !important;
         }
 
@@ -2120,8 +2053,8 @@
             justify-content: space-between !important;
             align-items: center !important;
             gap: 8px !important;
-            font-size: 11px !important;
-            padding: 6px 0 !important;
+            font-size: 11.5px !important;
+            padding: 7px 0 !important;
             border-bottom: 1px solid #f1f5f9 !important;
         }
         .co-appr-detail-row:last-child { border-bottom: none !important; }
@@ -2130,19 +2063,18 @@
 
         /* ── Activity Log ── */
         .co-appr-activity-scroll {
-            max-height: 160px !important;
+            max-height: 240px !important;
             overflow-y: auto !important;
         }
         .co-appr-activity-item {
-            padding: 5px 0 !important;
+            padding: 6px 0 !important;
             border-bottom: 1px solid #f1f5f9 !important;
         }
         .co-appr-activity-item:last-child { border-bottom: none !important; }
-        .co-appr-activity-text { font-size: 10.5px !important; color: #1e293b !important; font-weight: 600 !important; line-height: 1.25 !important; }
-        .co-appr-activity-time { font-size: 9.5px !important; color: #94a3b8 !important; margin-top: 1px !important; }
+        .co-appr-activity-text { font-size: 11px !important; color: #1e293b !important; font-weight: 600 !important; line-height: 1.3 !important; }
+        .co-appr-activity-time { font-size: 10px !important; color: #94a3b8 !important; margin-top: 2px !important; }
 
         @media (max-width: 1200px) {
-            .co-appr-summary-grid { grid-template-columns: repeat(2, 1fr) !important; }
             .co-appr-layout { flex-direction: column !important; }
             .co-appr-side { width: 100% !important; flex: 1 1 auto !important; }
         }
@@ -2392,6 +2324,12 @@
                     var typeLabel = document.getElementById('co_tpl_type_label');
                     if (typeLabel && selectedOption) {
                         typeLabel.textContent = selectedOption.getAttribute('data-template-type') || 'Full Time';
+                    }
+                    var tplNameLabel = document.getElementById('co_appr_tpl_name');
+                    if (tplNameLabel && selectedOption) {
+                        var labelText = selectedOption.textContent.trim();
+                        tplNameLabel.textContent = labelText;
+                        tplNameLabel.setAttribute('title', labelText);
                     }
                 }
             });
@@ -4712,7 +4650,7 @@
                                     <div class="card-header co-card-header">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="co-card-header-icon co-card-header-icon--blue">
-                                                <i class="fas fa-file-signature text-primary fs-4"></i>
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M10 13l2 2 4-4"/></svg>
                                             </div>
                                             <div>
                                                 <div class="d-flex align-items-center gap-2">
@@ -4725,118 +4663,37 @@
                                         <div class="d-flex align-items-center gap-2">
                                             @if($co_mgmt_status == 2)
                                                 <span class="badge badge-light-success text-success fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
-                                                    <i class="fas fa-check-circle me-1.5 text-success fs-9"></i>Offer Approved
+                                                    <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Offer Approved
                                                 </span>
                                             @elseif($co_mgmt_status == 3)
                                                 <span class="badge badge-light-danger text-danger fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
-                                                    <i class="fas fa-times-circle me-1.5 text-danger fs-9"></i>Offer Rejected
+                                                    <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Offer Rejected
                                                 </span>
                                             @elseif($co_mgmt_status == 1 || $co_appr_all_tl->isNotEmpty())
                                                 <span class="badge badge-light-warning text-warning fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
-                                                    <i class="fas fa-clock me-1.5 text-warning fs-9"></i>Awaiting Approval
+                                                    <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Awaiting Approval
                                                 </span>
                                             @else
                                                 <span class="badge badge-light-secondary text-gray-700 fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
-                                                    <i class="fas fa-user-clock me-1.5 text-gray-600 fs-9"></i>Ready for Approval
+                                                    <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>Ready for Approval
                                                 </span>
                                             @endif
                                         </div>
                                     </div>
 
                                     <div class="card-body p-4">
-                                        {{-- UPPER DISCRETE SUB-CARDS (Rule 20 Modern Card + Sub-Card Tier 3 / Top Stats) --}}
-                                        <div class="co-appr-summary-grid mb-4">
-                                            {{-- Sub-Card 1: Candidate --}}
-                                            <div class="co-subcard co-subcard-candidate">
-                                                <div class="co-subcard-header">
-                                                    <span class="co-subcard-title"><i class="far fa-user text-primary me-1.5"></i>CANDIDATE</span>
-                                                    <span class="badge badge-light-primary fs-9 px-1.5 py-0">Target Profile</span>
-                                                </div>
-                                                <div class="co-subcard-body p-3">
-                                                    <div class="d-flex align-items-center gap-2.5">
-                                                        <div class="co-appr-avatar-mini">
-                                                            {{ strtoupper(substr(trim(@$application->full_name ?: 'C'), 0, 1)) }}
-                                                        </div>
-                                                        <div class="min-w-0 flex-grow-1">
-                                                            <div class="co-appr-card-val text-truncate" title="{{ @$application->full_name }}">{{ @$application->full_name ?: '—' }}</div>
-                                                            <div class="co-appr-card-sub text-truncate" title="{{ @$application->email }}"><i class="far fa-envelope text-muted me-1 fs-9"></i>{{ @$application->email ?: '—' }}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {{-- Sub-Card 2: CTC (Annual) --}}
-                                            <div class="co-subcard co-subcard-ctc">
-                                                <div class="co-subcard-header">
-                                                    <span class="co-subcard-title"><i class="fas fa-coins text-warning me-1.5"></i>ANNUAL CTC</span>
-                                                    <span class="badge badge-light-warning fs-9 px-1.5 py-0">Base Package</span>
-                                                </div>
-                                                <div class="co-subcard-body p-3">
-                                                    <div class="d-flex align-items-baseline gap-1">
-                                                        <span class="co-appr-ctc-symbol">{{ $initialCurrSymbol }}</span>
-                                                        <span class="co-appr-card-val fs-3 fw-bolder">{{ number_format((float) @$yearly_final_gross, 0) }}</span>
-                                                        <span class="co-appr-card-sub ms-1 fw-bold">{{ $initialCurrCode }} / Yr</span>
-                                                    </div>
-                                                    <div class="co-appr-card-sub text-muted mt-1">
-                                                        <i class="fas fa-money-bill-wave text-success me-1 fs-9"></i>Gross Fixed &amp; Annual Package
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {{-- Sub-Card 3: Joining Date --}}
-                                            <div class="co-subcard co-subcard-doj">
-                                                <div class="co-subcard-header">
-                                                    <span class="co-subcard-title"><i class="far fa-calendar-alt text-primary me-1.5"></i>JOINING SCHEDULE</span>
-                                                    @if(@$joined_date && strtotime($joined_date))
-                                                        @php
-                                                            $daysDiff = round((strtotime($joined_date) - time()) / 86400);
-                                                        @endphp
-                                                        <span class="badge {{ $daysDiff >= 0 ? 'badge-light-success text-success' : 'badge-light-danger text-danger' }} fs-9 px-1.5 py-0">
-                                                            {{ $daysDiff >= 0 ? ($daysDiff == 0 ? 'Joining Today' : 'In ' . $daysDiff . ' days') : abs($daysDiff) . ' days ago' }}
-                                                        </span>
-                                                    @else
-                                                        <span class="badge badge-light-secondary fs-9 px-1.5 py-0">Schedule TBD</span>
-                                                    @endif
-                                                </div>
-                                                <div class="co-subcard-body p-3">
-                                                    <div class="co-appr-card-val">
-                                                        <i class="far fa-calendar-check text-primary me-1.5 fs-7"></i>{{ @$joined_date ? date('d M Y', strtotime($joined_date)) : 'Pending Schedule' }}
-                                                    </div>
-                                                    <div class="co-appr-card-sub text-muted mt-1">
-                                                        <i class="far fa-clock text-info me-1 fs-9"></i>Expected Target Joining Date
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {{-- Sub-Card 4: Requested By & Classification --}}
-                                            <div class="co-subcard co-subcard-requester">
-                                                <div class="co-subcard-header">
-                                                    <span class="co-subcard-title"><i class="far fa-id-badge text-info me-1.5"></i>REQUESTED BY</span>
-                                                    <span class="co-appr-mandate-badge {{ $orgTypeClass }}" style="{{ $orgTypeStyle }}">
-                                                        <i class="{{ $orgTypeIcon }} me-1 fs-9"></i>{{ $orgTypeLabel }}
-                                                    </span>
-                                                </div>
-                                                <div class="co-subcard-body p-3">
-                                                    <div class="co-appr-card-val text-truncate" title="{{ auth()->user()->name ?? '—' }}">
-                                                        <i class="far fa-user-circle text-primary me-1.5 fs-7"></i>{{ auth()->user()->name ?? '—' }}
-                                                    </div>
-                                                    <div class="co-appr-card-sub text-muted text-truncate mt-1" title="{{ auth()->user()->company->company_name ?? '' }}">
-                                                        <i class="far fa-building text-muted me-1 fs-9"></i>{{ auth()->user()->company->company_name ?? 'Internal Organization' }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- ── 2-COLUMN MAIN WORKFLOW SPLIT ── --}}
+                                        {{-- ── 2-COLUMN MAIN WORKFLOW SPLIT (Full-Height Layout — Top Subcards Removed as requested) ── --}}
                                         <div class="co-appr-layout">
                                             {{-- LEFT COLUMN: Approval Timeline & Governance Sub-Card --}}
                                             <div class="co-subcard co-appr-main">
-                                                <div class="co-subcard-header">
-                                                    <div>
-                                                        <span class="co-subcard-title fs-7 fw-bolder text-gray-800">
-                                                            <i class="fas fa-route text-primary me-2"></i>APPROVAL TIMELINE &amp; GOVERNANCE
+                                                <div class="co-subcard-header d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="co-subcard-title fs-7 fw-bolder text-gray-800 d-flex align-items-center gap-1.5">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                                                            APPROVAL TIMELINE &amp; GOVERNANCE
                                                         </span>
-                                                        <div class="co-subcard-status-desc" id="co_appr_timeline_subtitle">
+                                                        <span class="text-muted fs-9 ms-1 d-none d-sm-inline">•</span>
+                                                        <div class="co-subcard-status-desc ms-1 d-none d-sm-inline" id="co_appr_timeline_subtitle">
                                                             @if($co_mgmt_status == 2) Offer approved — ready to send to candidate.
                                                             @elseif($co_mgmt_status == 3) Offer rejected.
                                                             @elseif($co_appr_all_tl->isNotEmpty()) Awaiting decision from approver.
@@ -4851,7 +4708,8 @@
                                                             data-mtype="2"
                                                             data-offerId="{{ $offer_id }}"
                                                             class="btn btn-sm btn-light-primary co-appr-add-btn fwd_offer {{ $section_change_value ? '' : 'd-none' }}">
-                                                            <i class="fas fa-user-plus me-1.5 fs-9"></i>Add Approver
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                                            Add Approver
                                                         </button>
                                                     </div>
                                                 </div>
@@ -4859,26 +4717,33 @@
                                                 <div class="co-subcard-body p-3.5">
                                                     @if($co_appr_all_tl->isEmpty())
                                                         {{-- Clean Modern Empty State --}}
-                                                        <div class="co-appr-empty-state">
-                                                            <div class="co-appr-empty-ico">
-                                                                <i class="fas fa-user-shield fs-2 text-primary"></i>
+                                                        <div class="co-appr-empty-state text-center py-5">
+                                                            <div class="d-inline-flex align-items-center justify-content-center w-50px h-50px rounded-circle bg-light-primary text-primary mb-3">
+                                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                                                             </div>
-                                                            <div class="co-appr-empty-title">No Approver Assigned Yet</div>
-                                                            <div class="co-appr-empty-sub">Add internal governance approvers or client managers to sign off before candidate release.</div>
+                                                            <div class="fw-bold text-gray-800 fs-7 mb-1">No Approver Assigned Yet</div>
+                                                            <div class="text-muted fs-8">Add internal governance approvers to sign off before candidate release.</div>
                                                         </div>
                                                     @else
                                                         {{-- Column headers — anchored dedicated background bar --}}
                                                         <div class="co-appr-tl-cols">
-                                                            <div class="co-appr-tl-cols-spacer"></div>
-                                                            <div class="co-appr-tl-grid" style="flex:1;">
-                                                                <div class="co-appr-tl-col-hd"><i class="far fa-user text-muted me-1"></i>Approver</div>
-                                                                <div class="co-appr-tl-col-hd"><i class="fas fa-briefcase text-muted me-1"></i>Role</div>
-                                                                <div class="co-appr-tl-col-hd"><i class="far fa-clock text-muted me-1"></i>Status &amp; Timestamp</div>
-                                                                <div class="co-appr-tl-col-hd"><i class="far fa-bell text-muted me-1"></i>Email Reminder</div>
+                                                            <div class="co-appr-tl-grid">
+                                                                <div class="co-appr-tl-col-hd d-flex align-items-center gap-1.5">
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                                                    Approver &amp; Role
+                                                                </div>
+                                                                <div class="co-appr-tl-col-hd d-flex align-items-center gap-1.5">
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                                    Status &amp; Timestamp
+                                                                </div>
+                                                                <div class="co-appr-tl-col-hd text-end d-flex align-items-center justify-content-end gap-1.5">
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                                                    Email Reminder
+                                                                </div>
                                                             </div>
                                                         </div>
 
-                                                        {{-- Timeline Rows (ASC: oldest first, last row = current status) --}}
+                                                        {{-- Approver Cards Stream (Zero Timeline Nodes) --}}
                                                         @php $co_appr_asc = $co_appr_all_tl->reverse()->values(); @endphp
                                                         @foreach($co_appr_asc as $co_tl_row)
                                                         @php
@@ -4888,71 +4753,70 @@
                                                             $row_role    = trim((string)(@$co_tl_row->designation_offer ?: @$co_tl_row->approver_designation ?? ''));
                                                             $row_date    = !empty($co_tl_row->create_at) ? \Carbon\Carbon::parse($co_tl_row->create_at)->setTimezone($tenantTimezone)->format('d M Y, h:i A T') : '';
                                                             if ($loop->last) {
-                                                                $row_dot   = $co_mgmt_status == 2 ? 'approved' : ($co_mgmt_status == 3 ? 'rejected' : 'active');
-                                                                $row_badge = $row_dot;
-                                                                $row_card  = $row_dot;
+                                                                $row_badge = $co_mgmt_status == 2 ? 'approved' : ($co_mgmt_status == 3 ? 'rejected' : 'active');
+                                                                $row_card  = $row_badge;
                                                                 $row_label_status = $co_mgmt_status == 2 ? 'Approved' : ($co_mgmt_status == 3 ? 'Rejected' : 'Pending');
                                                             } else {
-                                                                $row_dot = $row_badge = 'waiting';
+                                                                $row_badge = 'waiting';
                                                                 $row_card = '';
                                                                 $row_label_status = 'Pending';
                                                             }
                                                         @endphp
-                                                        <div style="display:flex;align-items:stretch;margin-bottom:8px;" class="co-appr-tl-entry">
-                                                            <div style="width:48px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;">
-                                                                <div class="co-appr-tl-dot co-appr-tl-dot--{{ $row_dot }}" title="Step {{ $loop->iteration }}: {{ $row_label_status }}">
-                                                                    @if($row_dot==='approved')<i class="fas fa-check fs-8"></i>
-                                                                    @elseif($row_dot==='rejected')<i class="fas fa-times fs-8"></i>
-                                                                    @elseif($row_dot==='active')<i class="fas fa-user-clock fs-8"></i>
-                                                                    @else<i class="fas fa-hourglass-half fs-8"></i>
-                                                                    @endif
+                                                        <div class="co-appr-tl-card co-appr-tl-grid {{ $row_card ? 'co-appr-tl-card--'.$row_card : '' }} co-appr-tl-entry">
+                                                            {{-- Col 1: Approver & Role --}}
+                                                            <div class="co-appr-tl-appr">
+                                                                <div class="co-appr-tl-avatar">{{ $row_initial }}</div>
+                                                                <div class="min-w-0 flex-grow-1">
+                                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                                        <span class="co-appr-tl-name text-truncate" title="{{ $row_label ?: $row_email ?: '—' }}">{{ $row_label ?: $row_email ?: '—' }}</span>
+                                                                        <span class="badge badge-light-primary text-primary fw-semibold fs-9 px-2 py-0.5 border border-primary-subtle">{{ $row_role ?: 'Internal Approver' }}</span>
+                                                                    </div>
+                                                                    <div class="co-appr-tl-sub text-truncate d-flex align-items-center gap-1 mt-0.5" title="{{ $row_email }}">
+                                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                                                        <span class="text-truncate">{{ $row_email }}</span>
+                                                                    </div>
                                                                 </div>
-                                                                @if(!$loop->last)<div class="co-appr-tl-connector"></div>@endif
                                                             </div>
-                                                            <div class="co-appr-tl-card co-appr-tl-grid {{ $row_card ? 'co-appr-tl-card--'.$row_card : '' }}" style="flex:1;">
-                                                                <div class="co-appr-tl-appr">
-                                                                    <div class="co-appr-tl-avatar">{{ $row_initial }}</div>
-                                                                    <div class="min-w-0">
-                                                                        <div class="co-appr-tl-name text-truncate" title="{{ $row_label ?: $row_email ?: '—' }}">{{ $row_label ?: $row_email ?: '—' }}</div>
-                                                                        <div class="co-appr-tl-sub text-truncate" title="{{ $row_email }}"><i class="far fa-envelope text-muted me-1 fs-9"></i>{{ $row_email }}</div>
-                                                                    </div>
+
+                                                            {{-- Col 2: Status & Timestamp --}}
+                                                            <div class="co-appr-tl-status">
+                                                                <span class="co-appr-tl-badge co-appr-tl-badge--{{ $row_badge }}">
+                                                                    @if($row_label_status === 'Approved')
+                                                                        <svg class="me-1" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                                                    @elseif($row_label_status === 'Rejected')
+                                                                        <svg class="me-1" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                                                    @else
+                                                                        <svg class="me-1" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                                    @endif
+                                                                    {{ $row_label_status }}
+                                                                </span>
+                                                                <div class="co-appr-tl-date d-flex align-items-center gap-1 text-muted mt-1">
+                                                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                                                    <span>{{ $row_date ?: '—' }}</span>
                                                                 </div>
-                                                                <div class="co-appr-tl-role">
-                                                                    <span class="badge badge-light text-gray-800 fw-semibold fs-9 px-2 py-1">{{ $row_role ?: 'Internal Approver' }}</span>
-                                                                </div>
-                                                                <div class="co-appr-tl-status">
-                                                                    <span class="co-appr-tl-badge co-appr-tl-badge--{{ $row_badge }}">
-                                                                        @if($row_label_status === 'Approved')<i class="fas fa-check-circle fs-9 me-1"></i>
-                                                                        @elseif($row_label_status === 'Rejected')<i class="fas fa-times-circle fs-9 me-1"></i>
-                                                                        @else<i class="fas fa-clock fs-9 me-1"></i>
-                                                                        @endif
-                                                                        {{ $row_label_status }}
-                                                                    </span>
-                                                                    <div class="co-appr-tl-date"><i class="far fa-calendar-alt text-muted me-1 fs-9"></i>{{ $row_date ?: '—' }}</div>
-                                                                </div>
-                                                                <div class="co-appr-tl-rem">
-                                                                    <div class="co-appr-tl-rem-row">
-                                                                        <button type="button" class="btn btn-sm btn-light-primary py-1 px-2.5 fs-9 fw-semibold co-appr-remind-send" data-email="{{ $row_email }}" data-name="{{ $row_label }}" data-offerid="{{ $offer_id }}">
-                                                                            <i class="far fa-paper-plane me-1 fs-9"></i>Send Reminder
-                                                                        </button>
-                                                                        <span class="co-appr-tl-kebab" title="More options"><i class="fas fa-ellipsis-v fs-9"></i></span>
-                                                                    </div>
-                                                                    <div class="co-appr-tl-last-sent">Last sent: {{ $row_date ?: 'just now' }}</div>
-                                                                </div>
+                                                            </div>
+
+                                                            {{-- Col 3: Email Reminder Action --}}
+                                                            <div class="co-appr-tl-rem">
+                                                                <button type="button" class="co-appr-remind-send" data-email="{{ $row_email }}" data-name="{{ $row_label }}" data-offerid="{{ $offer_id }}">
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                                                    Send Reminder
+                                                                </button>
+                                                                <div class="co-appr-tl-last-sent">Last sent: {{ $row_date ?: 'just now' }}</div>
                                                             </div>
                                                         </div>
                                                         @endforeach
 
                                                         @if($co_mgmt_status == 3 && !empty(@$_co_tl_latest->note))
-                                                            <div class="co-appr-status-note">
-                                                                <i class="fas fa-comment-slash me-1.5 text-danger"></i>
-                                                                <strong>Approver Feedback:</strong> &ldquo;{{ $_co_tl_latest->note }}&rdquo;
+                                                            <div class="co-appr-status-note d-flex align-items-center gap-1.5">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                                                <span><strong>Approver Feedback:</strong> &ldquo;{{ $_co_tl_latest->note }}&rdquo;</span>
                                                             </div>
                                                         @endif
                                                     @endif
 
                                                     <div class="co-appr-note mt-3">
-                                                        <i class="fas fa-shield-alt text-primary fs-7 flex-shrink-0 mt-0.5"></i>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" class="flex-shrink-0 mt-0.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                                                         <span>Multi-tier approvals are executed sequentially in the order configured. You can modify approver hierarchy prior to releasing the offer letter.</span>
                                                     </div>
                                                 </div>
@@ -4962,40 +4826,54 @@
                                             <div class="co-appr-side">
                                                 {{-- Subcard: Details & Insights --}}
                                                 <div class="co-subcard co-appr-side-card mb-3">
-                                                    <div class="co-subcard-header">
-                                                        <span class="co-subcard-title"><i class="fas fa-info-circle text-primary me-1.5"></i>DETAILS &amp; INSIGHTS</span>
+                                                    <div class="co-subcard-header d-flex align-items-center justify-content-between">
+                                                        <span class="co-subcard-title d-flex align-items-center gap-1.5 fs-7 fw-bolder text-gray-800">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                                            DETAILS &amp; INSIGHTS
+                                                        </span>
                                                         <span class="badge badge-light-primary fs-9 px-1.5 py-0">Metadata</span>
                                                     </div>
                                                     <div class="co-subcard-body p-3">
+                                                        @php
+                                                            $selected_offer_template_label = 'Fulltime Offer Letter';
+                                                            foreach($offer_template_options ?? [] as $tOpt) {
+                                                                if (!empty($tOpt['selected'])) {
+                                                                    $selected_offer_template_label = $tOpt['label'];
+                                                                    break;
+                                                                }
+                                                            }
+                                                        @endphp
                                                         <div class="co-appr-detail-row">
-                                                            <span class="co-appr-detail-label"><i class="fas fa-hashtag text-muted me-1.5 fs-9"></i>Offer ID</span>
-                                                            <span class="badge badge-light-primary fw-bold fs-9">#OFF-{{ $offer_id }}</span>
+                                                            <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                                                Template
+                                                            </span>
+                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 170px;" id="co_appr_tpl_name" title="{{ $selected_offer_template_label }}">{{ $selected_offer_template_label }}</span>
                                                         </div>
                                                         <div class="co-appr-detail-row">
-                                                            <span class="co-appr-detail-label"><i class="far fa-file-alt text-muted me-1.5 fs-9"></i>Template</span>
-                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 140px;" title="Company Offer Letter Template">Company Offer Template</span>
-                                                        </div>
-                                                        <div class="co-appr-detail-row">
-                                                            <span class="co-appr-detail-label"><i class="fas fa-briefcase text-muted me-1.5 fs-9"></i>Designation</span>
-                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 140px;" id="co-appr-designation-display" title="{{ @$designation ?: '—' }}">{{ @$designation ?: '—' }}</span>
-                                                        </div>
-                                                        <div class="co-appr-detail-row">
-                                                            <span class="co-appr-detail-label"><i class="fas fa-phone-alt text-muted me-1.5 fs-9"></i>Candidate Mobile</span>
-                                                            <span class="co-appr-detail-value">{{ @$application->phone ?: '—' }}</span>
+                                                            <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                                                Designation
+                                                            </span>
+                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 170px;" id="co-appr-designation-display" title="{{ @$designation ?: '—' }}">{{ @$designation ?: '—' }}</span>
                                                         </div>
                                                         <div class="co-appr-detail-row border-bottom-0 pb-0">
-                                                            <span class="co-appr-detail-label"><i class="fas fa-building text-muted me-1.5 fs-9"></i>Client Mandate</span>
-                                                            <span class="co-appr-mandate-badge {{ $orgTypeClass }}" style="{{ $orgTypeStyle }}">
-                                                                <i class="{{ $orgTypeIcon }} me-1 fs-9"></i>{{ $orgTypeLabel }}
+                                                            <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                                                Candidate Mobile
                                                             </span>
+                                                            <span class="co-appr-detail-value">{{ @$application->phone ?: '—' }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 {{-- Subcard: Activity Log --}}
                                                 <div class="co-subcard co-appr-side-card">
-                                                    <div class="co-subcard-header">
-                                                        <span class="co-subcard-title"><i class="fas fa-history text-primary me-1.5"></i>ACTIVITY AUDIT LOG</span>
+                                                    <div class="co-subcard-header d-flex align-items-center justify-content-between">
+                                                        <span class="co-subcard-title d-flex align-items-center gap-1.5 fs-7 fw-bolder text-gray-800">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                            ACTIVITY AUDIT LOG
+                                                        </span>
                                                         <span class="badge badge-light-info fs-9 px-1.5 py-0">{{ count($co_activity_log ?? []) }} Entries</span>
                                                     </div>
                                                     <div class="co-subcard-body p-3 co-appr-activity-scroll">
@@ -5013,11 +4891,13 @@
                                                                 $log_time = !empty($log->create_at) ? \Carbon\Carbon::parse($log->create_at)->setTimezone($tenantTimezone)->format('d M Y, h:i A T') : '';
                                                             @endphp
                                                             <div class="co-appr-activity-item">
-                                                                <div class="co-appr-activity-text">
-                                                                    <i class="fas fa-check-circle text-primary me-1 fs-9"></i>{{ $log_label }}
+                                                                <div class="co-appr-activity-text d-flex align-items-center gap-1">
+                                                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" class="flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                                                                    <span>{{ $log_label }}</span>
                                                                 </div>
-                                                                <div class="co-appr-activity-time">
-                                                                    <i class="far fa-clock text-muted me-1 fs-9"></i>{{ $log_time }}
+                                                                <div class="co-appr-activity-time d-flex align-items-center gap-1">
+                                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                                    <span>{{ $log_time }}</span>
                                                                 </div>
                                                             </div>
                                                         @empty
@@ -5473,7 +5353,7 @@
                     }
                 }
 
-                // Called by offerSendMail after each approval email is sent — adds a new row to the timeline
+                // Called by offerSendMail after each approval email is sent — adds a new row to the approval stream
                 function co_updateStep4Timeline(email, name) {
                     var displayName = (name && name !== email) ? name : email;
                     var initial     = displayName ? displayName.charAt(0).toUpperCase() : '?';
@@ -5481,37 +5361,37 @@
                     var safeName    = $('<span/>').text(displayName).html();
                     var offId       = '{{ $offer_id }}';
 
-                    var mailSvg  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>';
-                    var kebabSvg = '<svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>';
-                    var activeSvg= '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
-                    var connSvg  = '<div class="co-appr-tl-connector"></div>';
-                    var connectorHtml = '<div class="co-appr-tl-connector"></div>';
-
                     var newEntry =
-                        '<div style="display:flex;align-items:stretch;margin-bottom:8px;" class="co-appr-tl-entry">' +
-                            '<div style="width:48px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;">' +
-                                '<div class="co-appr-tl-dot co-appr-tl-dot--active" title="Pending Approval"><i class="fas fa-user-clock fs-8"></i></div>' +
+                        '<div class="co-appr-tl-card co-appr-tl-card--active co-appr-tl-grid co-appr-tl-entry mb-2.5">' +
+                            '<div class="co-appr-tl-appr">' +
+                                '<div class="co-appr-tl-avatar">' + initial + '</div>' +
+                                '<div class="min-w-0 flex-grow-1">' +
+                                    '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+                                        '<span class="co-appr-tl-name text-truncate" title="' + safeName + '">' + safeName + '</span>' +
+                                        '<span class="badge badge-light-primary text-primary fw-semibold fs-9 px-2 py-0.5 border border-primary-subtle">Internal Approver</span>' +
+                                    '</div>' +
+                                    '<div class="co-appr-tl-sub text-truncate d-flex align-items-center gap-1 mt-0.5" title="' + safeEmail + '">' +
+                                        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
+                                        '<span class="text-truncate">' + safeEmail + '</span>' +
+                                    '</div>' +
+                                '</div>' +
                             '</div>' +
-                            '<div class="co-appr-tl-card co-appr-tl-card--active co-appr-tl-grid" style="flex:1;">' +
-                                '<div class="co-appr-tl-appr">' +
-                                    '<div class="co-appr-tl-avatar">' + initial + '</div>' +
-                                    '<div class="min-w-0">' +
-                                        '<div class="co-appr-tl-name text-truncate" title="' + safeName + '">' + safeName + '</div>' +
-                                        '<div class="co-appr-tl-sub text-truncate" title="' + safeEmail + '"><i class="far fa-envelope text-muted me-1 fs-9"></i>' + safeEmail + '</div>' +
-                                    '</div>' +
+                            '<div class="co-appr-tl-status">' +
+                                '<span class="co-appr-tl-badge co-appr-tl-badge--active">' +
+                                    '<svg class="me-1" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+                                    'Pending' +
+                                '</span>' +
+                                '<div class="co-appr-tl-date d-flex align-items-center gap-1 text-muted mt-1">' +
+                                    '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+                                    '<span>Sent just now</span>' +
                                 '</div>' +
-                                '<div class="co-appr-tl-role"><span class="badge badge-light text-gray-800 fw-semibold fs-9 px-2 py-1">Internal Approver</span></div>' +
-                                '<div class="co-appr-tl-status">' +
-                                    '<span class="co-appr-tl-badge co-appr-tl-badge--active"><i class="fas fa-clock fs-9 me-1"></i>Pending</span>' +
-                                    '<div class="co-appr-tl-date"><i class="far fa-calendar-alt text-muted me-1 fs-9"></i>Sent just now</div>' +
-                                '</div>' +
-                                '<div class="co-appr-tl-rem">' +
-                                    '<div class="co-appr-tl-rem-row">' +
-                                        '<button type="button" class="btn btn-sm btn-light-primary py-1 px-2.5 fs-9 fw-semibold co-appr-remind-send" data-email="' + safeEmail + '" data-name="' + safeName + '" data-offerid="' + offId + '"><i class="far fa-paper-plane me-1 fs-9"></i>Send Reminder</button>' +
-                                        '<span class="co-appr-tl-kebab"><i class="fas fa-ellipsis-v fs-9"></i></span>' +
-                                    '</div>' +
-                                    '<div class="co-appr-tl-last-sent">Last sent: just now</div>' +
-                                '</div>' +
+                            '</div>' +
+                            '<div class="co-appr-tl-rem">' +
+                                '<button type="button" class="co-appr-remind-send" data-email="' + safeEmail + '" data-name="' + safeName + '" data-offerid="' + offId + '">' +
+                                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
+                                    'Send Reminder' +
+                                '</button>' +
+                                '<div class="co-appr-tl-last-sent">Last sent: just now</div>' +
                             '</div>' +
                         '</div>';
 
@@ -5519,19 +5399,24 @@
                     var $entries = $main.find('.co-appr-tl-entry');
 
                     if ($entries.length) {
-                        // Add connector to previous last entry dot column before appending
-                        $entries.last().find('.co-appr-tl-dot').parent().append(connectorHtml);
                         $entries.last().after(newEntry);
                     } else {
-                        // Build full timeline layout for first add
+                        // Build full 3-column layout for first add
                         var colHdr =
                             '<div class="co-appr-tl-cols">' +
-                                '<div class="co-appr-tl-cols-spacer"></div>' +
-                                '<div class="co-appr-tl-grid" style="flex:1;">' +
-                                    '<div class="co-appr-tl-col-hd"><i class="far fa-user text-muted me-1"></i>Approver</div>' +
-                                    '<div class="co-appr-tl-col-hd"><i class="fas fa-briefcase text-muted me-1"></i>Role</div>' +
-                                    '<div class="co-appr-tl-col-hd"><i class="far fa-clock text-muted me-1"></i>Status &amp; Timestamp</div>' +
-                                    '<div class="co-appr-tl-col-hd"><i class="far fa-bell text-muted me-1"></i>Email Reminder</div>' +
+                                '<div class="co-appr-tl-grid">' +
+                                    '<div class="co-appr-tl-col-hd d-flex align-items-center gap-1.5">' +
+                                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
+                                        'Approver &amp; Role' +
+                                    '</div>' +
+                                    '<div class="co-appr-tl-col-hd d-flex align-items-center gap-1.5">' +
+                                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+                                        'Status &amp; Timestamp' +
+                                    '</div>' +
+                                    '<div class="co-appr-tl-col-hd text-end d-flex align-items-center justify-content-end gap-1.5">' +
+                                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
+                                        'Email Reminder' +
+                                    '</div>' +
                                 '</div>' +
                             '</div>';
                         var $emptyState = $main.find('.co-appr-empty-state');
@@ -7811,6 +7696,15 @@
                     if (sc) {
                         if (active >= 3) sc.classList.add('co-step-flex-mode');
                         else sc.classList.remove('co-step-flex-mode');
+                    }
+                    if (active === 4) {
+                        var $sel = $('#co_tpl_select');
+                        if ($sel.length) {
+                            var tplText = $sel.find('option:selected').text().trim();
+                            if (tplText) {
+                                $('#co_appr_tpl_name').text(tplText).attr('title', tplText);
+                            }
+                        }
                     }
                     if (typeof coEnsureStep5Composer === 'function') coEnsureStep5Composer();
                 }
