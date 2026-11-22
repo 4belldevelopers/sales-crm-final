@@ -419,6 +419,39 @@ Replaced the basic pill buttons with dedicated enterprise buttons matching the c
 - Tenancy isolation verified: strictly scoped to `service_company/`. Frozen personas untouched.
 - Stepper navigation tested across all 5 steps with dynamic Close/Back transformation verified.
 
+---
+
+## 12. Round 9 – Header Cross Button Removal, Stepper Collision Elimination & Component Name Column Input Restoration
+
+### 12.1 Problem Statements & Root Causes
+1. **Redundant Square Close Cross Button (`[ X ]`):**
+   - *Problem:* Having both the dynamic navigation button (`#co_header_nav_btn` rendering `[ Close ]` on Step 1) and the square icon button (`#kt_offercreate_close` rendering `[ X ]`) cluttered the topbar actions area.
+   - *Remediation:* Permanently hidden `.co-close-btn` (`display: none !important;`). The single unified button `#co_header_nav_btn` cleanly handles closing on Step 1 and back-navigation on Steps 2–5.
+2. **Stepper Text Overwriting & Collision:**
+   - *Problem:* Stepper nodes and titles collided across the header (`Review before approv`, `Get approver sign-of`).
+   - *Root Cause:* Each of the 5 steps rendered both a title and a subtitle description (`.co-step-status`, e.g., `"Build salary structure"`, `"Select offer template"`), totaling ~700px of text plus 150px of node circles and 190px of topbar buttons. In an 850px sliding drawer, this exceeded available horizontal width, forcing flex elements into each other.
+   - *Remediation:*
+     - Set `.co-step-status { display: none !important; }` in drawer headers, keeping only clean, high-clarity titles (`Compensation`, `Template`, `Preview Offer`, `Approval`, `Offer Sent`).
+     - Reduced node circle dimensions from 30px to 24px (`min-width: 24px`), font size to 11px, step gap to 6px, and line connector to 14px.
+     - Entire 5-step stepper now consumes ~460px, easily coexisting with topbar action buttons in an 850px drawer with ~190px of breathing room.
+3. **Collapsed Component Name Input Box (`1 ✏️ [ ]`):**
+   - *Problem:* In the Component Name column, rows displayed `1 ✏️` followed by a tiny 15px collapsed box with all text cut off, followed by vast whitespace.
+   - *Root Cause:* Direct assignment of `display: flex !important;` onto the table cell `<td>` (`.co-name-cell`) combined with `.form-control { min-width: 0 !important; }` inside a `table-layout: fixed` table caused Blink/WebKit layout engines to collapse the `<input>` element to its browser default intrinsic minimum (~15px).
+   - *Remediation:*
+     - Restored `<td>` to standard native table cell layout (`display: table-cell`).
+     - Wrapped the row lead and input inside a dedicated flex container `<div class="co-name-wrap">`.
+     - Styled `.co-name-wrap .form-control`, `#pointList .co-name-wrap .offer_points`, and `#bonusList .co-name-wrap .bonus_points` with `flex: 1 1 auto !important; width: 100% !important; min-width: 130px !important; height: 38px !important; padding: 6px 10px !important;`.
+     - Wrote defensive base rules directly targeting `#pointList .offer_points, #bonusList .bonus_points` (`width: 100% !important; min-width: 120px !important;`) guaranteeing the input stretches across the full 26% column width regardless of lifecycle timing.
+4. **Header Column Distinction (Allocation vs Condition):**
+   - *Problem:* Table headers `ALLOCATION (%)` and `CONDITION` merged visually into `ALLOCATION (%)× CONDITION`.
+   - *Remediation:* Removed `&times;` from the Col 4 header cell in all tables (`#pointList`, `#bonusList`, `#final_pay`), replacing it with `&nbsp;`. Added `border-right: 1px solid #e2e8f0 !important;` to `.co-th-alloc` and `.co-th-mult`, creating clean visual column boundaries.
+
+### 12.2 Verification Evidence
+- `php -l resources/views/service_company/job-applications/create-offer.blade.php`: **Passed (0 syntax errors)**.
+- Tenancy isolation verified: strictly scoped to `service_company/`. Frozen personas (`product_company/`, `staffing_company/`) remain 100% untouched (Rule 18).
+- Calculation event handlers, input names, IDs, and CQRS patterns verified 100% intact.
+
+
 
 
 
