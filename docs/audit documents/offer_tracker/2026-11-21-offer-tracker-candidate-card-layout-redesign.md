@@ -11,9 +11,32 @@
 
 ## 1. Executive Summary
 
-This update completes two major enhancements to the Service Company Offer Tracker (`applicationoffer`):
+This update completes major enhancements to the Service Company Offer Tracker (`applicationoffer`):
 
-1. **Replaced "Joining Soon" with Dynamic "Offer Rejected" Tab & KPI Card:**
+1. **Section Title & Subcard 2 ("Job Details"):**
+   - Renamed Subcard 2 header from "Job & Client" to **"Job Details"**.
+   - Removed the redundant "Hiring" status pill.
+   - Replaced client classification with canonical Rule 25 pills: **`Direct Client`**, **`Internal Client`**, and **`My Organization`** backed by `all_candidates.blade.php` and Elasticsearch client relationship logic.
+
+2. **Compensation Subcard & Employment Type Integration:**
+   - Renamed heading from "Compensation & Status" to **"Compensation"**, removing "Status" from the label.
+   - When creating an offer (`$hasPendingOffer`), added interactive Employment Type options directly inside the Compensation subcard:
+     - **Full-time** (`0`)
+     - **Contract** (`1`)
+     - **Freelancer** (`2`)
+     - **Internship** (`4`)
+   - Integrated with `GeneralMethod::employmentType()`, `ServiceCompanyJobApplicationController::saveCreateOffer`, `create-offer.blade.php`, and Elasticsearch `of_employment_type`.
+   - Clicking an employment type chip on the card pre-selects that employment type and opens the offer creation drawer with that type pre-populated.
+
+3. **Replaced "More Actions" with "Offer Settings":**
+   - Replaced the header dropdown button with **"Offer Settings"** (`<i class="fas fa-cog text-primary"></i> <span>Offer Settings</span>`).
+   - Exposes direct links to:
+     - **Offer Letter Templates** (`route('service_company.account.index') . '#offerterms'`)
+     - **Compensation Components & Breakup** (`route('service_company.account.index') . '#offercomponent'`)
+     - **Approval Stages & Pipeline** (`route('service_company.account.index') . '#interview_Stage'`)
+     - Quick Filters: Pending Offers, Rejected Offers, and Reset All Filters.
+
+4. **Replaced "Joining Soon" with Dynamic "Offer Rejected" Tab & KPI Card:**
    - **Card 5 KPI:** Replaced "Joining Soon" with **"Offer Rejected"** (`data-tab="rejected"`, `data-kpi="rejected"`, `selectOfferTab('rejected')`).
    - **Visual Theme:** Semantic danger/red palette (`.ot-kpi-icon.red` `#fef2f2` bg / `#dc2626` text, subtitle "Candidate declined", active card `#fef2f2` bg / `#dc2626` outline).
    - **Dynamic ES Tenancy & Sync:** 
@@ -21,34 +44,9 @@ This update completes two major enhancements to the Service Company Offer Tracke
      - `ServiceCompanyCvTrackerController` handles `case 'rejected': $offerTabFilterClause = ['term' => ['of_offer_acceptance' => 3]]; break;` to filter rejected offers via Elasticsearch.
      - Real-time client JavaScript updates `[data-kpi="rejected"]` from `c.rejected` in the size:0 aggregation, guaranteeing 100% dynamic counts without page reloads.
 
-2. **Redesigned Compensation & Status Sub-Card (Mirrors Pipeline & Stage Sub-Card):**
-   - **Order of Information:**
-     - **Row 1:** Compensation Amount (`INR 157,279/A` or `Salary Pending` in amber text).
-     - **Row 2:** Offer Status Badge (`Offer Created`, `Offer Released`, `Accepted`, `Offer Rejected`, `Expired`) with full width and matching semantic SVG icon.
-     - **Row 3:** Action Cue Link (`Update Offer >` or `Create Offer >` in primary blue `#009ef7` with chevron `>`).
-   - **Clickable Subcard Interaction:** The entire Subcard 3 has `create_offer` and `data-row-offerid`, with hover state `#f0f9ff` and cue underline, allowing recruiters to click anywhere on the card to open the Offer Drawer.
-
-3. **Candidate Subcard Width Expansion, Current Company & Click-to-Drawer:**
-   - **Width Expansion:** Increased Candidate column fraction to **`2.35fr`** (was `1.70fr`), completely eliminating role truncation (`PHP / Laravel Developer` displays in full).
-   - **Company Display:** Replaced location row with candidate's **Current Company Name** (`$candCompany`, e.g. `<i class="fas fa-building"></i> 4Bell Technology`, fallback `—`).
-   - **Clickable Candidate Drawer:** The entire Candidate subcard has `show-application-detail ot-clickable-subcard` with `data-row-id="{{ $row->wiseId }}"`. Clicking anywhere on the candidate subcard smoothly opens the Candidate Profile Drawer.
-
-4. **Compensation Subcard Width Optimization (Wasted Space Eliminated):**
-   - Reduced Compensation subcard column fraction from `1.65fr` down to **`1.15fr`**, eliminating the vast empty background and reallocating it to candidate details.
-
-5. **Fixed FontAwesome Icons Loading (Resolved Square Boxes `□`):**
-   - Root Cause: `.ot-dashboard * { font-family: 'Poppins' !important; }` was overriding FontAwesome's font family across all `<i>` tags.
-   - Fix: Removed universal `*` font override and added explicit FontAwesome declarations for `i.fa, i.fas, i.far, i.fab` with `"Font Awesome 6 Free", "FontAwesome" !important`. All icons now render with 100% precision.
-
-6. **Snug Header Spacing (Eliminated Empty Gap):**
-   - Configured `margin-top: -48px !important; padding-top: 0 !important;` (and `-38px` on mobile/tablet).
-   - Removes the empty gap between the main navigation bar and the Offer Tracker header card, ensuring clean, snug vertical alignment.
-
-7. **Removed Offer Ref & Candidate ID from Bottom Strip:**
-   - Cleaned up the bottom strip metadata, removing `#OFF-xxxx` and `#APP-xxxx` per user instruction to keep the card sleek and focused on `Status Date` and actions.
-
-8. **Grid Geometry (9.0fr Total):**
-   - `2.35fr (Candidate) 1.75fr (Job & Client) 1.15fr (Comp & Status) 1.05fr (Joining) 1.45fr (Ownership) 1.25fr (Stage)`.
+5. **Layout & Responsive 15.6" Grid Geometry:**
+   - Rebalanced 6-column grid: `2.3fr (Candidate) 1.7fr (Job Details) 1.35fr (Compensation) 1.05fr (Joining) 1.4fr (Ownership) 1.2fr (Stage)` (9.0fr total).
+   - Perfect fit across 1366×768 and 1920×1080 screens with 0px horizontal overflow.
 
 ---
 

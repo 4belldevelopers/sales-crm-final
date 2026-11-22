@@ -588,8 +588,9 @@ END:VCALENDAR";
         $array = [];
         $array[0] = 'Full-time';
         $array[1] = 'Contract';
-        $array[2] = 'Freelance';
+        $array[2] = 'Freelancer';
         $array[3] = 'Part Time';
+        $array[4] = 'Internship';
 
         return $array;
     }

@@ -18,6 +18,21 @@ Last updated: 2026-11-12 (Service Company Interview Tracker Rule 20 6-Subcard En
 - **Active code folder:** `testing.jero.works` (NOT `hire.jero.works`).
 - **Current focus:** Forward Resume & Prescreen Report Data Consistency Audit & Permanent SSOT Fix (100% COMPLETED and VERIFIED).
 - **AI Agent Browser Tooling:** Microsoft Playwright CLI (`@playwright/cli`) is globally installed and registered via `.agents/skills/playwright-cli/SKILL.md`. Use for token-efficient browser automation, DOM accessibility tree snapshots, element ref interaction, and 15.6" screen layout/screenshot verification.
+- **Agent-Native CLI Standard & CLI-Hub:** HKUDS CLI-Anything and CLI-Hub are installed project-locally in `.agents/skills/` and globally in `~/.gemini/config/skills/`, with `cli-hub` binary at `~/.local/bin/cli-hub.exe` (User `PATH` configured). AI coding agents must prefer lightweight, agent-native CLIs with `--json` outputs and `SKILL.md` manifests over context-bloating MCP schemas or brittle visual GUI automation.
+
+- *2026-11-22* — **Agent-Native CLI Suite & CLI-Hub Meta-Skill Integration (`HKUDS/CLI-Anything`) (COMPLETED & VERIFIED)**:
+  - **Skills Installed**:
+    1. `.agents/skills/cli-anything/` & `~/.gemini/config/skills/cli-anything/` (7-phase pipeline: Analyze, Design, Implement, Plan Tests, Write Tests, Document, Publish; Click-based CLI generation with `--json` flags, REPL, and `SKILL.md` generator).
+    2. `.agents/skills/cli-hub-meta-skill/` & `~/.gemini/config/skills/cli-hub-meta-skill/` (CLI-Hub live catalog discovery, search, and preflight inspection for agent-native software CLIs).
+  - **Executable Registered**:
+    - `cli-hub` (`cli-anything-hub v0.4.1`) provisioned via standalone Python 3.14 (`uv`) at `C:\Users\VIBHANSHU JAISWAL.000\.local\bin\cli-hub.exe`.
+    - Permanently registered in User environment `PATH`.
+  - **AI Brain Decision Boundary (Agent CLI vs. MCP vs. GUI Computer Use)**:
+    - **Agent-Native CLI**: 0 tokens upfront context cost, sub-second local execution, deterministic `--json` outputs, and standard exit codes (`0` ok, `1` error, `2` usage, `3` partial/gaps). Mandatory standard for internal testing, ATS resume parser benchmarking, CQRS query audits, and headless engine diagnostics.
+    - **MCP (Model Context Protocol)**: Use strictly when protocol-mandated by external third-party services. Avoid creating heavy MCP servers for internal tools to prevent prompt token bloat.
+    - **GUI / Computer Use**: Strictly discouraged for backend or data tasks. Reserved exclusively for visual layout rendering verification on 15.6" screens via Playwright CLI.
+  - **Core Directives & Rules**: Rule 29 in `AGENTS.md` and Directive 21 in `CLAUDE.md`.
+  - **Audit & Architecture Spec**: [`docs/audit documents/antigravity_superpowers/2026-11-22-cli-anything-and-cli-hub-installation-and-agent-standards.md`](../docs/audit%20documents/antigravity_superpowers/2026-11-22-cli-anything-and-cli-hub-installation-and-agent-standards.md).
 
 - *2026-11-22* — **GreenSock Animation Platform (GSAP) Official Skills Suite Integration (COMPLETED)**:
   - **Skills Installed**:
