@@ -127,9 +127,17 @@ class MarketJobV2Resource extends JsonResource
             }
         }
 
-        // Days ago string
+        // Days ago string & Rule 24 tenant timezone resolution
+        $companyTimezone = (string) (GeneralMethod::defaultTimeZone($companyId) ?: config('app.timezone', 'Asia/Kolkata'));
         $createdAt = $row->created_at ?? date('Y-m-d H:i:s');
-        $formattedDate = date('d M, Y', strtotime($createdAt));
+        try {
+            $createdAtCarbon = \Carbon\Carbon::parse($createdAt)->setTimezone($companyTimezone);
+            $formattedDate = $createdAtCarbon->format('d M, Y');
+            $formattedDateTime = $createdAtCarbon->format('d M y, h:i A T');
+        } catch (\Throwable $e) {
+            $formattedDate = date('d M, Y', strtotime($createdAt));
+            $formattedDateTime = date('d M y, h:i A', strtotime($createdAt));
+        }
         $daysAgo = GeneralMethod::timeAgo($createdAt);
 
         // Department / Category (dynamic from job_categories)
@@ -322,8 +330,9 @@ class MarketJobV2Resource extends JsonResource
             'location_display' => $locationDisplay,
             'employment_type' => $employmentTypeBadge,
             'public_market_status' => $publicMarketStatus,
-            'created_at_formatted' => "{$formattedDate} ({$daysAgo})",
+            'created_at_formatted' => "{$formattedDateTime} ({$daysAgo})",
             'created_at_date' => $formattedDate,
+            'created_at_datetime' => $formattedDateTime,
             'salary_currency' => $currencySymbol,
             'min_salary' => $canViewSalary ? $minSalFormatted : null,
             'max_salary' => $canViewSalary ? $maxSalFormatted : null,

@@ -1076,15 +1076,27 @@
 .simf-applied-more:hover { background: #e5e7eb; }
 
 /* ══════════════════════════════════════════════════════════════════
-   simf-* Filter Drawer Styles (Enterprise Standard)
+   simf-* Filter Drawer Styles (Enterprise Standard - Rule 20)
    ══════════════════════════════════════════════════════════════════ */
 .simf-header {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid #eef0f4;
+    padding: 16px 20px 14px;
     flex-shrink: 0;
+}
+
+/* Universal Mandatory Drawer Header Background Standard (Rule 20) */
+#kt_activitiesClientjob .card-header,
+#kt_activitiesBT .card-header,
+#kt_activitiesHM .card-header,
+#kt_activitiesTermsFindjob .card-header,
+#kt_market_filter_drawer .simf-header,
+.simf-applied-head {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
 }
 .simf-header-icon {
     width: 40px;
@@ -1964,9 +1976,20 @@
     color: #059669;
     background: #ecfdf5;
     border: 1px solid #a7f3d0;
-    border-radius: 4px;
-    padding: 1px 6px;
+    border-radius: 5px;
+    padding: 1.5px 7px;
     font-size: 10px;
+    line-height: 1.3;
+}
+.cd-mandate-tag.tag-direct {
+    color: #059669;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+}
+.cd-mandate-tag.tag-request {
+    color: #7c3aed;
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
 }
 
 .cd-openings-count {
@@ -2146,19 +2169,19 @@
    6 Interactive KPI Stat Cards, Micro-Search, Sort Combobox & Filter Bar
    ========================================================================== */
 
-/* ── Tier 1: Main Header Card (Pure White Background Standard) ── */
+/* ── Tier 1: Main Header Card (Dedicated #f8fafc Background Standard - Rule 20) ── */
 .cd-market-header-card, .cl-header-card {
-    background: #ffffff !important;
+    background: #f8fafc !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 12px !important;
-    padding: 14px 20px !important;
-    margin-bottom: 14px !important;
+    border-radius: 10px !important;
+    padding: 12px 18px !important;
+    margin-bottom: 12px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 16px !important;
+    gap: 14px !important;
     flex-wrap: wrap !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
     font-family: 'Poppins', sans-serif !important;
 }
 .cd-market-header-left {
@@ -2231,8 +2254,31 @@
 .cd-market-header-actions {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 8px !important;
     flex-shrink: 0 !important;
+    flex-wrap: wrap !important;
+}
+.cd-market-header-actions .cl-search-box {
+    margin-bottom: 0 !important;
+    min-width: 250px !important;
+    width: 275px !important;
+}
+.cd-market-header-actions .cl-search-inp {
+    height: 36px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    padding: 0 85px 0 34px !important;
+}
+.cd-market-header-actions .cl-sort-combobox-btn,
+.cd-market-header-actions .cl-filter-btn,
+.cd-market-header-actions .cl-export-btn {
+    height: 36px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
 }
 
 /* Header Action Buttons (Client Tracker Style) */
@@ -2243,8 +2289,9 @@
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
-    padding: 8px 14px !important;
-    font-size: 12.5px !important;
+    padding: 0 12px !important;
+    height: 36px !important;
+    font-size: 12px !important;
     font-weight: 600 !important;
     color: #0f172a !important;
     cursor: pointer !important;
