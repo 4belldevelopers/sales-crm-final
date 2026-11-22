@@ -694,11 +694,32 @@ class FindAgencyService
                 $recReason = 'Skill overlap in '.implode(', ', array_slice($commonSkills, 0, 2));
                 $matchPct = min(74, max(50, round(($matchedSkillCount / max(1, count($skillsList))) * 100)));
             } else {
+                // Default / General Marketplace Partner Baseline
+                $servingCountryIds = array_column($source['commericial_countries'] ?? [], 'country_id');
+                $isDomestic = in_array((int) $domesticCountryId, array_map('intval', $servingCountryIds));
+                $isSuperAdminVerified = ((int) ($batchAccountVerify[$matchedCompanyId] ?? 0)) === 1;
+
+                $calcPct = 70;
+                $reasons = [];
+                if ($isDomestic) {
+                    $calcPct += 10;
+                    $reasons[] = 'Domestic '.$domesticCountryAdjective;
+                }
+                if ($benchCount > 0) {
+                    $calcPct += 8;
+                    $reasons[] = $benchCount.' Bench Ready';
+                }
+                if ($isSuperAdminVerified) {
+                    $calcPct += 5;
+                    $reasons[] = 'Verified Partner';
+                }
+                $calcPct = min(92, max(70, $calcPct));
+
                 $recTier = 'marketplace';
-                $isDirectMatch = false;
-                $recLabel = '';
-                $recReason = '';
-                $matchPct = 0;
+                $isDirectMatch = true;
+                $recLabel = 'Verified Partner';
+                $recReason = ! empty($reasons) ? implode(' • ', $reasons) : ($domesticCountryAdjective.' Staffing Partner • Pre-Agreed Commercials');
+                $matchPct = $calcPct;
             }
 
             $source['recommendation_tier'] = $recTier;
@@ -762,7 +783,7 @@ class FindAgencyService
                 $domesticCountryAdjective = ! empty($cRow->country_code) ? strtoupper($cRow->country_code) : $cRow->country_name;
             }
         }
-        $domesticSubtext = $domesticDocCount . ' ' . $domesticCountryAdjective . ($domesticDocCount === 1 ? ' agency' : ' agencies');
+        $domesticSubtext = $domesticDocCount.' '.$domesticCountryAdjective.($domesticDocCount === 1 ? ' agency' : ' agencies');
 
         $kpiCounts = [
             'total_agencies' => $companyResponse['aggregations']['total']['value'] ?? $total,

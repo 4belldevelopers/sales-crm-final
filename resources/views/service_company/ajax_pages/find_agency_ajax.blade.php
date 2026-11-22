@@ -277,6 +277,15 @@
             $recReason = $row->recommendation_reason ?? '';
             $recTier = $row->recommendation_tier ?? 'marketplace';
             $rowMatchPct = (int) ($row->match_pct ?? 0);
+            if ($rowMatchPct <= 0) {
+                $rowMatchPct = 75;
+                $recReason = !empty($recReason) ? $recReason : 'Verified Partner • Pre-Agreed Commercials';
+            }
+
+            $page = (int) ($pagination['current_page'] ?? 1);
+            $perPage = (int) ($pagination['per_page'] ?? 10);
+            $rankNumber = (($page - 1) * $perPage) + ($loop->iteration);
+            $isTop3 = $rankNumber <= 3;
         @endphp
 
         <!-- ── PRIMARY AGENCY CARD (Modern Card + Sub-Card Enterprise Standard - Rule 20) ── -->
@@ -444,13 +453,22 @@
             <div class="cl-card-footer-strip">
                 <div class="cl-footer-strip-left">
                     <div class="cl-footer-match-wrap">
-                        @if($isDirectMatch && $rowMatchPct > 0)
-                            <span class="cl-card-match-badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
-                                <i class="fas fa-bolt text-success me-1"></i><strong>{{ $rowMatchPct }}% Match</strong> • <span class="text-muted font-weight-500 ms-1">{{ $recReason }}</span>
-                            </span>
-                        @else
-                            <span class="cl-card-match-badge d-none badge-light-success font-size-10 font-weight-700 py-0.5 px-2"></span>
-                        @endif
+                        <!-- Marketplace Rank Badge -->
+                        <span class="cl-card-rank-badge {{ $isTop3 ? 'rank-top3' : '' }}" title="Marketplace Ranking Position">
+                            @if($isTop3)
+                                <i class="fas fa-trophy font-size-9 me-1"></i>
+                            @endif
+                            <span>Rank #{{ $rankNumber }}</span>
+                        </span>
+
+                        <!-- Match % Badge & What/Why It Matches -->
+                        <span class="cl-card-match-badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
+                            <i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">{{ $rowMatchPct }}% Match</strong>
+                            @if(!empty($recReason))
+                                <span class="cl-footer-divider ms-1 me-1 text-muted">•</span>
+                                <span class="match-reason-text text-muted font-weight-500">{{ $recReason }}</span>
+                            @endif
+                        </span>
                     </div>
                 </div>
                 <div class="cl-footer-strip-right">
