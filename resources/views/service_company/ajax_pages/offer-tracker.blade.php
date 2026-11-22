@@ -406,9 +406,7 @@
                 <div class="ot-subcard-head">
                     <span class="ot-subcard-label">Compensation</span>
                     @if(!$hasPendingOffer && !empty($empLabel))
-                        <span class="ot-micro-pill ot-pill-neutral" title="Employment Type: {{ $empLabel }}">
-                            <i class="fas fa-briefcase me-1"></i>{{ $empLabel }}
-                        </span>
+                        <span class="ot-micro-pill ot-pill-neutral" title="Employment Type: {{ $empLabel }}">{{ $empLabel }}</span>
                     @elseif($hasPendingOffer)
                         <span class="ot-micro-pill ot-pill-pending" title="Offer Pending">Pending</span>
                     @endif
