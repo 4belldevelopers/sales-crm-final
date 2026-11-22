@@ -15,6 +15,7 @@
     $job_status_arr  = GeneralMethod::job_status();
     $now             = \Carbon\Carbon::now();
     $company_id      = auth()->user()->company_id;
+    $tenantTimezone  = GeneralMethod::defaultTimeZone($company_id) ?: 'Asia/Kolkata';
 
     $jobDetailsMap             = $jobDetailsMap ?? [];
     $allowedConfidentialJobIds = $allowedConfidentialJobIds ?? [];
@@ -33,12 +34,31 @@
             })
             ->whereIn('o.id', $offerIds)
             ->where('o.company_id', $company_id)
-            ->select('o.id as offer_id', 'o.updated_at as salary_saved_at', 't.send_approved_date_time', 't.accept_date_time')
+            ->select(
+                'o.id as offer_id',
+                'o.updated_at as salary_saved_at',
+                't.updated_at as doc_updated_at',
+                't.created_at as doc_created_at',
+                't.send_approved_date_time',
+                't.accept_date_time',
+                't.send_accept_date_time'
+            )
             ->get();
         foreach ($metaRows as $m) {
             $offerMeta[$m->offer_id] = $m;
         }
     }
+
+    $fmtDateTimeTz = function ($d) use ($tenantTimezone) {
+        if (empty($d)) return '';
+        $ts = strtotime($d);
+        if (!$ts || date('d-m-Y', $ts) === '01-01-1970') return '';
+        try {
+            return \Carbon\Carbon::parse($d)->setTimezone($tenantTimezone)->format('d M Y, h:i A T');
+        } catch (\Throwable $e) {
+            return date('d M Y, h:i A', $ts) . ' ' . $tenantTimezone;
+        }
+    };
 @endphp
 
 @if (count($data) > 0)
@@ -179,64 +199,70 @@
         $subForApproval  = (int) ($row->sub_for_approval ?? 0);    // 1 = sent for approval
         $isJoined        = ($row->of_joined ?? 0) == 1;
         $meta            = $offerMeta[$row->offer_id ?? 0] ?? null;
-        $fmtDate = fn($d) => (!empty($d) && date('d-m-Y', strtotime($d)) !== '01-01-1970')
-            ? \Carbon\Carbon::parse($d)->format('d M Y') : '';
 
         $offerStatusText = '';
-        $offerStatusDate = '';
+        $rawStatusDate   = null;
         $cardAccentColor = '#f59e0b';
 
         if ($hasPendingOffer) {                       // 1 — no salary yet
             $offerBadgeLabel = 'Pending';          $offerBadgeColor = '#b45309'; $offerBadgeBg = '#fef3c7'; $offerBadgeBorder = '#fde68a';
             $offerIconPath   = 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z';
             $offerStatusText = 'Awaiting offer creation';
-            $offerStatusDate = $fmtDate($row->of_stage_date ?? $row->created_at ?? '');
+            $rawStatusDate   = $row->of_stage_date ?? $row->created_at ?? $row->updated_at ?? null;
             $cardAccentColor = '#f59e0b';
         } elseif ($offerAcceptance == 4) {            // 7 — expired
             $offerBadgeLabel = 'Expired';          $offerBadgeColor = '#475569'; $offerBadgeBg = '#f1f5f9'; $offerBadgeBorder = '#cbd5e1';
             $offerIconPath   = 'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z';
             $offerStatusText = 'Renewal needed';
-            $offerStatusDate = $fmtDate($row->of_expired_date ?? '');
+            $rawStatusDate   = $row->of_expired_date ?? $meta->doc_updated_at ?? $meta->salary_saved_at ?? null;
             $cardAccentColor = '#94a3b8';
         } elseif ($offerAcceptance == 3) {            // 6 — rejected
             $offerBadgeLabel = 'Rejected';         $offerBadgeColor = '#b91c1c'; $offerBadgeBg = '#fee2e2'; $offerBadgeBorder = '#fecaca';
             $offerIconPath   = 'm9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z';
             $offerStatusText = 'Candidate declined';
-            $offerStatusDate = $fmtDate($meta->accept_date_time ?? '');
+            $rawStatusDate   = $meta->accept_date_time ?? $meta->doc_updated_at ?? $meta->salary_saved_at ?? null;
             $cardAccentColor = '#ef4444';
         } elseif ($offerAcceptance == 2) {            // 5 — accepted
             $offerBadgeLabel = 'Accepted';         $offerBadgeColor = '#15803d'; $offerBadgeBg = '#dcfce7'; $offerBadgeBorder = '#bbf7d0';
             $offerIconPath   = 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z';
             $offerStatusText = $isJoined ? 'Joined' : 'Ready for onboarding';
-            $offerStatusDate = $fmtDate($meta->accept_date_time ?? '');
+            $rawStatusDate   = $meta->accept_date_time ?? $meta->doc_updated_at ?? $meta->salary_saved_at ?? null;
             $cardAccentColor = '#10b981';
         } elseif ($offerAcceptance == 1) {            // 3 — released to candidate
             $offerBadgeLabel = 'Offer Released';   $offerBadgeColor = '#1d4ed8'; $offerBadgeBg = '#dbeafe'; $offerBadgeBorder = '#bfdbfe';
             $offerIconPath   = 'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5';
             $offerStatusText = 'Offer emailed to candidate';
+            $rawStatusDate   = $meta->send_accept_date_time ?? $meta->doc_updated_at ?? $meta->salary_saved_at ?? null;
             $cardAccentColor = '#009ef7';
         } elseif ($subForApproval == 1) {             // 4 — sent for approval
             $offerBadgeLabel = 'Approval Pending'; $offerBadgeColor = '#c2410c'; $offerBadgeBg = '#ffedd5'; $offerBadgeBorder = '#fed7aa';
             $offerIconPath   = 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z';
             $offerStatusText = 'Awaiting sign-off';
-            $offerStatusDate = $fmtDate($meta->send_approved_date_time ?? '');
+            $rawStatusDate   = $meta->send_approved_date_time ?? $meta->doc_updated_at ?? $meta->salary_saved_at ?? null;
             $cardAccentColor = '#ea580c';
         } else {                                      // 2 — salary saved, offer created
             $offerBadgeLabel = 'Offer Created';    $offerBadgeColor = '#4338ca'; $offerBadgeBg = '#e0e7ff'; $offerBadgeBorder = '#c7d2fe';
             $offerIconPath   = 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z';
             $offerStatusText = 'Compensation saved';
-            $offerStatusDate = $fmtDate($meta->salary_saved_at ?? '');
+            $rawStatusDate   = $meta->doc_updated_at ?? $meta->salary_saved_at ?? $meta->doc_created_at ?? $row->of_stage_date ?? null;
             $cardAccentColor = '#6366f1';
         }
+
+        if (empty($rawStatusDate)) {
+            $rawStatusDate = $meta->salary_saved_at ?? $meta->doc_updated_at ?? $row->updated_at ?? $row->of_stage_date ?? $row->created_at ?? null;
+        }
+
+        // Rule 24: Default User/Account-Setting Timezone with Date, Time, and Timezone
+        $lastUpdatedFormatted = $fmtDateTimeTz($rawStatusDate);
 
         /* ── 5. Joining Countdown ── */
         $joiningDate = $joiningTime = $joiningCountdown = $joiningCountdownBg = $joiningCountdownColor = '';
         if (!empty($offerJoinDate)) {
-            $jDate = \Carbon\Carbon::parse($offerJoinDate);
+            $jDate = \Carbon\Carbon::parse($offerJoinDate)->setTimezone($tenantTimezone);
             $check = date("d-m-Y", strtotime($offerJoinDate));
             if ($check !== '01-01-1970') {
                 $joiningDate = $jDate->format('d M Y');
-                $joiningTime = $jDate->format('g A (T)');
+                $joiningTime = $jDate->format('h:i A T');
                 $daysLeft    = (int) $now->diffInDays($jDate, false);
                 if ($daysLeft > 0) {
                     $joiningCountdown = 'in ' . $daysLeft . ' ' . ($daysLeft === 1 ? 'day' : 'days');
@@ -536,10 +562,10 @@
         <!-- SUB-CARD 7 / BOTTOM STRIP: REFERENCE & PRIMARY ACTIONS -->
         <div class="ot-entity-bottom">
             <div class="ot-bottom-left">
-                @if($offerStatusDate)
+                @if(!empty($lastUpdatedFormatted))
                     <div class="ot-bottom-item">
-                        <span class="ot-bottom-lbl">Status Date:</span>
-                        <span class="ot-bottom-muted">{{ $offerStatusDate }}</span>
+                        <span class="ot-bottom-lbl">Last Updated:</span>
+                        <span class="ot-bottom-muted">{{ $lastUpdatedFormatted }}</span>
                     </div>
                 @endif
             </div>

@@ -133,3 +133,16 @@ This update completes major enhancements to the Service Company Offer Tracker (`
    - Standardized 4 employment type chips in a symmetrical 2x2 grid (`repeat(2, minmax(0, 1fr))`) when offer is pending with 100% width and zero wrapping bugs.
    - Retained the uniform 3-row layout (Row 1: Amount, Row 2: Status Badge/Employment, Row 3: Action Cue) mirroring Subcard 6 (Pipeline & Stage).
    - Fully responsive across 1366×768, 1920×1080, and tablet/mobile breakpoints.
+
+---
+
+## 7. Last Updated Label & Timezone Formatting (Rule 24, 2026-11-22)
+
+1. **Label Replacement:**
+   - Replaced `Status Date:` with `Last Updated:` in the bottom metadata strip (`.ot-bottom-left`).
+
+2. **Rule 24 Timezone & Date/Time Enforcement:**
+   - Resolved company's default timezone via `GeneralMethod::defaultTimeZone($company_id) ?: 'Asia/Kolkata'`.
+   - Formatted timestamp to display date, time, and timezone abbreviation together: `d M Y, h:i A T` (e.g. `17 Nov 2026, 12:00 PM IST`).
+   - Mapped timestamp across all 7 offer lifecycle states with fallback to `updated_at` / `of_stage_date` / `created_at`.
+   - Synchronized Subcard 4 (Joining) timezone conversion with `$tenantTimezone`.
