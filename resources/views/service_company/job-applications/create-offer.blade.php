@@ -380,58 +380,70 @@
             box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
         }
 
-        /* ── Concise Enterprise Confidentiality Notification Line ── */
+        /* ── Concise Enterprise Confidentiality Notification Line (Single Line Fitted) ── */
         .co-conf-notice {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 11px !important;
+            gap: 5px;
+            font-size: 10px !important;
             color: #475569;
-            line-height: 1.4;
-            padding: 6px 10px;
+            line-height: 1.2;
+            padding: 4px 8px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
             margin-top: 6px;
-            min-height: 32px;
+            min-height: 26px;
+            white-space: nowrap;
+            overflow: hidden;
             transition: all 0.2s ease;
         }
         .co-conf-notice-text {
             flex: 1 1 auto;
-            font-size: 11px;
+            font-size: 10px !important;
             color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .co-conf-notice-link {
             color: #009ef7;
             font-weight: 600;
-            font-size: 11px;
+            font-size: 10px !important;
             text-decoration: none;
             white-space: nowrap;
+            flex-shrink: 0;
+            margin-left: 4px;
         }
         .co-conf-notice-link:hover {
             text-decoration: underline;
             color: #008be0;
         }
 
-        /* ── Date of Joining Onboarding Notice (Symmetric with Confidentiality Notice) ── */
+        /* ── Date of Joining Onboarding Notice (Single Line Fitted) ── */
         .co-doj-notice {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 11px !important;
+            gap: 5px;
+            font-size: 10px !important;
             color: #64748b;
-            line-height: 1.4;
-            padding: 6px 10px;
+            line-height: 1.2;
+            padding: 4px 8px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
             margin-top: 6px;
-            min-height: 32px;
+            min-height: 26px;
+            white-space: nowrap;
+            overflow: hidden;
         }
         .co-doj-notice-text {
             flex: 1 1 auto;
-            font-size: 11px;
+            font-size: 10px !important;
             color: #475569;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .co-conf-select {
