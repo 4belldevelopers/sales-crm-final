@@ -21,11 +21,22 @@ The Service Company Agency Job Marketplace page (`https://testing.jero.works/ser
 - Work mode label intermittently displaying `"Office"` instead of standardized `"Work From Office"`.
 - Raw timestamps displayed without organization-configured default timezone formatting.
 
-### Modern Card + Sub-Card State (Rule 20)
-- **Unified 3-Tier Layered Architecture:**
-  - **Tier 1 (Top Header Toolbar Card):** Dedicated `#f8fafc` background with crisp `#e2e8f0` border and 10px radius. Left branding area features verified marketplace shield, dynamic opportunity counter (`#span_jobMarket_header`), subtitle, and trust status pills. Right action area embeds the dynamic 275px micro-search bar with clear button (`#kt_tagify_2`), WAI-ARIA 1.2 compliant sort combobox (`#marketSortBtn`), advanced filter drawer trigger (`#kt_market_filter_toggle`), live refresh, and reset all buttons.
-  - **Tier 2 (Dedicated Sub-Tabs Card):** Pure white `#ffffff` background with `#e2e8f0` border and 10px radius. Contains 6 compact category tab buttons (`All Jobs`, `Full-Time`, `Contract`, `Freelance`, `Part-Time`, `Agency Requests`) with tabular count badges. Implements the single active Metronic primary blue highlight (`#009ef7`) with inverted white badge, saving ~140px vertical space.
-  - **Tier 3 (Primary Entity Card Stream):** Primary cards (`.cd-market-card`) structured into 5 upper discrete sub-cards + 1 full-width bottom telemetry and skill strip.
+### Modern Card + Sub-Card State (Rule 20 & Client Tracker Parity)
+- **Unified 4-Tier Layered Architecture:**
+  - **Tier 1 (Top Header Toolbar Card):** Dedicated `#f8fafc` background with crisp `#e2e8f0` border and 10px radius. Left branding area features verified marketplace shield, dynamic opportunity counter (`#span_jobMarket_header`), subtitle, and 3 trust status pills (`Verified Clients`, `Active Requirements`, `Agency Eligible`). Right action area houses live `Refresh` (`#marketRefreshBtn`) and `Reset All` (`#marketResetAllBtn`) quick action buttons.
+  - **Tier 2 (6 Interactive KPI Stat Cards Grid — Client Tracker Standard):** Responsive horizontal grid (`.cl-stat-grid`, 6 columns) containing 6 interactive KPI stat cards (`.cl-card.cl-stat-filter`):
+    1. `All Jobs` (`data-tab="all"`, `#kpi_card_all`): Blue icon, metric count `#kpi_num_all`, label `All Jobs`, sub-metric `Direct Client mandates`. Active state: `#eff6ff` background, `#60a5fa` border, `#2563eb` glow.
+    2. `Full-Time Roles` (`data-tab="fulltime"`, `#kpi_card_fulltime`): Green icon, metric count `#kpi_num_fulltime`, label `Full-Time Roles`, sub-metric `Permanent mandates`. Active state: `#f0fdf4` background, `#4ade80` border, `#16a34a` glow.
+    3. `Contract Roles` (`data-tab="contract"`, `#kpi_card_contract`): Orange icon, metric count `#kpi_num_contract`, label `Contract Roles`, sub-metric `C2C & staffing`. Active state: `#fff7ed` background, `#fb923c` border, `#ea580c` glow.
+    4. `Freelance Projects` (`data-tab="freelance"`, `#kpi_card_freelance`): Indigo icon, metric count `#kpi_num_freelance`, label `Freelance Projects`, sub-metric `Project deliverables`. Active state: `#eef2ff` background, `#818cf8` border, `#4f46e5` glow.
+    5. `Part-Time Openings` (`data-tab="parttime"`, `#kpi_card_parttime`): Pink icon, metric count `#kpi_num_parttime`, label `Part-Time Openings`, sub-metric `Fractional roles`. Active state: `#fdf2f8` background, `#f472b6` border, `#db2777` glow.
+    6. `Agency Requests` (`data-tab="agency_request"`, `#kpi_card_agency_request`): Purple icon, metric count `#kpi_num_agency_request`, label `Agency Requests`, sub-metric `Client invitations`. Active state: `#faf5ff` background, `#c084fc` border, `#9333ea` glow.
+  - **Tier 3 (Standalone Search & Filter Bar — Client Tracker Standard):** Dedicated full-width bar (`.cl-filter-bar`) positioned directly below the 6 stat cards:
+    - Micro-search box (`.cl-search-box`, `#marketSearchBoxWrapper`, height 42px, radius 10px) with SVG search icon, Ctrl+K hint (`#clSearchKbdHint`), clear button `✕` (`#clSearchClearBtn`), and match count pill (`#clSearchMatchCount`).
+    - Advanced Filter Button (`#kt_market_filter_toggle`, `.cl-filter-btn`, height 42px) with polygon filter icon and dynamic active badge (`#simf_count_badge`).
+    - Metronic Sort Combobox Popover (`#marketSortDropdownWrapper`, `.cl-sort-combobox-btn`, height 42px) with WAI-ARIA 1.2 popover panel (`#marketSortDropdownPanel`) supporting Chronological, Compensation (Salary), and Experience sorting.
+  - **Tier 3b (Applied Filters Summary Card):** `#simf_applied_card` displaying active filter chips with `Clear All` action.
+  - **Tier 4 (Primary Entity Card Stream):** Primary cards (`.cd-market-card`) structured into 5 upper discrete sub-cards + 1 full-width bottom telemetry and skill strip.
 - **Mandatory Header Background Color Standard:** All drawer headers (`#kt_activitiesClientjob`, `#kt_activitiesBT`, `#kt_activitiesHM`, `#kt_activitiesTermsFindjob`, `#kt_market_filter_drawer .simf-header`, `.simf-applied-head`) enforce dedicated `#f8fafc` / `#f1f5f9` backgrounds with crisp `#e2e8f0` borders.
 - **Canonical Classification Tokens (Rule 25):** Replaced ambiguous tags with canonical `Direct Client` (`.tag-direct` Emerald `#ecfdf5` bg, `#059669` text, `#a7f3d0` border) and `Job Request` (`.tag-request` Violet `#f5f3ff` bg, `#7c3aed` text, `#ddd6fe` border).
 - **Default Tenant Timezone Standard (Rule 24):** Timestamps resolved via `companies.timezone` (`GeneralMethod::defaultTimeZone($companyId)`) and formatted as `d M y, h:i A T (X days ago)` (e.g. `22 Nov 26, 09:30 PM IST (3 days ago)`).
@@ -38,13 +49,28 @@ The Service Company Agency Job Marketplace page (`https://testing.jero.works/ser
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ TIER 1: TOP HEADER TOOLBAR CARD (Dedicated #f8fafc Background, Border #e2e8f0, Radius 10px)             │
-│ [🏢 Icon] Agency Job Marketplace [Verified Shield] [Count Pill]  │ [🔍 Search] [Sort ▼] [Filter] [🔄] [✕]│
+│ [🏢 Icon] Agency Job Marketplace [Verified Shield] [Count Pill]  │ [🔄 Refresh]  [✕ Reset All]          │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
                                                     │
                                                     ▼
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ TIER 2: SUB-TABS CARD (Pure White #ffffff Background, Border #e2e8f0, Radius 10px)                     │
-│ [All Jobs (32)]  [Full-Time (18)]  [Contract (8)]  [Freelance (4)]  [Part-Time (2)]  [Agency Requests (1)]│
+│ TIER 2: 6 STAT KPI CARDS GRID (.cl-stat-grid, Client Tracker Parity)                                   │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐  │
+│ │ 💼 All Jobs  │ │ 👤 Full-Time │ │ 📄 Contract  │ │ 💻 Freelance │ │ ⏰ Part-Time │ │ 🤝 Requests  │  │
+│ │   32 Total   │ │   18 Roles   │ │   8 Roles    │ │  4 Projects  │ │  2 Openings  │ │ 1 Invitation│  │
+│ └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘  │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                    │
+                                                    ▼
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ TIER 3: STANDALONE SEARCH & FILTER BAR (.cl-filter-bar, Client Tracker Parity)                         │
+│ [🔍 Search jobs by title, skills, ID...    (0 matches) [✕] [Ctrl+K]]   [⚡ Filter (0)]   [↕ Sort ▼]    │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                    │
+                                                    ▼
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ TIER 3b: APPLIED FILTERS SUMMARY CARD (#simf_applied_card, Appears when filters active)               │
+│ Active Filters (2): [Full-Time ✕] [London ✕]                                               [Clear All] │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
                                                     │
                                                     ▼
