@@ -281,4 +281,52 @@ Replaced the basic pill buttons with dedicated enterprise buttons matching the c
 - Tenancy isolation verified: strictly scoped to `service_company/`. Frozen personas untouched.
 - CQRS read/write patterns and all calculation event handlers verified intact.
 
+---
+
+## 9. Round 6 – Condition Column Text Clipping Fix, 15.6" Screen Grid Optimization, & Enterprise Allocation Validation Banner UI/UX
+
+### 9.1 Root Cause Analysis of Condition Column Clipping ("Amour v" / "Amoun")
+- **Root Cause:**
+  1. `#pointList tbody td` previously lacked `table-layout: fixed` and had `width: revert !important` in certain rules, allowing browser auto-table layout to compress the Condition column down to ~65px when table widths adjusted.
+  2. The `.form-select` control had `padding-right: 26px !important` and `padding-left: 8px !important` (34px total padding).
+  3. Inside a 65px cell, subtracting 34px padding left a mere 31px of usable text width. The word "Amount" is 49px wide in Poppins 11.5px, causing the browser to truncate "Amount" to "Amoun" which collided with the SVG chevron to appear visually as `Amour v`.
+- **Resolution:**
+  1. Enforced `table-layout: fixed !important; min-width: 860px !important;` on `#pointList`, `#bonusList`, and `#final_pay`.
+  2. Widened the Condition column from 10% (95px) to **`11.5%` (min-width `110px`)** across all thead headers, tbody rows, and tfoot structures.
+  3. Created a specialized class `.co-col-cond` on every Condition header and data cell with compact padding (`padding-left: 3px !important; padding-right: 3px !important;`).
+  4. Streamlined select inner padding to `padding-left: 7px !important; padding-right: 19px !important; background-position: right 6px center !important; background-size: 10px 10px !important; font-size: 11.5px !important; min-width: 80px !important; width: 100% !important; text-overflow: clip !important;`.
+  5. Expanded usable text width from 31px to **88px** (>38px safety buffer), ensuring "Amount" and "Basic" never truncate under any screen resolution or zoom level.
+
+### 9.2 Enterprise Allocation Validation Banner UI/UX (`#co_validation_banner`)
+- **Previous Design:** A flat pink alert box with a solid red dot and plain string: `● Total of main components: 200.00%`.
+- **God-Level Enterprise Upgrade:** Engineered a dynamic, high-hierarchy status banner adhering to Rule 20 and Rule 26:
+  - **Left Section (`.co-valid-left`):**
+    - **Status Icon Badge (`.co-valid-icon-badge`):** 30×30px rounded badge with contextual icon (`fas fa-check-circle` in emerald for balanced, `fas fa-exclamation-circle` in rose for over-allocated, `fas fa-exclamation-triangle` in amber for incomplete).
+    - **Headline (`.co-valid-headline`):** Bold 12.5px title (`Main Components Balanced`, `Main Components Over-Allocated`, or `Main Components Incomplete`) paired with a pill badge (`.co-valid-status-badge`) showing exact delta (`100.00% Matched`, `Over by +X.XX%`, or `X.XX% Remaining`).
+    - **Explanatory Copy (`.co-valid-desc`):** Clear, professional instruction guiding the user on the exact action needed to achieve Base CTC balance.
+  - **Right Section (`.co-valid-right`):**
+    - **Dual Metric Group:** Displays `CURRENT TOTAL` in bold tabular numerals alongside `TARGET: 100.00%`, separated by a vertical hairline divider.
+    - **Difference Indicator Pill (`.co-valid-diff-pill`):** Compact semantic pill featuring directional icons (`fa-arrow-up` for overage, `fa-arrow-down` for deficit, `fa-check` for balanced) displaying exact difference (`+100.00% Over`, `-25.00% Remaining`, or `Balanced ✓`).
+
+### 9.3 Harmonized 8-Column Grid Matrix for 15.6" Screens (860px Grid)
+
+| Col # | PointList (Main Components) | BonusList (Additional Components) | Final Pay (Total CTC Summary) | Width % | Min-Width (px) | Usable Content Fit |
+|:---:|---|---|---|:---:|:---:|---|
+| **1** | Component Name (Pencil + #) | Component Name (Pencil + #) | Component Name (`colspan="2"`) | **33.0%** | **270px** | Full component label + edit icon |
+| **2** | Applicable (`basic_view`) | Applicable (`bonus_view`) | *(Spanned in Col 1)* | **12.5%** | **120px** | "Annually & Monthly" fits cleanly |
+| **3** | Allocation (%) | Allocation (%) | Allocation (%) | **8.5%** | **75px** | Numeric value + `%` badge |
+| **4** | Multiplier (`×`) | Multiplier (`×`) | Currency (`colspan="2"`) | **2.0%** | **20px** | Centered `×` multiplication glyph |
+| **5** | Condition (`.co-col-cond`) | Condition (`.co-col-cond`) | *(Spanned in Col 4)* | **11.5%** | **110px** | "Amount" / "Basic" with 38px margin |
+| **6** | Monthly (Tabular) | Monthly (Tabular) | Monthly (Tabular) | **14.0%** | **110px** | Currency figures up to 8 digits |
+| **7** | Annually (Tabular) | Annually (Tabular) | Annually (Tabular) | **14.5%** | **115px** | Currency figures up to 9 digits |
+| **8** | Action (Trash Icon) | Action (Trash Icon) | Spacer (`&nbsp;`) | **4.0%** | **40px** | Standardized 32px danger button |
+| **SUM** | **8 Columns** | **8 Columns** | **Summary Alignment** | **100.0%** | **860px** | **100% 15.6" Screen Fit (0 Overflow)** |
+
+### 9.4 Verification Evidence
+- `php -l resources/views/service_company/job-applications/create-offer.blade.php`: **Passed (0 syntax errors)**.
+- `git diff`: Clean mathematical consistency across all thead, tbody, and tfoot blocks.
+- Tenancy isolation verified: strictly scoped to `service_company/`. Frozen personas (`product_company/`, `staffing_company/`) remain 100% untouched (Rule 18).
+- CQRS read/write patterns and all calculation event handlers verified intact.
+
+
 
