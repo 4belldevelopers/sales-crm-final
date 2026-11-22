@@ -191,6 +191,89 @@
 .cl-export-opt-title { font-size: 12.5px; font-weight: 600; color: #0f172a; line-height: 1.25; }
 .cl-export-opt-sub { font-size: 11px; color: #64748b; line-height: 1.2; margin-top: 2px; }
 
+/* ── Agencies Settings Button & Dropdown (Enterprise Standard) ── */
+.cl-export-chevron,
+.cl-settings-chevron {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.cl-export-btn.show .cl-export-chevron,
+.cl-export-btn.active .cl-export-chevron,
+.cl-settings-btn.show .cl-settings-chevron,
+.cl-settings-btn.active .cl-settings-chevron {
+  transform: rotate(180deg) !important;
+}
+.cl-settings-wrapper {
+  position: relative !important;
+  display: inline-block !important;
+}
+.cl-settings-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.cl-settings-btn:hover,
+.cl-settings-btn.show,
+.cl-settings-btn.active {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+.cl-settings-dropdown-menu {
+  display: none;
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  left: auto !important;
+  margin-top: 6px !important;
+  min-width: 290px !important;
+  padding: 6px !important;
+  background: #ffffff !important;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08) !important;
+  z-index: 1080 !important;
+}
+.cl-settings-dropdown-menu.show {
+  display: block !important;
+}
+.cl-settings-option {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 8px 10px !important;
+  border-radius: 6px !important;
+  transition: background 0.12s ease !important;
+  text-decoration: none !important;
+}
+.cl-settings-option:hover {
+  background: #f1f5f9 !important;
+}
+.cl-settings-opt-icon {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.cl-settings-opt-icon.plan { background: #eff6ff; color: #2563eb; }
+.cl-settings-opt-icon.tc { background: #f0fdf4; color: #16a34a; }
+.cl-settings-opt-text { display: flex; flex-direction: column; min-width: 0; }
+.cl-settings-opt-title { font-size: 12.5px; font-weight: 600; color: #0f172a; line-height: 1.25; }
+.cl-settings-opt-sub { font-size: 11px; color: #64748b; line-height: 1.2; margin-top: 2px; }
+
 .cl-add-btn-primary {
   display: inline-flex !important;
   align-items: center !important;
@@ -1734,6 +1817,53 @@
                     </ul>
                 </div>
 
+                <div class="cl-settings-wrapper dropdown" id="clSettingsWrapper">
+                    <button type="button" class="cl-settings-btn" id="clSettingsDropdownBtn" onclick="toggleAgencySettingsDropdown(event)" title="Agencies Settings">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span id="clSettingsBtnLabel">Agencies Settings</span>
+                        <svg class="cl-settings-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm cl-settings-dropdown-menu" id="clSettingsDropdownMenu" aria-labelledby="clSettingsDropdownBtn">
+                        <li>
+                            <a class="dropdown-item cl-settings-option" href="{{ route('service_company.account.index', ['tab' => 'terms', 'section' => 'commercials']) }}#terms-commercials">
+                                <div class="cl-settings-opt-icon plan">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="5" width="20" height="14" rx="2"/>
+                                        <line x1="2" y1="10" x2="22" y2="10"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-settings-opt-text">
+                                    <span class="cl-settings-opt-title">Agencies Payment Plan</span>
+                                    <span class="cl-settings-opt-sub">Commercial models, fees &amp; payment terms</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1 border-gray-200"></li>
+                        <li>
+                            <a class="dropdown-item cl-settings-option" href="{{ route('service_company.account.index', ['tab' => 'terms', 'section' => 'agreement']) }}#terms-agreement">
+                                <div class="cl-settings-opt-icon tc">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                        <polyline points="10 9 9 9 8 9"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-settings-opt-text">
+                                    <span class="cl-settings-opt-title">Agencies T/C</span>
+                                    <span class="cl-settings-opt-sub">Agency agreement &amp; master terms</span>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
                 @if(in_array("add_staffing_partners", $userPermissions))
                 <button type="button" class="cl-add-btn-primary" id="open_add_agency_drawer">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="stroke: #ffffff !important; color: #ffffff !important;">
@@ -3188,12 +3318,33 @@
         const $menu = $('#clExportDropdownMenu');
         const isShown = $menu.hasClass('show');
         if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        $('#clSettingsDropdownMenu').removeClass('show');
+        $('#clSettingsDropdownBtn').removeClass('show active');
         if (!isShown) {
             $menu.addClass('show');
             $('#clExportDropdownBtn').addClass('show active');
         } else {
             $menu.removeClass('show');
             $('#clExportDropdownBtn').removeClass('show active');
+        }
+    };
+
+    window.toggleAgencySettingsDropdown = function(e) {
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        const $menu = $('#clSettingsDropdownMenu');
+        const isShown = $menu.hasClass('show');
+        if (window.AgencyListingManager) window.AgencyListingManager.closeAllDropdowns();
+        $('#clExportDropdownMenu').removeClass('show');
+        $('#clExportDropdownBtn').removeClass('show active');
+        if (!isShown) {
+            $menu.addClass('show');
+            $('#clSettingsDropdownBtn').addClass('show active');
+        } else {
+            $menu.removeClass('show');
+            $('#clSettingsDropdownBtn').removeClass('show active');
         }
     };
 
@@ -3224,6 +3375,19 @@
     $(document).on('click', '#clExportDropdownMenu a', function(e) {
         $('#clExportDropdownMenu').removeClass('show');
         $('#clExportDropdownBtn').removeClass('show active');
+    });
+
+    // ── Settings Dropdown Outside Click Listener ──
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#clSettingsWrapper').length) {
+            $('#clSettingsDropdownMenu').removeClass('show');
+            $('#clSettingsDropdownBtn').removeClass('show active');
+        }
+    });
+
+    $(document).on('click', '#clSettingsDropdownMenu a', function(e) {
+        $('#clSettingsDropdownMenu').removeClass('show');
+        $('#clSettingsDropdownBtn').removeClass('show active');
     });
 
     // ── Tab Management ──
@@ -3485,8 +3649,8 @@
         },
 
         closeAllDropdowns: function() {
-            $('.cl-loc-dropdown-panel, .cl-ind-dropdown-panel, .cl-act-dropdown-panel, .cl-pipe-dropdown-panel, .cl-sort-dropdown-panel, #clExportDropdownMenu').removeClass('show');
-            $('#clLocBtn, #clIndBtn, #clActBtn, #clPipeBtn, #clSortBtn, #clExportDropdownBtn').removeClass('active show');
+            $('.cl-loc-dropdown-panel, .cl-ind-dropdown-panel, .cl-act-dropdown-panel, .cl-pipe-dropdown-panel, .cl-sort-dropdown-panel, #clExportDropdownMenu, #clSettingsDropdownMenu').removeClass('show');
+            $('#clLocBtn, #clIndBtn, #clActBtn, #clPipeBtn, #clSortBtn, #clExportDropdownBtn, #clSettingsDropdownBtn').removeClass('active show');
         },
 
         getCacheKey: function(page) {

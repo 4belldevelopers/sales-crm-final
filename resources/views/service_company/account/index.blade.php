@@ -379,7 +379,7 @@ input[type="radio"]:checked {
 .aat-edit-pill{border:0;cursor:pointer}.aat-drawer.agency-commercial-mode{background:#f6f8fc;color:#111b3d}.aat-drawer.agency-commercial-mode .aat-drawer-head{min-height:72px;padding:12px 18px}.aat-drawer.agency-commercial-mode .aat-drawer-title{gap:11px}.aat-drawer.agency-commercial-mode .aat-hero-icon{width:38px;height:38px;border-radius:8px;background:#eef2ff;color:#4f46e5}.aat-drawer.agency-commercial-mode .aat-hero-icon svg{width:20px;height:20px}.aat-drawer.agency-commercial-mode .aat-drawer-title h3{font-size:16.5px!important}.aat-drawer.agency-commercial-mode .aat-drawer-title p{font-size:11px;line-height:1.45}.aat-drawer.agency-commercial-mode .aat-drawer-body{padding:14px 14px 82px}.aat-drawer.agency-commercial-mode .aat-drawer-tabs{display:none}.aat-drawer.agency-commercial-mode .aat-edit-alert{margin-bottom:12px;padding:10px 12px;border-color:#d6e3ff;background:#f4f8ff;color:#405781;font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-edit-section{margin-bottom:12px;border-color:#dbe3ef;border-radius:10px;box-shadow:0 1px 3px rgba(15,23,42,.045)}.aat-drawer.agency-commercial-mode .aat-edit-section-head{padding:14px 16px}.aat-drawer.agency-commercial-mode .aat-edit-section-title h4{font-size:13px!important}.aat-drawer.agency-commercial-mode .aat-edit-section-title p{font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:16px;background:linear-gradient(135deg,#fbfcff,#f8f7ff)}.aat-drawer.agency-commercial-mode .aat-field label{font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-field select,.aat-drawer.agency-commercial-mode .aat-field input,.aat-drawer.agency-commercial-mode .aat-control{height:36px;font-size:11px}.aat-drawer.agency-commercial-mode .aat-calc{padding:12px}.aat-drawer.agency-commercial-mode .aat-drawer-footer{padding:10px 14px}.aat-drawer.agency-commercial-mode .aat-btn.save{min-width:140px}.aat-exp-table{grid-column:1/-1;overflow:hidden;border:1px solid #dce4ef;border-radius:8px;background:#fff}.aat-exp-head,.aat-exp-row{display:grid;grid-template-columns:minmax(160px,1fr) minmax(120px,.75fr) minmax(130px,.8fr);align-items:center;gap:10px}.aat-exp-head{min-height:34px;padding:7px 10px;color:#657395;background:#f7f9fc;border-bottom:1px solid #dfe6ef;font-size:9.8px;font-weight:600}.aat-exp-row{min-height:48px;padding:7px 10px;border-bottom:1px solid #e8edf4}.aat-exp-row:last-child{border-bottom:0}.aat-exp-row input{height:32px!important}.aat-exp-basis{color:#53617f;font-size:10.5px}.aat-drawer.agency-commercial-fulltime [data-agency-section="contract"],.aat-drawer.agency-commercial-contract [data-agency-section="fulltime"]{display:none}.aat-drawer.agency-commercial-fulltime [data-agency-section="general"],.aat-drawer.agency-commercial-contract [data-agency-section="general"]{display:block}@media(max-width:1200px){.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.aat-drawer.agency-commercial-mode{width:calc(100vw - 220px);max-width:calc(100vw - 220px)}}@media(max-width:768px){.aat-drawer-overlay{left:0}.aat-drawer.agency-commercial-mode{width:100vw;max-width:100vw}.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode .aat-drawer-head{align-items:flex-start;flex-direction:column}.aat-drawer.agency-commercial-mode .aat-drawer-meta{justify-content:flex-start}.aat-exp-head,.aat-exp-row{grid-template-columns:1fr}.aat-exp-head{display:none}}
 
 /* Intent: cev3-inspired model radios + range table styling inside the agency commercials drawer, mirroring the Edit Services reference. */
-.aat-drawer.agency-commercial-mode .aat-edit-section[data-agency-section="fulltime aat-contract-only"] .aat-edit-grid{display:flex;flex-direction:column;gap:10px}.aat-drawer.agency-commercial-mode .aat-edit-section .aat-edit-grid>.aat-model-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;grid-column:1/-1}
+.aat-drawer.agency-commercial-mode .aat-edit-section.aat-edit-section-model .aat-edit-grid, .aat-drawer.agency-commercial-mode .aat-edit-section[data-agency-section="fulltime aat-contract-only"] .aat-edit-grid{display:flex;flex-direction:column;gap:10px}.aat-drawer.agency-commercial-mode .aat-edit-section .aat-edit-grid>.aat-model-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;grid-column:1/-1}
 .aat-model-option{position:relative;display:flex;flex-direction:row;align-items:flex-start;gap:12px;width:100%;min-height:96px;padding:14px;color:#27365a;background:#fff;border:1px solid #dce3ee;border-radius:9px;text-align:left;transition:border-color .16s,box-shadow .16s,background .16s;cursor:pointer;overflow:hidden}
 .aat-model-option:hover{border-color:#aaa5ff;background:#fcfbff}
 .aat-model-option.active{border-color:#6657ff;background:#fcfbff;box-shadow:0 0 0 1px rgba(102,87,255,.12)}
@@ -2128,7 +2128,7 @@ input[type="radio"]:checked {
         </a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="cd-tab-pill-btn nav-link" data-bs-toggle="tab" data-toggle="tab" href="#terms" role="tab" aria-selected="false" title="Agency Agreement Terms">
+        <a class="cd-tab-pill-btn nav-link {{ !empty($terms_tab) ? 'active' : '' }}" data-bs-toggle="tab" data-toggle="tab" href="#terms" role="tab" aria-selected="{{ !empty($terms_tab) ? 'true' : 'false' }}" title="Agency Agreement Terms">
           <i class="fas fa-handshake-angle fa-solid"></i>
           <span>Agency Agreement</span>
         </a>
@@ -2647,7 +2647,7 @@ input[type="radio"]:checked {
 <!--end::Interview Stage Content-->
 
 <!--begin::Terms & conditions Content-->
-<div class="tab-pane atc" id="terms" role="tabpanel">
+<div class="tab-pane atc {{ !empty($terms_tab) ? 'active show' : '' }}" id="terms" role="tabpanel">
   @php
     $atcCustom  = !empty(trim(strip_tags((string)@$account->terms)));
     $atcUpdated = @$account->updated_at;
@@ -6475,6 +6475,35 @@ $(document).ready(function(){
     $(document).on('click', '.cd-drawer-tabs-list .cd-tab-pill-btn', function (e) {
         $('.cd-drawer-tabs-list .cd-tab-pill-btn').removeClass('active');
         $(this).addClass('active');
+    });
+
+    // ── Deep-Linking / Tab Activation via URL hash and query params (Rule 20) ──
+    $(document).ready(function() {
+        var hash = window.location.hash;
+        var urlParams = new URLSearchParams(window.location.search);
+        var tabParam = urlParams.get('tab');
+        var sectionParam = urlParams.get('section');
+
+        if (tabParam === 'terms' || (hash && hash.indexOf('#terms') === 0)) {
+            var $termsTab = $('.cd-drawer-tabs-list a[href="#terms"]');
+            if ($termsTab.length && !$termsTab.hasClass('active')) {
+                $('.cd-drawer-tabs-list .cd-tab-pill-btn').removeClass('active');
+                $termsTab.addClass('active');
+                $('.tab-content > .tab-pane').removeClass('active show');
+                $('#terms').addClass('active show');
+            }
+            if (sectionParam === 'commercials' || hash === '#terms-commercials') {
+                setTimeout(function() {
+                    var el = document.querySelector('.aat-commercial-grid, [data-agency-commercial-open]');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            } else if (sectionParam === 'agreement' || hash === '#terms-agreement' || hash === '#terms-tc') {
+                setTimeout(function() {
+                    var el = document.querySelector('#editBtn, .agency-agreement, .aat-actions');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            }
+        }
     });
 
     // ── Dynamically Initialize Company Activity Feed (Overview + Activity Tab) ──

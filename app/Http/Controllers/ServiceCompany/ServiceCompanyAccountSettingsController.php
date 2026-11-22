@@ -66,6 +66,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $this->overview_tab = 'active show';
         $this->services_tab = '';
         $this->boostkeyword_tab = '';
+        $this->terms_tab = '';
         // Intent: route the Company Profile left-submenu directly to its existing account content without changing data flows.
         if ($requestedTab === 'services') {
             $this->overview_tab = '';
@@ -74,6 +75,10 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         if ($requestedTab === 'ads' || $ads_show == 'show') {
             $this->boostkeyword_tab = 'active show';
             $this->overview_tab = '';
+        }
+        if ($requestedTab === 'terms') {
+            $this->overview_tab = '';
+            $this->terms_tab = 'active show';
         }
 
         $company_id = auth()->user()->company_id;
