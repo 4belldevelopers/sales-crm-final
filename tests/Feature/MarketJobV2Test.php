@@ -465,4 +465,57 @@ class MarketJobV2Test extends TestCase
         $this->assertStringContainsString('.cl-card.active[data-tab="parttime"]', $cssContent);
         $this->assertStringContainsString('.cl-card.active[data-tab="agency_request"]', $cssContent);
     }
+
+    /**
+     * UI/UX Redesign Verification:
+     * 1. Sort & Filter Controls: Sort combobox precedes Filter toggle button in DOM.
+     * 2. Removed Unnecessary Controls: Refresh button, Reset All button, and header "X Opportunities" text removed.
+     * 3. Opportunity Subcard 1: 3-row layout (Row 1 Title, Row 2 ID & Dept, Row 3 Direct Client & EmpType).
+     * 4. Footer Strip: Left side Skills tags, Right side Posted Date and Number of Openings; icons/actions removed.
+     * 5. Enterprise-Level Height & Layout: Job Tracker subcard proportions and CSS parity.
+     */
+    public function test_market_jobs_redesign_controls_subcards_and_footer_strip_parity(): void
+    {
+        $bladePath = resource_path('views/service_company/jobs/market-jobs.blade.php');
+        $this->assertFileExists($bladePath);
+        $content = file_get_contents($bladePath);
+
+        // 1. Sort & Filter Position: Sort combobox comes BEFORE Filter toggle
+        $sortPos = strpos($content, 'id="marketSortDropdownWrapper"');
+        $filterPos = strpos($content, 'id="kt_market_filter_toggle"');
+        $this->assertNotFalse($sortPos, 'Must contain #marketSortDropdownWrapper');
+        $this->assertNotFalse($filterPos, 'Must contain #kt_market_filter_toggle');
+        $this->assertTrue($sortPos < $filterPos, 'Sort combobox must precede Filter toggle in DOM');
+
+        // 2. Removed Controls: Refresh, Reset All, and Header Count Pill
+        $this->assertStringNotContainsString('id="marketRefreshBtn"', $content, 'Refresh button must be removed');
+        $this->assertStringNotContainsString('id="marketResetAllBtn"', $content, 'Reset All button must be removed');
+        $this->assertStringNotContainsString('id="span_jobMarket_header"', $content, 'Header Opportunities count pill must be removed');
+
+        // 3. Opportunity Subcard 1: 3-row structure
+        $this->assertStringContainsString('cd-job-title cd-market-job-title', $content, 'Row 1: Must contain job title');
+        $this->assertStringContainsString('cd-job-meta', $content, 'Row 2: Must contain job meta');
+        $this->assertStringContainsString('cd-job-id jc-req-id', $content, 'Row 2: Must contain job ID');
+        $this->assertStringContainsString('cd-job-dept', $content, 'Row 2: Must contain department');
+        $this->assertStringContainsString('cd-job-client-row', $content, 'Row 3: Must contain client row');
+        $this->assertStringContainsString('cd-job-client-name', $content, 'Row 3: Must contain client name');
+        $this->assertStringContainsString('cd-job-emp-type', $content, 'Row 3: Must contain employment type');
+        $this->assertStringContainsString('normalizedEmploymentType', $content, 'Must compute normalized employment type');
+
+        // 4. Footer Strip: Left side skills, Right side Posted Date and Openings count
+        $this->assertStringContainsString('cd-bottom-skills cd-bottom-left-skills', $content, 'Footer: Must have left-aligned skills tags');
+        $this->assertStringContainsString('cd-bottom-telemetry cd-bottom-right-meta', $content, 'Footer: Must have right-aligned telemetry');
+        $this->assertStringContainsString('Posted: <strong>${postedDate}</strong>', $content, 'Footer: Must have Posted Date');
+        $this->assertStringContainsString('${row.total_positions || 1}</strong>', $content, 'Footer: Must have Openings count');
+        $this->assertStringNotContainsString('fa-bookmark', $content, 'Footer: Bookmark icon must be removed');
+        $this->assertStringNotContainsString('fa-ellipsis-vertical', $content, 'Footer: Ellipsis icon must be removed');
+
+        // 5. Stylesheet Parity: find-market-jobs.css
+        $cssPath = base_path('demo/css/find-market-jobs.css');
+        $this->assertFileExists($cssPath);
+        $cssContent = file_get_contents($cssPath);
+        $this->assertStringContainsString('.cd-job-client-name', $cssContent);
+        $this->assertStringContainsString('.cd-bottom-left-skills', $cssContent);
+        $this->assertStringContainsString('.cd-bottom-right-meta', $cssContent);
+    }
 }

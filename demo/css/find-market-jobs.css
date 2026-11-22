@@ -2038,11 +2038,21 @@
     display: flex !important;
     align-items: center !important;
     gap: 4px !important;
-    margin-top: 3px !important;
+    margin-top: 2px !important;
     min-width: 0 !important;
     overflow: hidden !important;
     white-space: nowrap !important;
     line-height: 1.25 !important;
+}
+
+.cd-job-client-name {
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 140px !important;
 }
 
 /* Canonical Badges (Rule 25 & Job Tracker Parity) */
@@ -2384,19 +2394,19 @@
 /* Sub-Card 6: Bottom Activity Strip (Job Tracker Parity) */
 .cd-market-card-bottom {
     border-top: 1px solid #f1f5f9 !important;
-    padding: 5px 12px !important;
+    padding: 6px 12px !important;
     background: #ffffff !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
     flex-wrap: nowrap !important;
-    gap: 8px !important;
-    border-radius: 0 0 8px 8px !important;
+    gap: 12px !important;
+    border-radius: 0 0 10px 10px !important;
     font-family: 'Poppins', sans-serif !important;
     box-sizing: border-box !important;
 }
 
-.cd-bottom-telemetry {
+.cd-bottom-telemetry, .cd-bottom-right-meta {
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
@@ -2407,25 +2417,26 @@
     white-space: nowrap !important;
 }
 
-.cd-bottom-telemetry strong {
+.cd-bottom-telemetry strong, .cd-bottom-right-meta strong {
     color: #0f172a !important;
     font-weight: 600 !important;
 }
 
-.cd-bottom-skills {
+.cd-bottom-skills, .cd-bottom-left-skills {
     display: flex !important;
     align-items: center !important;
     gap: 4px !important;
     flex-wrap: nowrap !important;
     flex: 1 1 auto !important;
-    justify-content: flex-end !important;
+    justify-content: flex-start !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
+    min-width: 0 !important;
 }
 
-.cd-bottom-skills::-webkit-scrollbar {
+.cd-bottom-skills::-webkit-scrollbar, .cd-bottom-left-skills::-webkit-scrollbar {
     display: none !important;
 }
 
@@ -2457,22 +2468,7 @@
 }
 
 .cd-bottom-actions {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    flex-shrink: 0 !important;
-}
-
-.cd-bottom-actions .cd-icon-btn {
-    font-size: 11.5px !important;
-    color: #94a3b8 !important;
-    cursor: pointer !important;
-    transition: color 0.15s !important;
-    padding: 2px 4px !important;
-}
-
-.cd-bottom-actions .cd-icon-btn:hover {
-    color: #009ef7 !important;
+    display: none !important;
 }
 
 /* ==========================================================================
