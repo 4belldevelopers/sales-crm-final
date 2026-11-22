@@ -21,12 +21,20 @@
       <span class="aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></span>
       <div><h3 data-agency-commercial-title>Edit Commercial Terms</h3><p data-agency-commercial-subtitle>Configure the commercial structure for agencies. These terms reflect in agreements and job assignments.</p></div>
     </div>
-    <div class="aat-drawer-meta">
+    <div class="aat-drawer-actions aat-drawer-meta">
+      <button type="button" class="aat-btn cd-btn-outline" id="cancelAgencyCommercialTerms"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Cancel</button>
+      <button type="button" class="aat-btn primary cd-btn-primary save" id="saveAgencyCommercialTerms"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>Save &amp; Update</button>
       <button type="button" class="aat-drawer-close" id="closeAgencyCommercialDrawer" aria-label="Close">&times;</button>
     </div>
   </div>
   <div class="aat-drawer-body">
-    <div class="aat-edit-alert"><span data-agency-alert-text>These commercial terms define how agencies will be paid for successful placements. They populate the agreement and can be overridden at job level if required.</span><button type="button" class="aat-drawer-close" style="width:28px;height:28px;font-size:18px;">&times;</button></div>
+    <div class="aat-edit-alert">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2" style="flex:0 0 16px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span data-agency-alert-text>These commercial terms define how agencies will be paid for successful placements. They populate the agreement and can be overridden at job level if required.</span>
+      </div>
+      <button type="button" class="aat-drawer-close" style="width:26px;height:26px;font-size:16px;">&times;</button>
+    </div>
 
     {{-- Defaults that the include site (account/index.blade.php) computes and passes in via $aatPartialVars. --}}
 
@@ -221,9 +229,5 @@
         <div class="aat-field"><label>TDS Deduction</label><select name="tds_deduction"><option value="As per applicable law" {{ (@$aatTerms->tds_deduction ?: 'As per applicable law') === 'As per applicable law' ? 'selected' : '' }}>As per applicable law</option><option value="Not applicable" {{ @$aatTerms->tds_deduction === 'Not applicable' ? 'selected' : '' }}>Not applicable</option></select></div>
       </div>
     </section>
-  </div>
-  <div class="aat-drawer-footer">
-    <button type="button" class="aat-btn ghost" id="cancelAgencyCommercialTerms">Cancel</button>
-    <div class="aat-footer-actions"><button type="button" class="aat-btn primary save" id="saveAgencyCommercialTerms">Save &amp; Update</button></div>
   </div>
 </form>
