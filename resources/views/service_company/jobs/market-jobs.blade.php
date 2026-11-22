@@ -1044,11 +1044,11 @@
         min-width: 0 !important;
     }
     .cd-market-job-title {
-        font-size: 13.5px !important;
+        font-size: 12.5px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
         margin: 0 0 2px 0 !important;
-        line-height: 1.3 !important;
+        line-height: 1.25 !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
@@ -1058,16 +1058,59 @@
     .cd-market-job-title:hover {
         color: #009ef7 !important;
     }
-    .cd-market-job-dept {
-        font-size: 11px !important;
-        color: #009ef7 !important;
-        font-weight: 500 !important;
-        margin-bottom: 5px !important;
+    .cd-job-meta {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        font-size: 10.5px !important;
+        color: #64748b !important;
+        margin-top: 1px !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-        display: flex;
-        align-items: center;
+        line-height: 1.3 !important;
+    }
+    .cd-job-id, .jc-req-id {
+        font-weight: 700 !important;
+        color: #0284c7 !important;
+        font-size: 10.5px !important;
+    }
+    .cd-job-dept {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        font-size: 10.5px !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+    }
+    .cd-job-client-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin-top: 2px !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        line-height: 1.25 !important;
+    }
+    .cd-job-client-name {
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 140px !important;
+    }
+    .cd-job-emp-type {
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        color: #2563eb !important;
+        white-space: nowrap !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        flex-shrink: 0 !important;
     }
     .cd-role-mandate-row {
         display: flex;
@@ -1186,52 +1229,49 @@
     }
     .cd-market-card-bottom {
         border-top: 1px solid #f1f5f9 !important;
-        padding: 6px 14px !important;
+        padding: 6px 12px !important;
         background: #ffffff !important;
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        flex-wrap: wrap !important;
-        gap: 8px !important;
+        flex-wrap: nowrap !important;
+        gap: 12px !important;
         border-radius: 0 0 10px 10px !important;
         font-family: 'Poppins', sans-serif !important;
+        box-sizing: border-box !important;
     }
-    .cd-bottom-telemetry {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        font-size: 10.5px;
-        color: #64748b;
+    .cd-bottom-telemetry, .cd-bottom-right-meta {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-wrap: nowrap !important;
+        font-size: 10.5px !important;
+        color: #64748b !important;
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
     }
-    .cd-bottom-telemetry strong {
-        color: #0f172a;
-        font-weight: 600;
+    .cd-bottom-telemetry strong, .cd-bottom-right-meta strong {
+        color: #0f172a !important;
+        font-weight: 600 !important;
     }
-    .cd-bottom-skills {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        flex-wrap: wrap;
-        flex: 1 1 auto;
-        justify-content: flex-end;
-        overflow: hidden;
+    .cd-bottom-skills, .cd-bottom-left-skills {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        flex-wrap: nowrap !important;
+        flex: 1 1 auto !important;
+        justify-content: flex-start !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        min-width: 0 !important;
+    }
+    .cd-bottom-skills::-webkit-scrollbar, .cd-bottom-left-skills::-webkit-scrollbar {
+        display: none !important;
     }
     .cd-bottom-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-    }
-    .cd-bottom-actions .cd-icon-btn {
-        font-size: 12.5px;
-        color: #94a3b8;
-        cursor: pointer;
-        transition: color 0.15s;
-        padding: 2px 4px;
-    }
-    .cd-bottom-actions .cd-icon-btn:hover {
-        color: #009ef7;
+        display: none !important;
     }
 
     @media (max-width: 1366px) {
@@ -1324,7 +1364,6 @@
                                             <path d="m9 12 2 2 4-4" stroke-width="2.5"/>
                                         </svg>
                                     </span>
-                                    <span class="cl-search-count-pill cd-market-count-pill" id="span_jobMarket_header">{{ number_format($all_jobs ?? 0) }} Opportunities</span>
                                 </div>
                                 <div class="cl-header-subtitle cd-market-header-sub">Verified hiring requirements shared directly by client companies. Find opportunities, review terms, and submit qualified candidates.</div>
                                 <div class="cd-market-header-pills">
@@ -1333,22 +1372,6 @@
                                     <span class="cd-market-pill pill-eligible"><i class="fas fa-users"></i> Agency Eligible</span>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="cl-header-actions cd-market-header-actions">
-                            <button type="button" class="cl-export-btn" id="marketRefreshBtn" onclick="fetchCandidates(1, '', { forceNetwork: true })" title="Refresh marketplace requirements">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-                                </svg>
-                                <span>Refresh</span>
-                            </button>
-                            <button type="button" class="cl-export-btn" id="marketResetAllBtn" onclick="clearAllFiltersAndSearch()" title="Reset all search &amp; filters">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                                    <path d="M3 3v5h5"/>
-                                </svg>
-                                <span>Reset All</span>
-                            </button>
                         </div>
                     </div>
 
@@ -1533,16 +1556,7 @@
                             <div id="loader_search" class="loader_search hidden_search" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
                         </div>
 
-                        {{-- Advanced Filter Button (Client Tracker Standard) --}}
-                        <button type="button" id="kt_market_filter_toggle" class="cl-filter-btn" title="Open Advanced Filters">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                            </svg>
-                            <span>Filter<span id="mktf_filter_count_text"></span></span>
-                            <span class="cl-filter-count-badge d-none" id="simf_count_badge">0</span>
-                        </button>
-
-                        {{-- Metronic Sort Combobox Popover (Client Tracker Standard) --}}
+                        {{-- Metronic Sort Combobox Popover (Interchanged: Placed Before Filter) --}}
                         <div class="cl-sort-dropdown-wrapper" id="marketSortDropdownWrapper">
                             <button type="button" class="cl-sort-combobox-btn" id="marketSortBtn" onclick="toggleMarketSortDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="marketSortDropdownPanel" title="Sort Job Opportunities">
                                 <div class="cl-pill-icon">
@@ -1641,6 +1655,15 @@
                                 <option value="8">Low to High (Experience)</option>
                             </select>
                         </div>
+
+                        {{-- Advanced Filter Button (Interchanged: Placed After Sort) --}}
+                        <button type="button" id="kt_market_filter_toggle" class="cl-filter-btn" title="Open Advanced Filters">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                            </svg>
+                            <span>Filter<span id="mktf_filter_count_text"></span></span>
+                            <span class="cl-filter-count-badge d-none" id="simf_count_badge">0</span>
+                        </button>
                     </div>
 
                     {{-- ── Applied Filters Summary Card (Appears when filters applied) ── --}}
@@ -3240,6 +3263,24 @@
             // ── Location display (dynamically resolved from ES nested client_city_jobs) ──
             let locationText = row.location_display || (row.work_type === 'Remote' ? 'Remote' : (row.industry_name || row.work_type || '—'));
 
+            // ── Client Name & Normalized Employment Type (Job Tracker Parity) ──
+            let displayClientName = row.company_name || row.client_name || row.agency_company_name || 'Direct Client';
+            let rawEmp = (row.employment_type || row.employment_type_badge || typeLabel || '').toLowerCase().replace(/[-_]/g, ' ').trim();
+            let normalizedEmploymentType = 'Full-time';
+            if (rawEmp.indexOf('contract') !== -1) {
+                normalizedEmploymentType = 'Contract';
+            } else if (rawEmp.indexOf('freelance') !== -1) {
+                normalizedEmploymentType = 'Freelancer';
+            } else if (rawEmp.indexOf('intern') !== -1) {
+                normalizedEmploymentType = 'Internship';
+            } else if (rawEmp.indexOf('part') !== -1) {
+                normalizedEmploymentType = 'Part-time';
+            } else if (rawEmp.indexOf('bench') !== -1) {
+                normalizedEmploymentType = 'Bench Talent';
+            } else {
+                normalizedEmploymentType = 'Full-time';
+            }
+
             // ── Card left border highlight accent (Green / Yellow / Orange) ──
             let cardAccentClass = 'jc-accent-green';
             if (row.status_label === 'HOLD' || typeLabel === 'Contract') {
@@ -3248,7 +3289,7 @@
                 cardAccentClass = 'jc-accent-orange';
             }
 
-            // ── Modern Card + Sub-Card Enterprise Layout (Rule 20) ──
+            // ── Modern Card + Sub-Card Enterprise Layout (Rule 20 & Job Tracker Parity) ──
             return `
             <div class="job-card cd-market-card ${cardAccentClass}" data-market-job-id="${row.id}">
                 <!-- UPPER DISCRETE SUB-CARDS GRID -->
@@ -3257,33 +3298,35 @@
                     <!-- SUB-CARD 1: Job Details (Job Tracker Parity) -->
                     <div class="cd-market-subcard cd-subcard-role">
                         <div class="cd-subcard-header">
-                            <span class="cd-subcard-label"><i class="fas fa-briefcase text-primary me-1"></i>JOB DETAILS</span>
+                            <span class="cd-subcard-label">JOB DETAILS</span>
                             <div class="cd-header-badges">
+                                <span class="cd-badge-client-type type-direct tag-direct"><i class="fas fa-shield-alt me-1"></i>Direct Client</span>
                                 <span class="cd-status-badge ${statusBadgeClass}">
                                     <i class="fas ${statusIcon} me-1"></i>${row.status_label || 'OPEN'}
                                 </span>
-                                <span class="cd-badge-type">${typeLabel}</span>
                             </div>
                         </div>
                         <div class="cd-subcard-body">
                             <div class="cd-details-body">
                                 <div class="cd-logo-box">
-                                    <span>${initialLetter}</span>
+                                    ${row.logo_path ? `<img src="${escapeHtmlAttr(row.logo_path)}" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span style="display:none;">${initialLetter}</span>` : `<span>${initialLetter}</span>`}
                                 </div>
                                 <div class="cd-details-text">
+                                    <!-- Row 1: Position / Job Title -->
                                     <a href="javascript:void(0);" class="cd-job-title cd-market-job-title market-show-detail" data-row-id="${row.id}" title="${escapeHtmlAttr(row.title)}">${escapeHtmlAttr(row.title_short || row.title)}</a>
+                                    
+                                    <!-- Row 2: Job ID and Department -->
                                     <div class="cd-job-meta">
-                                        <span class="cd-job-id jc-req-id">${row.req_id}</span>
+                                        <span class="cd-job-id jc-req-id">#${row.req_id || row.id}</span>
                                         <span class="cd-bullet">&bull;</span>
-                                        <span class="cd-job-dept" title="${escapeHtmlAttr(row.department || '')}"><i class="far fa-folder-open text-muted me-1"></i>${escapeHtmlAttr(row.department || 'General')}</span>
+                                        <span class="cd-job-dept" title="${escapeHtmlAttr(row.department || 'Information Technology')}">${escapeHtmlAttr(row.department || 'Information Technology')}</span>
                                     </div>
+                                    
+                                    <!-- Row 3: Direct Client label, followed by the employment type -->
                                     <div class="cd-job-client-row">
-                                        <span class="cd-badge-client-type type-direct tag-direct"><i class="fas fa-shield-alt me-1"></i>Direct Client</span>
-                                        ${row.public_market_status === 2 || row.action_type === 'apply_agency' ? '<span class="cd-bullet">&bull;</span><span class="cd-badge-client-type type-request tag-request"><i class="fas fa-handshake me-1"></i>Job Request</span>' : ''}
+                                        <span class="cd-job-client-name" title="${escapeHtmlAttr(displayClientName)}">${escapeHtmlAttr(displayClientName)}</span>
                                         <span class="cd-bullet">&bull;</span>
-                                        <span class="cd-job-emp-type"><i class="fas fa-briefcase text-primary me-1"></i>${typeLabel}</span>
-                                        <span class="cd-bullet">&bull;</span>
-                                        <span class="cd-openings-count"><i class="fas fa-users text-muted me-1"></i>${row.total_positions} Openings</span>
+                                        <span class="cd-job-emp-type"><i class="fas fa-briefcase text-primary me-1"></i>${normalizedEmploymentType}</span>
                                     </div>
                                 </div>
                             </div>
@@ -3293,13 +3336,13 @@
                     <!-- SUB-CARD 2: Compensation & Exp (Job Tracker Parity) -->
                     <div class="cd-market-subcard cd-subcard-comp">
                         <div class="cd-subcard-header">
-                            <span class="cd-subcard-label"><i class="fas fa-coins text-warning me-1"></i>COMPENSATION &amp; EXP</span>
+                            <span class="cd-subcard-label">COMPENSATION &amp; EXP</span>
                         </div>
                         <div class="cd-subcard-body">
                             <div class="cd-val-salary"><strong>${salaryDisplay}</strong></div>
                             <div class="cd-val-exp">
                                 <i class="far fa-user text-muted me-1"></i>
-                                <span>${row.min_exp} – ${row.max_exp} Years Exp</span>
+                                <span>${row.min_exp} – ${row.max_exp} Yrs</span>
                             </div>
                             <div class="cd-val-loc" title="${escapeHtmlAttr(locationText)}">
                                 <i class="fas fa-map-marker-alt text-danger me-1"></i>
@@ -3315,7 +3358,7 @@
                          data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}"
                          role="button" tabindex="0" title="View matching bench talents">
                         <div class="cd-subcard-header">
-                            <span class="cd-subcard-label"><i class="fas fa-user-check text-primary me-1"></i>BENCH MATCH</span>
+                            <span class="cd-subcard-label">BENCH MATCH</span>
                             <span class="cd-badge-active">ACTIVE</span>
                         </div>
                         <div class="cd-subcard-body text-center">
@@ -3328,7 +3371,7 @@
                     <!-- SUB-CARD 4: Commercial Terms (Job Tracker Parity) -->
                     <div class="cd-market-subcard cd-subcard-terms">
                         <div class="cd-subcard-header">
-                            <span class="cd-subcard-label"><i class="fas fa-file-invoice-dollar text-success me-1"></i>${termsTitle.toUpperCase()}</span>
+                            <span class="cd-subcard-label">${termsTitle.toUpperCase()}</span>
                             <span class="cd-badge-terms">TERMS</span>
                         </div>
                         <div class="cd-subcard-body">
@@ -3345,7 +3388,7 @@
                     <!-- SUB-CARD 5: Submission & Telemetry (Job Tracker Parity) -->
                     <div class="cd-market-subcard cd-subcard-actions">
                         <div class="cd-subcard-header">
-                            <span class="cd-subcard-label"><i class="fas fa-paper-plane text-info me-1"></i>SUBMISSION</span>
+                            <span class="cd-subcard-label">SUBMISSION</span>
                         </div>
                         <div class="cd-subcard-body">
                             ${actionBtnHtml}
@@ -3360,21 +3403,16 @@
 
                 <!-- SUB-CARD 6: BOTTOM ACTIVITY STRIP (Job Tracker Parity) -->
                 <div class="cd-market-card-bottom">
-                    <div class="cd-bottom-telemetry">
-                        <span><i class="far fa-calendar-alt text-muted me-1"></i>Posted: <strong>${postedDate}</strong></span>
-                        <span class="cd-bullet">&bull;</span>
-                        <span><i class="fas fa-history text-success me-1"></i>Updated: <strong class="text-success">${row.updated_at_ago || 'Recently'}</strong></span>
-                        <span class="cd-bullet">&bull;</span>
-                        <span><i class="far fa-clock text-warning me-1"></i>Deadline: <strong class="${row.is_bench_enabled ? 'text-success' : (row.is_direct_expired ? 'text-danger' : 'text-gray-700')}">${row.submission_deadline_formatted || 'Open till filled'}</strong></span>
-                    </div>
-
-                    <div class="cd-bottom-skills">
+                    <!-- Left side: Relevant Skills Tags -->
+                    <div class="cd-bottom-skills cd-bottom-left-skills">
                         <div class="skills-row">${skillTagsHtml}</div>
                     </div>
 
-                    <div class="cd-bottom-actions">
-                        <i class="fa-regular fa-bookmark cd-icon-btn" title="Save Job"></i>
-                        <i class="fa-solid fa-ellipsis-vertical cd-icon-btn" title="More Options"></i>
+                    <!-- Right side: Posted Date and Number of Openings -->
+                    <div class="cd-bottom-telemetry cd-bottom-right-meta">
+                        <span><i class="far fa-calendar-alt text-muted me-1"></i>Posted: <strong>${postedDate}</strong></span>
+                        <span class="cd-bullet">&bull;</span>
+                        <span><i class="fas fa-users text-muted me-1"></i><strong>${row.total_positions || 1}</strong> ${row.total_positions == 1 ? 'Opening' : 'Openings'}</span>
                     </div>
                 </div>
 
@@ -3886,7 +3924,9 @@
                 $('#marketJobLists').html(renderEnterpriseEmptyState(currentActiveTab));
             }
             $('#span_jobMarket').html(response.total);
-            $('#span_jobMarket_header').text((response.total || 0) + ' Opportunities');
+            if ($('#span_jobMarket_header').length) {
+                $('#span_jobMarket_header').text((response.total || 0) + ' Opportunities');
+            }
             
             // Synchronize active KPI card count with authoritative query count
             if (currentActiveTab === 'all') {
