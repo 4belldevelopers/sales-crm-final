@@ -461,33 +461,30 @@
             <div class="cl-card-footer-strip">
                 <div class="cl-footer-strip-left">
                     <div class="cl-footer-match-wrap">
-                        @if($isDirectMatch && $rowMatchPct > 0 && !empty($recReason))
-                            <!-- Match % Badge & What/Why It Matches (Only shown when skills match) -->
-                            <span class="cl-card-match-badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
-                                <i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">{{ $rowMatchPct }}% Match</strong>
-                                <span class="cl-footer-divider ms-1 me-1 text-muted">•</span>
-                                <span class="match-reason-text text-muted font-weight-500">{{ $recReason }}</span>
+                        <!-- Match % Badge & What/Why It Matches (Only shown when skills match) -->
+                        <span class="cl-card-match-badge {{ ($isDirectMatch && $rowMatchPct > 0 && !empty($recReason)) ? '' : 'd-none' }} badge-light-success font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
+                            <i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">{{ $rowMatchPct }}% Match</strong>
+                            <span class="cl-footer-divider ms-1 me-1 text-muted">•</span>
+                            <span class="match-reason-text text-muted font-weight-500">{{ $recReason }}</span>
+                        </span>
+
+                        <!-- OPERATIONAL REASSURANCE METADATA (Client Tracker Standard) -->
+                        <div class="cl-footer-operational-meta {{ ($isDirectMatch && $rowMatchPct > 0 && !empty($recReason)) ? 'd-none' : 'd-flex' }} align-items-center flex-wrap gap-2 text-muted">
+                            <span class="d-flex align-items-center gap-1" title="Last platform activity in your timezone: {{ $lastLoginFormatted }}">
+                                <i class="far fa-clock text-primary font-size-10"></i>
+                                <span>Last Active: <strong class="text-gray-800">{{ $lastLoginTimeAgo }}</strong></span>
                             </span>
-                        @else
-                            <span class="cl-card-match-badge d-none badge-light-success font-size-10 font-weight-700 py-0.5 px-2"></span>
-                            <!-- OPERATIONAL REASSURANCE METADATA (Client Tracker Standard) -->
-                            <div class="cl-footer-operational-meta d-flex align-items-center flex-wrap gap-2 text-muted">
-                                <span class="d-flex align-items-center gap-1" title="Last platform activity in your timezone: {{ $lastLoginFormatted }}">
-                                    <i class="far fa-clock text-primary font-size-10"></i>
-                                    <span>Last Active: <strong class="text-gray-800">{{ $lastLoginTimeAgo }}</strong></span>
-                                </span>
-                                <span class="cl-meta-dot">•</span>
-                                <span class="d-flex align-items-center gap-1" title="Instant SLA: Partner responds to mandate requests within 4 hours">
-                                    <i class="fas fa-bolt text-warning font-size-10"></i>
-                                    <span>Avg Response: <strong class="text-gray-800">&lt; 4 hrs</strong></span>
-                                </span>
-                                <span class="cl-meta-dot">•</span>
-                                <span class="d-flex align-items-center gap-1 text-success font-weight-600" title="Vetted and verified recruitment partner on JERO">
-                                    <i class="fas fa-shield-alt text-success font-size-10"></i>
-                                    <span>Verified Partner</span>
-                                </span>
-                            </div>
-                        @endif
+                            <span class="cl-meta-dot">•</span>
+                            <span class="d-flex align-items-center gap-1" title="Instant SLA: Partner responds to mandate requests within 4 hours">
+                                <i class="fas fa-bolt text-warning font-size-10"></i>
+                                <span>Avg Response: <strong class="text-gray-800">&lt; 4 hrs</strong></span>
+                            </span>
+                            <span class="cl-meta-dot">•</span>
+                            <span class="d-flex align-items-center gap-1 text-success font-weight-600" title="Vetted and verified recruitment partner on JERO">
+                                <i class="fas fa-shield-alt text-success font-size-10"></i>
+                                <span>Verified Partner</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div class="cl-footer-strip-right">

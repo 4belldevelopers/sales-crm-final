@@ -40,13 +40,13 @@
 .fa-header-card, .cl-header-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 11px !important;
-    padding: 10px 18px !important;
+    border-radius: 12px !important;
+    padding: 13px 20px !important;
     margin-bottom: 12px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 14px !important;
+    gap: 16px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     position: relative !important;
     z-index: 1 !important;
@@ -61,25 +61,25 @@
     min-width: 0 !important;
 }
 .fa-header-icon-box, .cl-header-icon-box {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    border-radius: 9px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    border-radius: 10px !important;
     background: #eff6ff !important;
     border: 1px solid #bfdbfe !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     color: #2563eb !important;
-    font-size: 16px !important;
+    font-size: 18px !important;
     flex-shrink: 0 !important;
     box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06) !important;
 }
 .fa-header-icon-box svg, .cl-header-icon-box svg {
     color: #2563eb !important;
     stroke: #2563eb !important;
-    width: 18px !important;
-    height: 18px !important;
+    width: 22px !important;
+    height: 22px !important;
 }
 .fa-header-title-row, .cl-header-title-row {
     display: flex !important;
@@ -88,12 +88,12 @@
     flex-wrap: wrap !important;
 }
 .fa-header-title, .cl-header-title {
-    font-size: 16px !important;
+    font-size: 20px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
-    letter-spacing: -0.01em !important;
+    letter-spacing: -0.015em !important;
     margin: 0 !important;
-    line-height: 1.25 !important;
+    line-height: 1.2 !important;
 }
 .fa-trust-pill {
     display: inline-flex !important;
@@ -103,7 +103,7 @@
     border: 1px solid #a7f3d0 !important;
     color: #065f46 !important;
     border-radius: 12px !important;
-    padding: 2px 8px !important;
+    padding: 2.5px 8px !important;
     font-size: 11px !important;
     font-weight: 600 !important;
     line-height: 1.3 !important;
@@ -118,10 +118,10 @@
     color: #059669 !important;
 }
 .fa-header-subtitle, .cl-header-subtitle {
-    font-size: 12px !important;
+    font-size: 13px !important;
     font-weight: 400 !important;
     color: #64748b !important;
-    margin-top: 2px !important;
+    margin-top: 3px !important;
     line-height: 1.35 !important;
 }
 
@@ -137,8 +137,8 @@
 .cl-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 8px 10px;
+    border-radius: 11px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -148,7 +148,7 @@
     min-width: 0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
     position: relative;
-    min-height: 56px;
+    min-height: 62px;
 }
 .cl-card:hover {
     transform: translateY(-1px);
@@ -159,20 +159,20 @@
 .cl-card-top {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     margin-bottom: 4px;
     min-width: 0;
 }
 .cl-card-icon {
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 11px;
+    font-size: 13px;
     transition: all 0.15s ease;
 }
 .cl-card-icon.blue   { background: #eff6ff; color: #2563eb; }
@@ -188,10 +188,10 @@
     overflow: hidden;
 }
 .cl-card-title, .cl-card-lbl {
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
-    color: #1e293b !important;
-    line-height: 1.2 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.25 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
@@ -205,53 +205,123 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 500;
-    line-height: 1.2;
+    line-height: 1.25;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-top: 1px;
+    margin-top: 2px;
     color: #64748b;
+    transition: color 0.15s ease;
+}
+.cl-card-sub i, .cl-card-sub svg {
+    flex-shrink: 0;
+    font-size: 11px;
 }
 
-/* ── KPI Selected States ── */
+/* ── KPI Selected States: Semantic Color-Coded Active Tab Rings (Client Tracker Standard) ── */
+/* 1. Total Agencies (Blue) */
 .cl-card.active[data-tab="all"] {
     background: #eff6ff !important;
     border-color: #60a5fa !important;
     box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
 }
-.cl-card.active[data-tab="all"] .cl-card-icon { background: #ffffff !important; color: #2563eb !important; }
+.cl-card.active[data-tab="all"] .cl-card-icon {
+    background: #ffffff !important;
+    color: #2563eb !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
+}
 .cl-card.active[data-tab="all"] .cl-card-title,
-.cl-card.active[data-tab="all"] .cl-card-lbl { color: #1e40af !important; font-weight: 700 !important; }
+.cl-card.active[data-tab="all"] .cl-card-lbl {
+    color: #1e40af !important;
+    font-weight: 700 !important;
+}
+.cl-card.active[data-tab="all"] .cl-card-sub {
+    color: #2563eb !important;
+    font-weight: 600 !important;
+}
+.cl-card.active[data-tab="all"] .cl-card-sub i,
+.cl-card.active[data-tab="all"] .cl-card-sub svg {
+    color: #2563eb !important;
+}
 
+/* 2. Bench Agencies (Indigo) */
 .cl-card.active[data-tab="bench"] {
     background: #eef2ff !important;
     border-color: #818cf8 !important;
     box-shadow: 0 0 0 1.5px #4f46e5, 0 4px 14px rgba(79, 70, 229, 0.12) !important;
 }
-.cl-card.active[data-tab="bench"] .cl-card-icon { background: #ffffff !important; color: #4f46e5 !important; }
+.cl-card.active[data-tab="bench"] .cl-card-icon {
+    background: #ffffff !important;
+    color: #4f46e5 !important;
+    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.15) !important;
+}
 .cl-card.active[data-tab="bench"] .cl-card-title,
-.cl-card.active[data-tab="bench"] .cl-card-lbl { color: #4338ca !important; font-weight: 700 !important; }
+.cl-card.active[data-tab="bench"] .cl-card-lbl {
+    color: #4338ca !important;
+    font-weight: 700 !important;
+}
+.cl-card.active[data-tab="bench"] .cl-card-sub {
+    color: #4f46e5 !important;
+    font-weight: 600 !important;
+}
+.cl-card.active[data-tab="bench"] .cl-card-sub i,
+.cl-card.active[data-tab="bench"] .cl-card-sub svg {
+    color: #4f46e5 !important;
+}
 
+/* 3. Contract Staffing (Emerald Green) */
 .cl-card.active[data-tab="contract"] {
     background: #ecfdf5 !important;
     border-color: #34d399 !important;
     box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
 }
-.cl-card.active[data-tab="contract"] .cl-card-icon { background: #ffffff !important; color: #059669 !important; }
+.cl-card.active[data-tab="contract"] .cl-card-icon {
+    background: #ffffff !important;
+    color: #059669 !important;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
+}
 .cl-card.active[data-tab="contract"] .cl-card-title,
-.cl-card.active[data-tab="contract"] .cl-card-lbl { color: #047857 !important; font-weight: 700 !important; }
+.cl-card.active[data-tab="contract"] .cl-card-lbl {
+    color: #047857 !important;
+    font-weight: 700 !important;
+}
+.cl-card.active[data-tab="contract"] .cl-card-sub {
+    color: #059669 !important;
+    font-weight: 600 !important;
+}
+.cl-card.active[data-tab="contract"] .cl-card-sub i,
+.cl-card.active[data-tab="contract"] .cl-card-sub svg {
+    color: #059669 !important;
+}
 
+/* 4. Full-Time Hiring (Purple) */
 .cl-card.active[data-tab="fulltime"] {
     background: #faf5ff !important;
     border-color: #c084fc !important;
     box-shadow: 0 0 0 1.5px #9333ea, 0 4px 14px rgba(147, 51, 234, 0.12) !important;
 }
-.cl-card.active[data-tab="fulltime"] .cl-card-icon { background: #ffffff !important; color: #9333ea !important; }
+.cl-card.active[data-tab="fulltime"] .cl-card-icon {
+    background: #ffffff !important;
+    color: #9333ea !important;
+    box-shadow: 0 1px 3px rgba(147, 51, 234, 0.15) !important;
+}
 .cl-card.active[data-tab="fulltime"] .cl-card-title,
-.cl-card.active[data-tab="fulltime"] .cl-card-lbl { color: #7e22ce !important; font-weight: 700 !important; }
+.cl-card.active[data-tab="fulltime"] .cl-card-lbl {
+    color: #7e22ce !important;
+    font-weight: 700 !important;
+}
+.cl-card.active[data-tab="fulltime"] .cl-card-sub {
+    color: #9333ea !important;
+    font-weight: 600 !important;
+}
+.cl-card.active[data-tab="fulltime"] .cl-card-sub i,
+.cl-card.active[data-tab="fulltime"] .cl-card-sub svg {
+    color: #9333ea !important;
+}
 
+/* 5. Domestic Agencies (Amber / Orange) */
 .cl-card.active[data-tab="domestic"],
 .cl-card.active[data-tab="india"] {
     background: #fffbeb !important;
@@ -259,20 +329,54 @@
     box-shadow: 0 0 0 1.5px #d97706, 0 4px 14px rgba(217, 119, 6, 0.12) !important;
 }
 .cl-card.active[data-tab="domestic"] .cl-card-icon,
-.cl-card.active[data-tab="india"] .cl-card-icon { background: #ffffff !important; color: #d97706 !important; }
+.cl-card.active[data-tab="india"] .cl-card-icon {
+    background: #ffffff !important;
+    color: #d97706 !important;
+    box-shadow: 0 1px 3px rgba(217, 119, 6, 0.15) !important;
+}
 .cl-card.active[data-tab="domestic"] .cl-card-title,
 .cl-card.active[data-tab="domestic"] .cl-card-lbl,
 .cl-card.active[data-tab="india"] .cl-card-title,
-.cl-card.active[data-tab="india"] .cl-card-lbl { color: #b45309 !important; font-weight: 700 !important; }
+.cl-card.active[data-tab="india"] .cl-card-lbl {
+    color: #b45309 !important;
+    font-weight: 700 !important;
+}
+.cl-card.active[data-tab="domestic"] .cl-card-sub,
+.cl-card.active[data-tab="india"] .cl-card-sub {
+    color: #d97706 !important;
+    font-weight: 600 !important;
+}
+.cl-card.active[data-tab="domestic"] .cl-card-sub i,
+.cl-card.active[data-tab="domestic"] .cl-card-sub svg,
+.cl-card.active[data-tab="india"] .cl-card-sub i,
+.cl-card.active[data-tab="india"] .cl-card-sub svg {
+    color: #d97706 !important;
+}
 
+/* 6. Global Agencies (Teal) */
 .cl-card.active[data-tab="global"] {
     background: #f0fdfa !important;
     border-color: #2dd4bf !important;
     box-shadow: 0 0 0 1.5px #0d9488, 0 4px 14px rgba(13, 148, 136, 0.12) !important;
 }
-.cl-card.active[data-tab="global"] .cl-card-icon { background: #ffffff !important; color: #0d9488 !important; }
+.cl-card.active[data-tab="global"] .cl-card-icon {
+    background: #ffffff !important;
+    color: #0d9488 !important;
+    box-shadow: 0 1px 3px rgba(13, 148, 136, 0.15) !important;
+}
 .cl-card.active[data-tab="global"] .cl-card-title,
-.cl-card.active[data-tab="global"] .cl-card-lbl { color: #0f766e !important; font-weight: 700 !important; }
+.cl-card.active[data-tab="global"] .cl-card-lbl {
+    color: #0f766e !important;
+    font-weight: 700 !important;
+}
+.cl-card.active[data-tab="global"] .cl-card-sub {
+    color: #0d9488 !important;
+    font-weight: 600 !important;
+}
+.cl-card.active[data-tab="global"] .cl-card-sub i,
+.cl-card.active[data-tab="global"] .cl-card-sub svg {
+    color: #0d9488 !important;
+}
 
 /* ── TIER 2.5: Filter Bar ── */
 .cl-filter-bar {
@@ -1371,6 +1475,27 @@
     color: #1e40af !important;
     border: 1px solid #bfdbfe !important;
 }
+/* Operational Reassurance Metadata (Client Tracker Standard) */
+.cl-footer-operational-meta {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    line-height: 1.2 !important;
+}
+.cl-footer-operational-meta.d-none {
+    display: none !important;
+}
+.cl-footer-operational-meta .cl-meta-dot {
+    color: #cbd5e1 !important;
+    font-weight: 700 !important;
+    font-size: 10px !important;
+}
+.cl-footer-operational-meta strong {
+    color: #1e293b !important;
+    font-weight: 600 !important;
+}
 .cl-footer-item {
     display: inline-flex !important;
     align-items: center !important;
@@ -1730,22 +1855,26 @@
 /* ── 15.6" Screen Responsive Breakpoints (Rule 14 & Rule 20) ── */
 @media (max-width: 1440px) {
     .cl-card {
-        padding: 7px 8px !important;
+        padding: 9px 10px !important;
+        min-height: 58px !important;
     }
     .cl-card-top {
-        gap: 5px !important;
+        gap: 7px !important;
+        margin-bottom: 3px !important;
     }
     .cl-card-icon {
-        width: 24px !important;
-        height: 24px !important;
-        min-width: 24px !important;
-        font-size: 10.5px !important;
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        font-size: 12px !important;
     }
     .cl-card-title, .cl-card-lbl {
-        font-size: 11px !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
     }
     .cl-card-sub {
-        font-size: 10px !important;
+        font-size: 10.5px !important;
+        font-weight: 500 !important;
     }
     .cl-subcards-grid {
         grid-template-columns: minmax(0, 1.75fr) minmax(0, 0.72fr) minmax(0, 1.25fr) minmax(0, 1.18fr) minmax(0, 1.1fr) !important;
@@ -2339,15 +2468,18 @@
                     $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">' + highestMatchPct + '% Match</strong> <span class="cl-footer-divider ms-1 me-1 text-muted">•</span> <span class="match-reason-text text-muted font-weight-500">Matches ' + jobCount + (jobCount === 1 ? ' Job' : ' Jobs') + ' (' + jobTitlesList + ')</span>');
                     $cardMatchBadge.attr('title', 'Matches ' + jobCount + ' open jobs: ' + matchingJobs.map(function(mj) { return mj.title + ' (' + mj.pct + '%)'; }).join(', '));
                     $card.attr('data-dynamic-pct', highestMatchPct);
+                    $card.find('.cl-footer-operational-meta').addClass('d-none').removeClass('d-flex');
                 } else {
-                    // No open jobs match this agency's skills: hide match badge completely
+                    // No open jobs match this agency's skills: hide match badge completely & show operational reassurance
                     $cardMatchBadge.addClass('d-none').empty();
                     $card.attr('data-dynamic-pct', 0);
+                    $card.find('.cl-footer-operational-meta').removeClass('d-none').addClass('d-flex');
                 }
             } else if (mode === 'none') {
-                // Matching turned off: hide match badge completely
+                // Matching turned off: hide match badge completely & show operational reassurance
                 $cardMatchBadge.addClass('d-none').empty();
                 $card.attr('data-dynamic-pct', 0);
+                $card.find('.cl-footer-operational-meta').removeClass('d-none').addClass('d-flex');
             } else {
                 // SPECIFIC REQUISITION MATCH MODE: Dynamic & Logically Correct
                 var overlap = [];
@@ -2365,10 +2497,12 @@
                     $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">' + matchPct + '% Match</strong> <span class="cl-footer-divider ms-1 me-1 text-muted">•</span> <span class="match-reason-text text-muted font-weight-500">Matches requirement (' + overlap.slice(0, 3).join(', ') + ')</span>');
                     $cardMatchBadge.attr('title', 'Matching Skills: ' + overlap.join(', '));
                     $card.attr('data-dynamic-pct', matchPct);
+                    $card.find('.cl-footer-operational-meta').addClass('d-none').removeClass('d-flex');
                 } else {
-                    // No skill overlap with selected requisition: hide match badge completely
+                    // No skill overlap with selected requisition: hide match badge completely & show operational reassurance
                     $cardMatchBadge.addClass('d-none').empty();
                     $card.attr('data-dynamic-pct', 0);
+                    $card.find('.cl-footer-operational-meta').removeClass('d-none').addClass('d-flex');
                 }
             }
         });
