@@ -11507,7 +11507,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         }
 
         $currency = GeneralMethod::currency();  // Currency code
-        $currencyCheck = $currency[$request->min_salary_currency];
+        $currencyCheck = isset($currency[$request->min_salary_currency]) ? $currency[$request->min_salary_currency] : 'INR';
         $min_salary = '';
         $max_salary = '';
         if (\request('min_sal') != '' || \request('max_sal') != '') {
