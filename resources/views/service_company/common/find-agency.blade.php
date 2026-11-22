@@ -2321,22 +2321,16 @@
                     $cardMatchBadge.attr('title', 'Matches ' + jobCount + ' open jobs: ' + matchingJobs.map(function(mj) { return mj.title + ' (' + mj.pct + '%)'; }).join(', '));
                     $card.attr('data-dynamic-pct', highestMatchPct);
                 } else {
-                    var serverPct = parseInt($card.attr('data-match-pct'), 10) || 75;
-                    var serverReason = $card.attr('data-rec-reason') || 'Verified Partner • Pre-Agreed Commercials';
-                    $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
-                    $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">' + serverPct + '% Match</strong> <span class="cl-footer-divider ms-1 me-1 text-muted">•</span> <span class="match-reason-text text-muted font-weight-500">' + serverReason + '</span>');
-                    $cardMatchBadge.attr('title', serverReason);
-                    $card.attr('data-dynamic-pct', serverPct);
+                    // No open jobs match this agency's skills: hide match badge completely
+                    $cardMatchBadge.addClass('d-none').empty();
+                    $card.attr('data-dynamic-pct', 0);
                 }
             } else if (mode === 'none') {
-                var serverPct = parseInt($card.attr('data-match-pct'), 10) || 75;
-                var serverReason = $card.attr('data-rec-reason') || 'Verified Partner • Pre-Agreed Commercials';
-                $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
-                $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">' + serverPct + '% Match</strong> <span class="cl-footer-divider ms-1 me-1 text-muted">•</span> <span class="match-reason-text text-muted font-weight-500">' + serverReason + '</span>');
-                $cardMatchBadge.attr('title', serverReason);
-                $card.attr('data-dynamic-pct', serverPct);
+                // Matching turned off: hide match badge completely
+                $cardMatchBadge.addClass('d-none').empty();
+                $card.attr('data-dynamic-pct', 0);
             } else {
-                // SPECIFIC REQUISITION MATCH MODE: Dynamic & Logically Correct (Point 2)
+                // SPECIFIC REQUISITION MATCH MODE: Dynamic & Logically Correct
                 var overlap = [];
                 selectedSkills.forEach(function(sk) {
                     var lower = (sk || '').toLowerCase().trim();
@@ -2353,10 +2347,9 @@
                     $cardMatchBadge.attr('title', 'Matching Skills: ' + overlap.join(', '));
                     $card.attr('data-dynamic-pct', matchPct);
                 } else {
-                    $cardMatchBadge.removeClass('d-none badge-light-success').addClass('badge-light-primary');
-                    $cardMatchBadge.html('<i class="fas fa-globe text-primary me-1"></i><strong class="match-pct-text">65% Match</strong> <span class="cl-footer-divider ms-1 me-1 text-muted">•</span> <span class="match-reason-text text-muted font-weight-500">Domestic Partner (General Staffing)</span>');
-                    $cardMatchBadge.attr('title', 'No direct skill overlap for this requisition; matched on Domestic Location');
-                    $card.attr('data-dynamic-pct', 65);
+                    // No skill overlap with selected requisition: hide match badge completely
+                    $cardMatchBadge.addClass('d-none').empty();
+                    $card.attr('data-dynamic-pct', 0);
                 }
             }
         });
