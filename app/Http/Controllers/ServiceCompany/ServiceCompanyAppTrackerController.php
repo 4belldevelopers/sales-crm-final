@@ -11179,6 +11179,258 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         return redirect()->route('service_company.tickets.show', encrypt($validated['ticket_id']))->with('success', 'Comment added successfully.');
     }
 
+    /**
+     * Compute matching jobs count for a candidate across Direct Client, Internal Client, and My Organization.
+     * Tenancy: Scoped to logged-in company and public marketplace mandates.
+     * Strict CQRS: Zero MySQL queries on read paths.
+     */
+    private function calculateMatchingJobsCount($candidateId, $candRow, $companyId)
+    {
+        $condId = (int) $candidateId;
+        $skillsHash = md5($candRow->skills ?? '');
+        $cacheKey = "ats:bench_recommend_counts_v2:{$condId}:{$companyId}:{$skillsHash}";
+
+        return cache()->remember($cacheKey, 180, function () use ($companyId, $candRow) {
+            $skillsStr = (string) ($candRow->skills ?? '');
+            $currentJobSkill = array_values(array_filter(array_map('trim', explode(',', $skillsStr))));
+
+            if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
+                return [
+                    'recommend_req_counter' => 0,
+                    'recommend_internal_req_counter' => 0,
+                    'recommend_my_org_req_counter' => 0,
+                ];
+            }
+
+            $should = [];
+            foreach ($currentJobSkill as $skill) {
+                $cleanSkill = strtolower(preg_replace('/\s+/', ' ', trim($skill)));
+                if ($cleanSkill !== '') {
+                    $should[] = [
+                        'match' => [
+                            'job_metronics_skills.skill_name' => [
+                                'query' => $cleanSkill,
+                                'operator' => 'and',
+                            ],
+                        ],
+                    ];
+                }
+            }
+
+            $skillFilter = [];
+            if (! empty($should)) {
+                $skillFilter = [
+                    'nested' => [
+                        'path' => 'job_metronics_skills',
+                        'query' => [
+                            'bool' => [
+                                'should' => $should,
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                    ],
+                ];
+            }
+
+            // 1. Direct Client / Market mandates (comId != $companyId)
+            $directFilter = [['term' => ['status' => 'active']]];
+            if (! empty($skillFilter)) {
+                $directFilter[] = $skillFilter;
+            }
+            $paramsDirect = [
+                'index' => ELASTIC_JOBS,
+                'body' => [
+                    'query' => [
+                        'bool' => [
+                            'must_not' => [
+                                ['term' => ['comId' => $companyId]],
+                            ],
+                            'filter' => $directFilter,
+                        ],
+                    ],
+                ],
+            ];
+            try {
+                $resDirect = $this->elasticService->getClient()->count($paramsDirect);
+                $totalDirect = (int) ($resDirect['count'] ?? 0);
+            } catch (\Throwable $e) {
+                $totalDirect = 0;
+            }
+
+            // 2. Internal Client & My Organization mandates (comId == $companyId)
+            $internalFilter = [['term' => ['status' => 'active']]];
+            if (! empty($skillFilter)) {
+                $internalFilter[] = $skillFilter;
+            }
+            $paramsInternal = [
+                'index' => ELASTIC_JOBS,
+                'body' => [
+                    'size' => 0,
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['comId' => $companyId]],
+                            ],
+                            'filter' => $internalFilter,
+                        ],
+                    ],
+                    'aggs' => [
+                        'by_self_company' => [
+                            'terms' => [
+                                'field' => 'self_company',
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+            $internalClientCount = 0;
+            $myOrgCount = 0;
+            try {
+                $resInternal = $this->elasticService->getClient()->search($paramsInternal);
+                $buckets = $resInternal['aggregations']['by_self_company']['buckets'] ?? [];
+                foreach ($buckets as $b) {
+                    if ((int) $b['key'] === 1) {
+                        $myOrgCount = (int) $b['doc_count'];
+                    } else {
+                        $internalClientCount += (int) $b['doc_count'];
+                    }
+                }
+            } catch (\Throwable $e) {
+                $internalClientCount = 0;
+                $myOrgCount = 0;
+            }
+
+            return [
+                'recommend_req_counter' => $totalDirect,
+                'recommend_internal_req_counter' => $internalClientCount,
+                'recommend_my_org_req_counter' => $myOrgCount,
+            ];
+        });
+    }
+
+    /**
+     * Compute live category counts for the 5 Find Talent KPI tabs using Elasticsearch aggregations.
+     * Strict CQRS: Zero MySQL queries on read paths.
+     */
+    public function getFindTalentTabCounts(int $companyId): array
+    {
+        $cacheKey = "ats:find_talent_tab_counts:{$companyId}";
+
+        return cache()->remember($cacheKey, 60, function () use ($companyId) {
+            $domesticCountryId = (int) GeneralMethod::defaultCountryId($companyId);
+            if ($domesticCountryId <= 0) {
+                $domesticCountryId = 101;
+            }
+
+            $boolQuery = [
+                'bool' => [
+                    'must' => [
+                        ['term' => ['condidate_type' => 'bench_condidate']],
+                        ['term' => ['status' => 2]],
+                    ],
+                    'must_not' => [
+                        ['term' => ['company_id' => $companyId]],
+                    ],
+                ],
+            ];
+
+            $params = [
+                'index' => ELASTIC_CANDIDATES_BENCH,
+                'request_cache' => true,
+                'body' => [
+                    'size' => 0,
+                    'query' => $boolQuery,
+                    'aggs' => [
+                        'total_unique' => [
+                            'cardinality' => ['field' => 'email'],
+                        ],
+                        'it_software' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['wildcard' => ['current_designation' => '*dev*']],
+                                        ['wildcard' => ['current_designation' => '*soft*']],
+                                        ['wildcard' => ['current_designation' => '*eng*']],
+                                        ['wildcard' => ['current_designation' => '*it*']],
+                                        ['wildcard' => ['skills' => '*java*']],
+                                        ['wildcard' => ['skills' => '*react*']],
+                                        ['wildcard' => ['skills' => '*python*']],
+                                        ['wildcard' => ['skills' => '*.net*']],
+                                        ['wildcard' => ['skills' => '*php*']],
+                                        ['wildcard' => ['skills' => '*script*']],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                            'aggs' => ['uc' => ['cardinality' => ['field' => 'email']]],
+                        ],
+                        'training_dev' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['range' => ['total_exp' => ['lte' => 1.5]]],
+                                        ['wildcard' => ['current_designation' => '*train*']],
+                                        ['wildcard' => ['current_designation' => '*intern*']],
+                                        ['wildcard' => ['current_designation' => '*fresh*']],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                            'aggs' => ['uc' => ['cardinality' => ['field' => 'email']]],
+                        ],
+                        'institutional' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['outsourcing_type' => 1]],
+                                        ['wildcard' => ['company_name' => '*univ*']],
+                                        ['wildcard' => ['company_name' => '*inst*']],
+                                        ['wildcard' => ['company_name' => '*coll*']],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                            'aggs' => ['uc' => ['cardinality' => ['field' => 'email']]],
+                        ],
+                        'domestic' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['city_id' => $domesticCountryId]],
+                                        ['term' => ['country_name.keyword' => 'India']],
+                                        ['term' => ['country.keyword' => 'India']],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                            'aggs' => ['uc' => ['cardinality' => ['field' => 'email']]],
+                        ],
+                    ],
+                ],
+            ];
+
+            try {
+                $res = $this->elasticService->getClient()->search($params);
+
+                return [
+                    'all' => (int) ($res['aggregations']['total_unique']['value'] ?? 0),
+                    'it_software' => (int) ($res['aggregations']['it_software']['uc']['value'] ?? 0),
+                    'training_dev' => (int) ($res['aggregations']['training_dev']['uc']['value'] ?? 0),
+                    'institutional' => (int) ($res['aggregations']['institutional']['uc']['value'] ?? 0),
+                    'domestic' => (int) ($res['aggregations']['domestic']['uc']['value'] ?? 0),
+                ];
+            } catch (\Throwable $e) {
+                return [
+                    'all' => 0,
+                    'it_software' => 0,
+                    'training_dev' => 0,
+                    'institutional' => 0,
+                    'domestic' => 0,
+                ];
+            }
+        });
+    }
+
     public function findTalent()
     {
 
@@ -11189,7 +11441,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             return redirect()->route('service_company.jobs.index')
                 ->with('error', __('No active requisition found. Please create a job first.'));
         }
-        $this->pageTitle = __('Candidates Recommended');
+        $this->pageTitle = __('Find Talents');
         $this->job = Job::withoutGlobalScopes()->findOrFail($id);
         $this->custome_count = 0;
 
@@ -11210,6 +11462,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $this->cities = [];
         $this->qualificationTag = ReferenceDataCache::qualificationNames();
+        $this->tenantTimezone = GeneralMethod::defaultTimeZone($company_id) ?: config('app.timezone', 'UTC');
+        $this->tabCounts = $this->getFindTalentTabCounts((int) $company_id);
 
         return view('service_company.apptracker.find-talent', $this->data);
     }
@@ -11319,6 +11573,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $valCheck = $request->input('sortingfilter');
         $country = '';
         $searchQuery = $request->input('q');
+        $activeTab = $request->input('tab') ?: $request->input('talent_category') ?: 'all';
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10); // Default 10 results per page
         $from = ($page - 1) * $size;
@@ -11328,6 +11583,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'page' => $page,
             'size' => $size,
             'q' => $searchQuery,
+            'tab' => $activeTab,
             'company' => $company_id,
             'requiredSkills' => $requiredSkills ?? [],
             'app_int_outsource' => $app_int_outsource,
@@ -11762,6 +12018,66 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ];
         }
 
+        // Category Tab filter (All Bench Talents, IT & Software, Training & Development, Institutional, Domestic)
+        if ($activeTab === 'it_software') {
+            $boolQuery['bool']['filter'][] = [
+                'bool' => [
+                    'should' => [
+                        ['wildcard' => ['current_designation' => '*dev*']],
+                        ['wildcard' => ['current_designation' => '*soft*']],
+                        ['wildcard' => ['current_designation' => '*eng*']],
+                        ['wildcard' => ['current_designation' => '*it*']],
+                        ['wildcard' => ['skills' => '*java*']],
+                        ['wildcard' => ['skills' => '*react*']],
+                        ['wildcard' => ['skills' => '*python*']],
+                        ['wildcard' => ['skills' => '*.net*']],
+                        ['wildcard' => ['skills' => '*php*']],
+                        ['wildcard' => ['skills' => '*script*']],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        } elseif ($activeTab === 'training_dev') {
+            $boolQuery['bool']['filter'][] = [
+                'bool' => [
+                    'should' => [
+                        ['range' => ['total_exp' => ['lte' => 1.5]]],
+                        ['wildcard' => ['current_designation' => '*train*']],
+                        ['wildcard' => ['current_designation' => '*intern*']],
+                        ['wildcard' => ['current_designation' => '*fresh*']],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        } elseif ($activeTab === 'institutional') {
+            $boolQuery['bool']['filter'][] = [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['outsourcing_type' => 1]],
+                        ['wildcard' => ['company_name' => '*univ*']],
+                        ['wildcard' => ['company_name' => '*inst*']],
+                        ['wildcard' => ['company_name' => '*coll*']],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        } elseif ($activeTab === 'domestic') {
+            $domesticCountryId = (int) GeneralMethod::defaultCountryId($company_id);
+            if ($domesticCountryId <= 0) {
+                $domesticCountryId = 101;
+            }
+            $boolQuery['bool']['filter'][] = [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['city_id' => $domesticCountryId]],
+                        ['term' => ['country_name.keyword' => 'India']],
+                        ['term' => ['country.keyword' => 'India']],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
+
         if ($valCheck == 22) {
             $today = date('Y-m-d');
             $next30 = date('Y-m-d', strtotime('+30 days'));
@@ -11917,11 +12233,23 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             }
         }
 
+        // Matching Jobs count pre-calculation (Direct Client, Internal Client, My Org)
+        $benchRecomCounts = [];
+        foreach ($data as $candRow) {
+            $cid = $candRow['id'] ?? null;
+            if ($cid) {
+                $benchRecomCounts[$cid] = $this->calculateMatchingJobsCount($cid, (object) $candRow, $company_id);
+            }
+        }
+        $tabCounts = $this->getFindTalentTabCounts((int) $company_id);
+        $tenantTimezone = GeneralMethod::defaultTimeZone($company_id) ?: config('app.timezone', 'UTC');
+
         // Phase 1 Optimization: Avoid duplicating rendered HTML and raw ES candidate documents + skill maps
         // in the JSON response (reducing payload size by >50%) unless client_render=1 is explicitly requested.
         $responseData = [
-            'html' => view('service_company.ajax_pages.find_talent_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'skillExperiencesMap'))->render(),
+            'html' => view('service_company.ajax_pages.find_talent_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'skillExperiencesMap', 'benchRecomCounts', 'company_id', 'salaryMode', 'currencySymbole', 'tenantTimezone'))->render(),
             'total' => $total,
+            'tab_counts' => $tabCounts,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'tenant_version' => $version,
         ];
