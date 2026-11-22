@@ -176,13 +176,40 @@
         .co-step--current .co-step-status { color: #009ef7; opacity: .85; }
         .co-step--done .co-step-title { color: #0f172a; font-weight: 600; }
 
-        /* ── Topbar Actions (Save & Next + Close button alignment) ── */
+        /* ── Topbar Actions (Back / Close + Save & Next + Close button alignment) ── */
         .co-drawer-actions {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             flex-shrink: 0;
             margin-left: 16px;
+        }
+        .co-header-nav-btn {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #475569 !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            height: 34px !important;
+            padding: 0 13px !important;
+            border-radius: 7px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            transition: all 0.15s ease !important;
+            cursor: pointer !important;
+            white-space: nowrap !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        }
+        .co-header-nav-btn:hover {
+            background: #f8fafc !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+        }
+        .co-header-nav-btn:active {
+            transform: translateY(1px) !important;
         }
         .co-header-save-btn {
             background: #009ef7 !important;
@@ -1650,7 +1677,7 @@
         .co-btn-save { background: #1b84ff !important; border: 1px solid #1b84ff !important; color: #fff !important; font-weight: 600 !important; min-width: 160px; height: 40px; border-radius: 8px; transition: background .15s, opacity .15s; }
         .co-btn-save:hover:not(:disabled) { background: #0b6cdb !important; border-color: #0b6cdb !important; }
         .co-btn-save:disabled { opacity: .72 !important; cursor: not-allowed !important; }
-        .co-btn-save .co-btn-spinner { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:co-spin .6s linear infinite; vertical-align:-2px; margin-right:6px; }
+        .co-btn-save .co-btn-spinner, .co-header-save-btn .co-btn-spinner { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:co-spin .6s linear infinite; vertical-align:-2px; margin-right:6px; }
         @keyframes co-spin { to { transform:rotate(360deg); } }
         /* Step 3 footer: Download Offer Letter pinned to the lower-left, Back/Continue stay right */
         .co-step3-footer { justify-content: space-between; }
@@ -2341,6 +2368,10 @@
             </div>
         </div>
         <div class="co-drawer-actions">
+            <button type="button" class="btn btn-sm co-header-nav-btn" id="co_header_nav_btn" title="Close drawer">
+                <i class="fas fa-times fs-9" id="co_header_nav_icon"></i>
+                <span id="co_header_nav_label">Close</span>
+            </button>
             <button type="button" class="btn btn-sm co-header-save-btn" id="co_header_save_btn">
                 <span class="co-header-save-label">Save &amp; Next</span>
                 <i class="fas fa-arrow-right fs-9 ms-1"></i>
@@ -5014,9 +5045,23 @@
                 }
                 /* reset every save button across the whole stepper */
                 function resetAllSaveBtns() {
-                    document.querySelectorAll('.co-btn-save').forEach(function(b) { btnSaveReset(b); });
+                    document.querySelectorAll('.co-btn-save, .co-header-save-btn').forEach(function(b) { btnSaveReset(b); });
                     var inp = document.getElementById('save-form');
-                    if (inp) { inp.disabled = false; if (inp._origVal) inp.value = inp._origVal; }
+                    if (inp) {
+                        inp.disabled = false;
+                        inp.value = 'Save & Next';
+                        inp._origVal = 'Save & Next';
+                    }
+                    var $hdrBtn = $('#co_header_save_btn');
+                    if ($hdrBtn.length) {
+                        $hdrBtn.prop('disabled', false);
+                        $hdrBtn.find('.co-btn-spinner').remove();
+                        var active = typeof coActiveStep === 'function' ? coActiveStep() : 1;
+                        var label = (active === 1 || active === 2) ? 'Save & Next' : (active === 3 ? 'Proceed to Approval' : (active === 4 ? 'Submit for Approval' : 'Send Offer'));
+                        $hdrBtn.find('.co-header-save-label').text(label);
+                        var iconClass = (active >= 4) ? 'fas fa-paper-plane fs-9 ms-1' : 'fas fa-arrow-right fs-9 ms-1';
+                        $hdrBtn.find('i').attr('class', iconClass);
+                    }
                 }
 
                 function nextStep(event, currentStep) {
@@ -5149,10 +5194,13 @@
 
                 // Function to move to the previous step
                 function prevStep(event, currentStep) {
-                    event.preventDefault();
+                    if (event && event.preventDefault) event.preventDefault();
                     resetAllSaveBtns();
-                    document.getElementById("step" + currentStep).classList.remove("active");
-                    document.getElementById("step" + (currentStep - 1)).classList.add("active");
+                    var cur = document.getElementById("step" + currentStep);
+                    var prev = document.getElementById("step" + (currentStep - 1));
+                    if (cur) cur.classList.remove("active");
+                    if (prev) prev.classList.add("active");
+                    resetAllSaveBtns();
                     if (typeof syncStepHeader === 'function') syncStepHeader();
                 }
 
@@ -7343,17 +7391,30 @@
                         else coPaintStep(step, 'pending');
                     });
 
-                    // Sync Main Drawer Header Action Button
+                    // Sync Header Back / Close Action Button (Close on step 1, Back on step > 1)
+                    var $navBtn = $('#co_header_nav_btn');
+                    if ($navBtn.length) {
+                        var $navLabel = $('#co_header_nav_label');
+                        var $navIcon = $('#co_header_nav_icon');
+                        if (active === 1) {
+                            $navLabel.text('Close');
+                            $navIcon.attr('class', 'fas fa-times fs-9');
+                            $navBtn.attr('title', 'Close drawer');
+                        } else {
+                            $navLabel.text('Back');
+                            $navIcon.attr('class', 'fas fa-arrow-left fs-9');
+                            $navBtn.attr('title', 'Go back to previous step');
+                        }
+                    }
+
+                    // Sync Main Drawer Header Action Button — ALWAYS 'Save & Next' for steps 1 & 2 (never 'Please wait...')
                     var $hdrBtn = $('#co_header_save_btn');
                     if ($hdrBtn.length) {
+                        $hdrBtn.prop('disabled', false);
+                        $hdrBtn.find('.co-btn-spinner').remove();
                         var $label = $hdrBtn.find('.co-header-save-label');
                         var $icon = $hdrBtn.find('i');
-                        if (active === 1) {
-                            var saveTxt = $('#save-form').val() || 'Save & Next';
-                            $label.text(saveTxt);
-                            $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
-                            $hdrBtn.show();
-                        } else if (active === 2) {
+                        if (active === 1 || active === 2) {
                             $label.text('Save & Next');
                             $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
                             $hdrBtn.show();
@@ -7372,6 +7433,12 @@
                         }
                     }
 
+                    // Reset hidden input so stale values never persist
+                    var $submitInput = $('#save-form');
+                    if ($submitInput.length) {
+                        $submitInput.prop('disabled', false).val('Save & Next');
+                    }
+
                     /* Full-height flex mode for steps 3-5: stretches the scroll
                        container so the active step fills the full height with no
                        blank white gap below the content. */
@@ -7382,6 +7449,16 @@
                     }
                     if (typeof coEnsureStep5Composer === 'function') coEnsureStep5Composer();
                 }
+
+                $(document).on('click', '#co_header_nav_btn', function (e) {
+                    e.preventDefault();
+                    var active = coActiveStep();
+                    if (active === 1) {
+                        $('#kt_offercreate_close').trigger('click');
+                    } else {
+                        prevStep(e, active);
+                    }
+                });
 
                 $(document).on('click', '#co_header_save_btn', function (e) {
                     e.preventDefault();
@@ -7704,6 +7781,7 @@
                     var current = document.getElementById('step' + active);
                     if (current) current.classList.remove('active');
                     target.classList.add('active');
+                    resetAllSaveBtns();
                     syncStepHeader();
                 }
 
