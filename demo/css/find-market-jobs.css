@@ -1866,63 +1866,75 @@
     border-left: 3.5px solid #2563eb !important;
 }
 
-/* Discrete Upper Sub-Cards Grid */
+/* Discrete Upper Sub-Cards Grid (Job Tracker Parity) */
 .cd-market-card-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.5fr) minmax(0, 1.05fr) minmax(0, 1.45fr) minmax(0, 1.35fr) !important;
+    grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.4fr) minmax(0, 0.95fr) minmax(0, 1.35fr) minmax(0, 1.25fr) !important;
     gap: 8px !important;
-    padding: 10px 12px 6px 12px !important;
+    padding: 8px 10px 6px 10px !important;
     width: 100% !important;
     box-sizing: border-box !important;
     align-items: stretch !important;
 }
 
-/* Individual Sub-Card Standard */
-.cd-market-subcard {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    box-sizing: border-box;
-    overflow: hidden;
+/* Individual Sub-Card Standard (Soft Slate Frame - Job Tracker Parity) */
+.cd-market-subcard, .cd-job-subcard {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 7px 9px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
-/* Mandatory Header Background Standard */
+.cd-market-subcard:hover {
+    border-color: #cbd5e1 !important;
+}
+
+/* Mandatory Header Background Standard (Anchored #f1f5f9 - Rule 20) */
 .cd-subcard-header {
-    background: #f8fafc !important;
+    background: #f1f5f9 !important;
     border-bottom: 1px solid #e2e8f0 !important;
-    padding: 6px 9px !important;
+    padding: 4px 8px !important;
+    margin: -7px -9px 6px -9px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 6px !important;
+    gap: 4px !important;
     flex-wrap: nowrap !important;
+    border-top-left-radius: 7px !important;
+    border-top-right-radius: 7px !important;
 }
 
 .cd-subcard-label {
-    font-size: 10px !important;
+    font-size: 9.5px !important;
     font-weight: 700 !important;
-    color: #475569 !important;
+    color: #64748b !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.4px !important;
+    letter-spacing: 0.3px !important;
     white-space: nowrap !important;
     display: flex !important;
     align-items: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
-.cd-badges-group {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: nowrap;
-    overflow: hidden;
+.cd-badges-group, .cd-header-badges {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
 }
 
-/* Sub-Card Bodies */
+/* Sub-Card Bodies (Zero Extra Outer Margin, Handled by Sub-Card Padding) */
 .cd-subcard-body {
-    padding: 8px 10px !important;
+    padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
@@ -1930,145 +1942,364 @@
     min-width: 0 !important;
 }
 
-/* Sub-Card 1: Role Profile */
-.cd-market-job-title {
-    font-size: 13.5px !important;
+/* Sub-Card 1: Job Details (Job Tracker Full Parity) */
+.cd-details-body {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.cd-logo-box {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    color: #009ef7 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+}
+
+.cd-logo-box img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    background-color: #ffffff !important;
+}
+
+.cd-logo-box span {
+    color: #009ef7 !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+}
+
+.cd-details-text {
+    flex: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.cd-job-title, .cd-market-job-title {
+    font-size: 12.5px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
-    margin: 0 0 2px 0 !important;
+    margin: 0 0 1px 0 !important;
     line-height: 1.3 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    cursor: pointer;
-    transition: color 0.15s ease;
+    display: block !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: color 0.12s ease !important;
 }
 
-.cd-market-job-title:hover {
+.cd-job-title:hover, .cd-market-job-title:hover {
     color: #009ef7 !important;
 }
 
-.cd-market-job-dept {
-    font-size: 11px !important;
-    color: #009ef7 !important;
-    font-weight: 500 !important;
-    margin-bottom: 5px !important;
+.cd-job-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    margin-top: 1px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    display: flex;
-    align-items: center;
+    line-height: 1.3 !important;
 }
 
-.cd-role-mandate-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    color: #64748b;
-    margin-top: auto;
+.cd-job-id, .jc-req-id {
+    font-weight: 600 !important;
+    color: #0284c7 !important;
+    font-size: 10.5px !important;
 }
 
-.cd-mandate-tag {
-    display: inline-flex;
-    align-items: center;
-    font-weight: 600;
-    color: #059669;
-    background: #ecfdf5;
-    border: 1px solid #a7f3d0;
-    border-radius: 5px;
-    padding: 1.5px 7px;
-    font-size: 10px;
-    line-height: 1.3;
+.cd-job-dept {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 10.5px !important;
+    color: #64748b !important;
 }
-.cd-mandate-tag.tag-direct {
-    color: #059669;
-    background: #ecfdf5;
-    border: 1px solid #a7f3d0;
+
+.cd-job-client-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-top: 3px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    line-height: 1.25 !important;
 }
-.cd-mandate-tag.tag-request {
-    color: #7c3aed;
-    background: #f5f3ff;
-    border: 1px solid #ddd6fe;
+
+/* Canonical Badges (Rule 25 & Job Tracker Parity) */
+.cd-badge-client-type {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1.3 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-badge-client-type i {
+    font-size: 8px !important;
+}
+
+.cd-badge-client-type.type-direct, .cd-mandate-tag.tag-direct {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+.cd-badge-client-type.type-request, .cd-mandate-tag.tag-request {
+    background: #f5f3ff !important;
+    color: #7c3aed !important;
+    border: 1px solid #ddd6fe !important;
+}
+
+.cd-status-badge {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1.3 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
+}
+
+.status-hiring, .jc-badge-open {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
+}
+
+.status-hold, .jc-badge-hold {
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
+}
+
+.cd-badge-type {
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border: 1px solid #bfdbfe !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1.3 !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-job-emp-type {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #2563eb !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
 }
 
 .cd-openings-count {
-    font-size: 10.5px;
-    color: #475569;
-    font-weight: 500;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
 }
 
-/* Sub-Card 2: Compensation & Work */
-.cd-comp-highlight {
-    font-size: 13px;
-    font-weight: 700;
-    color: #0f172a;
-    line-height: 1.25;
-    font-variant-numeric: tabular-nums;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.cd-bullet {
+    color: #cbd5e1 !important;
+    font-size: 8px !important;
+    margin: 0 1px !important;
 }
 
-.cd-comp-meta-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #475569;
-    font-weight: 500;
-    line-height: 1.35;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 3px;
+/* Sub-Card 2: Compensation & Exp */
+.cd-val-salary {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+.cd-val-exp {
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    margin-top: 2px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+}
+
+.cd-val-exp i {
+    font-size: 10px !important;
+    color: #94a3b8 !important;
+    flex-shrink: 0 !important;
+}
+
+.cd-val-loc {
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
 }
 
 .cd-location-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.cd-work-mode-badge {
+    background: #e0f2fe !important;
+    color: #0284c7 !important;
+    padding: 0.5px 5px !important;
+    border-radius: 4px !important;
+    font-size: 9px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
 }
 
 /* Sub-Card 3: Bench Match */
 .cd-subcard-bench {
-    cursor: pointer;
-    transition: background-color 0.15s, border-color 0.15s;
+    cursor: pointer !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease !important;
 }
 
 .cd-subcard-bench:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
 }
 
 .cd-bench-kpi-num {
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1.1;
-    margin: 2px 0 1px 0;
-    font-variant-numeric: tabular-nums;
-    text-align: center;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    margin: 1px 0 1px 0 !important;
+    font-variant-numeric: tabular-nums !important;
+    text-align: center !important;
 }
 
 .cd-bench-kpi-sub {
-    font-size: 10px;
-    color: #64748b;
-    line-height: 1.2;
-    text-align: center;
+    font-size: 10px !important;
+    color: #64748b !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    font-weight: 500 !important;
+}
+
+.cd-badge-active {
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    padding: 1px 4px !important;
+    border-radius: 4px !important;
+    background: #e0f2fe !important;
+    color: #0284c7 !important;
+    border: 1px solid #bae6fd !important;
+}
+
+/* Sub-Card 4: Commercial Terms */
+.cd-terms-rows {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+}
+
+.jc-ct-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+}
+
+.jc-ct-label {
+    color: #64748b !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+}
+
+.jc-ct-val {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    font-variant-numeric: tabular-nums !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.cd-badge-terms {
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    padding: 1px 4px !important;
+    border-radius: 4px !important;
+    background: #dcfce7 !important;
+    color: #166534 !important;
+    border: 1px solid #bbf7d0 !important;
 }
 
 /* Action Links inside Sub-Cards */
 .cd-subcard-link {
-    font-size: 10.5px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
     color: #009ef7 !important;
     text-decoration: none !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    margin-top: 4px !important;
+    gap: 3px !important;
+    margin-top: 3px !important;
     cursor: pointer !important;
+    line-height: 1.2 !important;
 }
 
 .cd-subcard-link:hover {
@@ -2076,92 +2307,172 @@
     color: #0081c7 !important;
 }
 
-/* Sub-Card 4: Commercial Terms */
-.cd-terms-rows {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    font-size: 10px;
-    line-height: 1.3;
-}
-
 /* Sub-Card 5: Submission & Telemetry */
 .cd-subcard-actions .cd-subcard-body {
-    gap: 5px;
-    justify-content: center;
+    gap: 4px !important;
+    justify-content: center !important;
 }
 
 .cd-actions-sec-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    width: 100%;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 4px !important;
+    width: 100% !important;
+    margin-top: 4px !important;
 }
 
 .cd-actions-sec-row .btn {
-    font-size: 10.5px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
-    padding: 3px 6px !important;
+    padding: 2px 6px !important;
     border-radius: 5px !important;
     line-height: 1.2 !important;
     white-space: nowrap !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
-/* Sub-Card 6: Bottom Activity Strip */
+.btn-cta-primary {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 10px !important;
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    border: none !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    transition: background-color 0.15s ease !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+}
+
+.btn-cta-primary:hover:not(:disabled) {
+    background: #0081c7 !important;
+    color: #ffffff !important;
+}
+
+.btn-cta-primary:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.8 !important;
+}
+
+.btn-cta-purple {
+    background: #7c3aed !important;
+}
+
+.btn-cta-purple:hover:not(:disabled) {
+    background: #6d28d9 !important;
+}
+
+.btn-cta-orange {
+    background: #ea580c !important;
+}
+
+.btn-cta-orange:hover:not(:disabled) {
+    background: #c2410c !important;
+}
+
+/* Sub-Card 6: Bottom Activity Strip (Job Tracker Parity) */
 .cd-market-card-bottom {
     border-top: 1px solid #f1f5f9 !important;
-    padding: 6px 14px !important;
+    padding: 5px 12px !important;
     background: #ffffff !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important;
     gap: 8px !important;
-    border-radius: 0 0 10px 10px !important;
+    border-radius: 0 0 8px 8px !important;
     font-family: 'Poppins', sans-serif !important;
+    box-sizing: border-box !important;
 }
 
 .cd-bottom-telemetry {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    font-size: 10.5px;
-    color: #64748b;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
 }
 
 .cd-bottom-telemetry strong {
-    color: #0f172a;
-    font-weight: 600;
+    color: #0f172a !important;
+    font-weight: 600 !important;
 }
 
 .cd-bottom-skills {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: wrap;
-    flex: 1 1 auto;
-    justify-content: flex-end;
-    overflow: hidden;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-wrap: nowrap !important;
+    flex: 1 1 auto !important;
+    justify-content: flex-end !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.cd-bottom-skills::-webkit-scrollbar {
+    display: none !important;
+}
+
+.cd-skill-pill, .skill-tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 1px 7px !important;
+    border-radius: 4px !important;
+    background: #f8fafc !important;
+    color: #334155 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    border: 1px solid #e2e8f0 !important;
+    white-space: nowrap !important;
+    line-height: 1.4 !important;
+    flex-shrink: 0 !important;
+}
+
+.skill-tag.skill-more {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border-color: #bfdbfe !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+}
+
+.skill-tag.skill-more:hover {
+    background: #dbeafe !important;
 }
 
 .cd-bottom-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
 }
 
 .cd-bottom-actions .cd-icon-btn {
-    font-size: 12.5px;
-    color: #94a3b8;
-    cursor: pointer;
-    transition: color 0.15s;
-    padding: 2px 4px;
+    font-size: 11.5px !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    transition: color 0.15s !important;
+    padding: 2px 4px !important;
 }
 
 .cd-bottom-actions .cd-icon-btn:hover {
-    color: #009ef7;
+    color: #009ef7 !important;
 }
 
 /* ==========================================================================

@@ -138,7 +138,73 @@ php artisan test --filter=MarketJobV2Test
 
 ---
 
-## 6. Backward Compatibility & Architectural Integrity
+## 7. Job Tracker Sub-Card Redesign & Enterprise Typography Scale Parity
+
+Following the baseline Modern Card + Sub-Card redesign, the subcards were further refactored to achieve 100% design and typographic parity with the **Job Tracker (`/service_company/jobs`)** canonical implementation (`tab-jobs-style.blade.php` & `jobs/index.blade.php`).
+
+### 1. Enterprise Typography Scale Matrix (Rule 14 & Rule 20)
+All ad-hoc, oversized fonts were stripped and replaced with the strict enterprise typography scale:
+
+| Component | Target Element | Previous Size | Redesigned Enterprise Size | Font Weight & Color | Notes |
+|---|---|---|---|---|---|
+| **Job Title** | `.cd-market-job-title` | 13.5px - 14px | **12.5px** | 700 / `#0f172a` | Truncated with ellipsis, line-height 1.3 |
+| **Subcard Header Labels** | `.cd-subcard-label` | 10px | **9.5px** | 700 / `#64748b` | Uppercase, tracking 0.3px |
+| **Primary Data / Salary** | `.cd-val-salary` | 13px | **11.5px** | 700 / `#0f172a` | Tabular numerals, clean currency range |
+| **Secondary Metadata** | `.cd-job-meta`, `.cd-val-exp`, `.cd-val-loc` | 11px | **10.5px** | 500 / `#475569` or `#64748b` | Compact metadata rows with muted icons |
+| **Req ID Reference** | `.jc-req-id`, `.cd-job-id` | 11px | **10.5px** | 600 / `#0284c7` | Clean cyan-blue identifier |
+| **Micro-Badges & Tags** | `.cd-badge-client-type`, `.cd-status-badge`, `.cd-badge-type` | 10px | **8.5px** | 700 / Semantic | Uppercase, tracking 0.2px, 1px 6px padding |
+| **Bench Match KPI Metric** | `.cd-bench-kpi-num` | 22px | **18px** | 800 / `#009ef7` or `#64748b` | Compact tabular numeral (not oversized) |
+| **Subcard Links** | `.cd-subcard-link` | 10.5px | **10px** | 600 / `#009ef7` | Clean inline chevron action links |
+| **Tabular Commercial Rows** | `.jc-ct-row` (`.jc-ct-label` / `.jc-ct-val`) | 10px - 11px | **10px** | 500 label / 600 value | Tabular key-value format |
+| **Primary CTA Button** | `.btn-cta-primary` | 32px height / 12px font | **28px height / 11px font** | 600 / `#ffffff` | Rounded 6px, crisp hover transition |
+| **Secondary CTA Buttons** | `.cd-actions-sec-row .btn` | 28px height / 11px font | **24px height / 10px font** | 600 / Semantic | 2-column grid (`View Req` & `Terms`) |
+| **Activity Strip Telemetry** | `.cd-bottom-telemetry` | 11px | **10.5px** | 500 label / 600 value | Bullet-separated timestamps with timezone |
+| **Skill Pills** | `.cd-skill-pill`, `.skill-tag` | 11px | **10px** | 500 / `#334155` | Rounded 4px, background `#f8fafc` |
+
+### 2. Subcard Structural Breakdown (Job Tracker Parity)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ TIER 3: DISCRETE UPPER SUB-CARDS GRID (Job Tracker Parity)                                                             │
+├─────────────────────┬──────────────────────┬────────────────────┬─────────────────────┬────────────────────────────────┤
+│ SUB-CARD 1:         │ SUB-CARD 2:          │ SUB-CARD 3:        │ SUB-CARD 4:         │ SUB-CARD 5:                    │
+│ [💼] JOB DETAILS    │ [🪙] COMPENSATION    │ [👥] BENCH MATCH   │ [📄] COMMERCIAL     │ [✈️] SUBMISSION                 │
+│ [OPEN] [Full-Time]  │                      │ [ACTIVE]           │ [TERMS]             │                                │
+│ ─────────────────── │ ──────────────────── │ ────────────────── │ ─────────────────── │ ────────────────────────────── │
+│ [Logo Box] Title    │ ₹45K – 60K / M       │       12           │ Fee: 8.33% of CTC   │ [ Submit Candidates (CTA) ]    │
+│ #REQ-ID • Dept      │ 3 – 5 Years Exp      │ Matching Candidates│ Replacement: 90 Days│ [ View Req ]   [ Terms ]       │
+│ [Direct] • Full-Time│ London • Work Mode   │ View Matches →     │ Pay Terms: 30 Days  │                                │
+│ • 3 Openings        │                      │                    │ View Full Terms →   │                                │
+├─────────────────────┴──────────────────────┴────────────────────┴─────────────────────┴────────────────────────────────┤
+│ SUB-CARD 6: BOTTOM ACTIVITY STRIP (Full Width)                                                                         │
+│ Posted: 22 Nov 26, 09:30 PM IST (3d ago) • Updated: Recently • Deadline: Open till filled  │ [PHP] [MySQL] [AWS]  [🔖] [⋮]│
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Subcard 1: Job Details (Role Profile):**
+   - **Logo Avatar Box (`.cd-logo-box`):** 38px × 38px white `#ffffff` box with `#e2e8f0` border and 8px border-radius, rendering the dynamic uppercase initial letter in primary blue `#009ef7` with 700 weight.
+   - **Title & Metadata:** Title in 12.5px (`#0f172a`), Req ID in cyan `#0284c7`, department in muted slate, bullet separators (`&bull;`), canonical `Direct Client` badge (`.tag-direct` Emerald), optional `Job Request` badge (`.tag-request` Violet), employment type with briefcase icon, and openings counter.
+   - **Header:** Uppercase `JOB DETAILS` label with status badge (`OPEN` `#dcfce7` or `HOLD` `#fef3c7`) and employment type badge.
+
+2. **Subcard 2: Compensation & Exp:**
+   - **Header:** Uppercase `COMPENSATION & EXP` with warning coin icon.
+   - **Body:** 11.5px bold salary range, 10.5px experience range with user icon, 10.5px location display with red pin icon, bullet separator, and soft blue `Work From Office` badge (`.cd-work-mode-badge`).
+
+3. **Subcard 3: Bench Match:**
+   - **Header:** Uppercase `BENCH MATCH` with user-check icon and soft blue `ACTIVE` micro-badge.
+   - **Body:** 18px bold KPI counter (`#009ef7` if > 0), 10px `Matching Candidates` label, and `View Matches →` action link triggering the bench talents drawer.
+
+4. **Subcard 4: Commercial Terms:**
+   - **Header:** Uppercase terms title (`HIRING TERMS` / `CONTRACT TERMS` / `BENCH TERMS`) with invoice icon and soft green `TERMS` micro-badge.
+   - **Body:** 10px tabular key-value rows (`.jc-ct-row`) displaying Fee/Rate, Replacement/Billing Model, and Payment Terms, followed by `View Full Terms →` link.
+
+5. **Subcard 5: Submission & Telemetry:**
+   - **Header:** Uppercase `SUBMISSION` with paper-plane icon.
+   - **Body:** Primary CTA button (`btn-cta-primary`, 28px height, 11px font) + 2-column secondary action buttons (`View Req` and `Terms`, 24px height, 10px font).
+
+6. **Subcard 6: Bottom Activity Strip:**
+   - Full-width white `#ffffff` container with `#f1f5f9` top border, 10.5px bullet-separated timestamps (Posted Date in tenant timezone via Rule 24, Updated Ago, and Deadline), horizontal-scrolling skill pills (`.cd-skill-pill`), and quick action icons (Save Job bookmark and More Options ellipsis).
+
 
 1. **DOM ID & Event Handler Parity:**
    - All legacy IDs (`#kpi_card_all`, `#kpi_card_fulltime`, `#kpi_card_contract`, `#kpi_card_freelance`, `#kpi_card_parttime`, `#kpi_card_agency_request`) and count containers (`#kpi_num_*`) were strictly preserved.

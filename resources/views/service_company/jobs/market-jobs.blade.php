@@ -2807,14 +2807,12 @@
         }
 
         function renderMarketJobCard(row) {
-            // ── Status badge (OPEN / HOLD) ──
-            let statusBadgeClass = 'jc-badge-open';
-            let statusDotClass   = 'jc-dot-open';
-            let statusText       = 'Active · Open';
+            // ── Status badge (OPEN / HOLD) & Icon (Job Tracker parity) ──
+            let statusBadgeClass = 'jc-badge-open status-hiring';
+            let statusIcon = 'fa-user-group';
             if (row.status_label === 'HOLD') {
-                statusBadgeClass = 'jc-badge-hold';
-                statusDotClass   = 'jc-dot-hold';
-                statusText       = 'Hold';
+                statusBadgeClass = 'jc-badge-hold status-hold';
+                statusIcon = 'fa-pause';
             }
 
             // ── Employment type badge ──
@@ -2830,10 +2828,13 @@
                 typeBadgeClass = 'jc-badge-bench';
             }
 
-            // ── Skills HTML ──
-            let skillTagsHtml = (row.skills || []).map(s => `<span class="skill-tag">${escapeHtmlAttr(s)}</span>`).join('');
+            // ── Initial letter for logo avatar box (Job Tracker parity) ──
+            let initialLetter = (row.title && row.title.length > 0) ? row.title.charAt(0).toUpperCase() : 'J';
+
+            // ── Skills HTML (Job Tracker parity) ──
+            let skillTagsHtml = (row.skills || []).map(s => `<span class="cd-skill-pill skill-tag">${escapeHtmlAttr(s)}</span>`).join('');
             if (row.remaining_skills_count > 0) {
-                skillTagsHtml += `<span class="skill-tag skill-more client-show-detail" data-row-id="${row.id}">+${row.remaining_skills_count}</span>`;
+                skillTagsHtml += `<span class="cd-skill-pill skill-tag skill-more client-show-detail" data-row-id="${row.id}">+${row.remaining_skills_count}</span>`;
             }
 
             // ── Action button (Col 5 primary CTA) ──
@@ -2927,55 +2928,69 @@
                 <!-- UPPER DISCRETE SUB-CARDS GRID -->
                 <div class="cd-market-card-grid">
 
-                    <!-- SUB-CARD 1: Role Profile -->
+                    <!-- SUB-CARD 1: Job Details (Job Tracker Parity) -->
                     <div class="cd-market-subcard cd-subcard-role">
                         <div class="cd-subcard-header">
-                            <span class="cd-subcard-label"><i class="fas fa-briefcase text-primary me-1"></i>ROLE PROFILE</span>
-                            <div class="cd-badges-group">
-                                <span class="jc-badge ${statusBadgeClass}">
-                                    <span class="jc-dot-mini"></span>${row.status_label || 'OPEN'}
+                            <span class="cd-subcard-label"><i class="fas fa-briefcase text-primary me-1"></i>JOB DETAILS</span>
+                            <div class="cd-header-badges">
+                                <span class="cd-status-badge ${statusBadgeClass}">
+                                    <i class="fas ${statusIcon} me-1"></i>${row.status_label || 'OPEN'}
                                 </span>
-                                <span class="jc-badge ${typeBadgeClass}">${typeLabel}</span>
-                                <span class="jc-req-id">${row.req_id}</span>
+                                <span class="cd-badge-type">${typeLabel}</span>
                             </div>
                         </div>
                         <div class="cd-subcard-body">
-                            <h2 class="cd-market-job-title market-show-detail" data-row-id="${row.id}" title="${escapeHtmlAttr(row.title)}">${escapeHtmlAttr(row.title_short || row.title)}</h2>
-                            <div class="cd-market-job-dept" title="${escapeHtmlAttr(row.department || '')}"><i class="far fa-folder-open text-muted me-1"></i>${escapeHtmlAttr(row.department || 'General')}</div>
-                            <div class="cd-role-mandate-row">
-                                <span class="cd-mandate-tag tag-direct"><i class="fas fa-shield-alt me-1"></i>Direct Client</span>
-                                ${row.public_market_status === 2 || row.action_type === 'apply_agency' ? '<span class="cd-mandate-tag tag-request"><i class="fas fa-handshake me-1"></i>Job Request</span>' : ''}
-                                <span class="cd-openings-count"><i class="fas fa-users text-muted me-1"></i>${row.total_positions} Openings</span>
+                            <div class="cd-details-body">
+                                <div class="cd-logo-box">
+                                    <span>${initialLetter}</span>
+                                </div>
+                                <div class="cd-details-text">
+                                    <a href="javascript:void(0);" class="cd-job-title cd-market-job-title market-show-detail" data-row-id="${row.id}" title="${escapeHtmlAttr(row.title)}">${escapeHtmlAttr(row.title_short || row.title)}</a>
+                                    <div class="cd-job-meta">
+                                        <span class="cd-job-id jc-req-id">${row.req_id}</span>
+                                        <span class="cd-bullet">&bull;</span>
+                                        <span class="cd-job-dept" title="${escapeHtmlAttr(row.department || '')}"><i class="far fa-folder-open text-muted me-1"></i>${escapeHtmlAttr(row.department || 'General')}</span>
+                                    </div>
+                                    <div class="cd-job-client-row">
+                                        <span class="cd-badge-client-type type-direct tag-direct"><i class="fas fa-shield-alt me-1"></i>Direct Client</span>
+                                        ${row.public_market_status === 2 || row.action_type === 'apply_agency' ? '<span class="cd-bullet">&bull;</span><span class="cd-badge-client-type type-request tag-request"><i class="fas fa-handshake me-1"></i>Job Request</span>' : ''}
+                                        <span class="cd-bullet">&bull;</span>
+                                        <span class="cd-job-emp-type"><i class="fas fa-briefcase text-primary me-1"></i>${typeLabel}</span>
+                                        <span class="cd-bullet">&bull;</span>
+                                        <span class="cd-openings-count"><i class="fas fa-users text-muted me-1"></i>${row.total_positions} Openings</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 2: Compensation & Work Mode -->
+                    <!-- SUB-CARD 2: Compensation & Exp (Job Tracker Parity) -->
                     <div class="cd-market-subcard cd-subcard-comp">
                         <div class="cd-subcard-header">
-                            <span class="cd-subcard-label"><i class="fas fa-coins text-warning me-1"></i>COMPENSATION &amp; WORK</span>
+                            <span class="cd-subcard-label"><i class="fas fa-coins text-warning me-1"></i>COMPENSATION &amp; EXP</span>
                         </div>
                         <div class="cd-subcard-body">
-                            <div class="cd-comp-highlight">
-                                <strong>${salaryDisplay}</strong>
-                            </div>
-                            <div class="cd-comp-meta-row">
+                            <div class="cd-val-salary"><strong>${salaryDisplay}</strong></div>
+                            <div class="cd-val-exp">
                                 <i class="far fa-user text-muted me-1"></i>
                                 <span>${row.min_exp} – ${row.max_exp} Years Exp</span>
                             </div>
-                            <div class="cd-comp-meta-row" title="${escapeHtmlAttr(locationText)}">
-                                <i class="fa-solid fa-location-dot text-danger me-1"></i>
-                                <span class="cd-location-name">${escapeHtmlAttr(locationText)}</span> • <span class="badge badge-light-primary px-1.5 py-0 fs-8">${escapeHtmlAttr((row.work_type === 'Office' || !row.work_type) ? 'Work From Office' : row.work_type)}</span>
+                            <div class="cd-val-loc" title="${escapeHtmlAttr(locationText)}">
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                                <span class="cd-location-name">${escapeHtmlAttr(locationText)}</span>
+                                <span class="cd-bullet">&bull;</span>
+                                <span class="cd-work-mode-badge">${escapeHtmlAttr((row.work_type === 'Office' || !row.work_type) ? 'Work From Office' : row.work_type)}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 3: Your Bench Match -->
+                    <!-- SUB-CARD 3: Your Bench Match (Job Tracker Parity) -->
                     <div class="cd-market-subcard cd-subcard-bench open-bench-talents"
                          data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}"
                          role="button" tabindex="0" title="View matching bench talents">
                         <div class="cd-subcard-header">
                             <span class="cd-subcard-label"><i class="fas fa-user-check text-primary me-1"></i>BENCH MATCH</span>
+                            <span class="cd-badge-active">ACTIVE</span>
                         </div>
                         <div class="cd-subcard-body text-center">
                             <div class="cd-bench-kpi-num ${row.bench_match_count > 0 ? 'text-primary' : 'text-gray-700'}">${row.bench_match_count || 0}</div>
@@ -2984,10 +2999,11 @@
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 4: Commercial Terms -->
+                    <!-- SUB-CARD 4: Commercial Terms (Job Tracker Parity) -->
                     <div class="cd-market-subcard cd-subcard-terms">
                         <div class="cd-subcard-header">
                             <span class="cd-subcard-label"><i class="fas fa-file-invoice-dollar text-success me-1"></i>${termsTitle.toUpperCase()}</span>
+                            <span class="cd-badge-terms">TERMS</span>
                         </div>
                         <div class="cd-subcard-body">
                             <div class="cd-terms-rows">
@@ -3000,7 +3016,7 @@
                         </div>
                     </div>
 
-                    <!-- SUB-CARD 5: Submission & Telemetry -->
+                    <!-- SUB-CARD 5: Submission & Telemetry (Job Tracker Parity) -->
                     <div class="cd-market-subcard cd-subcard-actions">
                         <div class="cd-subcard-header">
                             <span class="cd-subcard-label"><i class="fas fa-paper-plane text-info me-1"></i>SUBMISSION</span>
@@ -3008,19 +3024,21 @@
                         <div class="cd-subcard-body">
                             ${actionBtnHtml}
                             <div class="cd-actions-sec-row">
-                                <button class="btn btn-sm btn-light-primary py-1 px-2 fs-8 w-100 market-show-detail" data-row-id="${row.id}">View Req</button>
-                                <button class="btn btn-sm btn-light-secondary py-1 px-2 fs-8 w-100 client-terms-listing-find-job" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">Terms</button>
+                                <button class="btn btn-sm btn-light-primary market-show-detail" data-row-id="${row.id}">View Req</button>
+                                <button class="btn btn-sm btn-light-secondary client-terms-listing-find-job" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">Terms</button>
                             </div>
                         </div>
                     </div>
 
                 </div>
 
-                <!-- SUB-CARD 6: BOTTOM ACTIVITY STRIP -->
+                <!-- SUB-CARD 6: BOTTOM ACTIVITY STRIP (Job Tracker Parity) -->
                 <div class="cd-market-card-bottom">
                     <div class="cd-bottom-telemetry">
                         <span><i class="far fa-calendar-alt text-muted me-1"></i>Posted: <strong>${postedDate}</strong></span>
+                        <span class="cd-bullet">&bull;</span>
                         <span><i class="fas fa-history text-success me-1"></i>Updated: <strong class="text-success">${row.updated_at_ago || 'Recently'}</strong></span>
+                        <span class="cd-bullet">&bull;</span>
                         <span><i class="far fa-clock text-warning me-1"></i>Deadline: <strong class="${row.is_bench_enabled ? 'text-success' : (row.is_direct_expired ? 'text-danger' : 'text-gray-700')}">${row.submission_deadline_formatted || 'Open till filled'}</strong></span>
                     </div>
 
