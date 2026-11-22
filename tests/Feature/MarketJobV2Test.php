@@ -402,4 +402,67 @@ class MarketJobV2Test extends TestCase
         $benchmarkClass = \Tests\Performance\MarketJobsLoadTestBenchmark::class;
         $this->assertTrue(class_exists($benchmarkClass), 'MarketJobsLoadTestBenchmark class must exist');
     }
+
+    /**
+     * Test Client Tracker Parity for Market Jobs Tabs (6 KPI Stat Cards) and Standalone Filter Bar.
+     */
+    public function test_market_jobs_tabs_and_filter_bar_client_tracker_parity(): void
+    {
+        $bladePath = resource_path('views/service_company/jobs/market-jobs.blade.php');
+        $this->assertFileExists($bladePath);
+        $content = file_get_contents($bladePath);
+
+        // 1. Tier 2: 6 Stat Cards Grid (.cl-stat-grid)
+        $this->assertStringContainsString('class="cl-stat-grid"', $content, 'Must contain .cl-stat-grid');
+        $this->assertStringContainsString('id="marketKpiGrid"', $content, 'Must contain #marketKpiGrid');
+
+        // All 6 tabs with .cl-card.cl-stat-filter
+        $tabs = ['all', 'fulltime', 'contract', 'freelance', 'parttime', 'agency_request'];
+        foreach ($tabs as $tab) {
+            $this->assertStringContainsString('data-tab="' . $tab . '"', $content, "Must contain tab for $tab");
+            $this->assertStringContainsString('id="kpi_card_' . $tab . '"', $content, "Must contain card ID for $tab");
+            $this->assertStringContainsString('id="kpi_num_' . $tab . '"', $content, "Must contain number count ID for $tab");
+        }
+
+        // Semantic colors on card icons
+        $this->assertStringContainsString('cl-card-icon blue', $content);
+        $this->assertStringContainsString('cl-card-icon green', $content);
+        $this->assertStringContainsString('cl-card-icon orange', $content);
+        $this->assertStringContainsString('cl-card-icon indigo', $content);
+        $this->assertStringContainsString('cl-card-icon pink', $content);
+        $this->assertStringContainsString('cl-card-icon purple', $content);
+
+        // 2. Tier 3: Standalone Search & Filter Bar (.cl-filter-bar)
+        $this->assertStringContainsString('class="cl-filter-bar"', $content, 'Must contain .cl-filter-bar');
+        $this->assertStringContainsString('id="marketSearchBoxWrapper"', $content, 'Must contain #marketSearchBoxWrapper');
+        $this->assertStringContainsString('id="kt_tagify_2"', $content, 'Must contain search input #kt_tagify_2');
+        $this->assertStringContainsString('id="clSearchClearBtn"', $content, 'Must contain clear button #clSearchClearBtn');
+        $this->assertStringContainsString('id="clSearchMatchCount"', $content, 'Must contain match count #clSearchMatchCount');
+        $this->assertStringContainsString('id="clSearchKbdHint"', $content, 'Must contain Ctrl+K hint');
+
+        // Filter button
+        $this->assertStringContainsString('id="kt_market_filter_toggle"', $content, 'Must contain filter button toggle');
+        $this->assertStringContainsString('class="cl-filter-btn"', $content, 'Must use .cl-filter-btn class');
+        $this->assertStringContainsString('id="simf_count_badge"', $content, 'Must contain filter count badge');
+
+        // Sort combobox & popover panel
+        $this->assertStringContainsString('id="marketSortDropdownWrapper"', $content, 'Must contain #marketSortDropdownWrapper');
+        $this->assertStringContainsString('id="marketSortBtn"', $content, 'Must contain #marketSortBtn');
+        $this->assertStringContainsString('id="marketSortDisplay"', $content, 'Must contain #marketSortDisplay');
+        $this->assertStringContainsString('id="marketSortDropdownPanel"', $content, 'Must contain #marketSortDropdownPanel');
+        $this->assertStringContainsString('id="hiringtype"', $content, 'Must contain hidden #hiringtype select');
+
+        // CSS stylesheet check
+        $cssPath = base_path('demo/css/find-market-jobs.css');
+        $this->assertFileExists($cssPath);
+        $cssContent = file_get_contents($cssPath);
+        $this->assertStringContainsString('.cl-stat-grid', $cssContent);
+        $this->assertStringContainsString('.cl-filter-bar', $cssContent);
+        $this->assertStringContainsString('.cl-card.active[data-tab="all"]', $cssContent);
+        $this->assertStringContainsString('.cl-card.active[data-tab="fulltime"]', $cssContent);
+        $this->assertStringContainsString('.cl-card.active[data-tab="contract"]', $cssContent);
+        $this->assertStringContainsString('.cl-card.active[data-tab="freelance"]', $cssContent);
+        $this->assertStringContainsString('.cl-card.active[data-tab="parttime"]', $cssContent);
+        $this->assertStringContainsString('.cl-card.active[data-tab="agency_request"]', $cssContent);
+    }
 }
