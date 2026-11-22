@@ -252,6 +252,8 @@ body { overflow-x: hidden !important; }
 .jt-drop-ico.act { background: #eef2ff; color: #4f46e5; }
 .jt-drop-ico.wrn { background: #fff7ed; color: #ea580c; }
 .jt-drop-ico.rst { background: #fffbeb; color: #d97706; }
+.jt-drop-ico.suc { background: #ecfdf5; color: #059669; }
+.jt-drop-ico.dng { background: #fee2e2; color: #dc2626; }
 
 .jt-drop-title {
     font-size: 12px !important;
@@ -724,7 +726,6 @@ body { overflow-x: hidden !important; }
 
 .jt-tab-btn:not(.active) .jt-tab-badge.badge-today     { background: #ede9fe !important; color: #6d28d9 !important; }
 .jt-tab-btn:not(.active) .jt-tab-badge.badge-week      { background: #eff6ff !important; color: #1d4ed8 !important; }
-.jt-tab-btn:not(.active) .jt-tab-badge.badge-delayed   { background: #ffedd5 !important; color: #c2410c !important; }
 .jt-tab-btn:not(.active) .jt-tab-badge.badge-noshow    { background: #fee2e2 !important; color: #b91c1c !important; }
 .jt-tab-btn:not(.active) .jt-tab-badge.badge-docs      { background: #fef3c7 !important; color: #b45309 !important; }
 .jt-tab-btn:not(.active) .jt-tab-badge.badge-onboarded { background: #dcfce7 !important; color: #15803d !important; }
@@ -1722,11 +1723,20 @@ body { overflow-x: hidden !important; }
                         </a>
                     </li>
                     <li>
-                        <a class="jt-dropdown-item" href="javascript:void(0);" onclick="selectJoiningTab('delayed')">
-                            <span class="jt-drop-ico wrn"><i class="fas fa-hourglass-half"></i></span>
+                        <a class="jt-dropdown-item" href="javascript:void(0);" onclick="selectJoiningTab('onboarded')">
+                            <span class="jt-drop-ico suc"><i class="far fa-check-circle"></i></span>
                             <span>
-                                <span class="jt-drop-title">Review Delayed Joinings</span>
-                                <span class="jt-drop-sub">Reschedule &amp; follow-up queue</span>
+                                <span class="jt-drop-title">Joined &amp; Onboarded</span>
+                                <span class="jt-drop-sub">Successfully onboarded candidates</span>
+                            </span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="jt-dropdown-item" href="javascript:void(0);" onclick="selectJoiningTab('backed_out')">
+                            <span class="jt-drop-ico dng"><i class="far fa-times-circle"></i></span>
+                            <span>
+                                <span class="jt-drop-title">Joined &amp; Backedout</span>
+                                <span class="jt-drop-sub">Candidates who backed out or no-show</span>
                             </span>
                         </a>
                     </li>
