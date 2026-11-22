@@ -26,6 +26,9 @@ This audit documents the secondary refinement and optimization of **Step 4 (Appr
    - Removed circular timeline nodes (`.co-appr-tl-dot`), connector lines (`.co-appr-tl-connector`), and rail spacers. Approver entries now flow as a clean card stream with 3.5px left status border accents.
 6. **Universal Icon Vectorization:**
    - Fixed empty character boxes (`□`) by removing the aggressive universal `#step4 * { font-family: 'Poppins' }` selector and vectorizing all icons with inline SVGs, guaranteeing 100% render reliability across all operating systems and browsers.
+7. **Action Button Clarity & Typography Calibration:**
+   - Redesigned `+ Add Approver` with a solid Dark Slate background (`#1e293b`), crisp white text (`#ffffff`), white vector SVG plus icon, and elevation shadow (`0 1px 3px rgba(15, 23, 42, 0.15)`) for immediate contrast against the `#f8fafc` subcard header.
+   - Standardized typography scale to enterprise levels: 12.5px approver names, 11px uppercase table headers, 10.5px role pills, 11.5px reminder buttons, and tabular numbers for all timestamps.
 
 ---
 

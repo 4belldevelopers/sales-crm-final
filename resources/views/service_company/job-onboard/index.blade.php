@@ -626,6 +626,98 @@ body { overflow-x: hidden !important; }
     cursor: pointer !important;
 }
 
+/* Rule 25 Canonical Organization Filter Dropdown (matching Offer Tracker) */
+.jt-tb-org-wrap {
+    background: #f8fafc !important;
+    border: 1px solid var(--jt-border) !important;
+    border-radius: 8px !important;
+    padding: 0 12px !important;
+    height: 38px !important;
+    flex-shrink: 0 !important;
+    width: 200px !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
+}
+.jt-tb-org-wrap:hover {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+.jt-tb-org-wrap:focus-within,
+.jt-tb-org-wrap.open {
+    background: #ffffff !important;
+    border-color: var(--jt-primary) !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+.jt-tb-org-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--jt-text-main) !important;
+    text-align: left !important;
+    cursor: pointer !important;
+}
+.jt-tb-org-btn:focus { outline: none !important; }
+.jt-tb-org-icon {
+    width: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12.5px !important;
+    flex-shrink: 0 !important;
+}
+.jt-tb-org-label {
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+.jt-tb-org-btn .chevron {
+    flex-shrink: 0 !important;
+    color: #94a3b8 !important;
+    transition: transform 0.15s ease !important;
+}
+.jt-tb-org-btn.open .chevron { transform: rotate(180deg) !important; }
+.jt-tb-org-panel {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: 0 !important;
+    min-width: 220px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 25px -5px rgba(16, 24, 40, 0.12), 0 4px 6px -2px rgba(16, 24, 40, 0.06) !important;
+    padding: 6px !important;
+    z-index: 60 !important;
+}
+.jt-tb-org-item {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #3f4254 !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    transition: all 0.15s ease !important;
+}
+.jt-tb-org-item:hover { background: #f8fafc !important; }
+.jt-tb-org-item.active { background: #eff6ff !important; color: #1d4ed8 !important; font-weight: 600 !important; }
+.jt-tb-org-item .jt-tb-org-check { margin-left: auto !important; font-size: 11px !important; display: none !important; }
+.jt-tb-org-item.active .jt-tb-org-check { display: inline-block !important; color: #1d4ed8 !important; }
+
 .jt-reset-btn {
     height: 38px !important;
     padding: 0 12px !important;
@@ -1755,7 +1847,7 @@ body { overflow-x: hidden !important; }
                             <span class="jt-drop-ico csv"><i class="fas fa-undo-alt"></i></span>
                             <span>
                                 <span class="jt-drop-title">Reset All Filters</span>
-                                <span class="jt-drop-sub">Clear search, location &amp; tab</span>
+                                <span class="jt-drop-sub">Clear search, organization &amp; tab</span>
                             </span>
                         </a>
                     </li>
@@ -1924,14 +2016,43 @@ body { overflow-x: hidden !important; }
         </div>
 
         <div class="jt-inline-filters">
-            <div class="jt-filter-pill">
-                <span class="jt-filter-pill-lbl"><i class="fas fa-map-marker-alt text-muted"></i> Location:</span>
-                <select class="jt-filter-select" id="jt_country" aria-label="Filter by location">
-                    <option value="">All Locations</option>
-                    @foreach($countries as $c)
-                    <option value="{{ $c->id }}">{{ $c->country_name }}</option>
-                    @endforeach
+            {{-- Organization Dropdown (Rule 25 Canonical Dropdown matching Offer Tracker & Candidate Tracker) --}}
+            <div class="jt-tb-org-wrap" id="jt_org_wrap">
+                <button type="button" class="jt-tb-org-btn" id="jt_org_btn" title="Filter by organization classification">
+                    <span class="jt-tb-org-icon" id="jt_org_btn_icon">
+                        <i class="fa fa-layer-group" style="color: #2563eb;"></i>
+                    </span>
+                    <span class="jt-tb-org-label" id="jt_org_label">All Organizations</span>
+                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <select id="jt_company_type_select" style="display:none;">
+                    <option value="all" selected>All Organizations</option>
+                    <option value="my_organization">My Organization</option>
+                    <option value="internal_client">Internal Client</option>
+                    <option value="direct_client">Direct Client</option>
                 </select>
+                <div class="jt-tb-org-panel d-none" id="jt_org_panel">
+                    <div class="jt-tb-org-item active" data-value="all" data-icon="fa fa-layer-group" data-icon-color="#2563eb">
+                        <span class="jt-tb-org-item-icon" style="color: #2563eb; width: 16px; text-align: center;"><i class="fa fa-layer-group"></i></span>
+                        <span class="jt-tb-org-item-text">All Organizations</span>
+                        <span class="jt-tb-org-check"><i class="fa fa-check"></i></span>
+                    </div>
+                    <div class="jt-tb-org-item" data-value="my_organization" data-icon="fa fa-id-badge" data-icon-color="#d97706">
+                        <span class="jt-tb-org-item-icon" style="color: #d97706; width: 16px; text-align: center;"><i class="fa fa-id-badge"></i></span>
+                        <span class="jt-tb-org-item-text">My Organization</span>
+                        <span class="jt-tb-org-check"><i class="fa fa-check"></i></span>
+                    </div>
+                    <div class="jt-tb-org-item" data-value="internal_client" data-icon="fa fa-building" data-icon-color="#2563eb">
+                        <span class="jt-tb-org-item-icon" style="color: #2563eb; width: 16px; text-align: center;"><i class="fa fa-building"></i></span>
+                        <span class="jt-tb-org-item-text">Internal Client</span>
+                        <span class="jt-tb-org-check"><i class="fa fa-check"></i></span>
+                    </div>
+                    <div class="jt-tb-org-item" data-value="direct_client" data-icon="fa fa-shield-alt" data-icon-color="#059669">
+                        <span class="jt-tb-org-item-icon" style="color: #059669; width: 16px; text-align: center;"><i class="fa fa-shield-alt"></i></span>
+                        <span class="jt-tb-org-item-text">Direct Client</span>
+                        <span class="jt-tb-org-check"><i class="fa fa-check"></i></span>
+                    </div>
+                </div>
             </div>
 
             <div class="jt-filter-pill">
@@ -2048,7 +2169,7 @@ body { overflow-x: hidden !important; }
         page: 1,
         size: parseInt(localStorage.getItem('candidatePerPage'), 10) || 10,
         search: '',
-        country: '',
+        companyType: 'all',
         sort: '12',
         tab: 'all'
     };
@@ -2065,7 +2186,7 @@ body { overflow-x: hidden !important; }
         store: new Map(),
 
         makeKey: function (s) {
-            return [TENANT_ID, s.page, s.size, s.search.trim().toLowerCase(), s.country, s.sort, s.tab].join('|');
+            return [TENANT_ID, s.page, s.size, s.search.trim().toLowerCase(), s.companyType, s.sort, s.tab].join('|');
         },
 
         get: function (s) {
@@ -2218,7 +2339,6 @@ body { overflow-x: hidden !important; }
         stream: document.getElementById('joining-tracker'),
         pagination: document.getElementById('jt_pagination'),
         search: document.getElementById('jt_search'),
-        country: document.getElementById('jt_country'),
         sort: document.getElementById('jt_sort'),
         refreshBtn: document.getElementById('jtRefreshBtn')
     };
@@ -2311,7 +2431,7 @@ body { overflow-x: hidden !important; }
                 size               : state.size,
                 per_page           : state.size,
                 cus_search         : state.search,
-                country            : state.country,
+                company_type       : state.companyType === 'all' ? '' : state.companyType,
                 sortingfilter      : state.sort,
                 joining_tab_filter : state.tab,
             },
@@ -2365,16 +2485,50 @@ body { overflow-x: hidden !important; }
         }
     }
 
+    /* ── Organization Dropdown (Rule 25 Canonical Dropdown matching Offer Tracker) ── */
+    function setJtCompanyType(orgType) {
+        $('.jt-tb-org-item').removeClass('active');
+        var $target = $('.jt-tb-org-item[data-value="' + orgType + '"]');
+        if ($target.length) {
+            $target.addClass('active');
+            $('#jt_org_label').text($target.find('.jt-tb-org-item-text').text());
+            $('#jt_org_btn_icon').html('<i class="' + $target.data('icon') + '" style="color:' + $target.data('icon-color') + ';"></i>');
+        }
+        $('#jt_company_type_select').val(orgType);
+        state.companyType = orgType;
+        fetchTable(true);
+    }
+    window.setJtCompanyType = setJtCompanyType;
+
+    function jtOpenOrgPanel() {
+        $('#jt_org_panel').removeClass('d-none');
+        $('#jt_org_btn').addClass('open');
+        $('#jt_org_wrap').addClass('open');
+    }
+    function jtCloseOrgPanel() {
+        $('#jt_org_panel').addClass('d-none');
+        $('#jt_org_btn').removeClass('open');
+        $('#jt_org_wrap').removeClass('open');
+    }
+
     function resetFilters() {
-        state.page = 1;
-        state.search = '';
-        state.country = '';
-        state.sort = '12';
-        state.tab = 'all';
+        state.page        = 1;
+        state.search      = '';
+        state.companyType = 'all';
+        state.sort        = '12';
+        state.tab         = 'all';
 
         if (els.search) els.search.value = '';
-        if (els.country) els.country.value = '';
         if (els.sort) els.sort.value = '12';
+
+        $('.jt-tb-org-item').removeClass('active');
+        var $allOrg = $('.jt-tb-org-item[data-value="all"]');
+        if ($allOrg.length) {
+            $allOrg.addClass('active');
+            $('#jt_org_label').text($allOrg.find('.jt-tb-org-item-text').text());
+            $('#jt_org_btn_icon').html('<i class="' + $allOrg.data('icon') + '" style="color:' + $allOrg.data('icon-color') + ';"></i>');
+        }
+        $('#jt_company_type_select').val('all');
 
         syncActiveTabUI('all');
         fetchTable(true);
@@ -2408,12 +2562,28 @@ body { overflow-x: hidden !important; }
         }
     });
 
-    if (els.country) {
-        els.country.addEventListener('change', function () {
-            state.country = this.value;
-            fetchTable(true);
-        });
-    }
+    /* Organization filter dropdown event listeners (matching Offer Tracker) */
+    $(document).on('click', '#jt_org_btn', function (e) {
+        e.stopPropagation();
+        if ($('#jt_org_panel').hasClass('d-none')) {
+            jtOpenOrgPanel();
+        } else {
+            jtCloseOrgPanel();
+        }
+    });
+
+    $(document).on('click', '.jt-tb-org-item', function (e) {
+        e.stopPropagation();
+        var val = $(this).data('value');
+        setJtCompanyType(val);
+        jtCloseOrgPanel();
+    });
+
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('#jt_org_wrap').length) {
+            jtCloseOrgPanel();
+        }
+    });
 
     if (els.sort) {
         els.sort.addEventListener('change', function () {

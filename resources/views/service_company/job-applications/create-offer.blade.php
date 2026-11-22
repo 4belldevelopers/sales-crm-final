@@ -1888,7 +1888,7 @@
         .co-appr-layout {
             display: flex !important;
             align-items: flex-start !important;
-            gap: 12px !important;
+            gap: 14px !important;
             width: 100% !important;
         }
 
@@ -1900,8 +1900,8 @@
         }
 
         .co-appr-side {
-            width: 300px !important;
-            flex: 0 0 300px !important;
+            width: 310px !important;
+            flex: 0 0 310px !important;
             display: flex !important;
             flex-direction: column !important;
             gap: 12px !important;
@@ -1915,20 +1915,36 @@
         }
 
         .co-subcard-status-desc {
-            font-size: 11px !important;
+            font-size: 11.5px !important;
             color: #64748b !important;
             margin-top: 1px !important;
+            font-weight: 400 !important;
         }
 
+        /* Dark background with light text for prominent action button */
         .co-appr-add-btn {
-            font-size: 11px !important;
+            background: #1e293b !important;
+            border: 1px solid #0f172a !important;
+            color: #ffffff !important;
+            font-size: 11.5px !important;
             font-weight: 600 !important;
-            padding: 5px 12px !important;
+            padding: 6px 14px !important;
             border-radius: 6px !important;
             display: inline-flex !important;
             align-items: center !important;
-            gap: 5px !important;
+            gap: 6px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15) !important;
+            cursor: pointer !important;
             transition: all 0.15s ease !important;
+        }
+        .co-appr-add-btn:hover {
+            background: #0f172a !important;
+            border-color: #020617 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25) !important;
+        }
+        .co-appr-add-btn svg {
+            stroke: #ffffff !important;
         }
 
         /* ── Approval Timeline Table Header ── */
@@ -1938,7 +1954,7 @@
             background: #f1f5f9 !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 6px !important;
-            padding: 7px 14px !important;
+            padding: 8px 14px !important;
             margin-bottom: 8px !important;
         }
         .co-appr-tl-grid {
@@ -1949,9 +1965,9 @@
             width: 100% !important;
         }
         .co-appr-tl-col-hd {
-            font-size: 10.5px !important;
-            font-weight: 700 !important;
-            color: #64748b !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            color: #475569 !important;
             text-transform: uppercase !important;
             letter-spacing: .5px !important;
         }
@@ -1962,13 +1978,13 @@
             border: 1px solid #e2e8f0 !important;
             border-left: 3.5px solid #94a3b8 !important;
             border-radius: 8px !important;
-            padding: 10px 14px !important;
+            padding: 11px 15px !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
             margin-bottom: 8px !important;
             transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
         }
         .co-appr-tl-card:hover {
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
         }
         .co-appr-tl-card--active   { border-color: #e2e8f0 !important; border-left-color: #f59e0b !important; background: #fffcf5 !important; }
         .co-appr-tl-card--approved { border-color: #e2e8f0 !important; border-left-color: #10b981 !important; background: #ffffff !important; }
@@ -1985,29 +2001,29 @@
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 12px !important;
+            font-size: 12.5px !important;
             font-weight: 700 !important;
             flex-shrink: 0 !important;
         }
-        .co-appr-tl-name { font-size: 12px !important; font-weight: 700 !important; color: #1e293b !important; line-height: 1.25 !important; }
-        .co-appr-tl-sub  { font-size: 10.5px !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 2px !important; }
+        .co-appr-tl-name { font-size: 12.5px !important; font-weight: 600 !important; color: #0f172a !important; line-height: 1.25 !important; }
+        .co-appr-tl-sub  { font-size: 11px !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 2px !important; }
 
         .co-appr-tl-status { display: flex !important; flex-direction: column !important; gap: 3px !important; }
-        .co-appr-tl-badge { display: inline-flex !important; align-items: center !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 99px !important; width: fit-content !important; line-height: 1.2 !important; }
+        .co-appr-tl-badge { display: inline-flex !important; align-items: center !important; font-size: 10.5px !important; font-weight: 600 !important; padding: 2.5px 8.5px !important; border-radius: 99px !important; width: fit-content !important; line-height: 1.2 !important; }
         .co-appr-tl-badge--approved { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
         .co-appr-tl-badge--active   { background: #fef3c7 !important; color: #d97706 !important; border: 1px solid #fcd34d !important; }
         .co-appr-tl-badge--waiting  { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
         .co-appr-tl-badge--rejected { background: #fee2e2 !important; color: #dc2626 !important; border: 1px solid #fecaca !important; }
-        .co-appr-tl-date { font-size: 10px !important; color: #64748b !important; }
+        .co-appr-tl-date { font-size: 10.5px !important; color: #64748b !important; font-variant-numeric: tabular-nums !important; }
 
         .co-appr-tl-rem { display: flex !important; flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; }
         .co-appr-remind-send {
             background: #009ef7 !important;
             border: 1px solid #009ef7 !important;
             color: #ffffff !important;
-            font-size: 11px !important;
+            font-size: 11.5px !important;
             font-weight: 600 !important;
-            padding: 5px 12px !important;
+            padding: 6px 14px !important;
             border-radius: 6px !important;
             display: inline-flex !important;
             align-items: center !important;
@@ -2022,7 +2038,7 @@
             color: #ffffff !important;
             box-shadow: 0 2px 6px rgba(0, 158, 247, 0.35) !important;
         }
-        .co-appr-tl-last-sent { font-size: 10px !important; color: #94a3b8 !important; margin-top: 3px !important; text-align: right !important; }
+        .co-appr-tl-last-sent { font-size: 10.5px !important; color: #94a3b8 !important; margin-top: 3px !important; text-align: right !important; font-variant-numeric: tabular-nums !important; }
 
         .co-appr-note {
             display: flex !important;
@@ -2031,19 +2047,19 @@
             background: #eff6ff !important;
             border: 1px solid #bfdbfe !important;
             border-radius: 7px !important;
-            padding: 8px 12px !important;
-            font-size: 11px !important;
+            padding: 9px 13px !important;
+            font-size: 11.5px !important;
             color: #1e40af !important;
-            line-height: 1.4 !important;
+            line-height: 1.45 !important;
         }
 
         .co-appr-status-note {
-            font-size: 11px !important;
+            font-size: 11.5px !important;
             color: #991b1b !important;
             background: #fef2f2 !important;
             border: 1px solid #fecaca !important;
             border-radius: 7px !important;
-            padding: 7px 12px !important;
+            padding: 8px 13px !important;
             margin-top: 8px !important;
         }
 
@@ -2054,12 +2070,12 @@
             align-items: center !important;
             gap: 8px !important;
             font-size: 11.5px !important;
-            padding: 7px 0 !important;
+            padding: 8px 0 !important;
             border-bottom: 1px solid #f1f5f9 !important;
         }
         .co-appr-detail-row:last-child { border-bottom: none !important; }
-        .co-appr-detail-label { color: #64748b !important; font-weight: 500 !important; display: flex !important; align-items: center !important; }
-        .co-appr-detail-value { color: #1e293b !important; font-weight: 600 !important; text-align: right !important; }
+        .co-appr-detail-label { color: #475569 !important; font-weight: 500 !important; display: flex !important; align-items: center !important; font-size: 11.5px !important; }
+        .co-appr-detail-value { color: #0f172a !important; font-weight: 600 !important; text-align: right !important; font-size: 12px !important; }
 
         /* ── Activity Log ── */
         .co-appr-activity-scroll {
@@ -2067,12 +2083,12 @@
             overflow-y: auto !important;
         }
         .co-appr-activity-item {
-            padding: 6px 0 !important;
+            padding: 7px 0 !important;
             border-bottom: 1px solid #f1f5f9 !important;
         }
         .co-appr-activity-item:last-child { border-bottom: none !important; }
-        .co-appr-activity-text { font-size: 11px !important; color: #1e293b !important; font-weight: 600 !important; line-height: 1.3 !important; }
-        .co-appr-activity-time { font-size: 10px !important; color: #94a3b8 !important; margin-top: 2px !important; }
+        .co-appr-activity-text { font-size: 11.5px !important; color: #1e293b !important; font-weight: 600 !important; line-height: 1.35 !important; }
+        .co-appr-activity-time { font-size: 10.5px !important; color: #64748b !important; margin-top: 2px !important; font-variant-numeric: tabular-nums !important; }
 
         @media (max-width: 1200px) {
             .co-appr-layout { flex-direction: column !important; }
@@ -4707,8 +4723,8 @@
                                                             data-candidate="{{ @$application->id }}"
                                                             data-mtype="2"
                                                             data-offerId="{{ $offer_id }}"
-                                                            class="btn btn-sm btn-light-primary co-appr-add-btn fwd_offer {{ $section_change_value ? '' : 'd-none' }}">
-                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                                            class="btn btn-sm co-appr-add-btn fwd_offer {{ $section_change_value ? '' : 'd-none' }}">
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                                             Add Approver
                                                         </button>
                                                     </div>
@@ -4769,7 +4785,7 @@
                                                                 <div class="min-w-0 flex-grow-1">
                                                                     <div class="d-flex align-items-center gap-2 flex-wrap">
                                                                         <span class="co-appr-tl-name text-truncate" title="{{ $row_label ?: $row_email ?: '—' }}">{{ $row_label ?: $row_email ?: '—' }}</span>
-                                                                        <span class="badge badge-light-primary text-primary fw-semibold fs-9 px-2 py-0.5 border border-primary-subtle">{{ $row_role ?: 'Internal Approver' }}</span>
+                                                                        <span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle" style="font-size: 10.5px; border-radius: 4px;">{{ $row_role ?: 'Internal Approver' }}</span>
                                                                     </div>
                                                                     <div class="co-appr-tl-sub text-truncate d-flex align-items-center gap-1 mt-0.5" title="{{ $row_email }}">
                                                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -5368,7 +5384,7 @@
                                 '<div class="min-w-0 flex-grow-1">' +
                                     '<div class="d-flex align-items-center gap-2 flex-wrap">' +
                                         '<span class="co-appr-tl-name text-truncate" title="' + safeName + '">' + safeName + '</span>' +
-                                        '<span class="badge badge-light-primary text-primary fw-semibold fs-9 px-2 py-0.5 border border-primary-subtle">Internal Approver</span>' +
+                                        '<span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle" style="font-size: 10.5px; border-radius: 4px;">Internal Approver</span>' +
                                     '</div>' +
                                     '<div class="co-appr-tl-sub text-truncate d-flex align-items-center gap-1 mt-0.5" title="' + safeEmail + '">' +
                                         '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +

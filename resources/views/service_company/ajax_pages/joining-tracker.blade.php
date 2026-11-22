@@ -582,7 +582,7 @@
             </svg>
         </div>
         <div class="jt-empty-title">No Joining Records Found</div>
-        <div class="jt-empty-sub">No candidates match your active filter, location, or search criteria.</div>
+        <div class="jt-empty-sub">No candidates match your active filter, organization, or search criteria.</div>
         <button type="button" class="jt-empty-reset-btn" onclick="window.jeroJoiningTracker && window.jeroJoiningTracker.resetFilters()">
             <i class="fas fa-undo-alt"></i> Reset All Filters
         </button>
