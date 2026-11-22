@@ -39,25 +39,24 @@ Each primary entity card is anchored with a 3.5px left status accent border and 
   - Job Meta: `#<JobId>` in sky blue (`#0284c7`), separator bullet (`•`), Client Name in uppercase (`#475569`).
   - Employment Tag: Chip with `<i class="fas fa-briefcase"></i> Full-time` (or Contract, etc.).
 
-### 3. Sub-Card 3: COMPENSATION & REAL STATUS
+### 3. Sub-Card 3: COMPENSATION (View-Only)
 - **Header:** Label `COMPENSATION` with employment type badge (`Full-time`, `Contract`, etc.).
 - **Body:**
   - Row 1 (Amount): Formatted compensation (e.g. `INR 2,523,896/A`) with `font-variant-numeric: tabular-nums;` or `Confidential` with lock icon.
-  - Row 2 (Status Badge): Real joining and offer lifecycle badge:
-    - `Joined` (Emerald `#dcfce7` / `#15803d` / `#bbf7d0`)
-    - `Backed Out` / `No Show` (Red `#fee2e2` / `#dc2626` / `#fecaca`)
-    - `Joining Today` (Purple `#ede9fe` / `#7c3aed` / `#ddd6fe`)
-    - `Delayed` (Orange `#ffedd5` / `#ea580c` / `#fed7aa`)
-    - `Pending Docs` (Amber `#fef3c7` / `#d97706` / `#fde68a`)
-    - `Offer Created` (Indigo `#e0e7ff` / `#4338ca` / `#c7d2fe`)
-    - `Pre-Joining` (Emerald `#ecfdf5` / `#059669` / `#a7f3d0`)
-  - Row 3 (Action Cue): `Update Offer >` (triggers `create_offer` modal) or `Client Managed` (for direct client mandates).
+  - Row 2 (Status Badge): `Offer Accepted` (`#ecfdf5` bg / `#059669` text / `#a7f3d0` border) confirming the agreed salary.
+  - Row 3 (Package Detail): View-only package mode (e.g. `Yearly Package`).
+- **Interaction:** Strictly view-only. Zero `Update Offer` buttons or modal triggers (offer drawer is exclusively scoped to the Offer Stage).
 
-### 4. Sub-Card 4: JOINING SCHEDULE
-- **Header:** Label `JOINING` with dynamic relative countdown badge (`5d ago`, `Today`, `Tomorrow`, `in 3 days`, or `Pending`).
+### 4. Sub-Card 4: JOINING SCHEDULE (Includes Overdue / Delayed Joining Tracking)
+- **Header:** Label `JOINING` with dynamic relative countdown badge:
+  - `Joined` (green `#dcfce7`) when onboarding is completed (`of_joined == 1`).
+  - `No Show` / `Backed Out` (red `#fee2e2`) when candidate declines after offer.
+  - `Delayed (Xd ago)` (orange `#ffedd5` / `#ea580c`): Indicates a candidate whose scheduled joining date has elapsed without confirmed joining.
+  - `Today` (purple `#ede9fe`): Candidate joining on current date.
+  - `in X days` (blue/amber): Future scheduled joining.
 - **Body:**
   - Date: Calendar icon with bold date string (e.g. `📅 17 Nov 2026`).
-  - Time & Timezone: Formatted in the tenant's configured default timezone per Rule 24 (`12:18 PM IST`).
+  - Time & Status: Formatted in the tenant's configured default timezone per Rule 24 (`12:18 PM IST`), or warning note `Reschedule Pending` when delayed.
 
 ### 5. Sub-Card 5: OWNERSHIP & RECRUITER
 - **Header:** Label `<i class="fas fa-user-tie me-1"></i> OWNERSHIP & RECRUITER`.
@@ -79,8 +78,8 @@ Each primary entity card is anchored with a 3.5px left status accent border and 
 ## Bottom Activity Strip
 - **Left:** `LAST UPDATED: <d M Y, h:i A T>` formatted in the tenant's account timezone per Rule 24.
 - **Right:**
-  - `Manage Offer` button (for internal jobs with offer ID, opening `#kt_create_offer` drawer).
-  - `Candidate Profile ↗` primary action button (opening `#kt_drawer_candidate_profile`).
+  - `Candidate Profile ↗` primary action button (opening candidate profile drawer).
+  - (Offer drawer actions are omitted in Joining Tracker as offer generation is restricted to the Offer stage).
 
 ---
 

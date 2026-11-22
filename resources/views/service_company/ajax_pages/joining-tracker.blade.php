@@ -433,17 +433,8 @@
                     </div>
                 </div>
 
-                <!-- SUB-CARD 3: COMPENSATION & REAL STATUS (Offer Tracker Inspired) -->
-                <div class="jt-subcard jt-subcard-comp-status {{ $isOwnJob && !empty($row->offer_id) ? 'create_offer jt-clickable-subcard' : '' }}"
-                     @if($isOwnJob && !empty($row->offer_id))
-                     data-row-offerid="{{ $row->offer_id }}"
-                     data-emp-type="{{ $resolvedEmpVal }}"
-                     role="button"
-                     tabindex="0"
-                     title="Click to view/manage offer details"
-                     @else
-                     title="Compensation Details"
-                     @endif>
+                <!-- SUB-CARD 3: COMPENSATION (View-Only per ATS Stage Standard) -->
+                <div class="jt-subcard jt-subcard-comp" title="Agreed Compensation (View-Only)">
                     <div class="jt-subcard-head">
                         <span class="jt-subcard-label">Compensation</span>
                         <span class="jt-micro-pill jt-pill-neutral" title="Employment Type: {{ $empLabel }}">{{ $empLabel }}</span>
@@ -456,52 +447,46 @@
                                     <i class="fas fa-lock me-1"></i>Confidential
                                 </span>
                             @else
-                                <span class="jt-cs-amount" title="Proposed Compensation: {{ $compDisplay }}">
+                                <span class="jt-cs-amount" title="Agreed Compensation: {{ $compDisplay }}">
                                     {{ $compDisplay }}
                                 </span>
                             @endif
                         </div>
 
-                        <!-- 2nd Row: Real Joining / Offer Status Badge -->
+                        <!-- 2nd Row: Compensation Status Badge (View-Only) -->
                         <div class="jt-cs-status-row">
                             <span class="jt-status-badge"
-                                  style="background:{{ $statusBadgeBg }};color:{{ $statusBadgeColor }};border:1px solid {{ $statusBadgeBorder }};"
-                                  title="Current Status: {{ $statusBadgeLabel }}">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $statusIconPath }}"/></svg>
-                                <span>{{ $statusBadgeLabel }}</span>
+                                  style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;"
+                                  title="Offer Accepted & Finalized">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+                                <span>Offer Accepted</span>
                             </span>
                         </div>
 
-                        <!-- 3rd Row: Action Cue Link -->
-                        <div class="jt-cs-cue-row">
-                            @if($isOwnJob && !empty($row->offer_id))
-                                <span class="jt-cs-cue">
-                                    <span>Update Offer</span>
-                                    <i class="fas fa-chevron-right ms-1"></i>
-                                </span>
-                            @elseif(!$isOwnJob)
-                                <span class="jt-cs-cue locked" title="Client Managed Mandate">
-                                    <i class="fas fa-lock me-1"></i>Client Managed
-                                </span>
-                            @else
-                                <span class="jt-cs-cue" style="color:var(--jt-text-muted);">
-                                    <span>Joining Confirmed</span>
-                                </span>
-                            @endif
+                        <!-- 3rd Row: Package Descriptor (View-Only, No Offer Edit Button) -->
+                        <div class="jt-comp-sub">
+                            <i class="fas fa-coins text-warning me-1"></i>
+                            <span>{{ $modeFull }} Package</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: JOINING SCHEDULE -->
+                <!-- SUB-CARD 4: JOINING SCHEDULE (Overdue Joining Dates Marked as Delayed) -->
                 <div class="jt-subcard jt-subcard-joining">
                     <div class="jt-subcard-head">
                         <span class="jt-subcard-label">Joining</span>
-                        @if($joiningCountdown)
+                        @if($joined === 1)
+                            <span class="jt-micro-pill" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;">Joined</span>
+                        @elseif($offerAcceptance === 3)
+                            <span class="jt-micro-pill" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;">No Show</span>
+                        @elseif(!is_null($diffDays) && $diffDays < 0)
+                            <span class="jt-micro-pill" style="background:#ffedd5;color:#ea580c;border:1px solid #fed7aa;" title="Joining date passed without confirmed joining — Reschedule Pending">Delayed ({{ abs($diffDays) }}d ago)</span>
+                        @elseif(!is_null($diffDays) && $diffDays === 0)
+                            <span class="jt-micro-pill" style="background:#ede9fe;color:#7c3aed;border:1px solid #ddd6fe;">Today</span>
+                        @elseif($joiningCountdown)
                             <span class="jt-micro-pill" style="background:{{ $joiningCountdownBg }};color:{{ $joiningCountdownColor }};">{{ $joiningCountdown }}</span>
-                        @elseif($joined === 1)
-                            <span class="jt-micro-pill" style="background:#dcfce7;color:#15803d;">Joined</span>
                         @else
-                            <span class="jt-micro-pill jt-pill-neutral">Pending</span>
+                            <span class="jt-micro-pill jt-pill-neutral">Not Scheduled</span>
                         @endif
                     </div>
                     <div class="jt-joining-body">
@@ -510,7 +495,13 @@
                                 <i class="far fa-calendar-check"></i>
                                 <span>{{ $joiningDate }}</span>
                             </div>
-                            <div class="jt-join-time">{{ $joiningTime }}</div>
+                            <div class="jt-join-time">
+                                @if(!is_null($diffDays) && $diffDays < 0 && $joined !== 1 && $offerAcceptance !== 3)
+                                    <span style="color:#ea580c;font-weight:600;" title="Passed scheduled joining date"><i class="fas fa-exclamation-triangle me-1"></i>Reschedule Pending</span>
+                                @else
+                                    {{ $joiningTime }}
+                                @endif
+                            </div>
                         @else
                             <div class="jt-join-empty">—</div>
                             <div class="jt-join-time">{{ $joined === 1 ? 'Joined' : 'Not scheduled' }}</div>
@@ -577,16 +568,6 @@
                 </div>
 
                 <div class="jt-bottom-right">
-                    @if($isOwnJob && !empty($row->offer_id))
-                        <button type="button"
-                                class="jt-action-ghost create_offer"
-                                data-row-offerid="{{ $row->offer_id }}"
-                                data-emp-type="{{ $resolvedEmpVal }}"
-                                title="Manage Offer Details">
-                            <i class="fas fa-file-signature me-1"></i>
-                            <span>Manage Offer</span>
-                        </button>
-                    @endif
                     <button type="button"
                             class="jt-action-primary show-application-detail"
                             data-row-id="{{ $row->wiseId }}"
