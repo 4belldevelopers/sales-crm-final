@@ -4275,12 +4275,20 @@
 
                                 @php
                                     // Native composer — all values are real (from createOffer's scope); no AJAX loader. condidate_type
+                                    $origin_res = $origin_resolution ?? \App\Services\CandidateOriginResolver::resolve(@$application, auth()->user()->company_id, @$job_id);
+
                                     $so_name    = trim((string) @$co_candidate_name) ?: (@$application->full_name ?: 'Candidate');
-                                    $so_email   = @$co_candidate_email ?: @$application->email;
-                                    if(@$application->condidate_type=='bench_condidate'){
-                                         $bench_assign = DB::table('users')->join('bench_assign','bench_assign.user_id','=','users.id')->select('users.email')->where('bench_assign.bench_applications_id',@$application->id)->first();
-                                        $so_email   = @$bench_assign->email ?? @$application->email;
-                                    }
+                                    
+                                    // Origin-aware recipient & confidentiality resolution
+                                    $so_email   = $origin_res['primary_recipient_email'] ?? (@$co_candidate_email ?: @$application->email);
+                                    $so_display_email = $origin_res['display_recipient_email'] ?? $so_email;
+                                    $so_is_confidential = !empty($origin_res['is_confidential']);
+                                    $so_is_agency_bench = !empty($origin_res['is_agency_bench']);
+                                    $so_is_education_bench = !empty($origin_res['is_education_bench']);
+                                    $so_is_internal_bench = !empty($origin_res['is_internal_bench']);
+                                    $so_masked_email = $origin_res['masked_candidate_email'] ?? '';
+                                    $so_agency_name = $origin_res['source_company_name'] ?? '';
+                                    $so_cc_emails = $origin_res['cc_recipient_emails'] ?? [];
                                     $so_role    = @$designation ?: @$co_job_title;
                                     $so_exp     = @$application->total_exp;
                                     $so_location = trim((string) (@$application->current_location ?: @$application->city));
@@ -4392,9 +4400,29 @@
                                             <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg> To Email ID <span class="co-send-req">*</span></label>
                                             <div class="co-send-field">
                                                 <div class="co-send-chips co-send-chips--locked" id="co_to_chips">
-                                                    @if(!empty($so_email))<span class="co-send-chip co-send-chip--locked">{{ $so_email }}<svg class="co-chip-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>@endif
+                                                    @if(!empty($so_email))
+                                                        <span class="co-send-chip co-send-chip--locked" data-raw-email="{{ $so_email }}">
+                                                            {{ $so_email }}
+                                                            @if($so_is_agency_bench)
+                                                                <span class="badge badge-light-warning ms-1" style="font-size:10px;padding:2px 6px;vertical-align:1px;">Agency RM</span>
+                                                            @endif
+                                                            <svg class="co-chip-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                                                        </span>
+                                                    @endif
                                                 </div>
-                                                <div class="co-send-hint">Primary candidate email address — fixed, can't be changed or removed</div>
+                                                @if($so_is_confidential)
+                                                    <div class="co-send-hint" style="color: #92400e; font-weight: 500;">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                        <strong>Marketplace Confidentiality Guard:</strong> Candidate personal email{{ $so_masked_email ? ' ('.$so_masked_email.')' : '' }} is protected. Offer will be delivered directly to the Agency Relationship Manager ({{ $so_agency_name ?: 'Partner Agency' }}).
+                                                    </div>
+                                                @elseif($so_is_education_bench)
+                                                    <div class="co-send-hint" style="color: #059669; font-weight: 500;">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                                                        <strong>Campus / Training Candidate:</strong> Direct candidate contact authorized for employment onboarding. Institutional placement coordinator CC'd.
+                                                    </div>
+                                                @else
+                                                    <div class="co-send-hint">Primary candidate email address — fixed, can't be changed or removed</div>
+                                                @endif
                                             </div>
                                         </div>
 
@@ -4402,6 +4430,9 @@
                                             <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="14" height="14" rx="2"/><path d="M3 15V5a2 2 0 0 1 2-2h10"/></svg> CC Email ID</label>
                                             <div class="co-send-field">
                                                 <div class="co-send-chips" id="co_cc_chips">
+                                                    @foreach($so_cc_emails as $ccEmail)
+                                                        <span class="co-send-chip">{{ $ccEmail }}<button type="button" class="co-send-chip-x" aria-label="Remove">&times;</button></span>
+                                                    @endforeach
                                                     <input type="text" class="co-send-chip-input" placeholder="Type an email…">
                                                     <span class="co-send-addemail" data-chip-target="co_cc_chips">+ Add Email</span>
                                                 </div>
@@ -4482,7 +4513,7 @@
                                         <button type="button" class="co-send-drawer-x" id="co_send_drawer_close" aria-label="Close">&times;</button>
                                     </div>
                                     <div class="co-send-drawer-body co-appr-picker">
-                                        {{-- Choose source: internal always shown; client only when the job has an external client --}}
+                                        {{-- Choose source: internal always shown; client when job has external client; agency when candidate is from agency bench --}}
                                         <div class="co-appr-source-row">
                                             <label class="co-appr-source-card co-appr-source-card--active" data-source="internal">
                                                 <input type="radio" name="coSendSource" value="internal" checked>
@@ -4499,6 +4530,16 @@
                                                 <div>
                                                     <div class="co-appr-source-title">Client Company Approvers</div>
                                                     <div class="co-appr-source-sub">{{ count($co_send_client) }} available</div>
+                                                </div>
+                                            </label>
+                                            @endif
+                                            @if(!empty($co_send_agency))
+                                            <label class="co-appr-source-card" data-source="agency">
+                                                <input type="radio" name="coSendSource" value="agency">
+                                                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                                                <div>
+                                                    <div class="co-appr-source-title">Agency / Partner Contacts</div>
+                                                    <div class="co-appr-source-sub">{{ count($co_send_agency) }} available</div>
                                                 </div>
                                             </label>
                                             @endif
@@ -4520,7 +4561,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody class="text-gray-600 fw-bold">
-                                                @foreach ([['data' => $co_send_internal ?? [], 'source' => 'internal'], ['data' => $co_send_client ?? [], 'source' => 'client']] as $group)
+                                                @foreach ([['data' => $co_send_internal ?? [], 'source' => 'internal'], ['data' => $co_send_client ?? [], 'source' => 'client'], ['data' => $co_send_agency ?? [], 'source' => 'agency']] as $group)
                                                     @foreach ($group['data'] as $teamVal)
                                                         @php
                                                             $bgTextDecore = $strVal = '';
@@ -4534,12 +4575,12 @@
                                                             else if ($str >= 117 && $str <= 121) { $bgTextDecore = 'bg-dark text-secondary'; }
                                                             else { $bgTextDecore = 'bg-light-secondary text-dark'; }
                                                         @endphp
-                                                        <tr class="co-send-mrow co-send-mrow--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
+                                                        <tr class="co-send-mrow co-send-mrow--{{ $group['source'] }} {{ $group['source'] !== 'internal' ? 'd-none' : '' }}"
                                                             data-email="{{ @$teamVal->email }}"
                                                             data-search="{{ strtolower(trim((string) @$teamVal->name).' '.@$teamVal->email.' '.@$teamVal->company_name) }}">
                                                             <td><div class="d-flex align-items-center">
                                                                 <div class="co-send-mrow-av {{ $bgTextDecore }}">{{ strtoupper($strVal) }}</div>
-                                                                <div class="d-flex flex-column"><span class="text-dark fw-bolder">{{ ucwords(substr((string) @$teamVal->name, 0, 22)) }}</span><span class="text-muted fw-bold d-block co-send-mrow-role">{{ ucwords(substr((string) @$teamVal->display_name, 0, 25)) }}</span></div>
+                                                                <div class="d-flex flex-column"><span class="text-dark fw-bolder">{{ ucwords(substr((string) @$teamVal->name, 0, 22)) }}</span><span class="text-muted fw-bold d-block co-send-mrow-role">{{ ucwords(substr((string) (@$teamVal->display_name ?: @$teamVal->role), 0, 25)) }}</span></div>
                                                             </div></td>
                                                             <td>{{ @$teamVal->email }}</td>
                                                             <td>{{ @$teamVal->company_name }}</td>
@@ -4548,6 +4589,10 @@
                                                     @endforeach
                                                 @endforeach
                                                 <tr class="co-send-mrow--internal co-send-mrow-empty {{ !empty($co_send_internal) ? 'd-none' : '' }}"><td colspan="4" class="co-appr-empty">No internal team members found.</td></tr>
+                                                <tr class="co-send-mrow--client co-send-mrow-empty d-none"><td colspan="4" class="co-appr-empty">No client company contacts found.</td></tr>
+                                                <tr class="co-send-mrow--agency co-send-mrow-empty d-none"><td colspan="4" class="co-appr-empty">No agency / partner contacts found.</td></tr>
+                                            </tbody>
+                                        </table>
                                             </tbody>
                                         </table>
                                     </div>
@@ -7018,7 +7063,14 @@
                 }
                 function coCollectChips(containerId) {
                     var out = [];
-                    $('#' + containerId).find('.co-send-chip').each(function () { out.push($(this).clone().children().remove().end().text().trim()); });
+                    $('#' + containerId).find('.co-send-chip').each(function () {
+                        var raw = $(this).attr('data-raw-email');
+                        if (raw) {
+                            out.push(raw.trim());
+                        } else {
+                            out.push($(this).clone().children().remove().end().text().trim());
+                        }
+                    });
                     return out;
                 }
                 // "+ Add Email" → open the teammate/client picker drawer for that field.

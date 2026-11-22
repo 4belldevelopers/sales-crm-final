@@ -1016,8 +1016,11 @@ body { overflow-x: hidden !important; }
     line-height: 1.3 !important;
 }
 
-.ot-pill-neutral { background: #ffffff !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
-.ot-pill-bench   { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
+.ot-pill-neutral        { background: #ffffff !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+.ot-pill-bench          { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
+.ot-pill-internal-bench { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+.ot-pill-agency-bench   { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d !important; }
+.ot-pill-campus         { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
 
 /* Sub-Card 1: Candidate */
 .ot-subcard-cand.ot-clickable-subcard {
@@ -3052,6 +3055,16 @@ body { overflow-x: hidden !important; }
                 if ($('#employment_type').length) {
                     $('#employment_type').val(empType).trigger('change');
                 }
+            },
+            error: function (xhr) {
+                var errTxt = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to load offer details. Please try again.';
+                $('#offer_create_show_right_bar').html(
+                    '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                    '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Offer</div>' +
+                    '  <div class="text-gray-700 fs-6 mb-4">' + errTxt + '</div>' +
+                    '  <div><button type="button" class="btn btn-sm btn-light-primary" onclick="$(\'#kt_create_offer_toggle\').trigger(\'click\');">Close</button></div>' +
+                    '</div>'
+                );
             }
         });
     });

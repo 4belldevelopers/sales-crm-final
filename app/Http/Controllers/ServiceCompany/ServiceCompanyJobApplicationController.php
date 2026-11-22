@@ -38,6 +38,7 @@ use App\Mail\RejectedMail;
 use App\Models\AddJobWiseCondidate;
 use App\Models\ApplicationStatus;
 use App\Models\Company;
+use App\Services\CandidateOriginResolver;
 use App\Models\Country;
 use App\Models\InterviewSchedule;
 use App\Models\Job;
@@ -7216,8 +7217,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($OfferJobApplication->joined);
         $id = $OfferJobApplication->joined;
         $jobId = @$AddJobWiseCondidate->job_id;
-        $jobData = DB::table('jobs')->where('id', $jobId)->select('id', 'min_salary_currency', 'max_salary_currency', 'salary_currency')->first();
-        $this->job_currency = $jobData->min_salary_currency ?? $jobData->salary_currency ?? null;
+        $jobData = DB::table('jobs')->where('id', $jobId)->select('id', 'min_salary_currency', 'max_salary_currency')->first();
+        $this->job_currency = $jobData->min_salary_currency ?? $jobData->max_salary_currency ?? null;
         // dd($id,$jobId,$AddJobWiseCondidate);
         $this->intModeArr = GeneralMethod::interview_mode();
         $this->application = JobApplication::withoutGlobalScopes()->select(
@@ -7564,13 +7565,27 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $this->account = DB::table('companies')->select('*')->where('id', $rowDataOffer->company_id)->first();
         $this->global_settings = DB::table('global_settings')->select('*')->first();
+
+        // Institutional Sourcing & Confidentiality Resolution via CandidateOriginResolver
+        $originResolution = CandidateOriginResolver::resolve($this->application, $company_id, $jobId);
+        $this->origin_resolution = $originResolution;
+        $this->is_bench_candidate = $originResolution['is_bench'];
+        $this->is_agency_bench = ($originResolution['origin_type'] === 'agency_bench');
+        $this->is_education_bench = ($originResolution['origin_type'] === 'education_bench');
+        $this->is_internal_bench = ($originResolution['origin_type'] === 'internal_bench');
+        $this->origin_confidential = $originResolution['is_confidential'];
+        $this->co_send_agency_contacts = $originResolution['agency_contacts'] ?? [];
+
         $offer_terms = '';
         if ($this->offer_terms_conditions) {
             $offer_terms = (@$this->offer_terms_conditions->terms_condition) ? $this->offer_terms_conditions->terms_condition : '';
         } else {
-            $offer_terms = (@$this->account->offer_terms) ? $this->account->offer_terms : @$this->global_settings->offer_terms;
-            if ($this->application->condidate_type == 'bench_condidate') {
+            if ($this->is_agency_bench) {
+                // Default to Agency Offer Terms for third-party agency bench resources
                 $offer_terms = (@$this->account->agency_offer_terms) ? $this->account->agency_offer_terms : (@$this->global_settings->agency_offer_terms ?: @$this->global_settings->offer_terms);
+            } else {
+                // Fulltime terms default for Direct, Internal Bench, and Campus/Training candidates
+                $offer_terms = (@$this->account->offer_terms) ? $this->account->offer_terms : @$this->global_settings->offer_terms;
             }
         }
         $rowDataOfferDetails = GeneralMethod::offerLetterdetails($this->offer_id);
@@ -7611,7 +7626,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'label' => 'Fulltime Offer Letter',
                 'type' => 'Full Time',
                 'content' => $this->company_offer_terms,
-                'selected' => ! $this->offer_terms_conditions && $this->application->condidate_type != 'bench_condidate',
+                'selected' => ! $this->offer_terms_conditions && ! $this->is_agency_bench,
             ],
             [
                 'key' => 'internship-offer-letter',
@@ -7635,7 +7650,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'label' => 'Agency Offer terms',
                 'type' => 'Contract',
                 'content' => $this->agency_offer_terms,
-                'selected' => ! $this->offer_terms_conditions && $this->application->condidate_type == 'bench_condidate',
+                'selected' => ! $this->offer_terms_conditions && $this->is_agency_bench,
             ],
         ];
         $this->offer_template_contents = collect($this->offer_template_options)->pluck('content', 'key')->all();
@@ -7739,6 +7754,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ->where('client_contact_info.client_id', $co_job_client->client_id)
                 ->whereNotNull('client_contact_info.contact_person_email')->get()->toArray();
         }
+
+        $this->co_send_agency = $this->co_send_agency_contacts ?? [];
 
         // dd($this->offer_points);
         $view = view('service_company.job-applications.create-offer', $this->data)->render();

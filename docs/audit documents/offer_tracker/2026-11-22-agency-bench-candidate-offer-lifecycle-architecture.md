@@ -227,3 +227,73 @@ All UI elements strictly adhere to:
 3. **"My Organization" Job Requisition:**
    - Action: Issue offer for an agency candidate on a "My Organization" job.
    - Verify: Offer creation proceeds smoothly with complete tenancy security and audit trail.
+
+---
+
+## 8. Verification Results & Test Execution Evidence
+
+Automated forensic test suite (`verify_all_scenarios.php`) executed on 2026-11-22 against the actual application database and service layers:
+
+```text
+====================================================================
+OFFER TRACKER & CANDIDATE ORIGIN RESOLVER COMPREHENSIVE VERIFICATION
+====================================================================
+
+[PASS] Scenario 1: Direct candidate origin_type
+[PASS] Scenario 1: Direct candidate is_confidential is false
+[PASS] Scenario 1: Direct candidate recipient is candidate email
+[PASS] Scenario 1: Direct candidate default template is Full Time
+[PASS] Scenario 2: Internal bench origin_type
+[PASS] Scenario 2: Internal bench badge_label
+[PASS] Scenario 2: Internal bench is_confidential is false
+[PASS] Scenario 2: Internal bench recipient is candidate email
+[PASS] Scenario 2: Internal bench default template is Full Time
+[PASS] Scenario 3: Agency bench origin_type
+[PASS] Scenario 3: Agency bench badge_label
+[PASS] Scenario 3: Agency bench is_confidential is TRUE
+[PASS] Scenario 3: Agency bench candidate personal email is masked
+[PASS] Scenario 3: Agency bench allows both fulltime and contract
+[PASS] Scenario 3: Agency bench allows candidate-offer-letter template
+[PASS] Scenario 4: Educational institution detection via industry ID 56
+[PASS] Scenario 4: Training academy detection via industry ID 111
+[PASS] Scenario 4: Educational detection via company name keyword 'College'
+[PASS] Scenario 5: Confidential candidate email stripped from TO
+[PASS] Scenario 5: Agency RM email preserved in TO
+[PASS] Scenario 5: Confidential candidate email stripped from CC
+[PASS] Scenario 5: Internal HR email preserved in CC
+[PASS] Scenario 6: Batch resolution returned app 181
+[PASS] Scenario 6: App 181 resolved as internal_bench for company 2
+[PASS] Scenario 6: App 181 resolved as agency_bench for other company 999
+
+====================================================================
+SUMMARY: 25 Passed, 0 Failed (100% Success)
+====================================================================
+```
+
+### PHP Syntax & Pint Linting Validation
+- `app/Services/CandidateOriginResolver.php`: Passed (`php -l` & `./vendor/bin/pint`)
+- `app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php`: Passed (`php -l`)
+- `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php`: Passed (`php -l`)
+- `resources/views/service_company/job-applications/create-offer.blade.php`: Passed (`php -l`)
+- `resources/views/service_company/ajax_pages/offer-tracker.blade.php`: Passed (`php -l`)
+- `resources/views/service_company/applicationoffer/index.blade.php`: Passed (`php -l`)
+
+---
+
+## 9. Forensic Root Cause & Resolution for Stuck Drawer Loader
+
+### Root Cause
+In `ServiceCompanyJobApplicationController::createOffer($id)` (line 7220):
+```php
+$jobData = DB::table('jobs')->where('id', $jobId)->select('id', 'min_salary_currency', 'max_salary_currency', 'salary_currency')->first();
+```
+Per Rule 8 and `database/schema/mysql-schema.sql`, `jobs` table has `min_salary_currency` and `max_salary_currency`, but NO `salary_currency` column. Attempting to select this non-existent column threw an uncaught MySQL exception:
+`SQLSTATE[42S22]: Column not found: 1054 Unknown column 'salary_currency' in 'field list'`
+
+This 500 server response caused the AJAX loader in `#offer_create_show_right_bar` (`Loading2.gif`) to remain stuck indefinitely.
+
+### Resolution
+1. Corrected query in [ServiceCompanyJobApplicationController.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php#L7220) to select only `min_salary_currency, max_salary_currency`.
+2. Added comprehensive `error` callbacks to the AJAX drawer triggers in [applicationoffer/index.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/service_company/applicationoffer/index.blade.php#L3055) and [service_company_layout.blade.php](file:///c:/Users/VIBHANSHU%20JAISWAL.000/Documents/GitHub/JWMaincode28June2026/resources/views/layouts/service_company_layout.blade.php#L4004) so that any future failures display actionable error dialogs rather than freezing the screen.
+3. Verified all offers in `offer_job_applications` render the complete multi-step drawer HTML (1.3MB payload) with `status: success`.
+

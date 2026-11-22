@@ -8251,6 +8251,36 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
         }
 
+        // Confidentiality Guard: Agency bench candidate personal email must never be exposed or sent
+        if ((int) $mtypeId === 1 && !empty($offerId)) {
+            $offerRecord = DB::table('offer_job_applications')->where('id', $offerId)->first(['application_id', 'job_id', 'company_id']);
+            if ($offerRecord && !empty($offerRecord->application_id)) {
+                $appRecord = DB::table('job_applications')->where('id', $offerRecord->application_id)->first();
+                if ($appRecord) {
+                    $originRes = \App\Services\CandidateOriginResolver::resolve($appRecord, (int) auth()->user()->company_id, (int) $offerRecord->job_id);
+                    if (!empty($originRes['is_confidential'])) {
+                        $candPersonalEmail = strtolower(trim((string) ($appRecord->email ?? '')));
+                        $primaryRmEmail = strtolower(trim((string) ($originRes['primary_recipient_email'] ?? '')));
+
+                        // Purge candidate personal email from TO list
+                        $to = array_values(array_filter($to, function ($em) use ($candPersonalEmail) {
+                            return strtolower(trim($em)) !== $candPersonalEmail;
+                        }));
+
+                        // Purge candidate personal email from CC list
+                        $cc = array_values(array_filter($cc, function ($em) use ($candPersonalEmail) {
+                            return strtolower(trim($em)) !== $candPersonalEmail;
+                        }));
+
+                        // Ensure primary Agency RM email is present in TO list
+                        if (!empty($primaryRmEmail) && !in_array($primaryRmEmail, array_map('strtolower', $to), true)) {
+                            array_unshift($to, $primaryRmEmail);
+                        }
+                    }
+                }
+            }
+        }
+
         $attachments = [];
 
         // Sender-supplied files (Step 5 "+ Add Attachment"): store to the public disk so

@@ -4002,6 +4002,16 @@ $( document ).ready(function() {
                                     return false;
                                   }
 																		$('#offer_create_show_right_bar').html(response.view);
+												},
+												error: function (xhr) {
+													var errTxt = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to load offer details. Please try again.';
+													$('#offer_create_show_right_bar').html(
+														'<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+														'  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Offer</div>' +
+														'  <div class="text-gray-700 fs-6 mb-4">' + errTxt + '</div>' +
+														'  <div><button type="button" class="btn btn-sm btn-light-primary" onclick="$(\'#kt_create_offer_toggle\').trigger(\'click\');">Close</button></div>' +
+														'</div>'
+													);
 												}
 						});
 

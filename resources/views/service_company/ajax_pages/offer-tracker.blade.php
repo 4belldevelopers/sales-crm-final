@@ -49,6 +49,17 @@
         }
     }
 
+    /* ── Resolve Bench Candidate Classification (Rule 25 & Bench Origin) ──
+       Batch-resolved for all bench rows on page to prevent N+1 queries. */
+    $benchRowWiseIds = collect($data)->filter(function ($r) {
+        return ($r->condidate_type ?? '') === 'bench_condidate';
+    })->pluck('wiseId')->filter()->unique()->values()->all();
+
+    $benchOriginMap = [];
+    if (!empty($benchRowWiseIds)) {
+        $benchOriginMap = \App\Services\CandidateOriginResolver::resolveBatch($benchRowWiseIds, $company_id);
+    }
+
     $fmtDateTimeTz = function ($d) use ($tenantTimezone) {
         if (empty($d)) return '';
         $ts = strtotime($d);
@@ -361,7 +372,17 @@
                     <span class="ot-subcard-label">Candidate</span>
                     <div class="ot-subcard-badges">
                         @if($isBench)
-                            <span class="ot-micro-pill ot-pill-bench" title="Bench Candidate">Bench</span>
+                            @php
+                                $bOrigin = $benchOriginMap[$row->wiseId] ?? [
+                                    'badge_label' => 'Agency Bench',
+                                    'badge_class' => 'ot-pill-agency-bench',
+                                    'badge_icon'  => 'fas fa-handshake',
+                                    'badge_style' => 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;',
+                                ];
+                            @endphp
+                            <span class="ot-micro-pill {{ $bOrigin['badge_class'] }}" style="{{ $bOrigin['badge_style'] ?? '' }}" title="{{ $bOrigin['badge_label'] }}">
+                                <i class="{{ $bOrigin['badge_icon'] }} me-1" style="font-size:10px;"></i>{{ $bOrigin['badge_label'] }}
+                            </span>
                         @endif
                         @if($expLabel)
                             <span class="ot-micro-pill ot-pill-neutral" title="Total Experience">{{ $expLabel }}</span>
