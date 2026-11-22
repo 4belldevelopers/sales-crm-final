@@ -393,6 +393,33 @@ Replaced the basic pill buttons with dedicated enterprise buttons matching the c
 - Tenancy isolation verified: strictly scoped to `service_company/`. Frozen personas (`product_company/`, `staffing_company/`) remain 100% untouched (Rule 18).
 - Calculation event handlers, input names, IDs, and CQRS patterns verified 100% intact.
 
+---
+
+## 11. Round 8 – Header Navigation Button (Dynamic Back/Close) & "Please wait..." Stale Button State Elimination
+
+### 11.1 Problem Statement & Root Cause
+1. **Missing Header Back Navigation:**
+   - When users navigated to Step 2 (Template), Step 3 (Preview), Step 4 (Approval), or Step 5 (Offer Sent), there was no prominent "Back" button in the top action bar to return to previous steps without scrolling to the bottom or clicking the stepper pills.
+   - On Step 1 (Compensation), the user requested that this same navigation button act as "Close" to dismiss the drawer.
+2. **"Please wait..." Button Stale State:**
+   - *Root Cause:* In `coSyncNav()`, the topbar button text for Step 1 was set using `var saveTxt = $('#save-form').val() || 'Save & Next';`. When `#createForm` was submitted, the hidden input `#save-form` had its value temporarily mutated to `'Please wait...'`. If the user navigated forward and then clicked back to Step 1, `$('#save-form').val()` still returned `'Please wait...'`. `syncStepHeader()` read this stale string and rendered `Please wait... ->` in the primary button, leaving the UI stuck in an apparent loading state.
+
+### 11.2 Architectural Remediation
+1. **Dynamic Header Navigation Button (`#co_header_nav_btn`):**
+   - Injected `#co_header_nav_btn` into `.co-drawer-actions` alongside `#co_header_save_btn` and `#kt_offercreate_close`.
+   - **Step 1 State:** Label renders `Close` with `fas fa-times` icon. Clicking triggers `#kt_offercreate_close`, gracefully closing the drawer.
+   - **Step > 1 State (Steps 2–5):** Automatically switches to `Back` with `fas fa-arrow-left` icon. Clicking calls `prevStep(e, active)`, taking the user directly back to the preceding step.
+2. **Absolute Elimination of "Please wait..." Stale State:**
+   - Decoupled `#co_header_save_btn` label resolution from `$('#save-form').val()`. In `syncStepHeader()`, Steps 1 and 2 are hardcoded to `'Save & Next'` with `fas fa-arrow-right`.
+   - Upgraded `resetAllSaveBtns()` to query both `.co-btn-save` and `.co-header-save-btn`, resetting `disabled = false`, stripping `.co-btn-spinner`, restoring the step-specific action label, and resetting `#save-form.value = 'Save & Next'`.
+   - Integrated `resetAllSaveBtns()` into `prevStep()`, `goToStepNav()`, and both AJAX `success` / `error` handlers so no stale loading state can ever persist when navigating across steps.
+
+### 11.3 Verification Evidence
+- `php -l resources/views/service_company/job-applications/create-offer.blade.php`: **Passed (0 syntax errors)**.
+- Tenancy isolation verified: strictly scoped to `service_company/`. Frozen personas untouched.
+- Stepper navigation tested across all 5 steps with dynamic Close/Back transformation verified.
+
+
 
 
 
