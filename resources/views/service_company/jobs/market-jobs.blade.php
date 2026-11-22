@@ -385,18 +385,28 @@
        Modern Enterprise Card + Sub-Card Design System (Rule 20)
        ══════════════════════════════════════════════════════════════════ */
     .cd-market-header-card {
-        background: #ffffff !important;
+        background: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 12px !important;
-        padding: 14px 20px !important;
-        margin-bottom: 14px !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+        border-radius: 10px !important;
+        padding: 12px 18px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: 16px;
+        gap: 14px;
         font-family: 'Poppins', sans-serif;
+    }
+    /* Universal Mandatory Drawer Header Background Standard (Rule 20) */
+    #kt_activitiesClientjob .card-header,
+    #kt_activitiesBT .card-header,
+    #kt_activitiesHM .card-header,
+    #kt_activitiesTermsFindjob .card-header,
+    #kt_market_filter_drawer .simf-header,
+    .simf-applied-head {
+        background: #f8fafc !important;
+        border-bottom: 1px solid #e2e8f0 !important;
     }
     .cd-market-header-left {
         display: flex;
