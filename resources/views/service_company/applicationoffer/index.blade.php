@@ -802,6 +802,98 @@ body { overflow-x: hidden !important; }
     border-color: #bfdbfe !important;
 }
 
+/* Rule 25 Canonical Organization Filter Dropdown (matching Candidate Tracker) */
+.ot-tb-org-wrap {
+    background: #f8fafc !important;
+    border: 1px solid var(--ot-border) !important;
+    border-radius: 8px !important;
+    padding: 0 12px !important;
+    height: 38px !important;
+    flex-shrink: 0 !important;
+    width: 200px !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
+}
+.ot-tb-org-wrap:hover {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+.ot-tb-org-wrap:focus-within,
+.ot-tb-org-wrap.open {
+    background: #ffffff !important;
+    border-color: var(--ot-primary) !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+.ot-tb-org-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--ot-text-main) !important;
+    text-align: left !important;
+    cursor: pointer !important;
+}
+.ot-tb-org-btn:focus { outline: none !important; }
+.ot-tb-org-icon {
+    width: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12.5px !important;
+    flex-shrink: 0 !important;
+}
+.ot-tb-org-label {
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+.ot-tb-org-btn .chevron {
+    flex-shrink: 0 !important;
+    color: #94a3b8 !important;
+    transition: transform 0.15s ease !important;
+}
+.ot-tb-org-btn.open .chevron { transform: rotate(180deg) !important; }
+.ot-tb-org-panel {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: 0 !important;
+    min-width: 220px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 25px -5px rgba(16, 24, 40, 0.12), 0 4px 6px -2px rgba(16, 24, 40, 0.06) !important;
+    padding: 6px !important;
+    z-index: 60 !important;
+}
+.ot-tb-org-item {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #3f4254 !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    transition: all 0.15s ease !important;
+}
+.ot-tb-org-item:hover { background: #f8fafc !important; }
+.ot-tb-org-item.active { background: #eff6ff !important; color: #1d4ed8 !important; font-weight: 600 !important; }
+.ot-tb-org-item .ot-tb-org-check { margin-left: auto !important; font-size: 11px !important; display: none !important; }
+.ot-tb-org-item.active .ot-tb-org-check { display: inline-block !important; color: #1d4ed8 !important; }
+
 /* Tier 2: Dedicated White Sub-Tabs Card */
 .ot-tabs-card {
     background: #ffffff !important;
@@ -2266,6 +2358,45 @@ body { overflow-x: hidden !important; }
         </div>
 
         <div class="ot-inline-filters">
+            {{-- Organization Dropdown (Rule 25 Canonical Dropdown List matching Candidate Tracker) --}}
+            <div class="ot-tb-org-wrap" id="ot_org_wrap">
+                <button type="button" class="ot-tb-org-btn" id="ot_org_btn" title="Filter by organization classification">
+                    <span class="ot-tb-org-icon" id="ot_org_btn_icon">
+                        <i class="fa fa-layer-group" style="color: #2563eb;"></i>
+                    </span>
+                    <span class="ot-tb-org-label" id="ot_org_label">All Organizations</span>
+                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <select id="ot_company_type_select" style="display:none;">
+                    <option value="all" selected>All Organizations</option>
+                    <option value="my_organization">My Organization</option>
+                    <option value="internal_client">Internal Client</option>
+                    <option value="direct_client">Direct Client</option>
+                </select>
+                <div class="ot-tb-org-panel d-none" id="ot_org_panel">
+                    <div class="ot-tb-org-item active" data-value="all" data-icon="fa fa-layer-group" data-icon-color="#2563eb">
+                        <span class="ot-tb-org-item-icon" style="color: #2563eb; width: 16px; text-align: center;"><i class="fa fa-layer-group"></i></span>
+                        <span class="ot-tb-org-item-text">All Organizations</span>
+                        <span class="ot-tb-org-check"><i class="fa fa-check"></i></span>
+                    </div>
+                    <div class="ot-tb-org-item" data-value="my_organization" data-icon="fa fa-id-badge" data-icon-color="#d97706">
+                        <span class="ot-tb-org-item-icon" style="color: #d97706; width: 16px; text-align: center;"><i class="fa fa-id-badge"></i></span>
+                        <span class="ot-tb-org-item-text">My Organization</span>
+                        <span class="ot-tb-org-check"><i class="fa fa-check"></i></span>
+                    </div>
+                    <div class="ot-tb-org-item" data-value="internal_client" data-icon="fa fa-building" data-icon-color="#2563eb">
+                        <span class="ot-tb-org-item-icon" style="color: #2563eb; width: 16px; text-align: center;"><i class="fa fa-building"></i></span>
+                        <span class="ot-tb-org-item-text">Internal Client</span>
+                        <span class="ot-tb-org-check"><i class="fa fa-check"></i></span>
+                    </div>
+                    <div class="ot-tb-org-item" data-value="direct_client" data-icon="fa fa-shield-alt" data-icon-color="#059669">
+                        <span class="ot-tb-org-item-icon" style="color: #059669; width: 16px; text-align: center;"><i class="fa fa-shield-alt"></i></span>
+                        <span class="ot-tb-org-item-text">Direct Client</span>
+                        <span class="ot-tb-org-check"><i class="fa fa-check"></i></span>
+                    </div>
+                </div>
+            </div>
+
             <div class="ot-filter-pill">
                 <span class="ot-filter-pill-lbl"><i class="fas fa-map-marker-alt text-muted"></i> Location:</span>
                 <select class="ot-filter-select" id="ot_country" aria-label="Filter by location">
@@ -2430,6 +2561,7 @@ body { overflow-x: hidden !important; }
         search        : '',
         country       : '',
         sort          : '',
+        companyType   : 'all',
         tab           : 'all',
         pipelineRange : 'current',
     };
@@ -2621,6 +2753,7 @@ body { overflow-x: hidden !important; }
             q: state.search,
             c: state.country,
             srt: state.sort,
+            org: state.companyType,
             t: state.tab,
             pr: state.pipelineRange
         });
@@ -2669,6 +2802,7 @@ body { overflow-x: hidden !important; }
                 cus_search       : state.search,
                 country          : state.country,
                 sortingfilter    : state.sort,
+                company_type     : state.companyType === 'all' ? '' : state.companyType,
                 offer_tab_filter : state.tab,
                 pipeline_range   : state.pipelineRange,
             },
@@ -2797,12 +2931,39 @@ body { overflow-x: hidden !important; }
         });
     }
 
+    /* ── Organization Dropdown (Rule 25 Canonical Dropdown matching Candidate Tracker) ── */
+    function setOtCompanyType(orgType) {
+        $('.ot-tb-org-item').removeClass('active');
+        var $target = $('.ot-tb-org-item[data-value="' + orgType + '"]');
+        if ($target.length) {
+            $target.addClass('active');
+            $('#ot_org_label').text($target.find('.ot-tb-org-item-text').text());
+            $('#ot_org_btn_icon').html('<i class="' + $target.data('icon') + '" style="color:' + $target.data('icon-color') + ';"></i>');
+        }
+        $('#ot_company_type_select').val(orgType);
+        state.companyType = orgType;
+        fetchTable(true);
+    }
+    window.setOtCompanyType = setOtCompanyType;
+
+    function otOpenOrgPanel() {
+        $('#ot_org_panel').removeClass('d-none');
+        $('#ot_org_btn').addClass('open');
+        $('#ot_org_wrap').addClass('open');
+    }
+    function otCloseOrgPanel() {
+        $('#ot_org_panel').addClass('d-none');
+        $('#ot_org_btn').removeClass('open');
+        $('#ot_org_wrap').removeClass('open');
+    }
+
     function resetFilters() {
-        state.page    = 1;
-        state.search  = '';
-        state.country = '';
-        state.sort    = '';
-        state.tab     = 'all';
+        state.page        = 1;
+        state.search      = '';
+        state.country     = '';
+        state.sort        = '';
+        state.companyType = 'all';
+        state.tab         = 'all';
 
         var sInp = document.getElementById('ot_search');
         var sClr = document.getElementById('otSearchClear');
@@ -2812,6 +2973,15 @@ body { overflow-x: hidden !important; }
         if (sClr) sClr.style.display = 'none';
         if (cSel) cSel.value = '';
         if (rSel) rSel.value = '';
+
+        $('.ot-tb-org-item').removeClass('active');
+        var $allOrg = $('.ot-tb-org-item[data-value="all"]');
+        if ($allOrg.length) {
+            $allOrg.addClass('active');
+            $('#ot_org_label').text($allOrg.find('.ot-tb-org-item-text').text());
+            $('#ot_org_btn_icon').html('<i class="' + $allOrg.data('icon') + '" style="color:' + $allOrg.data('icon-color') + ';"></i>');
+        }
+        $('#ot_company_type_select').val('all');
 
         syncActiveTabUI('all');
         fetchTable(true);
@@ -2912,6 +3082,29 @@ body { overflow-x: hidden !important; }
             tab.addEventListener('click', function () {
                 selectOfferTab(this.dataset.filter);
             });
+        });
+
+        /* Organization filter dropdown event listeners */
+        $(document).on('click', '#ot_org_btn', function (e) {
+            e.stopPropagation();
+            if ($('#ot_org_panel').hasClass('d-none')) {
+                otOpenOrgPanel();
+            } else {
+                otCloseOrgPanel();
+            }
+        });
+
+        $(document).on('click', '.ot-tb-org-item', function (e) {
+            e.stopPropagation();
+            var val = $(this).data('value');
+            setOtCompanyType(val);
+            otCloseOrgPanel();
+        });
+
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('#ot_org_wrap').length) {
+                otCloseOrgPanel();
+            }
         });
     }
 
