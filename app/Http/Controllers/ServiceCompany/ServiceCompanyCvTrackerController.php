@@ -371,9 +371,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'status_filter' => $app_int_status,
                 'user_scope' => ($status_cus == 6 && ! $this->user->hasRole('admin')) ? 'u'.$this->user->id.'_'.(in_array('salary_view', (array) $this->userPermissions) ? '1' : '0') : (in_array('salary_view', (array) $this->userPermissions) ? '1' : '0'),
                 'segmentTwo' => $segmentTwo,
-                // Offer Tracker tab must vary the cache key, otherwise switching tabs
+                // Offer / Joining Tracker tab must vary the cache key, otherwise switching tabs
                 // returns a stale cached result set (the tab filter wasn't part of the key).
                 'offer_tab' => request('offer_tab_filter'),
+                'joining_tab' => request('joining_tab_filter'),
                 'pipeline_range' => request('pipeline_range'),
                 // CV Tracker stage tab must also vary the cache key for the same reason.
                 'stage_tab' => request('stage_tab'),

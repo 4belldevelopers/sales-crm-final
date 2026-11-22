@@ -113,14 +113,22 @@ Responsive breakpoints:
 
 ---
 
+### Toolbar Filter Parity (Offer Tracker Standard)
+Per user request, replaced the legacy Location select with the **Canonical Organization Filter Dropdown** matching the Offer Tracker and Candidate Tracker (`All Organizations`, `My Organization`, `Internal Client`, `Direct Client`).
+- **UI:** Rendered `.jt-tb-org-wrap` with active status icons, chevron rotation, and checkmarks.
+- **State & Caching:** `state.companyType` dynamically dispatched via `company_type` query parameter, with cache key variance across L1 RAM, L2 IndexedDB, and server-side Dragonfly/Redis (`ats:allcvtracker`).
+
+---
+
 ## File Changes Matrix
 | File | Changes |
 | :--- | :--- |
 | `resources/views/service_company/ajax_pages/joining-tracker.blade.php` | Complete redesign into Modern Card + 6 Discrete Sub-Cards + Bottom Strip matching Offer Tracker design. Removed `Delayed` badge, `Reschedule Pending` label, and orange accent border. Corrected `Joined` state detection via `$isCandidateJoined`. Tenancy-batched `offerMeta` lookup. Rule 24 and Rule 25 compliant. |
-| `resources/views/service_company/job-onboard/index.blade.php` | Added complete `.jt-*` subcard CSS classes, updated `.jt-entity-grid` to 6 fractional columns. Removed `.badge-delayed` and replaced "Review Delayed Joinings" dropdown item with "Joined & Onboarded" and "Joined & Backedout". |
+| `resources/views/service_company/job-onboard/index.blade.php` | Replaced Location filter with Rule 25 Canonical Organization Dropdown (`.jt-tb-org-*`). Added L1/L2 cache key variance for `companyType`. Updated "More Actions" dropdown and reset handlers. |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` | Included `joining_tab` in `$cachePayload` ensuring deterministic tenant cache keys for Joining Tracker tab switches. |
 
 ---
 
 ## Verification
-- `php -l` checks on both modified blade files passed with zero errors.
+- `php -l` checks on all modified PHP and Blade files passed with zero errors.
 - Pre-commit AST invariants and secret checks verified.
