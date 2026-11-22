@@ -853,9 +853,8 @@ body { overflow-x: hidden !important; }
 .jt-pill-neutral { background: #ffffff !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
 .jt-pill-bench   { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
 
-/* Clickable Sub-Card Hover States */
+/* Clickable Sub-Card Hover States (Candidate Profile & Stage Drawers Only) */
 .jt-subcard-cand.jt-clickable-subcard,
-.jt-subcard-comp-status.jt-clickable-subcard,
 .jt-subcard-stage.jt-clickable-subcard {
     cursor: pointer !important;
     transition: all 0.15s ease !important;
@@ -863,8 +862,6 @@ body { overflow-x: hidden !important; }
 
 .jt-subcard-cand.jt-clickable-subcard:hover,
 .jt-subcard-cand.jt-clickable-subcard:focus-visible,
-.jt-subcard-comp-status.jt-clickable-subcard:hover,
-.jt-subcard-comp-status.jt-clickable-subcard:focus-visible,
 .jt-subcard-stage.jt-clickable-subcard:hover,
 .jt-subcard-stage.jt-clickable-subcard:focus-visible {
     border-color: #93c5fd !important;
@@ -874,10 +871,6 @@ body { overflow-x: hidden !important; }
 
 .jt-subcard-cand.jt-clickable-subcard:hover .jt-cand-name {
     color: var(--jt-primary-deep) !important;
-    text-decoration: underline !important;
-}
-
-.jt-subcard-comp-status.jt-clickable-subcard:hover .jt-cs-cue {
     text-decoration: underline !important;
 }
 
