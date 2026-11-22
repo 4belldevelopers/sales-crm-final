@@ -277,10 +277,6 @@
             $recReason = $row->recommendation_reason ?? '';
             $recTier = $row->recommendation_tier ?? 'marketplace';
             $rowMatchPct = (int) ($row->match_pct ?? 0);
-            if ($rowMatchPct <= 0) {
-                $rowMatchPct = 75;
-                $recReason = !empty($recReason) ? $recReason : 'Verified Partner • Pre-Agreed Commercials';
-            }
         @endphp
 
         <!-- ── PRIMARY AGENCY CARD (Modern Card + Sub-Card Enterprise Standard - Rule 20) ── -->
@@ -448,14 +444,16 @@
             <div class="cl-card-footer-strip">
                 <div class="cl-footer-strip-left">
                     <div class="cl-footer-match-wrap">
-                        <!-- Match % Badge & What/Why It Matches -->
-                        <span class="cl-card-match-badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
-                            <i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">{{ $rowMatchPct }}% Match</strong>
-                            @if(!empty($recReason))
+                        @if($isDirectMatch && $rowMatchPct > 0 && !empty($recReason))
+                            <!-- Match % Badge & What/Why It Matches (Only shown when skills match) -->
+                            <span class="cl-card-match-badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
+                                <i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">{{ $rowMatchPct }}% Match</strong>
                                 <span class="cl-footer-divider ms-1 me-1 text-muted">•</span>
                                 <span class="match-reason-text text-muted font-weight-500">{{ $recReason }}</span>
-                            @endif
-                        </span>
+                            </span>
+                        @else
+                            <span class="cl-card-match-badge d-none badge-light-success font-size-10 font-weight-700 py-0.5 px-2"></span>
+                        @endif
                     </div>
                 </div>
                 <div class="cl-footer-strip-right">

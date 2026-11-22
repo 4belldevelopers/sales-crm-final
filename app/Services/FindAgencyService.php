@@ -706,32 +706,13 @@ class FindAgencyService
                 $recReason = 'Skill overlap in '.implode(', ', array_slice($commonSkills, 0, 2));
                 $matchPct = min(74, max(50, round(($matchedSkillCount / max(1, count($skillsList))) * 100)));
             } else {
-                // Default / General Marketplace Partner Baseline
-                $servingCountryIds = array_column($source['commericial_countries'] ?? [], 'country_id');
-                $isDomestic = in_array((int) $domesticCountryId, array_map('intval', $servingCountryIds));
-                $isSuperAdminVerified = ((int) ($batchAccountVerify[$matchedCompanyId] ?? 0)) === 1;
-
-                $calcPct = 70;
-                $reasons = [];
-                if ($isDomestic) {
-                    $calcPct += 10;
-                    $reasons[] = 'Domestic '.$domesticCountryAdjective;
-                }
-                if ($benchCount > 0) {
-                    $calcPct += 8;
-                    $reasons[] = $benchCount.' Bench Ready';
-                }
-                if ($isSuperAdminVerified) {
-                    $calcPct += 5;
-                    $reasons[] = 'Verified Partner';
-                }
-                $calcPct = min(92, max(70, $calcPct));
-
+                // Default Marketplace Partner: No direct skills match
+                // Strictly hide percentage match as we cannot claim why it matches without a skill mandate
                 $recTier = 'marketplace';
-                $isDirectMatch = true;
-                $recLabel = 'Verified Partner';
-                $recReason = ! empty($reasons) ? implode(' • ', $reasons) : ($domesticCountryAdjective.' Staffing Partner • Pre-Agreed Commercials');
-                $matchPct = $calcPct;
+                $isDirectMatch = false;
+                $recLabel = '';
+                $recReason = '';
+                $matchPct = 0;
             }
 
             $source['recommendation_tier'] = $recTier;
