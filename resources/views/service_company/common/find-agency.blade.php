@@ -1324,31 +1324,7 @@
 .cl-footer-match-wrap {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
     min-width: 0 !important;
-}
-.cl-card-rank-badge {
-    display: inline-flex !important;
-    align-items: center !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    padding: 2px 7px !important;
-    border-radius: 6px !important;
-    background: #f1f5f9 !important;
-    color: #334155 !important;
-    border: 1px solid #cbd5e1 !important;
-    line-height: 1.25 !important;
-    letter-spacing: 0.2px !important;
-    white-space: nowrap !important;
-    flex-shrink: 0 !important;
-}
-.cl-card-rank-badge.rank-top3 {
-    background: #fffbeb !important;
-    color: #92400e !important;
-    border-color: #fde68a !important;
-}
-.cl-card-rank-badge.rank-top3 i {
-    color: #d97706 !important;
 }
 .cl-card-match-badge {
     display: inline-flex !important;
@@ -2385,7 +2361,7 @@
             }
         });
 
-        // Dynamically rank agencies by Match % in Client RAM (0% Server Strain, Rule 3)
+        // Dynamically sort agencies by Match % in Client RAM (0% Server Strain, Rule 3)
         var $cardStream = $('#findAgencyList');
         var $cards = $cardStream.children('.cl-primary-card');
         if ($cards.length > 1 && mode !== 'none') {
@@ -2395,13 +2371,6 @@
                 return pctB - pctA;
             });
             $cards.detach().appendTo($cardStream);
-            // Re-sequence Rank numbers seamlessly
-            $cards.each(function(idx) {
-                var rank = idx + 1;
-                var $rankBadge = $(this).find('.cl-card-rank-badge');
-                $rankBadge.toggleClass('rank-top3', rank <= 3);
-                $rankBadge.html((rank <= 3 ? '<i class="fas fa-trophy font-size-9 me-1"></i>' : '') + '<span>Rank #' + rank + '</span>');
-            });
         }
     }
 

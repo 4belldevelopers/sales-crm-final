@@ -281,11 +281,6 @@
                 $rowMatchPct = 75;
                 $recReason = !empty($recReason) ? $recReason : 'Verified Partner • Pre-Agreed Commercials';
             }
-
-            $page = (int) ($pagination['current_page'] ?? 1);
-            $perPage = (int) ($pagination['per_page'] ?? 10);
-            $rankNumber = (($page - 1) * $perPage) + ($loop->iteration);
-            $isTop3 = $rankNumber <= 3;
         @endphp
 
         <!-- ── PRIMARY AGENCY CARD (Modern Card + Sub-Card Enterprise Standard - Rule 20) ── -->
@@ -453,14 +448,6 @@
             <div class="cl-card-footer-strip">
                 <div class="cl-footer-strip-left">
                     <div class="cl-footer-match-wrap">
-                        <!-- Marketplace Rank Badge -->
-                        <span class="cl-card-rank-badge {{ $isTop3 ? 'rank-top3' : '' }}" title="Marketplace Ranking Position">
-                            @if($isTop3)
-                                <i class="fas fa-trophy font-size-9 me-1"></i>
-                            @endif
-                            <span>Rank #{{ $rankNumber }}</span>
-                        </span>
-
                         <!-- Match % Badge & What/Why It Matches -->
                         <span class="cl-card-match-badge badge-light-success font-size-10 font-weight-700 py-0.5 px-2" title="{{ $recReason }}">
                             <i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">{{ $rowMatchPct }}% Match</strong>
