@@ -71,3 +71,44 @@ The `formatAmountInWords` client engine adheres to the following specification:
 - **Zero DB Read Strain (Rule 1 & 2):** All Number-to-Words conversions, currency filtering, and confidentiality toggling execute **100% in client browser memory (User RAM)**.
 - **Tenant Scope & Data Isolation (Rule 9 & 18):** Scoped exclusively to Service Company. Product and Staffing company files remain completely frozen.
 - **Contract Compatibility (Rule 7):** Preserved identical form field names (`ctc`, `current_ctc_cur`, `current_ctc_mode`, `employment_type`, `confidential`, `offer_id`) so backend request validation passes with 100% fidelity.
+
+---
+
+## 7. Iteration 2 Enhancements (2026-11-22): Enterprise Select Popovers, High-Visibility Confidentiality, Azure Header & Streamlined Footer
+
+Following user feedback on the active drawer UI screenshots, five focused refinements were engineered:
+
+1. **Main Header Distinct Light Background:**
+   - Updated `.co-drawer-topbar` background from `#f1f5f9` (soft slate) to `#f0f7ff` (light azure tint) with `#bfdbfe` hairline border and elevated soft blue shadow `0 2px 8px rgba(0, 158, 247, 0.08)`.
+   - Distinct from both the `#f8fafc` drawer page canvas and `#ffffff` card containers.
+
+2. **Enterprise Confidentiality Interactive Control:**
+   - Replaced ambiguous checkbox switch with dual-state interactive pill `#coConfToggleBtn`.
+   - **Active State:** `#eff6ff` blue wash, `1px solid #009ef7` border, glowing emerald pulsing bulb (`.co-conf-indicator-bulb`), `fa-lock` icon, bold text `Confidential: Active`, and `RESTRICTED` badge.
+   - **Inactive State:** `#f8fafc` soft neutral, `1px solid #cbd5e1` border, gray bulb, `fa-lock-open` icon, text `Confidential: Inactive`, and `STANDARD` badge.
+   - Added persistent `#confidential_active_hint` alert banner under Base CTC field explaining decryption and access boundaries.
+
+3. **Enterprise Salary Breakdown Format Dropdown Popover:**
+   - Replaced raw browser `<select>` with custom trigger `#coFormatTrigger` and floating popover menu `#coFormatDropdownMenu`.
+   - Features 5 options with custom icons, bold frequency titles, descriptive calculation subtitles, and active checkmarks:
+     - `0`: Monthly / Annually (`fa-layer-group`, Default badge)
+     - `1`: Monthly (`fa-calendar-alt`)
+     - `3`: Annually (`fa-chart-line`)
+     - `2`: Hourly (`fa-clock`)
+     - `4`: Hourly / Annually (`fa-business-time`)
+   - Synchronizes hidden `<select id="current_ctc_mode">` and fires `'change'` so all 20+ table mode and percentage listeners compute seamlessly.
+
+4. **Enterprise Employment Type Dropdown Popover:**
+   - Replaced raw browser `<select>` with custom trigger `#coEmpTypeTrigger` and floating popover menu `#coEmpTypeDropdownMenu`.
+   - Features 5 options with specialized role icons and contract summaries:
+     - `0`: Full-time (`fa-briefcase`, Standard badge)
+     - `1`: Contract (`fa-file-contract`)
+     - `2`: Freelancer (`fa-laptop-code`)
+     - `4`: Internship (`fa-graduation-cap`)
+     - `3`: Part Time (`fa-clock`)
+   - Synchronizes hidden `<select id="employment_type">` and fires `'change'`.
+
+5. **Complete Footer Action Removal:**
+   - Removed visible **Close** button and **Save & Next** button completely from `.co-footer-card`.
+   - Retained `<input type="submit" id="save-form" class="d-none">` in the DOM to maintain 100% form submission parity when triggered by the primary header button `#co_header_save_btn`.
+   - Streamlined `.co-footer-card` into a minimal status verification strip.

@@ -140,13 +140,13 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #f1f5f9 !important; /* Dedicated distinct background color (Rule 20) */
-            border-bottom: 1px solid #cbd5e1 !important;
+            background: #f0f7ff !important; /* Dedicated distinct light azure background (Rule 20) */
+            border-bottom: 1px solid #bfdbfe !important;
             padding: 10px 24px;
             position: sticky;
             top: 0;
             z-index: 50;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 2px 8px rgba(0, 158, 247, 0.08) !important;
             min-height: 58px;
             gap: 16px;
         }
@@ -330,11 +330,89 @@
         }
         .co-table-subcard table { margin-bottom: 0 !important; }
 
-        /* ── Integrated Confidentiality Control ── */
-        .co-conf-inline-wrap {
+        /* ── Integrated Enterprise Confidentiality Control ── */
+        .co-conf-enterprise-wrap {
             display: inline-flex;
             align-items: center;
             gap: 6px;
+        }
+        .co-conf-pill-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            height: 30px !important;
+            padding: 0 10px !important;
+            border-radius: 6px !important;
+            border: 1px solid #cbd5e1 !important;
+            background: #f8fafc !important;
+            color: #475569 !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            user-select: none !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+        }
+        .co-conf-pill-btn:hover {
+            background: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
+            color: #1e293b !important;
+        }
+        .co-conf-pill-btn.is-active {
+            background: #eff6ff !important;
+            border-color: #009ef7 !important;
+            color: #009ef7 !important;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.18) !important;
+        }
+        .co-conf-indicator-bulb {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #94a3b8;
+            display: inline-block;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        .co-conf-pill-btn.is-active .co-conf-indicator-bulb {
+            background: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+            animation: coBulbPulse 1.8s infinite;
+        }
+        @keyframes coBulbPulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+            70% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .co-conf-pill-icon {
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            color: #64748b;
+            transition: color 0.15s ease;
+        }
+        .co-conf-pill-btn.is-active .co-conf-pill-icon {
+            color: #009ef7;
+        }
+        .co-conf-pill-text {
+            line-height: 1;
+            font-weight: 600;
+        }
+        .co-conf-pill-badge {
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            padding: 2px 5px !important;
+            border-radius: 4px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            line-height: 1 !important;
+        }
+        .co-conf-pill-badge.badge-inactive {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+        .co-conf-pill-badge.badge-active {
+            background: #009ef7;
+            color: #ffffff;
         }
         .co-conf-info-trigger {
             display: inline-flex;
@@ -347,17 +425,245 @@
         .co-conf-info-trigger:hover {
             color: #009ef7;
         }
-        .co-conf-active-pill {
+        .co-conf-active-banner {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 11px;
-            color: #1e40af;
+            border-radius: 8px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
-            gap: 6px;
-            line-height: 1.35;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 11px;
+            color: #1e40af;
+            line-height: 1.4;
+            box-shadow: 0 1px 2px rgba(0, 158, 247, 0.05);
+        }
+        .co-conf-banner-badge {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .co-conf-banner-text {
+            color: #1e3a8a;
+            font-size: 11px;
+            flex: 1 1 auto;
+        }
+        .co-conf-banner-link {
+            color: #009ef7;
+            font-weight: 600;
+            font-size: 11px;
+            white-space: nowrap;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .co-conf-banner-link:hover {
+            text-decoration: underline;
+            color: #008be0;
+        }
+
+        /* ── Enterprise Custom Select & Floating Popovers (Rule 20 / Rule 26) ── */
+        .co-custom-select-wrap {
+            position: relative;
+            width: 100%;
+        }
+        .co-custom-select-btn {
+            width: 100% !important;
+            min-height: 40px !important;
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            padding: 5px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            text-align: left !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+            user-select: none !important;
+        }
+        .co-custom-select-btn:hover {
+            border-color: #94a3b8 !important;
+            background: #f8fafc !important;
+        }
+        .co-custom-select-btn[aria-expanded="true"] {
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+            background: #ffffff !important;
+        }
+        .co-csel-icon-box {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 11.5px;
+        }
+        .co-csel-icon-box--blue { background: #eff6ff; color: #009ef7; }
+        .co-csel-icon-box--indigo { background: #eef2ff; color: #6366f1; }
+        .co-csel-text-box {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+        .co-csel-title {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .co-csel-subtitle {
+            font-size: 10px !important;
+            color: #64748b !important;
+            line-height: 1.2 !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 1px;
+        }
+        .co-csel-chevron {
+            font-size: 11px;
+            color: #94a3b8;
+            transition: transform 0.2s ease, color 0.15s ease;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+        .co-custom-select-btn[aria-expanded="true"] .co-csel-chevron {
+            transform: rotate(180deg);
+            color: #009ef7;
+        }
+
+        /* Floating Enterprise Popover Menu */
+        .co-custom-dropdown-popover {
+            position: fixed !important;
+            z-index: 9999999 !important;
+            width: 340px !important;
+            max-width: calc(100vw - 32px) !important;
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.06) !important;
+            padding: 6px !important;
+            box-sizing: border-box !important;
+            animation: coPopFadeIn 0.15s ease-out !important;
+        }
+        .co-cdrop-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 6px 8px 6px 10px !important;
+            margin-bottom: 4px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+        .co-cdrop-header-title {
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+        }
+        .co-cdrop-header-badge {
+            font-size: 9.5px !important;
+            font-weight: 600 !important;
+            color: #94a3b8 !important;
+            background: #f8fafc !important;
+            padding: 1px 6px !important;
+            border-radius: 4px !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        .co-cdrop-list {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            max-height: 280px !important;
+            overflow-y: auto !important;
+        }
+        .co-cdrop-list::-webkit-scrollbar { width: 4px; }
+        .co-cdrop-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .co-cdrop-item {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 7px 10px !important;
+            border-radius: 7px !important;
+            cursor: pointer !important;
+            transition: all 0.12s ease !important;
+            border-left: 3px solid transparent !important;
+            user-select: none !important;
+        }
+        .co-cdrop-item:hover {
+            background: #f8fafc !important;
+            border-left-color: #cbd5e1 !important;
+        }
+        .co-cdrop-item.is-selected {
+            background: #eff6ff !important;
+            border-left-color: #009ef7 !important;
+        }
+        .co-cdrop-item-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 6px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 11.5px !important;
+            flex-shrink: 0 !important;
+        }
+        .co-cdrop-item-icon--blue { background: #eff6ff; color: #009ef7; }
+        .co-cdrop-item-icon--info { background: #f0fdfa; color: #0d9488; }
+        .co-cdrop-item-icon--success { background: #f0fdf4; color: #16a34a; }
+        .co-cdrop-item-icon--warning { background: #fffbeb; color: #d97706; }
+        .co-cdrop-item-icon--purple { background: #faf5ff; color: #9333ea; }
+        .co-cdrop-item-icon--indigo { background: #eef2ff; color: #4f46e5; }
+        .co-cdrop-item-content {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        .co-cdrop-item-title {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+        }
+        .co-cdrop-item.is-selected .co-cdrop-item-title {
+            color: #009ef7 !important;
+            font-weight: 700 !important;
+        }
+        .co-cdrop-item-sub {
+            font-size: 10px !important;
+            color: #64748b !important;
+            line-height: 1.25 !important;
+            margin-top: 1px !important;
+        }
+        .co-cdrop-check {
+            font-size: 11px !important;
+            color: #009ef7 !important;
+            margin-left: auto !important;
+            opacity: 0;
+            transition: opacity 0.15s ease !important;
+            flex-shrink: 0 !important;
+        }
+        .co-cdrop-item.is-selected .co-cdrop-check {
+            opacity: 1 !important;
         }
 
         /* ── CTC Words Dynamic Conversion Display ── */
@@ -665,48 +971,25 @@
         .co-guidance-title { font-size: 12px !important; font-weight: 700 !important; color: #1e293b !important; margin-bottom: 4px; }
         .co-guidance-text { font-size: 11px !important; color: #64748b !important; line-height: 1.5 !important; }
 
-        /* ── Footer Actions Card ── */
+        /* ── Footer Actions Card (Streamlined Reassurance Status Bar) ── */
         .co-footer-card {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 14px 20px;
+            border-radius: 8px;
+            padding: 10px 18px;
             margin-top: 10px;
             margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
         }
-        .co-footer-status { font-size: 11.5px; color: #64748b; display: flex; align-items: center; }
-        .co-btn-close-ghost {
-            background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            color: #475569 !important;
-            font-weight: 600 !important;
-            font-size: 12px !important;
-            padding: 8px 18px !important;
-            border-radius: 8px !important;
-            transition: all .15s ease !important;
-            cursor: pointer;
+        .co-footer-status {
+            font-size: 11.5px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            font-weight: 500;
         }
-        .co-btn-close-ghost:hover {
-            background: #f1f5f9 !important;
-            color: #1e293b !important;
-            border-color: #94a3b8 !important;
-        }
-        .co-btn-save-primary {
-            background: #009ef7 !important;
-            border: 1px solid #009ef7 !important;
-            color: #ffffff !important;
-            font-weight: 600 !important;
-            font-size: 12px !important;
-            padding: 8px 24px !important;
-            border-radius: 8px !important;
-            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
-            transition: all .15s ease !important;
-            cursor: pointer;
-        }
-        .co-btn-save-primary:hover:not(:disabled) {
-            background: #008be3 !important;
-            border-color: #008be3 !important;
             box-shadow: 0 3px 8px rgba(0, 158, 247, 0.3) !important;
         }
 
@@ -1869,22 +2152,69 @@
                                                                             </div>
                                                                         </div>
 
+                                                                        @php
+                                                                            $currentSalaryMode = (int)($salary_mode ?? 0);
+                                                                            $salaryModeTitles = [
+                                                                                0 => 'Monthly / Annually',
+                                                                                1 => 'Monthly',
+                                                                                2 => 'Hourly',
+                                                                                3 => 'Annually',
+                                                                                4 => 'Hourly / Annually',
+                                                                            ];
+                                                                            $salaryModeSubs = [
+                                                                                0 => 'Monthly components & annual aggregate',
+                                                                                1 => 'Monthly payout with annualized summary',
+                                                                                2 => 'Hourly wage rate based on logged hours',
+                                                                                3 => 'Annual lump-sum compensation structure',
+                                                                                4 => 'Dual hourly billing rate with annual projection',
+                                                                            ];
+                                                                            $activeModeTitle = $salaryModeTitles[$currentSalaryMode] ?? 'Monthly / Annually';
+                                                                            $activeModeSub = $salaryModeSubs[$currentSalaryMode] ?? 'Frequency mode used for component calculations';
+
+                                                                            $empTypeVal = (string)$employment_type;
+                                                                            $empKey = 0;
+                                                                            if ($empTypeVal === '1' || strtolower($empTypeVal) === 'contract') {
+                                                                                $empKey = 1;
+                                                                            } elseif ($empTypeVal === '2' || strtolower($empTypeVal) === 'freelancer' || strtolower($empTypeVal) === 'freelance') {
+                                                                                $empKey = 2;
+                                                                            } elseif ($empTypeVal === '4' || strtolower($empTypeVal) === 'internship') {
+                                                                                $empKey = 4;
+                                                                            } elseif ($empTypeVal === '3' || strtolower($empTypeVal) === 'part time' || strtolower($empTypeVal) === 'part-time') {
+                                                                                $empKey = 3;
+                                                                            } else {
+                                                                                $empKey = 0;
+                                                                            }
+
+                                                                            $empTypeMeta = [
+                                                                                0 => ['title' => 'Full-time', 'sub' => 'Permanent employment with standard benefits', 'icon' => 'fa-briefcase', 'iconClass' => 'co-csel-icon-box--blue'],
+                                                                                1 => ['title' => 'Contract', 'sub' => 'Fixed-term or project-based agreement', 'icon' => 'fa-file-contract', 'iconClass' => 'co-csel-icon-box--indigo'],
+                                                                                2 => ['title' => 'Freelancer', 'sub' => 'Independent contractor or milestone consultant', 'icon' => 'fa-laptop-code', 'iconClass' => 'co-csel-icon-box--blue'],
+                                                                                4 => ['title' => 'Internship', 'sub' => 'Trainee or student placement curriculum', 'icon' => 'fa-graduation-cap', 'iconClass' => 'co-csel-icon-box--indigo'],
+                                                                                3 => ['title' => 'Part Time', 'sub' => 'Reduced working hours arrangement', 'icon' => 'fa-clock', 'iconClass' => 'co-csel-icon-box--blue'],
+                                                                            ];
+                                                                            $activeEmp = $empTypeMeta[$empKey] ?? $empTypeMeta[0];
+                                                                        @endphp
+
                                                                         <div class="mb-4">
                                                                             <div class="d-flex align-items-center justify-content-between mb-2">
                                                                                 <label class="form-label required co-flabel mb-0" for="ctc">
                                                                                     <span class="co-ic co-ic--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/></svg></span> Enter Amount (CTC)
                                                                                 </label>
-                                                                                {{-- Confidentiality UI integrated into Amount section per Requirement 3 --}}
-                                                                                <div class="co-conf-inline-wrap d-flex align-items-center gap-2">
-                                                                                    <label class="form-check form-switch form-check-custom form-check-solid form-check-sm mb-0 cursor-pointer" title="Restrict salary visibility to Admins and Approvers">
-                                                                                        <input class="form-check-input" type="checkbox" id="confidential_toggle" {{ $confidential == 1 ? 'checked' : '' }}>
-                                                                                        <span class="form-check-label fs-8 text-gray-700 fw-semibold">
-                                                                                            <i class="fas fa-user-shield text-primary me-1 fs-9"></i>Confidential
+                                                                                {{-- Enterprise Confidentiality Toggle Control --}}
+                                                                                <div class="co-conf-enterprise-wrap d-flex align-items-center gap-2" id="coConfContainer">
+                                                                                    <button type="button" class="co-conf-pill-btn {{ $confidential == 1 ? 'is-active' : '' }}" id="coConfToggleBtn" role="switch" aria-checked="{{ $confidential == 1 ? 'true' : 'false' }}" title="Click to toggle offer salary confidentiality">
+                                                                                        <span class="co-conf-indicator-bulb"></span>
+                                                                                        <span class="co-conf-pill-icon">
+                                                                                            <i class="fas {{ $confidential == 1 ? 'fa-lock' : 'fa-lock-open' }}" id="coConfIcon"></i>
                                                                                         </span>
-                                                                                    </label>
+                                                                                        <span class="co-conf-pill-text" id="coConfLabel">{{ $confidential == 1 ? 'Confidential: Active' : 'Confidential: Inactive' }}</span>
+                                                                                        <span class="co-conf-pill-badge {{ $confidential == 1 ? 'badge-active' : 'badge-inactive' }}" id="coConfBadge">
+                                                                                            {{ $confidential == 1 ? 'RESTRICTED' : 'STANDARD' }}
+                                                                                        </span>
+                                                                                    </button>
                                                                                     <input type="hidden" name="confidential" id="confidential" value="{{ $confidential == 1 ? '1' : '0' }}">
-                                                                                    <a href="javascript:void(0);" class="co-conf-info-trigger" id="btnWhoCanView" title="Who can view salary?">
-                                                                                        <i class="fas fa-question-circle fs-8 text-gray-400 hover-primary"></i>
+                                                                                    <a href="javascript:void(0);" class="co-conf-info-trigger" id="btnWhoCanView" title="Who can view salary? (Security rules)">
+                                                                                        <i class="fas fa-question-circle fs-7 text-gray-400 hover-primary"></i>
                                                                                     </a>
                                                                                 </div>
                                                                             </div>
@@ -1894,15 +2224,18 @@
                                                                             </div>
                                                                             <div class="fv-plugins-message-container invalid-feedback"></div>
 
-                                                                            {{-- Number to words conversion display per Requirement 4 --}}
+                                                                            {{-- Number to words conversion display --}}
                                                                             <div class="co-ctc-words-wrap mt-1" id="coCtcWordsWrap">
                                                                                 <span class="co-ctc-words-text" id="coCtcWordsText"></span>
                                                                             </div>
 
-                                                                            {{-- Confidential active hint banner --}}
-                                                                            <div id="confidential_active_hint" class="co-conf-active-pill mt-2 {{ $confidential == 1 ? '' : 'd-none' }}">
-                                                                                <i class="fas fa-lock text-primary fs-9 me-1"></i>
-                                                                                <span><strong>Confidential Offer:</strong> Package details will only be visible to Organization Admins and designated Approvers. <a href="javascript:void(0);" class="text-primary fw-semibold ms-1" onclick="$('#btnWhoCanView').trigger('click')">Learn more</a></span>
+                                                                            {{-- High-visibility Confidential active banner --}}
+                                                                            <div id="confidential_active_hint" class="co-conf-active-banner mt-2 {{ $confidential == 1 ? '' : 'd-none' }}">
+                                                                                <div class="d-flex align-items-center gap-2">
+                                                                                    <span class="co-conf-banner-badge"><i class="fas fa-lock"></i> RESTRICTED</span>
+                                                                                    <span class="co-conf-banner-text"><strong>Confidential Package:</strong> Salary details are hidden from regular members. Only Organization Admins &amp; designated Approvers can view.</span>
+                                                                                </div>
+                                                                                <a href="javascript:void(0);" class="co-conf-banner-link" onclick="$('#btnWhoCanView').trigger('click')">Who can view?</a>
                                                                             </div>
                                                                         </div>
 
@@ -1910,13 +2243,26 @@
                                                                             <label class="form-label required co-flabel">
                                                                                 <span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span> Salary Breakdown Format
                                                                             </label>
-                                                                            <select class="form-select form-select-solid" arial-label="Select Annual Salary" id="current_ctc_mode" name="current_ctc_mode">
-                                                                                <option value="0" {{ empty($salary_mode) || $salary_mode == 0 ? 'selected' : '' }}>Monthly / Annually</option>
-                                                                                <option value="1" {{ $salary_mode == 1 ? 'selected' : '' }}>Monthly</option>
-                                                                                <option value="3" {{ $salary_mode == 3 ? 'selected' : '' }}>Annually</option>
-                                                                                <option value="2" {{ $salary_mode == 2 ? 'selected' : '' }}>Hourly</option>
-                                                                                <option value="4" {{ $salary_mode == 4 ? 'selected' : '' }}>Hourly / Annually</option>
-                                                                            </select>
+                                                                            <div class="co-custom-select-wrap" id="coFormatSelectWrap">
+                                                                                <button type="button" class="co-custom-select-btn" id="coFormatTrigger" aria-haspopup="listbox" aria-expanded="false" title="Click to change calculation frequency">
+                                                                                    <span class="co-csel-icon-box co-csel-icon-box--blue">
+                                                                                        <i class="fas fa-layer-group"></i>
+                                                                                    </span>
+                                                                                    <div class="co-csel-text-box">
+                                                                                        <span class="co-csel-title" id="coFormatTitle">{{ $activeModeTitle }}</span>
+                                                                                        <span class="co-csel-subtitle" id="coFormatSub">{{ $activeModeSub }}</span>
+                                                                                    </div>
+                                                                                    <i class="fas fa-chevron-down co-csel-chevron"></i>
+                                                                                </button>
+                                                                                {{-- Hidden select maintaining 100% backend contract & existing calculation listeners --}}
+                                                                                <select class="d-none" id="current_ctc_mode" name="current_ctc_mode">
+                                                                                    <option value="0" {{ empty($salary_mode) || $salary_mode == 0 ? 'selected' : '' }}>Monthly / Annually</option>
+                                                                                    <option value="1" {{ $salary_mode == 1 ? 'selected' : '' }}>Monthly</option>
+                                                                                    <option value="3" {{ $salary_mode == 3 ? 'selected' : '' }}>Annually</option>
+                                                                                    <option value="2" {{ $salary_mode == 2 ? 'selected' : '' }}>Hourly</option>
+                                                                                    <option value="4" {{ $salary_mode == 4 ? 'selected' : '' }}>Hourly / Annually</option>
+                                                                                </select>
+                                                                            </div>
                                                                             <div class="co-field-hint">Frequency mode used for component calculations</div>
                                                                         </div>
                                                                     </div>
@@ -1952,14 +2298,27 @@
                                                                             <label class="form-label required co-flabel">
                                                                                 <span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 0 0 0-6M21 20a5 5 0 0 0-3.5-4.8"/></svg></span> Employment Type
                                                                             </label>
-                                                                            <select class="form-select form-select-solid" arial-label="Select Job Type" id="employment_type" name="employment_type">
-                                                                                <option value="0" {{ ((string)$employment_type === '0' || strtolower((string)$employment_type) === 'full-time' || strtolower((string)$employment_type) === 'full time') ? 'selected' : '' }}>Full-time</option>
-                                                                                <option value="1" {{ ((string)$employment_type === '1' || strtolower((string)$employment_type) === 'contract') ? 'selected' : '' }}>Contract</option>
-                                                                                <option value="2" {{ ((string)$employment_type === '2' || strtolower((string)$employment_type) === 'freelancer' || strtolower((string)$employment_type) === 'freelance') ? 'selected' : '' }}>Freelancer</option>
-                                                                                <option value="4" {{ ((string)$employment_type === '4' || strtolower((string)$employment_type) === 'internship') ? 'selected' : '' }}>Internship</option>
-                                                                                <option value="3" {{ ((string)$employment_type === '3' || strtolower((string)$employment_type) === 'part time') ? 'selected' : '' }}>Part Time</option>
-                                                                            </select>
-                                                                            <div class="co-field-hint">Defines contract nature & legal template association</div>
+                                                                            <div class="co-custom-select-wrap" id="coEmpTypeSelectWrap">
+                                                                                <button type="button" class="co-custom-select-btn" id="coEmpTypeTrigger" aria-haspopup="listbox" aria-expanded="false" title="Click to select employment type">
+                                                                                    <span class="co-csel-icon-box {{ $activeEmp['iconClass'] }}">
+                                                                                        <i class="fas {{ $activeEmp['icon'] }}" id="coEmpTypeTriggerIcon"></i>
+                                                                                    </span>
+                                                                                    <div class="co-csel-text-box">
+                                                                                        <span class="co-csel-title" id="coEmpTypeTitle">{{ $activeEmp['title'] }}</span>
+                                                                                        <span class="co-csel-subtitle" id="coEmpTypeSub">{{ $activeEmp['sub'] }}</span>
+                                                                                    </div>
+                                                                                    <i class="fas fa-chevron-down co-csel-chevron"></i>
+                                                                                </button>
+                                                                                {{-- Hidden select maintaining 100% backend contract --}}
+                                                                                <select class="d-none" id="employment_type" name="employment_type">
+                                                                                    <option value="0" {{ $empKey === 0 ? 'selected' : '' }}>Full-time</option>
+                                                                                    <option value="1" {{ $empKey === 1 ? 'selected' : '' }}>Contract</option>
+                                                                                    <option value="2" {{ $empKey === 2 ? 'selected' : '' }}>Freelancer</option>
+                                                                                    <option value="4" {{ $empKey === 4 ? 'selected' : '' }}>Internship</option>
+                                                                                    <option value="3" {{ $empKey === 3 ? 'selected' : '' }}>Part Time</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div class="co-field-hint">Defines contract nature &amp; legal template association</div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -3428,6 +3787,132 @@
                                                     <svg class="ij-curr-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                                                 </div>
                                             @endforeach
+                                        </div>
+                                    </div>
+
+                                    <!-- Modern Enterprise Salary Breakdown Format Dropdown Popover -->
+                                    <div class="co-custom-dropdown-popover" id="coFormatDropdownMenu" style="display:none;" tabindex="-1">
+                                        <div class="co-cdrop-header">
+                                            <span class="co-cdrop-header-title">Salary Breakdown Format</span>
+                                            <span class="co-cdrop-header-badge">5 Options</span>
+                                        </div>
+                                        <div class="co-cdrop-list">
+                                            <div class="co-cdrop-item {{ (empty($salary_mode) || $salary_mode == 0) ? 'is-selected' : '' }}" data-val="0" data-title="Monthly / Annually" data-sub="Monthly components &amp; annual aggregate" data-icon="fa-layer-group" data-iconclass="co-csel-icon-box--blue">
+                                                <span class="co-cdrop-item-icon co-cdrop-item-icon--blue">
+                                                    <i class="fas fa-layer-group"></i>
+                                                </span>
+                                                <div class="co-cdrop-item-content">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="co-cdrop-item-title">Monthly / Annually</span>
+                                                        <span class="badge badge-light-primary fs-9 py-0 px-2 fw-semibold">Default</span>
+                                                    </div>
+                                                    <span class="co-cdrop-item-sub">Both monthly component and annual aggregate are tracked</span>
+                                                </div>
+                                                <i class="fas fa-check co-cdrop-check"></i>
+                                            </div>
+                                            <div class="co-cdrop-item {{ $salary_mode == 1 ? 'is-selected' : '' }}" data-val="1" data-title="Monthly" data-sub="Monthly payout with annualized summary" data-icon="fa-calendar-alt" data-iconclass="co-csel-icon-box--blue">
+                                                <span class="co-cdrop-item-icon co-cdrop-item-icon--info">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </span>
+                                                <div class="co-cdrop-item-content">
+                                                    <span class="co-cdrop-item-title">Monthly</span>
+                                                    <span class="co-cdrop-item-sub">Monthly salary payout with annualized calculation</span>
+                                                </div>
+                                                <i class="fas fa-check co-cdrop-check"></i>
+                                            </div>
+                                            <div class="co-cdrop-item {{ $salary_mode == 3 ? 'is-selected' : '' }}" data-val="3" data-title="Annually" data-sub="Annual lump-sum compensation structure" data-icon="fa-chart-line" data-iconclass="co-csel-icon-box--blue">
+                                                <span class="co-cdrop-item-icon co-cdrop-item-icon--success">
+                                                    <i class="fas fa-chart-line"></i>
+                                                </span>
+                                                <div class="co-cdrop-item-content">
+                                                    <span class="co-cdrop-item-title">Annually</span>
+                                                    <span class="co-cdrop-item-sub">Annual lump-sum package without monthly split</span>
+                                                </div>
+                                                <i class="fas fa-check co-cdrop-check"></i>
+                                            </div>
+                                            <div class="co-cdrop-item {{ $salary_mode == 2 ? 'is-selected' : '' }}" data-val="2" data-title="Hourly" data-sub="Hourly wage rate based on logged hours" data-icon="fa-clock" data-iconclass="co-csel-icon-box--blue">
+                                                <span class="co-cdrop-item-icon co-cdrop-item-icon--warning">
+                                                    <i class="fas fa-clock"></i>
+                                                </span>
+                                                <div class="co-cdrop-item-content">
+                                                    <span class="co-cdrop-item-title">Hourly</span>
+                                                    <span class="co-cdrop-item-sub">Hourly compensation based on billable work hours</span>
+                                                </div>
+                                                <i class="fas fa-check co-cdrop-check"></i>
+                                            </div>
+                                            <div class="co-cdrop-item {{ $salary_mode == 4 ? 'is-selected' : '' }}" data-val="4" data-title="Hourly / Annually" data-sub="Dual hourly billing rate with annual projection" data-icon="fa-business-time" data-iconclass="co-csel-icon-box--blue">
+                                                <span class="co-cdrop-item-icon co-cdrop-item-icon--purple">
+                                                    <i class="fas fa-business-time"></i>
+                                                </span>
+                                                <div class="co-cdrop-item-content">
+                                                    <span class="co-cdrop-item-title">Hourly / Annually</span>
+                                                    <span class="co-cdrop-item-sub">Dual hourly billing rate and projected annual package</span>
+                                                </div>
+                                                <i class="fas fa-check co-cdrop-check"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modern Enterprise Employment Type Dropdown Popover -->
+                                    <div class="co-custom-dropdown-popover" id="coEmpTypeDropdownMenu" style="display:none;" tabindex="-1">
+                                        <div class="co-cdrop-header">
+                                            <span class="co-cdrop-header-title">Employment Type</span>
+                                            <span class="co-cdrop-header-badge">5 Types</span>
+                                        </div>
+                                        <div class="co-cdrop-list">
+                                            <div class="co-cdrop-item {{ $empKey === 0 ? 'is-selected' : '' }}" data-val="0" data-title="Full-time" data-sub="Permanent employment with standard benefits" data-icon="fa-briefcase" data-iconclass="co-csel-icon-box--blue">
+                                                <span class="co-cdrop-item-icon co-cdrop-item-icon--blue">
+                                                    <i class="fas fa-briefcase"></i>
+                                                </span>
+                                                <div class="co-cdrop-item-content">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="co-cdrop-item-title">Full-time</span>
+                                                        <span class="badge badge-light-primary fs-9 py-0 px-2 fw-semibold">Standard</span>
+                                                    </div>
+                                                    <span class="co-cdrop-item-sub">Permanent employment with standard benefits &amp; payroll</span>
+                                                </div>
+                                                <i class="fas fa-check co-cdrop-check"></i>
+                                            </div>
+                                            <div class="co-cdrop-item {{ $empKey === 1 ? 'is-selected' : '' }}" data-val="1" data-title="Contract" data-sub="Fixed-term or project-based agreement" data-icon="fa-file-contract" data-iconclass="co-csel-icon-box--indigo">
+                                                <span class="co-cdrop-item-icon co-cdrop-item-icon--warning">
+                                                    <i class="fas fa-file-contract"></i>
+                                                </span>
+                                                <div class="co-cdrop-item-content">
+                                                    <span class="co-cdrop-item-title">Contract</span>
+                                                    <span class="co-cdrop-item-sub">Fixed-term contract or client mandate with defined tenure</span>
+                                                </div>
+                                                <i class="fas fa-check co-cdrop-check"></i>
+                                            </div>
+                                            <div class="co-cdrop-item {{ $empKey === 2 ? 'is-selected' : '' }}" data-val="2" data-title="Freelancer" data-sub="Independent contractor or milestone consultant" data-icon="fa-laptop-code" data-iconclass="co-csel-icon-box--blue">
+                                                <span class="co-cdrop-item-icon co-cdrop-item-icon--success">
+                                                    <i class="fas fa-laptop-code"></i>
+                                                </span>
+                                                <div class="co-cdrop-item-content">
+                                                    <span class="co-cdrop-item-title">Freelancer</span>
+                                                    <span class="co-cdrop-item-sub">Independent contractor or milestone-based consultant</span>
+                                                </div>
+                                                <i class="fas fa-check co-cdrop-check"></i>
+                                            </div>
+                                            <div class="co-cdrop-item {{ $empKey === 4 ? 'is-selected' : '' }}" data-val="4" data-title="Internship" data-sub="Trainee or student placement curriculum" data-icon="fa-graduation-cap" data-iconclass="co-csel-icon-box--indigo">
+                                                <span class="co-cdrop-item-icon co-cdrop-item-icon--info">
+                                                    <i class="fas fa-graduation-cap"></i>
+                                                </span>
+                                                <div class="co-cdrop-item-content">
+                                                    <span class="co-cdrop-item-title">Internship</span>
+                                                    <span class="co-cdrop-item-sub">Trainee or student placement with learning curriculum</span>
+                                                </div>
+                                                <i class="fas fa-check co-cdrop-check"></i>
+                                            </div>
+                                            <div class="co-cdrop-item {{ $empKey === 3 ? 'is-selected' : '' }}" data-val="3" data-title="Part Time" data-sub="Reduced working hours arrangement" data-icon="fa-clock" data-iconclass="co-csel-icon-box--blue">
+                                                <span class="co-cdrop-item-icon co-cdrop-item-icon--purple">
+                                                    <i class="fas fa-clock"></i>
+                                                </span>
+                                                <div class="co-cdrop-item-content">
+                                                    <span class="co-cdrop-item-title">Part Time</span>
+                                                    <span class="co-cdrop-item-sub">Reduced working hours with prorated compensation</span>
+                                                </div>
+                                                <i class="fas fa-check co-cdrop-check"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -7000,6 +7485,9 @@
                     }
 
                     function openCurrencyPopover($trigger) {
+                        if (typeof closeCustomSelectPopover === 'function') {
+                            closeCustomSelectPopover();
+                        }
                         activeTrigger = $trigger;
                         $pop.show();
                         positionCurrencyPopover($trigger);
@@ -7286,24 +7774,184 @@
 
                     $(document).on('input keyup change paste', '#ctc', updateCtcWords);
 
-                    /* ── Confidentiality Toggle Controller ── */
-                    $(document).on('change', '#confidential_toggle', function () {
-                        var isConf = $(this).is(':checked');
+                    /* ── Integrated Enterprise Confidentiality Toggle Controller ── */
+                    function setConfidentialState(isConf) {
                         $('#confidential').val(isConf ? '1' : '0');
+                        var $btn = $('#coConfToggleBtn');
+                        var $icon = $('#coConfIcon');
+                        var $label = $('#coConfLabel');
+                        var $badge = $('#coConfBadge');
+                        var $hint = $('#confidential_active_hint');
+                        var $hdrBadge = $('#coConfStatusBadge');
+                        var $hdrText = $('#coConfStatusBadgeText');
+
                         if (isConf) {
-                            $('#confidential_active_hint').removeClass('d-none');
-                            $('#coConfStatusBadge')
+                            $btn.addClass('is-active').attr('aria-checked', 'true');
+                            $icon.removeClass('fa-lock-open').addClass('fa-lock');
+                            $label.text('Confidential: Active');
+                            $badge.removeClass('badge-inactive').addClass('badge-active').text('RESTRICTED');
+                            $hint.removeClass('d-none');
+                            $hdrBadge
                                 .removeClass('badge-light-primary text-primary')
                                 .addClass('badge-light-warning text-warning');
-                            $('#coConfStatusBadge i').removeClass('fa-lock-open').addClass('fa-lock');
-                            $('#coConfStatusBadgeText').text('Confidential Offer');
+                            $hdrBadge.find('i').removeClass('fa-lock-open').addClass('fa-lock');
+                            $hdrText.text('Confidential (Restricted)');
                         } else {
-                            $('#confidential_active_hint').addClass('d-none');
-                            $('#coConfStatusBadge')
+                            $btn.removeClass('is-active').attr('aria-checked', 'false');
+                            $icon.removeClass('fa-lock').addClass('fa-lock-open');
+                            $label.text('Confidential: Inactive');
+                            $badge.removeClass('badge-active').addClass('badge-inactive').text('STANDARD');
+                            $hint.addClass('d-none');
+                            $hdrBadge
                                 .removeClass('badge-light-warning text-warning')
                                 .addClass('badge-light-primary text-primary');
-                            $('#coConfStatusBadge i').removeClass('fa-lock').addClass('fa-lock-open');
-                            $('#coConfStatusBadgeText').text('Standard Visibility');
+                            $hdrBadge.find('i').removeClass('fa-lock').addClass('fa-lock-open');
+                            $hdrText.text('Standard Visibility');
+                        }
+                    }
+
+                    $(document).on('click', '#coConfToggleBtn', function (e) {
+                        e.preventDefault();
+                        var isActive = $(this).hasClass('is-active');
+                        setConfidentialState(!isActive);
+                    });
+
+                    /* ── Custom Enterprise Select Menus (Salary Format & Employment Type) ── */
+                    var activeCustomSelectPop = null;
+                    var activeCustomSelectTrigger = null;
+
+                    function positionCustomSelectPopover($trigger, $pop) {
+                        if (!$trigger || !$trigger.length || !$pop || !$pop.length) return;
+                        var rect = $trigger[0].getBoundingClientRect();
+                        var popWidth = Math.max(rect.width, 320);
+                        var popHeight = $pop.outerHeight() || 260;
+                        var left = rect.left;
+
+                        if (left + popWidth > window.innerWidth - 16) {
+                            left = window.innerWidth - popWidth - 16;
+                        }
+                        if (left < 16) left = 16;
+
+                        var top = rect.bottom + 4;
+                        if (top + popHeight > window.innerHeight - 10 && rect.top > popHeight + 10) {
+                            top = rect.top - popHeight - 4;
+                        }
+
+                        $pop.css({
+                            position: 'fixed',
+                            top: top + 'px',
+                            left: left + 'px',
+                            width: popWidth + 'px',
+                            zIndex: 9999999
+                        });
+                    }
+
+                    function openCustomSelectPopover($trigger, $pop) {
+                        if (activeCustomSelectPop && activeCustomSelectPop[0] !== $pop[0]) {
+                            closeCustomSelectPopover();
+                        }
+                        if (typeof closeCurrencyPopover === 'function') {
+                            closeCurrencyPopover();
+                        }
+                        if (!$pop.parent().is('body')) {
+                            $('body').append($pop);
+                        }
+                        activeCustomSelectTrigger = $trigger;
+                        activeCustomSelectPop = $pop;
+
+                        $pop.show();
+                        positionCustomSelectPopover($trigger, $pop);
+                        $trigger.attr('aria-expanded', 'true');
+                    }
+
+                    function closeCustomSelectPopover() {
+                        if (activeCustomSelectPop) {
+                            activeCustomSelectPop.hide();
+                        }
+                        if (activeCustomSelectTrigger) {
+                            activeCustomSelectTrigger.attr('aria-expanded', 'false');
+                        }
+                        activeCustomSelectPop = null;
+                        activeCustomSelectTrigger = null;
+                    }
+
+                    // Salary Breakdown Format Trigger
+                    $(document).on('click', '#coFormatTrigger', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var $pop = $('#coFormatDropdownMenu');
+                        if ($pop.is(':visible')) {
+                            closeCustomSelectPopover();
+                        } else {
+                            openCustomSelectPopover($(this), $pop);
+                        }
+                    });
+
+                    // Salary Breakdown Format Item Select
+                    $(document).on('click', '#coFormatDropdownMenu .co-cdrop-item', function (e) {
+                        e.preventDefault();
+                        var val = $(this).data('val');
+                        var title = $(this).data('title');
+                        var sub = $(this).data('sub');
+
+                        $('#coFormatDropdownMenu .co-cdrop-item').removeClass('is-selected');
+                        $(this).addClass('is-selected');
+
+                        $('#coFormatTitle').text(title);
+                        $('#coFormatSub').text(sub);
+
+                        // Sync to hidden select & trigger existing change handler
+                        $('#current_ctc_mode').val(String(val)).trigger('change');
+
+                        closeCustomSelectPopover();
+                    });
+
+                    // Employment Type Trigger
+                    $(document).on('click', '#coEmpTypeTrigger', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var $pop = $('#coEmpTypeDropdownMenu');
+                        if ($pop.is(':visible')) {
+                            closeCustomSelectPopover();
+                        } else {
+                            openCustomSelectPopover($(this), $pop);
+                        }
+                    });
+
+                    // Employment Type Item Select
+                    $(document).on('click', '#coEmpTypeDropdownMenu .co-cdrop-item', function (e) {
+                        e.preventDefault();
+                        var val = $(this).data('val');
+                        var title = $(this).data('title');
+                        var sub = $(this).data('sub');
+                        var icon = $(this).data('icon') || 'fa-briefcase';
+
+                        $('#coEmpTypeDropdownMenu .co-cdrop-item').removeClass('is-selected');
+                        $(this).addClass('is-selected');
+
+                        $('#coEmpTypeTitle').text(title);
+                        $('#coEmpTypeSub').text(sub);
+                        $('#coEmpTypeTriggerIcon').attr('class', 'fas ' + icon);
+
+                        // Sync to hidden select & trigger change
+                        $('#employment_type').val(String(val)).trigger('change');
+
+                        closeCustomSelectPopover();
+                    });
+
+                    // Close custom popovers on outside click
+                    $(document).on('click', function (e) {
+                        if (activeCustomSelectPop && activeCustomSelectPop.is(':visible')) {
+                            if (!$(e.target).closest('#coFormatDropdownMenu, #coFormatTrigger, #coEmpTypeDropdownMenu, #coEmpTypeTrigger').length) {
+                                closeCustomSelectPopover();
+                            }
+                        }
+                    });
+
+                    // Close on escape key
+                    $(document).on('keydown', function (e) {
+                        if (e.key === 'Escape' && activeCustomSelectPop) {
+                            closeCustomSelectPopover();
                         }
                     });
 
