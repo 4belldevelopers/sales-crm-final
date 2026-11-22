@@ -277,12 +277,15 @@
         .co-section-note { font-size: 11px; font-weight: 500; color: #64748b; }
         .co-section-sub { font-size: 11px !important; color: #64748b !important; margin-top: 1px !important; line-height: 1.35 !important; }
 
-        /* ── Sub-Cards (Tier 3 Discrete Sub-Panels) ── */
+        /* ── Sub-Cards (Tier 3 Discrete Sub-Panels - Rule 20) ── */
         .co-subcard {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
             transition: all .15s ease;
         }
         .co-subcard:hover {
@@ -292,11 +295,12 @@
         .co-subcard-header {
             background: #f8fafc;
             border-bottom: 1px solid #e2e8f0;
-            padding: 8px 14px;
+            padding: 9px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             min-height: 38px;
+            flex-shrink: 0;
         }
         .co-subcard-title {
             font-size: 11px !important;
@@ -319,6 +323,10 @@
         .co-subcard-body {
             padding: 16px;
             background: #ffffff;
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         /* ── Table Sub-Card Shell ── */
@@ -330,146 +338,89 @@
         }
         .co-table-subcard table { margin-bottom: 0 !important; }
 
-        /* ── Integrated Enterprise Confidentiality Control ── */
-        .co-conf-enterprise-wrap {
-            display: inline-flex;
+        /* ── Integrated Amount Input & Currency Prefix (Seamless Single Control) ── */
+        .co-amount-input-wrap {
+            position: relative;
+            width: 100%;
+            display: flex;
             align-items: center;
-            gap: 6px;
         }
-        .co-conf-pill-btn {
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 7px !important;
-            height: 30px !important;
-            padding: 0 10px !important;
-            border-radius: 6px !important;
-            border: 1px solid #cbd5e1 !important;
-            background: #f8fafc !important;
-            color: #475569 !important;
-            font-size: 11.5px !important;
-            font-weight: 600 !important;
-            cursor: pointer !important;
-            transition: all 0.15s ease !important;
-            user-select: none !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
-        }
-        .co-conf-pill-btn:hover {
-            background: #f1f5f9 !important;
-            border-color: #94a3b8 !important;
-            color: #1e293b !important;
-        }
-        .co-conf-pill-btn.is-active {
-            background: #eff6ff !important;
-            border-color: #009ef7 !important;
-            color: #009ef7 !important;
-            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.18) !important;
-        }
-        .co-conf-indicator-bulb {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #94a3b8;
-            display: inline-block;
-            flex-shrink: 0;
-            transition: all 0.2s ease;
-        }
-        .co-conf-pill-btn.is-active .co-conf-indicator-bulb {
-            background: #10b981;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
-            animation: coBulbPulse 1.8s infinite;
-        }
-        @keyframes coBulbPulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
-            70% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-        .co-conf-pill-icon {
-            font-size: 11px;
-            display: inline-flex;
-            align-items: center;
-            color: #64748b;
-            transition: color 0.15s ease;
-        }
-        .co-conf-pill-btn.is-active .co-conf-pill-icon {
-            color: #009ef7;
-        }
-        .co-conf-pill-text {
-            line-height: 1;
+        .co-amount-prefix {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13.5px;
             font-weight: 600;
-        }
-        .co-conf-pill-badge {
-            font-size: 9.5px !important;
-            font-weight: 700 !important;
-            padding: 2px 5px !important;
-            border-radius: 4px !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.3px !important;
-            line-height: 1 !important;
-        }
-        .co-conf-pill-badge.badge-inactive {
-            background: #e2e8f0;
             color: #64748b;
-        }
-        .co-conf-pill-badge.badge-active {
-            background: #009ef7;
-            color: #ffffff;
-        }
-        .co-conf-info-trigger {
+            pointer-events: none;
+            z-index: 3;
+            line-height: 1;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: #94a3b8;
-            cursor: pointer;
-            transition: color 0.15s;
+            min-width: 16px;
         }
-        .co-conf-info-trigger:hover {
-            color: #009ef7;
+        .co-amount-input {
+            padding-left: 36px !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: #1e293b !important;
+            height: 40px !important;
+            min-height: 40px !important;
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 7px !important;
+            font-variant-numeric: tabular-nums;
+            width: 100% !important;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
-        .co-conf-active-banner {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            padding: 8px 12px;
+        .co-amount-input:focus {
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+        }
+
+        /* ── Concise Enterprise Confidentiality Notification Line ── */
+        .co-conf-notice {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            font-size: 11px;
-            color: #1e40af;
+            gap: 6px;
+            font-size: 11.5px !important;
+            color: #475569;
             line-height: 1.4;
-            box-shadow: 0 1px 2px rgba(0, 158, 247, 0.05);
+            padding: 6px 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin-top: 6px;
+            transition: all 0.2s ease;
         }
-        .co-conf-banner-badge {
-            background: #dbeafe;
-            color: #1d4ed8;
-            border: 1px solid #bfdbfe;
-            border-radius: 4px;
-            padding: 2px 6px;
-            font-size: 9.5px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-        .co-conf-banner-text {
-            color: #1e3a8a;
-            font-size: 11px;
+        .co-conf-notice-text {
             flex: 1 1 auto;
+            font-size: 11px;
+            color: #475569;
         }
-        .co-conf-banner-link {
+        .co-conf-notice-link {
             color: #009ef7;
             font-weight: 600;
             font-size: 11px;
-            white-space: nowrap;
             text-decoration: none;
-            flex-shrink: 0;
+            white-space: nowrap;
         }
-        .co-conf-banner-link:hover {
+        .co-conf-notice-link:hover {
             text-decoration: underline;
             color: #008be0;
+        }
+
+        /* ── Joining Schedule Guidance Card ── */
+        .co-schedule-guidance-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.4;
         }
 
         /* ── Enterprise Custom Select & Floating Popovers (Rule 20 / Rule 26) ── */
@@ -971,40 +922,27 @@
         .co-guidance-title { font-size: 12px !important; font-weight: 700 !important; color: #1e293b !important; margin-bottom: 4px; }
         .co-guidance-text { font-size: 11px !important; color: #64748b !important; line-height: 1.5 !important; }
 
-        /* ── Footer Actions Card (Streamlined Reassurance Status Bar) ── */
-        .co-footer-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 10px 18px;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        /* ── Standardized Field Labels & Neutral Icons (Rule 26 / unslop) ── */
+        .co-flabel {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #334155 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            margin-bottom: 6px !important;
+            line-height: 1.2 !important;
         }
-        .co-footer-status {
-            font-size: 11.5px;
-            color: #64748b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            font-weight: 500;
+        .co-lbl-icon {
+            font-size: 12px !important;
+            width: 16px !important;
+            text-align: center !important;
+            color: #64748b !important;
+            margin-right: 7px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
         }
-            box-shadow: 0 3px 8px rgba(0, 158, 247, 0.3) !important;
-        }
-
-        /* ── Colored square field/component icons (closest-match line icons) ── */
-        .co-ic { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; margin-right: 6px; }
-        .co-ic svg { width: 13px; height: 13px; }
-        .co-ic--blue   { background: #e8f1fd; color: #3699ff; }
-        .co-ic--green  { background: #e8fff3; color: #17a673; }
-        .co-ic--indigo { background: #eef2ff; color: #4f46e5; }
-        .co-ic--amber  { background: #fff4e0; color: #d9822b; }
-        .co-ic--red    { background: #fdeef0; color: #e24b4a; }
-        .co-ic--purple { background: #f3ecfe; color: #7239ea; }
-
-        /* Form input enhancements inside subcards */
-        .co-flabel { font-size: 12px !important; font-weight: 600; color: #334155; display: flex; align-items: center; margin-bottom: 6px; }
         .co-field-hint { font-size: 10.5px; color: #64748b; margin-top: 4px; }
         #offer_create_show_right_bar .form-control,
         #offer_create_show_right_bar .form-select {
@@ -2112,22 +2050,67 @@
                                                         </div>
                                                     </div>
 
+                                                    @php
+                                                        $currentSalaryMode = (int)($salary_mode ?? 0);
+                                                        $salaryModeTitles = [
+                                                            0 => 'Monthly / Annually',
+                                                            1 => 'Monthly',
+                                                            2 => 'Hourly',
+                                                            3 => 'Annually',
+                                                            4 => 'Hourly / Annually',
+                                                        ];
+                                                        $salaryModeSubs = [
+                                                            0 => 'Monthly components & annual aggregate',
+                                                            1 => 'Monthly payout with annualized summary',
+                                                            2 => 'Hourly wage rate based on logged hours',
+                                                            3 => 'Annual lump-sum compensation structure',
+                                                            4 => 'Dual hourly billing rate with annual projection',
+                                                        ];
+                                                        $activeModeTitle = $salaryModeTitles[$currentSalaryMode] ?? 'Monthly / Annually';
+                                                        $activeModeSub = $salaryModeSubs[$currentSalaryMode] ?? 'Frequency mode used for component calculations';
+
+                                                        $empTypeVal = (string)$employment_type;
+                                                        $empKey = 0;
+                                                        if ($empTypeVal === '1' || strtolower($empTypeVal) === 'contract') {
+                                                            $empKey = 1;
+                                                        } elseif ($empTypeVal === '2' || strtolower($empTypeVal) === 'freelancer' || strtolower($empTypeVal) === 'freelance') {
+                                                            $empKey = 2;
+                                                        } elseif ($empTypeVal === '4' || strtolower($empTypeVal) === 'internship') {
+                                                            $empKey = 4;
+                                                        } elseif ($empTypeVal === '3' || strtolower($empTypeVal) === 'part time' || strtolower($empTypeVal) === 'part-time') {
+                                                            $empKey = 3;
+                                                        } else {
+                                                            $empKey = 0;
+                                                        }
+
+                                                        $empTypeMeta = [
+                                                            0 => ['title' => 'Full-time', 'sub' => 'Permanent employment with standard benefits', 'icon' => 'fa-briefcase', 'iconClass' => 'co-csel-icon-box--blue'],
+                                                            1 => ['title' => 'Contract', 'sub' => 'Fixed-term or project-based agreement', 'icon' => 'fa-file-contract', 'iconClass' => 'co-csel-icon-box--indigo'],
+                                                            2 => ['title' => 'Freelancer', 'sub' => 'Independent contractor or milestone consultant', 'icon' => 'fa-laptop-code', 'iconClass' => 'co-csel-icon-box--blue'],
+                                                            4 => ['title' => 'Internship', 'sub' => 'Trainee or student placement curriculum', 'icon' => 'fa-graduation-cap', 'iconClass' => 'co-csel-icon-box--indigo'],
+                                                            3 => ['title' => 'Part Time', 'sub' => 'Reduced working hours arrangement', 'icon' => 'fa-clock', 'iconClass' => 'co-csel-icon-box--blue'],
+                                                        ];
+                                                        $activeEmp = $empTypeMeta[$empKey] ?? $empTypeMeta[0];
+                                                    @endphp
+
                                                     <div class="card-body p-5">
-                                                        <div class="row g-4">
-                                                            {{-- SUB-CARD 1: Salary & Currency Package --}}
-                                                            <div class="col-lg-6">
+                                                        <div class="row g-4 align-items-stretch">
+                                                            {{-- SUB-CARD 1: Salary & Currency --}}
+                                                            <div class="col-12 col-md-6 col-xxl-3 d-flex flex-column">
                                                                 <div class="co-subcard h-100">
                                                                     <div class="co-subcard-header">
                                                                         <span class="co-subcard-title">
-                                                                            <i class="fas fa-coins text-warning me-2"></i>
-                                                                            Salary & Currency Package
+                                                                            <i class="fas fa-coins text-primary me-2 fs-7"></i>
+                                                                            Salary &amp; Currency
                                                                         </span>
-                                                                        <span class="co-subcard-badge">Base CTC</span>
+                                                                        <span class="co-subcard-badge">Currency &amp; Mode</span>
                                                                     </div>
                                                                     <div class="co-subcard-body">
+                                                                        {{-- Currency Selection --}}
                                                                         <div class="mb-4">
-                                                                            <label class="form-label required co-flabel">
-                                                                                <span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1.1 2 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2.5 0 0 1 9.5 15M12 6v1.5M12 16.5V18"/></svg></span> Currency
+                                                                            <label class="form-label required co-flabel" for="coCurrTrigger">
+                                                                                <i class="fas fa-money-bill-wave co-lbl-icon"></i>
+                                                                                <span>Currency</span>
                                                                             </label>
                                                                             <div class="co-currency-control-wrapper" id="coCurrWrap">
                                                                                 <button type="button" class="ij-currency-btn co-drawer-curr-btn" id="coCurrTrigger" data-target="coCurrWrap" title="Click to change currency" aria-haspopup="dialog" aria-expanded="false">
@@ -2152,96 +2135,11 @@
                                                                             </div>
                                                                         </div>
 
-                                                                        @php
-                                                                            $currentSalaryMode = (int)($salary_mode ?? 0);
-                                                                            $salaryModeTitles = [
-                                                                                0 => 'Monthly / Annually',
-                                                                                1 => 'Monthly',
-                                                                                2 => 'Hourly',
-                                                                                3 => 'Annually',
-                                                                                4 => 'Hourly / Annually',
-                                                                            ];
-                                                                            $salaryModeSubs = [
-                                                                                0 => 'Monthly components & annual aggregate',
-                                                                                1 => 'Monthly payout with annualized summary',
-                                                                                2 => 'Hourly wage rate based on logged hours',
-                                                                                3 => 'Annual lump-sum compensation structure',
-                                                                                4 => 'Dual hourly billing rate with annual projection',
-                                                                            ];
-                                                                            $activeModeTitle = $salaryModeTitles[$currentSalaryMode] ?? 'Monthly / Annually';
-                                                                            $activeModeSub = $salaryModeSubs[$currentSalaryMode] ?? 'Frequency mode used for component calculations';
-
-                                                                            $empTypeVal = (string)$employment_type;
-                                                                            $empKey = 0;
-                                                                            if ($empTypeVal === '1' || strtolower($empTypeVal) === 'contract') {
-                                                                                $empKey = 1;
-                                                                            } elseif ($empTypeVal === '2' || strtolower($empTypeVal) === 'freelancer' || strtolower($empTypeVal) === 'freelance') {
-                                                                                $empKey = 2;
-                                                                            } elseif ($empTypeVal === '4' || strtolower($empTypeVal) === 'internship') {
-                                                                                $empKey = 4;
-                                                                            } elseif ($empTypeVal === '3' || strtolower($empTypeVal) === 'part time' || strtolower($empTypeVal) === 'part-time') {
-                                                                                $empKey = 3;
-                                                                            } else {
-                                                                                $empKey = 0;
-                                                                            }
-
-                                                                            $empTypeMeta = [
-                                                                                0 => ['title' => 'Full-time', 'sub' => 'Permanent employment with standard benefits', 'icon' => 'fa-briefcase', 'iconClass' => 'co-csel-icon-box--blue'],
-                                                                                1 => ['title' => 'Contract', 'sub' => 'Fixed-term or project-based agreement', 'icon' => 'fa-file-contract', 'iconClass' => 'co-csel-icon-box--indigo'],
-                                                                                2 => ['title' => 'Freelancer', 'sub' => 'Independent contractor or milestone consultant', 'icon' => 'fa-laptop-code', 'iconClass' => 'co-csel-icon-box--blue'],
-                                                                                4 => ['title' => 'Internship', 'sub' => 'Trainee or student placement curriculum', 'icon' => 'fa-graduation-cap', 'iconClass' => 'co-csel-icon-box--indigo'],
-                                                                                3 => ['title' => 'Part Time', 'sub' => 'Reduced working hours arrangement', 'icon' => 'fa-clock', 'iconClass' => 'co-csel-icon-box--blue'],
-                                                                            ];
-                                                                            $activeEmp = $empTypeMeta[$empKey] ?? $empTypeMeta[0];
-                                                                        @endphp
-
-                                                                        <div class="mb-4">
-                                                                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                                                                <label class="form-label required co-flabel mb-0" for="ctc">
-                                                                                    <span class="co-ic co-ic--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/></svg></span> Enter Amount (CTC)
-                                                                                </label>
-                                                                                {{-- Enterprise Confidentiality Toggle Control --}}
-                                                                                <div class="co-conf-enterprise-wrap d-flex align-items-center gap-2" id="coConfContainer">
-                                                                                    <button type="button" class="co-conf-pill-btn {{ $confidential == 1 ? 'is-active' : '' }}" id="coConfToggleBtn" role="switch" aria-checked="{{ $confidential == 1 ? 'true' : 'false' }}" title="Click to toggle offer salary confidentiality">
-                                                                                        <span class="co-conf-indicator-bulb"></span>
-                                                                                        <span class="co-conf-pill-icon">
-                                                                                            <i class="fas {{ $confidential == 1 ? 'fa-lock' : 'fa-lock-open' }}" id="coConfIcon"></i>
-                                                                                        </span>
-                                                                                        <span class="co-conf-pill-text" id="coConfLabel">{{ $confidential == 1 ? 'Confidential: Active' : 'Confidential: Inactive' }}</span>
-                                                                                        <span class="co-conf-pill-badge {{ $confidential == 1 ? 'badge-active' : 'badge-inactive' }}" id="coConfBadge">
-                                                                                            {{ $confidential == 1 ? 'RESTRICTED' : 'STANDARD' }}
-                                                                                        </span>
-                                                                                    </button>
-                                                                                    <input type="hidden" name="confidential" id="confidential" value="{{ $confidential == 1 ? '1' : '0' }}">
-                                                                                    <a href="javascript:void(0);" class="co-conf-info-trigger" id="btnWhoCanView" title="Who can view salary? (Security rules)">
-                                                                                        <i class="fas fa-question-circle fs-7 text-gray-400 hover-primary"></i>
-                                                                                    </a>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="input-group">
-                                                                                <span class="input-group-text bg-light border-end-0 text-muted fw-bold fs-7 co-ctc-symbol-prefix" id="coCtcSymbolPrefix">{{ $initialCurrSymbol }}</span>
-                                                                                <input type="text" class="form-control form-control-solid border-start-0" name="ctc" id="ctc" placeholder="Enter Base CTC" value="{{ @$salary_ctc }}">
-                                                                            </div>
-                                                                            <div class="fv-plugins-message-container invalid-feedback"></div>
-
-                                                                            {{-- Number to words conversion display --}}
-                                                                            <div class="co-ctc-words-wrap mt-1" id="coCtcWordsWrap">
-                                                                                <span class="co-ctc-words-text" id="coCtcWordsText"></span>
-                                                                            </div>
-
-                                                                            {{-- High-visibility Confidential active banner --}}
-                                                                            <div id="confidential_active_hint" class="co-conf-active-banner mt-2 {{ $confidential == 1 ? '' : 'd-none' }}">
-                                                                                <div class="d-flex align-items-center gap-2">
-                                                                                    <span class="co-conf-banner-badge"><i class="fas fa-lock"></i> RESTRICTED</span>
-                                                                                    <span class="co-conf-banner-text"><strong>Confidential Package:</strong> Salary details are hidden from regular members. Only Organization Admins &amp; designated Approvers can view.</span>
-                                                                                </div>
-                                                                                <a href="javascript:void(0);" class="co-conf-banner-link" onclick="$('#btnWhoCanView').trigger('click')">Who can view?</a>
-                                                                            </div>
-                                                                        </div>
-
+                                                                        {{-- Salary Breakdown Format --}}
                                                                         <div>
-                                                                            <label class="form-label required co-flabel">
-                                                                                <span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span> Salary Breakdown Format
+                                                                            <label class="form-label required co-flabel" for="coFormatTrigger">
+                                                                                <i class="fas fa-layer-group co-lbl-icon"></i>
+                                                                                <span>Salary Breakdown Format</span>
                                                                             </label>
                                                                             <div class="co-custom-select-wrap" id="coFormatSelectWrap">
                                                                                 <button type="button" class="co-custom-select-btn" id="coFormatTrigger" aria-haspopup="listbox" aria-expanded="false" title="Click to change calculation frequency">
@@ -2269,34 +2167,84 @@
                                                                 </div>
                                                             </div>
 
-                                                            {{-- SUB-CARD 2: Role & Joining Timeline --}}
-                                                            <div class="col-lg-6">
+                                                            {{-- SUB-CARD 2: Package --}}
+                                                            <div class="col-12 col-md-6 col-xxl-3 d-flex flex-column">
                                                                 <div class="co-subcard h-100">
                                                                     <div class="co-subcard-header">
                                                                         <span class="co-subcard-title">
-                                                                            <i class="fas fa-briefcase text-primary me-2"></i>
-                                                                            Role & Joining Schedule
+                                                                            <i class="fas fa-calculator text-primary me-2 fs-7"></i>
+                                                                            Package
                                                                         </span>
-                                                                        <span class="co-subcard-badge">Position Terms</span>
+                                                                        <span class="co-subcard-badge">Base CTC</span>
                                                                     </div>
                                                                     <div class="co-subcard-body">
+                                                                        {{-- Enter Amount (CTC) with Integrated Currency Prefix --}}
                                                                         <div class="mb-4">
-                                                                            <label class="form-label required co-flabel">
-                                                                                <span class="co-ic co-ic--purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span> Offered Designation
+                                                                            <label class="form-label required co-flabel" for="ctc">
+                                                                                <i class="fas fa-coins co-lbl-icon"></i>
+                                                                                <span>Enter Amount (CTC)</span>
+                                                                            </label>
+                                                                            <div class="co-amount-input-wrap">
+                                                                                <span class="co-amount-prefix" id="coCtcSymbolPrefix">{{ $initialCurrSymbol }}</span>
+                                                                                <input type="text" class="form-control form-control-solid co-amount-input" name="ctc" id="ctc" placeholder="Enter Base CTC" value="{{ @$salary_ctc }}">
+                                                                            </div>
+                                                                            <div class="fv-plugins-message-container invalid-feedback"></div>
+
+                                                                            {{-- Number to words conversion display --}}
+                                                                            <div class="co-ctc-words-wrap mt-1" id="coCtcWordsWrap">
+                                                                                <span class="co-ctc-words-text" id="coCtcWordsText"></span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {{-- Confidentiality Yes/No Dropdown & Concise Notification Line --}}
+                                                                        <div>
+                                                                            <label class="form-label required co-flabel" for="confidential">
+                                                                                <i class="fas fa-user-shield co-lbl-icon"></i>
+                                                                                <span>Confidentiality</span>
+                                                                            </label>
+                                                                            <div class="co-select-wrap">
+                                                                                <select name="confidential" id="confidential" class="form-select form-select-solid">
+                                                                                    <option value="0" {{ empty($confidential) || $confidential == 0 ? 'selected' : '' }}>No (Standard Visibility)</option>
+                                                                                    <option value="1" {{ !empty($confidential) && $confidential == 1 ? 'selected' : '' }}>Yes (Restricted / Confidential)</option>
+                                                                                </select>
+                                                                            </div>
+
+                                                                            {{-- Single concise confidentiality notification line --}}
+                                                                            <div id="coConfNotice" class="co-conf-notice {{ !empty($confidential) && $confidential == 1 ? '' : 'd-none' }}">
+                                                                                <i class="fas fa-shield-alt text-warning fs-9 me-1"></i>
+                                                                                <span class="co-conf-notice-text">Salary is confidential: visible only to Admins &amp; designated approvers.</span>
+                                                                                <a href="javascript:void(0);" class="co-conf-notice-link ms-1" id="btnWhoCanView" title="Who can view?">Learn more</a>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {{-- SUB-CARD 3: Role --}}
+                                                            <div class="col-12 col-md-6 col-xxl-3 d-flex flex-column">
+                                                                <div class="co-subcard h-100">
+                                                                    <div class="co-subcard-header">
+                                                                        <span class="co-subcard-title">
+                                                                            <i class="fas fa-user-tie text-primary me-2 fs-7"></i>
+                                                                            Role
+                                                                        </span>
+                                                                        <span class="co-subcard-badge">Position</span>
+                                                                    </div>
+                                                                    <div class="co-subcard-body">
+                                                                        {{-- Offered Designation --}}
+                                                                        <div class="mb-4">
+                                                                            <label class="form-label required co-flabel" for="current_designation">
+                                                                                <i class="fas fa-id-badge co-lbl-icon"></i>
+                                                                                <span>Offered Designation</span>
                                                                             </label>
                                                                             <input type="text" class="form-control form-control-solid" name="current_designation" id="current_designation" placeholder="Enter designation" value="{{ @$designation }}">
                                                                         </div>
 
-                                                                        <div class="mb-4">
-                                                                            <label class="form-label co-flabel">
-                                                                                <span class="co-ic co-ic--amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span> Date of Joining (DOJ)
-                                                                            </label>
-                                                                            <input type="datetime-local" class="form-control form-control-solid" name="dob" id="dob" placeholder="Enter dob" value="{{ @$joined_date }}" onclick="this.showPicker()">
-                                                                        </div>
-
+                                                                        {{-- Employment Type --}}
                                                                         <div>
-                                                                            <label class="form-label required co-flabel">
-                                                                                <span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 0 0 0-6M21 20a5 5 0 0 0-3.5-4.8"/></svg></span> Employment Type
+                                                                            <label class="form-label required co-flabel" for="coEmpTypeTrigger">
+                                                                                <i class="fas fa-briefcase co-lbl-icon"></i>
+                                                                                <span>Employment Type</span>
                                                                             </label>
                                                                             <div class="co-custom-select-wrap" id="coEmpTypeSelectWrap">
                                                                                 <button type="button" class="co-custom-select-btn" id="coEmpTypeTrigger" aria-haspopup="listbox" aria-expanded="false" title="Click to select employment type">
@@ -2319,6 +2267,45 @@
                                                                                 </select>
                                                                             </div>
                                                                             <div class="co-field-hint">Defines contract nature &amp; legal template association</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {{-- SUB-CARD 4: Joining Schedule --}}
+                                                            <div class="col-12 col-md-6 col-xxl-3 d-flex flex-column">
+                                                                <div class="co-subcard h-100">
+                                                                    <div class="co-subcard-header">
+                                                                        <span class="co-subcard-title">
+                                                                            <i class="fas fa-calendar-check text-primary me-2 fs-7"></i>
+                                                                            Joining Schedule
+                                                                        </span>
+                                                                        <span class="co-subcard-badge">Timeline</span>
+                                                                    </div>
+                                                                    <div class="co-subcard-body">
+                                                                        {{-- Date of Joining (DOJ) --}}
+                                                                        <div class="mb-4">
+                                                                            <label class="form-label co-flabel" for="dob">
+                                                                                <i class="fas fa-calendar-alt co-lbl-icon"></i>
+                                                                                <span>Date of Joining (DOJ)</span>
+                                                                            </label>
+                                                                            <input type="datetime-local" class="form-control form-control-solid" name="dob" id="dob" placeholder="Select date & time" value="{{ @$joined_date }}" onclick="this.showPicker()">
+                                                                            <div class="co-field-hint">Target reporting date and time for candidate onboarding</div>
+                                                                        </div>
+
+                                                                        {{-- Onboarding Schedule Guidance --}}
+                                                                        <div>
+                                                                            <label class="form-label co-flabel">
+                                                                                <i class="fas fa-info-circle co-lbl-icon"></i>
+                                                                                <span>Schedule Terms</span>
+                                                                            </label>
+                                                                            <div class="co-schedule-guidance-card">
+                                                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                                                    <i class="fas fa-clock text-primary fs-9"></i>
+                                                                                    <span class="fw-semibold text-gray-800 fs-8">Onboarding Schedule</span>
+                                                                                </div>
+                                                                                <div class="text-muted fs-8 lh-base">Joining date is populated in the offer letter terms and timeline milestone tracking.</div>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -3726,20 +3713,12 @@
                                                 </div>
                                             </div>
 
-                                            {{-- Rule 20 Modern Footer Card --}}
-                                            <div class="co-footer-card d-flex align-items-center justify-content-between mx-2 mb-5">
-                                                <div class="co-footer-status">
-                                                    <i class="fas fa-shield-check text-primary me-2"></i>
-                                                    <span>Real-time component validation enabled</span>
-                                                </div>
-                                                <div class="d-flex align-items-center gap-3">
-                                                    <button type="button" class="btn co-btn-close-ghost" onclick="$('#kt_offercreate_close').trigger('click')">
-                                                        <i class="fas fa-times me-1"></i> Close
-                                                    </button>
-                                                    <input type="submit" name="save"
-                                                        value="Save & {{($section_change_value) ? 'Next' : 'Generate'}}" id="save-form"
-                                                        class="btn co-btn-save-primary">
-                                                </div>
+                                            {{-- Streamlined Primary Action Bar (Compact, Clean, Enterprise) --}}
+                                            <div class="d-flex align-items-center justify-content-end mt-4 mb-4 mx-2">
+                                                <button type="submit" name="save" id="save-form" class="btn co-btn-save-primary">
+                                                    <span>Save &amp; {{ ($section_change_value) ? 'Next' : 'Generate' }}</span>
+                                                    <i class="fas fa-arrow-right ms-2 fs-8"></i>
+                                                </button>
                                             </div>
 
                                         </div>
@@ -7826,34 +7805,25 @@
 
                     $(document).on('input keyup change paste', '#ctc', updateCtcWords);
 
-                    /* ── Integrated Enterprise Confidentiality Toggle Controller ── */
+                    /* ── Enterprise Confidentiality Controller (Yes/No Dropdown + Notice) ── */
                     function setConfidentialState(isConf) {
-                        $('#confidential').val(isConf ? '1' : '0');
-                        var $btn = $('#coConfToggleBtn');
-                        var $icon = $('#coConfIcon');
-                        var $label = $('#coConfLabel');
-                        var $badge = $('#coConfBadge');
-                        var $hint = $('#confidential_active_hint');
+                        var confVal = isConf ? '1' : '0';
+                        if ($('#confidential').val() !== confVal) {
+                            $('#confidential').val(confVal);
+                        }
+                        var $notice = $('#coConfNotice');
                         var $hdrBadge = $('#coConfStatusBadge');
                         var $hdrText = $('#coConfStatusBadgeText');
 
                         if (isConf) {
-                            $btn.addClass('is-active').attr('aria-checked', 'true');
-                            $icon.removeClass('fa-lock-open').addClass('fa-lock');
-                            $label.text('Confidential: Active');
-                            $badge.removeClass('badge-inactive').addClass('badge-active').text('RESTRICTED');
-                            $hint.removeClass('d-none');
+                            $notice.removeClass('d-none');
                             $hdrBadge
                                 .removeClass('badge-light-primary text-primary')
                                 .addClass('badge-light-warning text-warning');
                             $hdrBadge.find('i').removeClass('fa-lock-open').addClass('fa-lock');
-                            $hdrText.text('Confidential (Restricted)');
+                            $hdrText.text('Confidential Offer');
                         } else {
-                            $btn.removeClass('is-active').attr('aria-checked', 'false');
-                            $icon.removeClass('fa-lock').addClass('fa-lock-open');
-                            $label.text('Confidential: Inactive');
-                            $badge.removeClass('badge-active').addClass('badge-inactive').text('STANDARD');
-                            $hint.addClass('d-none');
+                            $notice.addClass('d-none');
                             $hdrBadge
                                 .removeClass('badge-light-warning text-warning')
                                 .addClass('badge-light-primary text-primary');
@@ -7862,10 +7832,9 @@
                         }
                     }
 
-                    $(document).on('click', '#coConfToggleBtn', function (e) {
-                        e.preventDefault();
-                        var isActive = $(this).hasClass('is-active');
-                        setConfidentialState(!isActive);
+                    $(document).on('change', '#confidential', function () {
+                        var isConf = $(this).val() === '1';
+                        setConfidentialState(isConf);
                     });
 
                     /* ── Custom Enterprise Select Menus (Salary Format & Employment Type) ── */
