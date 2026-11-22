@@ -2194,7 +2194,7 @@ body { overflow-x: hidden !important; }
                             <span class="ot-drop-ico csv"><i class="fas fa-undo-alt text-primary"></i></span>
                             <span>
                                 <span class="ot-drop-title">Reset All Filters</span>
-                                <span class="ot-drop-sub">Clear search, location &amp; tab</span>
+                                <span class="ot-drop-sub">Clear search, organization &amp; tab</span>
                             </span>
                         </a>
                     </li>
@@ -2398,16 +2398,6 @@ body { overflow-x: hidden !important; }
             </div>
 
             <div class="ot-filter-pill">
-                <span class="ot-filter-pill-lbl"><i class="fas fa-map-marker-alt text-muted"></i> Location:</span>
-                <select class="ot-filter-select" id="ot_country" aria-label="Filter by location">
-                    <option value="">All Locations</option>
-                    @foreach($countries as $c)
-                    <option value="{{ $c->id }}">{{ $c->country_name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="ot-filter-pill">
                 <span class="ot-filter-pill-lbl"><i class="fas fa-sort-amount-down text-muted"></i> Sort:</span>
                 <select class="ot-filter-select" id="ot_sort" aria-label="Sort offers">
                     <option value="">Latest Updated</option>
@@ -2559,7 +2549,6 @@ body { overflow-x: hidden !important; }
         page          : 1,
         size          : parseInt(localStorage.getItem('candidatePerPage'), 10) || 10,
         search        : '',
-        country       : '',
         sort          : '',
         companyType   : 'all',
         tab           : 'all',
@@ -2751,7 +2740,6 @@ body { overflow-x: hidden !important; }
             p: state.page,
             s: state.size,
             q: state.search,
-            c: state.country,
             srt: state.sort,
             org: state.companyType,
             t: state.tab,
@@ -2800,7 +2788,6 @@ body { overflow-x: hidden !important; }
                 size             : state.size,
                 per_page         : state.size,
                 cus_search       : state.search,
-                country          : state.country,
                 sortingfilter    : state.sort,
                 company_type     : state.companyType === 'all' ? '' : state.companyType,
                 offer_tab_filter : state.tab,
@@ -2960,18 +2947,15 @@ body { overflow-x: hidden !important; }
     function resetFilters() {
         state.page        = 1;
         state.search      = '';
-        state.country     = '';
         state.sort        = '';
         state.companyType = 'all';
         state.tab         = 'all';
 
         var sInp = document.getElementById('ot_search');
         var sClr = document.getElementById('otSearchClear');
-        var cSel = document.getElementById('ot_country');
         var rSel = document.getElementById('ot_sort');
         if (sInp) sInp.value = '';
         if (sClr) sClr.style.display = 'none';
-        if (cSel) cSel.value = '';
         if (rSel) rSel.value = '';
 
         $('.ot-tb-org-item').removeClass('active');
@@ -3029,14 +3013,6 @@ body { overflow-x: hidden !important; }
                 if (searchInput) searchInput.focus();
             }
         });
-
-        var countrySelect = document.getElementById('ot_country');
-        if (countrySelect) {
-            countrySelect.addEventListener('change', function () {
-                state.country = this.value;
-                fetchTable(true);
-            });
-        }
 
         var sortSelect = document.getElementById('ot_sort');
         if (sortSelect) {
