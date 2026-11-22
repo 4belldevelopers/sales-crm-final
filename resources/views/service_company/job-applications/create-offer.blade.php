@@ -5093,8 +5093,14 @@
                     if ($hdrBtn.length) {
                         $hdrBtn.prop('disabled', false);
                         $hdrBtn.find('.co-btn-spinner').remove();
-                        $hdrBtn.find('.co-header-save-label').text('Save & Next');
-                        $hdrBtn.find('i').attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                        var active = typeof coActiveStep === 'function' ? coActiveStep() : 1;
+                        if (active === 5) {
+                            $hdrBtn.find('.co-header-save-label').text('Send Offer Letter');
+                            $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                        } else {
+                            $hdrBtn.find('.co-header-save-label').text('Save & Next');
+                            $hdrBtn.find('i').attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                        }
                     }
                 }
 
@@ -7445,15 +7451,20 @@
                         }
                     }
 
-                    // Sync Main Drawer Header Action Button — ALWAYS 'Save & Next' for ALL steps per user requirement
+                    // Sync Main Drawer Header Action Button: 'Save & Next' for steps 1-4, 'Send Offer Letter' on step 5
                     var $hdrBtn = $('#co_header_save_btn');
                     if ($hdrBtn.length) {
                         $hdrBtn.prop('disabled', false);
                         $hdrBtn.find('.co-btn-spinner').remove();
                         var $label = $hdrBtn.find('.co-header-save-label');
                         var $icon = $hdrBtn.find('i');
-                        $label.text('Save & Next');
-                        $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                        if (active === 5) {
+                            $label.text('Send Offer Letter');
+                            $icon.attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                        } else {
+                            $label.text('Save & Next');
+                            $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                        }
                         $hdrBtn.show();
                     }
 
@@ -7496,6 +7507,7 @@
                     } else if (active === 4) {
                         if (typeof nextStep === 'function') nextStep(e, 4);
                     } else if (active === 5) {
+                        if (window.coSendInFlight) return false;
                         var $sendBtn = $('#co_send_submit');
                         if ($sendBtn.length) $sendBtn.trigger('click');
                     }
@@ -7719,25 +7731,72 @@
                     coRenderAttachments();
                 });
 
-                // ── Send Offer Letter (native → same fwd_offer_send endpoint) ──
+                // ── Send Offer Letter (In-flight guard, Enterprise Redesigned Confirmation, Drawer Auto-Close & Pipeline Sync) ──
+                window.coSendInFlight = false;
+
+                function coCloseOfferDrawer() {
+                    var $close = $('#kt_offercreate_close');
+                    if ($close.length) {
+                        $close.trigger('click');
+                    }
+                    try {
+                        var drawerEl = document.getElementById('kt_activities');
+                        if (drawerEl && typeof KTDrawer !== 'undefined') {
+                            var drawerInst = KTDrawer.getInstance(drawerEl);
+                            if (drawerInst) drawerInst.hide();
+                        }
+                    } catch (e) {}
+                    try {
+                        $('body').removeClass('drawer-on');
+                        $('#kt_activities').removeClass('drawer-on');
+                        $('.drawer-overlay').remove();
+                    } catch (e) {}
+                }
+
                 $(document).on('click', '#co_send_submit', function () {
+                    if (window.coSendInFlight) {
+                        return false;
+                    }
+
                     var $btn = $(this);
-                    // fold any half-typed chip text into a chip first (To has no input — it's locked to the candidate)
+                    var $hdrBtn = $('#co_header_save_btn');
+
+                    // Fold any half-typed chip text into a chip first (To has no input — it's locked to the candidate)
                     $('#co_cc_chips').each(function () {
                         var id = $(this).attr('id'); var $inp = $(this).find('.co-send-chip-input');
                         if ($inp.length && $inp.val().trim()) { coAddChip(id, $inp.val()); $inp.val(''); }
                     });
                     var toArr = coCollectChips('co_to_chips');
-                    if (!toArr.length) { Swal.fire('Warning', 'Please add at least one recipient email address.', 'warning'); return; }
+                    if (!toArr.length) {
+                        Swal.fire({
+                            title: 'Recipient Required',
+                            text: 'Please add at least one recipient email address.',
+                            icon: 'warning',
+                            buttonsStyling: false,
+                            confirmButtonText: 'OK',
+                            customClass: { confirmButton: 'btn btn-primary fw-bold px-6 py-2' }
+                        });
+                        return;
+                    }
                     var replyTo = $('#co_send_replyto').val() ? $('#co_send_replyto').val().trim() : '';
                     var subject = $('#co_send_subject').val().trim();
-                    if (!subject) { Swal.fire('Warning', 'Please enter an email subject.', 'warning'); return; }
+                    if (!subject) {
+                        Swal.fire({
+                            title: 'Subject Required',
+                            text: 'Please enter an email subject before sending the offer letter.',
+                            icon: 'warning',
+                            buttonsStyling: false,
+                            confirmButtonText: 'OK',
+                            customClass: { confirmButton: 'btn btn-primary fw-bold px-6 py-2' }
+                        });
+                        return;
+                    }
                     var body = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.co_send_editor) ? CKEDITOR.instances.co_send_editor.getData() : '';
                     var fromEmail = $('#co_send_fromemail').val();
                     var formData = new FormData();
                     formData.append('_token', "{{ csrf_token() }}");
                     formData.append('template', '');
-                    formData.append('from_email', JSON.stringify([{ value: fromEmail }]));   // backend json_decodes this
+                    formData.append('from_email', JSON.stringify([{ value: fromEmail }]));
                     formData.append('to_email', toArr.join(','));
                     formData.append('cc_email', coCollectChips('co_cc_chips').join(','));
                     formData.append('reply_to_email', replyTo);
@@ -7748,49 +7807,149 @@
                     formData.append('offerId', $('#co_send_offerid').val());
                     formData.append('signature', $('#co_send_signature').is(':checked') ? 1 : 0);
                     coAttachFiles.forEach(function (f) { formData.append('attachments[]', f); });
+
+                    // Activate In-Flight Guard: prevent duplicate sends
+                    window.coSendInFlight = true;
                     $btn.prop('disabled', true);
-                    $btn.find('.co-send-submit-label').hide(); $btn.find('.co-send-submit-wait').show();
+                    $btn.find('.co-send-submit-label').hide();
+                    $btn.find('.co-send-submit-wait').show();
+
+                    $hdrBtn.prop('disabled', true);
+                    $hdrBtn.find('.co-header-save-label').text('Sending Offer Letter…');
+                    $hdrBtn.find('i').attr('class', 'fas fa-spinner fa-spin fs-9 ms-1');
+
                     $.ajax({
                         type: 'POST',
-                        {{-- Relative URL, not route()'s default absolute one — the deployed .env's
-                             APP_URL points at a different, unrelated domain (hire.jero.works), so an
-                             absolute URL here silently made this a cross-origin POST that never actually
-                             reached this server. Same root cause as the Download Offer Letter bug. --}}
                         url: "{{ route('service_company.cvtracker.fwd_offer_send') }}",
                         data: formData,
                         processData: false,
                         contentType: false,
                         success: function (r) {
                             $btn.prop('disabled', false);
-                            $btn.find('.co-send-submit-label').show(); $btn.find('.co-send-submit-wait').hide();
-                            if (r && r.status === 'coinCheck') { Swal.fire('Failed', r.message || 'Insufficient coins.', 'warning'); return; }
-                            if (r && r.status === 'rateLimited') { Swal.fire('Limit Reached', r.message || 'This offer letter has already been sent the maximum number of times recently.', 'warning'); return; }
-                            Swal.fire('Success', 'Offer letter sent to the candidate.', 'success');
-                            // The hero's Offer Status/Sent By were server-rendered at page load and don't
-                            // otherwise refresh after a successful send — reflect it immediately instead of
-                            // leaving "Not Sent" on screen until the whole drawer is reopened.
-                            $('.co-send-fact-v.co-send-fact-notsent').removeClass('co-send-fact-notsent').addClass('co-send-fact-sent').text('Sent');
+                            $btn.find('.co-send-submit-label').show();
+                            $btn.find('.co-send-submit-wait').hide();
+
+                            if (r && r.status === 'coinCheck') {
+                                window.coSendInFlight = false;
+                                $hdrBtn.prop('disabled', false);
+                                $hdrBtn.find('.co-header-save-label').text('Send Offer Letter');
+                                $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                                Swal.fire({
+                                    title: 'Insufficient Coins',
+                                    text: r.message || 'Insufficient coin balance to release this offer letter.',
+                                    icon: 'warning',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'OK',
+                                    customClass: { confirmButton: 'btn btn-primary fw-bold px-6 py-2' }
+                                });
+                                return;
+                            }
+                            if (r && r.status === 'rateLimited') {
+                                window.coSendInFlight = false;
+                                $hdrBtn.prop('disabled', false);
+                                $hdrBtn.find('.co-header-save-label').text('Send Offer Letter');
+                                $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                                Swal.fire({
+                                    title: 'Limit Reached',
+                                    text: r.message || 'This offer letter has already been sent the maximum number of times recently.',
+                                    icon: 'warning',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'OK',
+                                    customClass: { confirmButton: 'btn btn-primary fw-bold px-6 py-2' }
+                                });
+                                return;
+                            }
+
+                            // ── SUCCESS CONFIRMATION STATE (Enterprise Design System) ──
+                            window.coSendInFlight = false;
+                            $hdrBtn.find('.co-header-save-label').text('Offer Released ✓');
+                            $hdrBtn.find('i').attr('class', 'fas fa-check fs-9 ms-1');
+
+                            // Update in-drawer hero pill immediately
+                            $('.co-send-fact-v.co-send-fact-notsent').removeClass('co-send-fact-notsent').addClass('co-send-fact-sent').text('Offer Released');
                             $('.co-send-fact-v.co-send-fact-sentby').html(
                                 '<span class="co-send-sentby-name">{{ e($so_from_name) }}</span><span class="co-send-sentby-when">Sent just now</span>'
                             );
 
-                            // Realtime/delta synchronization: instantly refresh Offer Tracker list
+                            // Post-Sending Actions: Instantly Refresh Tracker & Pipeline Data
                             if (window.jeroOfferTracker && typeof window.jeroOfferTracker.refresh === 'function') {
                                 window.jeroOfferTracker.refresh(false);
                             }
+                            if (typeof tableLoad === 'function') {
+                                try { tableLoad('load'); } catch (e) {}
+                            }
+                            if (typeof window.LaravelDataTables !== 'undefined') {
+                                try {
+                                    $.each(window.LaravelDataTables, function (id, dt) {
+                                        if (dt && typeof dt.ajax !== 'undefined' && typeof dt.ajax.reload === 'function') {
+                                            dt.ajax.reload(null, false);
+                                        }
+                                    });
+                                } catch (e) {}
+                            }
+
+                            // Dispatches for real-time reactivity across tabs / boards
                             try {
                                 window.dispatchEvent(new CustomEvent('jero:offer_updated', { detail: { offerId: "{{ $offer_id }}" } }));
+                                window.dispatchEvent(new CustomEvent('jero:candidate_status_changed', { detail: { offerId: "{{ $offer_id }}", status: 'Offer Released' } }));
                                 if (typeof BroadcastChannel !== 'undefined') {
                                     var ch = new BroadcastChannel('jero_offer_tracker_channel');
-                                    ch.postMessage({ type: 'OFFER_MUTATION_SYNC', timestamp: Date.now() });
+                                    ch.postMessage({ type: 'OFFER_MUTATION_SYNC', status: 'Offer Released', timestamp: Date.now() });
                                     ch.close();
                                 }
                             } catch (e) {}
+
+                            // Clean, professional enterprise confirmation modal
+                            Swal.fire({
+                                title: 'Offer Letter Released Successfully!',
+                                html: '<div class="text-start mt-2" style="font-family: inherit;">' +
+                                        '<p class="fs-6 text-gray-700 mb-3">The official offer letter email has been dispatched to <strong>' + coEsc(toArr.join(', ')) + '</strong>.</p>' +
+                                        '<div class="d-flex align-items-center gap-3 p-3 bg-light-primary rounded border border-primary border-dashed mb-2">' +
+                                            '<span class="badge badge-light-success fs-7 fw-bolder px-3 py-2"><i class="fas fa-check-circle text-success me-1"></i> Offer Released</span>' +
+                                            '<span class="fs-7 text-gray-700 fw-semibold">Candidate pipeline status updated automatically</span>' +
+                                        '</div>' +
+                                        '<div class="text-muted fs-8 text-center mt-3"><i class="fas fa-clock fs-9 me-1"></i> Closing drawer and updating tracker...</div>' +
+                                      '</div>',
+                                icon: 'success',
+                                buttonsStyling: false,
+                                showConfirmButton: true,
+                                confirmButtonText: 'Done',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary fw-bold px-6 py-2'
+                                },
+                                timer: 2200,
+                                timerProgressBar: true
+                            }).then(function () {
+                                coCloseOfferDrawer();
+                            });
+
+                            // Auto-close drawer safely on timer
+                            setTimeout(function () {
+                                coCloseOfferDrawer();
+                            }, 2000);
                         },
-                        error: function () {
+                        error: function (xhr) {
+                            window.coSendInFlight = false;
                             $btn.prop('disabled', false);
-                            $btn.find('.co-send-submit-label').show(); $btn.find('.co-send-submit-wait').hide();
-                            Swal.fire('Error', 'Could not send the offer letter. Please try again.', 'error');
+                            $btn.find('.co-send-submit-label').show();
+                            $btn.find('.co-send-submit-wait').hide();
+
+                            $hdrBtn.prop('disabled', false);
+                            $hdrBtn.find('.co-header-save-label').text('Send Offer Letter');
+                            $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
+
+                            var errMsg = 'Failed to send the offer letter. Please check your network and try again.';
+                            if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                                errMsg = xhr.responseJSON.message;
+                            }
+                            Swal.fire({
+                                title: 'Sending Failed',
+                                text: errMsg,
+                                icon: 'error',
+                                buttonsStyling: false,
+                                confirmButtonText: 'Try Again',
+                                customClass: { confirmButton: 'btn btn-primary fw-bold px-6 py-2' }
+                            });
                         }
                     });
                 });

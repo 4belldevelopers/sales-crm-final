@@ -8493,8 +8493,30 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         $event_id = 5;
                         $send_accept_date_time = date('Y-m-d H:i:s');
 
-                        // Candidate
-                        DB::table('offer_create_main_tds')->where('offer_id', $offerId)->where('status', '=', 1)->update(['candidate_status' => 1, 'signature_type' => $signature, 'updated_at' => date('Y-m-d H:i:s'), 'send_accept_date_time' => $send_accept_date_time]);
+                        // Candidate offer status (1 = release / Offer Released)
+                        DB::table('offer_create_main_tds')->where('offer_id', $offerId)->where('status', '=', 1)->update([
+                            'candidate_status' => 1,
+                            'signature_type' => $signature,
+                            'updated_at' => date('Y-m-d H:i:s'),
+                            'send_accept_date_time' => $send_accept_date_time
+                        ]);
+
+                        // Update Candidate Pipeline Status to "Offer Released" (master_status_id = 5, candidate_status = 1)
+                        if (!empty($Offertimelime->joined)) {
+                            DB::table('add_job_wise_condidates')->where('id', $Offertimelime->joined)->update([
+                                'master_status_id' => 5,
+                                'candidate_status' => 1,
+                                'updated_at' => date('Y-m-d H:i:s'),
+                            ]);
+                        }
+                        if (!empty($Offertimelime->application_id)) {
+                            DB::table('job_applications')->where('id', $Offertimelime->application_id)->update([
+                                'master_status_id' => 5,
+                                'candidate_status' => 1,
+                                'updated_at' => date('Y-m-d H:i:s'),
+                            ]);
+                        }
+
                         if ($exists) {
                             $updateTime = now()->toIso8601String();
                             $updateParams_e = [
@@ -8502,6 +8524,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                                 'id' => $Offertimelime->joined,
                                 'body' => [
                                     'doc' => [
+                                        'job_master_status_id' => 5,
+                                        'master_process_name' => 'Offer Released',
+                                        'candidate_status' => 1,
                                         'of_offer_acceptance' => 1,
                                         'send_accept_date_time' => $updateTime,
                                         'updated_at' => $updateTime,
@@ -8595,6 +8620,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $values['yearly_gross'] = $exits_offer->yearly_gross;
                     $values['yearly_final_gross'] = $exits_offer->yearly_final_gross;
                     $values['mtypeSection'] = $mtypeId;
+                    if ($mtypeId == 1) {
+                        $values['master_process_name'] = 'Offer Released';
+                    }
                     GeneralMethod::UpdateTimeline($values);
 
                     // }
@@ -8633,7 +8661,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         $view = view('service_company.cvtracker.fwd_resume_message', $this->data)->render();
 
-        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'message' => 'Offer letter sent successfully to the candidate.',
+            'pipeline_status' => 'Offer Released',
+            'view' => $view,
+        ]);
 
     }
 
