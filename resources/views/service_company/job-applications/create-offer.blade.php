@@ -1881,97 +1881,270 @@
         }
         #step4 h1, #step4 h2, #step4 h3, #step4 h4, #step4 h5 { font-size: 12px !important; font-weight: 700; color: #181c32; margin: 0; }
 
-        .co-appr-info-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-        .co-appr-info-card { flex: 1 1 160px; background: #fff; border: 1px solid #eef1f7; border-radius: 12px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 12px; display: flex; gap: 10px; align-items: flex-start; }
-        .co-appr-info-ico { width: 30px; height: 30px; border-radius: 8px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .co-appr-info-ico svg { width: 15px; height: 15px; }
-        .co-appr-info-label { font-size: 10px; color: #7e8299; }
-        .co-appr-info-value { font-size: 12px; font-weight: 700; color: #181c32; margin-top: 2px; }
-        .co-appr-info-sub { font-size: 10px; color: #a1a5b7; margin-top: 1px; }
+        /* ══════════════════════════ Step 4 — Approval (Rule 20 Card + Sub-Card Standard) ══════════════════════════ */
+        #step4, #step4 * { font-family: 'Poppins', sans-serif; }
+        #step4 { background: transparent; font-size: 12px; }
 
-        .co-appr-layout { display: flex; align-items: flex-start; gap: 16px; }
-        .co-appr-main { flex: 1 1 auto; min-width: 0; background: #fff; border: 1px solid #eef1f7; border-radius: 14px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 18px; }
-        .co-appr-side { flex: 0 0 260px; max-width: 260px; display: flex; flex-direction: column; gap: 12px; }
-        .co-appr-side-card { background: #fff; border: 1px solid #eef1f7; border-radius: 14px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 14px; }
-        .co-appr-side-title { font-size: 12px !important; font-weight: 700; color: #181c32; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .co-appr-summary-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 10px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
 
-        .co-appr-empty-state { text-align: center; padding: 30px 14px; }
-        .co-appr-empty-ico { width: 64px; height: 64px; border-radius: 50%; border: 2px dashed #e0e7ff; background: #f5f7ff; color: #93a4f4; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; }
-        .co-appr-empty-ico svg { width: 30px; height: 30px; }
-        .co-appr-empty-title { font-size: 12px !important; font-weight: 700; color: #181c32; margin-bottom: 4px; }
-        .co-appr-empty-sub { font-size: 11px; color: #7e8299; margin-bottom: 14px; }
-        .co-appr-note { display: flex; gap: 8px; align-items: flex-start; background: #f3f8ff; border: 1px solid #dbe9ff; border-radius: 10px; padding: 10px 12px; font-size: 11px; color: #3f4254; margin-top: 14px; }
-        .co-appr-note svg { width: 14px; height: 14px; color: #1b84ff; flex-shrink: 0; margin-top: 1px; }
+        .co-appr-card-val {
+            font-size: 12.5px !important;
+            font-weight: 700 !important;
+            color: #1e293b !important;
+            line-height: 1.25 !important;
+        }
 
-        .co-appr-detail-row { display: flex; justify-content: space-between; gap: 10px; font-size: 11px; padding: 6px 0; border-bottom: 1px solid #f4f4f6; }
-        .co-appr-detail-row:last-child { border-bottom: none; }
-        .co-appr-detail-label { color: #7e8299; }
-        .co-appr-detail-value { color: #181c32; font-weight: 600; text-align: right; }
+        .co-appr-card-sub {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            line-height: 1.25 !important;
+        }
 
-        /* ── Approval Timeline ── */
-        /* Shared column widths — used by BOTH the header row and each data card */
-        .co-appr-tl-grid { display: grid; grid-template-columns: 1fr 130px 160px 190px; align-items: center; gap: 0; }
-        /* Header row: same flex shell as data rows but no card styling */
-        .co-appr-tl-cols { display: flex; align-items: center; padding-bottom: 10px; }
-        .co-appr-tl-cols-spacer { width: 52px; flex-shrink: 0; }
-        .co-appr-tl-col-hd { font-size: 10px; font-weight: 700; color: #a1a5b7; text-transform: uppercase; letter-spacing: .5px; padding: 0 14px 0 0; }
-        .co-appr-tl-col-hd:first-child { padding-left: 0; }
-        /* Card — fills the space right of the dot column */
-        .co-appr-tl-card { background: #fff; border: 1.5px solid #eef1f7; border-radius: 12px; padding: 12px 14px; }
-        .co-appr-tl-card--active   { border-color: #f59e0b; background: #fffbf3; }
-        .co-appr-tl-card--approved { border-color: #eef1f7; background: #fff; }
-        .co-appr-tl-card--rejected { border-color: #fca5a5; background: #fff7f7; }
-        /* Dot column with connector line */
-        .co-appr-tl-dot-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; position: relative; padding: 0; }
-        .co-appr-tl-dot { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; }
-        .co-appr-tl-dot svg { width: 18px; height: 18px; }
-        .co-appr-tl-dot--approved { background: #22c55e; color: #fff; box-shadow: 0 0 0 4px #bbf7d0; }
-        .co-appr-tl-dot--active   { background: #f59e0b; color: #fff; box-shadow: 0 0 0 4px #fde68a; }
-        .co-appr-tl-dot--waiting  { background: #3b82f6; color: #fff; box-shadow: 0 0 0 4px #bfdbfe; }
-        .co-appr-tl-dot--rejected { background: #ef4444; color: #fff; box-shadow: 0 0 0 4px #fca5a5; }
-        /* Dashed vertical connector between cards */
-        .co-appr-tl-connector { width: 2px; flex: 1; min-height: 14px; background: repeating-linear-gradient(to bottom, #d1d5db 0 4px, transparent 4px 8px); margin: 4px 0; }
-        /* Approver cell */
-        .co-appr-tl-appr { display: flex; align-items: center; gap: 10px; padding-right: 10px; }
-        .co-appr-tl-avatar { width: 38px; height: 38px; border-radius: 50%; background: #e8ecf5; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-        .co-appr-tl-name { font-size: 12px; font-weight: 700; color: #181c32; line-height: 1.3; }
-        .co-appr-tl-sub  { font-size: 10px; color: #7e8299; margin-top: 2px; }
-        /* Role */
-        .co-appr-tl-role { font-size: 11px; color: #5e6278; padding-right: 10px; }
-        /* Status cell */
-        .co-appr-tl-status { display: flex; flex-direction: column; gap: 4px; padding-right: 10px; }
-        .co-appr-tl-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 12px; border-radius: 20px; white-space: nowrap; }
-        .co-appr-tl-badge--approved { background: #dcfce7; color: #15803d; }
-        .co-appr-tl-badge--active   { background: #fef3c7; color: #d97706; }
-        .co-appr-tl-badge--waiting  { background: #ede9fe; color: #7c3aed; }
-        .co-appr-tl-badge--rejected { background: #fee2e2; color: #dc2626; }
-        .co-appr-tl-date { font-size: 10px; color: #a1a5b7; }
-        /* Reminder cell */
-        .co-appr-tl-rem { display: flex; flex-direction: column; gap: 5px; }
-        .co-appr-tl-rem-row { display: flex; align-items: center; gap: 6px; }
-        .co-appr-tl-rem-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; color: #1b84ff; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 7px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
-        .co-appr-tl-rem-btn:hover { background: #dbeafe; }
-        .co-appr-tl-rem-btn svg { width: 11px; height: 11px; }
-        .co-appr-tl-kebab { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; color: #a1a5b7; cursor: pointer; border: 1px solid #eef1f7; background: #fff; flex-shrink: 0; }
-        .co-appr-tl-kebab:hover { background: #f4f4f6; color: #181c32; }
-        .co-appr-tl-kebab svg { width: 13px; height: 13px; }
-        .co-appr-tl-last-sent { font-size: 10px; color: #a1a5b7; }
-        /* Add Approver dashed button */
-        .co-appr-add-dashed { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #1b84ff; background: transparent; border: 1.5px dashed #93c5fd; border-radius: 8px; padding: 6px 16px; cursor: pointer; white-space: nowrap; transition: background .15s; }
-        .co-appr-add-dashed:hover { background: #eff6ff; border-color: #1b84ff; }
-        .co-appr-add-dashed svg { width: 13px; height: 13px; }
-        /* Rejection note */
-        .co-appr-status-note { font-size: 10px; color: #5e6278; font-style: italic; margin-top: 8px; background: #fff5f5; border-radius: 8px; padding: 6px 10px; border: 1px solid #fca5a5; }
+        .co-appr-avatar-mini {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 50% !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+        }
 
-        /* Activity log — real entries from the updatetimeline table */
-        .co-appr-activity-item { padding: 8px 0; border-bottom: 1px solid #f4f4f6; }
-        .co-appr-activity-item:last-child { border-bottom: none; }
-        .co-appr-activity-text { font-size: 11px; color: #181c32; font-weight: 600; }
-        .co-appr-activity-time { font-size: 10px; color: #a1a5b7; margin-top: 2px; }
+        .co-appr-ctc-symbol {
+            font-size: 14px !important;
+            font-weight: 800 !important;
+            color: #d97706 !important;
+            line-height: 1 !important;
+        }
 
-        @media (max-width: 1100px) {
-            .co-appr-layout { flex-direction: column; }
-            .co-appr-side { flex: 1 1 auto; max-width: none; width: 100%; }
+        .co-appr-mandate-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            padding: 2px 7px !important;
+            border-radius: 99px !important;
+            white-space: nowrap !important;
+            line-height: 1.2 !important;
+        }
+
+        .co-appr-layout {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 12px !important;
+            width: 100% !important;
+        }
+
+        .co-appr-main {
+            flex: 1 1 0% !important;
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        .co-appr-side {
+            width: 290px !important;
+            flex: 0 0 290px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+
+        .co-appr-side-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+        }
+
+        .co-subcard-status-desc {
+            font-size: 10.5px !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+        }
+
+        .co-appr-add-btn {
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            padding: 5px 12px !important;
+            border-radius: 6px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            transition: all 0.15s ease !important;
+        }
+
+        /* ── Approval Timeline Table Header ── */
+        .co-appr-tl-cols {
+            display: flex !important;
+            align-items: center !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+            padding: 5px 10px !important;
+            margin-bottom: 8px !important;
+        }
+        .co-appr-tl-cols-spacer { width: 44px !important; flex-shrink: 0 !important; }
+        .co-appr-tl-grid {
+            display: grid !important;
+            grid-template-columns: minmax(170px, 1.2fr) minmax(110px, 0.8fr) minmax(130px, 1fr) minmax(130px, 0.9fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+        .co-appr-tl-col-hd {
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: .4px !important;
+        }
+
+        /* ── Timeline Entry & Cards ── */
+        .co-appr-tl-entry {
+            display: flex !important;
+            align-items: stretch !important;
+            margin-bottom: 8px !important;
+        }
+        .co-appr-tl-dot {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+            z-index: 1 !important;
+            font-size: 11px !important;
+            transition: all 0.15s ease !important;
+        }
+        .co-appr-tl-dot--approved { background: #10b981 !important; color: #fff !important; box-shadow: 0 0 0 3px #d1fae5 !important; }
+        .co-appr-tl-dot--active   { background: #f59e0b !important; color: #fff !important; box-shadow: 0 0 0 3px #fef3c7 !important; }
+        .co-appr-tl-dot--waiting  { background: #3b82f6 !important; color: #fff !important; box-shadow: 0 0 0 3px #dbeafe !important; }
+        .co-appr-tl-dot--rejected { background: #ef4444 !important; color: #fff !important; box-shadow: 0 0 0 3px #fee2e2 !important; }
+
+        .co-appr-tl-connector {
+            width: 2px !important;
+            flex: 1 1 auto !important;
+            min-height: 12px !important;
+            background: repeating-linear-gradient(to bottom, #94a3b8 0 4px, transparent 4px 8px) !important;
+            margin: 3px 0 !important;
+        }
+
+        .co-appr-tl-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-left: 3.5px solid #94a3b8 !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+        }
+        .co-appr-tl-card:hover {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+        }
+        .co-appr-tl-card--active   { border-color: #e2e8f0 !important; border-left-color: #f59e0b !important; background: #fffcf5 !important; }
+        .co-appr-tl-card--approved { border-color: #e2e8f0 !important; border-left-color: #10b981 !important; background: #ffffff !important; }
+        .co-appr-tl-card--rejected { border-color: #e2e8f0 !important; border-left-color: #ef4444 !important; background: #fff8f8 !important; }
+
+        .co-appr-tl-appr { display: flex !important; align-items: center !important; gap: 8px !important; min-width: 0 !important; }
+        .co-appr-tl-avatar {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 50% !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            flex-shrink: 0 !important;
+        }
+        .co-appr-tl-name { font-size: 11.5px !important; font-weight: 700 !important; color: #1e293b !important; line-height: 1.2 !important; }
+        .co-appr-tl-sub  { font-size: 10px !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 1px !important; }
+
+        .co-appr-tl-role { font-size: 11px !important; color: #475569 !important; }
+        .co-appr-tl-status { display: flex !important; flex-direction: column !important; gap: 2px !important; }
+        .co-appr-tl-badge { display: inline-flex !important; align-items: center !important; font-size: 9.5px !important; font-weight: 700 !important; padding: 2px 8px !important; border-radius: 99px !important; width: fit-content !important; }
+        .co-appr-tl-badge--approved { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+        .co-appr-tl-badge--active   { background: #fef3c7 !important; color: #d97706 !important; border: 1px solid #fcd34d !important; }
+        .co-appr-tl-badge--waiting  { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+        .co-appr-tl-badge--rejected { background: #fee2e2 !important; color: #dc2626 !important; border: 1px solid #fecaca !important; }
+        .co-appr-tl-date { font-size: 9.5px !important; color: #94a3b8 !important; }
+
+        .co-appr-tl-rem { display: flex !important; flex-direction: column !important; gap: 3px !important; }
+        .co-appr-tl-rem-row { display: flex !important; align-items: center !important; gap: 5px !important; }
+        .co-appr-tl-rem-btn { font-size: 10px !important; font-weight: 600 !important; padding: 3px 8px !important; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; }
+        .co-appr-tl-kebab { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 22px !important; height: 22px !important; border-radius: 5px !important; color: #94a3b8 !important; border: 1px solid #e2e8f0 !important; background: #ffffff !important; cursor: pointer !important; }
+        .co-appr-tl-kebab:hover { background: #f8fafc !important; color: #1e293b !important; }
+        .co-appr-tl-last-sent { font-size: 9.5px !important; color: #94a3b8 !important; }
+
+        .co-appr-note {
+            display: flex !important;
+            gap: 8px !important;
+            align-items: flex-start !important;
+            background: #eff6ff !important;
+            border: 1px solid #bfdbfe !important;
+            border-radius: 7px !important;
+            padding: 7px 10px !important;
+            font-size: 10.5px !important;
+            color: #1e40af !important;
+            line-height: 1.35 !important;
+        }
+
+        .co-appr-status-note {
+            font-size: 10.5px !important;
+            color: #991b1b !important;
+            background: #fef2f2 !important;
+            border: 1px solid #fecaca !important;
+            border-radius: 7px !important;
+            padding: 6px 10px !important;
+            margin-top: 8px !important;
+        }
+
+        /* ── Details & Insights ── */
+        .co-appr-detail-row {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 8px !important;
+            font-size: 11px !important;
+            padding: 6px 0 !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+        .co-appr-detail-row:last-child { border-bottom: none !important; }
+        .co-appr-detail-label { color: #64748b !important; font-weight: 500 !important; display: flex !important; align-items: center !important; }
+        .co-appr-detail-value { color: #1e293b !important; font-weight: 600 !important; text-align: right !important; }
+
+        /* ── Activity Log ── */
+        .co-appr-activity-scroll {
+            max-height: 160px !important;
+            overflow-y: auto !important;
+        }
+        .co-appr-activity-item {
+            padding: 5px 0 !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+        .co-appr-activity-item:last-child { border-bottom: none !important; }
+        .co-appr-activity-text { font-size: 10.5px !important; color: #1e293b !important; font-weight: 600 !important; line-height: 1.25 !important; }
+        .co-appr-activity-time { font-size: 9.5px !important; color: #94a3b8 !important; margin-top: 1px !important; }
+
+        @media (max-width: 1200px) {
+            .co-appr-summary-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .co-appr-layout { flex-direction: column !important; }
+            .co-appr-side { width: 100% !important; flex: 1 1 auto !important; }
         }
 
         /* ══════════════════════════ Step 5 — Send Offer Letter (native full composer) ══════════════════════════ */
@@ -4503,205 +4676,356 @@
                             </div>
 
                             <!-- Step 4 : Approval -->
-                            <div class="tab-content-section pt-5" id="step4">
-                                <div class="co-tpl-header">
-                                    <div>
-                                        <h5 class="co-tpl-title">Approval</h5>
-                                        <div class="co-tpl-sub">Send this offer for internal approval before it is released to the candidate.</div>
-                                    </div>
-                                </div>
-
-                                <div class="co-appr-info-row">
-                                    <div class="co-appr-info-card">
-                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
-                                        <div>
-                                            <div class="co-appr-info-label">Candidate</div>
-                                            <div class="co-appr-info-value">{{ @$application->full_name }}</div>
-                                            <div class="co-appr-info-sub">{{ @$application->email }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="co-appr-info-card">
-                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-                                        <div>
-                                            <div class="co-appr-info-label">CTC (Annual)</div>
-                                            <div class="co-appr-info-value">{!! @$current_ctc_cur !!} {{ number_format((float) @$yearly_final_gross, 0) }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="co-appr-info-card">
-                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span>
-                                        <div>
-                                            <div class="co-appr-info-label">Joining Date</div>
-                                            <div class="co-appr-info-value">{{ @$joined_date ? date('d M Y', strtotime($joined_date)) : '—' }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="co-appr-info-card">
-                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 0 0 0-6M21 20a5 5 0 0 0-3.5-4.8"/></svg></span>
-                                        <div>
-                                            <div class="co-appr-info-label">Requested By</div>
-                                            <div class="co-appr-info-value">{{ auth()->user()->name ?? '—' }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-
+                            <div class="tab-content-section pt-0" id="step4">
                                 @php
                                     // Real, persisted approval status — offer_create_main_tds.management_status:
                                     // 0/absent = never sent, 1 = pending, 2 = approved, 3 = rejected.
-                                    // (Set by fwd_offer_send() when the request is emailed, and by the public
-                                    // saveSignature() endpoint when the approver clicks Approve/Reject.)
                                     $co_mgmt_status = (int) (@$section_change_value->management_status ?? 0);
-                                    $_co_tl_latest = ($co_appr_timeline instanceof \Illuminate\Support\Collection) ? $co_appr_timeline->first() : $co_appr_timeline;
+                                    $co_appr_all_tl = ($co_appr_timeline instanceof \Illuminate\Support\Collection) ? $co_appr_timeline : collect($co_appr_timeline ?? []);
+                                    $_co_tl_latest = $co_appr_all_tl->first();
                                     $co_approver_label = trim((string) (@$_co_tl_latest->name_hr ?: @$_co_tl_latest->email_id_hr ?? ''));
+
+                                    // Rule 25 Canonical Client Classification
+                                    if (!empty($application->rjobid) && $application->rjobid > 0 && $application->from_company_id != auth()->user()->company_id) {
+                                        $orgTypeLabel = 'Direct Client';
+                                        $orgTypeIcon  = 'fas fa-shield-alt';
+                                        $orgTypeClass = 'type-direct';
+                                        $orgTypeStyle = 'background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;';
+                                    } elseif (!empty($application->client_name) && strcasecmp(trim($application->client_name), trim(auth()->user()->company->company_name ?? '')) !== 0) {
+                                        $orgTypeLabel = 'Internal Client';
+                                        $orgTypeIcon  = 'fas fa-building';
+                                        $orgTypeClass = 'type-internal';
+                                        $orgTypeStyle = 'background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;';
+                                    } else {
+                                        $orgTypeLabel = 'My Organization';
+                                        $orgTypeIcon  = 'fas fa-id-badge';
+                                        $orgTypeClass = 'type-my-org';
+                                        $orgTypeStyle = 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;';
+                                    }
+
+                                    // Default Organization Timezone Resolution (Rule 24)
+                                    $tenantTimezone = \App\Helper\GeneralMethod::defaultTimeZone(auth()->user()->company_id);
                                 @endphp
 
-                                <div class="co-appr-layout">
-                                    <div class="co-appr-main">
-                                        {{-- ── Approval Timeline header ── --}}
-                                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                                <div class="card mb-4 mx-2 co-main-card co-approval-card">
+                                    {{-- Card Header with Dedicated Background Color (Rule 20) --}}
+                                    <div class="card-header co-card-header">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="co-card-header-icon co-card-header-icon--blue">
+                                                <i class="fas fa-file-signature text-primary fs-4"></i>
+                                            </div>
                                             <div>
-                                                <h5 class="co-tpl-title">Approval Timeline</h5>
-                                                <div style="font-size:10px;color:#7e8299;margin-top:3px;">
-                                                    @php $co_appr_all_tl = ($co_appr_timeline instanceof \Illuminate\Support\Collection) ? $co_appr_timeline : collect(); @endphp
-                                                    @if($co_mgmt_status == 2) Offer approved — ready to send to candidate.
-                                                    @elseif($co_mgmt_status == 3) Offer rejected.
-                                                    @elseif($co_appr_all_tl->isNotEmpty()) Awaiting decision from approver.
-                                                    @else No approver assigned yet.
-                                                    @endif
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <h5 class="co-section-title mb-0">Offer Approval Workflow</h5>
+                                                    <span class="badge badge-light-primary fw-bold fs-8">Internal Governance</span>
                                                 </div>
+                                                <div class="co-section-sub">Send this offer for internal approval before it is released to the candidate</div>
                                             </div>
-                                            <button type="button"
-                                                data-jobid="{{ @$application->job_id }}"
-                                                data-candidate="{{ @$application->id }}"
-                                                data-mtype="2"
-                                                data-offerId="{{ $offer_id }}"
-                                                class="co-appr-add-dashed fwd_offer {{ $section_change_value ? '' : 'd-none' }}">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                                                Add Approver
-                                            </button>
                                         </div>
-
-                                        @if($co_appr_all_tl->isEmpty())
-                                            {{-- Empty state --}}
-                                            <div class="co-appr-empty-state">
-                                                <div class="co-appr-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M19 8v6M22 11h-6"/></svg></div>
-                                                <div class="co-appr-empty-title">No approver assigned yet</div>
-                                                <div class="co-appr-empty-sub">Choose an approver from your internal team, or the client's team if this job has one.</div>
-                                            </div>
-                                        @else
-                                            {{-- Column headers — same flex shell as rows, 52px spacer + 4-col grid --}}
-                                            <div class="co-appr-tl-cols">
-                                                <div class="co-appr-tl-cols-spacer"></div>
-                                                <div class="co-appr-tl-grid" style="flex:1;padding:0 14px;">
-                                                    <div class="co-appr-tl-col-hd">Approver</div>
-                                                    <div class="co-appr-tl-col-hd">Role</div>
-                                                    <div class="co-appr-tl-col-hd">Status (Date &amp; Time)</div>
-                                                    <div class="co-appr-tl-col-hd">Email Reminder</div>
-                                                </div>
-                                            </div>
-
-                                            {{-- Timeline rows (ASC: oldest first, last row = current status) --}}
-                                            @php $co_appr_asc = $co_appr_all_tl->reverse()->values(); @endphp
-                                            @foreach($co_appr_asc as $co_tl_row)
-                                            @php
-                                                $row_label   = trim((string)(@$co_tl_row->name_hr ?: @$co_tl_row->email_id_hr ?? ''));
-                                                $row_email   = trim((string)(@$co_tl_row->email_id_hr ?? ''));
-                                                $row_initial = $row_label ? strtoupper(substr($row_label,0,1)) : '?';
-                                                $row_role    = trim((string)(@$co_tl_row->designation_offer ?: @$co_tl_row->approver_designation ?? ''));
-                                                $row_date    = !empty($co_tl_row->create_at) ? date('d M Y, h:i A', strtotime($co_tl_row->create_at)) : '';
-                                                // Last row carries actual management_status; earlier rows = already-sent (waiting)
-                                                if ($loop->last) {
-                                                    $row_dot   = $co_mgmt_status == 2 ? 'approved' : ($co_mgmt_status == 3 ? 'rejected' : 'active');
-                                                    $row_badge = $row_dot;
-                                                    $row_card  = $row_dot;
-                                                    $row_label_status = $co_mgmt_status == 2 ? 'Approved' : ($co_mgmt_status == 3 ? 'Rejected' : 'Pending');
-                                                } else {
-                                                    $row_dot = $row_badge = 'waiting';
-                                                    $row_card = '';
-                                                    $row_label_status = 'Pending';
-                                                }
-                                            @endphp
-                                            {{-- Row: 52px dot column + flex-1 card --}}
-                                            <div style="display:flex;align-items:stretch;margin-bottom:8px;" class="co-appr-tl-entry">
-                                                <div style="width:52px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;">
-                                                    <div class="co-appr-tl-dot co-appr-tl-dot--{{ $row_dot }}">
-                                                        @if($row_dot==='approved')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                                                        @elseif($row_dot==='rejected')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                                                        @elseif($row_dot==='active')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                                                        @else<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                                                        @endif
-                                                    </div>
-                                                    @if(!$loop->last)<div class="co-appr-tl-connector"></div>@endif
-                                                </div>
-                                                {{-- Card uses same 4-col grid as header --}}
-                                                <div class="co-appr-tl-card co-appr-tl-grid {{ $row_card ? 'co-appr-tl-card--'.$row_card : '' }}" style="flex:1;">
-                                                    <div class="co-appr-tl-appr">
-                                                        <div class="co-appr-tl-avatar">{{ $row_initial }}</div>
-                                                        <div>
-                                                            <div class="co-appr-tl-name">{{ $row_label ?: $row_email ?: '—' }}</div>
-                                                            @if($row_role)<div class="co-appr-tl-sub">{{ $row_role }}</div>@endif
-                                                        </div>
-                                                    </div>
-                                                    <div class="co-appr-tl-role">{{ $row_role ?: '—' }}</div>
-                                                    <div class="co-appr-tl-status">
-                                                        <span class="co-appr-tl-badge co-appr-tl-badge--{{ $row_badge }}">{{ $row_label_status }}</span>
-                                                        <div class="co-appr-tl-date">{{ $row_date ?: '—' }}</div>
-                                                    </div>
-                                                    <div class="co-appr-tl-rem">
-                                                        <div class="co-appr-tl-rem-row">
-                                                            <button type="button" class="co-appr-tl-rem-btn co-appr-remind-send" data-email="{{ $row_email }}" data-name="{{ $row_label }}" data-offerid="{{ $offer_id }}">
-                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                                                                Send Reminder
-                                                            </button>
-                                                            <span class="co-appr-tl-kebab" title="More options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span>
-                                                        </div>
-                                                        <div class="co-appr-tl-last-sent">Last sent: {{ $row_date ?: '—' }}</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            @endforeach
-
-                                            @if($co_mgmt_status == 3 && !empty(@$_co_tl_latest->note))
-                                                <div class="co-appr-status-note" style="margin-top:8px;">&ldquo;{{ $_co_tl_latest->note }}&rdquo;</div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if($co_mgmt_status == 2)
+                                                <span class="badge badge-light-success text-success fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
+                                                    <i class="fas fa-check-circle me-1.5 text-success fs-9"></i>Offer Approved
+                                                </span>
+                                            @elseif($co_mgmt_status == 3)
+                                                <span class="badge badge-light-danger text-danger fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
+                                                    <i class="fas fa-times-circle me-1.5 text-danger fs-9"></i>Offer Rejected
+                                                </span>
+                                            @elseif($co_mgmt_status == 1 || $co_appr_all_tl->isNotEmpty())
+                                                <span class="badge badge-light-warning text-warning fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
+                                                    <i class="fas fa-clock me-1.5 text-warning fs-9"></i>Awaiting Approval
+                                                </span>
+                                            @else
+                                                <span class="badge badge-light-secondary text-gray-700 fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
+                                                    <i class="fas fa-user-clock me-1.5 text-gray-600 fs-9"></i>Ready for Approval
+                                                </span>
                                             @endif
-                                        @endif
-
-                                        <div class="co-appr-note" style="margin-top:14px;">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                                            <span>Approvals will be requested in the order shown above. You can reorder or remove approvers before sending the offer.</span>
                                         </div>
                                     </div>
 
-                                    <div class="co-appr-side">
-                                        <div class="co-appr-side-card">
-                                            <div class="co-appr-side-title">Details &amp; Insights</div>
-                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Offer ID</span><span class="co-appr-detail-value">{{ $offer_id }}</span></div>
-                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Template</span><span class="co-appr-detail-value">Company Offer Letter Template</span></div>
-                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Designation</span><span class="co-appr-detail-value" id="co-appr-designation-display">{{ @$designation ?: '—' }}</span></div>
-                                            @if(!empty(@$application->phone))
-                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Candidate Mobile</span><span class="co-appr-detail-value">{{ $application->phone }}</span></div>
-                                            @endif
+                                    <div class="card-body p-4">
+                                        {{-- UPPER DISCRETE SUB-CARDS (Rule 20 Modern Card + Sub-Card Tier 3 / Top Stats) --}}
+                                        <div class="co-appr-summary-grid mb-4">
+                                            {{-- Sub-Card 1: Candidate --}}
+                                            <div class="co-subcard co-subcard-candidate">
+                                                <div class="co-subcard-header">
+                                                    <span class="co-subcard-title"><i class="far fa-user text-primary me-1.5"></i>CANDIDATE</span>
+                                                    <span class="badge badge-light-primary fs-9 px-1.5 py-0">Target Profile</span>
+                                                </div>
+                                                <div class="co-subcard-body p-3">
+                                                    <div class="d-flex align-items-center gap-2.5">
+                                                        <div class="co-appr-avatar-mini">
+                                                            {{ strtoupper(substr(trim(@$application->full_name ?: 'C'), 0, 1)) }}
+                                                        </div>
+                                                        <div class="min-w-0 flex-grow-1">
+                                                            <div class="co-appr-card-val text-truncate" title="{{ @$application->full_name }}">{{ @$application->full_name ?: '—' }}</div>
+                                                            <div class="co-appr-card-sub text-truncate" title="{{ @$application->email }}"><i class="far fa-envelope text-muted me-1 fs-9"></i>{{ @$application->email ?: '—' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Sub-Card 2: CTC (Annual) --}}
+                                            <div class="co-subcard co-subcard-ctc">
+                                                <div class="co-subcard-header">
+                                                    <span class="co-subcard-title"><i class="fas fa-coins text-warning me-1.5"></i>ANNUAL CTC</span>
+                                                    <span class="badge badge-light-warning fs-9 px-1.5 py-0">Base Package</span>
+                                                </div>
+                                                <div class="co-subcard-body p-3">
+                                                    <div class="d-flex align-items-baseline gap-1">
+                                                        <span class="co-appr-ctc-symbol">{{ $initialCurrSymbol }}</span>
+                                                        <span class="co-appr-card-val fs-3 fw-bolder">{{ number_format((float) @$yearly_final_gross, 0) }}</span>
+                                                        <span class="co-appr-card-sub ms-1 fw-bold">{{ $initialCurrCode }} / Yr</span>
+                                                    </div>
+                                                    <div class="co-appr-card-sub text-muted mt-1">
+                                                        <i class="fas fa-money-bill-wave text-success me-1 fs-9"></i>Gross Fixed &amp; Annual Package
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Sub-Card 3: Joining Date --}}
+                                            <div class="co-subcard co-subcard-doj">
+                                                <div class="co-subcard-header">
+                                                    <span class="co-subcard-title"><i class="far fa-calendar-alt text-primary me-1.5"></i>JOINING SCHEDULE</span>
+                                                    @if(@$joined_date && strtotime($joined_date))
+                                                        @php
+                                                            $daysDiff = round((strtotime($joined_date) - time()) / 86400);
+                                                        @endphp
+                                                        <span class="badge {{ $daysDiff >= 0 ? 'badge-light-success text-success' : 'badge-light-danger text-danger' }} fs-9 px-1.5 py-0">
+                                                            {{ $daysDiff >= 0 ? ($daysDiff == 0 ? 'Joining Today' : 'In ' . $daysDiff . ' days') : abs($daysDiff) . ' days ago' }}
+                                                        </span>
+                                                    @else
+                                                        <span class="badge badge-light-secondary fs-9 px-1.5 py-0">Schedule TBD</span>
+                                                    @endif
+                                                </div>
+                                                <div class="co-subcard-body p-3">
+                                                    <div class="co-appr-card-val">
+                                                        <i class="far fa-calendar-check text-primary me-1.5 fs-7"></i>{{ @$joined_date ? date('d M Y', strtotime($joined_date)) : 'Pending Schedule' }}
+                                                    </div>
+                                                    <div class="co-appr-card-sub text-muted mt-1">
+                                                        <i class="far fa-clock text-info me-1 fs-9"></i>Expected Target Joining Date
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Sub-Card 4: Requested By & Classification --}}
+                                            <div class="co-subcard co-subcard-requester">
+                                                <div class="co-subcard-header">
+                                                    <span class="co-subcard-title"><i class="far fa-id-badge text-info me-1.5"></i>REQUESTED BY</span>
+                                                    <span class="co-appr-mandate-badge {{ $orgTypeClass }}" style="{{ $orgTypeStyle }}">
+                                                        <i class="{{ $orgTypeIcon }} me-1 fs-9"></i>{{ $orgTypeLabel }}
+                                                    </span>
+                                                </div>
+                                                <div class="co-subcard-body p-3">
+                                                    <div class="co-appr-card-val text-truncate" title="{{ auth()->user()->name ?? '—' }}">
+                                                        <i class="far fa-user-circle text-primary me-1.5 fs-7"></i>{{ auth()->user()->name ?? '—' }}
+                                                    </div>
+                                                    <div class="co-appr-card-sub text-muted text-truncate mt-1" title="{{ auth()->user()->company->company_name ?? '' }}">
+                                                        <i class="far fa-building text-muted me-1 fs-9"></i>{{ auth()->user()->company->company_name ?? 'Internal Organization' }}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div class="co-appr-side-card">
-                                            <div class="co-appr-side-title">Activity Log</div>
-                                            @forelse(($co_activity_log ?? []) as $log)
-                                                @php
-                                                    $log_label = 'Activity recorded';
-                                                    $log_who = trim((string) ($log->name_hr ?: $log->email_id_hr ?? ''));
-                                                    if ((int) $log->mtypeSection === 2) {
-                                                        if ((int) $log->management_status === 1) { $log_label = 'Approval requested' . ($log_who ? ' from ' . $log_who : ''); }
-                                                        elseif ((int) $log->management_status === 2) { $log_label = 'Approved' . ($log_who ? ' by ' . $log_who : ''); }
-                                                        elseif ((int) $log->management_status === 3) { $log_label = 'Rejected' . ($log_who ? ' by ' . $log_who : ''); }
-                                                    } elseif ((int) $log->mtypeSection === 1) {
-                                                        $log_label = ((int) $log->candidate_status === 1) ? 'Offer sent to candidate' : 'Candidate offer activity';
-                                                    }
-                                                @endphp
-                                                <div class="co-appr-activity-item">
-                                                    <div class="co-appr-activity-text">{{ $log_label }}</div>
-                                                    <div class="co-appr-activity-time">{{ !empty($log->create_at) ? date('d M Y, h:i A', strtotime($log->create_at)) : '' }}</div>
+                                        {{-- ── 2-COLUMN MAIN WORKFLOW SPLIT ── --}}
+                                        <div class="co-appr-layout">
+                                            {{-- LEFT COLUMN: Approval Timeline & Governance Sub-Card --}}
+                                            <div class="co-subcard co-appr-main">
+                                                <div class="co-subcard-header">
+                                                    <div>
+                                                        <span class="co-subcard-title fs-7 fw-bolder text-gray-800">
+                                                            <i class="fas fa-route text-primary me-2"></i>APPROVAL TIMELINE &amp; GOVERNANCE
+                                                        </span>
+                                                        <div class="co-subcard-status-desc" id="co_appr_timeline_subtitle">
+                                                            @if($co_mgmt_status == 2) Offer approved — ready to send to candidate.
+                                                            @elseif($co_mgmt_status == 3) Offer rejected.
+                                                            @elseif($co_appr_all_tl->isNotEmpty()) Awaiting decision from approver.
+                                                            @else No approver assigned yet.
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <button type="button"
+                                                            data-jobid="{{ @$application->job_id }}"
+                                                            data-candidate="{{ @$application->id }}"
+                                                            data-mtype="2"
+                                                            data-offerId="{{ $offer_id }}"
+                                                            class="btn btn-sm btn-light-primary co-appr-add-btn fwd_offer {{ $section_change_value ? '' : 'd-none' }}">
+                                                            <i class="fas fa-user-plus me-1.5 fs-9"></i>Add Approver
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            @empty
-                                                <div class="co-appr-empty-sub" style="margin-bottom:0;">No activity yet. Activities will appear here once the offer moves forward.</div>
-                                            @endforelse
+
+                                                <div class="co-subcard-body p-3.5">
+                                                    @if($co_appr_all_tl->isEmpty())
+                                                        {{-- Clean Modern Empty State --}}
+                                                        <div class="co-appr-empty-state">
+                                                            <div class="co-appr-empty-ico">
+                                                                <i class="fas fa-user-shield fs-2 text-primary"></i>
+                                                            </div>
+                                                            <div class="co-appr-empty-title">No Approver Assigned Yet</div>
+                                                            <div class="co-appr-empty-sub">Add internal governance approvers or client managers to sign off before candidate release.</div>
+                                                        </div>
+                                                    @else
+                                                        {{-- Column headers — anchored dedicated background bar --}}
+                                                        <div class="co-appr-tl-cols">
+                                                            <div class="co-appr-tl-cols-spacer"></div>
+                                                            <div class="co-appr-tl-grid" style="flex:1;">
+                                                                <div class="co-appr-tl-col-hd"><i class="far fa-user text-muted me-1"></i>Approver</div>
+                                                                <div class="co-appr-tl-col-hd"><i class="fas fa-briefcase text-muted me-1"></i>Role</div>
+                                                                <div class="co-appr-tl-col-hd"><i class="far fa-clock text-muted me-1"></i>Status &amp; Timestamp</div>
+                                                                <div class="co-appr-tl-col-hd"><i class="far fa-bell text-muted me-1"></i>Email Reminder</div>
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- Timeline Rows (ASC: oldest first, last row = current status) --}}
+                                                        @php $co_appr_asc = $co_appr_all_tl->reverse()->values(); @endphp
+                                                        @foreach($co_appr_asc as $co_tl_row)
+                                                        @php
+                                                            $row_label   = trim((string)(@$co_tl_row->name_hr ?: @$co_tl_row->email_id_hr ?? ''));
+                                                            $row_email   = trim((string)(@$co_tl_row->email_id_hr ?? ''));
+                                                            $row_initial = $row_label ? strtoupper(substr($row_label,0,1)) : '?';
+                                                            $row_role    = trim((string)(@$co_tl_row->designation_offer ?: @$co_tl_row->approver_designation ?? ''));
+                                                            $row_date    = !empty($co_tl_row->create_at) ? \Carbon\Carbon::parse($co_tl_row->create_at)->setTimezone($tenantTimezone)->format('d M Y, h:i A T') : '';
+                                                            if ($loop->last) {
+                                                                $row_dot   = $co_mgmt_status == 2 ? 'approved' : ($co_mgmt_status == 3 ? 'rejected' : 'active');
+                                                                $row_badge = $row_dot;
+                                                                $row_card  = $row_dot;
+                                                                $row_label_status = $co_mgmt_status == 2 ? 'Approved' : ($co_mgmt_status == 3 ? 'Rejected' : 'Pending');
+                                                            } else {
+                                                                $row_dot = $row_badge = 'waiting';
+                                                                $row_card = '';
+                                                                $row_label_status = 'Pending';
+                                                            }
+                                                        @endphp
+                                                        <div style="display:flex;align-items:stretch;margin-bottom:8px;" class="co-appr-tl-entry">
+                                                            <div style="width:48px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;">
+                                                                <div class="co-appr-tl-dot co-appr-tl-dot--{{ $row_dot }}" title="Step {{ $loop->iteration }}: {{ $row_label_status }}">
+                                                                    @if($row_dot==='approved')<i class="fas fa-check fs-8"></i>
+                                                                    @elseif($row_dot==='rejected')<i class="fas fa-times fs-8"></i>
+                                                                    @elseif($row_dot==='active')<i class="fas fa-user-clock fs-8"></i>
+                                                                    @else<i class="fas fa-hourglass-half fs-8"></i>
+                                                                    @endif
+                                                                </div>
+                                                                @if(!$loop->last)<div class="co-appr-tl-connector"></div>@endif
+                                                            </div>
+                                                            <div class="co-appr-tl-card co-appr-tl-grid {{ $row_card ? 'co-appr-tl-card--'.$row_card : '' }}" style="flex:1;">
+                                                                <div class="co-appr-tl-appr">
+                                                                    <div class="co-appr-tl-avatar">{{ $row_initial }}</div>
+                                                                    <div class="min-w-0">
+                                                                        <div class="co-appr-tl-name text-truncate" title="{{ $row_label ?: $row_email ?: '—' }}">{{ $row_label ?: $row_email ?: '—' }}</div>
+                                                                        <div class="co-appr-tl-sub text-truncate" title="{{ $row_email }}"><i class="far fa-envelope text-muted me-1 fs-9"></i>{{ $row_email }}</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="co-appr-tl-role">
+                                                                    <span class="badge badge-light text-gray-800 fw-semibold fs-9 px-2 py-1">{{ $row_role ?: 'Internal Approver' }}</span>
+                                                                </div>
+                                                                <div class="co-appr-tl-status">
+                                                                    <span class="co-appr-tl-badge co-appr-tl-badge--{{ $row_badge }}">
+                                                                        @if($row_label_status === 'Approved')<i class="fas fa-check-circle fs-9 me-1"></i>
+                                                                        @elseif($row_label_status === 'Rejected')<i class="fas fa-times-circle fs-9 me-1"></i>
+                                                                        @else<i class="fas fa-clock fs-9 me-1"></i>
+                                                                        @endif
+                                                                        {{ $row_label_status }}
+                                                                    </span>
+                                                                    <div class="co-appr-tl-date"><i class="far fa-calendar-alt text-muted me-1 fs-9"></i>{{ $row_date ?: '—' }}</div>
+                                                                </div>
+                                                                <div class="co-appr-tl-rem">
+                                                                    <div class="co-appr-tl-rem-row">
+                                                                        <button type="button" class="btn btn-sm btn-light-primary py-1 px-2.5 fs-9 fw-semibold co-appr-remind-send" data-email="{{ $row_email }}" data-name="{{ $row_label }}" data-offerid="{{ $offer_id }}">
+                                                                            <i class="far fa-paper-plane me-1 fs-9"></i>Send Reminder
+                                                                        </button>
+                                                                        <span class="co-appr-tl-kebab" title="More options"><i class="fas fa-ellipsis-v fs-9"></i></span>
+                                                                    </div>
+                                                                    <div class="co-appr-tl-last-sent">Last sent: {{ $row_date ?: 'just now' }}</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        @endforeach
+
+                                                        @if($co_mgmt_status == 3 && !empty(@$_co_tl_latest->note))
+                                                            <div class="co-appr-status-note">
+                                                                <i class="fas fa-comment-slash me-1.5 text-danger"></i>
+                                                                <strong>Approver Feedback:</strong> &ldquo;{{ $_co_tl_latest->note }}&rdquo;
+                                                            </div>
+                                                        @endif
+                                                    @endif
+
+                                                    <div class="co-appr-note mt-3">
+                                                        <i class="fas fa-shield-alt text-primary fs-7 flex-shrink-0 mt-0.5"></i>
+                                                        <span>Multi-tier approvals are executed sequentially in the order configured. You can modify approver hierarchy prior to releasing the offer letter.</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- RIGHT COLUMN: Details & Insights + Activity Log Sub-Cards --}}
+                                            <div class="co-appr-side">
+                                                {{-- Subcard: Details & Insights --}}
+                                                <div class="co-subcard co-appr-side-card mb-3">
+                                                    <div class="co-subcard-header">
+                                                        <span class="co-subcard-title"><i class="fas fa-info-circle text-primary me-1.5"></i>DETAILS &amp; INSIGHTS</span>
+                                                        <span class="badge badge-light-primary fs-9 px-1.5 py-0">Metadata</span>
+                                                    </div>
+                                                    <div class="co-subcard-body p-3">
+                                                        <div class="co-appr-detail-row">
+                                                            <span class="co-appr-detail-label"><i class="fas fa-hashtag text-muted me-1.5 fs-9"></i>Offer ID</span>
+                                                            <span class="badge badge-light-primary fw-bold fs-9">#OFF-{{ $offer_id }}</span>
+                                                        </div>
+                                                        <div class="co-appr-detail-row">
+                                                            <span class="co-appr-detail-label"><i class="far fa-file-alt text-muted me-1.5 fs-9"></i>Template</span>
+                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 140px;" title="Company Offer Letter Template">Company Offer Template</span>
+                                                        </div>
+                                                        <div class="co-appr-detail-row">
+                                                            <span class="co-appr-detail-label"><i class="fas fa-briefcase text-muted me-1.5 fs-9"></i>Designation</span>
+                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 140px;" id="co-appr-designation-display" title="{{ @$designation ?: '—' }}">{{ @$designation ?: '—' }}</span>
+                                                        </div>
+                                                        <div class="co-appr-detail-row">
+                                                            <span class="co-appr-detail-label"><i class="fas fa-phone-alt text-muted me-1.5 fs-9"></i>Candidate Mobile</span>
+                                                            <span class="co-appr-detail-value">{{ @$application->phone ?: '—' }}</span>
+                                                        </div>
+                                                        <div class="co-appr-detail-row border-bottom-0 pb-0">
+                                                            <span class="co-appr-detail-label"><i class="fas fa-building text-muted me-1.5 fs-9"></i>Client Mandate</span>
+                                                            <span class="co-appr-mandate-badge {{ $orgTypeClass }}" style="{{ $orgTypeStyle }}">
+                                                                <i class="{{ $orgTypeIcon }} me-1 fs-9"></i>{{ $orgTypeLabel }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Subcard: Activity Log --}}
+                                                <div class="co-subcard co-appr-side-card">
+                                                    <div class="co-subcard-header">
+                                                        <span class="co-subcard-title"><i class="fas fa-history text-primary me-1.5"></i>ACTIVITY AUDIT LOG</span>
+                                                        <span class="badge badge-light-info fs-9 px-1.5 py-0">{{ count($co_activity_log ?? []) }} Entries</span>
+                                                    </div>
+                                                    <div class="co-subcard-body p-3 co-appr-activity-scroll">
+                                                        @forelse(($co_activity_log ?? []) as $log)
+                                                            @php
+                                                                $log_label = 'Activity recorded';
+                                                                $log_who = trim((string) ($log->name_hr ?: $log->email_id_hr ?? ''));
+                                                                if ((int) $log->mtypeSection === 2) {
+                                                                    if ((int) $log->management_status === 1) { $log_label = 'Approval requested' . ($log_who ? ' from ' . $log_who : ''); }
+                                                                    elseif ((int) $log->management_status === 2) { $log_label = 'Approved' . ($log_who ? ' by ' . $log_who : ''); }
+                                                                    elseif ((int) $log->management_status === 3) { $log_label = 'Rejected' . ($log_who ? ' by ' . $log_who : ''); }
+                                                                } elseif ((int) $log->mtypeSection === 1) {
+                                                                    $log_label = ((int) $log->candidate_status === 1) ? 'Offer sent to candidate' : 'Candidate offer activity';
+                                                                }
+                                                                $log_time = !empty($log->create_at) ? \Carbon\Carbon::parse($log->create_at)->setTimezone($tenantTimezone)->format('d M Y, h:i A T') : '';
+                                                            @endphp
+                                                            <div class="co-appr-activity-item">
+                                                                <div class="co-appr-activity-text">
+                                                                    <i class="fas fa-check-circle text-primary me-1 fs-9"></i>{{ $log_label }}
+                                                                </div>
+                                                                <div class="co-appr-activity-time">
+                                                                    <i class="far fa-clock text-muted me-1 fs-9"></i>{{ $log_time }}
+                                                                </div>
+                                                            </div>
+                                                        @empty
+                                                            <div class="text-muted fs-8 text-center py-3">No activity recorded yet. Entries will appear automatically as the offer moves through stages.</div>
+                                                        @endforelse
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -5165,23 +5489,26 @@
 
                     var newEntry =
                         '<div style="display:flex;align-items:stretch;margin-bottom:8px;" class="co-appr-tl-entry">' +
-                            '<div style="width:52px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;">' +
-                                '<div class="co-appr-tl-dot co-appr-tl-dot--active">' + activeSvg + '</div>' +
+                            '<div style="width:48px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;">' +
+                                '<div class="co-appr-tl-dot co-appr-tl-dot--active" title="Pending Approval"><i class="fas fa-user-clock fs-8"></i></div>' +
                             '</div>' +
-                            '<div class="co-appr-tl-card co-appr-tl-card--active" style="flex:1;display:grid;grid-template-columns:1fr 130px 160px 190px;align-items:center;gap:0;padding:12px 14px;">' +
+                            '<div class="co-appr-tl-card co-appr-tl-card--active co-appr-tl-grid" style="flex:1;">' +
                                 '<div class="co-appr-tl-appr">' +
                                     '<div class="co-appr-tl-avatar">' + initial + '</div>' +
-                                    '<div><div class="co-appr-tl-name">' + safeName + '</div></div>' +
+                                    '<div class="min-w-0">' +
+                                        '<div class="co-appr-tl-name text-truncate" title="' + safeName + '">' + safeName + '</div>' +
+                                        '<div class="co-appr-tl-sub text-truncate" title="' + safeEmail + '"><i class="far fa-envelope text-muted me-1 fs-9"></i>' + safeEmail + '</div>' +
+                                    '</div>' +
                                 '</div>' +
-                                '<div class="co-appr-tl-role">—</div>' +
+                                '<div class="co-appr-tl-role"><span class="badge badge-light text-gray-800 fw-semibold fs-9 px-2 py-1">Internal Approver</span></div>' +
                                 '<div class="co-appr-tl-status">' +
-                                    '<span class="co-appr-tl-badge co-appr-tl-badge--active">Pending</span>' +
-                                    '<div class="co-appr-tl-date">Sent just now</div>' +
+                                    '<span class="co-appr-tl-badge co-appr-tl-badge--active"><i class="fas fa-clock fs-9 me-1"></i>Pending</span>' +
+                                    '<div class="co-appr-tl-date"><i class="far fa-calendar-alt text-muted me-1 fs-9"></i>Sent just now</div>' +
                                 '</div>' +
                                 '<div class="co-appr-tl-rem">' +
                                     '<div class="co-appr-tl-rem-row">' +
-                                        '<button type="button" class="co-appr-tl-rem-btn co-appr-remind-send" data-email="' + safeEmail + '" data-name="' + safeName + '" data-offerid="' + offId + '">' + mailSvg + ' Send Reminder</button>' +
-                                        '<span class="co-appr-tl-kebab">' + kebabSvg + '</span>' +
+                                        '<button type="button" class="btn btn-sm btn-light-primary py-1 px-2.5 fs-9 fw-semibold co-appr-remind-send" data-email="' + safeEmail + '" data-name="' + safeName + '" data-offerid="' + offId + '"><i class="far fa-paper-plane me-1 fs-9"></i>Send Reminder</button>' +
+                                        '<span class="co-appr-tl-kebab"><i class="fas fa-ellipsis-v fs-9"></i></span>' +
                                     '</div>' +
                                     '<div class="co-appr-tl-last-sent">Last sent: just now</div>' +
                                 '</div>' +
@@ -5198,18 +5525,21 @@
                     } else {
                         // Build full timeline layout for first add
                         var colHdr =
-                            '<div class="co-appr-tl-cols" style="padding-left:52px;margin-bottom:4px;">' +
-                                '<div class="co-appr-tl-col-hd">Approver</div>' +
-                                '<div class="co-appr-tl-col-hd">Role</div>' +
-                                '<div class="co-appr-tl-col-hd">Status (Date &amp; Time)</div>' +
-                                '<div class="co-appr-tl-col-hd">Email Reminder</div>' +
+                            '<div class="co-appr-tl-cols">' +
+                                '<div class="co-appr-tl-cols-spacer"></div>' +
+                                '<div class="co-appr-tl-grid" style="flex:1;">' +
+                                    '<div class="co-appr-tl-col-hd"><i class="far fa-user text-muted me-1"></i>Approver</div>' +
+                                    '<div class="co-appr-tl-col-hd"><i class="fas fa-briefcase text-muted me-1"></i>Role</div>' +
+                                    '<div class="co-appr-tl-col-hd"><i class="far fa-clock text-muted me-1"></i>Status &amp; Timestamp</div>' +
+                                    '<div class="co-appr-tl-col-hd"><i class="far fa-bell text-muted me-1"></i>Email Reminder</div>' +
+                                '</div>' +
                             '</div>';
                         var $emptyState = $main.find('.co-appr-empty-state');
                         if ($emptyState.length) { $emptyState.replaceWith(colHdr + newEntry); }
                         else { $main.find('.co-appr-tl-cols').length ? $main.find('.co-appr-note').before(newEntry) : $main.prepend(colHdr + newEntry); }
                     }
                     // Update header subtitle
-                    $main.find('[style*="font-size:10px;color:#7e8299"]').first().text('Awaiting decision from approver.');
+                    $('#co_appr_timeline_subtitle').text('Awaiting decision from approver.');
                 }
 
                 // Send Reminder handler
