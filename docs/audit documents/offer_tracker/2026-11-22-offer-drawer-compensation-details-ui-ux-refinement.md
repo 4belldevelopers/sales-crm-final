@@ -96,3 +96,58 @@ Both sub-cards are arranged side-by-side (`col-lg-6` and `col-lg-6`) with `align
     - `[PASS]` Primary submit button `#save-form` present
 - **Notice Font Size Single-Line Optimization:** Refined font size to `10px` with `white-space: nowrap; overflow: hidden; text-overflow: ellipsis;` across `.co-conf-notice` and `.co-doj-notice` so both helper status lines fit strictly on ONE single line without text wrapping.
 - **State Transition Test (`test_conf_states.php`):** Verified reactive update between `0` (Standard Visibility) and `1` (Confidential Restricted).
+
+---
+
+## 6. Round 3 – God-Level Enterprise Polish & Defect Remediation
+
+### 6.1 Card Header Height Optimization
+- **Defect:** Headers for `Main Components`, `Additional Components`, and `Final CTC` had ballooned to ~72–85px due to excessive Metronic card-header padding (`padding: 1.5rem 2.25rem`), 28px icon badges, and stacked subtitle text.
+- **Remediation:**
+  - Standardized `.co-card-header` across all three cards to a sleek, compact `min-height: 42px !important; padding: 8px 16px !important;`.
+  - Icon badge dimensions optimized to `26×26px` with `11.5px` font/SVG glyphs.
+  - Subtitle typography compressed to `10.5px` with `margin-top: 1px; line-height: 1.25`.
+  - Status badges standardized to compact `fs-8` pills (`padding: 2px 7px`).
+  - Add Component buttons standardized to sleek 28px pills (`.co-btn-add-pill`).
+
+### 6.2 Allocation & Percentage Column Design Parity
+- **Defect:**
+  - `ALLOCATION` in table headers was breaking awkwardly into `ALLOCA` on line 1 and `TION` on line 2 due to narrow `width: 7% !important;` and missing `white-space: nowrap`.
+  - In `Final CTC`, the percentage input was displayed right next to `show_currency` (`INR`) in a column with an empty `&nbsp;` header, resulting in an unreadable `20 % INR` visual clump.
+- **Remediation:**
+  - Added `white-space: nowrap !important;` to all `th` elements (`#pointList thead th, #bonusList thead th, #final_pay thead th`).
+  - Allocated generous, responsive column widths (`10% / min-width: 85px` for Allocation; `11% / min-width: 80px` for Currency).
+  - Renamed the header of Column 3 in `final_pay` to an explicit `Currency` header (`text-center`).
+  - Aligned numbers: Percentage inputs right-aligned with `%` suffix, Currency centered, and Monthly/Annually right-aligned with tabular numerals.
+  - Aligned column boundaries across Main Components, Additional Components, and Final CTC with 100% mathematical symmetry (`26% + 11% + 10% + 2% + 9% + 15% + 15% + 12% = 100%`).
+
+### 6.3 Complete Removal of Footer Action Button
+- **Defect:** Floating bottom `Save & Next` / `Save & Generate` button duplicated the persistent topbar `#co_header_save_btn`, consuming vertical drawer height.
+- **Remediation:**
+  - Completely removed the bottom action container (`.co-btn-save-primary`).
+  - Retained a hidden submit element `<button type="submit" id="save-form" style="display:none !important;"></button>` inside `#createForm` so existing JS handlers and topbar trigger events execute without any regressions.
+
+### 6.4 Critical Defect Fix: "Some Data Has Been Hidden"
+- **Root Cause 1 (`coToggleAdditionalEmpty`):**
+  - In lines 7444 and 7448, `coToggleAdditionalEmpty()` executed:
+    `$('#bonusList').closest('.row').hide();`
+  - `#bonusList` has no immediate `.row` parent. jQuery traversed up the DOM to `<div class="form-group row ...">` (line 2060) — the container holding the **entire Step 1 form**!
+  - When a user opened the drawer for a candidate with no bonus points (the default for fresh offers), `dataRows === 0` caused the entire form row to be hidden!
+  - **Fix:** Switched selector to `$('#bonusList').closest('.co-table-subcard').hide();` / `.show();`.
+- **Root Cause 2 (Table Clipping):**
+  - `.co-table-subcard` previously had `overflow: hidden;` with column 1 forced to `min-width: 340px`. On 15.6" screens or smaller drawer viewports, right-hand columns (Monthly, Annually, Action) were clipped offscreen.
+  - **Fix:** Updated `.co-table-subcard` to `overflow-x: auto !important; overflow-y: hidden !important;` with thin custom scrollbars, and normalized first-column min-width to `220px`.
+
+### 6.5 Verification Results
+- Ran `php scratch/verify_step1_ui.php`:
+  - `[PASS] card_header_min_height` (42px)
+  - `[PASS] card_header_padding` (8px 16px)
+  - `[PASS] table_subcard_overflow_x` (`overflow-x: auto`)
+  - `[PASS] thead_th_nowrap` (`white-space: nowrap`)
+  - `[PASS] final_pay_currency_th` (`Currency` header)
+  - `[PASS] footer_save_button_removed` (Zero visible footer button)
+  - `[PASS] hidden_save_form_present` (Hidden `#save-form` active)
+  - `[PASS] coToggle_no_closest_row` (Zero `.closest('.row')` calls)
+  - `[PASS] coToggle_uses_subcard` (`.closest('.co-table-subcard')`)
+  - `[PASS] allocation_header_has_pct` (`Allocation (%)`)
+  - **Result:** ALL 10/10 VERIFICATIONS PASSED 100%.

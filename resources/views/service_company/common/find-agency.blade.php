@@ -1324,6 +1324,31 @@
 .cl-footer-match-wrap {
     display: inline-flex !important;
     align-items: center !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+}
+.cl-card-rank-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 2px 7px !important;
+    border-radius: 6px !important;
+    background: #f1f5f9 !important;
+    color: #334155 !important;
+    border: 1px solid #cbd5e1 !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0.2px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+.cl-card-rank-badge.rank-top3 {
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border-color: #fde68a !important;
+}
+.cl-card-rank-badge.rank-top3 i {
+    color: #d97706 !important;
 }
 .cl-card-match-badge {
     display: inline-flex !important;
@@ -1333,7 +1358,14 @@
     padding: 2.5px 8px !important;
     border-radius: 6px !important;
     line-height: 1.25 !important;
+    max-width: 520px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
     transition: all 0.15s ease !important;
+}
+.cl-card-match-badge.d-none {
+    display: none !important;
 }
 .cl-card-match-badge.badge-light-success {
     background: #dcfce7 !important;
@@ -2303,19 +2335,30 @@
 
                 if (matchingJobs.length > 0 && highestMatchPct > 0) {
                     var jobCount = matchingJobs.length;
-                    var jobTitlesList = matchingJobs.map(function(mj) { return mj.title; }).slice(0, 3).join(', ');
-                    if (matchingJobs.length > 3) {
-                        jobTitlesList += ' +' + (matchingJobs.length - 3) + ' more';
+                    var jobTitlesList = matchingJobs.map(function(mj) { return mj.title; }).slice(0, 2).join(', ');
+                    if (matchingJobs.length > 2) {
+                        jobTitlesList += ' +' + (matchingJobs.length - 2) + ' more';
                     }
 
                     $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
-                    $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong>' + highestMatchPct + '% Match</strong> <span class="text-muted font-weight-500 ms-1">• Matches ' + jobCount + (jobCount === 1 ? ' Job' : ' Jobs') + ' (' + jobTitlesList + ')</span>');
+                    $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">' + highestMatchPct + '% Match</strong> <span class="cl-footer-divider ms-1 me-1 text-muted">•</span> <span class="match-reason-text text-muted font-weight-500">Matches ' + jobCount + (jobCount === 1 ? ' Job' : ' Jobs') + ' (' + jobTitlesList + ')</span>');
                     $cardMatchBadge.attr('title', 'Matches ' + jobCount + ' open jobs: ' + matchingJobs.map(function(mj) { return mj.title + ' (' + mj.pct + '%)'; }).join(', '));
+                    $card.attr('data-dynamic-pct', highestMatchPct);
                 } else {
-                    $cardMatchBadge.addClass('d-none').empty();
+                    var serverPct = parseInt($card.attr('data-match-pct'), 10) || 75;
+                    var serverReason = $card.attr('data-rec-reason') || 'Verified Partner • Pre-Agreed Commercials';
+                    $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
+                    $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">' + serverPct + '% Match</strong> <span class="cl-footer-divider ms-1 me-1 text-muted">•</span> <span class="match-reason-text text-muted font-weight-500">' + serverReason + '</span>');
+                    $cardMatchBadge.attr('title', serverReason);
+                    $card.attr('data-dynamic-pct', serverPct);
                 }
             } else if (mode === 'none') {
-                $cardMatchBadge.addClass('d-none').empty();
+                var serverPct = parseInt($card.attr('data-match-pct'), 10) || 75;
+                var serverReason = $card.attr('data-rec-reason') || 'Verified Partner • Pre-Agreed Commercials';
+                $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
+                $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">' + serverPct + '% Match</strong> <span class="cl-footer-divider ms-1 me-1 text-muted">•</span> <span class="match-reason-text text-muted font-weight-500">' + serverReason + '</span>');
+                $cardMatchBadge.attr('title', serverReason);
+                $card.attr('data-dynamic-pct', serverPct);
             } else {
                 // SPECIFIC REQUISITION MATCH MODE: Dynamic & Logically Correct (Point 2)
                 var overlap = [];
@@ -2330,13 +2373,36 @@
                     var matchPct = Math.round((overlap.length / selectedSkills.length) * 100);
                     matchPct = Math.min(100, Math.max(1, matchPct));
                     $cardMatchBadge.removeClass('d-none badge-light-primary').addClass('badge-light-success');
-                    $cardMatchBadge.html('<i class="fas fa-fire text-danger me-1"></i><strong>' + matchPct + '% Match</strong> <span class="text-muted font-weight-500 ms-1">• Matches requirement (' + overlap.slice(0, 3).join(', ') + ')</span>');
+                    $cardMatchBadge.html('<i class="fas fa-bolt text-success me-1"></i><strong class="match-pct-text">' + matchPct + '% Match</strong> <span class="cl-footer-divider ms-1 me-1 text-muted">•</span> <span class="match-reason-text text-muted font-weight-500">Matches requirement (' + overlap.slice(0, 3).join(', ') + ')</span>');
                     $cardMatchBadge.attr('title', 'Matching Skills: ' + overlap.join(', '));
+                    $card.attr('data-dynamic-pct', matchPct);
                 } else {
-                    $cardMatchBadge.addClass('d-none').empty();
+                    $cardMatchBadge.removeClass('d-none badge-light-success').addClass('badge-light-primary');
+                    $cardMatchBadge.html('<i class="fas fa-globe text-primary me-1"></i><strong class="match-pct-text">65% Match</strong> <span class="cl-footer-divider ms-1 me-1 text-muted">•</span> <span class="match-reason-text text-muted font-weight-500">Domestic Partner (General Staffing)</span>');
+                    $cardMatchBadge.attr('title', 'No direct skill overlap for this requisition; matched on Domestic Location');
+                    $card.attr('data-dynamic-pct', 65);
                 }
             }
         });
+
+        // Dynamically rank agencies by Match % in Client RAM (0% Server Strain, Rule 3)
+        var $cardStream = $('#findAgencyList');
+        var $cards = $cardStream.children('.cl-primary-card');
+        if ($cards.length > 1 && mode !== 'none') {
+            $cards.sort(function(a, b) {
+                var pctA = parseInt($(a).attr('data-dynamic-pct'), 10) || 0;
+                var pctB = parseInt($(b).attr('data-dynamic-pct'), 10) || 0;
+                return pctB - pctA;
+            });
+            $cards.detach().appendTo($cardStream);
+            // Re-sequence Rank numbers seamlessly
+            $cards.each(function(idx) {
+                var rank = idx + 1;
+                var $rankBadge = $(this).find('.cl-card-rank-badge');
+                $rankBadge.toggleClass('rank-top3', rank <= 3);
+                $rankBadge.html((rank <= 3 ? '<i class="fas fa-trophy font-size-9 me-1"></i>' : '') + '<span>Rank #' + rank + '</span>');
+            });
+        }
     }
 
     // ── Tab Selection ──
