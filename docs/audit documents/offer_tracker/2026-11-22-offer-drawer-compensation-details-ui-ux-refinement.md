@@ -493,6 +493,61 @@ Replaced the basic pill buttons with dedicated enterprise buttons matching the c
 - Persona freeze verified: all changes strictly confined to `service_company/`.
 - Single-active step transitions tested: Step 1 $\leftrightarrow$ Step 2 $\leftrightarrow$ Step 3 $\leftrightarrow$ Step 4 $\leftrightarrow$ Step 5.
 
+---
+
+## 14. Round 11 – Final Step (Offer Sent) Button Redesign, Pipeline Status "Offer Released" Sync, Enterprise Confirmation UI & Auto Drawer Closure
+
+### 14.1 Problem Statements & Requirements
+1. **Final Step Button Specialization:**
+   - On the final step (Step 5: Send Offer Letter), replace the generic "Save & Next" button with **"Send Offer Letter"** equipped with an enterprise paper-plane icon (`fas fa-paper-plane`), clearly conveying to the recruiter that clicking it triggers the candidate email dispatch process. Steps 1–4 retain "Save & Next".
+2. **Offer Letter Sent UI/UX Redesign:**
+   - Redesign the offer letter sending confirmation experience using the JeroATS Metronic enterprise design system (clean SweetAlert2 card with rounded border, `#009ef7` theme, and an `Offer Released` badge with checkmark), giving immediate visual confidence of dispatch.
+3. **Post-Sending Actions & Real-Time Pipeline Sync:**
+   - Once email dispatch succeeds:
+     - Automatically close the Offer Letter drawer smoothly.
+     - Update the candidate's ATS pipeline status to **"Offer Released"** (`master_status_id = 5`, `candidate_status = 1` across `offer_create_main_tds`, `add_job_wise_condidates`, `job_applications`, `updatetimeline`, and Elasticsearch doc in `ELASTIC_CANDIDATES`).
+     - Refresh all relevant candidate and offer tracker data immediately (real-time delta sync, offer tracker, CV tracker, and DataTables reload).
+4. **Resilient Failure Handling & Duplicate Prevention:**
+   - Auto-close the drawer and update the status **strictly after** receiving confirmed success from the email delivery service.
+   - If sending fails (coin balance deficiency, rate limiting, or network exception), keep the drawer open, preserve all entered form inputs, reset button states, and display an explicit error alert.
+   - Prevent duplicate email dispatches via a client-side in-flight guard (`window.coSendInFlight`), disabled button state, and animated loading indicators on both the in-card trigger and the persistent header button.
+
+### 14.2 Architecture & Code Implementation
+1. **Backend Controller Hardening (`app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php`):**
+   - In `fwd_offer_send(Request $request)`:
+     - Updated `add_job_wise_condidates` (`master_status_id = 5, candidate_status = 1, updated_at = NOW()`) for `$Offertimelime->joined`.
+     - Updated `job_applications` (`master_status_id = 5, candidate_status = 1, updated_at = NOW()`) for `$Offertimelime->application_id`.
+     - Synced Elasticsearch candidate document in `ELASTIC_CANDIDATES`:
+       ```php
+       'job_master_status_id' => 5,
+       'master_process_name'  => 'Offer Released',
+       'candidate_status'     => 1,
+       'of_offer_acceptance'  => 1,
+       'send_accept_date_time'=> $updateTime,
+       'updated_at'           => $updateTime,
+       ```
+     - Updated timeline entry with `master_process_name = 'Offer Released'` and `event_id = 5`.
+     - Flushed recruiter cache keys via `GeneralMethod::cacheClean(...)`.
+     - Enhanced JSON response to return `pipeline_status = 'Offer Released'`.
+2. **Frontend Offer Drawer Hardening (`resources/views/service_company/job-applications/create-offer.blade.php`):**
+   - **Step 5 Button Specialization:**
+     - In both `syncStepHeader()` and `resetAllSaveBtns()`, detected active step: if `active === 5`, labeled button as `"Send Offer Letter"` with `fas fa-paper-plane`; otherwise retained `"Save & Next"` with `fas fa-arrow-right`.
+   - **Duplicate Dispatch Guard:**
+     - Introduced `window.coSendInFlight = true/false` guard blocking rapid double-clicks on both `#co_header_save_btn` and `#co_send_submit`.
+     - Disabled button and displayed `"Sending Offer Letter…"` with `fa-spinner fa-spin`.
+   - **Enterprise Confirmation & Auto-Close Drawer:**
+     - Created `coCloseOfferDrawer()` supporting `#kt_offercreate_close`, `KTDrawer.getInstance().hide()`, and body overlay cleanup.
+     - Displayed redesigned SweetAlert2 modal featuring recipient details, `Offer Released` badge, and 2-second auto-close transition.
+   - **Real-Time Pipeline Sync:**
+     - Fired `window.jeroOfferTracker.refresh(false)`, `tableLoad('load')`, `window.LaravelDataTables.*.ajax.reload(null, false)`, custom DOM events (`jero:offer_updated`, `jero:candidate_status_changed`), and BroadcastChannel message (`OFFER_MUTATION_SYNC`).
+
+### 14.3 Verification Evidence
+- `php -l app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php`: **Passed (0 syntax errors)**.
+- `php -l resources/views/service_company/job-applications/create-offer.blade.php`: **Passed (0 syntax errors)**.
+- Tenancy isolation verified: strictly scoped to Service Company; frozen personas (`product_company/`, `staffing_company/`) remain 100% untouched (Rule 18).
+- Multi-channel pipeline status synchronization verified across MySQL (`master_status_id = 5`), Elasticsearch (`job_master_status_id = 5`), and UI DataTables.
+
+
 
 
 
