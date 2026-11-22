@@ -4483,11 +4483,8 @@
                                     </div>
                                 </div>
 
-                                {{-- Shared footer for both tabs: one Back / Save & Next bar, bottom-right --}}
-                                <div class="co-footer-actions co-tpl-footer">
-                                    <span class="btn co-btn-close" onclick="prevStep(event,2)">Back</span>
-                                    <button type="button" class="btn co-btn-save" id="step2SaveBtn" onclick="btnSaveLoading(this);$('#termConditioncreateForm').trigger('submit')">Save & Next</button>
-                                </div>
+                                {{-- Step 2 footer navigation buttons removed (primary Back/Save & Next lives in header topbar). Hidden trigger kept for form submission. --}}
+                                <button type="button" class="btn co-btn-save" id="step2SaveBtn" style="display: none !important;" onclick="btnSaveLoading(this);$('#termConditioncreateForm').trigger('submit')"></button>
 
                             </div>
 
@@ -4495,19 +4492,13 @@
                             <div class="tab-content-section pt-5" id="step3">
 
                                 <div id="preview_offer_body_content"></div>
-                                <div class="co-footer-actions co-tpl-footer co-step3-footer">
-                                    {{-- Direct download: navigates to a route that streams the PDF as an
-                                         attachment (no AJAX/JSON/storage-URL — those all failed silently on
-                                         the live host). target=_blank so the current drawer stays put. --}}
+                                <div class="co-footer-actions co-tpl-footer co-step3-footer" style="justify-content: flex-start !important; margin-top: 16px;">
+                                    {{-- Direct download action kept; duplicate navigation buttons removed (handled by header topbar) --}}
                                     <a href="{{ route('service_company.cvtracker.offer_letter_stream', $offer_id, false) }}"
                                        target="_blank" rel="noopener"
                                        class="btn co-btn-close co-step3-download">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>Download Offer Letter
                                     </a>
-                                    <div class="co-step3-footer-right">
-                                        <span class="btn co-btn-close" onclick="prevStep(event,3)">Back</span>
-                                        <button type="button" class="btn co-btn-save section_change_value {{ $section_change_value ? '' : 'd-none' }}" onclick="nextStep(event,3)">Continue to Approval</button>
-                                    </div>
                                 </div>
                             </div>
 
@@ -4715,10 +4706,7 @@
                                     </div>
                                 </div>
 
-                                <div class="co-footer-actions co-tpl-footer section_change_value {{ $section_change_value ? '' : 'd-none' }}">
-                                    <span class="btn co-btn-close" onclick="prevStep(event,4)">Back</span>
-                                    <button type="button" class="btn co-btn-save" onclick="nextStep(event,4)">Save &amp; Next</button>
-                                </div>
+                                {{-- Step 4 duplicate footer navigation buttons removed (handled by header topbar) --}}
                             </div>
 
                             <!-- Step 5 : Send Offer Letter (candidate email composer, inline) -->
@@ -4948,13 +4936,11 @@
                                         </div>
                                     </div>
 
-                                    {{-- Footer --}}
+                                    {{-- Footer: informative note kept; duplicate footer buttons removed (handled by header topbar) --}}
                                     <div class="co-send-footer">
-                                        <div class="co-send-footer-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> Email will be sent automatically</div>
-                                        <div class="co-send-footer-actions">
-                                            <span class="btn co-btn-close" onclick="prevStep(event,5)">Back</span>
-                                            <button type="button" class="btn co-send-submit" id="co_send_submit"><span class="co-send-submit-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:-2px;margin-right:6px;"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Send Offer Letter</span><span class="co-send-submit-wait" style="display:none;">Sending…</span></button>
-                                        </div>
+                                        <div class="co-send-footer-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> Email will be sent automatically upon clicking Save &amp; Next</div>
+                                        {{-- Hidden submit trigger for header Save & Next action --}}
+                                        <button type="button" class="btn co-send-submit" id="co_send_submit" style="display: none !important;"><span class="co-send-submit-label">Send Offer Letter</span><span class="co-send-submit-wait" style="display:none;">Sending…</span></button>
                                     </div>
                                 </div>
 
@@ -5107,17 +5093,14 @@
                     if ($hdrBtn.length) {
                         $hdrBtn.prop('disabled', false);
                         $hdrBtn.find('.co-btn-spinner').remove();
-                        var active = typeof coActiveStep === 'function' ? coActiveStep() : 1;
-                        var label = (active === 1 || active === 2) ? 'Save & Next' : (active === 3 ? 'Proceed to Approval' : (active === 4 ? 'Submit for Approval' : 'Send Offer'));
-                        $hdrBtn.find('.co-header-save-label').text(label);
-                        var iconClass = (active >= 4) ? 'fas fa-paper-plane fs-9 ms-1' : 'fas fa-arrow-right fs-9 ms-1';
-                        $hdrBtn.find('i').attr('class', iconClass);
+                        $hdrBtn.find('.co-header-save-label').text('Save & Next');
+                        $hdrBtn.find('i').attr('class', 'fas fa-arrow-right fs-9 ms-1');
                     }
                 }
 
                 function nextStep(event, currentStep) {
-                    event.preventDefault();
-                    var btn = event.currentTarget || event.target;
+                    if (event && event.preventDefault) event.preventDefault();
+                    var btn = (event && (event.currentTarget || event.target)) || document.getElementById('co_header_save_btn');
                     if (currentStep == 2) {
                         btnSaveLoading(btn);
                         var id = "{{ $offer_id }}";
@@ -5134,8 +5117,9 @@
                                 btnSaveReset(btn);
                                 if (response.status == "success") {
                                     $('#preview_offer_body_content').html(response.view);
-                                    document.getElementById("step" + currentStep).classList.remove("active");
-                                    document.getElementById("step" + (currentStep + 1)).classList.add("active");
+                                    document.querySelectorAll('.tab-content-section').forEach(function(s) { s.classList.remove("active"); });
+                                    var s3 = document.getElementById("step3");
+                                    if (s3) s3.classList.add("active");
                                     if (typeof syncStepHeader === 'function') syncStepHeader();
                                 } else if (response.status == "error") {
                                     Swal.fire("Warning", "Offer letter not ready", "warning");
@@ -5149,11 +5133,13 @@
                     } else {
                         btnSaveLoading(btn);
                         setTimeout(function() {
-                            document.getElementById("step" + currentStep).classList.remove("active");
-                            document.getElementById("step" + (currentStep + 1)).classList.add("active");
+                            var nextNum = currentStep + 1;
+                            document.querySelectorAll('.tab-content-section').forEach(function(s) { s.classList.remove("active"); });
+                            var nextEl = document.getElementById("step" + nextNum);
+                            if (nextEl) nextEl.classList.add("active");
                             if (typeof syncStepHeader === 'function') syncStepHeader();
                             btnSaveReset(btn);
-                        }, 600);
+                        }, 300);
                     }
                 }
 
@@ -5247,9 +5233,10 @@
                 function prevStep(event, currentStep) {
                     if (event && event.preventDefault) event.preventDefault();
                     resetAllSaveBtns();
-                    var cur = document.getElementById("step" + currentStep);
-                    var prev = document.getElementById("step" + (currentStep - 1));
-                    if (cur) cur.classList.remove("active");
+                    var prevNum = currentStep - 1;
+                    if (prevNum < 1) prevNum = 1;
+                    document.querySelectorAll('.tab-content-section').forEach(function(s) { s.classList.remove("active"); });
+                    var prev = document.getElementById("step" + prevNum);
                     if (prev) prev.classList.add("active");
                     resetAllSaveBtns();
                     if (typeof syncStepHeader === 'function') syncStepHeader();
@@ -7458,30 +7445,16 @@
                         }
                     }
 
-                    // Sync Main Drawer Header Action Button — ALWAYS 'Save & Next' for steps 1 & 2 (never 'Please wait...')
+                    // Sync Main Drawer Header Action Button — ALWAYS 'Save & Next' for ALL steps per user requirement
                     var $hdrBtn = $('#co_header_save_btn');
                     if ($hdrBtn.length) {
                         $hdrBtn.prop('disabled', false);
                         $hdrBtn.find('.co-btn-spinner').remove();
                         var $label = $hdrBtn.find('.co-header-save-label');
                         var $icon = $hdrBtn.find('i');
-                        if (active === 1 || active === 2) {
-                            $label.text('Save & Next');
-                            $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
-                            $hdrBtn.show();
-                        } else if (active === 3) {
-                            $label.text('Proceed to Approval');
-                            $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
-                            $hdrBtn.show();
-                        } else if (active === 4) {
-                            $label.text('Submit for Approval');
-                            $icon.attr('class', 'fas fa-paper-plane fs-9 ms-1');
-                            $hdrBtn.show();
-                        } else if (active === 5) {
-                            $label.text('Send Offer');
-                            $icon.attr('class', 'fas fa-paper-plane fs-9 ms-1');
-                            $hdrBtn.show();
-                        }
+                        $label.text('Save & Next');
+                        $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                        $hdrBtn.show();
                     }
 
                     // Reset hidden input so stale values never persist
@@ -7519,12 +7492,11 @@
                     } else if (active === 2) {
                         $('#step2SaveBtn').trigger('click');
                     } else if (active === 3) {
-                        if (typeof nextStep === 'function') nextStep(e, 4);
+                        if (typeof nextStep === 'function') nextStep(e, 3);
                     } else if (active === 4) {
-                        var $btn = $('#co_send_approval_btn');
-                        if ($btn.length) $btn.trigger('click');
+                        if (typeof nextStep === 'function') nextStep(e, 4);
                     } else if (active === 5) {
-                        var $sendBtn = $('#co_send_offer_submit');
+                        var $sendBtn = $('#co_send_submit');
                         if ($sendBtn.length) $sendBtn.trigger('click');
                     }
                 });
@@ -7828,9 +7800,8 @@
                     if (n === active) return;
                     if (n > active && n > coFurthestStep) return;   // forward nav gated
                     var target = document.getElementById('step' + n);
-                    if (!target) return;                            // step4/step5 added in a later piece
-                    var current = document.getElementById('step' + active);
-                    if (current) current.classList.remove('active');
+                    if (!target) return;
+                    document.querySelectorAll('.tab-content-section').forEach(function(s) { s.classList.remove('active'); });
                     target.classList.add('active');
                     resetAllSaveBtns();
                     syncStepHeader();
