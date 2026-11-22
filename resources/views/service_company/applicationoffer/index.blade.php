@@ -921,7 +921,7 @@ body { overflow-x: hidden !important; }
 .ot-stream-wrapper {
     position: relative !important;
     width: 100% !important;
-    min-height: 160px !important;
+    min-height: auto !important;
 }
 
 .ot-cards-stream {
@@ -933,12 +933,16 @@ body { overflow-x: hidden !important; }
     background: #ffffff !important;
     border: 1px solid var(--ot-border) !important;
     border-radius: 10px !important;
-    margin-bottom: 12px !important;
+    margin-bottom: 8px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease !important;
     width: 100% !important;
     max-width: 100% !important;
     overflow: hidden !important;
+}
+
+.ot-entity-card:last-child {
+    margin-bottom: 0 !important;
 }
 
 .ot-entity-card:hover {
@@ -949,7 +953,7 @@ body { overflow-x: hidden !important; }
 
 .ot-entity-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.7fr) minmax(0, 1.35fr) minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, 1.2fr) !important;
+    grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.65fr) minmax(0, 1.65fr) minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 1.25fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -1250,6 +1254,32 @@ body { overflow-x: hidden !important; }
     text-decoration: underline !important;
 }
 
+.ot-subcard-comp-status .ot-subcard-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+}
+
+.ot-subcard-comp-status .ot-subcard-label {
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+}
+
+.ot-subcard-comp-status .ot-micro-pill {
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    max-width: 85px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 8px !important;
+    padding: 1px 5px !important;
+}
+
 .ot-comp-status-body {
     display: flex !important;
     flex-direction: column !important;
@@ -1294,12 +1324,12 @@ body { overflow-x: hidden !important; }
 }
 
 .ot-cs-emp-group {
-    display: flex !important;
-    flex-wrap: wrap !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 3px !important;
     width: 100% !important;
     min-width: 0 !important;
-    margin: 1px 0 !important;
+    margin: 2px 0 !important;
 }
 
 .ot-emp-btn {
@@ -1308,12 +1338,15 @@ body { overflow-x: hidden !important; }
     color: #475569 !important;
     font-size: 8.5px !important;
     font-weight: 600 !important;
-    padding: 1.5px 5px !important;
+    padding: 2px 4px !important;
     border-radius: 4px !important;
     line-height: 1.2 !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     white-space: nowrap !important;
+    text-align: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
     font-family: inherit !important;
 }
 
@@ -1764,10 +1797,116 @@ body { overflow-x: hidden !important; }
     border-radius: 10px !important;
     overflow: hidden !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    margin-top: 8px !important;
 }
 
 .ot-footer-card .pagi-bar {
     border-top: none !important;
+    padding: 6px 14px !important;
+    min-height: 42px !important;
+    max-height: 44px !important;
+    height: 42px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #ffffff !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    width: 100% !important;
+}
+
+.ot-footer-card .pagi-info {
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+.ot-footer-card .pagi-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+}
+
+.ot-footer-card .pagi-arrow {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    color: #64748b !important;
+    font-size: 11px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-footer-card .pagi-arrow:hover:not(.pagi-disabled) {
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+}
+
+.ot-footer-card .pagi-arrow.pagi-disabled {
+    opacity: 0.35 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.ot-footer-card .pagi-page {
+    min-width: 26px !important;
+    height: 26px !important;
+    padding: 0 6px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    transition: all 0.15s ease !important;
+}
+
+.ot-footer-card .pagi-page:hover:not(.pagi-active-disabled) {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+}
+
+.ot-footer-card .pagi-page.pagi-active {
+    background: #009ef7 !important;
+    border-color: #009ef7 !important;
+    color: #ffffff !important;
+    pointer-events: none !important;
+}
+
+.ot-footer-card .pagi-dots {
+    font-size: 11.5px !important;
+    color: #94a3b8 !important;
+    padding: 0 2px !important;
+}
+
+.ot-footer-card .pagi-perpage {
+    height: 26px !important;
+    padding: 0 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    background: #f8fafc !important;
+    margin-left: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
 }
 
 /* ==========================================================================
@@ -1786,7 +1925,7 @@ body { overflow-x: hidden !important; }
     .ot-pipe-card-v2 { padding: 8px 10px 9px 20px !important; min-width: 132px !important; }
 
     .ot-entity-grid {
-        grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.7fr) minmax(0, 1.35fr) minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, 1.2fr) !important;
+        grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.65fr) minmax(0, 1.65fr) minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 1.25fr) !important;
         gap: 6px !important;
         padding: 8px 10px !important;
     }

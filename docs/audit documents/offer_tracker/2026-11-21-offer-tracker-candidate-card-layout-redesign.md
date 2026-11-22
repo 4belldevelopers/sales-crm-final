@@ -116,3 +116,20 @@ This update completes major enhancements to the Service Company Offer Tracker (`
    - 0 `dd()`, `dump()`, `var_dump()` calls.
    - Tenancy scoped by `company_id`.
    - Zero business logic mutations (Rule 7).
+
+---
+
+## 6. Enterprise Footer Height & Compensation Subcard Responsive Refinements (2026-11-22)
+
+1. **Standard Enterprise Footer Card Height (`42px`):**
+   - Locked `.ot-footer-card .pagi-bar` to fixed enterprise height `42px` (`min-height: 42px`, `max-height: 44px`, `padding: 6px 14px !important`).
+   - Scaled pagination buttons (arrows and page numbers) to compact `26px x 26px` with `border-radius: 6px` and font size `11.5px` (matching Metronic / enterprise design tokens).
+   - Reset `.ot-stream-wrapper { min-height: auto !important; }` and `.ot-entity-card { margin-bottom: 8px !important; }` to eliminate unnatural vertical whitespace above the footer when viewing 1 or few offers.
+
+2. **Compensation Subcard Layout & Screen Fit:**
+   - Rebalanced grid fractions from `2.3fr : 1.7fr : 1.35fr : 1.05fr : 1.4fr : 1.2fr` to `2.05fr : 1.65fr : 1.65fr : 1.05fr : 1.35fr : 1.25fr` (total 9.0fr), expanding Subcard 3 horizontal width by +22% (~236px on standard 1366px screen).
+   - Guaranteed "COMPENSATION" header label never truncates with ellipsis: `.ot-subcard-comp-status .ot-subcard-label { flex-shrink: 0 !important; overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important; }`.
+   - Simplified header employment pill (`{{ $empLabel }}`) without redundant bulky icon, saving ~18px.
+   - Standardized 4 employment type chips in a symmetrical 2x2 grid (`repeat(2, minmax(0, 1fr))`) when offer is pending with 100% width and zero wrapping bugs.
+   - Retained the uniform 3-row layout (Row 1: Amount, Row 2: Status Badge/Employment, Row 3: Action Cue) mirroring Subcard 6 (Pipeline & Stage).
+   - Fully responsive across 1366×768, 1920×1080, and tablet/mobile breakpoints.
