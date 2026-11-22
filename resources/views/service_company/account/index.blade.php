@@ -477,61 +477,141 @@ input[type="radio"]:checked {
 .candidate-config-link i svg,.candidate-action-icon svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.candidate-action-icon{display:inline-flex;align-items:center;justify-content:center;margin-right:6px;color:currentColor;line-height:1}
 .aat-input-group.aat-fixed-fee-group{grid-template-columns:82px minmax(0,1fr)}.aat-calc-row.simple{grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)}
 .jero-btn-loading{position:relative;pointer-events:none;opacity:.82}.jero-btn-loading:before{content:'';display:inline-block;width:13px;height:13px;margin-right:7px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-2px;animation:jero-btn-spin .65s linear infinite}.jero-btn-loading.btn-icon:before,.jero-btn-loading.aat-drawer-close:before,.jero-btn-loading.aga-close:before{margin-right:0}@keyframes jero-btn-spin{to{transform:rotate(360deg)}}
-.aat-edit-pill{border:0;cursor:pointer}.aat-drawer.agency-commercial-mode{background:#f6f8fc;color:#111b3d}.aat-drawer.agency-commercial-mode .aat-drawer-head{min-height:72px;padding:12px 18px}.aat-drawer.agency-commercial-mode .aat-drawer-title{gap:11px}.aat-drawer.agency-commercial-mode .aat-hero-icon{width:38px;height:38px;border-radius:8px;background:#eef2ff;color:#4f46e5}.aat-drawer.agency-commercial-mode .aat-hero-icon svg{width:20px;height:20px}.aat-drawer.agency-commercial-mode .aat-drawer-title h3{font-size:16.5px!important}.aat-drawer.agency-commercial-mode .aat-drawer-title p{font-size:11px;line-height:1.45}.aat-drawer.agency-commercial-mode .aat-drawer-body{padding:14px 14px 82px}.aat-drawer.agency-commercial-mode .aat-drawer-tabs{display:none}.aat-drawer.agency-commercial-mode .aat-edit-alert{margin-bottom:12px;padding:10px 12px;border-color:#d6e3ff;background:#f4f8ff;color:#405781;font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-edit-section{margin-bottom:12px;border-color:#dbe3ef;border-radius:10px;box-shadow:0 1px 3px rgba(15,23,42,.045)}.aat-drawer.agency-commercial-mode .aat-edit-section-head{padding:14px 16px}.aat-drawer.agency-commercial-mode .aat-edit-section-title h4{font-size:13px!important}.aat-drawer.agency-commercial-mode .aat-edit-section-title p{font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:16px;background:linear-gradient(135deg,#fbfcff,#f8f7ff)}.aat-drawer.agency-commercial-mode .aat-field label{font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-field select,.aat-drawer.agency-commercial-mode .aat-field input,.aat-drawer.agency-commercial-mode .aat-control{height:36px;font-size:11px}.aat-drawer.agency-commercial-mode .aat-calc{padding:12px}.aat-drawer.agency-commercial-mode .aat-drawer-footer{padding:10px 14px}.aat-drawer.agency-commercial-mode .aat-btn.save{min-width:140px}.aat-exp-table{grid-column:1/-1;overflow:hidden;border:1px solid #dce4ef;border-radius:8px;background:#fff}.aat-exp-head,.aat-exp-row{display:grid;grid-template-columns:minmax(160px,1fr) minmax(120px,.75fr) minmax(130px,.8fr);align-items:center;gap:10px}.aat-exp-head{min-height:34px;padding:7px 10px;color:#657395;background:#f7f9fc;border-bottom:1px solid #dfe6ef;font-size:9.8px;font-weight:600}.aat-exp-row{min-height:48px;padding:7px 10px;border-bottom:1px solid #e8edf4}.aat-exp-row:last-child{border-bottom:0}.aat-exp-row input{height:32px!important}.aat-exp-basis{color:#53617f;font-size:10.5px}.aat-drawer.agency-commercial-fulltime [data-agency-section="contract"],.aat-drawer.agency-commercial-contract [data-agency-section="fulltime"]{display:none}.aat-drawer.agency-commercial-fulltime [data-agency-section="general"],.aat-drawer.agency-commercial-contract [data-agency-section="general"]{display:block}@media(max-width:1200px){.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.aat-drawer.agency-commercial-mode{width:calc(100vw - 220px);max-width:calc(100vw - 220px)}}@media(max-width:768px){.aat-drawer-overlay{left:0}.aat-drawer.agency-commercial-mode{width:100vw;max-width:100vw}.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode .aat-drawer-head{align-items:flex-start;flex-direction:column}.aat-drawer.agency-commercial-mode .aat-drawer-meta{justify-content:flex-start}.aat-exp-head,.aat-exp-row{grid-template-columns:1fr}.aat-exp-head{display:none}}
+.aat-edit-pill{border:0;cursor:pointer}
+/* ===== Agency Commercials Drawer: Modern Card + Sub-Card Enterprise Standard (Rule 20) ===== */
+.aat-drawer.agency-commercial-mode { background:#f8fafc !important; color:#0f172a !important; width:min(1180px,calc((100vw - 220px)*0.94)) !important; max-width:calc(100vw - 220px) !important; overflow-x:hidden !important; overflow-y:auto !important; font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif !important; }
+.aat-drawer.agency-commercial-mode .aat-drawer-head { position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 20px !important; background:#f8fafc !important; border-bottom:1px solid #e2e8f0 !important; box-shadow:0 1px 3px rgba(15,23,42,0.04); min-height:64px; }
+.aat-drawer.agency-commercial-mode .aat-drawer-title { display:flex; align-items:center; gap:12px; min-width:0; }
+.aat-drawer.agency-commercial-mode .aat-hero-icon { width:38px; height:38px; border-radius:8px; background:#eff6ff !important; color:#2563eb !important; display:inline-flex; align-items:center; justify-content:center; flex:0 0 38px; }
+.aat-drawer.agency-commercial-contract .aat-hero-icon { background:#fffbeb !important; color:#d97706 !important; }
+.aat-drawer.agency-commercial-mode .aat-hero-icon svg { width:20px; height:20px; }
+.aat-drawer.agency-commercial-mode .aat-drawer-title h3 { margin:0; color:#0f172a !important; font-size:15px !important; font-weight:700 !important; line-height:1.25; }
+.aat-drawer.agency-commercial-mode .aat-drawer-title p { margin:2px 0 0; color:#64748b !important; font-size:11px !important; line-height:1.4; }
+.aat-drawer.agency-commercial-mode .aat-drawer-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.aat-drawer.agency-commercial-mode .aat-drawer-actions .aat-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:34px; padding:0 14px; font-size:11.5px; font-weight:600; border-radius:8px; border:1px solid #e2e8f0; background:#ffffff; color:#334155; cursor:pointer; transition:all 0.16s ease; white-space:nowrap; }
+.aat-drawer.agency-commercial-mode .aat-drawer-actions .aat-btn:hover { background:#f8fafc; border-color:#cbd5e1; color:#0f172a; }
+.aat-drawer.agency-commercial-mode .aat-drawer-actions .aat-btn.primary { background:#2563eb !important; border-color:#2563eb !important; color:#ffffff !important; min-width:130px; box-shadow:0 1px 2px rgba(37,99,235,0.18); }
+.aat-drawer.agency-commercial-mode .aat-drawer-actions .aat-btn.primary:hover { background:#1d4ed8 !important; border-color:#1d4ed8 !important; }
+.aat-drawer.agency-commercial-mode .aat-drawer-close { width:34px; height:34px; border:1px solid #e2e8f0; border-radius:8px; background:#ffffff; color:#64748b; font-size:20px; line-height:1; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:all 0.15s ease; }
+.aat-drawer.agency-commercial-mode .aat-drawer-close:hover { background:#f1f5f9; color:#0f172a; border-color:#cbd5e1; }
+.aat-drawer.agency-commercial-mode .aat-drawer-body { padding:16px 20px 24px !important; }
+.aat-drawer.agency-commercial-mode .aat-drawer-tabs { display:none; }
+.aat-drawer.agency-commercial-mode .aat-drawer-footer { display:none !important; }
 
-/* Intent: cev3-inspired model radios + range table styling inside the agency commercials drawer, mirroring the Edit Services reference. */
-.aat-drawer.agency-commercial-mode .aat-edit-section.aat-edit-section-model .aat-edit-grid, .aat-drawer.agency-commercial-mode .aat-edit-section[data-agency-section="fulltime aat-contract-only"] .aat-edit-grid{display:flex;flex-direction:column;gap:10px}.aat-drawer.agency-commercial-mode .aat-edit-section .aat-edit-grid>.aat-model-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;grid-column:1/-1}
-.aat-model-option{position:relative;display:flex;flex-direction:row;align-items:flex-start;gap:12px;width:100%;min-height:96px;padding:14px;color:#27365a;background:#fff;border:1px solid #dce3ee;border-radius:9px;text-align:left;transition:border-color .16s,box-shadow .16s,background .16s;cursor:pointer;overflow:hidden}
-.aat-model-option:hover{border-color:#aaa5ff;background:#fcfbff}
-.aat-model-option.active{border-color:#6657ff;background:#fcfbff;box-shadow:0 0 0 1px rgba(102,87,255,.12)}
-.aat-model-option>span{display:flex;flex:1 1 auto;flex-direction:column;align-items:flex-start;min-width:0;padding-right:24px}
-.aat-model-option b{display:block;margin:2px 0 7px;color:#111b3d;font-size:12px;font-weight:600;line-height:1.2;word-break:break-word}
-.aat-model-option small{display:block;width:100%;color:#617091;font-size:10.5px;font-weight:500;line-height:1.55;word-break:break-word;overflow-wrap:break-word}
-.aat-model-option i{position:absolute;left:18px;bottom:13px;width:16px;height:16px;border:1.5px solid #cdd5e3;border-radius:50%;flex:0 0 16px}
-.aat-model-option.active i{border:5px solid #5b45f5}
-.aat-model-icon{display:flex;flex:0 0 34px;width:34px;height:34px;align-items:center;justify-content:center;color:#4f46e5;background:#eff0ff;border-radius:8px;font-size:15px;font-weight:600}
-.aat-help-inline{color:#94a3b8;font-weight:500;font-size:9.8px;margin-left:4px}
-.aat-label{display:block;margin:0 0 6px;color:#26365c;font-size:10.5px;font-weight:600}
-.aat-default-pricing-card{padding:16px;background:linear-gradient(135deg,#fbfcff,#f8f7ff)}
-.aat-default-pricing-card,.aat-policy-card,.aat-payment-card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:16px;background:linear-gradient(135deg,#fbfcff,#f8f7ff);border:1px solid #e3e6f2;border-radius:8px}
-.aat-info{display:flex;align-items:flex-start;gap:8px;grid-column:1/-1;margin-top:6px;padding:9px 10px;color:#386252;background:#f0fbf6;border:1px solid #cceedd;border-radius:7px;font-size:10.5px;line-height:1.45}
-.aat-info svg{flex:0 0 15px;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
-.aat-info.blue{color:#405781;background:#f4f8ff;border-color:#d6e3ff}
-.aat-policy-note{display:flex;grid-column:1/-1;min-height:54px;align-items:center;gap:9px;padding:11px;color:#435783;background:#f6f5ff;border:1px solid #d8d5ff;border-radius:7px;font-size:10px;line-height:1.5}
-.aat-policy-note>span{display:flex;width:22px;height:22px;align-items:center;justify-content:center;flex:0 0 22px;color:#4f46e5;border:1px solid #8d86ff;border-radius:50%;font-weight:600}
-.aat-policy-note b{color:#1d2c5f}
-.aat-range-table{grid-column:1/-1;overflow:hidden;border:1px solid #dce4ef;border-radius:8px;background:#fff}
-.aat-range-head,.aat-range-row{display:grid;grid-template-columns:minmax(150px,1.05fr) minmax(120px,.72fr) minmax(120px,.72fr) minmax(160px,1fr) 34px;align-items:center;gap:10px}
-.aat-range-head{min-height:34px;padding:7px 10px;color:#657395;background:#f7f9fc;border-bottom:1px solid #dfe6ef;font-size:9.8px;font-weight:600}
-.aat-range-row{min-height:48px;padding:7px 10px;border-bottom:1px solid #e8edf4}
-.aat-range-row:last-child{border-bottom:0}
-.aat-range-row .aat-control{height:32px!important;font-size:10.5px;padding:4px 8px}
-.aat-range-label{overflow:hidden;color:#24345a;font-size:10.5px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
-.aat-rate-wrap{position:relative;display:flex;align-items:center}
-.aat-rate-wrap .aat-control{padding-right:30px;font-variant-numeric:tabular-nums}
-.aat-rate-suffix{position:absolute;right:10px;top:50%;color:#657395;font-size:10px;font-weight:600;transform:translateY(-50%)}
-.aat-range-reset{display:flex;width:30px;height:30px;align-items:center;justify-content:center;color:#4f46e5;background:#f1f3ff;border:1px solid #d9dcff;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
-.aat-range-reset:hover{color:#fff;background:#4f46e5}
-.aat-drawer.agency-commercial-mode .aat-help{display:block;margin:5px 0 0;color:#697797;font-size:9.8px;font-weight:500;line-height:1.4}
-/* cev3-inspired fixed-fee dynamic mode within the agency commercials drawer. */
-.aat-drawer.agency-commercial-mode .aat-fixed-only{display:none}
-.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-fixed-only{display:block}
-.aat-drawer.agency-commercial-mode .aat-default-pricing-card{grid-template-columns:repeat(3,minmax(0,1fr))}
-.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card{grid-template-columns:repeat(5,minmax(0,1fr))}
-.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-currency{order:1}
-.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-rate{order:2}
-.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-applied{order:3}
-.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-fixed-trigger-field{order:4}
-.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-fixed-frequency-field{order:5}
-.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head,.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row{grid-template-columns:minmax(145px,1.05fr) minmax(100px,.7fr) minmax(120px,.82fr) minmax(135px,.9fr) minmax(115px,.78fr) 34px}
-.aat-contract-range-table .aat-range-head,.aat-contract-range-table .aat-range-row{grid-template-columns:minmax(150px,1.05fr) minmax(120px,.72fr) minmax(160px,1fr) 34px}
-.aat-drawer.agency-commercial-mode .aat-standard-pricing-field{display:none}
-.aat-drawer.agency-commercial-mode .aat-range-head .aat-standard-pricing-field,.aat-drawer.agency-commercial-mode .aat-range-row .aat-standard-pricing-field{display:block}
-.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head .aat-percentage-only,.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row .aat-percentage-only{display:none}
-.aat-drawer.agency-commercial-mode:not(.is-fixed-fee) .aat-range-head .aat-fixed-only,.aat-drawer.agency-commercial-mode:not(.is-fixed-fee) .aat-range-row .aat-fixed-only{display:none}
-.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head,.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row{grid-template-columns:minmax(145px,1.05fr) minmax(100px,.7fr) minmax(120px,.82fr) minmax(135px,.9fr) minmax(115px,.78fr) 34px}
-@media(max-width:1199px){.aat-drawer.agency-commercial-mode .aat-default-pricing-card,.aat-drawer.agency-commercial-mode .aat-policy-card,.aat-drawer.agency-commercial-mode .aat-payment-card{grid-template-columns:repeat(2,minmax(0,1fr))}.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card{grid-template-columns:repeat(2,minmax(0,1fr))}.aat-drawer.agency-commercial-mode .aat-range-head,.aat-drawer.agency-commercial-mode .aat-range-row{grid-template-columns:minmax(135px,1fr) minmax(95px,.6fr) minmax(120px,.7fr) 30px;gap:8px}}
-@media(max-width:767px){.aat-drawer.agency-commercial-mode .aat-range-table,.aat-drawer.agency-commercial-mode .aat-contract-range-table{overflow-x:auto}.aat-drawer.agency-commercial-mode .aat-range-head,.aat-drawer.agency-commercial-mode .aat-range-row{grid-template-columns:140px 95px 120px 30px;min-width:430px}.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head,.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row{grid-template-columns:145px 95px 130px 140px 115px 32px;min-width:660px}.aat-drawer.agency-commercial-mode .aat-edit-section .aat-edit-grid>.aat-model-grid{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode .aat-default-pricing-card,.aat-drawer.agency-commercial-mode .aat-policy-card,.aat-drawer.agency-commercial-mode .aat-payment-card{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card{grid-template-columns:1fr}}@media(min-width:768px) and (max-width:1199px){.aat-drawer.agency-commercial-mode .aat-edit-section .aat-edit-grid>.aat-model-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Alert strip */
+.aat-drawer.agency-commercial-mode .aat-edit-alert { margin-bottom:14px; padding:10px 14px; border:1px solid #e2e8f0 !important; border-left:3.5px solid #2563eb !important; border-radius:8px; background:#f8fafc !important; color:#475569 !important; font-size:11.5px !important; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.aat-drawer.agency-commercial-contract .aat-edit-alert { border-left-color:#d97706 !important; background:#fffdfa !important; }
+.aat-drawer.agency-commercial-contract .aat-edit-alert svg { stroke:#d97706 !important; }
+
+/* Section Cards (Tier 3) */
+.aat-drawer.agency-commercial-mode .aat-edit-section { margin-bottom:14px !important; border:1px solid #e2e8f0 !important; border-radius:10px !important; background:#ffffff !important; box-shadow:0 1px 3px rgba(15,23,42,0.03) !important; overflow:hidden !important; }
+.aat-drawer.agency-commercial-mode .aat-edit-section-head { padding:10px 16px !important; background:#f8fafc !important; border-bottom:1px solid #e2e8f0 !important; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.aat-drawer.agency-commercial-mode .aat-edit-section-title { display:flex; align-items:center; gap:10px; }
+.aat-drawer.agency-commercial-mode .aat-sec-icon { width:30px; height:30px; border-radius:6px; background:#eff6ff !important; color:#2563eb !important; display:inline-flex; align-items:center; justify-content:center; flex:0 0 30px; }
+.aat-drawer.agency-commercial-mode .aat-avatar.orange { width:30px; height:30px; border-radius:6px; background:#fffbeb !important; color:#d97706 !important; display:inline-flex; align-items:center; justify-content:center; flex:0 0 30px; }
+.aat-drawer.agency-commercial-mode .aat-avatar.orange svg { width:16px; height:16px; }
+.aat-drawer.agency-commercial-mode .aat-sec-icon svg { width:16px; height:16px; }
+.aat-drawer.agency-commercial-mode .aat-edit-section-title h4 { margin:0; color:#0f172a !important; font-size:13px !important; font-weight:700 !important; line-height:1.25; }
+.aat-drawer.agency-commercial-mode .aat-edit-section-title p { margin:2px 0 0; color:#64748b !important; font-size:11px !important; }
+
+/* Sub-card Grids */
+.aat-drawer.agency-commercial-mode .aat-edit-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; padding:16px !important; background:#ffffff !important; }
+.aat-drawer.agency-commercial-mode .aat-edit-section.aat-edit-section-model .aat-edit-grid { display:flex; flex-direction:column; gap:12px; }
+.aat-drawer.agency-commercial-mode .aat-field { display:flex; flex-direction:column; gap:4px; }
+.aat-drawer.agency-commercial-mode .aat-field label, .aat-drawer.agency-commercial-mode .aat-label { display:flex; align-items:center; gap:4px; margin:0 0 5px; color:#334155 !important; font-size:11px !important; font-weight:600 !important; }
+.aat-drawer.agency-commercial-mode .aat-field label .req, .aat-drawer.agency-commercial-mode .aat-label .req { color:#ef4444; font-weight:700; }
+.aat-drawer.agency-commercial-mode .aat-control, .aat-drawer.agency-commercial-mode select, .aat-drawer.agency-commercial-mode input[type="text"], .aat-drawer.agency-commercial-mode input[type="number"] { width:100%; height:36px !important; padding:0 10px !important; border:1px solid #e2e8f0 !important; border-radius:6px !important; background:#ffffff !important; color:#0f172a !important; font-size:11.5px !important; font-weight:500 !important; font-family:'Poppins',sans-serif !important; transition:border-color 0.15s ease, box-shadow 0.15s ease; }
+.aat-drawer.agency-commercial-mode .aat-control:focus, .aat-drawer.agency-commercial-mode select:focus, .aat-drawer.agency-commercial-mode input:focus { border-color:#2563eb !important; outline:none; box-shadow:0 0 0 3px rgba(37,99,235,0.12) !important; }
+.aat-drawer.agency-commercial-mode .aat-input-suffix { display:grid; grid-template-columns:minmax(0,1fr) 56px; }
+.aat-drawer.agency-commercial-mode .aat-input-suffix input { border-radius:6px 0 0 6px !important; }
+.aat-drawer.agency-commercial-mode .aat-input-suffix span { display:flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; border-left:0; border-radius:0 6px 6px 0; color:#64748b; background:#f8fafc; font-size:11px; font-weight:600; }
+.aat-drawer.agency-commercial-mode .aat-help { display:block; margin:4px 0 0; color:#94a3b8 !important; font-size:10px !important; font-weight:500; line-height:1.35; }
+.aat-help-inline { color:#94a3b8; font-weight:500; font-size:10px; margin-left:4px; }
+
+/* Model Options */
+.aat-model-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; width:100%; }
+.aat-model-option { position:relative; display:flex; flex-direction:row; align-items:center; gap:12px; width:100%; min-height:78px; padding:12px 14px; color:#0f172a; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; text-align:left; transition:all 0.16s ease; cursor:pointer; }
+.aat-model-option:hover { border-color:#cbd5e1; background:#f8fafc; }
+.aat-model-option.active { border-color:#2563eb !important; background:#eff6ff !important; box-shadow:0 0 0 1px #2563eb !important; }
+.aat-model-icon { display:flex; flex:0 0 36px; width:36px; height:36px; align-items:center; justify-content:center; color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; font-size:15px; font-weight:700; }
+.aat-model-option.active .aat-model-icon { background:#2563eb; color:#ffffff; border-color:#2563eb; }
+.aat-model-option>span { display:flex; flex:1 1 auto; flex-direction:column; align-items:flex-start; min-width:0; padding-right:24px; }
+.aat-model-option b { display:block; margin:0 0 2px; color:#0f172a; font-size:12.5px; font-weight:700; line-height:1.25; }
+.aat-model-option small { display:block; color:#64748b; font-size:10.5px; font-weight:500; line-height:1.4; }
+.aat-model-option i { position:absolute; right:14px; top:50%; transform:translateY(-50%); width:18px; height:18px; border:2px solid #cbd5e1; border-radius:50%; flex:0 0 18px; background:#ffffff; transition:all 0.15s ease; }
+.aat-model-option.active i { border-color:#2563eb; background:#2563eb; box-shadow:inset 0 0 0 3px #ffffff; }
+
+/* Subcards: Default Pricing, Policy, Payment */
+.aat-default-pricing-card, .aat-policy-card, .aat-payment-card { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)) !important; gap:14px; padding:14px !important; background:#f8fafc !important; border:1px solid #e2e8f0 !important; border-radius:8px !important; }
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card { grid-template-columns:repeat(5, minmax(0, 1fr)) !important; }
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-currency { order:1; }
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-rate { order:2; }
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-applied { order:3; }
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-fixed-trigger-field { order:4; }
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-fixed-frequency-field { order:5; }
+.aat-drawer.agency-commercial-mode .aat-fixed-only { display:none; }
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-fixed-only { display:block; }
+.aat-drawer.agency-commercial-mode .aat-standard-pricing-field { display:none; }
+.aat-drawer.agency-commercial-mode .aat-range-head .aat-standard-pricing-field, .aat-drawer.agency-commercial-mode .aat-range-row .aat-standard-pricing-field { display:block; }
+.aat-drawer.agency-commercial-mode .aat-range-row .aat-rate-wrap.aat-standard-pricing-field { display:flex !important; }
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head .aat-percentage-only, .aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row .aat-percentage-only { display:none; }
+.aat-drawer.agency-commercial-mode:not(.is-fixed-fee) .aat-range-head .aat-fixed-only, .aat-drawer.agency-commercial-mode:not(.is-fixed-fee) .aat-range-row .aat-fixed-only { display:none; }
+
+/* Rate Wrap */
+.aat-rate-wrap { position:relative; display:flex; align-items:center; width:100%; }
+.aat-rate-wrap .aat-control { padding-right:26px !important; font-variant-numeric:tabular-nums; }
+.aat-rate-suffix { position:absolute; right:9px; top:50%; transform:translateY(-50%); color:#64748b; font-size:11px; font-weight:700; pointer-events:none; }
+
+/* Calculation Sub-cards */
+.aat-calc { grid-column:1 / -1; margin-top:6px; padding:12px 14px !important; border:1px solid #e2e8f0 !important; border-radius:8px !important; background:#f8fafc !important; }
+.aat-calc h5 { margin:0 0 8px; color:#2563eb !important; font-size:11px !important; font-weight:700 !important; text-transform:uppercase; letter-spacing:0.5px; }
+.aat-calc.orange h5 { color:#d97706 !important; }
+.aat-calc-row { display:flex; align-items:center; justify-content:space-around; gap:12px; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; background:#ffffff; text-align:center; }
+.aat-calc-cell { font-size:10.5px; color:#64748b; font-weight:500; }
+.aat-calc-cell b { display:block; margin-top:2px; color:#0f172a; font-size:13.5px; font-weight:700; font-variant-numeric:tabular-nums; }
+.aat-calc-row div:not(.aat-calc-cell) { font-size:15px; font-weight:700; color:#94a3b8; }
+
+/* Range Tables */
+.aat-range-table { grid-column:1 / -1; overflow:hidden; border:1px solid #e2e8f0 !important; border-radius:8px !important; background:#ffffff !important; }
+.aat-range-head, .aat-range-row { display:grid; grid-template-columns:140px 100px minmax(130px, 1fr) 130px 34px; align-items:center; gap:10px; }
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head, .aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row { grid-template-columns:140px 95px minmax(120px, 1fr) 130px 120px 34px !important; }
+.aat-contract-range-table .aat-range-head, .aat-contract-range-table .aat-range-row { display:grid; grid-template-columns:160px 110px minmax(200px, 1fr) 34px !important; align-items:center; gap:10px; }
+.aat-range-head { min-height:36px; padding:8px 12px !important; color:#475569 !important; background:#f8fafc !important; border-bottom:1px solid #e2e8f0 !important; font-size:10.5px !important; font-weight:700 !important; text-transform:uppercase; letter-spacing:0.3px; }
+.aat-range-row { min-height:44px; padding:6px 12px !important; border-bottom:1px solid #f1f5f9 !important; background:#ffffff; }
+.aat-range-row:last-child { border-bottom:0 !important; }
+.aat-range-label { font-size:11.5px !important; font-weight:600 !important; color:#0f172a !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.aat-range-reset { display:inline-flex; width:32px; height:32px; align-items:center; justify-content:center; color:#64748b; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s ease; }
+.aat-range-reset:hover { color:#2563eb; background:#eff6ff; border-color:#bfdbfe; }
+
+/* Notes */
+.aat-info { display:flex; align-items:center; gap:8px; grid-column:1 / -1; margin-top:8px; padding:8px 12px; border-radius:6px; font-size:11px; line-height:1.45; background:#eff6ff !important; border:1px solid #bfdbfe !important; color:#1e40af !important; }
+.aat-info svg { flex:0 0 15px; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; }
+.aat-policy-note { display:flex; grid-column:1 / -1; min-height:42px; align-items:center; gap:8px; padding:9px 12px; background:#eff6ff !important; border:1px solid #bfdbfe !important; border-radius:6px; font-size:11px; color:#1e40af; margin-top:6px; }
+.aat-policy-note>span { display:inline-flex; width:20px; height:20px; align-items:center; justify-content:center; flex:0 0 20px; color:#2563eb; border:1px solid #bfdbfe; border-radius:50%; font-size:11px; font-weight:700; background:#ffffff; }
+.aat-policy-note b { color:#0f172a; font-weight:700; }
+
+/* Mode visibility toggles */
+.aat-drawer.agency-commercial-fulltime [data-agency-section="contract"], .aat-drawer.agency-commercial-contract [data-agency-section="fulltime"] { display:none !important; }
+.aat-drawer.agency-commercial-fulltime [data-agency-section="general"], .aat-drawer.agency-commercial-contract [data-agency-section="general"] { display:block !important; }
+
+/* Responsive adjustments for 15.6" and smaller screens */
+@media(max-width:1199px) {
+  .aat-drawer.agency-commercial-mode .aat-edit-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .aat-drawer.agency-commercial-mode .aat-default-pricing-card, .aat-drawer.agency-commercial-mode .aat-policy-card, .aat-drawer.agency-commercial-mode .aat-payment-card { grid-template-columns:repeat(2, minmax(0, 1fr)) !important; }
+  .aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card { grid-template-columns:repeat(3, minmax(0, 1fr)) !important; }
+}
+@media(max-width:767px) {
+  .aat-drawer.agency-commercial-mode { width:100vw !important; max-width:100vw !important; }
+  .aat-drawer.agency-commercial-mode .aat-drawer-head { flex-direction:column; align-items:flex-start; }
+  .aat-drawer.agency-commercial-mode .aat-drawer-actions { width:100%; justify-content:flex-end; }
+  .aat-drawer.agency-commercial-mode .aat-edit-grid { grid-template-columns:1fr !important; }
+  .aat-model-grid { grid-template-columns:1fr !important; }
+  .aat-drawer.agency-commercial-mode .aat-default-pricing-card, .aat-drawer.agency-commercial-mode .aat-policy-card, .aat-drawer.agency-commercial-mode .aat-payment-card { grid-template-columns:1fr !important; }
+  .aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card { grid-template-columns:1fr !important; }
+  .aat-range-table, .aat-contract-range-table { overflow-x:auto; }
+  .aat-range-head, .aat-range-row { min-width:480px; }
+  .aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head, .aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row { min-width:640px; }
+}
 
 /* ── Modern Card + Sub-Card Enterprise Design System (Internal Client Drawer Standard - Rule 20) ── */
 .cd-scope {
