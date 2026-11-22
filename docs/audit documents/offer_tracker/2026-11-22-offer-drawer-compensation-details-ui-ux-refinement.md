@@ -213,3 +213,72 @@ Both sub-cards are arranged side-by-side (`col-lg-6` and `col-lg-6`) with `align
 | **8** | Action (Trash) | Action (Trash) | Spacer (`&nbsp;`) | **4%** | 44px |
 | **SUM** | **100%** | **100%** | **100%** | **100%** | **974px** |
 
+---
+
+## 8. Round 5 – God-Level Card Differentiation, Dropdown Redesign, Truncation Elimination, & Editable UX
+
+### 8.1 Distinct 4-Card Background Palettes (Immediate Visual Differentiation)
+To ensure users can immediately differentiate between the 4 major sections of Step 1 at a single glance, distinct semantic background palettes were engineered with crisp borders, tinted headers, and white inner sub-card containers:
+
+1. **Card 1: Compensation Details (`.co-details-card`)**
+   - **Card Body:** Crisp Neutral Pure White (`#ffffff`)
+   - **Card Header:** Soft Slate Neutral (`#f8fafc`, border-bottom `#e2e8f0`)
+   - **Card Outer Border:** Clean Slate Hairline (`#cbd5e1`, shadow `0 1px 3px rgba(0,0,0,0.03)`)
+2. **Card 2: Main Components (`.co-main-components-card`)**
+   - **Card Body:** Soft Azure Ice Blue (`#f0f7ff`)
+   - **Card Header:** Crisp Light Azure (`#e0effe`, border-bottom `#bae0fd`)
+   - **Card Outer Border:** Medium Azure Hairline (`#bfdbfe`, shadow `0 1px 4px rgba(37, 99, 235, 0.06)`)
+   - **Inner Table Sub-Card:** Pure White (`#ffffff`, border `#bfdbfe`)
+3. **Card 3: Additional Components (`.co-additional-card`)**
+   - **Card Body:** Soft Lavender Tint (`#faf5ff`)
+   - **Card Header:** Royal Violet Tint (`#f3e8ff`, border-bottom `#e9d5ff`)
+   - **Card Outer Border:** Lavender Hairline (`#e9d5ff`, shadow `0 1px 4px rgba(124, 58, 237, 0.06)`)
+   - **Inner Table Sub-Card:** Pure White (`#ffffff`, border `#e9d5ff`)
+4. **Card 4: Final CTC (`.co-finalctc-card`)**
+   - **Card Body:** Soft Mint Financial Emerald Tint (`#f0fdf4`)
+   - **Card Header:** Light Emerald Tint (`#dcfce7`, border-bottom `#bbf7d0`)
+   - **Card Outer Border:** Mint Hairline (`#bbf7d0`, shadow `0 1px 4px rgba(5, 150, 105, 0.06)`)
+   - **Inner Table Sub-Card:** Pure White (`#ffffff`, border `#bbf7d0`)
+
+### 8.2 Enterprise Add Buttons
+Replaced the basic pill buttons with dedicated enterprise buttons matching the card semantic colors:
+- **`+ Add Main Component` (`.co-btn-add-main`):** Deep Azure (`#0284c7`, hover `#0369a1`), 32px height, 7px radius, `#0369a1` border, 11.5px Poppins font, 600 weight, subtle shadow `0 1px 2px rgba(2, 132, 199, 0.25)`.
+- **`+ Add Additional Component` (`.co-btn-add-additional`):** Royal Violet (`#7c3aed`, hover `#6d28d9`), 32px height, 7px radius, `#6d28d9` border, 11.5px Poppins font, 600 weight, subtle shadow `0 1px 2px rgba(124, 58, 237, 0.25)`.
+
+### 8.3 High-Contrast Dropdown Chevron Indicators (Zero Confusion)
+- **Problem:** When `.form-control, .form-select` had `background: #ffffff !important`, the browser's native `<select>` dropdown chevron arrow was wiped out. Users could not tell that `Applicable` (Annually/Monthly) and `Condition` (Amount/Basic) were interactive dropdowns.
+- **Solution:** Injected a high-contrast dark slate SVG chevron down arrow (`stroke='%23475569'`, stroke-width 2.5) as a CSS data URI at `right 8px center` with `background-repeat: no-repeat`, `background-size: 13px 13px`, `padding-right: 26px !important`, `padding-left: 8px !important`, and `appearance: none !important`.
+- **Interactive Feedback:** On hover, border turns `#94a3b8` and background softens to `#f8fafc`. On focus, border highlights to `#009ef7` with a 3px glow ring (`box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15)`).
+
+### 8.4 Truncation Elimination & Drag Handle Removal
+- **Problem 1:** Component names like `House Rent Allowance (HRA)` were truncated to `House Rent Allowar` because the column was squeezed by cell padding, the drag handle (`⋮⋮`), and badges.
+- **Problem 2:** Pick-and-drop drag handles (`co-drag-handle` / `⋮⋮`) were completely non-functional and took up 20px of valuable horizontal space.
+- **Problem 3:** Users could not tell component names were editable inline.
+- **Problem 4:** Condition dropdown truncated "Amount" into "Amoun" because the column was only 9% (min 80px) and had an inline style `style="width: 100px"`.
+- **Solution:**
+  1. Completely removed the non-functional `co-drag-handle` (`⋮⋮`).
+  2. Injected an interactive edit pencil icon (`fas fa-pencil-alt .co-name-edit-icon`) alongside the row number inside `.co-row-lead`. Clicking the pencil automatically focuses the component name text input.
+  3. Styled `.offer_points, .bonus_points, .offer_point_hourly, .bonus_point_hourly` with clean `#cbd5e1` borders, 6px radius, hover and focus ring so they look unmistakably editable.
+  4. Expanded Component Name column to **`36%` (min-width `330px`)** across headers, tbody rows, and tfoot.
+  5. Expanded Condition column to **`10%` (min-width `95px`)** and removed restrictive `width: 100px` inline styles, giving the dropdown ample space to display "Amount" and "Basic" alongside the SVG chevron without truncation.
+
+### 8.5 Revised 8-Column Balanced Grid Matrix Across All Tables
+
+| Column # | PointList (Main) | BonusList (Additional) | Final Pay (CTC Summary) | Width % | Min-Width |
+|---|---|---|---|---|---|
+| **1** | Component Name (Pencil + #) | Component Name (Pencil + #) | Component (`colspan="2"`) | **36%** | 330px (470px final) |
+| **2** | Applicable (SVG Dropdown) | Applicable (SVG Dropdown) | *(Included in Col 1)* | **14%** | 140px |
+| **3** | Allocation (%) | Allocation (%) | Allocation (%) | **9%** | 85px |
+| **4** | Multiplier (`×`) | Multiplier (`×`) | Currency (`colspan="2"`) | **2%** | 20px (115px final) |
+| **5** | Condition (SVG Dropdown) | Condition (SVG Dropdown) | *(Included in Col 4)* | **10%** | 95px |
+| **6** | Monthly (Tabular) | Monthly (Tabular) | Monthly (Tabular) | **12%** | 105px |
+| **7** | Annually (Tabular) | Annually (Tabular) | Annually (Tabular) | **13%** | 110px |
+| **8** | Action (Trash Can) | Action (Trash Can) | Spacer (`&nbsp;`) | **4%** | 44px |
+| **SUM** | **100%** | **100%** | **100%** | **100%** | **984px** |
+
+### 8.6 Verification Evidence
+- `php -l resources/views/service_company/job-applications/create-offer.blade.php`: **Passed (0 syntax errors)**.
+- Tenancy isolation verified: strictly scoped to `service_company/`. Frozen personas untouched.
+- CQRS read/write patterns and all calculation event handlers verified intact.
+
+
