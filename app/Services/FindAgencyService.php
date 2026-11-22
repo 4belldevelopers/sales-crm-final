@@ -371,6 +371,18 @@ class FindAgencyService
         }
 
         $domesticCountryId = (int) \App\Helper\GeneralMethod::defaultCountryId($company_id);
+        $domesticCountryIso = strtolower(trim(GeneralMethod::countryCodeFun($company_id)));
+        $domesticCountryAdjective = 'Domestic';
+        if ($domesticCountryId === 101 || $domesticCountryIso === 'in') {
+            $domesticCountryAdjective = 'Indian';
+        } elseif ($domesticCountryId === 233 || $domesticCountryIso === 'us') {
+            $domesticCountryAdjective = 'US';
+        } else {
+            $cRow = DB::table('countries')->where('id', $domesticCountryId)->first();
+            if ($cRow) {
+                $domesticCountryAdjective = ! empty($cRow->country_code) ? strtoupper($cRow->country_code) : $cRow->country_name;
+            }
+        }
 
         $countryFilter = [];
         if (! empty($country_id_job)) {
@@ -770,19 +782,6 @@ class FindAgencyService
         $jobid = '';
 
         $domesticDocCount = (int) ($companyResponse['aggregations']['domestic']['doc_count'] ?? ($companyResponse['aggregations']['indian']['doc_count'] ?? 0));
-
-        $domesticCountryIso = strtolower(trim(GeneralMethod::countryCodeFun($company_id)));
-        $domesticCountryAdjective = 'Domestic';
-        if ($domesticCountryId === 101 || $domesticCountryIso === 'in') {
-            $domesticCountryAdjective = 'Indian';
-        } elseif ($domesticCountryId === 233 || $domesticCountryIso === 'us') {
-            $domesticCountryAdjective = 'US';
-        } else {
-            $cRow = DB::table('countries')->where('id', $domesticCountryId)->first();
-            if ($cRow) {
-                $domesticCountryAdjective = ! empty($cRow->country_code) ? strtoupper($cRow->country_code) : $cRow->country_name;
-            }
-        }
         $domesticSubtext = $domesticDocCount.' '.$domesticCountryAdjective.($domesticDocCount === 1 ? ' agency' : ' agencies');
 
         $kpiCounts = [
