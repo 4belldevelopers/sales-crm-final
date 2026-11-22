@@ -239,13 +239,17 @@
                 }
             }
 
-            /* Real status badge & card left accent */
-            if ($joined === 1) {
+            $rawMasterStatus = strtolower(trim((string) ($row->name ?? '')));
+            $isCandidateJoined = ($joined === 1) || in_array($rawMasterStatus, ['joined', 'onboarded', 'accepted']);
+            $isCandidateBackedOut = ($offerAcceptance === 3) || in_array($rawMasterStatus, ['backed out', 'backedout', 'rejected', 'declined']);
+
+            /* Real status badge & card left accent (No Delayed or Reschedule state) */
+            if ($isCandidateJoined) {
                 $statusBadgeLabel  = 'Joined';
                 $statusBadgeBg     = '#dcfce7'; $statusBadgeColor = '#15803d'; $statusBadgeBorder = '#bbf7d0';
                 $cardAccentColor   = '#10b981';
                 $statusIconPath    = 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z';
-            } elseif ($offerAcceptance === 3) {
+            } elseif ($isCandidateBackedOut) {
                 $statusBadgeLabel  = 'Backed Out';
                 $statusBadgeBg     = '#fee2e2'; $statusBadgeColor = '#dc2626'; $statusBadgeBorder = '#fecaca';
                 $cardAccentColor   = '#ef4444';
@@ -255,11 +259,6 @@
                 $statusBadgeBg     = '#ede9fe'; $statusBadgeColor = '#7c3aed'; $statusBadgeBorder = '#ddd6fe';
                 $cardAccentColor   = '#7c3aed';
                 $statusIconPath    = 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z';
-            } elseif (!is_null($diffDays) && $diffDays < 0) {
-                $statusBadgeLabel  = 'Delayed';
-                $statusBadgeBg     = '#ffedd5'; $statusBadgeColor = '#ea580c'; $statusBadgeBorder = '#fed7aa';
-                $cardAccentColor   = '#ea580c';
-                $statusIconPath    = 'M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z';
             } elseif ($offerAcceptance === 1) {
                 $statusBadgeLabel  = 'Pending Docs';
                 $statusBadgeBg     = '#fef3c7'; $statusBadgeColor = '#d97706'; $statusBadgeBorder = '#fde68a';
@@ -273,7 +272,7 @@
             } else {
                 $statusBadgeLabel  = 'Pre-Joining';
                 $statusBadgeBg     = '#ecfdf5'; $statusBadgeColor = '#059669'; $statusBadgeBorder = '#a7f3d0';
-                $cardAccentColor   = '#10b981';
+                $cardAccentColor   = '#009ef7';
                 $statusIconPath    = 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z';
             }
 
@@ -471,20 +470,18 @@
                     </div>
                 </div>
 
-                <!-- SUB-CARD 4: JOINING SCHEDULE (Overdue Joining Dates Marked as Delayed) -->
+                <!-- SUB-CARD 4: JOINING SCHEDULE -->
                 <div class="jt-subcard jt-subcard-joining">
                     <div class="jt-subcard-head">
                         <span class="jt-subcard-label">Joining</span>
-                        @if($joined === 1)
+                        @if($isCandidateJoined)
                             <span class="jt-micro-pill" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;">Joined</span>
-                        @elseif($offerAcceptance === 3)
+                        @elseif($isCandidateBackedOut)
                             <span class="jt-micro-pill" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;">No Show</span>
-                        @elseif(!is_null($diffDays) && $diffDays < 0)
-                            <span class="jt-micro-pill" style="background:#ffedd5;color:#ea580c;border:1px solid #fed7aa;" title="Joining date passed without confirmed joining — Reschedule Pending">Delayed ({{ abs($diffDays) }}d ago)</span>
                         @elseif(!is_null($diffDays) && $diffDays === 0)
                             <span class="jt-micro-pill" style="background:#ede9fe;color:#7c3aed;border:1px solid #ddd6fe;">Today</span>
                         @elseif($joiningCountdown)
-                            <span class="jt-micro-pill" style="background:{{ $joiningCountdownBg }};color:{{ $joiningCountdownColor }};">{{ $joiningCountdown }}</span>
+                            <span class="jt-micro-pill" style="background:{{ $joiningCountdownBg }};color:{{ $joiningCountdownColor }};border:1px solid #e2e8f0;">{{ $joiningCountdown }}</span>
                         @else
                             <span class="jt-micro-pill jt-pill-neutral">Not Scheduled</span>
                         @endif
@@ -496,15 +493,11 @@
                                 <span>{{ $joiningDate }}</span>
                             </div>
                             <div class="jt-join-time">
-                                @if(!is_null($diffDays) && $diffDays < 0 && $joined !== 1 && $offerAcceptance !== 3)
-                                    <span style="color:#ea580c;font-weight:600;" title="Passed scheduled joining date"><i class="fas fa-exclamation-triangle me-1"></i>Reschedule Pending</span>
-                                @else
-                                    {{ $joiningTime }}
-                                @endif
+                                {{ $joiningTime }}
                             </div>
                         @else
                             <div class="jt-join-empty">—</div>
-                            <div class="jt-join-time">{{ $joined === 1 ? 'Joined' : 'Not scheduled' }}</div>
+                            <div class="jt-join-time">{{ $isCandidateJoined ? 'Joined' : 'Not scheduled' }}</div>
                         @endif
                     </div>
                 </div>

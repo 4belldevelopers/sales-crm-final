@@ -47,16 +47,26 @@ Each primary entity card is anchored with a 3.5px left status accent border and 
   - Row 3 (Package Detail): View-only package mode (e.g. `Yearly Package`).
 - **Interaction:** Strictly view-only. Zero `Update Offer` buttons or modal triggers (offer drawer is exclusively scoped to the Offer Stage).
 
-### 4. Sub-Card 4: JOINING SCHEDULE (Includes Overdue / Delayed Joining Tracking)
+### 4. Sub-Card 4: JOINING SCHEDULE
 - **Header:** Label `JOINING` with dynamic relative countdown badge:
-  - `Joined` (green `#dcfce7`) when onboarding is completed (`of_joined == 1`).
-  - `No Show` / `Backed Out` (red `#fee2e2`) when candidate declines after offer.
-  - `Delayed (Xd ago)` (orange `#ffedd5` / `#ea580c`): Indicates a candidate whose scheduled joining date has elapsed without confirmed joining.
-  - `Today` (purple `#ede9fe`): Candidate joining on current date.
-  - `in X days` (blue/amber): Future scheduled joining.
+  - `Joined` (green `#dcfce7` / `#15803d`): Displayed when candidate onboarding is completed (`of_joined == 1` or master stage is `Joined`/`Onboarded`).
+  - `No Show` / `Backed Out` (red `#fee2e2` / `#dc2626`): Candidate declined after offer acceptance.
+  - `Today` (purple `#ede9fe` / `#7c3aed`): Candidate scheduled to join on the current date.
+  - `in X days` (blue/amber): Future scheduled joining countdown.
+  - `Xd ago` (neutral `#f1f5f9` / `#64748b` with subtle `#e2e8f0` border): Neutral relative elapsed time for past dates (zero "Delayed" or "Reschedule" warning pills).
+  - `Not Scheduled`: Unscheduled fallback.
 - **Body:**
   - Date: Calendar icon with bold date string (e.g. `📅 17 Nov 2026`).
-  - Time & Status: Formatted in the tenant's configured default timezone per Rule 24 (`12:18 PM IST`), or warning note `Reschedule Pending` when delayed.
+  - Time: Always displays the scheduled time formatted in the tenant's configured default timezone per Rule 24 (e.g. `12:18 PM IST`). Zero warning states, zero exclamation icons, and zero "Reschedule Pending" text.
+
+---
+
+### Removal of "Delayed" Options & Reschedule Pending
+Per explicit user directive:
+1. **Sub-Card 4 Badge:** Replaced orange "Delayed" pill badge with neutral elapsed time badge (e.g. `4d ago` in `#f1f5f9`/`#64748b`) or `Joined` if master stage is `Joined`/`Onboarded`.
+2. **Sub-Card 4 Time:** Completely removed `Reschedule Pending` label and orange warning icon. The second line now cleanly renders the tenant-formatted joining time (`12:18 PM IST`).
+3. **Card Left Accent Border:** Removed orange `#ea580c` for overdue dates. Accent colors now strictly map to authoritative states: `#10b981` (Joined), `#ef4444` (Backed Out), `#7c3aed` (Today), `#d97706` (Pending Docs), `#6366f1` (Offer Created), or `#009ef7` (Pre-Joining).
+4. **More Actions Dropdown:** Removed legacy "Review Delayed Joinings / Reschedule & follow-up queue" item and replaced with direct filters for "Joined & Onboarded" (`selectJoiningTab('onboarded')`) and "Joined & Backedout" (`selectJoiningTab('backed_out')`).
 
 ### 5. Sub-Card 5: OWNERSHIP & RECRUITER
 - **Header:** Label `<i class="fas fa-user-tie me-1"></i> OWNERSHIP & RECRUITER`.
@@ -106,8 +116,8 @@ Responsive breakpoints:
 ## File Changes Matrix
 | File | Changes |
 | :--- | :--- |
-| `resources/views/service_company/ajax_pages/joining-tracker.blade.php` | Complete redesign into Modern Card + 6 Discrete Sub-Cards + Bottom Strip matching Offer Tracker design. Tenancy-batched `offerMeta` lookup. Rule 24 and Rule 25 compliant. |
-| `resources/views/service_company/job-onboard/index.blade.php` | Added complete `.jt-*` subcard CSS classes, updated `.jt-entity-grid` to 6 fractional columns and adjusted responsive breakpoints. |
+| `resources/views/service_company/ajax_pages/joining-tracker.blade.php` | Complete redesign into Modern Card + 6 Discrete Sub-Cards + Bottom Strip matching Offer Tracker design. Removed `Delayed` badge, `Reschedule Pending` label, and orange accent border. Corrected `Joined` state detection via `$isCandidateJoined`. Tenancy-batched `offerMeta` lookup. Rule 24 and Rule 25 compliant. |
+| `resources/views/service_company/job-onboard/index.blade.php` | Added complete `.jt-*` subcard CSS classes, updated `.jt-entity-grid` to 6 fractional columns. Removed `.badge-delayed` and replaced "Review Delayed Joinings" dropdown item with "Joined & Onboarded" and "Joined & Backedout". |
 
 ---
 
