@@ -94,4 +94,5 @@ Both sub-cards are arranged side-by-side (`col-lg-6` and `col-lg-6`) with `align
     - `[PASS]` Zero "Real-time component validation enabled" text
     - `[PASS]` Zero footer "Close" button
     - `[PASS]` Primary submit button `#save-form` present
+- **Notice Font Size Single-Line Optimization:** Refined font size to `10px` with `white-space: nowrap; overflow: hidden; text-overflow: ellipsis;` across `.co-conf-notice` and `.co-doj-notice` so both helper status lines fit strictly on ONE single line without text wrapping.
 - **State Transition Test (`test_conf_states.php`):** Verified reactive update between `0` (Standard Visibility) and `1` (Confidential Restricted).
