@@ -5216,7 +5216,7 @@ new Tagify(input)
 $(document).ready(function(){
         // Intent: give every real account-page action immediate loading feedback without changing the underlying AJAX or submit business logic.
         var buttonSpinnerSelector = 'button, a.btn, .aat-btn, .cv2-edit, .candidate-action-icon';
-        var buttonSpinnerExclude = '.aat-drawer-close, .aga-close, .avd-close, .apv-close, .btn-icon, .nav-link, [data-toggle="tab"], .aga-tab, .aat-drawer-tab, .co-var-chip, .aga-var-item, .avd-row-actions button, [data-no-spinner]';
+        var buttonSpinnerExclude = '.aat-drawer-close, .aga-close, .avd-close, .apv-close, .btn-icon, .nav-link, [data-toggle="tab"], .aga-tab, .aat-drawer-tab, .co-var-chip, .aga-var-item, .avd-row-actions button, [data-no-spinner], .aat-edit-pill, [data-agency-commercial-open], #toggleAgencyCommercialTerms';
         function setButtonLoading($button) {
             if (!$button.length || $button.is(buttonSpinnerExclude) || $button.hasClass('jero-btn-loading')) {
                 return;
@@ -5233,7 +5233,7 @@ $(document).ready(function(){
             $('.jero-btn-loading').removeClass('jero-btn-loading').removeAttr('aria-busy');
         });
         // Intent: persist agency-facing commercial terms separately from client Services/Commercials.
-        function openAgencyCommercialDrawer(mode) {
+        window.openAgencyCommercialDrawer = function(mode) {
             var commercialMode = mode === 'contract' ? 'contract' : 'fulltime';
             var title = commercialMode === 'contract' ? 'Edit Contract Commercials' : 'Edit Fulltime Commercials';
             var subtitle = commercialMode === 'contract'
@@ -5249,20 +5249,35 @@ $(document).ready(function(){
             $('[data-agency-alert-text]').text(commercialMode === 'contract'
                 ? 'Contract hiring commercials govern how agencies are paid for contract / temporary staffing. They populate the agreement.'
                 : 'These commercial terms define how agencies will be paid for successful placements. They populate the agreement and can be overridden at job level if required.');
+            if (commercialMode === 'contract') {
+                $('#agency_commercial_terms_form').find('[data-agency-section="fulltime"]').hide();
+                $('#agency_commercial_terms_form').find('[data-agency-section="contract"]').show();
+            } else {
+                $('#agency_commercial_terms_form').find('[data-agency-section="contract"]').hide();
+                $('#agency_commercial_terms_form').find('[data-agency-section="fulltime"]').show();
+            }
+            $('#agency_commercial_terms_form').find('[data-agency-section="general"]').show();
             $('body').addClass('modal-open');
             syncFulltimeFeeModelFields();
             syncAgencyReplacementSummary();
             syncAgencyContractReplacementSummary();
-        }
-        function closeAgencyCommercialDrawer() {
+        };
+        var openAgencyCommercialDrawer = window.openAgencyCommercialDrawer;
+
+        window.closeAgencyCommercialDrawer = function() {
             $('#agencyCommercialDrawerOverlay').removeClass('show');
             $('#agency_commercial_terms_form').removeClass('open agency-commercial-fulltime agency-commercial-contract').attr('aria-hidden', 'true');
             $('body').removeClass('modal-open');
-        }
-        $('body').on('click', '[data-agency-commercial-open], #toggleAgencyCommercialTerms', function(){
-            openAgencyCommercialDrawer($(this).data('agency-commercial-open') || 'fulltime');
+        };
+        var closeAgencyCommercialDrawer = window.closeAgencyCommercialDrawer;
+
+        $('body').on('click', '[data-agency-commercial-open], #toggleAgencyCommercialTerms', function(e){
+            e.preventDefault();
+            var mode = $(this).attr('data-agency-commercial-open') || $(this).data('agency-commercial-open') || 'fulltime';
+            openAgencyCommercialDrawer(mode);
         });
-        $('body').on('click', '#cancelAgencyCommercialTerms, #closeAgencyCommercialDrawer, #agencyCommercialDrawerOverlay, .aat-edit-alert .aat-drawer-close', function(){
+        $('body').on('click', '#cancelAgencyCommercialTerms, #closeAgencyCommercialDrawer, #agencyCommercialDrawerOverlay, .aat-edit-alert .aat-drawer-close', function(e){
+            e.preventDefault();
             closeAgencyCommercialDrawer();
         });
         // Cached selectors so the model-toggle handler stays fast on big DOM trees.
@@ -6465,6 +6480,7 @@ $(document).ready(function(){
                 }
             });
         });
+    });
 
     // Synchronize sub-tabs pill button active state (Rule 20 Modern Card + Sub-Card)
     $(document).on('shown.bs.tab', '.cd-drawer-tabs-list a[data-toggle="tab"], .cd-drawer-tabs-list a[data-bs-toggle="tab"]', function (e) {

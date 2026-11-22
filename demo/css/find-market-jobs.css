@@ -2569,19 +2569,6 @@
     flex-shrink: 0 !important;
     flex-wrap: wrap !important;
 }
-.cd-market-header-actions .cl-search-box {
-    margin-bottom: 0 !important;
-    min-width: 250px !important;
-    width: 275px !important;
-}
-.cd-market-header-actions .cl-search-inp {
-    height: 36px !important;
-    border-radius: 8px !important;
-    font-size: 12px !important;
-    padding: 0 85px 0 34px !important;
-}
-.cd-market-header-actions .cl-sort-combobox-btn,
-.cd-market-header-actions .cl-filter-btn,
 .cd-market-header-actions .cl-export-btn {
     height: 36px !important;
     padding: 0 12px !important;
@@ -2645,12 +2632,18 @@
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease !important;
     min-width: 0 !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    color: inherit !important;
 }
 .cl-card:hover {
     transform: translateY(-1px) !important;
     border-color: #cbd5e1 !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
     text-decoration: none !important;
+    color: inherit !important;
+}
+.cl-card:focus, .cl-card:active {
+    text-decoration: none !important;
+    color: inherit !important;
 }
 .cl-card.active {
     text-decoration: none !important;

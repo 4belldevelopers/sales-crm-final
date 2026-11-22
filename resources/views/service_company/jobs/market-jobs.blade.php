@@ -575,166 +575,387 @@
         color: #dc2626;
     }
 
-    /* Tier 2: Executive KPI Metrics Grid */
-    .cd-market-kpi-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
-        margin-bottom: 12px;
-        width: 100%;
-        font-family: 'Poppins', sans-serif;
+    /* ── Tier 2: 6 Stat Cards Grid (Client Tracker Exact Layout per Rule 20) ── */
+    .cl-stat-grid {
+        display: grid !important;
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        margin-bottom: 14px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        font-family: 'Poppins', sans-serif !important;
     }
-    .cd-market-kpi-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 12px 14px;
+    .cl-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 11px !important;
+        padding: 10px 11px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
         text-decoration: none !important;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        position: relative;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+        cursor: pointer !important;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease !important;
+        min-width: 0 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+        color: inherit !important;
     }
-    .cd-market-kpi-card:hover {
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-        transform: translateY(-1px);
-        border-color: #cbd5e1;
+    .cl-card:hover {
+        transform: translateY(-1px) !important;
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+        text-decoration: none !important;
+        color: inherit !important;
     }
-    .cd-market-kpi-card.cd-kpi-active {
-        border-color: #009ef7 !important;
-        background: #f8fbff !important;
-        box-shadow: 0 2px 6px rgba(0, 158, 247, 0.15) !important;
+    .cl-card:focus, .cl-card:active {
+        text-decoration: none !important;
+        color: inherit !important;
     }
-    .cd-kpi-top-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    .cl-card.active {
+        text-decoration: none !important;
     }
-    .cd-kpi-icon-box {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        flex-shrink: 0;
+    .cl-card-top {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-bottom: 6px !important;
+        min-width: 0 !important;
     }
-    .cd-kpi-icon-blue   { background: #eff6ff; color: #2563eb; }
-    .cd-kpi-icon-green  { background: #ecfdf5; color: #059669; }
-    .cd-kpi-icon-purple { background: #f5f3ff; color: #7c3aed; }
-    .cd-kpi-icon-amber  { background: #fff7ed; color: #ea580c; }
-    .cd-kpi-meta {
-        min-width: 0;
-        flex: 1;
+    .cl-card-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+        transition: all 0.15s ease !important;
     }
-    .cd-kpi-label {
-        font-size: 11.5px;
-        font-weight: 500;
-        color: #64748b;
-        margin-bottom: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .cl-card-icon svg {
+        width: 17px !important;
+        height: 17px !important;
     }
-    .cd-kpi-value {
-        font-size: 19px;
-        font-weight: 700;
-        color: #0f172a;
-        line-height: 1.15;
-        font-variant-numeric: tabular-nums;
+    .cl-card-icon.blue   { background: #eff6ff !important; color: #2563eb !important; }
+    .cl-card-icon.green  { background: #ecfdf5 !important; color: #16a34a !important; }
+    .cl-card-icon.orange { background: #fff7ed !important; color: #ea580c !important; }
+    .cl-card-icon.indigo { background: #eef2ff !important; color: #4f46e5 !important; }
+    .cl-card-icon.pink   { background: #fdf2f8 !important; color: #db2777 !important; }
+    .cl-card-icon.purple { background: #faf5ff !important; color: #9333ea !important; }
+
+    .cl-card-meta {
+        min-width: 0 !important;
+        flex: 1 !important;
+        overflow: hidden !important;
     }
-    .cd-kpi-subtext {
-        font-size: 10.5px;
-        color: #94a3b8;
-        margin-top: 6px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .cl-card-num {
+        font-size: 19px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+        font-variant-numeric: tabular-nums !important;
+    }
+    .cl-card-lbl {
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        margin-top: 2px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        line-height: 1.2 !important;
+    }
+    .cl-card-sub {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        font-size: 10px !important;
+        font-weight: 500 !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        margin-top: 2px !important;
+    }
+    .cl-card-sub.blue   { color: #3b82f6 !important; }
+    .cl-card-sub.green  { color: #16a34a !important; }
+    .cl-card-sub.orange { color: #ea580c !important; }
+    .cl-card-sub.indigo { color: #4f46e5 !important; }
+    .cl-card-sub.pink   { color: #db2777 !important; }
+    .cl-card-sub.purple { color: #9333ea !important; }
+    .cl-card-sub svg { flex-shrink: 0 !important; width: 11px !important; height: 11px !important; }
+
+    /* ── KPI Active Highlight States (Dedicated Semantic Tints) ── */
+    /* 1. All Jobs (Blue) */
+    .cl-card.active[data-tab="all"] {
+        background: #eff6ff !important;
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
+    }
+    .cl-card.active[data-tab="all"] .cl-card-icon {
+        background: #ffffff !important;
+        color: #2563eb !important;
+        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
+    }
+    .cl-card.active[data-tab="all"] .cl-card-num {
+        color: #1d4ed8 !important;
+    }
+    .cl-card.active[data-tab="all"] .cl-card-lbl {
+        color: #1e40af !important;
+        font-weight: 700 !important;
     }
 
-    /* Tier 3: Dedicated Sub-Tabs Card */
-    .cd-market-tabs-card {
+    /* 2. Full-Time Hiring Jobs (Green) */
+    .cl-card.active[data-tab="fulltime"] {
+        background: #f0fdf4 !important;
+        border-color: #4ade80 !important;
+        box-shadow: 0 0 0 1.5px #16a34a, 0 4px 14px rgba(22, 163, 74, 0.15) !important;
+    }
+    .cl-card.active[data-tab="fulltime"] .cl-card-icon {
+        background: #ffffff !important;
+        color: #16a34a !important;
+        box-shadow: 0 1px 3px rgba(22, 163, 74, 0.18) !important;
+    }
+    .cl-card.active[data-tab="fulltime"] .cl-card-num {
+        color: #15803d !important;
+    }
+    .cl-card.active[data-tab="fulltime"] .cl-card-lbl {
+        color: #166534 !important;
+        font-weight: 700 !important;
+    }
+
+    /* 3. Contract Hiring Jobs (Orange) */
+    .cl-card.active[data-tab="contract"] {
+        background: #fff7ed !important;
+        border-color: #fb923c !important;
+        box-shadow: 0 0 0 1.5px #ea580c, 0 4px 14px rgba(234, 88, 12, 0.15) !important;
+    }
+    .cl-card.active[data-tab="contract"] .cl-card-icon {
+        background: #ffffff !important;
+        color: #ea580c !important;
+        box-shadow: 0 1px 3px rgba(234, 88, 12, 0.18) !important;
+    }
+    .cl-card.active[data-tab="contract"] .cl-card-num {
+        color: #c2410c !important;
+    }
+    .cl-card.active[data-tab="contract"] .cl-card-lbl {
+        color: #9a3412 !important;
+        font-weight: 700 !important;
+    }
+
+    /* 4. Freelance Hiring Jobs (Indigo) */
+    .cl-card.active[data-tab="freelance"] {
+        background: #eef2ff !important;
+        border-color: #818cf8 !important;
+        box-shadow: 0 0 0 1.5px #4f46e5, 0 4px 14px rgba(79, 70, 229, 0.12) !important;
+    }
+    .cl-card.active[data-tab="freelance"] .cl-card-icon {
+        background: #ffffff !important;
+        color: #4f46e5 !important;
+        box-shadow: 0 1px 3px rgba(79, 70, 229, 0.15) !important;
+    }
+    .cl-card.active[data-tab="freelance"] .cl-card-num {
+        color: #3730a3 !important;
+    }
+    .cl-card.active[data-tab="freelance"] .cl-card-lbl {
+        color: #4338ca !important;
+        font-weight: 700 !important;
+    }
+
+    /* 5. Part-Time Hiring Jobs (Pink) */
+    .cl-card.active[data-tab="parttime"] {
+        background: #fdf2f8 !important;
+        border-color: #f472b6 !important;
+        box-shadow: 0 0 0 1.5px #db2777, 0 4px 14px rgba(219, 39, 119, 0.15) !important;
+    }
+    .cl-card.active[data-tab="parttime"] .cl-card-icon {
+        background: #ffffff !important;
+        color: #db2777 !important;
+        box-shadow: 0 1px 3px rgba(219, 39, 119, 0.18) !important;
+    }
+    .cl-card.active[data-tab="parttime"] .cl-card-num {
+        color: #9d174d !important;
+    }
+    .cl-card.active[data-tab="parttime"] .cl-card-lbl {
+        color: #831843 !important;
+        font-weight: 700 !important;
+    }
+
+    /* 6. Agency Requests by Clients (Purple) */
+    .cl-card.active[data-tab="agency_request"] {
+        background: #faf5ff !important;
+        border-color: #c084fc !important;
+        box-shadow: 0 0 0 1.5px #9333ea, 0 4px 14px rgba(147, 51, 234, 0.12) !important;
+    }
+    .cl-card.active[data-tab="agency_request"] .cl-card-icon {
+        background: #ffffff !important;
+        color: #9333ea !important;
+        box-shadow: 0 1px 3px rgba(147, 51, 234, 0.15) !important;
+    }
+    .cl-card.active[data-tab="agency_request"] .cl-card-num {
+        color: #6b21a8 !important;
+    }
+    .cl-card.active[data-tab="agency_request"] .cl-card-lbl {
+        color: #7e22ce !important;
+        font-weight: 700 !important;
+    }
+
+    /* ── Tier 3: Standalone Search & Filter Bar (Client Tracker Parity) ── */
+    .cl-filter-bar {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 14px !important;
+        flex-wrap: wrap !important;
+        font-family: 'Poppins', sans-serif !important;
+    }
+    .cl-search-box {
+        position: relative !important;
+        flex: 1 !important;
+        min-width: 260px !important;
+    }
+    .cl-search-box svg.cl-search-icon {
+        position: absolute !important;
+        left: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 15px !important;
+        height: 15px !important;
+        color: #94a3b8 !important;
+        pointer-events: none !important;
+    }
+    .cl-search-inp {
+        width: 100% !important;
+        height: 42px !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 0 100px 0 38px !important;
+        font-size: 12.5px !important;
+        font-family: 'Poppins', sans-serif !important;
+        color: #0f172a !important;
+        background: #ffffff !important;
+        outline: none !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    }
+    .cl-search-inp:focus {
+        border-color: #009ef7 !important;
+        box-shadow: 0 0 0 2.5px rgba(0, 158, 247, 0.15) !important;
+    }
+    .cl-search-inp::placeholder {
+        color: #94a3b8 !important;
+    }
+    .cl-search-right-affix {
+        position: absolute !important;
+        right: 10px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+    .cl-search-count-pill {
+        font-size: 10.5px !important;
+        font-weight: 600 !important;
+        background: #eff6ff !important;
+        color: #009ef7 !important;
+        border: 1px solid #dbeafe !important;
+        padding: 2px 7px !important;
+        border-radius: 6px !important;
+        white-space: nowrap !important;
+        line-height: 1.2 !important;
+    }
+    .cl-search-clear-btn {
+        border: none !important;
+        background: #e2e8f0 !important;
+        color: #64748b !important;
+        width: 19px !important;
+        height: 19px !important;
+        border-radius: 50% !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        line-height: 1 !important;
+        padding: 0 !important;
+        transition: all 0.15s ease !important;
+    }
+    .cl-search-clear-btn:hover {
+        background: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    .cl-search-kbd-hint {
+        font-size: 9.5px !important;
+        font-weight: 600 !important;
+        font-family: inherit !important;
+        color: #94a3b8 !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 4px !important;
+        padding: 2px 5px !important;
+        line-height: 1 !important;
+        user-select: none !important;
+    }
+    .cl-filter-btn {
+        height: 42px !important;
+        border-radius: 10px !important;
+        font-size: 12.5px !important;
+        font-weight: 600 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        white-space: nowrap !important;
+        padding: 0 16px !important;
+        flex-shrink: 0 !important;
+        background: #009ef7 !important;
+        border: 1px solid #009ef7 !important;
+        color: #ffffff !important;
+        cursor: pointer !important;
+        font-family: 'Poppins', sans-serif !important;
+        transition: all 0.15s ease !important;
+        box-shadow: 0 1px 3px rgba(0, 158, 247, 0.25) !important;
+    }
+    .cl-filter-btn:hover {
+        background: #008be0 !important;
+        border-color: #008be0 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 6px rgba(0, 158, 247, 0.35) !important;
+    }
+    .cl-filter-count-badge {
+        background: #ffffff !important;
+        color: #009ef7 !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        padding: 1px 6px !important;
+        border-radius: 10px !important;
+        margin-left: 2px !important;
+    }
+    .cl-sort-dropdown-wrapper {
+        position: relative !important;
+        display: inline-block !important;
+        flex-shrink: 0 !important;
+    }
+    .cl-sort-combobox-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        height: 42px !important;
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 10px !important;
-        padding: 8px 12px !important;
-        margin-bottom: 12px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
-        font-family: 'Poppins', sans-serif;
-    }
-    .cd-market-tabs-group {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-        width: 100%;
-    }
-    .cd-market-tab-btn {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px !important;
-        padding: 6px 12px !important;
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        color: #475569 !important;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        transition: all 0.15s ease;
-        text-decoration: none !important;
-        user-select: none;
-        font-family: 'Poppins', sans-serif;
-        line-height: 1.3;
-    }
-    .cd-market-tab-btn:hover {
-        background: #f8fafc !important;
-        border-color: #cbd5e1 !important;
-        color: #0f172a !important;
-    }
-    .cd-market-tab-btn.active {
-        background: #009ef7 !important;
-        border-color: #009ef7 !important;
-        color: #ffffff !important;
-        box-shadow: 0 2px 4px rgba(0, 158, 247, 0.2) !important;
-    }
-    .cd-market-tab-btn i {
-        font-size: 12px;
-        opacity: 0.9;
-    }
-    .cd-tab-badge {
-        min-width: 20px;
-        height: 18px;
-        padding: 0 6px;
-        border-radius: 10px;
-        font-size: 10.5px;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 1;
-        font-variant-numeric: tabular-nums;
-    }
-    .cd-market-tab-btn .cd-tab-badge {
-        background: #f1f5f9;
-        color: #475569;
-    }
-    .cd-market-tab-btn .cd-tab-badge.badge-blue   { background: #eff6ff; color: #1d4ed8; }
-    .cd-market-tab-btn .cd-tab-badge.badge-green  { background: #ecfdf5; color: #059669; }
-    .cd-market-tab-btn .cd-tab-badge.badge-amber  { background: #fef3c7; color: #d97706; }
-    .cd-market-tab-btn .cd-tab-badge.badge-purple { background: #f5f3ff; color: #6d28d9; }
-    .cd-market-tab-btn .cd-tab-badge.badge-indigo { background: #e0e7ff; color: #4338ca; }
-    .cd-market-tab-btn .cd-tab-badge.badge-orange { background: #fff7ed; color: #c2410c; }
-    .cd-market-tab-btn.active .cd-tab-badge {
-        background: rgba(255, 255, 255, 0.28) !important;
-        color: #ffffff !important;
+        padding: 0 12px !important;
+        min-width: 155px !important;
+        max-width: 220px !important;
+        cursor: pointer !important;
+        user-select: none !important;
+        transition: all 0.15s ease !important;
+        position: relative !important;
+        font-family: 'Poppins', sans-serif !important;
+        font-size: inherit !important;
+        text-align: left !important;
+        outline: none !important;
     }
 
     /* Tier 4: Primary Card Stream & Discrete Sub-Cards */
@@ -1115,143 +1336,6 @@
                         </div>
 
                         <div class="cl-header-actions cd-market-header-actions">
-                            {{-- Search Input (Enterprise Tier 1 Micro-Search Bar) --}}
-                            <div class="cl-search-box" id="marketSearchBoxWrapper">
-                                <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <circle cx="11" cy="11" r="8"/>
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                                </svg>
-                                <input 
-                                    type="text" 
-                                    class="cl-search-inp" 
-                                    name="inputJobSearch" 
-                                    value="" 
-                                    placeholder="Search by title, skills, ID, client..." 
-                                    id="kt_tagify_2" 
-                                    autocomplete="off" 
-                                    spellcheck="false" 
-                                    aria-label="Search jobs listing" 
-                                    role="searchbox"
-                                />
-                                <div class="cl-search-right-affix">
-                                    <span class="cl-search-count-pill" id="clSearchMatchCount" style="display:none;" title="Matching jobs count">0 matches</span>
-                                    <button type="button" class="cl-search-clear-btn" id="clSearchClearBtn" title="Clear search (Esc)" aria-label="Clear search" style="display:none;" onclick="clearMarketSearchInput(event)">
-                                        ✕
-                                    </button>
-                                    <kbd class="cl-search-kbd-hint" id="clSearchKbdHint" title="Press Ctrl+K to search">Ctrl+K</kbd>
-                                </div>
-                                <div id="loader_search" class="loader_search hidden_search" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
-                            </div>
-
-                            {{-- Sort Combobox Popover (Client Tracker Standard) --}}
-                            <div class="cl-sort-dropdown-wrapper" id="marketSortDropdownWrapper">
-                                <button type="button" class="cl-sort-combobox-btn" id="marketSortBtn" onclick="toggleMarketSortDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="marketSortDropdownPanel" title="Sort Job Opportunities">
-                                    <div class="cl-pill-icon">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="7" y1="4" x2="7" y2="20"/>
-                                            <polyline points="3 8 7 4 11 8"/>
-                                            <line x1="17" y1="4" x2="17" y2="20"/>
-                                            <polyline points="13 16 17 20 21 16"/>
-                                        </svg>
-                                    </div>
-                                    <div class="cl-pill-texts">
-                                        <span class="cl-pill-lbl">Sort</span>
-                                        <span class="cl-pill-val" id="marketSortDisplay">Newest to Oldest</span>
-                                    </div>
-                                    <div class="cl-pill-chevron">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                                    </div>
-                                </button>
-
-                                {{-- Custom Popover Panel (WAI-ARIA 1.2 Compliant) --}}
-                                <div class="cl-sort-dropdown-panel" id="marketSortDropdownPanel" role="listbox" aria-labelledby="marketSortBtn" tabindex="-1">
-                                    <div class="cl-sort-section-hdr">Chronological</div>
-                                    <div class="cl-sort-item selected" id="sort-opt-1" data-sort-val="1" onclick="selectMarketSortOption('1', 'Newest to Oldest', event)" role="option" aria-selected="true" tabindex="0">
-                                        <div class="cl-sort-item-left">
-                                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                            <span class="cl-sort-item-title">Newest to Oldest</span>
-                                        </div>
-                                        <div class="cl-sort-item-right">
-                                            <span class="cl-sort-direction-badge">Newest ↓</span>
-                                            <span class="cl-sort-check">✓</span>
-                                        </div>
-                                    </div>
-                                    <div class="cl-sort-item" id="sort-opt-2" data-sort-val="2" onclick="selectMarketSortOption('2', 'Oldest to Newest', event)" role="option" aria-selected="false" tabindex="0">
-                                        <div class="cl-sort-item-left">
-                                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                            <span class="cl-sort-item-title">Oldest to Newest</span>
-                                        </div>
-                                        <div class="cl-sort-item-right">
-                                            <span class="cl-sort-direction-badge">Oldest ↑</span>
-                                            <span class="cl-sort-check" style="display:none;">✓</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="cl-sort-section-hdr">Compensation (Salary)</div>
-                                    <div class="cl-sort-item" id="sort-opt-4" data-sort-val="4" onclick="selectMarketSortOption('4', 'High to Low (Salary)', event)" role="option" aria-selected="false" tabindex="0">
-                                        <div class="cl-sort-item-left">
-                                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5a2.5 2.5 0 0 0-5 0c0 3 5 2 5 5a2.5 2.5 0 0 1-5 0"/></svg>
-                                            <span class="cl-sort-item-title">High to Low (Salary)</span>
-                                        </div>
-                                        <div class="cl-sort-item-right">
-                                            <span class="cl-sort-direction-badge">High → Low</span>
-                                            <span class="cl-sort-check" style="display:none;">✓</span>
-                                        </div>
-                                    </div>
-                                    <div class="cl-sort-item" id="sort-opt-3" data-sort-val="3" onclick="selectMarketSortOption('3', 'Low to High (Salary)', event)" role="option" aria-selected="false" tabindex="0">
-                                        <div class="cl-sort-item-left">
-                                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5a2.5 2.5 0 0 0-5 0c0 3 5 2 5 5a2.5 2.5 0 0 1-5 0"/></svg>
-                                            <span class="cl-sort-item-title">Low to High (Salary)</span>
-                                        </div>
-                                        <div class="cl-sort-item-right">
-                                            <span class="cl-sort-direction-badge">Low → High</span>
-                                            <span class="cl-sort-check" style="display:none;">✓</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="cl-sort-section-hdr">Experience</div>
-                                    <div class="cl-sort-item" id="sort-opt-7" data-sort-val="7" onclick="selectMarketSortOption('7', 'High to Low (Experience)', event)" role="option" aria-selected="false" tabindex="0">
-                                        <div class="cl-sort-item-left">
-                                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                                            <span class="cl-sort-item-title">High to Low (Experience)</span>
-                                        </div>
-                                        <div class="cl-sort-item-right">
-                                            <span class="cl-sort-direction-badge">Senior First</span>
-                                            <span class="cl-sort-check" style="display:none;">✓</span>
-                                        </div>
-                                    </div>
-                                    <div class="cl-sort-item" id="sort-opt-8" data-sort-val="8" onclick="selectMarketSortOption('8', 'Low to High (Experience)', event)" role="option" aria-selected="false" tabindex="0">
-                                        <div class="cl-sort-item-left">
-                                            <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                                            <span class="cl-sort-item-title">Low to High (Experience)</span>
-                                        </div>
-                                        <div class="cl-sort-item-right">
-                                            <span class="cl-sort-direction-badge">Junior First</span>
-                                            <span class="cl-sort-check" style="display:none;">✓</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Hidden native select preserved for 100% backward compatibility --}}
-                                <select id="hiringtype" class="d-none" data-kt-select2="false" style="display:none !important;" onchange="filtersdata()">
-                                    <option value="1" selected>Newest to Oldest</option>
-                                    <option value="2">Oldest to Newest</option>
-                                    <option value="3">Low to High (Salary)</option>
-                                    <option value="4">High to Low (Salary)</option>
-                                    <option value="7">High to Low (Experience)</option>
-                                    <option value="8">Low to High (Experience)</option>
-                                </select>
-                            </div>
-
-                            {{-- Advanced Filter Button (Client Tracker Standard) --}}
-                            <button type="button" id="kt_market_filter_toggle" class="cl-filter-btn" title="Open Advanced Filters">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                                </svg>
-                                <span>Filter<span id="mktf_filter_count_text"></span></span>
-                                <span class="cl-filter-count-badge d-none" id="simf_count_badge">0</span>
-                            </button>
-
                             <button type="button" class="cl-export-btn" id="marketRefreshBtn" onclick="fetchCandidates(1, '', { forceNetwork: true })" title="Refresh marketplace requirements">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
@@ -1269,51 +1353,293 @@
                     </div>
 
                     <!-- ══════════════════════════════════════════════════════════════
-                         TIER 2: SUB-TABS CARD (Pure White #ffffff Standard per Rule 20)
+                         TIER 2: 6 STAT KPI CARDS (Client Tracker Parity per Rule 20)
                          ══════════════════════════════════════════════════════════════ -->
-                    <div class="cd-market-tabs-card">
-                        <div class="cd-market-tabs-group" id="marketKpiGrid">
-                            {{-- Tab 1: All Jobs --}}
-                            <button type="button" onclick="setMarketJobTab('all', this); return false;" class="cd-market-tab-btn cl-stat-filter active" data-tab="all" id="kpi_card_all" title="View all verified marketplace jobs">
-                                <i class="fas fa-briefcase"></i>
-                                <span>All Jobs</span>
-                                <span class="cd-tab-badge badge-blue" id="kpi_num_all">{{ number_format($all_jobs ?? 0) }}</span>
+                    <div class="cl-stat-grid" id="marketKpiGrid">
+                        {{-- Card 1: All Jobs --}}
+                        <a href="#" onclick="setMarketJobTab('all', this); return false;" class="cl-card cl-stat-filter active" data-tab="all" id="kpi_card_all" title="View all verified marketplace jobs">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon blue">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="kpi_num_all">{{ number_format($all_jobs ?? 0) }}</div>
+                                    <div class="cl-card-lbl">All Jobs</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub blue">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                </svg>
+                                <span>Direct Client mandates</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 2: Full-Time Hiring Jobs --}}
+                        <a href="#" onclick="setMarketJobTab('fulltime', this); return false;" class="cl-card cl-stat-filter" data-tab="fulltime" id="kpi_card_fulltime" title="Filter full-time direct positions">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon green">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <polyline points="16 11 18 13 22 9"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="kpi_num_fulltime">{{ number_format($fulltime_jobs ?? 0) }}</div>
+                                    <div class="cl-card-lbl">Full-Time Roles</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub green">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                    <polyline points="17 6 23 6 23 12"/>
+                                </svg>
+                                <span>Permanent mandates</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 3: Contract Hiring Jobs --}}
+                        <a href="#" onclick="setMarketJobTab('contract', this); return false;" class="cl-card cl-stat-filter" data-tab="contract" id="kpi_card_contract" title="Filter contract &amp; staffing mandates">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon orange">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="kpi_num_contract">{{ number_format($contract_jobs ?? 0) }}</div>
+                                    <div class="cl-card-lbl">Contract Roles</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub orange">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <span>C2C &amp; staffing</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 4: Freelance Hiring Jobs --}}
+                        <a href="#" onclick="setMarketJobTab('freelance', this); return false;" class="cl-card cl-stat-filter" data-tab="freelance" id="kpi_card_freelance" title="Filter freelance &amp; gig requirements">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon indigo">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                        <line x1="8" y1="21" x2="16" y2="21"/>
+                                        <line x1="12" y1="17" x2="12" y2="21"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="kpi_num_freelance">{{ number_format($freelance_jobs ?? 0) }}</div>
+                                    <div class="cl-card-lbl">Freelance Projects</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub indigo">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="16 18 22 12 16 6"/>
+                                    <polyline points="8 6 2 12 8 18"/>
+                                </svg>
+                                <span>Project deliverables</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 5: Part-Time Hiring Jobs --}}
+                        <a href="#" onclick="setMarketJobTab('parttime', this); return false;" class="cl-card cl-stat-filter" data-tab="parttime" id="kpi_card_parttime" title="Filter flexible part-time positions">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon pink">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 14 14"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="kpi_num_parttime">{{ number_format($parttime_jobs ?? 0) }}</div>
+                                    <div class="cl-card-lbl">Part-Time Openings</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub pink">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="12"/>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                <span>Fractional roles</span>
+                            </div>
+                        </a>
+
+                        {{-- Card 6: Agency Requests by Clients --}}
+                        <a href="#" onclick="setMarketJobTab('agency_request', this); return false;" class="cl-card cl-stat-filter" data-tab="agency_request" id="kpi_card_agency_request" title="Filter bench talent requests &amp; client invitations">
+                            <div class="cl-card-top">
+                                <div class="cl-card-icon purple">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-card-meta">
+                                    <div class="cl-card-num" id="kpi_num_agency_request">{{ number_format($agency_requests ?? 0) }}</div>
+                                    <div class="cl-card-lbl">Agency Requests</div>
+                                </div>
+                            </div>
+                            <div class="cl-card-sub purple">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                                <span>Client invitations</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- ══════════════════════════════════════════════════════════════
+                         TIER 3: STANDALONE SEARCH & FILTER BAR (Client Tracker Parity)
+                         ══════════════════════════════════════════════════════════════ -->
+                    <div class="cl-filter-bar">
+                        {{-- Search Input (Enterprise Tier 1 Micro-Search Bar) --}}
+                        <div class="cl-search-box" id="marketSearchBoxWrapper">
+                            <svg class="cl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="11" cy="11" r="8"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            <input 
+                                type="text" 
+                                class="cl-search-inp" 
+                                name="inputJobSearch" 
+                                value="" 
+                                placeholder="Search jobs by title, skills, ID, client..." 
+                                id="kt_tagify_2" 
+                                autocomplete="off" 
+                                spellcheck="false" 
+                                aria-label="Search jobs listing" 
+                                role="searchbox"
+                            />
+                            <div class="cl-search-right-affix">
+                                <span class="cl-search-count-pill" id="clSearchMatchCount" style="display:none;" title="Matching jobs count">0 matches</span>
+                                <button type="button" class="cl-search-clear-btn" id="clSearchClearBtn" title="Clear search (Esc)" aria-label="Clear search" style="display:none;" onclick="clearMarketSearchInput(event)">
+                                    ✕
+                                </button>
+                                <kbd class="cl-search-kbd-hint" id="clSearchKbdHint" title="Press Ctrl+K to search">Ctrl+K</kbd>
+                            </div>
+                            <div id="loader_search" class="loader_search hidden_search" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
+                        </div>
+
+                        {{-- Advanced Filter Button (Client Tracker Standard) --}}
+                        <button type="button" id="kt_market_filter_toggle" class="cl-filter-btn" title="Open Advanced Filters">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                            </svg>
+                            <span>Filter<span id="mktf_filter_count_text"></span></span>
+                            <span class="cl-filter-count-badge d-none" id="simf_count_badge">0</span>
+                        </button>
+
+                        {{-- Metronic Sort Combobox Popover (Client Tracker Standard) --}}
+                        <div class="cl-sort-dropdown-wrapper" id="marketSortDropdownWrapper">
+                            <button type="button" class="cl-sort-combobox-btn" id="marketSortBtn" onclick="toggleMarketSortDropdown(event)" aria-haspopup="listbox" aria-expanded="false" aria-controls="marketSortDropdownPanel" title="Sort Job Opportunities">
+                                <div class="cl-pill-icon">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="7" y1="4" x2="7" y2="20"/>
+                                        <polyline points="3 8 7 4 11 8"/>
+                                        <line x1="17" y1="4" x2="17" y2="20"/>
+                                        <polyline points="13 16 17 20 21 16"/>
+                                    </svg>
+                                </div>
+                                <div class="cl-pill-texts">
+                                    <span class="cl-pill-lbl">Sort</span>
+                                    <span class="cl-pill-val" id="marketSortDisplay">Newest to Oldest</span>
+                                </div>
+                                <div class="cl-pill-chevron">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                </div>
                             </button>
 
-                            {{-- Tab 2: Full-Time Hiring Jobs --}}
-                            <button type="button" onclick="setMarketJobTab('fulltime', this); return false;" class="cd-market-tab-btn cl-stat-filter" data-tab="fulltime" id="kpi_card_fulltime" title="Filter full-time direct positions">
-                                <i class="fas fa-user-check"></i>
-                                <span>Full-Time</span>
-                                <span class="cd-tab-badge badge-green" id="kpi_num_fulltime">{{ number_format($fulltime_jobs ?? 0) }}</span>
-                            </button>
+                            {{-- Custom Popover Panel (WAI-ARIA 1.2 Compliant) --}}
+                            <div class="cl-sort-dropdown-panel" id="marketSortDropdownPanel" role="listbox" aria-labelledby="marketSortBtn" tabindex="-1">
+                                <div class="cl-sort-section-hdr">Chronological</div>
+                                <div class="cl-sort-item selected" id="sort-opt-1" data-sort-val="1" onclick="selectMarketSortOption('1', 'Newest to Oldest', event)" role="option" aria-selected="true" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        <span class="cl-sort-item-title">Newest to Oldest</span>
+                                    </div>
+                                    <div class="cl-sort-item-right">
+                                        <span class="cl-sort-direction-badge">Newest ↓</span>
+                                        <span class="cl-sort-check">✓</span>
+                                    </div>
+                                </div>
+                                <div class="cl-sort-item" id="sort-opt-2" data-sort-val="2" onclick="selectMarketSortOption('2', 'Oldest to Newest', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        <span class="cl-sort-item-title">Oldest to Newest</span>
+                                    </div>
+                                    <div class="cl-sort-item-right">
+                                        <span class="cl-sort-direction-badge">Oldest ↑</span>
+                                        <span class="cl-sort-check" style="display:none;">✓</span>
+                                    </div>
+                                </div>
 
-                            {{-- Tab 3: Contract Hiring Jobs --}}
-                            <button type="button" onclick="setMarketJobTab('contract', this); return false;" class="cd-market-tab-btn cl-stat-filter" data-tab="contract" id="kpi_card_contract" title="Filter contract &amp; staffing mandates">
-                                <i class="fas fa-file-contract"></i>
-                                <span>Contract</span>
-                                <span class="cd-tab-badge badge-orange" id="kpi_num_contract">{{ number_format($contract_jobs ?? 0) }}</span>
-                            </button>
+                                <div class="cl-sort-section-hdr">Compensation (Salary)</div>
+                                <div class="cl-sort-item" id="sort-opt-4" data-sort-val="4" onclick="selectMarketSortOption('4', 'High to Low (Salary)', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5a2.5 2.5 0 0 0-5 0c0 3 5 2 5 5a2.5 2.5 0 0 1-5 0"/></svg>
+                                        <span class="cl-sort-item-title">High to Low (Salary)</span>
+                                    </div>
+                                    <div class="cl-sort-item-right">
+                                        <span class="cl-sort-direction-badge">High → Low</span>
+                                        <span class="cl-sort-check" style="display:none;">✓</span>
+                                    </div>
+                                </div>
+                                <div class="cl-sort-item" id="sort-opt-3" data-sort-val="3" onclick="selectMarketSortOption('3', 'Low to High (Salary)', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5a2.5 2.5 0 0 0-5 0c0 3 5 2 5 5a2.5 2.5 0 0 1-5 0"/></svg>
+                                        <span class="cl-sort-item-title">Low to High (Salary)</span>
+                                    </div>
+                                    <div class="cl-sort-item-right">
+                                        <span class="cl-sort-direction-badge">Low → High</span>
+                                        <span class="cl-sort-check" style="display:none;">✓</span>
+                                    </div>
+                                </div>
 
-                            {{-- Tab 4: Freelance Hiring Jobs --}}
-                            <button type="button" onclick="setMarketJobTab('freelance', this); return false;" class="cd-market-tab-btn cl-stat-filter" data-tab="freelance" id="kpi_card_freelance" title="Filter freelance &amp; gig requirements">
-                                <i class="fas fa-laptop-code"></i>
-                                <span>Freelance</span>
-                                <span class="cd-tab-badge badge-indigo" id="kpi_num_freelance">{{ number_format($freelance_jobs ?? 0) }}</span>
-                            </button>
+                                <div class="cl-sort-section-hdr">Experience</div>
+                                <div class="cl-sort-item" id="sort-opt-7" data-sort-val="7" onclick="selectMarketSortOption('7', 'High to Low (Experience)', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                        <span class="cl-sort-item-title">High to Low (Experience)</span>
+                                    </div>
+                                    <div class="cl-sort-item-right">
+                                        <span class="cl-sort-direction-badge">Senior First</span>
+                                        <span class="cl-sort-check" style="display:none;">✓</span>
+                                    </div>
+                                </div>
+                                <div class="cl-sort-item" id="sort-opt-8" data-sort-val="8" onclick="selectMarketSortOption('8', 'Low to High (Experience)', event)" role="option" aria-selected="false" tabindex="0">
+                                    <div class="cl-sort-item-left">
+                                        <svg class="cl-sort-item-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                        <span class="cl-sort-item-title">Low to High (Experience)</span>
+                                    </div>
+                                    <div class="cl-sort-item-right">
+                                        <span class="cl-sort-direction-badge">Junior First</span>
+                                        <span class="cl-sort-check" style="display:none;">✓</span>
+                                    </div>
+                                </div>
+                            </div>
 
-                            {{-- Tab 5: Part-Time Hiring Jobs --}}
-                            <button type="button" onclick="setMarketJobTab('parttime', this); return false;" class="cd-market-tab-btn cl-stat-filter" data-tab="parttime" id="kpi_card_parttime" title="Filter flexible part-time positions">
-                                <i class="fas fa-clock"></i>
-                                <span>Part-Time</span>
-                                <span class="cd-tab-badge badge-amber" id="kpi_num_parttime">{{ number_format($parttime_jobs ?? 0) }}</span>
-                            </button>
-
-                            {{-- Tab 6: Agency Requests by Clients --}}
-                            <button type="button" onclick="setMarketJobTab('agency_request', this); return false;" class="cd-market-tab-btn cl-stat-filter" data-tab="agency_request" id="kpi_card_agency_request" title="Filter bench talent requests &amp; client invitations">
-                                <i class="fas fa-handshake"></i>
-                                <span>Agency Requests</span>
-                                <span class="cd-tab-badge badge-purple" id="kpi_num_agency_request">{{ number_format($agency_requests ?? 0) }}</span>
-                            </button>
+                            {{-- Hidden native select preserved for 100% backward compatibility --}}
+                            <select id="hiringtype" class="d-none" data-kt-select2="false" style="display:none !important;" onchange="filtersdata()">
+                                <option value="1" selected>Newest to Oldest</option>
+                                <option value="2">Oldest to Newest</option>
+                                <option value="3">Low to High (Salary)</option>
+                                <option value="4">High to Low (Salary)</option>
+                                <option value="7">High to Low (Experience)</option>
+                                <option value="8">Low to High (Experience)</option>
+                            </select>
                         </div>
                     </div>
 
