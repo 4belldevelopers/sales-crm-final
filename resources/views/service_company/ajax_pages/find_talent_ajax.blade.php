@@ -314,7 +314,7 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 5: MATCHING JOBS (Replaces Similar Clients per user request) -->
+                <!-- Sub-Card 5: MATCHING JOBS -->
                 <div class="cd-talent-subcard cd-subcard-matching-jobs" title="Matching Client Requisitions">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label text-uppercase text-truncate">
@@ -352,7 +352,7 @@
                     </div>
                 </div>
 
-                <!-- Sub-Card 6: ACTIONS (Replaces Pipeline Activity per user request) -->
+                <!-- Sub-Card 6: ACTIONS -->
                 <div class="cd-talent-subcard cd-subcard-actions" title="Candidate Actions">
                     <div class="cd-subcard-header">
                         <span class="cd-subcard-label text-uppercase text-truncate">
