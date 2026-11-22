@@ -795,7 +795,7 @@ body { overflow-x: hidden !important; }
 
 .jt-entity-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.9fr) minmax(0, 1.3fr) minmax(0, 1.45fr) minmax(0, 1.45fr) !important;
+    grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.65fr) minmax(0, 1.65fr) minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 1.25fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -852,6 +852,38 @@ body { overflow-x: hidden !important; }
 
 .jt-pill-neutral { background: #ffffff !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
 .jt-pill-bench   { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
+
+/* Clickable Sub-Card Hover States */
+.jt-subcard-cand.jt-clickable-subcard,
+.jt-subcard-comp-status.jt-clickable-subcard,
+.jt-subcard-stage.jt-clickable-subcard {
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.jt-subcard-cand.jt-clickable-subcard:hover,
+.jt-subcard-cand.jt-clickable-subcard:focus-visible,
+.jt-subcard-comp-status.jt-clickable-subcard:hover,
+.jt-subcard-comp-status.jt-clickable-subcard:focus-visible,
+.jt-subcard-stage.jt-clickable-subcard:hover,
+.jt-subcard-stage.jt-clickable-subcard:focus-visible {
+    border-color: #93c5fd !important;
+    background: #f0f9ff !important;
+    outline: none !important;
+}
+
+.jt-subcard-cand.jt-clickable-subcard:hover .jt-cand-name {
+    color: var(--jt-primary-deep) !important;
+    text-decoration: underline !important;
+}
+
+.jt-subcard-comp-status.jt-clickable-subcard:hover .jt-cs-cue {
+    text-decoration: underline !important;
+}
+
+.jt-subcard-stage.jt-clickable-subcard:hover .jt-stage-cue {
+    text-decoration: underline !important;
+}
 
 /* Sub-Card 1: Candidate */
 .jt-cand-body {
@@ -928,6 +960,32 @@ body { overflow-x: hidden !important; }
     margin-top: 1px !important;
 }
 
+.jt-cand-company {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4.5px !important;
+    font-size: 10.5px !important;
+    color: var(--jt-text-muted) !important;
+    font-weight: 500 !important;
+    margin-top: 1.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+}
+
+.jt-cand-company i {
+    font-size: 9.5px !important;
+    color: var(--jt-text-light) !important;
+    flex-shrink: 0 !important;
+}
+
+.jt-cand-company span {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
 .jt-cand-loc {
     display: flex !important;
     align-items: center !important;
@@ -940,25 +998,28 @@ body { overflow-x: hidden !important; }
     text-overflow: ellipsis !important;
 }
 
-/* Sub-Card 2: Requisition & Client */
+/* Sub-Card 2: Job Details */
 .jt-scope-pill {
-    font-size: 8.5px !important;
+    font-size: 8px !important;
     font-weight: 700 !important;
-    padding: 1.5px 6px !important;
-    border-radius: 4px !important;
+    padding: 1px 5px !important;
+    border-radius: 3px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.2px !important;
     white-space: nowrap !important;
     line-height: 1.3 !important;
+    display: inline-flex !important;
+    align-items: center !important;
 }
-.jt-scope-direct   { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
-.jt-scope-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+.jt-scope-pill.type-direct, .jt-scope-direct   { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+.jt-scope-pill.type-internal, .jt-scope-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+.jt-scope-pill.type-my-org { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d !important; }
 
 .jt-job-status-pill {
-    font-size: 8.5px !important;
+    font-size: 8px !important;
     font-weight: 700 !important;
-    padding: 1.5px 6px !important;
-    border-radius: 4px !important;
+    padding: 1px 5px !important;
+    border-radius: 3px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.2px !important;
     white-space: nowrap !important;
@@ -1031,70 +1092,123 @@ body { overflow-x: hidden !important; }
     padding: 1px 6px !important;
 }
 
-/* Sub-Card 3: Compensation */
-.jt-comp-body {
+/* Sub-Card 3: Compensation & Status */
+.jt-subcard-comp-status .jt-subcard-head {
     display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    gap: 3px !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
     min-width: 0 !important;
 }
 
-.jt-comp-amount {
-    font-size: 13px !important;
+.jt-subcard-comp-status .jt-subcard-label {
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+}
+
+.jt-subcard-comp-status .jt-micro-pill {
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    max-width: 85px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 8px !important;
+    padding: 1px 5px !important;
+}
+
+.jt-comp-status-body {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+.jt-cs-amount-row {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    line-height: 1.25 !important;
+}
+
+.jt-cs-amount {
+    font-size: 12.5px !important;
     font-weight: 700 !important;
     color: var(--jt-text-main) !important;
     line-height: 1.25 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    font-variant-numeric: tabular-nums !important;
 }
 
-.jt-comp-sub {
-    font-size: 10px !important;
-    font-weight: 500 !important;
-    color: var(--jt-text-muted) !important;
+.jt-cs-amount.is-pending {
+    color: #d97706 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
 }
 
-/* Sub-Card 4: Joining Status */
-.jt-status-body {
+.jt-cs-status-row {
     display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
+    align-items: center !important;
+    width: 100% !important;
     min-width: 0 !important;
 }
 
-.jt-joining-badge {
+.jt-status-badge {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 5px !important;
+    gap: 4px !important;
     width: fit-content !important;
-    padding: 3px 9px !important;
-    border-radius: 6px !important;
-    font-size: 10.5px !important;
+    max-width: 100% !important;
+    padding: 2px 7px !important;
+    border-radius: 4px !important;
+    font-size: 9.5px !important;
     font-weight: 700 !important;
     line-height: 1.3 !important;
-}
-
-.jt-joining-badge svg {
-    width: 12px !important;
-    height: 12px !important;
-    flex-shrink: 0 !important;
-}
-
-.jt-joining-sub {
-    font-size: 10.5px !important;
-    color: var(--jt-text-muted) !important;
-    font-weight: 500 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
 
-/* Sub-Card 5: Joining Date */
+.jt-status-badge svg {
+    width: 11px !important;
+    height: 11px !important;
+    flex-shrink: 0 !important;
+}
+
+.jt-cs-cue-row {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 1px !important;
+}
+
+.jt-cs-cue {
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    color: #009ef7 !important;
+    line-height: 1.2 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+}
+
+.jt-cs-cue.locked {
+    color: var(--jt-text-muted) !important;
+    font-weight: 500 !important;
+    font-size: 10px !important;
+}
+
+/* Sub-Card 4: Joining */
 .jt-joining-body {
     display: flex !important;
     flex-direction: column !important;
@@ -1129,7 +1243,138 @@ body { overflow-x: hidden !important; }
     line-height: 1.2 !important;
 }
 
-/* Sub-Card 6: Bottom Strip */
+/* Sub-Card 5: Ownership & Recruiter */
+.jt-subcard-owner .jt-subcard-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 5px !important;
+    min-height: 18px !important;
+}
+
+.jt-owner-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+}
+
+.jt-owner-name {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+.jt-owner-name i {
+    color: #2563eb !important;
+    font-size: 11px !important;
+    flex-shrink: 0 !important;
+}
+
+.jt-owner-company {
+    font-size: 10.5px !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+.jt-owner-company i {
+    color: #94a3b8 !important;
+    font-size: 10px !important;
+    flex-shrink: 0 !important;
+}
+
+.jt-owner-submitted {
+    font-size: 10px !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+.jt-owner-submitted i {
+    color: #94a3b8 !important;
+    font-size: 10px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Sub-Card 6: Pipeline & Stage */
+.jt-subcard-stage.jt-clickable-subcard {
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.jt-stage-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2.5px !important;
+    min-width: 0 !important;
+}
+
+.jt-stage-trigger {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2.5px !important;
+    text-decoration: none !important;
+    min-width: 0 !important;
+}
+
+.jt-stage-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    padding: 2px 8px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.jt-substage-txt {
+    font-size: 10.5px !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+}
+
+.jt-substage-txt strong {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+}
+
+.jt-stage-cue {
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    color: #009ef7 !important;
+    line-height: 1.2 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+}
+
+/* Bottom Strip: Activity & Actions */
 .jt-entity-bottom {
     background: #ffffff !important;
     border-top: 1px solid var(--jt-border-soft) !important;
@@ -1357,9 +1602,9 @@ body { overflow-x: hidden !important; }
     .jt-kpi-sub  { font-size: 9.5px !important; }
 
     .jt-entity-grid {
-        grid-template-columns: minmax(0, 2fr) minmax(0, 1.85fr) minmax(0, 1.25fr) minmax(0, 1.45fr) minmax(0, 1.4fr) !important;
-        gap: 7px !important;
-        padding: 9px 11px !important;
+        grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.65fr) minmax(0, 1.65fr) minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 1.25fr) !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
     }
     .jt-subcard { padding: 7px 9px !important; }
     .jt-search-kbd { display: none !important; }
