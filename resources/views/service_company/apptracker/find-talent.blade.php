@@ -890,6 +890,362 @@ table{
     @media (max-width: 480px) { #apptrackerfilter { width: 100% !important; } }
     </style>
 
+    <!-- Rule 20 Modern Card + Sub-Card & Client Tracker Tabs CSS -->
+    <style id="rule20-modern-card-tabs-styles">
+        /* Client Tracker .cl-stat-grid Enterprise Standard for Find Talents */
+        .cl-stat-grid-5 {
+            display: grid !important;
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            margin-bottom: 14px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            font-family: 'Poppins', sans-serif !important;
+        }
+        .cl-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 11px !important;
+            padding: 10px 12px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            text-decoration: none !important;
+            color: inherit !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease !important;
+            cursor: pointer !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+            outline: none !important;
+        }
+        .cl-card:hover {
+            transform: translateY(-1px) !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+            text-decoration: none !important;
+        }
+        .cl-card-top {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin-bottom: 6px !important;
+            min-width: 0 !important;
+        }
+        .cl-card-icon {
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+            transition: all 0.15s ease !important;
+        }
+        .cl-card-icon i {
+            font-size: 15px !important;
+        }
+        .cl-card-icon.blue   { background: #eff6ff !important; color: #2563eb !important; }
+        .cl-card-icon.cyan   { background: #f0f9ff !important; color: #0284c7 !important; }
+        .cl-card-icon.purple { background: #faf5ff !important; color: #7c3aed !important; }
+        .cl-card-icon.green  { background: #ecfdf5 !important; color: #059669 !important; }
+        .cl-card-icon.orange { background: #fff7ed !important; color: #ea580c !important; }
+
+        .cl-card-meta {
+            min-width: 0 !important;
+            flex: 1 1 0% !important;
+            overflow: hidden !important;
+        }
+        .cl-card-num {
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.1 !important;
+            white-space: nowrap !important;
+            font-variant-numeric: tabular-nums !important;
+            transition: color 0.15s ease !important;
+        }
+        .cl-card-lbl {
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.2 !important;
+            transition: color 0.15s ease !important;
+        }
+        .cl-card-sub {
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            margin-top: 2px !important;
+            padding-top: 4px !important;
+            border-top: 1px dashed #f1f5f9 !important;
+            transition: color 0.15s ease !important;
+        }
+        .cl-card-sub.blue   { color: #2563eb !important; }
+        .cl-card-sub.cyan   { color: #0284c7 !important; }
+        .cl-card-sub.purple { color: #7c3aed !important; }
+        .cl-card-sub.green  { color: #059669 !important; }
+        .cl-card-sub.orange { color: #ea580c !important; }
+
+        /* KPI Selected States (Stage Color Parity Standard) */
+        .cl-card.active[data-tab="all"] {
+            background: #eff6ff !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12) !important;
+        }
+        .cl-card.active[data-tab="all"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #2563eb !important;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
+        }
+        .cl-card.active[data-tab="all"] .cl-card-num,
+        .cl-card.active[data-tab="all"] .cl-card-lbl,
+        .cl-card.active[data-tab="all"] .cl-card-sub {
+            color: #2563eb !important;
+        }
+        .cl-card.active[data-tab="all"] .cl-card-lbl { font-weight: 700 !important; }
+
+        .cl-card.active[data-tab="it_software"] {
+            background: #f0f9ff !important;
+            border-color: #0284c7 !important;
+            box-shadow: 0 0 0 1.5px #0284c7, 0 4px 14px rgba(2, 132, 199, 0.12) !important;
+        }
+        .cl-card.active[data-tab="it_software"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #0284c7 !important;
+            box-shadow: 0 1px 3px rgba(2, 132, 199, 0.15) !important;
+        }
+        .cl-card.active[data-tab="it_software"] .cl-card-num,
+        .cl-card.active[data-tab="it_software"] .cl-card-lbl,
+        .cl-card.active[data-tab="it_software"] .cl-card-sub {
+            color: #0284c7 !important;
+        }
+        .cl-card.active[data-tab="it_software"] .cl-card-lbl { font-weight: 700 !important; }
+
+        .cl-card.active[data-tab="training_dev"] {
+            background: #faf5ff !important;
+            border-color: #7c3aed !important;
+            box-shadow: 0 0 0 1.5px #7c3aed, 0 4px 14px rgba(124, 58, 237, 0.12) !important;
+        }
+        .cl-card.active[data-tab="training_dev"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #7c3aed !important;
+            box-shadow: 0 1px 3px rgba(124, 58, 237, 0.15) !important;
+        }
+        .cl-card.active[data-tab="training_dev"] .cl-card-num,
+        .cl-card.active[data-tab="training_dev"] .cl-card-lbl,
+        .cl-card.active[data-tab="training_dev"] .cl-card-sub {
+            color: #7c3aed !important;
+        }
+        .cl-card.active[data-tab="training_dev"] .cl-card-lbl { font-weight: 700 !important; }
+
+        .cl-card.active[data-tab="institutional"] {
+            background: #ecfdf5 !important;
+            border-color: #059669 !important;
+            box-shadow: 0 0 0 1.5px #059669, 0 4px 14px rgba(5, 150, 105, 0.12) !important;
+        }
+        .cl-card.active[data-tab="institutional"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #059669 !important;
+            box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
+        }
+        .cl-card.active[data-tab="institutional"] .cl-card-num,
+        .cl-card.active[data-tab="institutional"] .cl-card-lbl,
+        .cl-card.active[data-tab="institutional"] .cl-card-sub {
+            color: #059669 !important;
+        }
+        .cl-card.active[data-tab="institutional"] .cl-card-lbl { font-weight: 700 !important; }
+
+        .cl-card.active[data-tab="domestic"] {
+            background: #fff7ed !important;
+            border-color: #ea580c !important;
+            box-shadow: 0 0 0 1.5px #ea580c, 0 4px 14px rgba(234, 88, 12, 0.12) !important;
+        }
+        .cl-card.active[data-tab="domestic"] .cl-card-icon {
+            background: #ffffff !important;
+            color: #ea580c !important;
+            box-shadow: 0 1px 3px rgba(234, 88, 12, 0.15) !important;
+        }
+        .cl-card.active[data-tab="domestic"] .cl-card-num,
+        .cl-card.active[data-tab="domestic"] .cl-card-lbl,
+        .cl-card.active[data-tab="domestic"] .cl-card-sub {
+            color: #ea580c !important;
+        }
+        .cl-card.active[data-tab="domestic"] .cl-card-lbl { font-weight: 700 !important; }
+
+        /* Toolbar Card (Rule 20 Standard) */
+        .caf-toolbar-card {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            font-family: 'Poppins', sans-serif !important;
+        }
+
+        /* Modern Card + Sub-Card Enterprise Grid (Rule 20 Standard) */
+        .cd-talent-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            margin-bottom: 0 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            font-family: 'Poppins', sans-serif !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .cd-talent-card:hover {
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07) !important;
+            border-color: #cbd5e1 !important;
+            transform: translateY(-1px) !important;
+        }
+        .cd-talent-card-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.4fr) minmax(0, 1.4fr) minmax(0, 1.35fr) minmax(0, 1.3fr) minmax(0, 1.15fr) !important;
+            gap: 8px !important;
+            padding: 10px 12px 6px 12px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            align-items: stretch !important;
+        }
+        .cd-talent-subcard {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .cd-talent-subcard:hover {
+            border-color: #cbd5e1;
+        }
+        .cd-subcard-header {
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            padding: 6px 9px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 6px !important;
+            flex-wrap: nowrap !important;
+        }
+        .cd-subcard-label {
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            color: #475569 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.4px !important;
+            white-space: nowrap !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .cd-subcard-body {
+            padding: 8px 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+        }
+        .cd-talent-card-bottom {
+            padding: 7px 12px !important;
+            background: #f8fafc !important;
+            border-top: 1px solid #e2e8f0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            font-size: 11px !important;
+        }
+        .cd-skill-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 10.5px;
+            font-weight: 500;
+            border-radius: 5px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+
+        /* Canonical Job Classification Pills (Rule 25) */
+        .type-direct {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+        }
+        .type-internal {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border: 1px solid #bfdbfe !important;
+        }
+        .type-my-org {
+            background: #fef3c7 !important;
+            color: #92400e !important;
+            border: 1px solid #fcd34d !important;
+        }
+
+        /* 15.6" Screen Fit & Zero Horizontal Scroll Standard */
+        @media (max-width: 1440px) {
+            .cl-stat-grid-5 {
+                gap: 8px !important;
+            }
+            .cl-card {
+                padding: 8px 10px !important;
+            }
+            .cl-card-num {
+                font-size: 17px !important;
+            }
+            .cd-talent-card-grid {
+                gap: 6px !important;
+                padding: 8px 10px 5px 10px !important;
+            }
+        }
+        @media (max-width: 1200px) {
+            .cl-stat-grid-5 {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            }
+            .cd-talent-card-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            }
+        }
+        @media (max-width: 768px) {
+            .cl-stat-grid-5 {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            .cd-talent-card-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .cl-card, .cd-talent-card, .btn {
+                transition: none !important;
+                animation: none !important;
+                transform: none !important;
+            }
+        }
+    </style>
+
     <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 
