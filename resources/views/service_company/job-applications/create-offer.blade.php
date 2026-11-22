@@ -385,7 +385,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 11.5px !important;
+            font-size: 11px !important;
             color: #475569;
             line-height: 1.4;
             padding: 6px 10px;
@@ -393,6 +393,7 @@
             border: 1px solid #e2e8f0;
             border-radius: 6px;
             margin-top: 6px;
+            min-height: 32px;
             transition: all 0.2s ease;
         }
         .co-conf-notice-text {
@@ -412,15 +413,36 @@
             color: #008be0;
         }
 
-        /* ── Joining Schedule Guidance Card ── */
-        .co-schedule-guidance-card {
+        /* ── Date of Joining Onboarding Notice (Symmetric with Confidentiality Notice) ── */
+        .co-doj-notice {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px !important;
+            color: #64748b;
+            line-height: 1.4;
+            padding: 6px 10px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
-            padding: 8px 10px;
+            margin-top: 6px;
+            min-height: 32px;
+        }
+        .co-doj-notice-text {
+            flex: 1 1 auto;
             font-size: 11px;
-            color: #64748b;
-            line-height: 1.4;
+            color: #475569;
+        }
+
+        .co-conf-select {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 7px !important;
+            min-height: 40px !important;
+            height: 40px !important;
+            font-size: 12.5px !important;
+            font-weight: 500 !important;
+            color: #1e293b !important;
         }
 
         /* ── Enterprise Custom Select & Floating Popovers (Rule 20 / Rule 26) ── */
@@ -2095,18 +2117,18 @@
 
                                                     <div class="card-body p-5">
                                                         <div class="row g-4 align-items-stretch">
-                                                            {{-- SUB-CARD 1: Salary & Currency --}}
-                                                            <div class="col-12 col-md-6 col-xxl-3 d-flex flex-column">
+                                                            {{-- SUB-CARD 1: Salary & Currency Package --}}
+                                                            <div class="col-lg-6 d-flex flex-column">
                                                                 <div class="co-subcard h-100">
                                                                     <div class="co-subcard-header">
                                                                         <span class="co-subcard-title">
-                                                                            <i class="fas fa-coins text-primary me-2 fs-7"></i>
-                                                                            Salary &amp; Currency
+                                                                            <i class="fas fa-coins text-warning me-2 fs-7"></i>
+                                                                            Salary &amp; Currency Package
                                                                         </span>
-                                                                        <span class="co-subcard-badge">Currency &amp; Mode</span>
+                                                                        <span class="co-subcard-badge">Base CTC</span>
                                                                     </div>
                                                                     <div class="co-subcard-body">
-                                                                        {{-- Currency Selection --}}
+                                                                        {{-- Row 1: Currency Selection --}}
                                                                         <div class="mb-4">
                                                                             <label class="form-label required co-flabel" for="coCurrTrigger">
                                                                                 <i class="fas fa-money-bill-wave co-lbl-icon"></i>
@@ -2133,9 +2155,51 @@
                                                                                     @endforeach
                                                                                 </select>
                                                                             </div>
+                                                                            <div class="co-field-hint">Primary operational currency applied to all salary components</div>
                                                                         </div>
 
-                                                                        {{-- Salary Breakdown Format --}}
+                                                                        {{-- Row 2: Enter Amount (CTC) & Confidentiality Dropdown --}}
+                                                                        <div class="mb-4">
+                                                                            <div class="row g-3">
+                                                                                <div class="col-sm-7">
+                                                                                    <label class="form-label required co-flabel" for="ctc">
+                                                                                        <i class="fas fa-calculator co-lbl-icon"></i>
+                                                                                        <span>Enter Amount (CTC)</span>
+                                                                                    </label>
+                                                                                    <div class="co-amount-input-wrap">
+                                                                                        <span class="co-amount-prefix" id="coCtcSymbolPrefix">{{ $initialCurrSymbol }}</span>
+                                                                                        <input type="text" class="form-control form-control-solid co-amount-input" name="ctc" id="ctc" placeholder="Enter Base CTC" value="{{ @$salary_ctc }}">
+                                                                                    </div>
+                                                                                    <div class="fv-plugins-message-container invalid-feedback"></div>
+                                                                                </div>
+                                                                                <div class="col-sm-5">
+                                                                                    <label class="form-label required co-flabel" for="confidential">
+                                                                                        <i class="fas fa-user-shield co-lbl-icon"></i>
+                                                                                        <span>Confidentiality</span>
+                                                                                    </label>
+                                                                                    <div class="co-select-wrap">
+                                                                                        <select name="confidential" id="confidential" class="form-select form-select-solid co-conf-select">
+                                                                                            <option value="0" {{ empty($confidential) || $confidential == 0 ? 'selected' : '' }}>No (Standard)</option>
+                                                                                            <option value="1" {{ !empty($confidential) && $confidential == 1 ? 'selected' : '' }}>Yes (Confidential)</option>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {{-- Number to words conversion display --}}
+                                                                            <div class="co-ctc-words-wrap mt-1" id="coCtcWordsWrap">
+                                                                                <span class="co-ctc-words-text" id="coCtcWordsText"></span>
+                                                                            </div>
+
+                                                                            {{-- Single concise confidentiality notification line --}}
+                                                                            <div id="coConfNotice" class="co-conf-notice {{ !empty($confidential) && $confidential == 1 ? '' : 'd-none' }}">
+                                                                                <i class="fas fa-shield-alt text-warning fs-9 me-1" id="coConfNoticeIcon"></i>
+                                                                                <span class="co-conf-notice-text" id="coConfNoticeText">Salary is confidential: visible only to Admins &amp; designated approvers.</span>
+                                                                                <a href="javascript:void(0);" class="co-conf-notice-link ms-1" id="btnWhoCanView" title="Who can view?">Learn more</a>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {{-- Row 3: Salary Breakdown Format --}}
                                                                         <div>
                                                                             <label class="form-label required co-flabel" for="coFormatTrigger">
                                                                                 <i class="fas fa-layer-group co-lbl-icon"></i>
@@ -2167,80 +2231,41 @@
                                                                 </div>
                                                             </div>
 
-                                                            {{-- SUB-CARD 2: Package --}}
-                                                            <div class="col-12 col-md-6 col-xxl-3 d-flex flex-column">
+                                                            {{-- SUB-CARD 2: Role & Joining Schedule --}}
+                                                            <div class="col-lg-6 d-flex flex-column">
                                                                 <div class="co-subcard h-100">
                                                                     <div class="co-subcard-header">
                                                                         <span class="co-subcard-title">
-                                                                            <i class="fas fa-calculator text-primary me-2 fs-7"></i>
-                                                                            Package
+                                                                            <i class="fas fa-briefcase text-primary me-2 fs-7"></i>
+                                                                            Role &amp; Joining Schedule
                                                                         </span>
-                                                                        <span class="co-subcard-badge">Base CTC</span>
+                                                                        <span class="co-subcard-badge">Position Terms</span>
                                                                     </div>
                                                                     <div class="co-subcard-body">
-                                                                        {{-- Enter Amount (CTC) with Integrated Currency Prefix --}}
-                                                                        <div class="mb-4">
-                                                                            <label class="form-label required co-flabel" for="ctc">
-                                                                                <i class="fas fa-coins co-lbl-icon"></i>
-                                                                                <span>Enter Amount (CTC)</span>
-                                                                            </label>
-                                                                            <div class="co-amount-input-wrap">
-                                                                                <span class="co-amount-prefix" id="coCtcSymbolPrefix">{{ $initialCurrSymbol }}</span>
-                                                                                <input type="text" class="form-control form-control-solid co-amount-input" name="ctc" id="ctc" placeholder="Enter Base CTC" value="{{ @$salary_ctc }}">
-                                                                            </div>
-                                                                            <div class="fv-plugins-message-container invalid-feedback"></div>
-
-                                                                            {{-- Number to words conversion display --}}
-                                                                            <div class="co-ctc-words-wrap mt-1" id="coCtcWordsWrap">
-                                                                                <span class="co-ctc-words-text" id="coCtcWordsText"></span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        {{-- Confidentiality Yes/No Dropdown & Concise Notification Line --}}
-                                                                        <div>
-                                                                            <label class="form-label required co-flabel" for="confidential">
-                                                                                <i class="fas fa-user-shield co-lbl-icon"></i>
-                                                                                <span>Confidentiality</span>
-                                                                            </label>
-                                                                            <div class="co-select-wrap">
-                                                                                <select name="confidential" id="confidential" class="form-select form-select-solid">
-                                                                                    <option value="0" {{ empty($confidential) || $confidential == 0 ? 'selected' : '' }}>No (Standard Visibility)</option>
-                                                                                    <option value="1" {{ !empty($confidential) && $confidential == 1 ? 'selected' : '' }}>Yes (Restricted / Confidential)</option>
-                                                                                </select>
-                                                                            </div>
-
-                                                                            {{-- Single concise confidentiality notification line --}}
-                                                                            <div id="coConfNotice" class="co-conf-notice {{ !empty($confidential) && $confidential == 1 ? '' : 'd-none' }}">
-                                                                                <i class="fas fa-shield-alt text-warning fs-9 me-1"></i>
-                                                                                <span class="co-conf-notice-text">Salary is confidential: visible only to Admins &amp; designated approvers.</span>
-                                                                                <a href="javascript:void(0);" class="co-conf-notice-link ms-1" id="btnWhoCanView" title="Who can view?">Learn more</a>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            {{-- SUB-CARD 3: Role --}}
-                                                            <div class="col-12 col-md-6 col-xxl-3 d-flex flex-column">
-                                                                <div class="co-subcard h-100">
-                                                                    <div class="co-subcard-header">
-                                                                        <span class="co-subcard-title">
-                                                                            <i class="fas fa-user-tie text-primary me-2 fs-7"></i>
-                                                                            Role
-                                                                        </span>
-                                                                        <span class="co-subcard-badge">Position</span>
-                                                                    </div>
-                                                                    <div class="co-subcard-body">
-                                                                        {{-- Offered Designation --}}
+                                                                        {{-- Row 1: Offered Designation --}}
                                                                         <div class="mb-4">
                                                                             <label class="form-label required co-flabel" for="current_designation">
                                                                                 <i class="fas fa-id-badge co-lbl-icon"></i>
                                                                                 <span>Offered Designation</span>
                                                                             </label>
-                                                                            <input type="text" class="form-control form-control-solid" name="current_designation" id="current_designation" placeholder="Enter designation" value="{{ @$designation }}">
+                                                                            <input type="text" class="form-control form-control-solid" name="current_designation" id="current_designation" placeholder="Enter designation (e.g. Senior Software Engineer)" value="{{ @$designation }}">
+                                                                            <div class="co-field-hint">Official job designation to be printed on the offer letter</div>
                                                                         </div>
 
-                                                                        {{-- Employment Type --}}
+                                                                        {{-- Row 2: Date of Joining (DOJ) --}}
+                                                                        <div class="mb-4">
+                                                                            <label class="form-label co-flabel" for="dob">
+                                                                                <i class="fas fa-calendar-alt co-lbl-icon"></i>
+                                                                                <span>Date of Joining (DOJ)</span>
+                                                                            </label>
+                                                                            <input type="datetime-local" class="form-control form-control-solid" name="dob" id="dob" placeholder="Select date & time" value="{{ @$joined_date }}" onclick="this.showPicker()">
+                                                                            <div class="co-doj-notice mt-2">
+                                                                                <i class="fas fa-clock text-primary fs-9 me-1"></i>
+                                                                                <span class="co-doj-notice-text">Target reporting date and time for candidate onboarding and offer terms.</span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {{-- Row 3: Employment Type --}}
                                                                         <div>
                                                                             <label class="form-label required co-flabel" for="coEmpTypeTrigger">
                                                                                 <i class="fas fa-briefcase co-lbl-icon"></i>
@@ -2267,45 +2292,6 @@
                                                                                 </select>
                                                                             </div>
                                                                             <div class="co-field-hint">Defines contract nature &amp; legal template association</div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            {{-- SUB-CARD 4: Joining Schedule --}}
-                                                            <div class="col-12 col-md-6 col-xxl-3 d-flex flex-column">
-                                                                <div class="co-subcard h-100">
-                                                                    <div class="co-subcard-header">
-                                                                        <span class="co-subcard-title">
-                                                                            <i class="fas fa-calendar-check text-primary me-2 fs-7"></i>
-                                                                            Joining Schedule
-                                                                        </span>
-                                                                        <span class="co-subcard-badge">Timeline</span>
-                                                                    </div>
-                                                                    <div class="co-subcard-body">
-                                                                        {{-- Date of Joining (DOJ) --}}
-                                                                        <div class="mb-4">
-                                                                            <label class="form-label co-flabel" for="dob">
-                                                                                <i class="fas fa-calendar-alt co-lbl-icon"></i>
-                                                                                <span>Date of Joining (DOJ)</span>
-                                                                            </label>
-                                                                            <input type="datetime-local" class="form-control form-control-solid" name="dob" id="dob" placeholder="Select date & time" value="{{ @$joined_date }}" onclick="this.showPicker()">
-                                                                            <div class="co-field-hint">Target reporting date and time for candidate onboarding</div>
-                                                                        </div>
-
-                                                                        {{-- Onboarding Schedule Guidance --}}
-                                                                        <div>
-                                                                            <label class="form-label co-flabel">
-                                                                                <i class="fas fa-info-circle co-lbl-icon"></i>
-                                                                                <span>Schedule Terms</span>
-                                                                            </label>
-                                                                            <div class="co-schedule-guidance-card">
-                                                                                <div class="d-flex align-items-center gap-2 mb-1">
-                                                                                    <i class="fas fa-clock text-primary fs-9"></i>
-                                                                                    <span class="fw-semibold text-gray-800 fs-8">Onboarding Schedule</span>
-                                                                                </div>
-                                                                                <div class="text-muted fs-8 lh-base">Joining date is populated in the offer letter terms and timeline milestone tracking.</div>
-                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
