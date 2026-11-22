@@ -328,5 +328,71 @@ Replaced the basic pill buttons with dedicated enterprise buttons matching the c
 - Tenancy isolation verified: strictly scoped to `service_company/`. Frozen personas (`product_company/`, `staffing_company/`) remain 100% untouched (Rule 18).
 - CQRS read/write patterns and all calculation event handlers verified intact.
 
+---
+
+## 10. Round 7 – Horizontal Scroller Elimination, Applicable Text Visibility, Allocation vs Condition Header Distinction, & Total Component Digits Fix
+
+### 10.1 Key Defects Identified & Forensic Root Cause Analysis
+1. **Applicable Column Text Truncation (`Annually & M v`):**
+   - *Root Cause:* The Applicable select was confined to a narrow 12.5% column with 24px right padding. The text string "Annually & Monthly" required ~112px width, exceeding the available space and truncating to `Annually & M v`.
+2. **Allocation (%) and Condition Header Collision (`ALLOCATION (%) CONDITION`):**
+   - *Root Cause:* The intermediate column between Allocation (%) and Condition (holding the multiplier `×` symbol in data rows) was defined in the header as an empty cell `&nbsp;` with `padding: 0 !important; width: 2%`. The browser collapsed this cell in the header, placing the `ALLOCATION (%)` text immediately adjacent to `CONDITION` without any separation, making it difficult to discern which header belonged to which input.
+3. **Component Name Column Congestion ([Main] Badge Overhead):**
+   - *Root Cause:* The dynamically injected `.co-comp-badge` (`[Main]` or `[Additional]`) consumed ~55px of horizontal space within the Component Name column, squeezing long labels like `House Rent Allowance (HRA)` and `Provident Fund (Employer)`.
+4. **Horizontal Scrollbar in Compensation Subcard:**
+   - *Root Cause:* `.co-table-subcard` had `overflow-x: auto !important;` while `#pointList`, `#bonusList`, and `#final_pay` had a rigid CSS rule `min-width: 860px !important;` coupled with rigid cell min-widths (`min-width: 270px`, `min-width: 120px`, `min-width: 390px`). On standard 15.6" displays or laptop screens with 125% DPI scaling (where the drawer width is ~800px), this forced a horizontal scrollbar.
+5. **Total Main Components Hidden Digits (`200.0 %`):**
+   - *Root Cause:* In the summary row `tfoot`, the Allocation total cell had `padding-right: 22px !important;` and the `%` glyph was positioned at `right: 8px;`. Within an 8.5% column, this covered the second decimal digit `0`, showing `200.0 %` instead of `200.00 %`.
+
+### 10.2 Architectural Remediation & Implementation Details
+1. **Horizontal Scrollbar Elimination & Fluid Responsive Containment:**
+   - Updated `.co-table-subcard` to `overflow-x: hidden !important; overflow-y: hidden !important; width: 100% !important;`.
+   - Removed `min-width: 860px !important;` from `#pointList, #bonusList, #final_pay`. Tables now utilize `width: 100% !important; max-width: 100% !important; table-layout: fixed !important;`.
+   - Stripped all rigid pixel `min-width` styles from individual `th` and `td` cells, transitioning to a strict percentage-based grid that sums to exactly 100%.
+2. **Expansion of Applicable Dropdown Column (18% Width):**
+   - Widened the Applicable column from 12.5% to **`18.0%`**.
+   - Streamlined select padding to `padding-left: 7px !important; padding-right: 20px !important; font-size: 11.5px !important; background-position: right 6px center !important;`.
+   - "Annually & Monthly" now renders completely with generous whitespace buffer and zero truncation.
+3. **Allocation (%) vs Condition Visual Separation & Header Glyph:**
+   - Injected `<span class="co-hdr-mult">&times;</span>` into the header's 4th column (`.co-th-mult`, `3.0%` width).
+   - Styled `.co-th-alloc` (`9.0%` width, centered) and `.co-th-cond` (`11.0%` width, left-aligned, padded) with distinct column boundaries, establishing clear visual parity between the header row (`ALLOCATION (%) × CONDITION`) and data rows (`[ 50 % ] × [ Amount ]`).
+4. **Component Name Space Optimization (Badge Removal):**
+   - Removed the `co-comp-badge` (`[Main]` and `[Additional]`) insertion from `coEnhanceRows()`.
+   - Set Component Name column to **`24.0%`** width. The text input now enjoys ~190px of uninhibited space, accommodating long component titles cleanly alongside the row counter and edit pencil.
+5. **Total Main Components Display Hardening (`200.00 %`):**
+   - Widened the Allocation total cell in `tfoot` to **`9.0%`**.
+   - Adjusted padding to `padding-right: 15px !important; padding-left: 2px !important; font-size: 12px !important; font-weight: 700 !important;`.
+   - Positioned `%` pseudo-element at `right: 4px; font-size: 11px;`.
+   - Numeric totals (e.g. `200.00 %`) now fit cleanly with zero overlapping or clipped digits.
+
+### 10.3 Rebalanced 8-Column Mathematical Grid Matrix (100% Responsive)
+
+| Col # | PointList (Main Components) | BonusList (Additional Components) | Final Pay (Total CTC Summary) | Width % | Data Fit & UI/UX Standards |
+|:---:|---|---|---|:---:|---|
+| **1** | Component Name (Pencil + #) | Component Name (Pencil + #) | Component Name (`colspan="2"`) | **24.0%** | Full label breathing room; badges removed |
+| **2** | Applicable (`basic_view`) | Applicable (`bonus_view`) | *(Spanned in Col 1)* | **18.0%** | "Annually & Monthly" 100% visible, no clipping |
+| **3** | Allocation (%) (`.co-th-alloc`) | Allocation (%) (`.co-th-alloc`) | Allocation (%) (`.co-th-alloc`) | **9.0%** | Numeric input with inner `%` badge |
+| **4** | Multiplier (`×`) (`.co-th-mult`) | Multiplier (`×`) (`.co-th-mult`) | Currency (`colspan="2"`) | **3.0%** | Centered `×` in header and data rows |
+| **5** | Condition (`.co-th-cond`) | Condition (`.co-th-cond`) | *(Spanned in Col 4)* | **11.0%** | "Amount" / "Basic" dropdown with chevron |
+| **6** | Monthly (Tabular) | Monthly (Tabular) | Monthly (Tabular) | **15.0%** | Tabular figures up to 8 digits, right-aligned |
+| **7** | Annually (Tabular) | Annually (Tabular) | Annually (Tabular) | **15.0%** | Tabular figures up to 9 digits, right-aligned |
+| **8** | Action (Trash Icon) | Action (Trash Icon) | Spacer (`&nbsp;`) | **5.0%** | Standardized centered danger button |
+| **SUM** | **8 Columns** | **8 Columns** | **Summary Alignment** | **100.0%** | **Zero Horizontal Scrollbar, 100% 15.6" Fit** |
+
+### 10.4 Footer Alignment Across All Tables (`tfoot`)
+- **Colspan 2 (Total Label):** `24.0% + 18.0% = 42.0%`
+- **Allocation Total (`.co-th-total-pct`):** `9.0%`
+- **Colspan 2 (Currency):** `3.0% + 11.0% = 14.0%`
+- **Monthly Total:** `15.0%`
+- **Annually Total:** `15.0%`
+- **Action Spacer:** `5.0%`
+- **SUM:** `42.0% + 9.0% + 14.0% + 15.0% + 15.0% + 5.0% = 100.0%` (Pixel-perfect parity across `#pointList`, `#bonusList`, and `#final_pay`).
+
+### 10.5 Final Verification Evidence
+- `php -l resources/views/service_company/job-applications/create-offer.blade.php`: **Passed (0 syntax errors)**.
+- Tenancy isolation verified: strictly scoped to `service_company/`. Frozen personas (`product_company/`, `staffing_company/`) remain 100% untouched (Rule 18).
+- Calculation event handlers, input names, IDs, and CQRS patterns verified 100% intact.
+
+
 
 
