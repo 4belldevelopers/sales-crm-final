@@ -3974,8 +3974,12 @@ $( document ).ready(function() {
           // alert("hi");
           $('#kt_create_offer_toggle').trigger('click');
 				var id    		=	$(this).data('row-offerid');
+				var empType     =   $(this).data('emp-type') || $(this).closest('.ot-subcard-comp-status').attr('data-emp-type') || '';
 				var url 		=	"{{ route('service_company.job-applications.create_offer',':id') }}";
 				url     		=	url.replace(':id', id);		
+				if (empType !== '') {
+					url += (url.indexOf('?') !== -1 ? '&' : '?') + 'emp_type=' + encodeURIComponent(empType);
+				}
 				var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
 				$.ajax({
 								type  		:	'GET',

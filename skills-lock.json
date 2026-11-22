@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "skills": {
+    "cli-anything": {
+      "source": "HKUDS/CLI-Anything",
+      "commit": "34f519533bc175d2fe287ab8316b0dd99bb9cc43",
+      "sourceType": "github",
+      "skillPath": "codex-skill/SKILL.md",
+      "computedHash": "1d97f589137cc6f8247451f13415fe84a10f94b1756f14871e4268c33cbd7abe"
+    },
+    "cli-hub-meta-skill": {
+      "source": "HKUDS/CLI-Anything",
+      "commit": "34f519533bc175d2fe287ab8316b0dd99bb9cc43",
+      "sourceType": "github",
+      "skillPath": "cli-hub-meta-skill/SKILL.md",
+      "computedHash": "dc795a30a4e2a154c735d2e048e005018ef134378fc48556184c7eaa2eef313e"
+    }
+  }
+}

@@ -1224,6 +1224,9 @@
         $yearly_final_gross = '';
         $monthly_final_gross = '';
         $employment_type = '';
+        if (request()->has('emp_type') && request('emp_type') !== '') {
+            $employment_type = request('emp_type');
+        }
         $view_type = '';
 
         if (isset($OfferJobApplication) && count($OfferJobApplication) > 0) {
@@ -1605,9 +1608,11 @@
                                                                                 <span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 0 0 0-6M21 20a5 5 0 0 0-3.5-4.8"/></svg></span> Employment Type
                                                                             </label>
                                                                             <select class="form-select form-select-solid" arial-label="Select Job Type" id="employment_type" name="employment_type">
-                                                                                <option value="0" {{ $employment_type == 0 ? 'selected' : '' }}>Full Time</option>
-                                                                                <option value="1" {{ $employment_type == 1 ? 'selected' : '' }}>Contract</option>
-                                                                                <option value="3" {{ $employment_type == 3 ? 'selected' : '' }}>Part Time</option>
+                                                                                <option value="0" {{ ((string)$employment_type === '0' || strtolower((string)$employment_type) === 'full-time' || strtolower((string)$employment_type) === 'full time') ? 'selected' : '' }}>Full-time</option>
+                                                                                <option value="1" {{ ((string)$employment_type === '1' || strtolower((string)$employment_type) === 'contract') ? 'selected' : '' }}>Contract</option>
+                                                                                <option value="2" {{ ((string)$employment_type === '2' || strtolower((string)$employment_type) === 'freelancer' || strtolower((string)$employment_type) === 'freelance') ? 'selected' : '' }}>Freelancer</option>
+                                                                                <option value="4" {{ ((string)$employment_type === '4' || strtolower((string)$employment_type) === 'internship') ? 'selected' : '' }}>Internship</option>
+                                                                                <option value="3" {{ ((string)$employment_type === '3' || strtolower((string)$employment_type) === 'part time') ? 'selected' : '' }}>Part Time</option>
                                                                             </select>
                                                                             <div class="co-field-hint">Defines contract nature & legal template association</div>
                                                                         </div>

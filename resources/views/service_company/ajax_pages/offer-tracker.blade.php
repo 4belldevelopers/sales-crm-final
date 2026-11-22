@@ -91,7 +91,7 @@
         }
         $expLabel = ($expRaw !== '' && $expRaw != '0') ? ($expRaw . ' Yrs') : '';
 
-        /* ── 2. Job & Client Details ── */
+        /* ── 2. Job & Client Details (Canonical Rule 25 Classification) ── */
         $jobId      = (int) ($row->jobId ?? 0);
         $jobTitle   = ucwords(mb_substr(trim((string) ($row->title ?? 'Untitled Role')), 0, 36));
         $clientFull = $jobId > 0 ? GeneralMethod::companyDetailsByClient($jobId) : '';
@@ -99,40 +99,67 @@
             ? ucwords(mb_substr(trim((string) $clientFull), 0, 40))
             : ucwords(mb_substr(trim((string) ($row->client_name ?? '')), 0, 40));
 
-        /* Job status from pre-batched $jobDetailsMap (0 extra queries), fallback to helper */
-        $jobStatusRaw = 'active';
-        if ($jobId > 0) {
-            if (isset($jobDetailsMap[$jobId])) {
-                $jobStatusRaw = $jobDetailsMap[$jobId]->status ?? 'active';
-            } else {
-                try { $jobStatusRaw = GeneralMethod::jobDetails($jobId)->status ?? 'active'; } catch (\Throwable $e) {}
-            }
+        $jobObj = $jobDetailsMap[$jobId] ?? null;
+
+        $isDirect = false;
+        if (!empty($row->is_direct_client) || !empty($row->is_job_request) || !empty($row->recommendation_id) || (!empty($row->ClientComID) && (int)$row->ClientComID !== (int)$company_id) || (!empty($row->client_comapny_id) && (int)$row->client_comapny_id !== (int)$company_id && (int)$row->client_comapny_id > 0)) {
+            $isDirect = true;
         }
-        $jobStatusLabel = match($jobStatusRaw) {
-            'active'   => 'Hiring',
-            'hold'     => 'Hold',
-            'inactive' => 'Closed',
-            default    => ucfirst($jobStatusRaw),
-        };
-        $jobStatusPillClass = match($jobStatusRaw) {
-            'active'   => 'ot-pill-hiring',
-            'hold'     => 'ot-pill-hold',
-            'inactive' => 'ot-pill-closed',
-            default    => 'ot-pill-neutral',
-        };
 
-        $isOwnJob       = ($row->client_comapny_id ?? 0) == $company_id;
-        $clientType     = $isOwnJob ? 'Internal' : 'Direct Client';
-        $scopePillClass = $isOwnJob ? 'ot-scope-internal' : 'ot-scope-direct';
+        $resolvedClientId = $jobObj->client_id ?? ($row->client_id ?? null);
+        $resolvedSelfCompany = isset($jobObj->client_self_company)
+            ? (int) $jobObj->client_self_company
+            : (isset($row->client_self_company) ? (int) $row->client_self_company : null);
 
-        /* ── 3. Compensation ── */
+        $tenantCompanyName = trim((string) (auth()->user()->company->company_name ?? ''));
+        $clientNameTrim = trim((string) ($clientName ?: ($jobObj->client_name ?? '')));
+
+        if ($isDirect) {
+            $targetTypeLabel = 'Direct Client';
+            $targetTypeClass = 'type-direct';
+            $targetTypeIcon  = 'fas fa-shield-alt';
+            $targetTypeStyle = 'background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;';
+        } elseif ($resolvedSelfCompany === 0 || (!empty($resolvedClientId) && $resolvedSelfCompany !== 1 && !empty($clientNameTrim) && ($tenantCompanyName === '' || strcasecmp($clientNameTrim, $tenantCompanyName) !== 0))) {
+            $targetTypeLabel = 'Internal Client';
+            $targetTypeClass = 'type-internal';
+            $targetTypeIcon  = 'fas fa-building';
+            $targetTypeStyle = 'background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;';
+        } else {
+            $targetTypeLabel = 'My Organization';
+            $targetTypeClass = 'type-my-org';
+            $targetTypeIcon  = 'fas fa-id-badge';
+            $targetTypeStyle = 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;';
+        }
+
+        $isOwnJob = ($targetTypeLabel !== 'Direct Client');
+
+        /* ── 3. Compensation & Employment Type ── */
         $offerAmount    = $row->of_offer_amount ?? '';
         $offerJoinDate  = $row->of_joined_date ?? '';
         $currencyLabel  = $currency[$row->of_offer_currency ?? 0] ?? '₹';
         $modeFull       = $salaryModeOffer[$row->of_offer_mode ?? 0] ?? 'Yearly';
         $modeLabel      = mb_substr($modeFull, 0, 1);
-        $empType        = ($row->employment_type ?? 0) == 1 ? 'Contract' : 'Full-Time';
-        $empLabel       = !empty($row->of_employment_type) ? ucwords((string) $row->of_employment_type) : $empType;
+
+        $employmentTypesList = GeneralMethod::employmentType();
+        $rawEmpTypeVal = $row->employment_type ?? 0;
+        $empType = $employmentTypesList[(int)$rawEmpTypeVal] ?? ($rawEmpTypeVal == 1 ? 'Contract' : 'Full-time');
+        if (!empty($row->of_employment_type)) {
+            $empLabel = ucwords((string) $row->of_employment_type);
+        } else {
+            $empLabel = ucwords((string) $empType);
+        }
+
+        $resolvedEmpVal = 0;
+        if (strtolower($empLabel) === 'contract' || (string)$rawEmpTypeVal === '1') {
+            $resolvedEmpVal = 1;
+        } elseif (str_contains(strtolower($empLabel), 'freelanc') || (string)$rawEmpTypeVal === '2') {
+            $resolvedEmpVal = 2;
+        } elseif (str_contains(strtolower($empLabel), 'intern') || (string)$rawEmpTypeVal === '4') {
+            $resolvedEmpVal = 4;
+        } else {
+            $resolvedEmpVal = 0;
+        }
+
         $isConfidential = ($row->confidential ?? 0) == 1;
 
         if ($isConfidential) {
@@ -340,13 +367,14 @@
                 </div>
             </div>
 
-            <!-- SUB-CARD 2: REQUISITION & CLIENT -->
+            <!-- SUB-CARD 2: JOB DETAILS -->
             <div class="ot-subcard ot-subcard-job">
                 <div class="ot-subcard-head">
-                    <span class="ot-subcard-label">Job &amp; Client</span>
+                    <span class="ot-subcard-label">Job Details</span>
                     <div class="ot-subcard-badges">
-                        <span class="ot-scope-pill {{ $scopePillClass }}">{{ $clientType }}</span>
-                        <span class="ot-job-status-pill {{ $jobStatusPillClass }}">{{ $jobStatusLabel }}</span>
+                        <span class="ot-scope-pill {{ $targetTypeClass }}" style="{{ $targetTypeStyle }}">
+                            <i class="{{ $targetTypeIcon }} me-1"></i>{{ $targetTypeLabel }}
+                        </span>
                     </div>
                 </div>
                 <div class="ot-job-body">
@@ -364,10 +392,11 @@
                 </div>
             </div>
 
-            <!-- SUB-CARD 3: COMPENSATION & STATUS (Mirrors Sub-Card 6 Pipeline & Stage Layout) -->
+            <!-- SUB-CARD 3: COMPENSATION (Mirrors Sub-Card 6 Pipeline & Stage Layout) -->
             <div class="ot-subcard ot-subcard-comp-status {{ $isOwnJob ? 'create_offer ot-clickable-subcard' : '' }}"
                  @if($isOwnJob)
                  data-row-offerid="{{ $row->offer_id ?? '' }}"
+                 data-emp-type="{{ $resolvedEmpVal }}"
                  role="button"
                  tabindex="0"
                  title="Click anywhere on this card to {{ $hasPendingOffer ? 'create' : 'update' }} offer"
@@ -375,7 +404,14 @@
                  title="Client Managed Offer"
                  @endif>
                 <div class="ot-subcard-head">
-                    <span class="ot-subcard-label">Compensation &amp; Status</span>
+                    <span class="ot-subcard-label">Compensation</span>
+                    @if(!$hasPendingOffer && !empty($empLabel))
+                        <span class="ot-micro-pill ot-pill-neutral" title="Employment Type: {{ $empLabel }}">
+                            <i class="fas fa-briefcase me-1"></i>{{ $empLabel }}
+                        </span>
+                    @elseif($hasPendingOffer)
+                        <span class="ot-micro-pill ot-pill-pending" title="Offer Pending">Pending</span>
+                    @endif
                 </div>
                 <div class="ot-comp-status-body">
                     <!-- 1st Row: Amount -->
@@ -391,12 +427,21 @@
                         @endif
                     </div>
 
-                    <!-- 2nd Row: Offer Status Badge (Offer Created, Released, Accepted, Rejected, Expired) -->
+                    <!-- 2nd Row: Employment Type Options (Pending) OR Offer Status Badge (Existing) -->
                     <div class="ot-cs-status-row">
-                        <span class="ot-offer-badge" style="background:{{ $offerBadgeBg }};color:{{ $offerBadgeColor }};border:1px solid {{ $offerBadgeBorder }};" title="{{ $offerBadgeLabel }} — {{ $offerStatusText }}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $offerIconPath }}"/></svg>
-                            <span>{{ $offerBadgeLabel }}</span>
-                        </span>
+                        @if($hasPendingOffer)
+                            <div class="ot-cs-emp-group" role="group" aria-label="Employment Type" onclick="event.stopPropagation();">
+                                <button type="button" class="ot-emp-btn {{ $resolvedEmpVal === 0 ? 'is-active' : '' }}" data-emp-type="0" data-row-offerid="{{ $row->offer_id ?? '' }}" title="Full-time">Full-time</button>
+                                <button type="button" class="ot-emp-btn {{ $resolvedEmpVal === 1 ? 'is-active' : '' }}" data-emp-type="1" data-row-offerid="{{ $row->offer_id ?? '' }}" title="Contract">Contract</button>
+                                <button type="button" class="ot-emp-btn {{ $resolvedEmpVal === 2 ? 'is-active' : '' }}" data-emp-type="2" data-row-offerid="{{ $row->offer_id ?? '' }}" title="Freelancer">Freelancer</button>
+                                <button type="button" class="ot-emp-btn {{ $resolvedEmpVal === 4 ? 'is-active' : '' }}" data-emp-type="4" data-row-offerid="{{ $row->offer_id ?? '' }}" title="Internship">Internship</button>
+                            </div>
+                        @else
+                            <span class="ot-offer-badge" style="background:{{ $offerBadgeBg }};color:{{ $offerBadgeColor }};border:1px solid {{ $offerBadgeBorder }};" title="{{ $offerBadgeLabel }} — {{ $offerStatusText }}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $offerIconPath }}"/></svg>
+                                <span>{{ $offerBadgeLabel }}</span>
+                            </span>
+                        @endif
                     </div>
 
                     <!-- 3rd Row: Change or Update Action Cue -->

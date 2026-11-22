@@ -949,7 +949,7 @@ body { overflow-x: hidden !important; }
 
 .ot-entity-grid {
     display: grid !important;
-    grid-template-columns: minmax(0, 2.35fr) minmax(0, 1.75fr) minmax(0, 1.15fr) minmax(0, 1.05fr) minmax(0, 1.45fr) minmax(0, 1.25fr) !important;
+    grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.7fr) minmax(0, 1.35fr) minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, 1.2fr) !important;
     gap: 8px !important;
     padding: 10px 12px !important;
     width: 100% !important;
@@ -1138,7 +1138,7 @@ body { overflow-x: hidden !important; }
     text-overflow: ellipsis !important;
 }
 
-/* Sub-Card 2: Job & Client */
+/* Sub-Card 2: Job Details */
 .ot-scope-pill {
     font-size: 8px !important;
     font-weight: 700 !important;
@@ -1148,9 +1148,12 @@ body { overflow-x: hidden !important; }
     letter-spacing: 0.2px !important;
     white-space: nowrap !important;
     line-height: 1.3 !important;
+    display: inline-flex !important;
+    align-items: center !important;
 }
-.ot-scope-direct   { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
-.ot-scope-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+.ot-scope-pill.type-direct, .ot-scope-direct   { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
+.ot-scope-pill.type-internal, .ot-scope-internal { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
+.ot-scope-pill.type-my-org { background: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d !important; }
 
 .ot-job-status-pill {
     font-size: 8px !important;
@@ -1288,6 +1291,43 @@ body { overflow-x: hidden !important; }
     align-items: center !important;
     width: 100% !important;
     min-width: 0 !important;
+}
+
+.ot-cs-emp-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 1px 0 !important;
+}
+
+.ot-emp-btn {
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+    color: #475569 !important;
+    font-size: 8.5px !important;
+    font-weight: 600 !important;
+    padding: 1.5px 5px !important;
+    border-radius: 4px !important;
+    line-height: 1.2 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+    font-family: inherit !important;
+}
+
+.ot-emp-btn:hover {
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+}
+
+.ot-emp-btn.is-active {
+    background: #eff6ff !important;
+    border-color: #3b82f6 !important;
+    color: #1d4ed8 !important;
+    font-weight: 700 !important;
 }
 
 .ot-offer-badge {
@@ -1746,7 +1786,7 @@ body { overflow-x: hidden !important; }
     .ot-pipe-card-v2 { padding: 8px 10px 9px 20px !important; min-width: 132px !important; }
 
     .ot-entity-grid {
-        grid-template-columns: minmax(0, 2.35fr) minmax(0, 1.75fr) minmax(0, 1.15fr) minmax(0, 1.05fr) minmax(0, 1.45fr) minmax(0, 1.25fr) !important;
+        grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.7fr) minmax(0, 1.35fr) minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, 1.2fr) !important;
         gap: 6px !important;
         padding: 8px 10px !important;
     }
@@ -1857,33 +1897,67 @@ body { overflow-x: hidden !important; }
             </div>
 
             <div class="dropdown">
-                <button type="button" class="ot-hdr-btn" id="otMoreActionsBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span>More Actions</span>
+                <button type="button" class="ot-hdr-btn" id="otOfferSettingsBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Offer Configuration & Settings">
+                    <i class="fas fa-cog text-primary"></i>
+                    <span>Offer Settings</span>
                     <i class="fas fa-chevron-down" style="font-size:10px;color:#64748b;"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end ot-dropdown-menu" aria-labelledby="otMoreActionsBtn">
+                <ul class="dropdown-menu dropdown-menu-end ot-dropdown-menu" aria-labelledby="otOfferSettingsBtn" style="min-width: 250px;">
                     <li>
-                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="selectOfferTab('pending')">
-                            <span class="ot-drop-ico rst"><i class="far fa-clock"></i></span>
+                        <h6 class="dropdown-header text-uppercase text-muted fw-bolder fs-8 tracking-wider px-4 pt-2 pb-1">Offer Configuration</h6>
+                    </li>
+                    <li>
+                        <a class="ot-dropdown-item" href="{{ route('service_company.account.index') }}#offerterms" target="_blank">
+                            <span class="ot-drop-ico pdf"><i class="fas fa-file-contract"></i></span>
                             <span>
-                                <span class="ot-drop-title">Filter Pending Offers</span>
-                                <span class="ot-drop-sub">Review offers awaiting action</span>
+                                <span class="ot-drop-title">Offer Letter Templates</span>
+                                <span class="ot-drop-sub">Manage legal terms &amp; wording</span>
                             </span>
                         </a>
                     </li>
                     <li>
-                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="selectOfferTab('rejected')">
-                            <span class="ot-drop-ico rst"><i class="fas fa-times-circle"></i></span>
+                        <a class="ot-dropdown-item" href="{{ route('service_company.account.index') }}#offercomponent" target="_blank">
+                            <span class="ot-drop-ico csv"><i class="fas fa-coins"></i></span>
                             <span>
-                                <span class="ot-drop-title">Filter Rejected Offers</span>
-                                <span class="ot-drop-sub">Review candidate declined offers</span>
+                                <span class="ot-drop-title">Compensation Components</span>
+                                <span class="ot-drop-sub">Salary, bonus &amp; allowance rules</span>
+                            </span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="ot-dropdown-item" href="{{ route('service_company.account.index') }}#interview_Stage" target="_blank">
+                            <span class="ot-drop-ico rst"><i class="fas fa-tasks"></i></span>
+                            <span>
+                                <span class="ot-drop-title">Approval Stages &amp; Pipeline</span>
+                                <span class="ot-drop-sub">Stage transitions &amp; sign-offs</span>
                             </span>
                         </a>
                     </li>
                     <li><hr class="dropdown-divider my-1 border-gray-200"></li>
                     <li>
+                        <h6 class="dropdown-header text-uppercase text-muted fw-bolder fs-8 tracking-wider px-4 pt-1 pb-1">Quick Filters</h6>
+                    </li>
+                    <li>
+                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="selectOfferTab('pending')">
+                            <span class="ot-drop-ico rst"><i class="far fa-clock"></i></span>
+                            <span>
+                                <span class="ot-drop-title">Pending Offers</span>
+                                <span class="ot-drop-sub">Review offers awaiting creation</span>
+                            </span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="ot-dropdown-item" href="javascript:void(0);" onclick="selectOfferTab('rejected')">
+                            <span class="ot-drop-ico rst"><i class="fas fa-times-circle text-danger"></i></span>
+                            <span>
+                                <span class="ot-drop-title">Rejected Offers</span>
+                                <span class="ot-drop-sub">Review candidate declined offers</span>
+                            </span>
+                        </a>
+                    </li>
+                    <li>
                         <a class="ot-dropdown-item" href="javascript:void(0);" onclick="window.jeroOfferTracker && window.jeroOfferTracker.resetFilters()">
-                            <span class="ot-drop-ico csv"><i class="fas fa-undo-alt"></i></span>
+                            <span class="ot-drop-ico csv"><i class="fas fa-undo-alt text-primary"></i></span>
                             <span>
                                 <span class="ot-drop-title">Reset All Filters</span>
                                 <span class="ot-drop-sub">Clear search, location &amp; tab</span>
@@ -2795,6 +2869,50 @@ body { overflow-x: hidden !important; }
             },
             error: function() {
                 $('#application_fwd_offer_body_content').html('<div style="padding:40px;text-align:center;color:#ef4444;">Failed to load. Please try again.</div>');
+            }
+        });
+    });
+
+    /* Employment Type Selector click handling on Compensation subcard */
+    $(document).on('click', '.ot-emp-btn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        var empType = $(this).data('emp-type');
+        var offerId = $(this).data('row-offerid');
+        var $subcard = $(this).closest('.ot-subcard-comp-status');
+        $subcard.attr('data-emp-type', empType);
+        $subcard.find('.ot-emp-btn').removeClass('is-active');
+        $(this).addClass('is-active');
+
+        $('#kt_create_offer_toggle').trigger('click');
+        var url = "{{ route('service_company.job-applications.create_offer', ':id') }}";
+        url = url.replace(':id', offerId) + '?emp_type=' + encodeURIComponent(empType);
+        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+        $.ajax({
+            type: 'GET',
+            url: url,
+            beforeSend: function () {
+                $('#offer_create_show_right_bar').html('<img src="' + baseurl + '" height="35px" width="100%">');
+            },
+            success: function (response) {
+                if (response.status === 'permisionInfo') {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            text: response.view,
+                            icon: "warning",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok",
+                            customClass: { confirmButton: "btn btn-primary" }
+                        });
+                    }
+                    $('#kt_create_offer_toggle').trigger('click');
+                    return false;
+                }
+                $('#offer_create_show_right_bar').html(response.view);
+                if ($('#employment_type').length) {
+                    $('#employment_type').val(empType).trigger('change');
+                }
             }
         });
     });

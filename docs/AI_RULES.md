@@ -145,3 +145,48 @@ The platform infrastructure is provisioned with high-performance dedicated resou
   4. **Pending Direct Client Job Request (`is_job_request === true`):**
      - **Dual Tag Requirement:** Render **`Direct Client`** (`.type-direct` Emerald `#ecfdf5` / `#059669`) + **`Job Request`** (`fas fa-handshake`, `.type-request`: Background `#f5f3ff`, Text `#7c3aed`, Border `1px solid #ddd6fe`) beside the status badge.
      - **KPI Card Active Combination (`data-kpi="job_request"`):** Background `#faf5ff`, Border `#c084fc`, Ring/Icon `#9333ea`, Count `#6b21a8`, Label `#7e22ce` (`Job Requests`)
+
+
+24. **Client-First Resume Parser Engine Parity (`JeroIdentityEngine`):**
+- All resume parsing and ATS field extraction MUST run 100% in client browser RAM (`User RAM + WebAssembly + Client NLP`) with 0% server/DB read strain (ADR 0008). Never introduce backend server parsing endpoints.
+- Name resolution uses 5-vector identity triangulation (spatial decay + bounded email decomposition + strict zero-authority filename tie-breaker capped at +35 pts + negative blacklist + 250+ role truncator).
+- Current company uses the Employment Chronology Resolver (month/year precision, ongoing active roles prioritized, project descriptions ignored), Contextual Academic Guards, and Canonical Employer Knowledge Graph (`ServiceNow`, `PwC`, `EY`, `HCLTech`, `HP`, `CRED`) with a 3-tier confidence threshold gate ($\ge 140$ High, $80\text{--}139$ Medium, $< 80$ Low/Unconfirmed).
+- Maintain identical parity across all 4 parser bridge files: `public/js/jero-client-parser.js`, `js/jero-client-parser.js`, `resources/views/service_company/job-applications/jero-client-parser.blade.php`, and `resources/views/service_company/bench-candidates/jero-bench-parser.blade.php`.
+
+25. **Mandatory `/unslop` UI/UX Review Standard (Zero AI Slop in Frontends):**
+- **Zero AI Slop Hallmark Policy:** All frontend views, Blade templates, drawers, modals, tables, and cards authored or refactored by AI agents **MUST AND ONLY** adhere to the `/unslop` craft standard (`.agents/skills/unslop/` and `~/.gemini/config/skills/unslop/`).
+- **Prohibited Clichés:** Ban all AI slop hallmarks:
+  - Zero neon or violet/pink gradients on buttons, borders, backgrounds, or cards.
+  - Zero colored glowing drop-shadows (`shadow-[0_0_20px_...]`).
+  - Zero emoji labels in navigation, counts, or status badges (e.g. 🏠, ✨, 🚀, 💰).
+  - Zero arbitrary CSS spacing (`mt-[13px]`, `h-[31px]`, `px-3.5`).
+  - Zero marketing hype copy (*"Supercharge"*, *"Unlock"*, *"Revolutionary"*).
+  - Zero floating 3D glossy blobs, orbs, or abstract glass graphics.
+  - Zero unneeded looping animations (`animate-pulse`, `animate-ping`).
+- **The 9-Pass Redline Sequence:**
+  1. *Spacing:* Strict 4px rhythm (`4px`, `8px`, `12px`, `16px`, `20px`, `24px`).
+  2. *Color:* Quiet chrome with tinted neutrals and crisp hairlines (`#e2e8f0` at 6–10% opacity); vivid color reserved for 1–2 focal content items.
+  3. *Icons:* Semantic FontAwesome line icons at uniform box sizes.
+  4. *Copy:* Concise, factual B2B statements without exclamation marks or trailing periods.
+  5. *Type:* Poppins enterprise scale; max 14px on data tables; tabular figures (`tabular-nums`) on all numeric columns.
+  6. *Layout:* 15.6" screen fit (**1366×768** baseline), 0px horizontal overflow, Rule 20 Card + Sub-Card architecture.
+  7. *Details:* Nested border radius math ($r_{\text{inner}} = r_{\text{outer}} - \text{padding}$); quiet micro-badges; distinct hover/active states.
+  8. *Visuals:* Authentic product previews or concrete domain metaphors over generic AI illustrations.
+  9. *Motion:* Subtle, purposeful 150ms–200ms ease-out transitions only.
+
+26. **Mandatory Production-Ready UI Transitions & Motion Standard (`transitions.dev` & Zero-Jank Motion):**
+- All animations, drawers, popovers, dropdowns, modal reveals, number changes, tabs, and micro-interactions **MUST AND ONLY** follow the `transitions.dev` motion standard (`.agents/skills/transitions-dev/` and `~/.gemini/config/skills/transitions-dev/`).
+- **Compositor-Only Execution:** Strictly use GPU compositor-only properties (`transform`, `opacity`, `filter`). Strictly ban layout thrashing properties (`height`, `width`, `top`, `left`, `margin`, `padding`) and arbitrary `transition: all 0.3s ease` on hot interaction paths.
+- **Tokenized Easing Physics:** Use shared cubic-bezier curves (`--ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1)`, `--ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1)`).
+- **Mandatory Accessibility:** Every motion snippet must ship built-in `@media (prefers-reduced-motion: reduce)` media query overrides.
+
+27. **Official GSAP Animation Skills Standard (`gsap-skills`):**
+- For complex JavaScript-driven animation sequences, multi-step timeline choreography (`gsap.timeline()`), scroll-driven scrubbing/pinning (`ScrollTrigger`), SVG morphing, coordinate flip animations (`Flip`), or framework lifecycle-safe components (React `useGSAP()`, Vue), AI agents **MUST AND ONLY** follow the official GreenSock skills (`.agents/skills/gsap-*` and `~/.gemini/config/skills/gsap-*`).
+- **Compositor-Only Transforms:** Always enforce transforms (`x`, `y`, `scale`), `autoAlpha` over `opacity`, explicit plugin registration (`gsap.registerPlugin`), strict unmount cleanup to eliminate memory leaks, and `@media (prefers-reduced-motion: reduce)` via `gsap.matchMedia()`.
+- **Motion Scope Division:** CSS transitions handle micro-interactions (`transitions.dev`); GSAP handles orchestrated and scrubbed JS timelines.
+- **100% Free Public NPM:** All GSAP plugins are 100% free under public npm (`npm install gsap`) — never hallucinate Club GSAP memberships or private registry tokens.
+
+28. **Mandatory Agent-Native CLI Standard (`CLI-Anything` & `cli-hub`):**
+- **Zero-Token-Tax Agent Tools:** For internal developer tooling, headless document engines, background testing harnesses, ATS parser benchmarking, and CQRS tenancy verification across JERO, AI agents **MUST AND ONLY** follow the agent-native CLI methodology (`.agents/skills/cli-anything/`, `.agents/skills/cli-hub-meta-skill/`, and `cli-hub` executable).
+- **Mandatory `--json` & Deterministic Exit Codes:** Always expose structured `--json` output flags alongside human-readable outputs. Enforce semantic exit codes (`0` ok, `1` execution failure, `2` syntax error, `3` preflight gap).
+- **Discovery via `SKILL.md`:** Package every internal tool harness with a concise `SKILL.md` so AI coding agents can discover and run tools on-demand with 0 prompt token tax upfront, strictly replacing bloated MCP server schemas and fragile visual GUI clicking (computer-use).

@@ -7771,7 +7771,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $offerPermision = 66;
         }
         $employment_type = GeneralMethod::employmentType();
-        $of_employment_type = $employment_type[$request->employment_type];
+        $of_employment_type = $employment_type[$request->employment_type] ?? (is_numeric($request->employment_type) ? ($employment_type[(int) $request->employment_type] ?? 'Full-time') : ($request->employment_type ?: 'Full-time'));
         // dd($of_employment_type,$request->all());
 
         $permisiionCheck = GeneralMethod::permissioncheck($offerPermision, auth()->user()->id);
