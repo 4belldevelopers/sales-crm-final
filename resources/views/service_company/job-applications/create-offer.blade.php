@@ -909,41 +909,72 @@
             opacity: 1 !important;
         }
 
-        /* ── Action Pills and Badges ── */
-        .co-btn-add-pill {
-            background: #009ef7 !important;
-            border-color: #009ef7 !important;
-            color: #fff !important;
+        /* ── Enterprise Add Component Buttons (Rule 20 Enterprise Standard) ── */
+        .co-btn-add-main {
+            background: #0284c7 !important;
+            color: #ffffff !important;
+            border: 1px solid #0369a1 !important;
+            border-radius: 7px !important;
+            font-size: 11.5px !important;
             font-weight: 600 !important;
-            font-size: 12px !important;
-            border-radius: 8px !important;
-            padding: 7px 14px !important;
-            box-shadow: 0 1px 3px rgba(0, 158, 247, 0.25) !important;
-            transition: all .15s ease !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
+            padding: 5px 14px !important;
+            height: 32px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            cursor: pointer !important;
+            line-height: 1 !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 2px rgba(2, 132, 199, 0.25) !important;
+        }
+        .co-btn-add-main:hover {
+            background: #0369a1 !important;
+            border-color: #075985 !important;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35) !important;
+        }
+        .co-btn-add-additional {
+            background: #7c3aed !important;
+            color: #ffffff !important;
+            border: 1px solid #6d28d9 !important;
+            border-radius: 7px !important;
+            font-size: 11.5px !important;
+            font-weight: 600 !important;
+            padding: 5px 14px !important;
+            height: 32px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            cursor: pointer !important;
+            line-height: 1 !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 2px rgba(124, 58, 237, 0.25) !important;
+        }
+        .co-btn-add-additional:hover {
+            background: #6d28d9 !important;
+            border-color: #5b21b6 !important;
+            box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35) !important;
         }
         .co-btn-add-pill {
-            background: #009ef7 !important;
+            background: #0284c7 !important;
             color: #ffffff !important;
-            border: 1px solid #009ef7 !important;
-            border-radius: 6px !important;
-            font-size: 11px !important;
+            border: 1px solid #0369a1 !important;
+            border-radius: 7px !important;
+            font-size: 11.5px !important;
             font-weight: 600 !important;
-            padding: 4px 10px !important;
-            height: 28px !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-            line-height: 1;
+            padding: 5px 14px !important;
+            height: 32px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            cursor: pointer !important;
+            line-height: 1 !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 2px rgba(2, 132, 199, 0.25) !important;
         }
         .co-btn-add-pill:hover {
-            background: #008be3 !important;
-            border-color: #008be3 !important;
-            box-shadow: 0 2px 6px rgba(0, 158, 247, 0.25) !important;
+            background: #0369a1 !important;
+            border-color: #075985 !important;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35) !important;
         }
         .co-finalctc-badge {
             font-size: 10px !important;
@@ -1075,9 +1106,66 @@
             .co-preview-col .co-preview-grid { grid-template-columns: 1fr 1fr 1fr; }
         }
 
+        /* ── Distinct 4-Card Enterprise Visual Differentiation Standard (Rule 20) ── */
+        /* Card 1: Compensation Details (Warm Slate & Crisp Pure White) */
+        .co-details-card {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        }
+        .co-details-card > .card-header {
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+
+        /* Card 2: Main Components (Deep Azure / Ice Blue) */
+        .co-main-components-card {
+            background: #f0f7ff !important;
+            border: 1px solid #bfdbfe !important;
+            box-shadow: 0 1px 4px rgba(37, 99, 235, 0.06) !important;
+        }
+        .co-main-components-card > .card-header {
+            background: #e0effe !important;
+            border-bottom: 1px solid #bae0fd !important;
+        }
+        .co-main-components-card .co-table-subcard {
+            background: #ffffff !important;
+            border: 1px solid #bfdbfe !important;
+        }
+
+        /* Card 3: Additional Components (Royal Violet / Soft Lavender) */
+        .co-additional-card {
+            background: #faf5ff !important;
+            border: 1px solid #e9d5ff !important;
+            box-shadow: 0 1px 4px rgba(124, 58, 237, 0.06) !important;
+        }
+        .co-additional-card > .card-header {
+            background: #f3e8ff !important;
+            border-bottom: 1px solid #e9d5ff !important;
+        }
+        .co-additional-card .co-table-subcard {
+            background: #ffffff !important;
+            border: 1px solid #e9d5ff !important;
+        }
+
+        /* Card 4: Final CTC (Mint Emerald / Financial Green) */
+        .co-finalctc-card {
+            background: #f0fdf4 !important;
+            border: 1px solid #bbf7d0 !important;
+            box-shadow: 0 1px 4px rgba(5, 150, 105, 0.06) !important;
+        }
+        .co-finalctc-card > .card-header {
+            background: #dcfce7 !important;
+            border-bottom: 1px solid #bbf7d0 !important;
+        }
+        .co-finalctc-card .co-table-subcard {
+            background: #ffffff !important;
+            border: 1px solid #bbf7d0 !important;
+        }
+
         /* ── Clean, modern component tables (Rule 20 Mandatory Table Header Standard) ── */
-        .co-components-card { border: 1px solid #e2e8f0; border-radius: 10px; }
-        #pointList, #bonusList { border-collapse: separate; border-spacing: 0; width: 100%; }
+        .co-components-card { border-radius: 10px; }
+        #pointList, #bonusList { border-collapse: separate; border-spacing: 0; width: 100% !important; min-width: 960px !important; }
         #pointList thead th, #bonusList thead th, #final_pay thead th {
             text-transform: uppercase !important; color: #475569 !important; font-size: 11px !important;
             font-weight: 700 !important; padding: 8px 10px !important; background: #f1f5f9 !important;
@@ -1090,26 +1178,107 @@
         }
         #pointList tbody tr:hover td, #bonusList tbody tr:hover td { background: #f8fafc !important; }
         /* inputs & selects read like clean inline cells */
-        #pointList .form-control, #bonusList .form-control,
-        #pointList .form-select, #bonusList .form-select {
-            background: #fff !important; border: 1px solid #cbd5e1 !important; border-radius: 7px !important;
-            box-shadow: none !important; min-height: 38px; height: 38px; font-size: 13px !important;
-            color: #1e293b !important; padding: 4px 10px !important;
+        #pointList .form-control, #bonusList .form-control {
+            background: #fff !important; border: 1px solid #cbd5e1 !important; border-radius: 6px !important;
+            box-shadow: none !important; min-height: 38px; height: 38px; font-size: 12.5px !important;
+            color: #1e293b !important; padding: 4px 10px !important; transition: all .15s ease !important;
         }
+        #pointList .form-control:focus, #bonusList .form-control:focus {
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+        }
+
+        /* Editable Component Name input boxes — crisp, clear editable appearance */
         #pointList .offer_points, #bonusList .offer_points,
-        #pointList .bonus_points, #bonusList .bonus_points {
-            font-weight: 600 !important; border-color: transparent !important; background: transparent !important; padding-left: 2px !important;
+        #pointList .bonus_points, #bonusList .bonus_points,
+        #pointList .offer_point_hourly, #bonusList .offer_point_hourly {
+            background: #ffffff !important; border: 1px solid #cbd5e1 !important; border-radius: 6px !important;
+            font-weight: 600 !important; font-size: 12.5px !important; color: #0f172a !important; padding: 6px 10px !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important; transition: all 0.15s ease !important;
         }
-        /* Name cell becomes a flex row so the drag-handle/number/badge sit inline
-           with the name input without truncating long salary components. */
-        #pointList tbody td:first-child, #bonusList tbody td:first-child { min-width: 300px !important; width: 33% !important; }
-        #pointList thead th:first-child, #bonusList thead th:first-child { min-width: 300px !important; width: 33% !important; }
-        .co-name-cell { display: flex !important; align-items: center; gap: 8px; flex-wrap: nowrap; width: 100%; }
-        .co-name-cell .form-control { flex: 1 1 auto; min-width: 180px !important; width: 100% !important; }
+        #pointList .offer_points:hover, #bonusList .offer_points:hover,
+        #pointList .bonus_points:hover, #bonusList .bonus_points:hover,
+        #pointList .offer_point_hourly:hover, #bonusList .offer_point_hourly:hover {
+            border-color: #94a3b8 !important;
+        }
+        #pointList .offer_points:focus, #bonusList .offer_points:focus,
+        #pointList .bonus_points:focus, #bonusList .bonus_points:focus,
+        #pointList .offer_point_hourly:focus, #bonusList .offer_point_hourly:focus {
+            border-color: #009ef7 !important; background: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+        }
+
+        /* Dropdown Select Indicators (Applicable & Condition) — High-contrast SVG chevron arrow */
+        #pointList .form-select.basic_view,
+        #bonusList .form-select.bonus_view,
+        #pointList .form-select.option_salarymode,
+        #pointList .form-select.option_salarymode_hourly,
+        #bonusList .form-select.bonus_option_salarymode,
+        #bonusList .form-select.bonus_option_salarymode_hourly,
+        .co-conf-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 8px center !important;
+            background-size: 13px 13px !important;
+            background-color: #ffffff !important;
+            padding-right: 26px !important;
+            padding-left: 8px !important;
+            cursor: pointer !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            color: #0f172a !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            transition: all 0.15s ease !important;
+            width: 100% !important;
+        }
+        #pointList .form-select.basic_view:hover,
+        #bonusList .form-select.bonus_view:hover,
+        #pointList .form-select.option_salarymode:hover,
+        #pointList .form-select.option_salarymode_hourly:hover,
+        #bonusList .form-select.bonus_option_salarymode:hover,
+        #bonusList .form-select.bonus_option_salarymode_hourly:hover,
+        .co-conf-select:hover {
+            border-color: #94a3b8 !important;
+            background-color: #f8fafc !important;
+        }
+        #pointList .form-select.basic_view:focus,
+        #bonusList .form-select.bonus_view:focus,
+        #pointList .form-select.option_salarymode:focus,
+        #pointList .form-select.option_salarymode_hourly:focus,
+        #bonusList .form-select.bonus_option_salarymode:focus,
+        #bonusList .form-select.bonus_option_salarymode_hourly:focus,
+        .co-conf-select:focus {
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+            background-color: #ffffff !important;
+        }
+
+        /* Name cell becomes a flex row so the number, pencil icon, and badge sit inline */
+        #pointList tbody td:first-child, #bonusList tbody td:first-child { min-width: 330px !important; width: 36% !important; }
+        #pointList thead th:first-child, #bonusList thead th:first-child { min-width: 330px !important; width: 36% !important; }
+        .co-name-cell { display: flex !important; align-items: center; gap: 6px; flex-wrap: nowrap; width: 100%; }
+        .co-name-cell .form-control { flex: 1 1 auto; min-width: 170px !important; width: 100% !important; }
         .co-name-cell .co-row-lead, .co-name-cell .co-comp-badge { flex: 0 0 auto; }
-        .co-drag-handle { flex-shrink: 0; color: #94a3b8; font-size: 13px; cursor: grab; user-select: none; }
-        .co-row-num { color: #64748b; font-size: 12px; font-weight: 600; min-width: 16px; text-align: center; }
-        .co-comp-badge { display: inline-block; font-size: 10px !important; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin: 0; vertical-align: middle; white-space: nowrap; }
+        .co-row-lead { display: inline-flex !important; align-items: center !important; gap: 5px !important; margin-right: 6px !important; vertical-align: middle !important; flex-shrink: 0 !important; }
+        .co-row-num {
+            color: #475569 !important; font-size: 11px !important; font-weight: 700 !important;
+            min-width: 18px !important; height: 18px !important; line-height: 18px !important; text-align: center !important;
+            background: #f1f5f9 !important; border-radius: 4px !important; border: 1px solid #e2e8f0 !important; display: inline-block !important;
+        }
+        .co-name-edit-icon {
+            color: #94a3b8 !important; font-size: 10px !important; transition: color 0.15s ease !important; cursor: pointer !important;
+        }
+        .co-name-cell:hover .co-name-edit-icon { color: #009ef7 !important; }
+        .co-comp-badge { display: inline-block !important; font-size: 9.5px !important; font-weight: 700 !important; padding: 2px 7px !important; border-radius: 99px !important; margin: 0 0 0 6px !important; vertical-align: middle !important; white-space: nowrap !important; flex-shrink: 0 !important; }
+        .co-comp-badge--main { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }   /* Main = blue/indigo */
+        .co-comp-badge--add  { background: #f5f0ff !important; color: #7c3aed !important; border: 1px solid #ddd6fe !important; }   /* Additional = violet */
+
         /* Monthly / Annually preview inputs — muted, right-aligned, tabular figures */
         #pointList .offer_monthly, #pointList .offer_yearly,
         #bonusList .bonus_offer_monthly, #bonusList .bonus_offer_yearly,
@@ -1145,10 +1314,9 @@
         #bonusList tfoot tr.co-total-row input { background: transparent !important; color: #7c3aed !important; font-weight: 700 !important; border-color: transparent !important; }
         /* Final CTC: header sits OUTSIDE the colour block; only the total row is tinted GREEN.
            Same box height/font-size as Total Main/Additional (reuse their input + th rules). */
-        .co-finalctc-card { border: 1px solid #b7ebc6 !important; border-radius: 10px; }
         /* table-layout:fixed makes the declared column widths authoritative (not content-based),
            so Allocation/Currency/Monthly/Annually line up exactly under Total Main/Additional's columns. */
-        #final_pay { background: transparent; border: none; margin-top: 0; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+        #final_pay { background: transparent; border: none; margin-top: 0; border-collapse: separate; border-spacing: 0; table-layout: fixed; width: 100% !important; min-width: 960px !important; }
         #final_pay thead th {
             background: #f1f5f9 !important; border-bottom: 1px solid #e2e8f0 !important; color: #475569 !important;
             font-size: 11px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: .5px !important;
@@ -1166,8 +1334,8 @@
         #final_pay tfoot input[value*="Total CTC"] { color: #065f46 !important; }
 
         /* Applicable column: widen so "Annually & Monthly" shows fully */
-        #pointList .basic_view, #bonusList .bonus_view { min-width: 120px !important; width: auto !important; }
-        #pointList thead th:nth-child(2), #bonusList thead th:nth-child(2) { min-width: 120px; }
+        #pointList .basic_view, #bonusList .bonus_view { min-width: 140px !important; width: 100% !important; }
+        #pointList thead th:nth-child(2), #bonusList thead th:nth-child(2) { min-width: 140px; }
 
         /* "%" INSIDE the Allocation input box (data rows); "×" multiplier sits in the spacer cell */
         .co-mult-sign {
@@ -1248,13 +1416,7 @@
         /* Disabled (template) row's delete button stays visibly inert, not identical-looking-but-broken */
         #pointList .remove_points:disabled, #bonusList .remove_points:disabled { background: #f4f4f6 !important; color: #c1c5cc !important; cursor: not-allowed; }
 
-        /* ── Row #, drag-handle, Main/Additional badge — injected by JS (coEnhanceRows) ── */
-        .co-row-lead { display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; vertical-align: middle; }
-        .co-drag-handle { color: #c1c5cc; font-size: 12px; line-height: 1; cursor: grab; letter-spacing: -1px; user-select: none; }
-        .co-row-num { color: #a1a5b7; font-size: 12px; font-weight: 600; min-width: 14px; display: inline-block; }
-        .co-comp-badge { display: inline-block; font-size: 10px !important; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin: 0; vertical-align: middle; white-space: nowrap; }
-        .co-comp-badge--main { background: #eef3ff !important; color: #4f46e5 !important; }   /* Main = blue/indigo */
-        .co-comp-badge--add  { background: #f5f0ff !important; color: #7c3aed !important; }   /* Additional = violet, matches the Additional card's total-row theme */
+        /* ── Row # & Main/Additional badge styles handled above in lines 1262-1280 ── */
 
         /* ── Additional-components info line ── */
         .co-info-line { font-size: 12px; color: #7239ea; font-weight: 600; margin: 6px 0 12px; }
@@ -2371,7 +2533,7 @@
                                             </div>
 
                                             <div class="col-lg-12">
-                                                <div class="card mb-5 mb-xl-5 mx-2 co-main-card co-components-card">
+                                                <div class="card mb-5 mb-xl-5 mx-2 co-main-card co-components-card co-main-components-card">
                                                     <div class="card-header co-card-header">
                                                         <div class="d-flex align-items-center gap-2">
                                                             <span class="co-card-header-icon co-card-header-icon--indigo">
@@ -2386,7 +2548,7 @@
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <button type="button" class="btn btn-sm btn-primary co-btn-add-pill" onclick="$('#pointList').find('.addRowBtn').first().trigger('click')">
+                                                            <button type="button" class="btn btn-sm co-btn-add-main" onclick="$('#pointList').find('.addRowBtn').first().trigger('click')">
                                                                 <i class="fas fa-plus fs-8 me-1"></i> Add Main Component
                                                             </button>
                                                         </div>
@@ -2403,22 +2565,22 @@
                                                             <thead>
                                                                 <tr class="fw-bolder text-muted other_section {{ $section_other }}"
                                                                     role="row">
-                                                                    <th class="sorting_disabled" style="width: 33% !important; min-width: 300px;">Component Name</th>
-                                                                    <th class="sorting_disabled" style="width: 12% !important; min-width: 125px;">Applicable</th>
-                                                                    <th class="sorting_disabled" style="width: 10% !important; min-width: 85px;">Allocation (%)</th>
+                                                                    <th class="sorting_disabled" style="width: 36% !important; min-width: 330px;">Component Name</th>
+                                                                    <th class="sorting_disabled" style="width: 14% !important; min-width: 140px;">Applicable</th>
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px;">Allocation (%)</th>
                                                                     <th class="sorting_disabled text-center" style="width: 2% !important; min-width: 20px; padding: 0 !important;">&nbsp;</th>
-                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 80px;">Condition</th>
-                                                                    <th class="sorting_disabled change_text_first text-end" style="width: 15% !important; min-width: 110px;">Monthly</th>
-                                                                    <th class="sorting_disabled change_text_second text-end" style="width: 15% !important; min-width: 110px;">{{$first_text}}</th>
+                                                                    <th class="sorting_disabled" style="width: 10% !important; min-width: 95px;">Condition</th>
+                                                                    <th class="sorting_disabled change_text_first text-end" style="width: 12% !important; min-width: 105px;">Monthly</th>
+                                                                    <th class="sorting_disabled change_text_second text-end" style="width: 13% !important; min-width: 110px;">{{$first_text}}</th>
                                                                     <th class="sorting_disabled text-center" style="width: 4% !important; min-width: 44px;">Action</th>
                                                                 </tr>
                                                                 <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}"
                                                                     role="row">
-                                                                    <th class="sorting_disabled" style="width: 45% !important; min-width: 320px;">Component Name</th>
-                                                                    <th class="sorting_disabled" style="width: 12% !important; min-width: 85px;">Allocation (%)</th>
+                                                                    <th class="sorting_disabled" style="width: 50% !important; min-width: 380px;">Component Name</th>
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px;">Allocation (%)</th>
                                                                     <th class="sorting_disabled text-center" style="width: 2% !important; min-width: 20px; padding: 0 !important;">&nbsp;</th>
-                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 80px;">Condition</th>
-                                                                    <th class="sorting_disabled change_text text-end" style="width: 28% !important; min-width: 140px;">{{$secont_text}}</th>
+                                                                    <th class="sorting_disabled" style="width: 10% !important; min-width: 95px;">Condition</th>
+                                                                    <th class="sorting_disabled change_text text-end" style="width: 25% !important; min-width: 160px;">{{$secont_text}}</th>
                                                                     <th class="sorting_disabled text-center" style="width: 4% !important; min-width: 44px;">Action</th>
                                                                 </tr>
                                                             </thead>
@@ -2430,7 +2592,7 @@
                                                                         @foreach ($offer['Basic_offer_points'] as $key => $basic)
                                                                             <tr class="other_section other_section_row row-template {{ $key > 0 ? 'remove_row' : '' }} {{ $section_other }}"
                                                                                 role="row">
-                                                                                <td class="" style="width: 33% !important; min-width: 300px;">
+                                                                                <td class="" style="width: 36% !important; min-width: 330px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_points"
                                                                                         name="offer_point[]"
@@ -2440,7 +2602,7 @@
                                                                                         value="{{ $basic->basic_poins }}"
                                                                                         placeholder="Enter Point">
                                                                                 </td>
-                                                                                <td class="" style="width: 12% !important; min-width: 125px;">
+                                                                                <td class="" style="width: 14% !important; min-width: 140px;">
                                                                                     <select &nbsp="" class="form-select form-select-solid basic_view" arial-label="Select  View" name="basic_view[]" id="basic_view_{{ $basic->id }}" data-id="{{ $basic->id }}"
                                                                                     data-offerid="{{ $basic->id }}"
                                                                                     style="width: 100%;display: initial; ">
@@ -2450,7 +2612,7 @@
                                                                                     </select>
                                                                                 </td>
 
-                                                                                <td class="" style="width: 10% !important; min-width: 85px;">
+                                                                                <td class="" style="width: 9% !important; min-width: 85px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-select-solid option_percentage"
                                                                                         name="option_percentage[]"
@@ -2461,7 +2623,7 @@
                                                                                         placeholder="0">
                                                                                 </td>
                                                                                 <td class="text-center" style="width: 2% !important; min-width: 20px; vertical-align: middle; padding: 0 !important;"> <span class="co-mult-sign">&times;</span> </td>
-                                                                                <td class="" style="width: 9% !important; min-width: 80px;">
+                                                                                <td class="" style="width: 10% !important; min-width: 95px;">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid option_salarymode"
                                                                                         arial-label="Select Annual Salary"
@@ -2480,7 +2642,7 @@
                                                                                             @endif
                                                                                     </select>
                                                                                 </td>
-                                                                                <td class="" style="width: 15% !important; min-width: 110px;">
+                                                                                <td class="" style="width: 12% !important; min-width: 105px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_monthly"
                                                                                         name="offer_monthly[]"
@@ -2490,7 +2652,7 @@
                                                                                         value="{{ $basic->basic_monthly }}"
                                                                                         placeholder="0.00">
                                                                                 </td>
-                                                                                <td class="" style="width: 15% !important; min-width: 110px;">
+                                                                                <td class="" style="width: 13% !important; min-width: 110px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_yearly {{ $key > 0 ? 'other_salary_get' : 'basic_salary_get' }}"
                                                                                         name="offer_yearly[]"
@@ -2542,7 +2704,7 @@
 
                                                                             <tr class="hourly_section hourly_section_row row-template {{ $key > 0 ? 'remove_row' : '' }} {{ $section_hourly }}"
                                                                                 role="row">
-                                                                                <td class="" style="width: 45% !important; min-width: 320px;">
+                                                                                <td class="" style="width: 50% !important; min-width: 380px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_point_hourly"
                                                                                         name="offer_point_hourly[]"
@@ -2552,7 +2714,7 @@
                                                                                         value="{{ $basic->basic_poins }}"
                                                                                         placeholder="Enter Point">
                                                                                 </td>
-                                                                                <td class="" style="width: 12% !important; min-width: 85px;">
+                                                                                <td class="" style="width: 9% !important; min-width: 85px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-select-solid option_percentage_hourly"
                                                                                         name="option_percentage_hourly[]"
@@ -2564,7 +2726,7 @@
                                                                                 </td>
                                                                                 <td class="text-center" style="width: 2% !important; min-width: 20px; vertical-align: middle; padding: 0 !important;"> <span class="co-mult-sign">&times;</span> 
                                                                                 </td>
-                                                                                <td class="" style="width: 9% !important; min-width: 80px;">
+                                                                                <td class="" style="width: 10% !important; min-width: 95px;">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid option_salarymode_hourly"
                                                                                         arial-label="Select Annual Salary"
@@ -2572,7 +2734,7 @@
                                                                                         id="option_salarymode_hourly{{ $basic->id }}"
                                                                                         data-id="{{ $basic->id }}"
                                                                                         data-offerid="{{ $basic->id }}"
-                                                                                        style="width: 100px;display: initial; ">
+                                                                                        style="width: 100%;display: initial; ">
                                                                                         <option value="0"
                                                                                             {{ $basic->basic_condition_s == 0 ? 'selected' : '' }}>
                                                                                             Amount </option>
@@ -2581,7 +2743,7 @@
                                                                                             Basic</option>
                                                                                     </select>
                                                                                 </td>
-                                                                                <td class="hourly_section" style="width: 28% !important; min-width: 140px;">
+                                                                                <td class="hourly_section" style="width: 25% !important; min-width: 160px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_hourly {{ $key > 0 ? 'other_salary_get_hourly' : 'basic_salary_get_hourly' }}"
                                                                                         name="offer_hourly[]"
@@ -2648,7 +2810,7 @@
                                                                         @foreach ($offer_points as $key => $value)
                                                                             <tr class="other_section other_section_row row-template {{$key > 1 ? 'remove_row' : '' }} {{ $section_other }}"
                                                                                 role="row">
-                                                                                <td class="" style="width: 33% !important; min-width: 300px;">
+                                                                                <td class="" style="width: 36% !important; min-width: 330px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_points"
                                                                                         name="offer_point[]"
@@ -2658,7 +2820,7 @@
                                                                                         value="{{ $value->points }}"
                                                                                         placeholder="Enter Point">
                                                                                 </td>
-                                                                                <td class="" style="width: 12% !important; min-width: 125px;">
+                                                                                <td class="" style="width: 14% !important; min-width: 140px;">
                                                                                     <select &nbsp="" class="form-select form-select-solid basic_view" arial-label="Select  View" name="basic_view[]" id="basic_view_{{ $value->id }}" data-id="{{ $value->id }}"
                                                                                     data-offerid="{{ $value->id }}"
                                                                                     style="width: 100%;display: initial; ">
@@ -2668,7 +2830,7 @@
                                                                                     </select>
                                                                                 </td>
 
-                                                                                <td class="" style="width: 10% !important; min-width: 85px;">
+                                                                                <td class="" style="width: 9% !important; min-width: 85px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-select-solid option_percentage"
                                                                                         name="option_percentage[]"
@@ -2679,7 +2841,7 @@
                                                                                         placeholder="0">
                                                                                 </td>
                                                                                 <td class="text-center" style="width: 2% !important; min-width: 20px; vertical-align: middle; padding: 0 !important;"> <span class="co-mult-sign">&times;</span> </td>
-                                                                                <td class="" style="width: 9% !important; min-width: 80px;">
+                                                                                <td class="" style="width: 10% !important; min-width: 95px;">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid option_salarymode"
                                                                                         arial-label="Select Annual Salary"
@@ -2696,7 +2858,7 @@
                                                                                         @endif
                                                                                     </select>
                                                                                 </td>
-                                                                                <td class="" style="width: 15% !important; min-width: 110px;">
+                                                                                <td class="" style="width: 12% !important; min-width: 105px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_monthly"
                                                                                         name="offer_monthly[]"
@@ -2705,7 +2867,7 @@
                                                                                         data-offerid="{{ $value->id }}"
                                                                                         value="" placeholder="0.00">
                                                                                 </td>
-                                                                                <td class="" style="width: 15% !important; min-width: 110px;">
+                                                                                <td class="" style="width: 13% !important; min-width: 110px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_yearly {{ $key > 1 ? 'other_salary_get' : 'basic_salary_get' }}"
                                                                                         name="offer_yearly[]"
@@ -2764,7 +2926,7 @@
                                                                             <tr class="hourly_section hourly_section_row row-template {{ $key > 1 ? 'remove_row' : '' }} {{ $section_hourly }}"
                                                                                 role="row">
                                                                                 <td class=""
-                                                                                    style="width: 45% !important; min-width: 320px;">
+                                                                                    style="width: 50% !important; min-width: 380px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_point_hourly"
                                                                                         name="offer_point_hourly[]"
@@ -2775,7 +2937,7 @@
                                                                                         placeholder="Enter Point">
                                                                                 </td>
                                                                                 <td class=""
-                                                                                    style="width: 12% !important; min-width: 85px;">
+                                                                                    style="width: 9% !important; min-width: 85px;">
 
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-select-solid option_percentage_hourly"
@@ -2789,7 +2951,7 @@
                                                                                 <td class="text-center" style="width: 2% !important; min-width: 20px; vertical-align: middle; padding: 0 !important;"> <span class="co-mult-sign">&times;</span> 
                                                                                 </td>
                                                                                 <td class=""
-                                                                                    style="width: 9% !important; min-width: 80px;">
+                                                                                    style="width: 10% !important; min-width: 95px;">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid option_salarymode_hourly"
                                                                                         arial-label="Select Annual Salary"
@@ -2808,7 +2970,7 @@
                                                                                     </select>
                                                                                 </td>
                                                                                 <td class=""
-                                                                                    style="width: 28% !important; min-width: 140px;">
+                                                                                    style="width: 25% !important; min-width: 160px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_hourly {{ $key > 1 ? 'other_salary_get_hourly' : 'basic_salary_get_hourly' }}"
                                                                                         name="offer_hourly[]"
@@ -2880,55 +3042,55 @@
 
                                                             <tfoot class="other_section {{ $section_other }}">
                                                                 <tr class="co-total-row">
-                                                                    <th colspan="2" class="sorting_disabled">
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 50% !important; min-width: 470px;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total Main Components" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" style="position: relative;">
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px; position: relative;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalpercentage text-end fw-bold"
                                                                             name="totalpercentage"
                                                                             value=""
                                                                             id="totalpercentage" readonly style="background: transparent;">
                                                                     </th>
-                                                                    <th colspan="2" class="sorting_disabled text-center">
+                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 12% !important; min-width: 115px;">
                                                                         <input type="text"
                                                                         class="form-control form-control-solid show_currency text-center fw-bold"
                                                                         name="show_currency"
                                                                         value="" readonly style="cursor: not-allowed;background: transparent;"></th>
-                                                                    <th class="sorting_disabled text-end">
+                                                                    <th class="sorting_disabled text-end" style="width: 12% !important; min-width: 105px;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalMonthly text-end fw-bold"
                                                                             name="totalMonthly"
                                                                             value="{{ @$monthly_gross }}"
                                                                             id="totalMonthly" readonly style="background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled text-end">
+                                                                    <th class="sorting_disabled text-end" style="width: 13% !important; min-width: 110px;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalYearly text-end fw-bold"
                                                                             name="totalYearly"
                                                                             value="{{ @$yearly_gross }}"
                                                                             id="totalYearly" readonly style="background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled">&nbsp;</th>
+                                                                    <th class="sorting_disabled" style="width: 4% !important; min-width: 44px;">&nbsp;</th>
                                                                 </tr>
                                                             </tfoot>
 
                                                             <tfoot class="hourly_section {{ $section_hourly }}">
                                                                 <tr class="co-total-row">
-                                                                    <th class="sorting_disabled">
+                                                                    <th class="sorting_disabled" style="width: 50% !important; min-width: 380px;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total Main Components" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" style="position: relative;">
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px; position: relative;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalpercentagehouly text-end fw-bold"
                                                                             name="totalpercentagehouly" value="" id="totalpercentagehouly" readonly style="background: transparent;">
                                                                     </th>
-                                                                    <th colspan="2" class="sorting_disabled text-center">
+                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 12% !important; min-width: 115px;">
                                                                         <input type="text"
                                                                         class="form-control form-control-solid show_currency text-center fw-bold"
                                                                         name="show_currency"
                                                                         value="" readonly style="cursor: not-allowed;background: transparent;"></th>
-                                                                    <th class="sorting_disabled text-end" colspan="2">
+                                                                    <th class="sorting_disabled text-end" colspan="2" style="width: 29% !important; min-width: 204px;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalhourlyhourly text-end fw-bold"
                                                                             name="totalhourlyhourly"
@@ -2946,7 +3108,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="card mb-5 mb-xl-5 mx-2 co-main-card co-components-card">
+                                            <div class="card mb-5 mb-xl-5 mx-2 co-main-card co-components-card co-additional-card">
                                                 <div class="card-header co-card-header">
                                                     <div class="d-flex align-items-center gap-2">
                                                         <span class="co-card-header-icon co-card-header-icon--purple">
@@ -2961,7 +3123,7 @@
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <button type="button" class="btn btn-sm btn-primary co-btn-add-pill" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">
+                                                        <button type="button" class="btn btn-sm co-btn-add-additional" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">
                                                             <i class="fas fa-plus fs-8 me-1"></i> Add Additional Component
                                                         </button>
                                                     </div>
@@ -2978,7 +3140,7 @@
                                                         </div>
                                                         <div class="co-empty-title">No additional components added yet</div>
                                                         <div class="co-empty-sub">Add bonuses, reimbursements or other components if applicable.</div>
-                                                        <button type="button" class="co-add-btn" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">+ Add Additional Component</button>
+                                                        <button type="button" class="btn btn-sm co-btn-add-additional" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">+ Add Additional Component</button>
                                                     </div>
 
                                                     <div class="co-table-subcard">
@@ -2988,21 +3150,21 @@
                                                             <thead>
                                                                 {{-- Column header row (like Main Components) --}}
                                                                 <tr class="fw-bolder text-muted other_section {{ $section_other }}">
-                                                                    <th class="sorting_disabled" style="width: 33% !important; min-width: 300px;">Component Name</th>
-                                                                    <th class="sorting_disabled" style="width: 12% !important; min-width: 125px;">Applicable</th>
-                                                                    <th class="sorting_disabled" style="width: 10% !important; min-width: 85px;">Allocation (%)</th>
+                                                                    <th class="sorting_disabled" style="width: 36% !important; min-width: 330px;">Component Name</th>
+                                                                    <th class="sorting_disabled" style="width: 14% !important; min-width: 140px;">Applicable</th>
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px;">Allocation (%)</th>
                                                                     <th class="sorting_disabled text-center" style="width: 2% !important; min-width: 20px; padding: 0 !important;">&nbsp;</th>
-                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 80px;">Condition</th>
-                                                                    <th class="sorting_disabled text-end" style="width: 15% !important; min-width: 110px;">Monthly</th>
-                                                                    <th class="sorting_disabled text-end" style="width: 15% !important; min-width: 110px;">{{$first_text}}</th>
+                                                                    <th class="sorting_disabled" style="width: 10% !important; min-width: 95px;">Condition</th>
+                                                                    <th class="sorting_disabled text-end" style="width: 12% !important; min-width: 105px;">Monthly</th>
+                                                                    <th class="sorting_disabled text-end" style="width: 13% !important; min-width: 110px;">{{$first_text}}</th>
                                                                     <th class="sorting_disabled text-center" style="width: 4% !important; min-width: 44px;">Action</th>
                                                                 </tr>
                                                                 <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}">
-                                                                    <th class="sorting_disabled" style="width: 45% !important; min-width: 320px;">Component Name</th>
-                                                                    <th class="sorting_disabled" style="width: 12% !important; min-width: 85px;">Allocation (%)</th>
+                                                                    <th class="sorting_disabled" style="width: 50% !important; min-width: 380px;">Component Name</th>
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px;">Allocation (%)</th>
                                                                     <th class="sorting_disabled text-center" style="width: 2% !important; min-width: 20px; padding: 0 !important;">&nbsp;</th>
-                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 80px;">Condition</th>
-                                                                    <th class="sorting_disabled text-end" style="width: 28% !important; min-width: 140px;">{{ $secont_text }}</th>
+                                                                    <th class="sorting_disabled" style="width: 10% !important; min-width: 95px;">Condition</th>
+                                                                    <th class="sorting_disabled text-end" style="width: 25% !important; min-width: 160px;">{{ $secont_text }}</th>
                                                                     <th class="sorting_disabled text-center" style="width: 4% !important; min-width: 44px;">Action</th>
                                                                 </tr>
                                                                 {{-- Old compact "Additional Component" bar kept only to host the add-row trigger (hidden; replaced by column headers above) --}}
@@ -3076,7 +3238,7 @@
 
 
                                                                             <tr class="other_section other_section_row row-template remove_row {{ $section_other }}" role="row">
-                                                                                <td class="" style="width: 33% !important; min-width: 300px;">
+                                                                                <td class="" style="width: 36% !important; min-width: 330px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid bonus_points"
                                                                                         name="bonus_points[]"
@@ -3086,7 +3248,7 @@
                                                                                         value="{{ $bonus->bonus_poins }}" placeholder="Enter Point">
                                                                                 </td>
                                                                                 
-                                                                                <td class="" style="width: 12% !important; min-width: 125px;">
+                                                                                <td class="" style="width: 14% !important; min-width: 140px;">
                                                                                     <select &nbsp="" class="form-select form-select-solid bonus_view" arial-label="Select  View" name="bonus_view[]" id="bonus_view_{{ $bonus->id }}" data-id="{{ $bonus->id }}"
                                                                                     data-offerid="{{ $bonus->id }}"
                                                                                     style="width: 100%;display: initial; ">
@@ -3095,7 +3257,7 @@
                                                                                     <option value="2" {{ @$bonus->view_type == 2 ? 'selected' : '' }}> Annually &amp; Monthly</option>
                                                                                     </select>
                                                                                 </td>
-                                                                                <td class="" style="width: 10% !important; min-width: 85px;">
+                                                                                <td class="" style="width: 9% !important; min-width: 85px;">
                                                                                     <input &nbsp="" type="text"
                                                                                     class="form-control form-select-solid bonus_option_percentage"
                                                                                     name="bonus_option_percentage[]"
@@ -3109,7 +3271,7 @@
                                                                                     <span class="co-mult-sign">&times;</span> 
                                                                                 </td>
                                                                             
-                                                                                <td class="" style="width: 9% !important; min-width: 80px;">
+                                                                                <td class="" style="width: 10% !important; min-width: 95px;">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid bonus_option_salarymode"
                                                                                         arial-label="Select Annual Salary"
@@ -3120,7 +3282,7 @@
                                                                                         <option value="1" {{ ($bonus->bonus_condition_s==1) ? 'selected'  : '' }}>Basic</option>
                                                                                     </select>
                                                                                 </td>
-                                                                                <td class="" style="width: 15% !important; min-width: 110px;">
+                                                                                <td class="" style="width: 12% !important; min-width: 105px;">
                                                                                     <input &nbsp="" type="text"
                                                                                     class="form-control form-control-solid bonus_offer_monthly"
                                                                                     name="bonus_offer_monthly[]"
@@ -3129,7 +3291,7 @@
                                                                                     data-offerid="{{ $bonus->id }}"
                                                                                     value="{{ $bonus->bonus_monthly }}" placeholder="0.00">
                                                                                 </td>
-                                                                                <td class="" style="width: 15% !important; min-width: 110px;"> 
+                                                                                <td class="" style="width: 13% !important; min-width: 110px;"> 
                                                                                     <input &nbsp="" type="text"
                                                                                     class="form-control form-control-solid bonus_offer_yearly"
                                                                                     name="bonus_offer_yearly[]"
@@ -3174,7 +3336,7 @@
                                                                             </tr>
             
                                                                             <tr class="hourly_section hourly_section_row row-template remove_row {{ $section_hourly }}" role="row">
-                                                                                <td class="" style="width: 45% !important; min-width: 320px;">
+                                                                                <td class="" style="width: 50% !important; min-width: 380px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid bonus_point_hourly"
                                                                                         name="bonus_point_hourly[]"
@@ -3183,7 +3345,7 @@
                                                                                         data-offerid="{{ $bonus->id }}"
                                                                                         value="{{ $bonus->bonus_poins }}" placeholder="Enter Point">
                                                                                 </td>
-                                                                                <td class="" style="width: 12% !important; min-width: 85px;">
+                                                                                <td class="" style="width: 9% !important; min-width: 85px;">
                                                                                     <input &nbsp="" type="text"
                                                                                     class="form-control form-select-solid bonus_option_percentage_hourly"
                                                                                     name="bonus_option_percentage_hourly[]"
@@ -3196,18 +3358,18 @@
                                                                                 <td class="text-center" style="width: 2% !important; min-width: 20px; vertical-align: middle; padding: 0 !important;"> <span class="co-mult-sign">&times;</span> 
                                                                                 </td>
 
-                                                                                <td class="" style="width: 9% !important; min-width: 80px;">
+                                                                                <td class="" style="width: 10% !important; min-width: 95px;">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid bonus_option_salarymode_hourly"
                                                                                         arial-label="Select Annual Salary"
                                                                                         name="bonus_option_salarymode_hourly[]" id="bonus_option_salarymode_hourly{{ $bonus->id }}"
                                                                                         data-id="{{ $bonus->id }}" data-offerid="{{ $bonus->id }}"
-                                                                                        style="width: 100px;display: initial; ">
+                                                                                        style="width: 100%;display: initial; ">
                                                                                         <option value="0" {{ ($bonus->bonus_condition_s==0) ? 'selected'  : '' }}>Amount </option>
                                                                                         <option value="1" {{ ($bonus->bonus_condition_s==1) ? 'selected'  : '' }}>Basic</option>
                                                                                     </select>
                                                                                 </td>
-                                                                                <td class="" style="width: 28% !important; min-width: 140px;"> 
+                                                                                <td class="" style="width: 25% !important; min-width: 160px;"> 
                                                                                     <input &nbsp="" type="text"
                                                                                     class="form-control form-control-solid bonus_offer_hourly"
                                                                                     name="bonus_offer_hourly[]"
@@ -3260,7 +3422,7 @@
                                                                         @foreach ($offer_point_other as $offer)
                                                                             <tr class="other_section other_section_row row-template remove_row {{ $section_other }}"
                                                                                 role="row">
-                                                                                <td class="" style="width: 33% !important; min-width: 300px;">
+                                                                                <td class="" style="width: 36% !important; min-width: 330px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid bonus_points"
                                                                                         name="bonus_points[]"
@@ -3270,7 +3432,7 @@
                                                                                         value="{{ $offer->points }}"
                                                                                         placeholder="Enter Point">
                                                                                 </td>
-                                                                                <td class="" style="width: 12% !important; min-width: 125px;">
+                                                                                <td class="" style="width: 14% !important; min-width: 140px;">
                                                                                     <select &nbsp="" class="form-select form-select-solid bonus_view" arial-label="Select  View" name="bonus_view[]" id="bonus_view_{{ $offer->id }}" data-id="{{ $offer->id }}"
                                                                                     data-offerid="{{ $offer->id }}"
                                                                                     style="width: 100%;display: initial; ">
@@ -3281,7 +3443,7 @@
                                                                                 </td>
 
 
-                                                                                <td class="" style="width: 10% !important; min-width: 85px;">
+                                                                                <td class="" style="width: 9% !important; min-width: 85px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-select-solid bonus_option_percentage"
                                                                                         name="bonus_option_percentage[]"
@@ -3295,7 +3457,7 @@
                                                                                 <td class="text-center" style="width: 2% !important; min-width: 20px; vertical-align: middle; padding: 0 !important;">
                                                                                     <span class="co-mult-sign">&times;</span> 
                                                                                 </td>
-                                                                                <td class="" style="width: 9% !important; min-width: 80px;">
+                                                                                <td class="" style="width: 10% !important; min-width: 95px;">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid bonus_option_salarymode"
                                                                                         arial-label="Select Annual Salary"
@@ -3312,7 +3474,7 @@
                                                                                             Basic</option>
                                                                                     </select>
                                                                                 </td>
-                                                                                <td class="" style="width: 15% !important; min-width: 110px;">
+                                                                                <td class="" style="width: 12% !important; min-width: 105px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid bonus_offer_monthly"
                                                                                         name="bonus_offer_monthly[]"
@@ -3322,7 +3484,7 @@
                                                                                         value=""
                                                                                         placeholder="0.00">
                                                                                 </td>
-                                                                                <td class="" style="width: 15% !important; min-width: 110px;">
+                                                                                <td class="" style="width: 13% !important; min-width: 110px;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid bonus_offer_yearly"
                                                                                         name="bonus_offer_yearly[]"
@@ -3387,7 +3549,7 @@
                                                                                 <tr class="hourly_section hourly_section_row row-template remove_row {{ $section_hourly }}"
                                                                                     role="row">
                                                                                     <td class=""
-                                                                                        style="width: 45% !important; min-width: 320px;">
+                                                                                        style="width: 50% !important; min-width: 380px;">
                                                                                         <input &nbsp="" type="text"
                                                                                             class="form-control form-control-solid bonus_point_hourly"
                                                                                             name="bonus_point_hourly[]"
@@ -3398,7 +3560,7 @@
                                                                                             placeholder="Enter Point">
                                                                                     </td>
                                                                                     <td class=""
-                                                                                        style="width: 12% !important; min-width: 85px;">
+                                                                                        style="width: 9% !important; min-width: 85px;">
                                                                                         <input &nbsp="" type="text"
                                                                                             class="form-control form-select-solid bonus_option_percentage_hourly"
                                                                                             name="bonus_option_percentage_hourly[]"
@@ -3411,7 +3573,7 @@
                                                                                     <td class="text-center" style="width: 2% !important; min-width: 20px; vertical-align: middle; padding: 0 !important;"> <span class="co-mult-sign">&times;</span> 
                                                                                     </td>
                                                                                     <td class=""
-                                                                                        style="width: 9% !important; min-width: 80px;">
+                                                                                        style="width: 10% !important; min-width: 95px;">
                                                                                         <select &nbsp=""
                                                                                             class="form-select form-select-solid bonus_option_salarymode_hourly"
                                                                                             arial-label="Select Annual Salary"
@@ -3419,7 +3581,7 @@
                                                                                             id="bonus_option_salarymode_hourly{{ $offer->id }}"
                                                                                             data-id="{{ $offer->id }}"
                                                                                             data-offerid="{{ $offer->id }}"
-                                                                                            style="width: 100px;display: initial; ">
+                                                                                            style="width: 100%;display: initial; ">
                                                                                             <option value="0"
                                                                                                 {{ $offer->condition_check == 0 ? 'selected' : '' }}>
                                                                                                 CTC </option>
@@ -3429,7 +3591,7 @@
                                                                                         </select>
                                                                                     </td>
                                                                                     <td class=""
-                                                                                        style="width: 28% !important; min-width: 140px;">
+                                                                                        style="width: 25% !important; min-width: 160px;">
                                                                                         <input &nbsp="" type="text"
                                                                                             class="form-control form-control-solid bonus_offer_hourly"
                                                                                             name="bonus_offer_hourly[]"
@@ -3500,57 +3662,57 @@
                                                             </tbody>
                                                             <tfoot class="other_section {{ $section_other }}">
                                                                 <tr class="co-total-row">
-                                                                    <th colspan="2" class="sorting_disabled">
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 50% !important; min-width: 470px;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total Additional Components" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" style="position: relative;">
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px; position: relative;">
                                                                         <input type="text" readonly
                                                                             class="form-control form-control-solid totalpercentagebonus text-end fw-bold"
                                                                             name="totalpercentagebonus"
                                                                             value=""
                                                                             id="totalpercentagebonus" style="background: transparent;">
                                                                     </th>
-                                                                    <th colspan="2" class="sorting_disabled text-center">
+                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 12% !important; min-width: 115px;">
                                                                         <input type="text"
                                                                         class="form-control form-control-solid show_currency text-center fw-bold"
                                                                         name="show_currency"
                                                                         value="" readonly style="cursor: not-allowed;background: transparent;"></th>
-                                                                    <th class="sorting_disabled text-end">
+                                                                    <th class="sorting_disabled text-end" style="width: 12% !important; min-width: 105px;">
                                                                         <input type="text" readonly
                                                                             class="form-control form-control-solid totalMonthlybonus text-end fw-bold"
                                                                             name="totalMonthlybonus"
                                                                             id="totalMonthlybonus"
                                                                             value="{{ @$monthly_bounus_gross }}" style="background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled text-end">
+                                                                    <th class="sorting_disabled text-end" style="width: 13% !important; min-width: 110px;">
                                                                         <input type="text" readonly
                                                                             class="form-control form-control-solid totalYearlybonus text-end fw-bold"
                                                                             name="totalYearlybonus"
                                                                             value="{{ @$yearly_bonus_gross }}"
                                                                             id="totalYearlybonus" style="background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled">&nbsp;</th>
+                                                                    <th class="sorting_disabled" style="width: 4% !important; min-width: 44px;">&nbsp;</th>
                                                                 </tr>
                                                             </tfoot>
 
                                                             <tfoot class="hourly_section {{ $section_hourly }}">
                                                                 <tr class="co-total-row">
-                                                                    <th colspan="2" class="sorting_disabled">
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 50% !important; min-width: 380px;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total Additional Components" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" style="position: relative;">
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px; position: relative;">
                                                                         <input type="text" readonly
                                                                             class="form-control form-control-solid totalhourlypercentagebonus text-end fw-bold"
                                                                             name="totalhourlypercentagebonus"
                                                                             value=""
                                                                             id="totalhourlypercentagebonus" style="background: transparent;">
                                                                     </th>
-                                                                    <th colspan="2" class="sorting_disabled text-center">
+                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 12% !important; min-width: 115px;">
                                                                         <input type="text"
                                                                         class="form-control form-control-solid show_currency text-center fw-bold"
                                                                         name="show_currency"
                                                                         value="" readonly style="cursor: not-allowed;background: transparent;"></th>
-                                                                    <th class="sorting_disabled text-end" colspan="1">
+                                                                    <th class="sorting_disabled text-end" colspan="1" style="width: 29% !important; min-width: 204px;">
                                                                         <input type="text" readonly
                                                                             class="form-control form-control-solid totalhourlyybonus text-end fw-bold"
                                                                             name="totalhourlyybonus"
@@ -3594,76 +3756,76 @@
                                                             {{-- Column header row for the Final CTC values (aligned with Main / Additional) --}}
                                                             <thead>
                                                                 <tr class="fw-bolder text-muted other_section {{ $section_other }}">
-                                                                    <th colspan="2" class="sorting_disabled" style="width: 45% !important; min-width: 425px;">Component</th>
-                                                                    <th class="sorting_disabled" style="width: 10% !important; min-width: 85px;">Allocation (%)</th>
-                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 11% !important; min-width: 100px;">Currency</th>
-                                                                    <th class="sorting_disabled text-end" style="width: 15% !important; min-width: 110px;">Monthly</th>
-                                                                    <th class="sorting_disabled text-end" style="width: 15% !important; min-width: 110px;">{{ $first_text }}</th>
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 50% !important; min-width: 470px;">Component</th>
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px;">Allocation (%)</th>
+                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 12% !important; min-width: 115px;">Currency</th>
+                                                                    <th class="sorting_disabled text-end" style="width: 12% !important; min-width: 105px;">Monthly</th>
+                                                                    <th class="sorting_disabled text-end" style="width: 13% !important; min-width: 110px;">{{ $first_text }}</th>
                                                                     <th class="sorting_disabled text-center" style="width: 4% !important; min-width: 44px;">&nbsp;</th>
                                                                 </tr>
                                                                 <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}">
-                                                                    <th class="sorting_disabled" style="width: 45% !important; min-width: 320px;">Component</th>
-                                                                    <th class="sorting_disabled" style="width: 12% !important; min-width: 85px;">Allocation (%)</th>
-                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 11% !important; min-width: 100px;">Currency</th>
-                                                                    <th class="sorting_disabled text-end" colspan="2" style="width: 28% !important; min-width: 140px;">{{ $first_text }}</th>
+                                                                    <th class="sorting_disabled" style="width: 50% !important; min-width: 380px;">Component</th>
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px;">Allocation (%)</th>
+                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 12% !important; min-width: 115px;">Currency</th>
+                                                                    <th class="sorting_disabled text-end" colspan="2" style="width: 29% !important; min-width: 204px;">{{ $first_text }}</th>
                                                                     <th class="sorting_disabled text-center" style="width: 4% !important; min-width: 44px;">&nbsp;</th>
                                                                 </tr>
                                                             </thead>
 
                                                             <tfoot class="other_section_final other_section {{ $section_other }}">
                                                                 <tr>
-                                                                    <th colspan="2" class="sorting_disabled" style="width: 45%;">
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 50% !important; min-width: 470px;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total CTC (Main + Additional)" readonly style="cursor: not-allowed;background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" style="width: 10%; position: relative;">
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px; position: relative;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalpercentagefinal text-end fw-bold"
                                                                             name="totalpercentagefinal"
                                                                             value=""
                                                                             id="totalpercentagefinal" readonly style="background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 11%;">
+                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 12% !important; min-width: 115px;">
                                                                         <input type="text"
                                                                         class="form-control form-control-solid show_currency text-center fw-bold"
                                                                         name="show_currency"
                                                                         value="" readonly style="cursor: not-allowed;background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th class="sorting_disabled text-end" style="width: 15%;">
+                                                                    <th class="sorting_disabled text-end" style="width: 12% !important; min-width: 105px;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid finalpaytotalMonthly text-end fw-bold"
                                                                             name="finalpaytotalMonthly"
                                                                             id="finalpaytotalMonthly"
                                                                             value="{{ @$monthly_final_gross }}" readonly style="background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th class="sorting_disabled text-end" style="width: 15%;">
+                                                                    <th class="sorting_disabled text-end" style="width: 13% !important; min-width: 110px;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid finalpaytotalYearly text-end fw-bold"
                                                                             name="finalpaytotalYearly"
                                                                             id="finalpaytotalYearly"
                                                                             value="{{ @$yearly_final_gross }}" readonly style="background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th class="sorting_disabled text-center" style="width: 4%;">&nbsp;</th>
+                                                                    <th class="sorting_disabled text-center" style="width: 4% !important; min-width: 44px;">&nbsp;</th>
                                                                 </tr>
                                                             </tfoot>
                                                             <tfoot class="hourly_section_final hourly_section {{ $section_hourly }}">
                                                                 <tr>
-                                                                    <th class="sorting_disabled" style="width: 46%;">
+                                                                    <th class="sorting_disabled" style="width: 50% !important; min-width: 380px;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total CTC (Main + Additional)" readonly style="cursor: not-allowed;background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" style="width: 12%; position: relative;">
+                                                                    <th class="sorting_disabled" style="width: 9% !important; min-width: 85px; position: relative;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalpercentagefinalhourly text-end fw-bold"
                                                                             name="totalpercentagefinalhourly"
                                                                             value=""
                                                                             id="totalpercentagefinalhourly" readonly style="background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 11%;">
+                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 12% !important; min-width: 115px;">
                                                                         <input type="text"
                                                                         class="form-control form-control-solid show_currency text-center fw-bold"
                                                                         name="show_currency"
                                                                         value="" readonly style="cursor: not-allowed;background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th class="sorting_disabled text-end" colspan="2" style="width: 31%;">
+                                                                    <th class="sorting_disabled text-end" colspan="2" style="width: 29% !important; min-width: 204px;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid finalpaytotalhourly text-end fw-bold"
                                                                             name="finalpaytotalhourly"
@@ -7401,7 +7563,7 @@
                         coEnhanceRows();
                     };
 
-                    // ── Injects row #, drag-handle (visual only — does not reorder), and a
+                    // ── Injects row #, edit pencil icon, and a
                     // Main/Additional badge next to each visible component's name. Runs on
                     // every refresh so numbers stay correct after rows are added/removed.
                     // Idempotent: skips a row if it already has the lead markup.
@@ -7417,7 +7579,7 @@
                                 var $td = $name.closest('td').addClass('co-name-cell');
                                 var $lead = $td.find('.co-row-lead');
                                 if (!$lead.length) {
-                                    $lead = $('<span class="co-row-lead"><span class="co-drag-handle">&#8942;&#8942;</span><span class="co-row-num"></span></span>');
+                                    $lead = $('<span class="co-row-lead"><span class="co-row-num"></span><i class="fas fa-pencil-alt co-name-edit-icon" title="Click to edit component name"></i></span>');
                                     $name.before($lead);
                                     $name.after('<span class="co-comp-badge ' + badgeClass + '">' + badgeText + '</span>');
                                 }
@@ -7428,6 +7590,10 @@
                         enhance('#bonusList tbody', '.bonus_points, .bonus_point_hourly', 'co-comp-badge--add', 'Additional');
                         coToggleAdditionalEmpty();
                     }
+
+                    $(document).on('click', '.co-name-edit-icon', function () {
+                        $(this).closest('.co-name-cell').find('.offer_points, .bonus_points, .offer_point_hourly, .bonus_point_hourly').focus();
+                    });
 
                     // Show the empty-state (illustration + CTA) when there are no additional
                     // components; show the table + total line once at least one row exists.
