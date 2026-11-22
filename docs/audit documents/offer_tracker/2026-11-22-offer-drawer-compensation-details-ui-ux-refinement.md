@@ -151,3 +151,65 @@ Both sub-cards are arranged side-by-side (`col-lg-6` and `col-lg-6`) with `align
   - `[PASS] coToggle_uses_subcard` (`.closest('.co-table-subcard')`)
   - `[PASS] allocation_header_has_pct` (`Allocation (%)`)
   - **Result:** ALL 10/10 VERIFICATIONS PASSED 100%.
+
+---
+
+## 7. Round 4 – God-Level UI/UX Full Page Forensic Audit & Table Optimization
+
+### 7.1 Screenshot-by-Screenshot Forensic Evaluation
+
+#### Screenshot 1: Drawer Header, Stepper & Compensation Details Sub-Cards
+- **Audit Findings:**
+  - **Sleek Stepper Navigation:** 5 discrete stages (`1 Compensation`, `2 Template`, `3 Preview Offer`, `4 Approval`, `5 Offer Sent`) with Stage 1 active in primary blue `#009ef7`. Clear, uncluttered, and fits horizontally with zero wrapping.
+  - **Top Action Bar:** Prominent `Save & Next →` button and close `✕` icon anchored in the topbar right corner.
+  - **Subcard Symmetry:** `SALARY & CURRENCY PACKAGE` (left) and `ROLE & JOINING SCHEDULE` (right) have pixel-perfect matching heights, borders, and margins.
+  - **Confidentiality Dropdown:** Successfully replaced the old bulky toggle with an intuitive `No (Standard)` / `Yes (Confidential)` dropdown.
+  - **Amount & Words Display:** Crisp currency prefix integrated inside the input, and the number-to-words line (`Twenty Five Lakh...`) fits strictly on a single line without wrapping.
+
+#### Screenshots 2 & 3: Main Components Table (Forensic Defect Uncovered & Fixed)
+- **Defects Identified:**
+  - **Component Name Input Truncation:** In rows 2, 4, 6, 10, 12, component name inputs visibly truncated long titles (e.g. `House Rent Allowar` was missing "ance", `Provident Fund (Em` was missing "ployer Contribution)", `Conveyance Allow` was missing "ance").
+    - *Root Cause:* The first column was allocated only `26%` width (`min-width: 220px`), while the `Action` column took `12%` to `14%` for a single 34px button. After factoring in cell padding, drag handle `⋮⋮`, row number, and the `Main` pill badge, the text input was squeezed down to ~106px usable content width (~18 chars).
+  - **Multiplier `×` Floating High:** The multiplication symbol had absolute positioning `top: 10px; left: 2px;`, causing it to float above the vertical baseline of the inputs.
+  - **Duplicated Row Sets (200.00% Total):** Rows 1–6 (Annually only) and Rows 7–12 (Annually & Monthly) coexisted in the database record, totaling 200.00%. The real-time validation banner correctly turned red (`Total of main components: 200.00%`) and the total row turned red, proving the real-time calculation engine is 100% active.
+- **Remediation Implemented:**
+  - **Column Width Rebalance (33% vs 4%):**
+    - Expanded `Component Name` column to `width: 33% !important; min-width: 300px;` across all table headers and data rows.
+    - Reduced `Action` column from `12%` to a compact `width: 4% !important; min-width: 44px; text-align: center;`.
+    - Set `.co-name-cell .form-control { flex: 1 1 auto; min-width: 180px !important; width: 100% !important; }`. Long standard Indian and international salary components now display 100% complete without truncation.
+  - **Centered Multiplier:** Updated `.co-mult-sign` to `display: inline-flex; align-items: center; justify-content: center; height: 38px; color: #94a3b8; font-size: 15px; font-weight: 600; vertical-align: middle;`, perfectly centered between Allocation and Condition.
+  - **Tabular Figures & Right-Alignment:** Enforced `text-align: right !important; font-variant-numeric: tabular-nums;` on all Monthly and Annually inputs across data rows and summary rows.
+
+#### Screenshot 4: Additional Components Table
+- **Audit Findings:**
+  - Clean violet theme for `Total Additional Components` distinguishes it from Main's indigo.
+  - Clean sub-banner displaying `Total additional components: 4.00% (Allowed above 100%) • Amount: 23,896`.
+  - Applied the exact same column width rebalance (`Component Name` 33%, `Action` 4%, centered multiplier, right-aligned numbers).
+
+#### Screenshot 5: Final CTC & Guidance Sub-Cards
+- **Audit Findings:**
+  - Header height matches Main and Additional at 42px with `✔ Net Offer Value` emerald badge.
+  - Columns line up with pixel precision with Main and Additional tables:
+    - `Component` (`colspan="2"`): `width: 45%` (matches 33% + 12%)
+    - `Allocation (%)`: `width: 10%`
+    - `Currency` (`colspan="2"`): `width: 11%` (matches 2% + 9%)
+    - `Monthly`: `width: 15%`
+    - `Annually`: `width: 15%`
+    - Spacer: `width: 4%`
+  - Guidance cards (`How it works?` and `Before you proceed`) sit side-by-side with balanced typography and icons.
+  - Zero redundant footer action button. Drawer ends gracefully with balanced spacing.
+
+### 7.2 Mathematical Column Alignment Matrix Across All 3 Tables
+
+| Column # | PointList (Main) | BonusList (Additional) | Final Pay (CTC Summary) | Width % | Min-Width |
+|---|---|---|---|---|---|
+| **1** | Component Name | Component Name | Component (`colspan="2"`) | **33%** | 300px (425px final) |
+| **2** | Applicable | Applicable | *(Included in Col 1)* | **12%** | 125px |
+| **3** | Allocation (%) | Allocation (%) | Allocation (%) | **10%** | 85px |
+| **4** | Multiplier (`×`) | Multiplier (`×`) | Currency (`colspan="2"`) | **2%** | 20px (100px final) |
+| **5** | Condition | Condition | *(Included in Col 4)* | **9%** | 80px |
+| **6** | Monthly | Monthly | Monthly | **15%** | 110px |
+| **7** | Annually | Annually | Annually | **15%** | 110px |
+| **8** | Action (Trash) | Action (Trash) | Spacer (`&nbsp;`) | **4%** | 44px |
+| **SUM** | **100%** | **100%** | **100%** | **100%** | **974px** |
+

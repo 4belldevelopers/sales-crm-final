@@ -3387,7 +3387,7 @@
                                                                                 <tr class="hourly_section hourly_section_row row-template remove_row {{ $section_hourly }}"
                                                                                     role="row">
                                                                                     <td class=""
-                                                                                        style="width: 47% !important;">
+                                                                                        style="width: 45% !important; min-width: 320px;">
                                                                                         <input &nbsp="" type="text"
                                                                                             class="form-control form-control-solid bonus_point_hourly"
                                                                                             name="bonus_point_hourly[]"
@@ -3398,7 +3398,7 @@
                                                                                             placeholder="Enter Point">
                                                                                     </td>
                                                                                     <td class=""
-                                                                                        style="width: 12% !important;">
+                                                                                        style="width: 12% !important; min-width: 85px;">
                                                                                         <input &nbsp="" type="text"
                                                                                             class="form-control form-select-solid bonus_option_percentage_hourly"
                                                                                             name="bonus_option_percentage_hourly[]"
@@ -3408,10 +3408,10 @@
                                                                                             value="{{ $offer->percentage }}"
                                                                                             placeholder="0">
                                                                                     </td>
-                                                                                    <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
+                                                                                    <td class="text-center" style="width: 2% !important; min-width: 20px; vertical-align: middle; padding: 0 !important;"> <span class="co-mult-sign">&times;</span> 
                                                                                     </td>
                                                                                     <td class=""
-                                                                                        style="width: 10% !important;">
+                                                                                        style="width: 9% !important; min-width: 80px;">
                                                                                         <select &nbsp=""
                                                                                             class="form-select form-select-solid bonus_option_salarymode_hourly"
                                                                                             arial-label="Select Annual Salary"
@@ -3429,7 +3429,7 @@
                                                                                         </select>
                                                                                     </td>
                                                                                     <td class=""
-                                                                                        style="width: 15% !important;">
+                                                                                        style="width: 28% !important; min-width: 140px;">
                                                                                         <input &nbsp="" type="text"
                                                                                             class="form-control form-control-solid bonus_offer_hourly"
                                                                                             name="bonus_offer_hourly[]"
@@ -3439,7 +3439,7 @@
                                                                                             value=""
                                                                                             placeholder="0.00">
                                                                                     </td>
-                                                                                    <td style="width: 13% !important">
+                                                                                    <td class="text-center" style="width: 4% !important; min-width: 44px; vertical-align: middle; padding: 6px 4px !important;">
                                                                                         <button type="button"
                                                                                             class="btn btn-sm btn-light-danger font-weight-bolder remove_points py-4 me-0">
                                                                                             <span
@@ -3465,7 +3465,7 @@
                                                                                             </span>
                                                                                         </button>
                                                                                         <button type="button" id=""
-                                                                                            class="btn btn-sm btn-primary me-0 py-4 addRowBtnbonus" style="">
+                                                                                            class="btn btn-sm btn-primary me-0 py-4 addRowBtnbonus" style="display:none !important;">
                                                                                                 <span class="svg-icon svg-icon svg-icon me-0">
                                                                                                     <svg xmlns="http://www.w3.org/2000/svg"
                                                                                                         xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -3594,24 +3594,25 @@
                                                             {{-- Column header row for the Final CTC values (aligned with Main / Additional) --}}
                                                             <thead>
                                                                 <tr class="fw-bolder text-muted other_section {{ $section_other }}">
-                                                                    <th colspan="2" class="sorting_disabled" style="width: 37% !important; min-width: 250px;">Component</th>
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 45% !important; min-width: 425px;">Component</th>
                                                                     <th class="sorting_disabled" style="width: 10% !important; min-width: 85px;">Allocation (%)</th>
-                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 11% !important; min-width: 80px;">Currency</th>
+                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 11% !important; min-width: 100px;">Currency</th>
                                                                     <th class="sorting_disabled text-end" style="width: 15% !important; min-width: 110px;">Monthly</th>
                                                                     <th class="sorting_disabled text-end" style="width: 15% !important; min-width: 110px;">{{ $first_text }}</th>
-                                                                    <th class="sorting_disabled" style="width: 12% !important; min-width: 50px;">&nbsp;</th>
+                                                                    <th class="sorting_disabled text-center" style="width: 4% !important; min-width: 44px;">&nbsp;</th>
                                                                 </tr>
                                                                 <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}">
-                                                                    <th class="sorting_disabled" style="width: 46% !important; min-width: 220px;">Component</th>
+                                                                    <th class="sorting_disabled" style="width: 45% !important; min-width: 320px;">Component</th>
                                                                     <th class="sorting_disabled" style="width: 12% !important; min-width: 85px;">Allocation (%)</th>
-                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 11% !important; min-width: 80px;">Currency</th>
-                                                                    <th class="sorting_disabled text-end" colspan="2" style="width: 31% !important;">{{ $first_text }}</th>
+                                                                    <th colspan="2" class="sorting_disabled text-center" style="width: 11% !important; min-width: 100px;">Currency</th>
+                                                                    <th class="sorting_disabled text-end" colspan="2" style="width: 28% !important; min-width: 140px;">{{ $first_text }}</th>
+                                                                    <th class="sorting_disabled text-center" style="width: 4% !important; min-width: 44px;">&nbsp;</th>
                                                                 </tr>
                                                             </thead>
 
                                                             <tfoot class="other_section_final other_section {{ $section_other }}">
                                                                 <tr>
-                                                                    <th colspan="2" class="sorting_disabled" style="width: 37%;">
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 45%;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total CTC (Main + Additional)" readonly style="cursor: not-allowed;background: transparent; color: #065f46;">
                                                                     </th>
                                                                     <th class="sorting_disabled" style="width: 10%; position: relative;">
@@ -3641,7 +3642,7 @@
                                                                             id="finalpaytotalYearly"
                                                                             value="{{ @$yearly_final_gross }}" readonly style="background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" style="width: 12%;">&nbsp;</th>
+                                                                    <th class="sorting_disabled text-center" style="width: 4%;">&nbsp;</th>
                                                                 </tr>
                                                             </tfoot>
                                                             <tfoot class="hourly_section_final hourly_section {{ $section_hourly }}">
