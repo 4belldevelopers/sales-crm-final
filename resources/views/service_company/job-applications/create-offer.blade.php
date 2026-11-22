@@ -3284,7 +3284,7 @@
                                                                     <th colspan="2" class="sorting_disabled" style="width: 42% !important;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total Main Components" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" class="co-th-total-pct" style="width: 9% !important; position: relative;">
+                                                                    <th class="sorting_disabled co-th-total-pct" style="width: 9% !important; position: relative;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalpercentage text-end fw-bold"
                                                                             name="totalpercentage"
@@ -3319,7 +3319,7 @@
                                                                     <th class="sorting_disabled" style="width: 42% !important;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total Main Components" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" class="co-th-total-pct" style="width: 9% !important; position: relative;">
+                                                                    <th class="sorting_disabled co-th-total-pct" style="width: 9% !important; position: relative;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalpercentagehouly text-end fw-bold"
                                                                             name="totalpercentagehouly" value="" id="totalpercentagehouly" readonly style="background: transparent;">
@@ -3903,7 +3903,7 @@
                                                                     <th colspan="2" class="sorting_disabled" style="width: 42% !important;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total Additional Components" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" class="co-th-total-pct" style="width: 9% !important; position: relative;">
+                                                                    <th class="sorting_disabled co-th-total-pct" style="width: 9% !important; position: relative;">
                                                                         <input type="text" readonly
                                                                             class="form-control form-control-solid totalpercentagebonus text-end fw-bold"
                                                                             name="totalpercentagebonus"
@@ -3938,7 +3938,7 @@
                                                                     <th colspan="2" class="sorting_disabled" style="width: 42% !important;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total Additional Components" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" class="co-th-total-pct" style="width: 9% !important; position: relative;">
+                                                                    <th class="sorting_disabled co-th-total-pct" style="width: 9% !important; position: relative;">
                                                                         <input type="text" readonly
                                                                             class="form-control form-control-solid totalhourlypercentagebonus text-end fw-bold"
                                                                             name="totalhourlypercentagebonus"
@@ -4015,7 +4015,7 @@
                                                                     <th colspan="2" class="sorting_disabled" style="width: 42% !important;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total CTC (Main + Additional)" readonly style="cursor: not-allowed;background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" class="co-th-total-pct" style="width: 9% !important; position: relative;">
+                                                                    <th class="sorting_disabled co-th-total-pct" style="width: 9% !important; position: relative;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalpercentagefinal text-end fw-bold"
                                                                             name="totalpercentagefinal"
@@ -4050,7 +4050,7 @@
                                                                     <th class="sorting_disabled" style="width: 42% !important;">
                                                                         <input type="text" class="form-control form-control-solid fw-bold" value="Total CTC (Main + Additional)" readonly style="cursor: not-allowed;background: transparent; color: #065f46;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" class="co-th-total-pct" style="width: 9% !important; position: relative;">
+                                                                    <th class="sorting_disabled co-th-total-pct" style="width: 9% !important; position: relative;">
                                                                         <input type="text"
                                                                             class="form-control form-control-solid totalpercentagefinalhourly text-end fw-bold"
                                                                             name="totalpercentagefinalhourly"
