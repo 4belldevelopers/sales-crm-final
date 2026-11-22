@@ -1833,149 +1833,178 @@ table{
                 </div>
                 <!--End Filter Drawer-->
 
-                <main class="main-content">
-                    <!-- Content Area -->
-                    <div class="content-area">
+                <main class="main-content w-100">
+                    <div class="content-area w-100">
 
-                        <!-- HERO -->
-                        <div class="hero-section-wrap">
-                            <div class="hero-head-row">
-                                <div>
-                                    <div class="hero-title">
-                                        Bench Candidates
-                                        <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                            <path d="m9 12 2 2 4-4" stroke="#16A34A"/>
-                                        </svg>
+                        <!-- Tier 1: Toolbar Card (Rule 20 Modern Card Enterprise Standard) -->
+                        <div class="card caf-toolbar-card mb-3" style="background: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                    <!-- Left: Page Title, Live Total Badge, and Refresh -->
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <div class="d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; flex-shrink: 0;">
+                                            <i class="fa-solid fa-users-viewfinder fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <h3 class="mb-0 fw-bolder text-gray-900" style="font-size: 15.5px; letter-spacing: -0.2px;">Find Bench Talents</h3>
+                                                <span class="badge badge-light-primary fw-bolder px-2 py-0.5" id="ftTotalBadge" style="font-size: 11px; border: 1px solid #bfdbfe;">
+                                                    {{ number_format($tabCounts['all'] ?? 0) }} Talents
+                                                </span>
+                                            </div>
+                                            <div class="text-muted" style="font-size: 11px; margin-top: 1px;">Discover & hire verified bench candidates across categories</div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-icon btn-light-primary ms-1" id="btnRefreshFindTalent" onclick="fetchCandidates(1, $('#inputSearch').val(), true);" title="Refresh listing" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                                            <i class="fa-solid fa-arrows-rotate fs-7"></i>
+                                        </button>
                                     </div>
-                                    <div class="hero-sub">Discover verified bench candidates posted by agencies and add them to your open jobs</div>
-                                </div>
-                            </div>
-                            <div class="hero-stats-row">
-                                <div class="h-stat-card">
-                                    <div class="h-stat-icon h-icon-blue">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                            <circle cx="9" cy="7" r="4"/>
-                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <div class="h-stat-num">344</div>
-                                        <div class="h-stat-label">Total Agencies</div>
-                                    </div>
-                                </div>
-                                <div class="h-stat-card">
-                                    <div class="h-stat-icon h-icon-blue">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                            <path d="M9 9h6M9 13h4"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <div class="h-stat-num">3333</div>
-                                        <div class="h-stat-label">Verified Agencies</div>
-                                    </div>
-                                </div>
-                                <div class="h-stat-card">
-                                    <div class="h-stat-icon h-icon-green">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                            <circle cx="12" cy="7" r="4"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <div class="h-stat-num">92</div>
-                                        <div class="h-stat-label">Highly Rated (4★+)</div>
-                                    </div>
-                                </div>
-                                <div class="h-stat-card">
-                                    <div class="h-stat-icon h-icon-orange">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="2" y="7" width="20" height="14" rx="2"/>
-                                            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                                            <line x1="12" y1="12" x2="12" y2="16"/>
-                                            <line x1="10" y1="14" x2="14" y2="14"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <div class="h-stat-num">24</div>
-                                        <div class="h-stat-label">AI Matched for You</div>
+
+                                    <!-- Right: Search, Sort, More Filters, Bulk CTA -->
+                                    <div class="d-flex align-items-center flex-wrap gap-2 flex-grow-1 justify-content-end" style="max-width: 720px;">
+                                        <!-- Debounced Search Wrap -->
+                                        <div class="caf-search-wrap position-relative flex-grow-1" style="min-width: 220px; max-width: 320px;">
+                                            <span class="position-absolute start-0 top-50 translate-middle-y ms-3 text-muted" style="pointer-events: none;">
+                                                <i class="fa-solid fa-magnifying-glass fs-7 text-muted"></i>
+                                            </span>
+                                            <input type="text" id="inputSearch" class="form-control form-control-sm ps-9 pe-8"
+                                                   placeholder="Search by name, role, skill, company..."
+                                                   style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; background: #ffffff;" />
+                                            <button type="button" id="btnClearSearch" class="btn btn-sm btn-icon position-absolute end-0 top-50 translate-middle-y me-1 d-none" style="width: 26px; height: 26px; color: #94a3b8; background: transparent; border: none;">
+                                                <i class="fa-solid fa-xmark fs-7"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Sort Dropdown -->
+                                        <div style="min-width: 160px;">
+                                            <select class="form-select form-select-sm" id="sortingfilter" onchange="filtersdataget()" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; background: #ffffff; font-weight: 500;">
+                                                <option value="Show All" selected>Sort: Default</option>
+                                                <option value="1">Newest to Oldest</option>
+                                                <option value="2">Oldest to Newest</option>
+                                                <option value="3">Salary: Low to High</option>
+                                                <option value="4">Salary: High to Low</option>
+                                                <option value="7">Experience: High to Low</option>
+                                                <option value="8">Experience: Low to High</option>
+                                                <option value="21">Notice: Immediate</option>
+                                                <option value="22">Notice: Serving</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- More Filters Button (triggers fdOpen) -->
+                                        <button type="button" class="btn btn-sm btn-light d-flex align-items-center gap-1.5 px-3" onclick="fdOpen()" style="height: 38px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; font-size: 12px; font-weight: 600;">
+                                            <i class="fa-solid fa-sliders text-muted fs-7"></i>
+                                            <span>Filters</span>
+                                        </button>
+
+                                        <!-- Bulk Add to Job CTA (shown when candidate checkboxes are checked) -->
+                                        <button type="button" class="btn btn-sm btn-primary d-none application_copy d-flex align-items-center gap-1.5 px-3"
+                                                id="btnBulkAddToJob"
+                                                data-toggle="modal" data-target="#application_copy"
+                                                style="height: 38px; border-radius: 8px; font-size: 12px; font-weight: 600;">
+                                            <i class="fa-solid fa-briefcase fs-7"></i>
+                                            <span>Add to Job (<span id="selectedCandidatesCount">0</span>)</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- FILTER BAR -->
-                        <div class="filter-bar">
-                            <div class="search-input-wrap">
-                                <input type="text" class="search-input" name="inputJobSearch"
-                                    value="{{ @$default_skill }}" placeholder="Enter Skills to search Bench Talents....." id="kt_tagify_2" />
-                                {{-- <div data-toggle="modal" data-target="#apptrackerfilter"
-                                    style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"> </div> --}}
-                            </div>
-                            <button class="ai-match-btn" onclick="filtersdataget()">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                                </svg>
-                                Search
-                            </button>
-                            <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                                <select class="form-select form-select-lg sortingfilterselect" data-hide-search="true"
-                                    id="sortingfilter" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option" onchange="filtersdataget()">
-                                    <option value="Show All" selected="">Sort</option>
-                                    <option value="1">Newest to Oldest (Upload Date)</option>
-                                    <option value="2">Oldest to Newest (Upload Date)</option>
-                                    <option value="3">Low to High (Salary)</option>
-                                    <option value="4">High to Low (Salary)</option>
-                                    <option value="21">Notice Period (Immediate)</option>
-                                    <option value="22">Notice Period (Serving)</option>
-                                    <option value="7">High to Low (Experience) </option>
-                                    <option value="8">Low to High (Experience)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="more-filters-btn" onclick="fdOpen()" style="cursor:pointer;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
-                                </svg>
-                                More Filters
+                        <!-- Tier 2: Dedicated Sub-Tabs Grid (Client Tracker .cl-stat-grid Standard) -->
+                        <div class="cl-stat-grid cl-stat-grid-5 mb-3" id="findTalentsTabGrid">
+                            <!-- Tab 1: All Bench Talents -->
+                            <a href="javascript:void(0);" class="cl-card cl-stat-filter active" data-tab="all" onclick="setFindTalentTab('all', this); return false;">
+                                <div class="cl-card-top">
+                                    <div class="cl-card-icon blue">
+                                        <i class="fa-solid fa-users"></i>
+                                    </div>
+                                    <div class="cl-card-meta">
+                                        <div class="cl-card-num" id="stat_all_bench">{{ number_format($tabCounts['all'] ?? 0) }}</div>
+                                        <div class="cl-card-lbl">All Bench Talents</div>
+                                    </div>
+                                </div>
+                                <div class="cl-card-sub blue">
+                                    <i class="fa-solid fa-globe"></i> Active Marketplace
+                                </div>
+                            </a>
+
+                            <!-- Tab 2: IT & Software Talents -->
+                            <a href="javascript:void(0);" class="cl-card cl-stat-filter" data-tab="it_software" onclick="setFindTalentTab('it_software', this); return false;">
+                                <div class="cl-card-top">
+                                    <div class="cl-card-icon cyan">
+                                        <i class="fa-solid fa-laptop-code"></i>
+                                    </div>
+                                    <div class="cl-card-meta">
+                                        <div class="cl-card-num" id="stat_it_software">{{ number_format($tabCounts['it_software'] ?? 0) }}</div>
+                                        <div class="cl-card-lbl">IT & Software Talents</div>
+                                    </div>
+                                </div>
+                                <div class="cl-card-sub cyan">
+                                    <i class="fa-solid fa-code"></i> Developers & Tech
+                                </div>
+                            </a>
+
+                            <!-- Tab 3: Training & Development Talents -->
+                            <a href="javascript:void(0);" class="cl-card cl-stat-filter" data-tab="training_dev" onclick="setFindTalentTab('training_dev', this); return false;">
+                                <div class="cl-card-top">
+                                    <div class="cl-card-icon purple">
+                                        <i class="fa-solid fa-chalkboard-user"></i>
+                                    </div>
+                                    <div class="cl-card-meta">
+                                        <div class="cl-card-num" id="stat_training_dev">{{ number_format($tabCounts['training_dev'] ?? 0) }}</div>
+                                        <div class="cl-card-lbl">Training & Development</div>
+                                    </div>
+                                </div>
+                                <div class="cl-card-sub purple">
+                                    <i class="fa-solid fa-graduation-cap"></i> Upskilled Candidates
+                                </div>
+                            </a>
+
+                            <!-- Tab 4: Institutional Talents -->
+                            <a href="javascript:void(0);" class="cl-card cl-stat-filter" data-tab="institutional" onclick="setFindTalentTab('institutional', this); return false;">
+                                <div class="cl-card-top">
+                                    <div class="cl-card-icon green">
+                                        <i class="fa-solid fa-building-columns"></i>
+                                    </div>
+                                    <div class="cl-card-meta">
+                                        <div class="cl-card-num" id="stat_institutional">{{ number_format($tabCounts['institutional'] ?? 0) }}</div>
+                                        <div class="cl-card-lbl">Institutional Talents</div>
+                                    </div>
+                                </div>
+                                <div class="cl-card-sub green">
+                                    <i class="fa-solid fa-award"></i> University & Campus
+                                </div>
+                            </a>
+
+                            <!-- Tab 5: Domestic Talents -->
+                            <a href="javascript:void(0);" class="cl-card cl-stat-filter" data-tab="domestic" onclick="setFindTalentTab('domestic', this); return false;">
+                                <div class="cl-card-top">
+                                    <div class="cl-card-icon orange">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                    </div>
+                                    <div class="cl-card-meta">
+                                        <div class="cl-card-num" id="stat_domestic">{{ number_format($tabCounts['domestic'] ?? 0) }}</div>
+                                        <div class="cl-card-lbl">Domestic Talents</div>
+                                    </div>
+                                </div>
+                                <div class="cl-card-sub orange">
+                                    <i class="fa-solid fa-map-pin"></i> In-Country / Local
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Tier 3: Primary Card Stream (Modern Card + Sub-Card Design Standard) -->
+                        <div class="card shadow-none border-0 bg-transparent mb-4">
+                            <div class="card-body p-0 position-relative">
+                                <div class="loadingMessage" style="display: none; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 100; background: rgba(15, 23, 42, 0.88); color: #ffffff; padding: 7px 18px; border-radius: 20px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 14px rgba(0,0,0,0.18);">
+                                    <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Loading Talents...
+                                </div>
+
+                                <div id="candidatetList" class="cd-talent-cards-stream d-flex flex-column gap-3">
+                                </div>
+
+                                <div id="paginationcandidate" class="mt-4"></div>
                             </div>
                         </div>
 
-
-                        <!--begin::Card-->
-                        <div class="card">
-                            <!--begin::Card body-->
-                            <div class="card-body pt-3 px-5">
-                                <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
-                                <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class">
-                                    <!--begin::Table head-->
-                                    
-                                    {{-- id="myTable" --}}
-                                    <thead>
-                                        <!--begin::Table row-->
-                                        <tr class="fw-bolder text-muted">
-                                            <th style="width:18%;">Talent</th>
-                                            <th style="width:8%;">Experience</th>
-                                            <th style="width:13%;">Skills</th>
-                                            <th style="width:12%;">Availability</th>
-                                            <th style="width:13%;">Location</th>
-                                            <th style="width:14%;">Expected Salary</th>
-                                            <th style="width:15%;">Action</th>
-                                        </tr>
-                                        <!--end::Table row-->
-                                    </thead>
-                                    <!--end::Table head-->
-                                    <tbody class="text-gray-600 fw-bold" id="candidatetList">
-                                    </tbody>
-                                </table>
-                                <div id="paginationcandidate"></div>
-                            </div>
-                            <!--end::Card body-->
-                        </div>
-                        <!--end::Card-->
                     </div>
                 </main>
             </div>
