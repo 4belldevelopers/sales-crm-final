@@ -32,7 +32,7 @@
 
     <input type="hidden" name="fulltime_fee_model" id="aatFulltimeFeeModelHidden" value="{{ $aatFulltimeFeeModel }}">
 
-    <section class="aat-edit-section" data-agency-section="fulltime aat-contract-only">
+    <section class="aat-edit-section aat-edit-section-model" data-agency-section="fulltime">
       <div class="aat-edit-section-head">
         <div class="aat-edit-section-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></span><div><h4>Commercial Model</h4><p data-aat-commercial-model-copy>Pick how the agency is paid for every successful placement.</p></div></div>
       </div>
