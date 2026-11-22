@@ -12247,9 +12247,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         // Phase 1 Optimization: Avoid duplicating rendered HTML and raw ES candidate documents + skill maps
         // in the JSON response (reducing payload size by >50%) unless client_render=1 is explicitly requested.
         $responseData = [
+            'status' => 1,
             'html' => view('service_company.ajax_pages.find_talent_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'skillExperiencesMap', 'benchRecomCounts', 'company_id', 'salaryMode', 'currencySymbole', 'tenantTimezone'))->render(),
             'total' => $total,
+            'total_data' => $total,
             'tab_counts' => $tabCounts,
+            'tabCounts' => $tabCounts,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'tenant_version' => $version,
         ];
