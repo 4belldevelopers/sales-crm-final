@@ -451,6 +451,49 @@ Replaced the basic pill buttons with dedicated enterprise buttons matching the c
 - Tenancy isolation verified: strictly scoped to `service_company/`. Frozen personas (`product_company/`, `staffing_company/`) remain 100% untouched (Rule 18).
 - Calculation event handlers, input names, IDs, and CQRS patterns verified 100% intact.
 
+---
+
+## 13. Round 10 – Preview Stage Step Transition Fix, Drawer-Wide "Save & Next" Standardization & Complete Removal of Duplicate Footer Buttons
+
+### 13.1 Problem Statements & Root Causes
+1. **Drawer Stuck on Step 3 (Preview Offer) & Skipping to Step 5 with Dual Active Steps:**
+   - *Problem:* Clicking the primary action button on Step 3 did not advance to Step 4 (Approval). Instead, both Step 3 and Step 5 appeared simultaneously on the screen (as shown in the user's screenshot where the candidate signature card from Step 3 and the "Send Offer Letter" composer from Step 5 both rendered at the same time).
+   - *Root Cause:*
+     1. In the `#co_header_save_btn` click handler, the Step 3 condition mistakenly called `nextStep(e, 4)`.
+     2. In `nextStep(event, currentStep)`, the logic attempted to remove `.active` from `step` + `currentStep` (`#step4`, which was never active) and add `.active` to `step` + (`currentStep + 1`) (`#step5`). Because `#step3` was never deactivated, `#step3` and `#step5` became active simultaneously.
+     3. For Step 4, the click handler attempted to trigger `#co_send_approval_btn` (a non-existent element in the DOM) rather than executing `nextStep(e, 4)`.
+     4. For Step 5, the click handler looked for `#co_send_offer_submit` rather than `#co_send_submit`.
+2. **Inconsistent Header Button Naming ("Proceed to Approval", "Submit for Approval", etc.):**
+   - *Problem:* The primary button changed names across steps (`Proceed to Approval`, `Submit for Approval`, `Send Offer`), causing confusion and UI inconsistency.
+   - *Remediation:* Standardized the header primary action button to strictly display **`Save & Next`** across all steps, fulfilling the explicit user requirement to "use save & next button only".
+3. **Duplicate Navigation Buttons in Footers Across Every Page:**
+   - *Problem:* Each step featured redundant `[ Back ]`, `[ Save & Next ]`, or `[ Continue to Approval ]` footer buttons at the bottom of the card/content alongside the persistent header action buttons.
+   - *Remediation:*
+     - **Step 2 (Template):** Removed visible `.co-footer-actions`, retaining only a hidden `#step2SaveBtn` form trigger.
+     - **Step 3 (Preview):** Removed `.co-step3-footer-right` (`[ Back ]` and `[ Continue to Approval ]`). Preserved the essential `Download Offer Letter` stream action button aligned cleanly to the left.
+     - **Step 4 (Approval):** Completely removed `.co-footer-actions`.
+     - **Step 5 (Send Offer):** Removed `.co-send-footer-actions` (`[ Back ]` and duplicate submit), retaining only the informational note and a hidden `#co_send_submit` trigger.
+
+### 13.2 Architectural & Code Remediation
+1. **Defensive Single-Active Step Sanitation:**
+   - Upgraded `nextStep(event, currentStep)`, `prevStep(event, currentStep)`, and `goToStepNav(n)` to execute:
+     `document.querySelectorAll('.tab-content-section').forEach(s => s.classList.remove('active'));`
+     before adding `.active` to the designated target step. This renders dual active step collisions impossible under any circumstance.
+2. **Corrected Step Navigation Mapping:**
+   - Step 1: `#save-form.click()` $\rightarrow$ AJAX validates & saves Base CTC $\rightarrow$ `nextStep(event, 1)` $\rightarrow$ activates Step 2.
+   - Step 2: `#step2SaveBtn.click()` $\rightarrow$ AJAX saves Terms $\rightarrow$ `nextStep(fakeEvent, 2)` $\rightarrow$ activates Step 3 (renders preview).
+   - Step 3: `nextStep(e, 3)` $\rightarrow$ deactivates all $\rightarrow$ activates Step 4 (Approval).
+   - Step 4: `nextStep(e, 4)` $\rightarrow$ deactivates all $\rightarrow$ activates Step 5 (Send Offer Letter).
+   - Step 5: `#co_send_submit.click()` $\rightarrow$ dispatches candidate offer email via AJAX.
+3. **Universal "Save & Next" Sync:**
+   - Both `syncStepHeader()` and `resetAllSaveBtns()` now deterministically paint `Save & Next` with `fas fa-arrow-right` on `#co_header_save_btn`.
+
+### 13.3 Verification Evidence
+- `php -l resources/views/service_company/job-applications/create-offer.blade.php`: **Passed (0 syntax errors)**.
+- Persona freeze verified: all changes strictly confined to `service_company/`.
+- Single-active step transitions tested: Step 1 $\leftrightarrow$ Step 2 $\leftrightarrow$ Step 3 $\leftrightarrow$ Step 4 $\leftrightarrow$ Step 5.
+
+
 
 
 
