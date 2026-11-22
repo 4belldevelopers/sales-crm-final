@@ -51,7 +51,6 @@ class ServiceCompanyApplicationOfferController extends ServiceCompanyBaseControl
 					->where('job_applications.thirdparty_company_id', '=', $company_id);
 		});
 		$this->appCounter = $this->appCounter->count();
-		$this->countries  = DB::table('countries')->get();
 
 		// KPI stats & pipeline for the redesigned index page.
 		//
