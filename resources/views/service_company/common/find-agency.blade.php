@@ -600,6 +600,10 @@
     text-overflow: ellipsis;
     min-width: 0;
     flex: 1;
+    position: relative;
+    -webkit-mask-image: linear-gradient(to right, black 0%, black calc(100% - 32px), transparent 100%);
+    mask-image: linear-gradient(to right, black 0%, black calc(100% - 32px), transparent 100%);
+    padding-right: 14px;
 }
 .ticker-item {
     white-space: nowrap;
@@ -628,11 +632,25 @@
 }
 .ticker-right {
     font-size: 10.5px;
-    color: #64748b;
+    color: #475569;
     flex-shrink: 0;
     font-family: inherit;
     white-space: nowrap;
     margin-left: auto;
+    background: #ffffff;
+    border: 1px solid #d1fae5;
+    border-radius: 20px;
+    padding: 2.5px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 1px 2px rgba(16, 185, 129, 0.08);
+    position: relative;
+    z-index: 2;
+}
+.ticker-right i {
+    font-size: 9.5px;
+    color: #059669;
 }
 
 /* ── POINT 1: "Match With My Open Jobs" Instant AI Job Matcher ── */
@@ -1823,7 +1841,8 @@
                     </div>
                 </div>
                 <div class="ticker-right">
-                    <span class="font-mono text-muted" id="faTickerTimestamp">{{ $liveTickerUpdatedAt ?? 'Updated Just Now' }}</span>
+                    <i class="far fa-clock"></i>
+                    <span class="font-mono" id="faTickerTimestamp">{{ $liveTickerUpdatedAt ?? 'Updated Just Now' }}</span>
                 </div>
             </div>
 

@@ -77,9 +77,22 @@
             $compSizeFrom = $row->_company_size_from ?? ($row->company_size_from ?? null);
             $compSizeTo = $row->_company_size ?? ($row->company_size ?? null);
             if (!empty($compSizeFrom) && !empty($compSizeTo)) {
-                $companySizeText = number_format((int)$compSizeFrom) . ' - ' . number_format((int)$compSizeTo) . ' employees';
+                $fromNum = (int)$compSizeFrom;
+                $toNum = (int)$compSizeTo;
+                if ($fromNum === 1 && $toNum === 1) {
+                    $companySizeText = '1 employee';
+                } elseif ($fromNum === $toNum) {
+                    $companySizeText = number_format($toNum) . ' employees';
+                } else {
+                    $companySizeText = number_format($fromNum) . ' - ' . number_format($toNum) . ' employees';
+                }
             } elseif (!empty($compSizeTo) && (int)$compSizeTo > 0) {
-                $companySizeText = 'Up to ' . number_format((int)$compSizeTo) . ' employees';
+                $toNum = (int)$compSizeTo;
+                if ($toNum === 1) {
+                    $companySizeText = '1 employee';
+                } else {
+                    $companySizeText = 'Up to ' . number_format($toNum) . ' employees';
+                }
             } else {
                 if ($Sizecount >= 50) {
                     $companySizeText = '1,001 - 5,000 employees';
@@ -89,6 +102,8 @@
                     $companySizeText = '101 - 500 employees';
                 } elseif ($Sizecount >= 5) {
                     $companySizeText = '51 - 100 employees';
+                } elseif ($Sizecount === 1) {
+                    $companySizeText = '1 employee';
                 } else {
                     $companySizeText = '11 - 50 employees';
                 }
