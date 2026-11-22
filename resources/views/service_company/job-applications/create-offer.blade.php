@@ -140,14 +140,15 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #f8fafc !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-            padding: 12px 24px;
+            background: #f1f5f9 !important; /* Dedicated distinct background color (Rule 20) */
+            border-bottom: 1px solid #cbd5e1 !important;
+            padding: 10px 24px;
             position: sticky;
             top: 0;
             z-index: 50;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-            min-height: 60px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+            min-height: 58px;
+            gap: 16px;
         }
 
         /* ── 5-step timeline stepper = modern interactive flow ── */
@@ -155,7 +156,7 @@
         .co-step { flex: 1 1 0; display: flex; align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
         .co-step:last-child { flex: 0 0 auto; }
         /* connector line fills the space after each step's label, up to the next circle */
-        .co-step:not(:last-child)::after { content: ''; flex: 1 1 auto; height: 2px; background: #e2e8f0; min-width: 16px; margin: 0 8px; transition: background .2s; }
+        .co-step:not(:last-child)::after { content: ''; flex: 1 1 auto; height: 2px; background: #cbd5e1; min-width: 16px; margin: 0 8px; transition: background .2s; }
         .co-step--done:not(:last-child)::after { background: #10b981; }
         .co-step-node {
             width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -174,12 +175,58 @@
         .co-step--current .co-step-title { color: #009ef7; font-weight: 700; }
         .co-step--current .co-step-status { color: #009ef7; opacity: .85; }
         .co-step--done .co-step-title { color: #0f172a; font-weight: 600; }
-        .co-drawer-actions { flex-shrink: 0; margin-left: 16px; }
-        .co-close-btn {
-            width: 32px; height: 32px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;
-            color: #64748b; display: flex; align-items: center; justify-content: center; transition: all .15s ease; cursor: pointer; padding: 0;
+
+        /* ── Topbar Actions (Save & Next + Close button alignment) ── */
+        .co-drawer-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            margin-left: 16px;
         }
-        .co-close-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #ef4444; }
+        .co-header-save-btn {
+            background: #009ef7 !important;
+            border: 1px solid #009ef7 !important;
+            color: #ffffff !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            height: 34px !important;
+            padding: 0 14px !important;
+            border-radius: 7px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 2px rgba(0, 158, 247, 0.2) !important;
+            cursor: pointer !important;
+            white-space: nowrap !important;
+        }
+        .co-header-save-btn:hover {
+            background: #008be0 !important;
+            border-color: #008be0 !important;
+            box-shadow: 0 2px 5px rgba(0, 158, 247, 0.3) !important;
+        }
+        .co-close-btn {
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 7px !important;
+            color: #64748b !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all .15s ease !important;
+            cursor: pointer !important;
+            padding: 0 !important;
+        }
+        .co-close-btn:hover {
+            background: #fee2e2 !important;
+            border-color: #fca5a5 !important;
+            color: #ef4444 !important;
+        }
         @media (max-width: 900px) {
             .co-stepper { padding: 0; }
             .co-step-status { display: none; }
@@ -198,37 +245,37 @@
         .co-card-header {
             background: #f8fafc !important;
             border-bottom: 1px solid #e2e8f0 !important;
-            padding: 14px 20px !important;
+            padding: 10px 18px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
             flex-wrap: wrap !important;
             gap: 12px !important;
-            min-height: auto !important;
+            min-height: 48px !important;
         }
         .co-card-header--emerald {
             background: linear-gradient(90deg, #f8fafc 0%, #f0fdf4 100%) !important;
             border-bottom: 1px solid #bbf7d0 !important;
         }
         .co-card-header-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
         }
-        .co-card-header-icon svg { width: 16px; height: 16px; }
+        .co-card-header-icon svg { width: 15px; height: 15px; }
         .co-card-header-icon--blue   { background: #eff6ff; color: #2563eb; }
         .co-card-header-icon--indigo { background: #eef2ff; color: #4f46e5; }
         .co-card-header-icon--purple { background: #f5f3ff; color: #7c3aed; }
         .co-card-header-icon--green  { background: #ecfdf5; color: #059669; }
         .co-card-header-icon--amber  { background: #fef3c7; color: #d97706; }
 
-        .co-section-title { font-size: 14px !important; font-weight: 700 !important; color: #0f172a !important; margin: 0 !important; line-height: 1.3 !important; }
-        .co-section-note { font-size: 11.5px; font-weight: 500; color: #64748b; }
-        .co-section-sub { font-size: 11.5px !important; color: #64748b !important; margin-top: 2px !important; line-height: 1.4 !important; }
+        .co-section-title { font-size: 13.5px !important; font-weight: 700 !important; color: #0f172a !important; margin: 0 !important; line-height: 1.25 !important; }
+        .co-section-note { font-size: 11px; font-weight: 500; color: #64748b; }
+        .co-section-sub { font-size: 11px !important; color: #64748b !important; margin-top: 1px !important; line-height: 1.35 !important; }
 
         /* ── Sub-Cards (Tier 3 Discrete Sub-Panels) ── */
         .co-subcard {
@@ -243,17 +290,18 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
         }
         .co-subcard-header {
-            background: #f1f5f9;
+            background: #f8fafc;
             border-bottom: 1px solid #e2e8f0;
-            padding: 10px 14px;
+            padding: 8px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            min-height: 38px;
         }
         .co-subcard-title {
             font-size: 11px !important;
             font-weight: 700 !important;
-            color: #475569 !important;
+            color: #334155 !important;
             text-transform: uppercase !important;
             letter-spacing: .5px !important;
             display: flex;
@@ -262,11 +310,11 @@
         .co-subcard-badge {
             font-size: 10px !important;
             font-weight: 600 !important;
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 99px;
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            color: #64748b;
+            border: 1px solid #cbd5e1;
+            color: #475569;
         }
         .co-subcard-body {
             padding: 16px;
@@ -282,40 +330,284 @@
         }
         .co-table-subcard table { margin-bottom: 0 !important; }
 
-        /* ── Confidentiality Header Control ── */
-        .co-conf-header-box {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 3px;
-        }
-        .co-flabel-inline {
-            font-size: 11.5px !important;
-            font-weight: 600 !important;
-            color: #475569 !important;
+        /* ── Integrated Confidentiality Control ── */
+        .co-conf-inline-wrap {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
-        .co-conf-select {
-            width: 90px !important;
-            height: 32px !important;
-            min-height: 32px !important;
-            background: #ffffff !important;
+        .co-conf-info-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+        .co-conf-info-trigger:hover {
+            color: #009ef7;
+        }
+        .co-conf-active-pill {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 11px;
+            color: #1e40af;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.35;
+        }
+
+        /* ── CTC Words Dynamic Conversion Display ── */
+        .co-ctc-words-wrap {
+            min-height: 18px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .co-ctc-words-text {
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            color: #334155 !important;
+            line-height: 1.35 !important;
+            word-break: break-word;
+        }
+        .co-ctc-words-text.is-empty {
+            color: #94a3b8 !important;
+            font-style: italic;
+        }
+        .co-ctc-symbol-prefix {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #009ef7 !important;
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        /* ── Currency Trigger & Dropdown Popover (Reusing Add Job Technology) ── */
+        .co-currency-control-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .co-drawer-curr-btn {
+            width: 100% !important;
+            height: 38px !important;
+            background: #f8fafc !important;
             border: 1px solid #cbd5e1 !important;
             border-radius: 6px !important;
-            font-size: 12px !important;
-            font-weight: 600 !important;
-            color: #1e293b !important;
-            padding: 4px 8px !important;
+            padding: 0 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            font-size: 12.5px !important;
+            color: #0f172a !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+            user-select: none !important;
         }
-        .co-conf-hint {
-            font-size: 10.5px !important;
+        .co-drawer-curr-btn:hover {
+            background: #ffffff !important;
+            border-color: #009ef7 !important;
+            box-shadow: 0 2px 4px rgba(0, 158, 247, 0.1) !important;
+        }
+        .co-drawer-curr-btn[aria-expanded="true"] {
+            background: #ffffff !important;
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+        }
+        .co-drawer-curr-btn .ij-curr-pill-symbol {
+            font-size: 13.5px !important;
+            font-weight: 700 !important;
             color: #009ef7 !important;
-            font-weight: 500 !important;
-            text-decoration: none !important;
         }
-        .co-conf-hint:hover { text-decoration: underline !important; }
+        .co-drawer-curr-btn .ij-curr-pill-code {
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            color: #1e293b !important;
+        }
+        .co-drawer-curr-btn .co-curr-label-name {
+            font-size: 11.5px !important;
+            color: #64748b !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .co-drawer-curr-btn .ij-curr-arrow {
+            width: 12px !important;
+            height: 12px !important;
+            color: #64748b !important;
+            margin-left: auto !important;
+            flex-shrink: 0;
+            transition: transform 0.2s ease !important;
+        }
+        .co-drawer-curr-btn[aria-expanded="true"] .ij-curr-arrow {
+            transform: rotate(180deg) !important;
+            color: #009ef7 !important;
+        }
+
+        .ij-curr-popover {
+            position: fixed !important;
+            z-index: 9999999 !important;
+            width: 320px !important;
+            max-width: calc(100vw - 32px) !important;
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.06) !important;
+            padding: 10px !important;
+            box-sizing: border-box !important;
+            animation: coPopFadeIn 0.15s ease-out !important;
+        }
+        @keyframes coPopFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ij-curr-pop-search-wrap {
+            position: relative !important;
+            margin-bottom: 8px !important;
+        }
+        .ij-curr-pop-search-icon {
+            position: absolute !important;
+            left: 10px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            width: 14px !important;
+            height: 14px !important;
+            color: #94a3b8 !important;
+            pointer-events: none !important;
+        }
+        .ij-curr-pop-search {
+            width: 100% !important;
+            height: 32px !important;
+            min-height: 32px !important;
+            padding: 4px 10px 4px 32px !important;
+            font-size: 11.5px !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            box-sizing: border-box !important;
+            color: #0f172a !important;
+            outline: none !important;
+            transition: all 0.15s ease !important;
+        }
+        .ij-curr-pop-search:focus {
+            border-color: #009ef7 !important;
+            box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.2) !important;
+        }
+        .ij-curr-pop-quick {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin-bottom: 8px !important;
+            padding-bottom: 8px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            flex-wrap: wrap !important;
+        }
+        .ij-curr-pop-quick-label {
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+        }
+        .ij-curr-pop-quick-chips {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            flex-wrap: wrap !important;
+        }
+        .ij-curr-pop-chip {
+            padding: 2.5px 7px !important;
+            font-size: 10.5px !important;
+            font-weight: 600 !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 4px !important;
+            color: #334155 !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            line-height: 1.2 !important;
+        }
+        .ij-curr-pop-chip:hover {
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+            color: #1d4ed8 !important;
+        }
+        .ij-curr-pop-list {
+            max-height: 220px !important;
+            overflow-y: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+        }
+        .ij-curr-pop-list::-webkit-scrollbar { width: 5px; }
+        .ij-curr-pop-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .ij-curr-pop-item {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 6px 8px !important;
+            border-radius: 5px !important;
+            cursor: pointer !important;
+            transition: all 0.12s ease !important;
+            border-left: 2px solid transparent !important;
+        }
+        .ij-curr-pop-item:hover {
+            background: #f8fafc !important;
+            border-left-color: #009ef7 !important;
+        }
+        .ij-curr-pop-item.is-selected {
+            background: #eff6ff !important;
+            border-left-color: #009ef7 !important;
+        }
+        .ij-curr-item-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+        }
+        .ij-curr-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            font-size: 11.5px !important;
+            padding: 2px 6px !important;
+            background: #f1f5f9 !important;
+            border-radius: 4px !important;
+            flex-shrink: 0 !important;
+        }
+        .ij-curr-pop-item.is-selected .ij-curr-badge {
+            background: #dbeafe !important;
+        }
+        .ij-curr-badge-code {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        .ij-curr-badge-symbol {
+            color: #009ef7 !important;
+            font-weight: 600 !important;
+        }
+        .ij-curr-name {
+            font-size: 11.5px !important;
+            color: #334155 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        .ij-curr-check {
+            width: 14px !important;
+            height: 14px !important;
+            color: #009ef7 !important;
+            opacity: 0 !important;
+            flex-shrink: 0 !important;
+            transition: opacity 0.15s ease !important;
+        }
+        .ij-curr-pop-item.is-selected .ij-curr-check {
+            opacity: 1 !important;
+        }
 
         /* ── Action Pills and Badges ── */
         .co-btn-add-pill {
@@ -1248,6 +1540,24 @@
                 $monthly_final_gross = $offer['monthly_final_gross'];
             }
         }
+
+        $allCurrencies = GeneralMethod::currency();
+        $defaultTenantCurrencyKey = GeneralMethod::defaultCurrencyKey();
+        // Currency Synchronization: Synchronize with the associated Job's currency if offer currency is unset
+        if ($currency === '' || $currency === null) {
+            if (isset($job_currency) && $job_currency !== '' && $job_currency !== null) {
+                $selectedCurrency = (int)$job_currency;
+            } else {
+                $selectedCurrency = $defaultTenantCurrencyKey;
+            }
+        } else {
+            $selectedCurrency = (int)$currency;
+        }
+        $initialCurrCode = $allCurrencies[$selectedCurrency] ?? 'INR';
+        $initialMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($initialCurrCode);
+        $initialCurrSymbol = $initialMeta['symbol'] ?? '₹';
+        $initialCurrName = $initialMeta['name'] ?? $initialCurrCode;
+
         // dd($offer_terms_conditions);
         $details = '';
        if(empty(@$offer_terms_conditions)){
@@ -1344,7 +1654,11 @@
             </div>
         </div>
         <div class="co-drawer-actions">
-            <button type="button" class="btn btn-sm btn-icon co-close-btn" id="kt_offercreate_close" title="Close drawer">
+            <button type="button" class="btn btn-sm co-header-save-btn" id="co_header_save_btn">
+                <span class="co-header-save-label">Save &amp; Next</span>
+                <i class="fas fa-arrow-right fs-9 ms-1"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-icon co-close-btn" id="kt_offercreate_close" title="Close drawer" aria-label="Close drawer">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1507,18 +1821,11 @@
                                                                 <div class="co-section-sub">Enter the candidate salary package and core employment parameters</div>
                                                             </div>
                                                         </div>
-                                                        <div class="co-conf-header-box">
-                                                            <div class="d-flex align-items-center gap-2">
-                                                                <label class="co-flabel-inline mb-0" for="confidential">
-                                                                    <span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/></svg></span>
-                                                                    Confidentiality Status <span class="text-danger">*</span>:
-                                                                </label>
-                                                                <select class="form-select form-select-sm co-conf-select" arial-label="Select Confidential" id="confidential" name="confidential">
-                                                                    <option value="0" {{ $confidential == 0 ? 'selected' : '' }}>No</option>
-                                                                    <option value="1" {{ $confidential == 1 ? 'selected' : '' }}>Yes</option>
-                                                                </select>
-                                                            </div>
-                                                            <a href="javascript:void(0);" class="co-conf-hint">Who can view the Salary</a>
+                                                        <div class="d-flex align-items-center gap-2" id="coCardHeaderSecPill">
+                                                            <span class="badge {{ $confidential == 1 ? 'badge-light-warning text-warning' : 'badge-light-primary text-primary' }} fw-semibold fs-8 px-2 py-1" id="coConfStatusBadge">
+                                                                <i class="fas {{ $confidential == 1 ? 'fa-lock' : 'fa-lock-open' }} me-1 fs-9"></i>
+                                                                <span id="coConfStatusBadgeText">{{ $confidential == 1 ? 'Confidential Offer' : 'Standard Visibility' }}</span>
+                                                            </span>
                                                         </div>
                                                     </div>
 
@@ -1539,26 +1846,64 @@
                                                                             <label class="form-label required co-flabel">
                                                                                 <span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1.1 2 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2.5 0 0 1 9.5 15M12 6v1.5M12 16.5V18"/></svg></span> Currency
                                                                             </label>
-                                                                            @php
-                                                                                $defaultTenantCurrencyKey = GeneralMethod::defaultCurrencyKey();
-                                                                                $selectedCurrency = ($currency !== '' && $currency !== null) ? (int)$currency : $defaultTenantCurrencyKey;
-                                                                            @endphp
-                                                                            <select class="form-select form-select-solid" arial-label="Select Currency" id="current_ctc_cur" name="current_ctc_cur">
-                                                                                <option value="0" {{ $selectedCurrency === 0 ? 'selected' : '' }}>INR - Indian Rupee</option>
-                                                                                <option value="1" {{ $selectedCurrency === 1 ? 'selected' : '' }}>EUR</option>
-                                                                                <option value="2" {{ $selectedCurrency === 2 ? 'selected' : '' }}>JPY</option>
-                                                                                <option value="3" {{ $selectedCurrency === 3 ? 'selected' : '' }}>GBP</option>
-                                                                                <option value="4" {{ $selectedCurrency === 4 ? 'selected' : '' }}>USD</option>
-                                                                                <option value="5" {{ $selectedCurrency === 5 ? 'selected' : '' }}>AED</option>
-                                                                            </select>
+                                                                            <div class="co-currency-control-wrapper" id="coCurrWrap">
+                                                                                <button type="button" class="ij-currency-btn co-drawer-curr-btn" id="coCurrTrigger" data-target="coCurrWrap" title="Click to change currency" aria-haspopup="dialog" aria-expanded="false">
+                                                                                    <span class="ij-curr-pill-symbol" id="coCurrTriggerSymbol">{{ $initialCurrSymbol }}</span>
+                                                                                    <span class="ij-curr-pill-code" id="coCurrTriggerCode">{{ $initialCurrCode }}</span>
+                                                                                    <span class="co-curr-label-name text-muted fs-8 ms-1">— <span id="coCurrSelectedName">{{ $initialCurrName }}</span></span>
+                                                                                    <svg class="ij-curr-arrow ms-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                                                                </button>
+                                                                                {{-- Hidden select storing selected currency key for 100% backend contract --}}
+                                                                                <select class="d-none" id="current_ctc_cur" name="current_ctc_cur">
+                                                                                    @foreach($allCurrencies as $cKey => $cCode)
+                                                                                        @php
+                                                                                            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($cCode);
+                                                                                            $cName = $cMeta['name'] ?? $cCode;
+                                                                                            $cSymbol = $cMeta['symbol'] ?? '';
+                                                                                        @endphp
+                                                                                        <option value="{{ $cKey }}" data-code="{{ $cCode }}" data-symbol="{{ $cSymbol }}" data-name="{{ $cName }}" {{ (int)$selectedCurrency === (int)$cKey ? 'selected' : '' }}>
+                                                                                            {{ $cCode }} - {{ $cName }} ({{ $cSymbol }})
+                                                                                        </option>
+                                                                                    @endforeach
+                                                                                </select>
+                                                                            </div>
                                                                         </div>
 
                                                                         <div class="mb-4">
-                                                                            <label class="form-label required co-flabel">
-                                                                                <span class="co-ic co-ic--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/></svg></span> Enter Amount (CTC)
-                                                                            </label>
-                                                                            <input type="text" class="form-control form-control-solid" name="ctc" id="ctc" placeholder="Enter current CTC" value="{{ @$salary_ctc }}">
+                                                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                                                <label class="form-label required co-flabel mb-0" for="ctc">
+                                                                                    <span class="co-ic co-ic--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/></svg></span> Enter Amount (CTC)
+                                                                                </label>
+                                                                                {{-- Confidentiality UI integrated into Amount section per Requirement 3 --}}
+                                                                                <div class="co-conf-inline-wrap d-flex align-items-center gap-2">
+                                                                                    <label class="form-check form-switch form-check-custom form-check-solid form-check-sm mb-0 cursor-pointer" title="Restrict salary visibility to Admins and Approvers">
+                                                                                        <input class="form-check-input" type="checkbox" id="confidential_toggle" {{ $confidential == 1 ? 'checked' : '' }}>
+                                                                                        <span class="form-check-label fs-8 text-gray-700 fw-semibold">
+                                                                                            <i class="fas fa-user-shield text-primary me-1 fs-9"></i>Confidential
+                                                                                        </span>
+                                                                                    </label>
+                                                                                    <input type="hidden" name="confidential" id="confidential" value="{{ $confidential == 1 ? '1' : '0' }}">
+                                                                                    <a href="javascript:void(0);" class="co-conf-info-trigger" id="btnWhoCanView" title="Who can view salary?">
+                                                                                        <i class="fas fa-question-circle fs-8 text-gray-400 hover-primary"></i>
+                                                                                    </a>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="input-group">
+                                                                                <span class="input-group-text bg-light border-end-0 text-muted fw-bold fs-7 co-ctc-symbol-prefix" id="coCtcSymbolPrefix">{{ $initialCurrSymbol }}</span>
+                                                                                <input type="text" class="form-control form-control-solid border-start-0" name="ctc" id="ctc" placeholder="Enter Base CTC" value="{{ @$salary_ctc }}">
+                                                                            </div>
                                                                             <div class="fv-plugins-message-container invalid-feedback"></div>
+
+                                                                            {{-- Number to words conversion display per Requirement 4 --}}
+                                                                            <div class="co-ctc-words-wrap mt-1" id="coCtcWordsWrap">
+                                                                                <span class="co-ctc-words-text" id="coCtcWordsText"></span>
+                                                                            </div>
+
+                                                                            {{-- Confidential active hint banner --}}
+                                                                            <div id="confidential_active_hint" class="co-conf-active-pill mt-2 {{ $confidential == 1 ? '' : 'd-none' }}">
+                                                                                <i class="fas fa-lock text-primary fs-9 me-1"></i>
+                                                                                <span><strong>Confidential Offer:</strong> Package details will only be visible to Organization Admins and designated Approvers. <a href="javascript:void(0);" class="text-primary fw-semibold ms-1" onclick="$('#btnWhoCanView').trigger('click')">Learn more</a></span>
+                                                                            </div>
                                                                         </div>
 
                                                                         <div>
@@ -1566,11 +1911,11 @@
                                                                                 <span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span> Salary Breakdown Format
                                                                             </label>
                                                                             <select class="form-select form-select-solid" arial-label="Select Annual Salary" id="current_ctc_mode" name="current_ctc_mode">
-                                                                                <option value="2" {{ $salary_mode == 2 ? 'selected' : '' }}>Hourly</option>
+                                                                                <option value="0" {{ empty($salary_mode) || $salary_mode == 0 ? 'selected' : '' }}>Monthly / Annually</option>
                                                                                 <option value="1" {{ $salary_mode == 1 ? 'selected' : '' }}>Monthly</option>
                                                                                 <option value="3" {{ $salary_mode == 3 ? 'selected' : '' }}>Annually</option>
-                                                                                <option value="0" {{ empty($salary_mode) || $salary_mode == 0 ? 'selected' : '' }}>Monthly/Annually</option>
-                                                                                <option value="4" {{ $salary_mode == 4 ? 'selected' : '' }}>Hourly/Annually</option>
+                                                                                <option value="2" {{ $salary_mode == 2 ? 'selected' : '' }}>Hourly</option>
+                                                                                <option value="4" {{ $salary_mode == 4 ? 'selected' : '' }}>Hourly / Annually</option>
                                                                             </select>
                                                                             <div class="co-field-hint">Frequency mode used for component calculations</div>
                                                                         </div>
@@ -3041,6 +3386,50 @@
                                         </div>
                                         </div>
                                     </form>
+
+                                    <!-- Modern Enterprise Currency Dropdown Popover (Reusing Add Job Technology) -->
+                                    <div class="ij-curr-popover" id="coCurrencyPopover" style="display:none;" tabindex="-1">
+                                        <div class="ij-curr-pop-search-wrap">
+                                            <svg class="ij-curr-pop-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                                            </svg>
+                                            <input type="text" class="ij-curr-pop-search" id="coCurrPopSearch" placeholder="Search currency (code, name, symbol)..." autocomplete="off" spellcheck="false">
+                                        </div>
+                                        <div class="ij-curr-pop-quick">
+                                            <span class="ij-curr-pop-quick-label">Popular:</span>
+                                            <div class="ij-curr-pop-quick-chips">
+                                                <button type="button" class="ij-curr-pop-chip" data-code="INR">INR (₹)</button>
+                                                <button type="button" class="ij-curr-pop-chip" data-code="USD">USD ($)</button>
+                                                <button type="button" class="ij-curr-pop-chip" data-code="EUR">EUR (€)</button>
+                                                <button type="button" class="ij-curr-pop-chip" data-code="GBP">GBP (£)</button>
+                                                <button type="button" class="ij-curr-pop-chip" data-code="AED">AED (د.إ)</button>
+                                                <button type="button" class="ij-curr-pop-chip" data-code="SGD">SGD (S$)</button>
+                                            </div>
+                                        </div>
+                                        <div class="ij-curr-pop-list" id="coCurrPopList">
+                                            @php
+                                                $popRendered = [];
+                                            @endphp
+                                            @foreach($allCurrencies as $cKey => $cCode)
+                                                @php
+                                                    if (isset($popRendered[$cCode])) continue;
+                                                    $popRendered[$cCode] = true;
+                                                    $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($cCode);
+                                                    $cSymbol = $cMeta['symbol'] ?? '';
+                                                    $cName = $cMeta['name'] ?? $cCode;
+                                                    $searchData = strtolower(($cMeta['keywords'] ?? '') . ' ' . $cCode . ' ' . $cName . ' ' . $cSymbol);
+                                                    $isSel = ((int)$selectedCurrency === (int)$cKey);
+                                                @endphp
+                                                <div class="ij-curr-pop-item {{ $isSel ? 'is-selected' : '' }}" data-val="{{ $cKey }}" data-code="{{ $cCode }}" data-symbol="{{ $cSymbol }}" data-name="{{ $cName }}" data-search="{{ $searchData }}">
+                                                    <div class="ij-curr-item-left">
+                                                        <span class="ij-curr-badge"><strong class="ij-curr-badge-code">{{ $cCode }}</strong> <span class="ij-curr-badge-symbol">{{ $cSymbol }}</span></span>
+                                                        <span class="ij-curr-name">{{ $cName }}</span>
+                                                    </div>
+                                                    <svg class="ij-curr-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -6048,6 +6437,36 @@
                         else if (n === active) coPaintStep(step, 'current');
                         else coPaintStep(step, 'pending');
                     });
+
+                    // Sync Main Drawer Header Action Button
+                    var $hdrBtn = $('#co_header_save_btn');
+                    if ($hdrBtn.length) {
+                        var $label = $hdrBtn.find('.co-header-save-label');
+                        var $icon = $hdrBtn.find('i');
+                        if (active === 1) {
+                            var saveTxt = $('#save-form').val() || 'Save & Next';
+                            $label.text(saveTxt);
+                            $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                            $hdrBtn.show();
+                        } else if (active === 2) {
+                            $label.text('Save & Next');
+                            $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                            $hdrBtn.show();
+                        } else if (active === 3) {
+                            $label.text('Proceed to Approval');
+                            $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                            $hdrBtn.show();
+                        } else if (active === 4) {
+                            $label.text('Submit for Approval');
+                            $icon.attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                            $hdrBtn.show();
+                        } else if (active === 5) {
+                            $label.text('Send Offer');
+                            $icon.attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                            $hdrBtn.show();
+                        }
+                    }
+
                     /* Full-height flex mode for steps 3-5: stretches the scroll
                        container so the active step fills the full height with no
                        blank white gap below the content. */
@@ -6058,6 +6477,24 @@
                     }
                     if (typeof coEnsureStep5Composer === 'function') coEnsureStep5Composer();
                 }
+
+                $(document).on('click', '#co_header_save_btn', function (e) {
+                    e.preventDefault();
+                    var active = coActiveStep();
+                    if (active === 1) {
+                        $('#save-form').trigger('click');
+                    } else if (active === 2) {
+                        $('#step2SaveBtn').trigger('click');
+                    } else if (active === 3) {
+                        if (typeof nextStep === 'function') nextStep(e, 4);
+                    } else if (active === 4) {
+                        var $btn = $('#co_send_approval_btn');
+                        if ($btn.length) $btn.trigger('click');
+                    } else if (active === 5) {
+                        var $sendBtn = $('#co_send_offer_submit');
+                        if ($sendBtn.length) $sendBtn.trigger('click');
+                    }
+                });
 
                 // Native Step 5 composer — initialises CKEditor on the body once Step 5 is active.
                 // No AJAX loader: the composer markup is server-rendered with real values; only the
@@ -6524,5 +6961,382 @@
                     var $s5 = $('#co-send-step5-designation');
                     if (val) { $s5.text(val).show(); } else { $s5.hide(); }
                 });
+            </script>
+
+            <script>
+                /* ── Currency Selection & Number-to-Words Engine (Reusing Add Job Technology) ── */
+                (function () {
+                    var $pop = $('#coCurrencyPopover');
+                    var activeTrigger = null;
+
+                    // Ensure popover is attached to body so parent drawer overflow never clips it
+                    if ($pop.length && !$pop.parent().is('body')) {
+                        $('body').append($pop);
+                    }
+
+                    function positionCurrencyPopover($trigger) {
+                        if (!$trigger || !$trigger.length) return;
+                        var rect = $trigger[0].getBoundingClientRect();
+                        var popWidth = 320;
+                        var popHeight = $pop.outerHeight() || 340;
+                        var left = rect.left;
+
+                        if (left + popWidth > window.innerWidth - 16) {
+                            left = window.innerWidth - popWidth - 16;
+                        }
+                        if (left < 16) left = 16;
+
+                        var top = rect.bottom + 4;
+                        if (top + popHeight > window.innerHeight - 10 && rect.top > popHeight + 10) {
+                            top = rect.top - popHeight - 4;
+                        }
+
+                        $pop.css({
+                            position: 'fixed',
+                            top: top + 'px',
+                            left: left + 'px',
+                            zIndex: 9999999
+                        });
+                    }
+
+                    function openCurrencyPopover($trigger) {
+                        activeTrigger = $trigger;
+                        $pop.show();
+                        positionCurrencyPopover($trigger);
+                        $trigger.attr('aria-expanded', 'true');
+
+                        var $search = $('#coCurrPopSearch');
+                        $search.val('');
+                        $('#coCurrPopList .ij-curr-pop-item').show();
+                        $('.co-curr-pop-empty').remove();
+                        setTimeout(function () { $search.focus().select(); }, 50);
+
+                        var $selItem = $('#coCurrPopList .ij-curr-pop-item.is-selected').first();
+                        if ($selItem.length) {
+                            var list = document.getElementById('coCurrPopList');
+                            if (list) {
+                                list.scrollTop = $selItem[0].offsetTop - list.offsetTop - 30;
+                            }
+                        }
+                    }
+
+                    function closeCurrencyPopover() {
+                        $pop.hide();
+                        if (activeTrigger) {
+                            activeTrigger.attr('aria-expanded', 'false');
+                        }
+                        activeTrigger = null;
+                    }
+
+                    function selectOfferCurrency(val, code, symbol, name) {
+                        $('#current_ctc_cur').val(String(val)).trigger('change');
+
+                        $('#coCurrTriggerSymbol').text(symbol || '');
+                        $('#coCurrTriggerCode').text(code || '');
+                        $('#coCurrSelectedName').text(name || code);
+                        $('#coCtcSymbolPrefix').text(symbol || code);
+
+                        $('#coCurrencyPopover .ij-curr-pop-item').removeClass('is-selected');
+                        $('#coCurrencyPopover .ij-curr-pop-item[data-val="' + val + '"]').addClass('is-selected');
+
+                        closeCurrencyPopover();
+                        updateCtcWords();
+                        if (activeTrigger && activeTrigger.length) {
+                            try { activeTrigger.focus(); } catch (e) {}
+                        }
+                    }
+
+                    $(document).on('click', '#coCurrTrigger', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if ($pop.is(':visible') && activeTrigger && activeTrigger[0] === this) {
+                            closeCurrencyPopover();
+                        } else {
+                            openCurrencyPopover($(this));
+                        }
+                    });
+
+                    $(document).on('input keyup', '#coCurrPopSearch', function (e) {
+                        if (e.key === 'Escape') {
+                            closeCurrencyPopover();
+                            return;
+                        }
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            var $firstVis = $('#coCurrPopList .ij-curr-pop-item:visible').first();
+                            if ($firstVis.length) {
+                                selectOfferCurrency(
+                                    $firstVis.attr('data-val'),
+                                    $firstVis.attr('data-code'),
+                                    $firstVis.attr('data-symbol'),
+                                    $firstVis.attr('data-name')
+                                );
+                            }
+                            return;
+                        }
+                        var term = $(this).val().trim().toLowerCase();
+                        var matches = 0;
+                        $('#coCurrPopList .ij-curr-pop-item').each(function () {
+                            var s = ($(this).attr('data-search') || '').toLowerCase();
+                            var c = ($(this).attr('data-code') || '').toLowerCase();
+                            var n = ($(this).attr('data-name') || '').toLowerCase();
+                            var sym = ($(this).attr('data-symbol') || '').toLowerCase();
+                            if (!term || s.indexOf(term) > -1 || c.indexOf(term) > -1 || n.indexOf(term) > -1 || sym.indexOf(term) > -1) {
+                                $(this).show();
+                                matches++;
+                            } else {
+                                $(this).hide();
+                            }
+                        });
+                        $('.co-curr-pop-empty').remove();
+                        if (matches === 0) {
+                            $('#coCurrPopList').append('<div class="co-curr-pop-empty p-3 text-center text-muted fs-8">No matching currency found</div>');
+                        }
+                    });
+
+                    $(document).on('click', '#coCurrencyPopover .ij-curr-pop-item', function (e) {
+                        e.preventDefault();
+                        selectOfferCurrency(
+                            $(this).attr('data-val'),
+                            $(this).attr('data-code'),
+                            $(this).attr('data-symbol'),
+                            $(this).attr('data-name')
+                        );
+                    });
+
+                    $(document).on('click', '#coCurrencyPopover .ij-curr-pop-chip', function (e) {
+                        e.preventDefault();
+                        var chipCode = ($(this).attr('data-code') || '').toUpperCase();
+                        var $target = $('#coCurrPopList .ij-curr-pop-item[data-code="' + chipCode + '"]').first();
+                        if ($target.length) {
+                            selectOfferCurrency(
+                                $target.attr('data-val'),
+                                $target.attr('data-code'),
+                                $target.attr('data-symbol'),
+                                $target.attr('data-name')
+                            );
+                        }
+                    });
+
+                    $(document).on('click', function (e) {
+                        if ($pop.is(':visible') && !$(e.target).closest('#coCurrencyPopover, #coCurrTrigger').length) {
+                            closeCurrencyPopover();
+                        }
+                    });
+
+                    $(document).on('keydown', function (e) {
+                        if (e.key === 'Escape' && $pop.is(':visible')) {
+                            closeCurrencyPopover();
+                        }
+                    });
+
+                    /* ── Number-to-Words Conversion ── */
+                    var CURRENCY_DENOMINATIONS = {
+                        'INR': { singular: 'Rupee', plural: 'Rupees', subunitSingular: 'Paisa', subunitPlural: 'Paise', system: 'indian' },
+                        'USD': { singular: 'Dollar', plural: 'Dollars', subunitSingular: 'Cent', subunitPlural: 'Cents', system: 'intl' },
+                        'EUR': { singular: 'Euro', plural: 'Euros', subunitSingular: 'Cent', subunitPlural: 'Cents', system: 'intl' },
+                        'GBP': { singular: 'Pound', plural: 'Pounds', subunitSingular: 'Penny', subunitPlural: 'Pence', system: 'intl' },
+                        'AED': { singular: 'Dirham', plural: 'Dirhams', subunitSingular: 'Fils', subunitPlural: 'Fils', system: 'intl' },
+                        'CAD': { singular: 'Canadian Dollar', plural: 'Canadian Dollars', subunitSingular: 'Cent', subunitPlural: 'Cents', system: 'intl' },
+                        'AUD': { singular: 'Australian Dollar', plural: 'Australian Dollars', subunitSingular: 'Cent', subunitPlural: 'Cents', system: 'intl' },
+                        'SGD': { singular: 'Singapore Dollar', plural: 'Singapore Dollars', subunitSingular: 'Cent', subunitPlural: 'Cents', system: 'intl' },
+                        'CHF': { singular: 'Swiss Franc', plural: 'Swiss Francs', subunitSingular: 'Rappen', subunitPlural: 'Rappen', system: 'intl' },
+                        'JPY': { singular: 'Yen', plural: 'Yen', subunitSingular: 'Sen', subunitPlural: 'Sen', system: 'intl' },
+                        'NZD': { singular: 'New Zealand Dollar', plural: 'New Zealand Dollars', subunitSingular: 'Cent', subunitPlural: 'Cents', system: 'intl' },
+                        'ZAR': { singular: 'Rand', plural: 'Rand', subunitSingular: 'Cent', subunitPlural: 'Cents', system: 'intl' },
+                        'BRL': { singular: 'Real', plural: 'Reais', subunitSingular: 'Centavo', subunitPlural: 'Centavos', system: 'intl' },
+                        'PHP': { singular: 'Philippine Peso', plural: 'Philippine Pesos', subunitSingular: 'Centavo', subunitPlural: 'Centavos', system: 'intl' },
+                        'MYR': { singular: 'Malaysian Ringgit', plural: 'Malaysian Ringgits', subunitSingular: 'Sen', subunitPlural: 'Sen', system: 'intl' },
+                        'THB': { singular: 'Thai Baht', plural: 'Thai Baht', subunitSingular: 'Satang', subunitPlural: 'Satang', system: 'intl' },
+                        'IDR': { singular: 'Indonesian Rupiah', plural: 'Indonesian Rupiah', subunitSingular: 'Sen', subunitPlural: 'Sen', system: 'intl' },
+                        'VND': { singular: 'Dong', plural: 'Dong', subunitSingular: 'Hao', subunitPlural: 'Hao', system: 'intl' },
+                        'SEK': { singular: 'Swedish Krona', plural: 'Swedish Kronor', subunitSingular: 'Ore', subunitPlural: 'Ore', system: 'intl' },
+                        'NOK': { singular: 'Norwegian Krone', plural: 'Norwegian Kroner', subunitSingular: 'Ore', subunitPlural: 'Ore', system: 'intl' },
+                        'DKK': { singular: 'Danish Krone', plural: 'Danish Kroner', subunitSingular: 'Ore', subunitPlural: 'Ore', system: 'intl' },
+                        'SAR': { singular: 'Saudi Riyal', plural: 'Saudi Riyals', subunitSingular: 'Halala', subunitPlural: 'Halalas', system: 'intl' },
+                        'QAR': { singular: 'Qatari Riyal', plural: 'Qatari Riyals', subunitSingular: 'Dirham', subunitPlural: 'Dirhams', system: 'intl' },
+                        'KWD': { singular: 'Kuwaiti Dinar', plural: 'Kuwaiti Dinars', subunitSingular: 'Fils', subunitPlural: 'Fils', system: 'intl' },
+                        'BHD': { singular: 'Bahraini Dinar', plural: 'Bahraini Dinars', subunitSingular: 'Fils', subunitPlural: 'Fils', system: 'intl' },
+                        'OMR': { singular: 'Omani Rial', plural: 'Omani Rials', subunitSingular: 'Baisa', subunitPlural: 'Baisas', system: 'intl' },
+                        'CNY': { singular: 'Yuan', plural: 'Yuan', subunitSingular: 'Fen', subunitPlural: 'Fen', system: 'intl' },
+                        'KRW': { singular: 'Won', plural: 'Won', subunitSingular: 'Jeon', subunitPlural: 'Jeon', system: 'intl' },
+                        'RUB': { singular: 'Russian Ruble', plural: 'Russian Rubles', subunitSingular: 'Kopek', subunitPlural: 'Kopeks', system: 'intl' },
+                        'TRY': { singular: 'Turkish Lira', plural: 'Turkish Liras', subunitSingular: 'Kurus', subunitPlural: 'Kurus', system: 'intl' },
+                        'PLN': { singular: 'Zloty', plural: 'Zlotys', subunitSingular: 'Grosz', subunitPlural: 'Grosze', system: 'intl' }
+                    };
+
+                    var _ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+                    var _tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+                    function convertUnderThousand(n) {
+                        var str = '';
+                        if (n >= 100) {
+                            str += _ones[Math.floor(n / 100)] + ' Hundred ';
+                            n %= 100;
+                        }
+                        if (n >= 20) {
+                            str += _tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + _ones[n % 10] : '');
+                        } else if (n > 0) {
+                            str += _ones[n];
+                        }
+                        return str.trim();
+                    }
+
+                    function convertIndianSystem(num) {
+                        if (num === 0) return 'Zero';
+                        var words = '';
+                        var crore = Math.floor(num / 10000000);
+                        num %= 10000000;
+                        var lakh = Math.floor(num / 100000);
+                        num %= 100000;
+                        var thousand = Math.floor(num / 1000);
+                        num %= 1000;
+                        var rest = num;
+
+                        if (crore > 0) words += convertIndianSystem(crore) + ' Crore ';
+                        if (lakh > 0) words += convertIndianSystem(lakh) + ' Lakh ';
+                        if (thousand > 0) words += convertIndianSystem(thousand) + ' Thousand ';
+                        if (rest > 0) words += convertUnderThousand(rest);
+                        return words.trim();
+                    }
+
+                    function convertIntlSystem(num) {
+                        if (num === 0) return 'Zero';
+                        var words = '';
+                        var billion = Math.floor(num / 1000000000);
+                        num %= 1000000000;
+                        var million = Math.floor(num / 1000000);
+                        num %= 1000000;
+                        var thousand = Math.floor(num / 1000);
+                        num %= 1000;
+                        var rest = num;
+
+                        if (billion > 0) words += convertUnderThousand(billion) + ' Billion ';
+                        if (million > 0) words += convertUnderThousand(million) + ' Million ';
+                        if (thousand > 0) words += convertUnderThousand(thousand) + ' Thousand ';
+                        if (rest > 0) words += convertUnderThousand(rest);
+                        return words.trim();
+                    }
+
+                    function formatAmountInWords(amountStr, currCode) {
+                        if (!amountStr) return '';
+                        var cleaned = String(amountStr).replace(/,/g, '').trim();
+                        var val = parseFloat(cleaned);
+                        if (isNaN(val) || val <= 0) return '';
+
+                        var code = (currCode || 'INR').toUpperCase();
+                        var denom = CURRENCY_DENOMINATIONS[code] || {
+                            singular: code,
+                            plural: code,
+                            subunitSingular: 'Cent',
+                            subunitPlural: 'Cents',
+                            system: (code === 'INR' ? 'indian' : 'intl')
+                        };
+
+                        var parts = cleaned.split('.');
+                        var intPart = parseInt(parts[0], 10) || 0;
+                        var decPart = 0;
+                        if (parts.length > 1 && parts[1]) {
+                            decPart = parseInt(parts[1].substring(0, 2).padEnd(2, '0'), 10) || 0;
+                        }
+
+                        var words = '';
+                        if (intPart > 0) {
+                            var intWords = (denom.system === 'indian') ? convertIndianSystem(intPart) : convertIntlSystem(intPart);
+                            var unit = (intPart === 1) ? denom.singular : denom.plural;
+                            words = intWords + ' ' + unit;
+                        }
+
+                        if (decPart > 0) {
+                            var decWords = (denom.system === 'indian') ? convertIndianSystem(decPart) : convertIntlSystem(decPart);
+                            var subUnit = (decPart === 1) ? (denom.subunitSingular || 'Cent') : (denom.subunitPlural || 'Cents');
+                            if (words) {
+                                words += ' and ' + decWords + ' ' + subUnit;
+                            } else {
+                                words = decWords + ' ' + subUnit;
+                            }
+                        }
+
+                        if (words) {
+                            return words.trim() + ' Only';
+                        }
+                        return '';
+                    }
+
+                    function getActiveOfferCurrencyCode() {
+                        var $opt = $('#current_ctc_cur option:selected');
+                        if ($opt.length && $opt.data('code')) {
+                            return String($opt.data('code')).toUpperCase();
+                        }
+                        var code = ($('#coCurrTriggerCode').text() || 'INR').trim().toUpperCase();
+                        return code || 'INR';
+                    }
+
+                    function updateCtcWords() {
+                        var rawVal = $('#ctc').val();
+                        var code = getActiveOfferCurrencyCode();
+                        var words = formatAmountInWords(rawVal, code);
+                        var $txt = $('#coCtcWordsText');
+                        if (words) {
+                            $txt.removeClass('is-empty').html('<i class="fas fa-comment-dollar text-primary me-1 fs-9"></i><strong>' + words + '</strong>');
+                        } else {
+                            $txt.addClass('is-empty').text('* Enter CTC amount to see words conversion');
+                        }
+                    }
+
+                    $(document).on('input keyup change paste', '#ctc', updateCtcWords);
+
+                    /* ── Confidentiality Toggle Controller ── */
+                    $(document).on('change', '#confidential_toggle', function () {
+                        var isConf = $(this).is(':checked');
+                        $('#confidential').val(isConf ? '1' : '0');
+                        if (isConf) {
+                            $('#confidential_active_hint').removeClass('d-none');
+                            $('#coConfStatusBadge')
+                                .removeClass('badge-light-primary text-primary')
+                                .addClass('badge-light-warning text-warning');
+                            $('#coConfStatusBadge i').removeClass('fa-lock-open').addClass('fa-lock');
+                            $('#coConfStatusBadgeText').text('Confidential Offer');
+                        } else {
+                            $('#confidential_active_hint').addClass('d-none');
+                            $('#coConfStatusBadge')
+                                .removeClass('badge-light-warning text-warning')
+                                .addClass('badge-light-primary text-primary');
+                            $('#coConfStatusBadge i').removeClass('fa-lock').addClass('fa-lock-open');
+                            $('#coConfStatusBadgeText').text('Standard Visibility');
+                        }
+                    });
+
+                    $(document).on('click', '#btnWhoCanView, .co-conf-info-trigger', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: '<div class="d-flex align-items-center gap-2 justify-content-center"><i class="fas fa-user-shield text-primary fs-3"></i><span>Salary Confidentiality Policy</span></div>',
+                                html: '<div class="text-start fs-7 text-gray-700">' +
+                                      '<p class="mb-3">When <strong>Confidentiality</strong> is enabled for this offer:</p>' +
+                                      '<ul class="ps-4 mb-3" style="line-height: 1.6;">' +
+                                      '<li><strong>Restricted Access:</strong> Compensation figures (CTC, gross, and breakdown) are masked as <em>Confidential</em> across general candidate lists, pipelines, and tracker streams.</li>' +
+                                      '<li><strong>Authorized Roles:</strong> Only Organization Administrators, Account Owners, and assigned Offer Approvers can view the numerical salary amounts.</li>' +
+                                      '<li><strong>Letter Privacy:</strong> The final generated offer letter PDF is only accessible to authorized approvers until released directly to the candidate.</li>' +
+                                      '</ul>' +
+                                      '<div class="alert alert-light-primary p-3 mb-0 fs-8 text-primary fw-semibold">' +
+                                      '<i class="fas fa-info-circle me-1"></i> You can toggle confidentiality at any stage prior to releasing the offer letter.' +
+                                      '</div>' +
+                                      '</div>',
+                                icon: null,
+                                confirmButtonText: 'Understood',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary btn-sm'
+                                }
+                            });
+                        }
+                    });
+
+                    // Initialise on document ready
+                    $(document).ready(function () {
+                        updateCtcWords();
+                    });
+                })();
             </script>
         </div>

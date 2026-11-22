@@ -7216,6 +7216,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($OfferJobApplication->joined);
         $id = $OfferJobApplication->joined;
         $jobId = @$AddJobWiseCondidate->job_id;
+        $jobData = DB::table('jobs')->where('id', $jobId)->select('id', 'min_salary_currency', 'max_salary_currency', 'salary_currency')->first();
+        $this->job_currency = $jobData->min_salary_currency ?? $jobData->salary_currency ?? null;
         // dd($id,$jobId,$AddJobWiseCondidate);
         $this->intModeArr = GeneralMethod::interview_mode();
         $this->application = JobApplication::withoutGlobalScopes()->select(
