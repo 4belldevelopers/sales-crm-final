@@ -7673,7 +7673,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // (management_status/send_approved_date_time/approved_date_time). The approver's own
         // name/email only lives on updatetimeline (written by fwd_offer_send()/saveSignature()),
         // so pull the latest approval-type row for this application, plus a short activity feed.
-        // Fetch ALL approval emails sent for this offer (one row per approver/resend).
+        // Fetch approval emails sent for this offer (deduplicated by approver email, preserving latest status).
         // Left-join users_profile by email to get the approver's designation when available.
         $this->co_appr_timeline = DB::table('updatetimeline')
             ->leftJoin('users', 'users.email', '=', 'updatetimeline.email_id_hr')
@@ -7683,7 +7683,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->where('updatetimeline.job_id', $this->application->job_id)
             ->whereIn('updatetimeline.mtypeSection', [2, 8]) // 2 = legacy approval, 8 = new approval flow (mtypeId=8)
             ->orderByDesc('updatetimeline.id')
-            ->get();
+            ->get()
+            ->unique(function ($item) {
+                return strtolower(trim((string) ($item->email_id_hr ?: $item->name_hr)));
+            })
+            ->values();
 
         $this->co_activity_log = DB::table('updatetimeline')
             ->where('application_id', $this->application->id)

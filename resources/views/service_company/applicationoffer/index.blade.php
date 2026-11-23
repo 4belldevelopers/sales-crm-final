@@ -2444,7 +2444,7 @@ body { overflow-x: hidden !important; }
 #kt_fwd_offer_drawer {
     position: fixed !important;
     top: 0; right: 0; bottom: 0;
-    width: 720px !important;
+    width: 760px !important;
     max-width: 95vw !important;
     z-index: 1055 !important;
     display: flex; flex-direction: column;
