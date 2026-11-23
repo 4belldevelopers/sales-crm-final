@@ -1900,11 +1900,11 @@
         }
 
         .co-appr-side {
-            width: 310px !important;
-            flex: 0 0 310px !important;
+            width: 330px !important;
+            flex: 0 0 330px !important;
             display: flex !important;
             flex-direction: column !important;
-            gap: 12px !important;
+            gap: 8px !important;
         }
 
         .co-appr-side-card {
@@ -1915,7 +1915,7 @@
         }
 
         .co-subcard-status-desc {
-            font-size: 11.5px !important;
+            font-size: 11px !important;
             color: #64748b !important;
             margin-top: 1px !important;
             font-weight: 400 !important;
@@ -1928,7 +1928,7 @@
             color: #ffffff !important;
             font-size: 11.5px !important;
             font-weight: 600 !important;
-            padding: 6px 14px !important;
+            padding: 5px 12px !important;
             border-radius: 6px !important;
             display: inline-flex !important;
             align-items: center !important;
@@ -1954,18 +1954,18 @@
             background: #f1f5f9 !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 6px !important;
-            padding: 8px 14px !important;
-            margin-bottom: 8px !important;
+            padding: 6px 12px !important;
+            margin-bottom: 6px !important;
         }
         .co-appr-tl-grid {
             display: grid !important;
-            grid-template-columns: minmax(210px, 1.4fr) minmax(140px, 1fr) minmax(140px, 0.9fr) !important;
+            grid-template-columns: minmax(200px, 1.4fr) minmax(130px, 1fr) minmax(130px, 0.9fr) !important;
             align-items: center !important;
-            gap: 12px !important;
+            gap: 10px !important;
             width: 100% !important;
         }
         .co-appr-tl-col-hd {
-            font-size: 11px !important;
+            font-size: 10.5px !important;
             font-weight: 600 !important;
             color: #475569 !important;
             text-transform: uppercase !important;
@@ -1976,24 +1976,26 @@
         .co-appr-tl-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            border-left: 3.5px solid #94a3b8 !important;
+            border-left: 3.5px solid #f59e0b !important;
             border-radius: 8px !important;
-            padding: 11px 15px !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
-            margin-bottom: 8px !important;
+            padding: 8px 12px !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+            margin-bottom: 6px !important;
             transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
         }
         .co-appr-tl-card:hover {
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
         }
-        .co-appr-tl-card--active   { border-color: #e2e8f0 !important; border-left-color: #f59e0b !important; background: #fffcf5 !important; }
+        .co-appr-tl-card--pending,
+        .co-appr-tl-card--active,
+        .co-appr-tl-card--waiting  { border-color: #e2e8f0 !important; border-left-color: #f59e0b !important; background: #fffcf5 !important; }
         .co-appr-tl-card--approved { border-color: #e2e8f0 !important; border-left-color: #10b981 !important; background: #ffffff !important; }
         .co-appr-tl-card--rejected { border-color: #e2e8f0 !important; border-left-color: #ef4444 !important; background: #fff8f8 !important; }
 
-        .co-appr-tl-appr { display: flex !important; align-items: center !important; gap: 10px !important; min-width: 0 !important; }
+        .co-appr-tl-appr { display: flex !important; align-items: center !important; gap: 8px !important; min-width: 0 !important; }
         .co-appr-tl-avatar {
-            width: 32px !important;
-            height: 32px !important;
+            width: 30px !important;
+            height: 30px !important;
             border-radius: 50% !important;
             background: #eff6ff !important;
             color: #2563eb !important;
@@ -2001,34 +2003,37 @@
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 12.5px !important;
+            font-size: 12px !important;
             font-weight: 700 !important;
             flex-shrink: 0 !important;
         }
-        .co-appr-tl-name { font-size: 12.5px !important; font-weight: 600 !important; color: #0f172a !important; line-height: 1.25 !important; }
-        .co-appr-tl-sub  { font-size: 11px !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 2px !important; }
+        .co-appr-tl-name { font-size: 12px !important; font-weight: 600 !important; color: #0f172a !important; line-height: 1.25 !important; }
+        .co-appr-tl-sub  { font-size: 10.5px !important; color: #64748b !important; line-height: 1.2 !important; margin-top: 1px !important; }
 
-        .co-appr-tl-status { display: flex !important; flex-direction: column !important; gap: 3px !important; }
-        .co-appr-tl-badge { display: inline-flex !important; align-items: center !important; font-size: 10.5px !important; font-weight: 600 !important; padding: 2.5px 8.5px !important; border-radius: 99px !important; width: fit-content !important; line-height: 1.2 !important; }
+        .co-appr-tl-status { display: flex !important; flex-direction: column !important; gap: 2px !important; }
+        .co-appr-tl-badge { display: inline-flex !important; align-items: center !important; font-size: 10.5px !important; font-weight: 600 !important; padding: 2px 8px !important; border-radius: 99px !important; width: fit-content !important; line-height: 1.2 !important; }
+        
+        /* ── Canonical Orange Token for Pending (Rule 20 / Enterprise Standards) ── */
+        .co-appr-tl-badge--pending,
+        .co-appr-tl-badge--active,
+        .co-appr-tl-badge--waiting  { background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important; }
         .co-appr-tl-badge--approved { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
-        .co-appr-tl-badge--active   { background: #fef3c7 !important; color: #d97706 !important; border: 1px solid #fcd34d !important; }
-        .co-appr-tl-badge--waiting  { background: #eff6ff !important; color: #2563eb !important; border: 1px solid #bfdbfe !important; }
         .co-appr-tl-badge--rejected { background: #fee2e2 !important; color: #dc2626 !important; border: 1px solid #fecaca !important; }
-        .co-appr-tl-date { font-size: 10.5px !important; color: #64748b !important; font-variant-numeric: tabular-nums !important; }
+        .co-appr-tl-date { font-size: 10px !important; color: #64748b !important; font-variant-numeric: tabular-nums !important; }
 
         .co-appr-tl-rem { display: flex !important; flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; }
         .co-appr-remind-send {
             background: #009ef7 !important;
             border: 1px solid #009ef7 !important;
             color: #ffffff !important;
-            font-size: 11.5px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
-            padding: 6px 14px !important;
-            border-radius: 6px !important;
+            padding: 5px 12px !important;
+            border-radius: 5px !important;
             display: inline-flex !important;
             align-items: center !important;
-            gap: 6px !important;
-            box-shadow: 0 1px 3px rgba(0, 158, 247, 0.2) !important;
+            gap: 5px !important;
+            box-shadow: 0 1px 2px rgba(0, 158, 247, 0.2) !important;
             cursor: pointer !important;
             transition: all 0.15s ease !important;
         }
@@ -2036,31 +2041,31 @@
             background: #0086d1 !important;
             border-color: #0086d1 !important;
             color: #ffffff !important;
-            box-shadow: 0 2px 6px rgba(0, 158, 247, 0.35) !important;
+            box-shadow: 0 2px 5px rgba(0, 158, 247, 0.35) !important;
         }
-        .co-appr-tl-last-sent { font-size: 10.5px !important; color: #94a3b8 !important; margin-top: 3px !important; text-align: right !important; font-variant-numeric: tabular-nums !important; }
+        .co-appr-tl-last-sent { font-size: 10px !important; color: #94a3b8 !important; margin-top: 2px !important; text-align: right !important; font-variant-numeric: tabular-nums !important; }
 
         .co-appr-note {
             display: flex !important;
-            gap: 8px !important;
+            gap: 6px !important;
             align-items: flex-start !important;
             background: #eff6ff !important;
             border: 1px solid #bfdbfe !important;
-            border-radius: 7px !important;
-            padding: 9px 13px !important;
-            font-size: 11.5px !important;
+            border-radius: 6px !important;
+            padding: 6px 10px !important;
+            font-size: 11px !important;
             color: #1e40af !important;
-            line-height: 1.45 !important;
+            line-height: 1.4 !important;
         }
 
         .co-appr-status-note {
-            font-size: 11.5px !important;
+            font-size: 11px !important;
             color: #991b1b !important;
             background: #fef2f2 !important;
             border: 1px solid #fecaca !important;
-            border-radius: 7px !important;
-            padding: 8px 13px !important;
-            margin-top: 8px !important;
+            border-radius: 6px !important;
+            padding: 6px 10px !important;
+            margin-top: 6px !important;
         }
 
         /* ── Details & Insights ── */
@@ -2069,26 +2074,29 @@
             justify-content: space-between !important;
             align-items: center !important;
             gap: 8px !important;
-            font-size: 11.5px !important;
-            padding: 8px 0 !important;
+            font-size: 11px !important;
+            padding: 5px 0 !important;
             border-bottom: 1px solid #f1f5f9 !important;
         }
         .co-appr-detail-row:last-child { border-bottom: none !important; }
-        .co-appr-detail-label { color: #475569 !important; font-weight: 500 !important; display: flex !important; align-items: center !important; font-size: 11.5px !important; }
-        .co-appr-detail-value { color: #0f172a !important; font-weight: 600 !important; text-align: right !important; font-size: 12px !important; }
+        .co-appr-detail-label { color: #475569 !important; font-weight: 500 !important; display: flex !important; align-items: center !important; font-size: 11px !important; }
+        .co-appr-detail-value { color: #0f172a !important; font-weight: 600 !important; text-align: right !important; font-size: 11.5px !important; }
 
         /* ── Activity Log ── */
         .co-appr-activity-scroll {
-            max-height: 240px !important;
+            max-height: 115px !important;
             overflow-y: auto !important;
+            padding-right: 2px !important;
         }
+        .co-appr-activity-scroll::-webkit-scrollbar { width: 4px; }
+        .co-appr-activity-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .co-appr-activity-item {
-            padding: 7px 0 !important;
+            padding: 4px 0 !important;
             border-bottom: 1px solid #f1f5f9 !important;
         }
         .co-appr-activity-item:last-child { border-bottom: none !important; }
-        .co-appr-activity-text { font-size: 11.5px !important; color: #1e293b !important; font-weight: 600 !important; line-height: 1.35 !important; }
-        .co-appr-activity-time { font-size: 10.5px !important; color: #64748b !important; margin-top: 2px !important; font-variant-numeric: tabular-nums !important; }
+        .co-appr-activity-text { font-size: 11px !important; color: #1e293b !important; font-weight: 600 !important; line-height: 1.3 !important; }
+        .co-appr-activity-time { font-size: 10px !important; color: #64748b !important; margin-top: 1px !important; font-variant-numeric: tabular-nums !important; }
 
         @media (max-width: 1200px) {
             .co-appr-layout { flex-direction: column !important; }
@@ -4727,7 +4735,7 @@
                                     $tenantTimezone = \App\Helper\GeneralMethod::defaultTimeZone(auth()->user()->company_id);
                                 @endphp
 
-                                <div class="card mb-4 mx-2 co-main-card co-approval-card">
+                                <div class="card mb-2 mx-2 co-main-card co-approval-card">
                                     {{-- Card Header with Dedicated Background Color (Rule 20) --}}
                                     <div class="card-header co-card-header">
                                         <div class="d-flex align-items-center gap-3">
@@ -4763,7 +4771,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="card-body p-4">
+                                    <div class="card-body p-3">
                                         {{-- ── 2-COLUMN MAIN WORKFLOW SPLIT (Full-Height Layout — Top Subcards Removed as requested) ── --}}
                                         <div class="co-appr-layout">
                                             {{-- LEFT COLUMN: Approval Timeline & Governance Sub-Card --}}
@@ -4796,7 +4804,7 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="co-subcard-body p-3.5">
+                                                <div class="co-subcard-body p-3">
                                                     @if($co_appr_all_tl->isEmpty())
                                                         {{-- Clean Modern Empty State --}}
                                                         <div class="co-appr-empty-state text-center py-5">
@@ -4834,13 +4842,18 @@
                                                             $row_initial = $row_label ? strtoupper(substr($row_label,0,1)) : '?';
                                                             $row_role    = trim((string)(@$co_tl_row->designation_offer ?: @$co_tl_row->approver_designation ?? ''));
                                                             $row_date    = !empty($co_tl_row->create_at) ? \Carbon\Carbon::parse($co_tl_row->create_at)->setTimezone($tenantTimezone)->format('d M Y, h:i A T') : '';
-                                                            if ($loop->last) {
-                                                                $row_badge = $co_mgmt_status == 2 ? 'approved' : ($co_mgmt_status == 3 ? 'rejected' : 'active');
-                                                                $row_card  = $row_badge;
-                                                                $row_label_status = $co_mgmt_status == 2 ? 'Approved' : ($co_mgmt_status == 3 ? 'Rejected' : 'Pending');
+                                                            if ($co_mgmt_status == 2) {
+                                                                $row_badge = 'approved';
+                                                                $row_card  = 'approved';
+                                                                $row_label_status = 'Approved';
+                                                            } elseif ($co_mgmt_status == 3) {
+                                                                $row_badge = 'rejected';
+                                                                $row_card  = 'rejected';
+                                                                $row_label_status = 'Rejected';
                                                             } else {
-                                                                $row_badge = 'waiting';
-                                                                $row_card = '';
+                                                                // Canonical Orange Token for all pending states
+                                                                $row_badge = 'pending';
+                                                                $row_card  = 'pending';
                                                                 $row_label_status = 'Pending';
                                                             }
                                                         @endphp
@@ -4860,7 +4873,7 @@
                                                                 </div>
                                                             </div>
 
-                                                            {{-- Col 2: Status & Timestamp --}}
+                                                            {{-- Col 2: Status & Timestamp (Orange only for Pending) --}}
                                                             <div class="co-appr-tl-status">
                                                                 <span class="co-appr-tl-badge co-appr-tl-badge--{{ $row_badge }}">
                                                                     @if($row_label_status === 'Approved')
@@ -4868,7 +4881,7 @@
                                                                     @elseif($row_label_status === 'Rejected')
                                                                         <svg class="me-1" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                                                     @else
-                                                                        <svg class="me-1" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                                        <svg class="me-1" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                                                     @endif
                                                                     {{ $row_label_status }}
                                                                 </span>
@@ -4897,8 +4910,8 @@
                                                         @endif
                                                     @endif
 
-                                                    <div class="co-appr-note mt-3">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" class="flex-shrink-0 mt-0.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                    <div class="co-appr-note mt-2">
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" class="flex-shrink-0 mt-0.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                                                         <span>Multi-tier approvals are executed sequentially in the order configured. You can modify approver hierarchy prior to releasing the offer letter.</span>
                                                     </div>
                                                 </div>
@@ -4906,14 +4919,14 @@
 
                                             {{-- RIGHT COLUMN: Details & Insights + Activity Log Sub-Cards --}}
                                             <div class="co-appr-side">
-                                                {{-- Subcard: Details & Insights --}}
-                                                <div class="co-subcard co-appr-side-card mb-3">
+                                                {{-- Subcard: Details & Insights (Candidate Name, Designation Offered, Date of Joining, Amount & Metadata) --}}
+                                                <div class="co-subcard co-appr-side-card mb-2">
                                                     <div class="co-subcard-header d-flex align-items-center justify-content-between">
                                                         <span class="co-subcard-title d-flex align-items-center gap-1.5 fs-7 fw-bolder text-gray-800">
                                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                                                             DETAILS &amp; INSIGHTS
                                                         </span>
-                                                        <span class="badge badge-light-primary fs-9 px-1.5 py-0">Metadata</span>
+                                                        <span class="badge badge-light-primary fs-9 px-1.5 py-0">Offer Summary</span>
                                                     </div>
                                                     <div class="co-subcard-body p-3">
                                                         @php
@@ -4924,21 +4937,54 @@
                                                                     break;
                                                                 }
                                                             }
+                                                            $co_cand_name = trim((string) (@$application->full_name ?: @$co_candidate_name ?: 'Candidate'));
+                                                            $co_cand_desig = trim((string) (@$designation ?: @$application->title ?: '—'));
+                                                            $co_cand_doj = @$joined_date ?: @$co_joining_date;
+                                                            $co_cand_doj_fmt = ($co_cand_doj && strtotime($co_cand_doj)) ? date('d M Y', strtotime($co_cand_doj)) : '—';
+                                                            $co_cand_amt = (float)(@$yearly_final_gross ?: (@$salary_ctc ?: 0));
+                                                            $co_cand_amt_fmt = $initialCurrSymbol . ' ' . number_format($co_cand_amt, 0) . ($initialCurrCode ? ' ' . $initialCurrCode . '/Yr' : '');
                                                         @endphp
+                                                        {{-- 1. Candidate Name --}}
                                                         <div class="co-appr-detail-row">
                                                             <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                                                                Template
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" class="flex-shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                                                Candidate Name
                                                             </span>
-                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 170px;" id="co_appr_tpl_name" title="{{ $selected_offer_template_label }}">{{ $selected_offer_template_label }}</span>
+                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 165px;" id="co-appr-candidate-name-display" title="{{ $co_cand_name }}">{{ $co_cand_name }}</span>
                                                         </div>
+                                                        {{-- 2. Designation Offered --}}
                                                         <div class="co-appr-detail-row">
                                                             <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                                                                Designation
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" class="flex-shrink-0"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                                                Designation Offered
                                                             </span>
-                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 170px;" id="co-appr-designation-display" title="{{ @$designation ?: '—' }}">{{ @$designation ?: '—' }}</span>
+                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 165px;" id="co-appr-designation-display" title="{{ $co_cand_desig }}">{{ $co_cand_desig }}</span>
                                                         </div>
+                                                        {{-- 3. Date of Joining --}}
+                                                        <div class="co-appr-detail-row">
+                                                            <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" class="flex-shrink-0"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                                                Date of Joining
+                                                            </span>
+                                                            <span class="co-appr-detail-value" id="co-appr-doj-display">{{ $co_cand_doj_fmt }}</span>
+                                                        </div>
+                                                        {{-- 4. Amount (CTC) --}}
+                                                        <div class="co-appr-detail-row">
+                                                            <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" class="flex-shrink-0"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="18"/></svg>
+                                                                Amount (CTC)
+                                                            </span>
+                                                            <span class="co-appr-detail-value fw-bold text-gray-900" id="co-appr-amount-display">{{ $co_cand_amt_fmt }}</span>
+                                                        </div>
+                                                        {{-- 5. Template --}}
+                                                        <div class="co-appr-detail-row">
+                                                            <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                                                Offer Template
+                                                            </span>
+                                                            <span class="co-appr-detail-value text-truncate" style="max-width: 165px;" id="co_appr_tpl_name" title="{{ $selected_offer_template_label }}">{{ $selected_offer_template_label }}</span>
+                                                        </div>
+                                                        {{-- 6. Candidate Mobile --}}
                                                         <div class="co-appr-detail-row border-bottom-0 pb-0">
                                                             <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
                                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -4958,7 +5004,7 @@
                                                         </span>
                                                         <span class="badge badge-light-info fs-9 px-1.5 py-0">{{ count($co_activity_log ?? []) }} Entries</span>
                                                     </div>
-                                                    <div class="co-subcard-body p-3 co-appr-activity-scroll">
+                                                    <div class="co-subcard-body p-2.5 co-appr-activity-scroll">
                                                         @forelse(($co_activity_log ?? []) as $log)
                                                             @php
                                                                 $log_label = 'Activity recorded';
@@ -5515,13 +5561,13 @@
                     var offId       = '{{ $offer_id }}';
 
                     var newEntry =
-                        '<div class="co-appr-tl-card co-appr-tl-card--active co-appr-tl-grid co-appr-tl-entry mb-2.5">' +
+                        '<div class="co-appr-tl-card co-appr-tl-card--pending co-appr-tl-grid co-appr-tl-entry mb-1.5">' +
                             '<div class="co-appr-tl-appr">' +
                                 '<div class="co-appr-tl-avatar">' + initial + '</div>' +
                                 '<div class="min-w-0 flex-grow-1">' +
                                     '<div class="d-flex align-items-center gap-2 flex-wrap">' +
                                         '<span class="co-appr-tl-name text-truncate" title="' + safeName + '">' + safeName + '</span>' +
-                                        '<span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle" style="font-size: 10.5px; border-radius: 4px;">Internal Approver</span>' +
+                                        '<span class="badge badge-light-primary text-primary fw-semibold px-2 py-0.5 border border-primary-subtle" style="font-size: 10px; border-radius: 4px;">Internal Approver</span>' +
                                     '</div>' +
                                     '<div class="co-appr-tl-sub text-truncate d-flex align-items-center gap-1 mt-0.5" title="' + safeEmail + '">' +
                                         '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
@@ -5530,8 +5576,8 @@
                                 '</div>' +
                             '</div>' +
                             '<div class="co-appr-tl-status">' +
-                                '<span class="co-appr-tl-badge co-appr-tl-badge--active">' +
-                                    '<svg class="me-1" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+                                '<span class="co-appr-tl-badge co-appr-tl-badge--pending">' +
+                                    '<svg class="me-1" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
                                     'Pending' +
                                 '</span>' +
                                 '<div class="co-appr-tl-date d-flex align-items-center gap-1 text-muted mt-1">' +
@@ -7865,6 +7911,27 @@
                             if (tplText) {
                                 $('#co_appr_tpl_name').text(tplText).attr('title', tplText);
                             }
+                        }
+                        var curDesig = $('#current_designation').val();
+                        if (curDesig && curDesig.trim()) {
+                            $('#co-appr-designation-display').text(curDesig.trim()).attr('title', curDesig.trim());
+                        }
+                        var curDoj = $('#dob').val();
+                        if (curDoj && curDoj.trim()) {
+                            try {
+                                var d = new Date(curDoj);
+                                if (!isNaN(d.getTime())) {
+                                    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                                    var fmtDoj = ('0' + d.getDate()).slice(-2) + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+                                    $('#co-appr-doj-display').text(fmtDoj);
+                                }
+                            } catch(e) {}
+                        }
+                        var curAmt = $('#finalpaytotalyearly').val() || $('#ctc').val();
+                        if (curAmt && !isNaN(parseFloat(curAmt.toString().replace(/,/g, '')))) {
+                            var num = parseFloat(curAmt.toString().replace(/,/g, ''));
+                            var sym = $('#coCtcSymbolPrefix').text() || '₹';
+                            $('#co-appr-amount-display').text(sym + ' ' + num.toLocaleString('en-IN') + ' / Yr');
                         }
                     }
                     if (typeof coEnsureStep5Composer === 'function') coEnsureStep5Composer();
