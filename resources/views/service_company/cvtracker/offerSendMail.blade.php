@@ -239,6 +239,31 @@ if($cc_email_count > 0){
     font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500;
     color: #334155;
 }
+.co-appr-status-badge {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    gap: 4px !important; font-family: 'Poppins', sans-serif !important; font-size: 11px !important;
+    font-weight: 600 !important; padding: 3px 8px !important; border-radius: 6px !important;
+    white-space: nowrap !important; line-height: 1.2 !important;
+}
+.co-appr-status--added {
+    background: #ecfdf5 !important; color: #047857 !important; border: 1px solid #a7f3d0 !important;
+}
+.co-appr-status--not-added {
+    background: #f8fafc !important; color: #64748b !important; border: 1px solid #e2e8f0 !important;
+}
+.co-appr-remove-btn {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    gap: 5px !important; height: 28px !important; padding: 0 12px !important;
+    font-family: 'Poppins', sans-serif !important; font-size: 11.5px !important;
+    font-weight: 600 !important; color: #dc2626 !important; background: #fef2f2 !important;
+    border: 1px solid #fecaca !important; border-radius: 6px !important; cursor: pointer !important;
+    text-decoration: none !important; white-space: nowrap !important;
+    box-shadow: 0 1px 2px rgba(220, 38, 38, 0.06) !important; transition: all 0.15s ease !important;
+}
+.co-appr-remove-btn:hover {
+    background: #fee2e2 !important; border-color: #fca5a5 !important; color: #b91c1c !important;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.12) !important;
+}
 .co-appr-add-btn {
     display: inline-flex !important; align-items: center !important; justify-content: center !important;
     gap: 5px !important; height: 28px !important; padding: 0 14px !important;
@@ -771,10 +796,11 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
             <table class="co-appr-table align-middle" id="Iteam_Table_to">
               <thead>
                 <tr>
-                  <th style="min-width:180px;">APPROVER</th>
-                  <th style="min-width:170px;">CONTACT</th>
-                  <th style="min-width:140px;">COMPANY</th>
-                  <th style="min-width:80px;width:80px;text-align:center;">ACTION</th>
+                  <th style="min-width:170px;">APPROVER</th>
+                  <th style="min-width:160px;">CONTACT</th>
+                  <th style="min-width:130px;">COMPANY</th>
+                  <th style="min-width:125px;text-align:center;">STATUS</th>
+                  <th style="min-width:90px;width:90px;text-align:center;">ACTION</th>
                 </tr>
               </thead>
               <tbody>
@@ -794,9 +820,12 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                             ];
                             $pal = $palettes[$charOrd % count($palettes)];
                             $roleText = trim((string) (@$teamVal->display_name ?: @$teamVal->role));
+                            $approverEmailClean = strtolower(trim((string) @$teamVal->email));
+                            $isAlreadyAdded = in_array($approverEmailClean, $already_added_approvers ?? []);
                         @endphp
                         <tr class="co-appr-row co-appr-row--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
-                            data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower((string) @$teamVal->company_name) }}">
+                            data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower((string) @$teamVal->company_name) }}"
+                            data-approver-email="{{ $approverEmailClean }}" data-row-id="{{ @$teamVal->id }}">
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="co-appr-avatar" style="background:{{ $pal['bg'] }};color:{{ $pal['text'] }};border:1px solid {{ $pal['border'] }};">
@@ -827,7 +856,26 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                                 </div>
                             </td>
                             <td style="text-align:center;">
-                                <a id="to_team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="to_select co-appr-add-btn"
+                                <span class="co-appr-status-badge {{ $isAlreadyAdded ? 'co-appr-status--added' : 'co-appr-status--not-added' }}" id="co_appr_status_badge_{{ @$teamVal->id }}">
+                                    @if($isAlreadyAdded)
+                                        <i class="fas fa-check-circle me-1"></i> Already Added
+                                    @else
+                                        <i class="far fa-circle me-1"></i> Not Added
+                                    @endif
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                {{-- Remove Button (shown when already added) --}}
+                                <button type="button" class="to_remove co-appr-remove-btn {{ $isAlreadyAdded ? '' : 'd-none' }}"
+                                    id="to_team_remove_{{ @$teamVal->id }}"
+                                    rel="{{ @$teamVal->id }}"
+                                    data-title="{{ @$teamVal->name }}"
+                                    data-email="{{ @$teamVal->email }}"
+                                    data-offerid="{{ $offerId }}">
+                                    <i class="fas fa-trash-alt me-1 fs-9"></i> Remove
+                                </button>
+                                {{-- Add Button (shown when not yet added) --}}
+                                <a id="to_team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="to_select co-appr-add-btn {{ $isAlreadyAdded ? 'd-none' : '' }}"
                                     rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}" data-email="{{ @$teamVal->email }}">
                                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                     <span>Add</span>
@@ -837,7 +885,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                     @endforeach
                 @endforeach
                 <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--internal {{ !empty($cc_email_internal_data) ? 'd-none' : '' }}">
-                    <td colspan="4" class="co-appr-empty-cell">
+                    <td colspan="5" class="co-appr-empty-cell">
                         <div class="co-appr-empty-inner">
                             <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
                             <div class="co-appr-empty-msg">No internal approvers found</div>
@@ -845,7 +893,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                     </td>
                 </tr>
                 <tr class="co-appr-row co-appr-empty-row co-appr-empty-row--client d-none">
-                    <td colspan="4" class="co-appr-empty-cell">
+                    <td colspan="5" class="co-appr-empty-cell">
                         <div class="co-appr-empty-inner">
                             <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
                             <div class="co-appr-empty-msg">No client approvers found</div>
@@ -1118,32 +1166,45 @@ function addEmailToList(rel) {
 		        'signature':  0
 		    },
 		    success: function(r) {
+		        $btn.html(resetBtn).css({'pointer-events':'','opacity':'1'});
 		        if (r.status === 'coinCheck') {
-		            $btn.html(resetBtn).css({'pointer-events':'','opacity':'1'});
 		            Swal.fire("Failed", r.message, "warning");
 		            return;
 		        }
+		        if (r.status === 'alreadyExists') {
+		            // Status update: approver already in workflow
+		            $('#co_appr_status_badge_' + rel).removeClass('co-appr-status--not-added').addClass('co-appr-status--added').html('<i class="fas fa-check-circle me-1"></i> Already Added');
+		            $btn.addClass('d-none');
+		            $('#to_team_remove_' + rel).removeClass('d-none');
+		            Swal.fire("Already Added", r.message, "info");
+		            return;
+		        }
 		        if (r.status === 'rateLimited') {
-		            $btn.html(resetBtn).css({'pointer-events':'','opacity':'1'});
 		            Swal.fire("Already Sent", r.message, "info");
 		            return;
 		        }
 		        if (r.status === 'success') {
 		            // Mark approval as sent so "Save & Next" just advances
 		            $('#step4').data('mgmt-status', 1);
-		            $btn.html('<span><i class="fas fa-check me-1"></i> Sent ✓</span>').addClass('co-appr-btn--remove').css({'pointer-events':'none','opacity':'0.8'});
-		            // Update the step-4 timeline
+
+		            // Update row UI to Already Added + Remove button
+		            $('#co_appr_status_badge_' + rel).removeClass('co-appr-status--not-added').addClass('co-appr-status--added').html('<i class="fas fa-check-circle me-1"></i> Already Added');
+		            $btn.addClass('d-none');
+		            $('#to_team_remove_' + rel).removeClass('d-none');
+
+		            // Update the step-4 timeline in real-time
 		            if (typeof co_updateStep4Timeline === 'function') {
 		                co_updateStep4Timeline(approverEmail, approverName);
 		            }
-		            // Close inner pickers
-		            coApprCloseDrawers();
-		            // Close outer approval drawer (direct DOM — bypasses any reference issues)
-		            $('#kt_fwd_offer_drawer').removeClass('drawer-on');
-		            $('#kt_fwd_offer_overlay').removeClass('active');
-		            $('body').css('overflow', '');
+
+		            Swal.fire({
+		                icon: 'success',
+		                title: 'Approver Added',
+		                text: 'Approver has been added to the workflow.',
+		                timer: 1200,
+		                showConfirmButton: false
+		            });
 		        } else {
-		            $btn.html(resetBtn).css({'pointer-events':'','opacity':'1'});
 		            Swal.fire("Error", r.message || "Could not send approval email.", "error");
 		        }
 		    },
@@ -1155,6 +1216,58 @@ function addEmailToList(rel) {
 		@else
 		addEmailToList(rel);
 		@endif
+	});
+
+	// Approver Removal Handler (Select Approval Drawer)
+	$(document).on('click', '.to_remove', function(e) {
+	    e.preventDefault();
+	    var rel = $(this).attr('rel');
+	    var $btn = $(this);
+	    var approverEmail = $btn.attr('data-email');
+	    var offerId = $btn.attr('data-offerid') || $('#offerId').val();
+
+	    if (!approverEmail || !offerId) return;
+
+	    var resetRemoveBtn = '<i class="fas fa-trash-alt me-1 fs-9"></i> Remove';
+	    $btn.html('<span><i class="fas fa-spinner fa-spin me-1"></i> Removing…</span>').css({'pointer-events':'none','opacity':'0.6'});
+
+	    $.ajax({
+	        type: 'POST',
+	        url: "{{ route('service_company.cvtracker.remove_offer_approver') }}",
+	        data: {
+	            '_token': "{{ csrf_token() }}",
+	            'offerId': offerId,
+	            'email': approverEmail
+	        },
+	        success: function(r) {
+	            $btn.html(resetRemoveBtn).css({'pointer-events':'','opacity':'1'});
+	            if (r.status === 'success') {
+	                // Update row UI to Not Added + Add button
+	                $('#co_appr_status_badge_' + rel).removeClass('co-appr-status--added').addClass('co-appr-status--not-added').html('<i class="far fa-circle me-1"></i> Not Added');
+	                $btn.addClass('d-none');
+	                $('#to_team_select_' + rel).removeClass('d-none');
+
+	                // Update Step 4 view in real-time
+	                if (typeof co_removeStep4Approver === 'function') {
+	                    co_removeStep4Approver(approverEmail, r.remaining_approvers);
+	                }
+
+	                Swal.fire({
+	                    icon: 'success',
+	                    title: 'Approver Removed',
+	                    text: 'Approver removed from workflow.',
+	                    timer: 1200,
+	                    showConfirmButton: false
+	                });
+	            } else {
+	                Swal.fire("Error", r.message || "Could not remove approver.", "error");
+	            }
+	        },
+	        error: function() {
+	            $btn.html(resetRemoveBtn).css({'pointer-events':'','opacity':'1'});
+	            Swal.fire("Error", "Could not remove approver. Please try again.", "error");
+	        }
+	    });
 	});
 
 // document.getElementById('to_select').addEventListener('click', addEmailToList);

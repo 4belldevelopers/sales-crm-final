@@ -5283,6 +5283,37 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->mtype = $request->mtype;
         // $this->arr = $request->id;
 
+        // Query approvers already added to the workflow for this offer so drawer can render accurate status (Rule 20)
+        $this->already_added_approvers = [];
+        if (!empty($request->offerId)) {
+            $offerAppRow = DB::table('offer_job_applications')->where('id', $request->offerId)->first(['application_id', 'job_id']);
+            if ($offerAppRow) {
+                $this->already_added_approvers = DB::table('updatetimeline')
+                    ->where('application_id', $offerAppRow->application_id)
+                    ->where('job_id', $offerAppRow->job_id)
+                    ->whereIn('mtypeSection', [2, 8])
+                    ->whereNotNull('email_id_hr')
+                    ->pluck('email_id_hr')
+                    ->map(fn($e) => strtolower(trim((string) $e)))
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->toArray();
+            }
+        } elseif (!empty($this->arr) && !empty($this->jobIdArr)) {
+            $this->already_added_approvers = DB::table('updatetimeline')
+                ->whereIn('application_id', (array) $this->arr)
+                ->whereIn('job_id', (array) $this->jobIdArr)
+                ->whereIn('mtypeSection', [2, 8])
+                ->whereNotNull('email_id_hr')
+                ->pluck('email_id_hr')
+                ->map(fn($e) => strtolower(trim((string) $e)))
+                ->filter()
+                ->unique()
+                ->values()
+                ->toArray();
+        }
+
         // Send Offer Letter (mtype=1) — data for the candidate summary header card. Real values
         // only: the saved offer row (CTC/joining/designation/currency) and, if it was routed for
         // approval, the latest approval-timeline row (approver name + management_status).
@@ -8180,23 +8211,51 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
         }
 
-        // Rate limit: approval emails (mtypeId=8) — at most 1 send per recipient per hour.
-        // Prevents accidental spam when the user clicks "Add" or "Send Reminder" repeatedly.
-        if ((int) $mtypeId === 8 && ! empty($request->to_email)) {
+        // Approval workflow duplicate prevention & rate limiting validation (mtypeId in [2, 8])
+        if (in_array((int) $mtypeId, [2, 8]) && ! empty($request->to_email)) {
             $approvalAppRow = DB::table('offer_job_applications')->where('id', $offerId)->first(['application_id', 'job_id']);
             if ($approvalAppRow) {
-                $recentApproval = DB::table('updatetimeline')
+                $targetEmail = strtolower(trim($request->to_email));
+                $alreadyExists = DB::table('updatetimeline')
                     ->where('application_id', $approvalAppRow->application_id)
                     ->where('job_id', $approvalAppRow->job_id)
-                    ->whereIn('mtypeSection', [2, 8]) // 2 = legacy approval, 8 = new flow
-                    ->where('email_id_hr', trim($request->to_email))
-                    ->where('create_at', '>=', now()->subHour())
+                    ->whereIn('mtypeSection', [2, 8])
+                    ->where(function($q) use ($targetEmail) {
+                        $q->where('email_id_hr', $targetEmail)
+                          ->orWhereRaw('LOWER(TRIM(email_id_hr)) = ?', [$targetEmail]);
+                    })
                     ->exists();
-                if ($recentApproval) {
+
+                // If this is an "Add Approver" request and approver is already in workflow, block addition
+                if (empty($request->is_reminder) && $alreadyExists) {
                     return Reply::dataOnly([
-                        'status' => 'rateLimited',
-                        'message' => 'An approval email was already sent to this approver within the last hour. Please wait before sending again.',
+                        'status' => 'alreadyExists',
+                        'message' => 'This approver is already included in the approval workflow.',
                     ]);
+                }
+
+                // If this is a "Send Reminder" request, apply 1-hour rate limit
+                if (! empty($request->is_reminder)) {
+                    $recentReminder = DB::table('updatetimeline')
+                        ->where('application_id', $approvalAppRow->application_id)
+                        ->where('job_id', $approvalAppRow->job_id)
+                        ->whereIn('mtypeSection', [2, 8])
+                        ->where(function($q) use ($targetEmail) {
+                            $q->where('email_id_hr', $targetEmail)
+                              ->orWhereRaw('LOWER(TRIM(email_id_hr)) = ?', [$targetEmail]);
+                        })
+                        ->where(function($q) {
+                            $q->where('update_at', '>=', now()->subHour())
+                              ->orWhere('create_at', '>=', now()->subHour());
+                        })
+                        ->exists();
+
+                    if ($recentReminder) {
+                        return Reply::dataOnly([
+                            'status' => 'rateLimited',
+                            'message' => 'A reminder was already sent to this approver within the last hour. Please wait before sending again.',
+                        ]);
+                    }
                 }
             }
         }
@@ -8622,7 +8681,31 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     if ($mtypeId == 1) {
                         $values['master_process_name'] = 'Offer Released';
                     }
-                    GeneralMethod::UpdateTimeline($values);
+
+                    if (! empty($request->is_reminder)) {
+                        // Reminders: update existing approver's last-sent timestamp so cards never duplicate
+                        DB::table('updatetimeline')
+                            ->where('application_id', @$Offertimelime->application_id)
+                            ->where('job_id', @$Offertimelime->job_id)
+                            ->whereIn('mtypeSection', [2, 8])
+                            ->where(function($q) use ($mailto) {
+                                $targetMail = strtolower(trim($mailto));
+                                $q->where('email_id_hr', $targetMail)
+                                  ->orWhereRaw('LOWER(TRIM(email_id_hr)) = ?', [$targetMail]);
+                            })
+                            ->update([
+                                'update_at' => date('Y-m-d H:i:s'),
+                                'send_approved_date_time' => $send_approved_date_time,
+                            ]);
+
+                        // Add audit log entry with mtypeSection=null so it logs to activity stream without acting as an approver
+                        $values['mtypeSection'] = null;
+                        $values['note'] = 'Approval reminder sent to ' . $mailto;
+                        GeneralMethod::UpdateTimeline($values);
+                    } else {
+                        // First-time approver addition: write official approver timeline record
+                        GeneralMethod::UpdateTimeline($values);
+                    }
 
                     // }
 
@@ -8667,6 +8750,104 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'view' => $view,
         ]);
 
+    }
+
+    /**
+     * Remove an approver from the offer approval workflow (Step 4 & Select Approval drawer).
+     * Tenancy-scoped, deletes matching updatetimeline records for this approver, reverts offer
+     * management_status if no approvers remain, and invalidates tenant caches.
+     */
+    public function removeOfferApprover(Request $request)
+    {
+        $offerId = $request->offerId;
+        $targetEmail = strtolower(trim($request->to_email ?: $request->email));
+
+        if (empty($offerId) || empty($targetEmail)) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Invalid offer or approver email.']);
+        }
+
+        $offerAppRow = DB::table('offer_job_applications')->where('id', $offerId)->first(['id', 'application_id', 'job_id', 'joined', 'company_id']);
+        if (!$offerAppRow) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Offer record not found.']);
+        }
+
+        // Delete matching updatetimeline records for this approver
+        DB::table('updatetimeline')
+            ->where('application_id', $offerAppRow->application_id)
+            ->where('job_id', $offerAppRow->job_id)
+            ->whereIn('mtypeSection', [2, 8])
+            ->where(function ($q) use ($targetEmail) {
+                $q->where('email_id_hr', $targetEmail)
+                  ->orWhereRaw('LOWER(TRIM(email_id_hr)) = ?', [$targetEmail]);
+            })
+            ->delete();
+
+        // Check remaining approvers count
+        $remainingCount = DB::table('updatetimeline')
+            ->where('application_id', $offerAppRow->application_id)
+            ->where('job_id', $offerAppRow->job_id)
+            ->whereIn('mtypeSection', [2, 8])
+            ->count();
+
+        // If no approvers remain, reset offer management status
+        if ($remainingCount === 0) {
+            DB::table('offer_create_main_tds')
+                ->where('offer_id', $offerId)
+                ->where('status', 1)
+                ->update([
+                    'management_status' => 0,
+                    'send_approved_date_time' => null,
+                    'approved_date_time' => null,
+                    'updated_at' => now(),
+                ]);
+
+            // Elasticsearch candidate sync (Rule 10)
+            if (!empty($offerAppRow->joined)) {
+                try {
+                    $exists = $this->elasticService->getClient()->exists([
+                        'index' => ELASTIC_CANDIDATES,
+                        'id' => $offerAppRow->joined,
+                    ]);
+                    if ($exists) {
+                        $updateTime = now()->toIso8601String();
+                        $this->elasticService->getClient()->update([
+                            'index' => ELASTIC_CANDIDATES,
+                            'id' => $offerAppRow->joined,
+                            'body' => [
+                                'doc' => [
+                                    'of_offer_approved' => 0,
+                                    'send_approved_date_time' => null,
+                                    'updated_at' => $updateTime,
+                                ],
+                                'doc_as_upsert' => false,
+                            ],
+                            'refresh' => false,
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('Elasticsearch update exception on removeOfferApprover', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
+        // Multi-tenant cache invalidation (Rule 6)
+        $userId = auth()->user()->id;
+        $cachekeys = [
+            'allcvtracker_version_user_' . $userId,
+            'allapptracker_version_user_' . $userId,
+            'allclientapp_version_user_' . $userId,
+            'alljobslist_version_user_' . $userId,
+        ];
+        foreach ($cachekeys as $key) {
+            GeneralMethod::cacheClean($key);
+        }
+
+        return Reply::dataOnly([
+            'status' => 'success',
+            'message' => 'Approver removed successfully from the workflow.',
+            'remaining_approvers' => $remainingCount,
+            'email' => $targetEmail,
+        ]);
     }
 
     public function fwd_offer_download(Request $request)

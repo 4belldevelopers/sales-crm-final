@@ -1959,7 +1959,7 @@
         }
         .co-appr-tl-grid {
             display: grid !important;
-            grid-template-columns: minmax(200px, 1.4fr) minmax(130px, 1fr) minmax(130px, 0.9fr) !important;
+            grid-template-columns: minmax(190px, 1.4fr) minmax(130px, 1fr) minmax(170px, 1.1fr) !important;
             align-items: center !important;
             gap: 10px !important;
             width: 100% !important;
@@ -2042,6 +2042,26 @@
             border-color: #0086d1 !important;
             color: #ffffff !important;
             box-shadow: 0 2px 5px rgba(0, 158, 247, 0.35) !important;
+        }
+        .co-appr-card-remove {
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            padding: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 5px !important;
+            background: #fef2f2 !important;
+            border: 1px solid #fecaca !important;
+            color: #dc2626 !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+        }
+        .co-appr-card-remove:hover {
+            background: #fee2e2 !important;
+            border-color: #fca5a5 !important;
+            color: #b91c1c !important;
         }
         .co-appr-tl-last-sent { font-size: 10px !important; color: #94a3b8 !important; margin-top: 2px !important; text-align: right !important; font-variant-numeric: tabular-nums !important; }
 
@@ -4710,6 +4730,10 @@
                                     // 0/absent = never sent, 1 = pending, 2 = approved, 3 = rejected.
                                     $co_mgmt_status = (int) (@$section_change_value->management_status ?? 0);
                                     $co_appr_all_tl = ($co_appr_timeline instanceof \Illuminate\Support\Collection) ? $co_appr_timeline : collect($co_appr_timeline ?? []);
+                                    // Deduplicate by approver email to guarantee unique approver cards
+                                    $co_appr_all_tl = $co_appr_all_tl->unique(function($item) {
+                                        return strtolower(trim((string) (@$item->email_id_hr ?: @$item->name_hr)));
+                                    })->values();
                                     $_co_tl_latest = $co_appr_all_tl->first();
                                     $co_approver_label = trim((string) (@$_co_tl_latest->name_hr ?: @$_co_tl_latest->email_id_hr ?? ''));
 
@@ -4752,58 +4776,41 @@
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
                                             @if($co_mgmt_status == 2)
-                                                <span class="badge badge-light-success text-success fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
+                                                <span class="badge badge-light-success text-success fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_step4_status_badge">
                                                     <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Offer Approved
                                                 </span>
                                             @elseif($co_mgmt_status == 3)
-                                                <span class="badge badge-light-danger text-danger fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
+                                                <span class="badge badge-light-danger text-danger fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_step4_status_badge">
                                                     <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Offer Rejected
                                                 </span>
                                             @elseif($co_mgmt_status == 1 || $co_appr_all_tl->isNotEmpty())
-                                                <span class="badge badge-light-warning text-warning fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
+                                                <span class="badge badge-light-warning text-warning fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_step4_status_badge">
                                                     <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Awaiting Approval
                                                 </span>
                                             @else
-                                                <span class="badge badge-light-secondary text-gray-700 fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center">
+                                                <span class="badge badge-light-secondary text-gray-700 fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_step4_status_badge">
                                                     <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>Ready for Approval
                                                 </span>
                                             @endif
+
+                                            {{-- Repositioned Add Approver button: Top-right corner of header --}}
+                                            <button type="button"
+                                                data-jobid="{{ @$application->job_id }}"
+                                                data-candidate="{{ @$application->id }}"
+                                                data-mtype="2"
+                                                data-offerId="{{ $offer_id }}"
+                                                class="btn btn-sm co-appr-add-btn fwd_offer {{ $section_change_value ? '' : 'd-none' }}">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                                Add Approver
+                                            </button>
                                         </div>
                                     </div>
 
                                     <div class="card-body p-3">
-                                        {{-- ── 2-COLUMN MAIN WORKFLOW SPLIT (Full-Height Layout — Top Subcards Removed as requested) ── --}}
+                                        {{-- ── 2-COLUMN MAIN WORKFLOW SPLIT (Full-Height Layout) ── --}}
                                         <div class="co-appr-layout">
-                                            {{-- LEFT COLUMN: Approval Timeline & Governance Sub-Card --}}
+                                            {{-- LEFT COLUMN: Approval Timeline Stream (Subcard Header Removed as requested) --}}
                                             <div class="co-subcard co-appr-main">
-                                                <div class="co-subcard-header d-flex align-items-center justify-content-between">
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <span class="co-subcard-title fs-7 fw-bolder text-gray-800 d-flex align-items-center gap-1.5">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-                                                            APPROVAL TIMELINE &amp; GOVERNANCE
-                                                        </span>
-                                                        <span class="text-muted fs-9 ms-1 d-none d-sm-inline">•</span>
-                                                        <div class="co-subcard-status-desc ms-1 d-none d-sm-inline" id="co_appr_timeline_subtitle">
-                                                            @if($co_mgmt_status == 2) Offer approved — ready to send to candidate.
-                                                            @elseif($co_mgmt_status == 3) Offer rejected.
-                                                            @elseif($co_appr_all_tl->isNotEmpty()) Awaiting decision from approver.
-                                                            @else No approver assigned yet.
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <button type="button"
-                                                            data-jobid="{{ @$application->job_id }}"
-                                                            data-candidate="{{ @$application->id }}"
-                                                            data-mtype="2"
-                                                            data-offerId="{{ $offer_id }}"
-                                                            class="btn btn-sm co-appr-add-btn fwd_offer {{ $section_change_value ? '' : 'd-none' }}">
-                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                                            Add Approver
-                                                        </button>
-                                                    </div>
-                                                </div>
-
                                                 <div class="co-subcard-body p-3">
                                                     @if($co_appr_all_tl->isEmpty())
                                                         {{-- Clean Modern Empty State --}}
@@ -4857,7 +4864,7 @@
                                                                 $row_label_status = 'Pending';
                                                             }
                                                         @endphp
-                                                        <div class="co-appr-tl-card co-appr-tl-grid {{ $row_card ? 'co-appr-tl-card--'.$row_card : '' }} co-appr-tl-entry">
+                                                        <div class="co-appr-tl-card co-appr-tl-grid {{ $row_card ? 'co-appr-tl-card--'.$row_card : '' }} co-appr-tl-entry" data-approver-email="{{ strtolower($row_email) }}">
                                                             {{-- Col 1: Approver & Role --}}
                                                             <div class="co-appr-tl-appr">
                                                                 <div class="co-appr-tl-avatar">{{ $row_initial }}</div>
@@ -4891,13 +4898,18 @@
                                                                 </div>
                                                             </div>
 
-                                                            {{-- Col 3: Email Reminder Action --}}
+                                                            {{-- Col 3: Email Reminder & Removal Actions --}}
                                                             <div class="co-appr-tl-rem">
-                                                                <button type="button" class="co-appr-remind-send" data-email="{{ $row_email }}" data-name="{{ $row_label }}" data-offerid="{{ $offer_id }}">
-                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                                                    Send Reminder
-                                                                </button>
-                                                                <div class="co-appr-tl-last-sent">Last sent: {{ $row_date ?: 'just now' }}</div>
+                                                                <div class="d-flex align-items-center justify-content-end gap-2">
+                                                                    <button type="button" class="co-appr-remind-send" data-email="{{ $row_email }}" data-name="{{ $row_label }}" data-offerid="{{ $offer_id }}">
+                                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                                                        Send Reminder
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-sm btn-icon btn-light-danger co-appr-card-remove" data-email="{{ $row_email }}" data-name="{{ $row_label }}" data-offerid="{{ $offer_id }}" title="Remove this approver">
+                                                                        <i class="fas fa-trash-alt fs-8 text-danger"></i>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="co-appr-tl-last-sent text-end">Last sent: {{ $row_date ?: 'just now' }}</div>
                                                             </div>
                                                         </div>
                                                         @endforeach
@@ -4976,21 +4988,13 @@
                                                             </span>
                                                             <span class="co-appr-detail-value fw-bold text-gray-900" id="co-appr-amount-display">{{ $co_cand_amt_fmt }}</span>
                                                         </div>
-                                                        {{-- 5. Template --}}
-                                                        <div class="co-appr-detail-row">
+                                                        {{-- 5. Offer Template --}}
+                                                        <div class="co-appr-detail-row border-bottom-0 pb-0">
                                                             <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
                                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                                                                 Offer Template
                                                             </span>
                                                             <span class="co-appr-detail-value text-truncate" style="max-width: 165px;" id="co_appr_tpl_name" title="{{ $selected_offer_template_label }}">{{ $selected_offer_template_label }}</span>
-                                                        </div>
-                                                        {{-- 6. Candidate Mobile --}}
-                                                        <div class="co-appr-detail-row border-bottom-0 pb-0">
-                                                            <span class="co-appr-detail-label d-flex align-items-center gap-1.5">
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted flex-shrink-0"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                                                Candidate Mobile
-                                                            </span>
-                                                            <span class="co-appr-detail-value">{{ @$application->phone ?: '—' }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -5559,9 +5563,16 @@
                     var safeEmail   = $('<span/>').text(email).html();
                     var safeName    = $('<span/>').text(displayName).html();
                     var offId       = '{{ $offer_id }}';
+                    var cleanEmail  = email ? email.toLowerCase().trim() : '';
+
+                    // Prevent duplicate card addition if already rendered in DOM
+                    var $existingCard = $('#step4 .co-appr-tl-card[data-approver-email="' + cleanEmail + '"]');
+                    if ($existingCard.length) {
+                        return;
+                    }
 
                     var newEntry =
-                        '<div class="co-appr-tl-card co-appr-tl-card--pending co-appr-tl-grid co-appr-tl-entry mb-1.5">' +
+                        '<div class="co-appr-tl-card co-appr-tl-card--pending co-appr-tl-grid co-appr-tl-entry mb-1.5" data-approver-email="' + cleanEmail + '">' +
                             '<div class="co-appr-tl-appr">' +
                                 '<div class="co-appr-tl-avatar">' + initial + '</div>' +
                                 '<div class="min-w-0 flex-grow-1">' +
@@ -5586,11 +5597,16 @@
                                 '</div>' +
                             '</div>' +
                             '<div class="co-appr-tl-rem">' +
-                                '<button type="button" class="co-appr-remind-send" data-email="' + safeEmail + '" data-name="' + safeName + '" data-offerid="' + offId + '">' +
-                                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
-                                    'Send Reminder' +
-                                '</button>' +
-                                '<div class="co-appr-tl-last-sent">Last sent: just now</div>' +
+                                '<div class="d-flex align-items-center justify-content-end gap-2">' +
+                                    '<button type="button" class="co-appr-remind-send" data-email="' + safeEmail + '" data-name="' + safeName + '" data-offerid="' + offId + '">' +
+                                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
+                                        'Send Reminder' +
+                                    '</button>' +
+                                    '<button type="button" class="btn btn-sm btn-icon btn-light-danger co-appr-card-remove" data-email="' + safeEmail + '" data-name="' + safeName + '" data-offerid="' + offId + '" title="Remove this approver">' +
+                                        '<i class="fas fa-trash-alt fs-8 text-danger"></i>' +
+                                    '</button>' +
+                                '</div>' +
+                                '<div class="co-appr-tl-last-sent text-end">Last sent: just now</div>' +
                             '</div>' +
                         '</div>';
 
@@ -5620,11 +5636,98 @@
                             '</div>';
                         var $emptyState = $main.find('.co-appr-empty-state');
                         if ($emptyState.length) { $emptyState.replaceWith(colHdr + newEntry); }
-                        else { $main.find('.co-appr-tl-cols').length ? $main.find('.co-appr-note').before(newEntry) : $main.prepend(colHdr + newEntry); }
+                        else { $main.find('.co-appr-tl-cols').length ? $main.find('.co-appr-note').before(newEntry) : $main.find('.co-subcard-body').prepend(colHdr + newEntry); }
                     }
-                    // Update header subtitle
-                    $('#co_appr_timeline_subtitle').text('Awaiting decision from approver.');
+                    // Update header status badge & step data
+                    $('#co_step4_status_badge').replaceWith(
+                        '<span class="badge badge-light-warning text-warning fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_step4_status_badge">' +
+                            '<svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Awaiting Approval' +
+                        '</span>'
+                    );
+                    $('#step4').data('mgmt-status', 1);
                 }
+
+                // Remove approver card from Step 4 timeline
+                function co_removeStep4Approver(email, remainingCount) {
+                    var cleanEmail = (email || '').toLowerCase().trim();
+                    var $card = $('#step4 .co-appr-tl-card[data-approver-email="' + cleanEmail + '"]');
+                    if ($card.length) {
+                        $card.remove();
+                    }
+
+                    var remaining = remainingCount !== undefined ? remainingCount : $('#step4 .co-appr-tl-entry').length;
+                    if (remaining <= 0 || $('#step4 .co-appr-tl-entry').length === 0) {
+                        $('#step4 .co-appr-tl-cols').remove();
+                        var emptyStateHtml =
+                            '<div class="co-appr-empty-state text-center py-5">' +
+                                '<div class="d-inline-flex align-items-center justify-content-center w-50px h-50px rounded-circle bg-light-primary text-primary mb-3">' +
+                                    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+                                '</div>' +
+                                '<div class="fw-bold text-gray-800 fs-7 mb-1">No Approver Assigned Yet</div>' +
+                                '<div class="text-muted fs-8">Add internal governance approvers to sign off before candidate release.</div>' +
+                            '</div>';
+                        var $body = $('#step4 .co-appr-main .co-subcard-body');
+                        if (!$body.find('.co-appr-empty-state').length) {
+                            $body.prepend(emptyStateHtml);
+                        }
+                        $('#co_step4_status_badge').replaceWith(
+                            '<span class="badge badge-light-secondary text-gray-700 fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_step4_status_badge">' +
+                                '<svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>Ready for Approval' +
+                            '</span>'
+                        );
+                        $('#step4').data('mgmt-status', 0);
+                    }
+                }
+
+                // Approver card remove button click (from Step 4 timeline)
+                $(document).on('click', '.co-appr-card-remove', function(e) {
+                    e.preventDefault();
+                    var $btn = $(this);
+                    var rEmail = $btn.data('email');
+                    var rOffId = $btn.data('offerid');
+                    if (!rEmail || !rOffId) return;
+
+                    Swal.fire({
+                        title: 'Remove Approver?',
+                        text: 'Remove ' + rEmail + ' from this approval workflow?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, Remove'
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: 'POST',
+                                url: "{{ route('service_company.cvtracker.remove_offer_approver') }}",
+                                data: {
+                                    '_token': "{{ csrf_token() }}",
+                                    'offerId': rOffId,
+                                    'email': rEmail
+                                },
+                                success: function(r) {
+                                    if (r.status === 'success') {
+                                        co_removeStep4Approver(rEmail, r.remaining_approvers);
+                                        // Also update drawer row if open
+                                        var $drawerRow = $('tr[data-approver-email="' + rEmail.toLowerCase().trim() + '"]');
+                                        if ($drawerRow.length) {
+                                            var rowId = $drawerRow.data('row-id');
+                                            $('#co_appr_status_badge_' + rowId).removeClass('co-appr-status--added').addClass('co-appr-status--not-added').html('<i class="far fa-circle me-1"></i> Not Added');
+                                            $('#to_team_remove_' + rowId).addClass('d-none');
+                                            $('#to_team_select_' + rowId).removeClass('d-none');
+                                        }
+                                        Swal.fire({icon:'success', title:'Removed', text:'Approver removed successfully.', timer:1200, showConfirmButton:false});
+                                    } else {
+                                        Swal.fire('Error', r.message || 'Could not remove approver.', 'error');
+                                    }
+                                },
+                                error: function() {
+                                    Swal.fire('Error', 'Could not remove approver.', 'error');
+                                }
+                            });
+                        }
+                    });
+                });
 
                 // Send Reminder handler
                 $(document).on('click', '.co-appr-remind-send', function() {
@@ -5636,7 +5739,7 @@
                     $btn.html(mailIcon + ' Sending…').css({'pointer-events':'none','opacity':'0.6'});
                     $.ajax({
                         type:'POST', url:"{{ route('service_company.cvtracker.fwd_offer_send') }}",
-                        data:{ '_token':"{{ csrf_token() }}", 'template':'', 'from_email':"{{ auth()->user()->email ?? '' }}", 'to_email':rEmail, 'cc_email':'', 'subject':'', 'attached_cv':0, 'editor1':'', 'arr':[], 'mtypeId':8, 'offerId':rOffId, 'signature':0 },
+                        data:{ '_token':"{{ csrf_token() }}", 'template':'', 'from_email':"{{ auth()->user()->email ?? '' }}", 'to_email':rEmail, 'cc_email':'', 'subject':'', 'attached_cv':0, 'editor1':'', 'arr':[], 'mtypeId':8, 'offerId':rOffId, 'signature':0, 'is_reminder': 1 },
                         success:function(r) {
                             $btn.html(mailIcon + ' Send Reminder').css({'pointer-events':'','opacity':'1'});
                             if (r.status === 'rateLimited') { Swal.fire('Already Sent', r.message, 'info'); }
