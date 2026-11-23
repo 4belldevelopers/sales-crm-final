@@ -2272,7 +2272,14 @@
             border-color: #2563eb;
         }
 
-        /* E-Signature toggle */
+        /* E-Signature refined enterprise tile card */
+        .co-send-sig-card {
+            transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .co-send-sig-card:hover {
+            box-shadow: 0 1px 4px rgba(37, 99, 235, 0.08);
+            border-color: #93c5fd !important;
+        }
         .co-send-sigrow { display: flex; align-items: center; gap: 10px; }
         .co-send-switch { position: relative; display: inline-block; width: 38px; height: 20px; flex-shrink: 0; }
         .co-send-switch input { opacity: 0; width: 0; height: 0; }
@@ -5166,17 +5173,32 @@
                                                 </div>
 
                                                 <!-- Row 4: E-Signature & Template (2 columns) -->
-                                                <div class="row g-3">
+                                                <div class="row g-3 align-items-start">
                                                     <div class="col-md-6">
                                                         <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M3 21c3-1 6-8 8-8s2 3 4 3 3-2 6-2"/><path d="m15 5 4 4"/></svg>
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="m15 5 4 4"/><path d="M18 2l4 4"/><path d="M3 20l5-1 12-12-4-4L4 15l-1 5z"/><path d="M2 21h20"/></svg>
                                                             E-Signature Requirement
                                                         </label>
-                                                        <div class="co-send-sigrow d-flex align-items-center gap-3 pt-1">
-                                                            <label class="co-send-switch mb-0"><input type="checkbox" id="co_send_signature" checked><span class="co-send-slider"></span></label>
-                                                            <span class="co-send-sigtext fw-semibold fs-7 text-gray-800" id="co_send_sigtext">With E-Signature</span>
+                                                        <div class="co-send-sig-card d-flex align-items-center justify-content-between px-3 py-2 rounded border" id="co_send_sig_card" style="min-height: 40px; border-color: #bfdbfe !important; background-color: #f0f7ff; cursor: pointer;">
+                                                            <div class="d-flex align-items-center gap-2.5 min-w-0">
+                                                                <div class="co-send-sig-icon rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" id="co_send_sig_icon" style="width: 26px; height: 26px; background: #dbeafe; color: #2563eb;">
+                                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                                                    </svg>
+                                                                </div>
+                                                                <div class="min-w-0">
+                                                                    <div class="d-flex align-items-center gap-2">
+                                                                        <span class="fw-bold fs-7 text-gray-900 text-truncate" id="co_send_sigtext">With E-Signature</span>
+                                                                        <span class="badge badge-light-primary fs-9 px-2 py-0.5 fw-semibold" id="co_send_sigbadge">Required</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <label class="co-send-switch mb-0 flex-shrink-0 ms-2" onclick="event.stopPropagation();">
+                                                                <input type="checkbox" id="co_send_signature" checked>
+                                                                <span class="co-send-slider"></span>
+                                                            </label>
                                                         </div>
-                                                        <div class="co-send-hint">Candidate uploads a digital signature to accept offer</div>
+                                                        <div class="co-send-hint" id="co_send_sighint">Candidate must upload a digital signature before accepting the offer letter</div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
@@ -7978,10 +8000,35 @@
                     coSyncDrawerAddedState();
                 });
 
-                // ── E-Signature toggle text (the toggle itself already posts to `signature`, which
-                //    fwd_offer_send() already reads — this only updates the label next to it) ──
+                // ── E-Signature toggle UI & State Synchronization ──
                 $(document).on('change', '#co_send_signature', function () {
-                    $('#co_send_sigtext').text($(this).is(':checked') ? 'With E-Signature' : 'Without E-Signature');
+                    var isChecked = $(this).is(':checked');
+                    var $card = $('#co_send_sig_card');
+                    var $icon = $('#co_send_sig_icon');
+                    var $text = $('#co_send_sigtext');
+                    var $badge = $('#co_send_sigbadge');
+                    var $hint = $('#co_send_sighint');
+
+                    if (isChecked) {
+                        $card.css({ 'border-color': '#bfdbfe', 'background-color': '#f0f7ff' });
+                        $icon.css({ 'background': '#dbeafe', 'color': '#2563eb' });
+                        $text.text('With E-Signature');
+                        $badge.attr('class', 'badge badge-light-primary fs-9 px-2 py-0.5 fw-semibold').text('Required');
+                        $hint.text('Candidate must upload a digital signature before accepting the offer letter');
+                    } else {
+                        $card.css({ 'border-color': '#e2e8f0', 'background-color': '#f8fafc' });
+                        $icon.css({ 'background': '#f1f5f9', 'color': '#64748b' });
+                        $text.text('Without E-Signature');
+                        $badge.attr('class', 'badge badge-light-secondary fs-9 px-2 py-0.5 fw-semibold text-muted').text('Optional');
+                        $hint.text('Direct one-click acceptance without requiring digital signature upload');
+                    }
+                });
+
+                // Click anywhere on the E-Signature card to toggle the switch
+                $(document).on('click', '#co_send_sig_card', function (e) {
+                    if ($(e.target).closest('.co-send-switch').length) return;
+                    var $chk = $('#co_send_signature');
+                    $chk.prop('checked', !$chk.is(':checked')).trigger('change');
                 });
 
                 // ── Template select (reuses the existing email_template endpoint/behavior from the

@@ -8502,18 +8502,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                             'send_accept_date_time' => $send_accept_date_time
                         ]);
 
-                        // Update Candidate Pipeline Status to "Offer Released" (master_status_id = 5, candidate_status = 1)
+                        // Update Candidate Pipeline Status to "Offer Released" (master_status_id = 5)
                         if (!empty($Offertimelime->joined)) {
                             DB::table('add_job_wise_condidates')->where('id', $Offertimelime->joined)->update([
                                 'master_status_id' => 5,
-                                'candidate_status' => 1,
                                 'updated_at' => date('Y-m-d H:i:s'),
                             ]);
                         }
                         if (!empty($Offertimelime->application_id)) {
                             DB::table('job_applications')->where('id', $Offertimelime->application_id)->update([
                                 'master_status_id' => 5,
-                                'candidate_status' => 1,
                                 'updated_at' => date('Y-m-d H:i:s'),
                             ]);
                         }
