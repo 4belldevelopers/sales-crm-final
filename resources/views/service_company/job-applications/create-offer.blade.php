@@ -2320,46 +2320,83 @@
         /* CKEditor in Step 5 */
         #step5 .cke_chrome { border-radius: 7px !important; border-color: #cbd5e1 !important; box-shadow: none !important; }
 
-        /* Add-Email drawer Header & Table (Rule 20 Anchor Backgrounds) */
-        .co-send-drawer-bd { display: none; position: absolute; inset: 0; background: rgba(15, 23, 42, 0.4); z-index: 1000; }
+        /* Add-Email drawer: Modern Card + Sub-Card Enterprise Standard (Rule 20) */
+        .co-send-drawer-bd { display: none; position: absolute; inset: 0; background: rgba(15, 23, 42, 0.45); z-index: 1000; backdrop-filter: blur(1.5px); }
         .co-send-drawer-bd.co-send-drawer-bd--open { display: block; }
-        .co-send-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 70%; max-width: 70%; background: #fff; box-shadow: -8px 0 30px rgba(15, 23, 42, 0.22); z-index: 1001; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; visibility: hidden; }
+        .co-send-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 680px; max-width: 92%; background: #ffffff; box-shadow: -8px 0 30px rgba(15, 23, 42, 0.22); z-index: 1001; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; visibility: hidden; }
         .co-send-drawer.co-send-drawer--open { transform: translateX(0); visibility: visible; }
-        .co-send-drawer-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 18px; background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; flex-shrink: 0; }
-        .co-send-drawer-title { font-size: 13px !important; font-weight: 700; color: #0f172a; }
-        .co-send-drawer-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
-        .co-send-drawer-x { background: #f1f5f9; border: 1px solid #e2e8f0; width: 28px; height: 28px; border-radius: 6px; font-size: 16px; color: #64748b; cursor: pointer; line-height: 1; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+        .co-send-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; flex-shrink: 0; min-height: 56px; }
+        .co-send-drawer-icon { width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 13.5px; flex-shrink: 0; }
+        .co-send-drawer-title { font-size: 14px !important; font-weight: 700; color: #0f172a; font-family: 'Poppins', sans-serif; letter-spacing: -0.01em; }
+        .co-send-drawer-sub { font-size: 10.5px; color: #64748b; margin-top: 1px; }
+        .co-send-drawer-x { background: #f1f5f9; border: 1px solid #e2e8f0; width: 28px; height: 28px; border-radius: 6px; font-size: 16px; color: #64748b; cursor: pointer; line-height: 1; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
         .co-send-drawer-x:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
         .co-send-drawer-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; padding: 16px 20px 20px; }
-        .co-appr-source-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-        .co-appr-source-card { flex: 1 1 230px; display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; background: #fff; margin: 0; min-width: 0; }
-        .co-appr-source-card input { margin: 0 6px 0 0; flex-shrink: 0; }
-        .co-appr-source-card--active { border-color: #2563eb; background: #eff6ff; }
-        .co-appr-source-ico { width: 30px; height: 30px; border-radius: 6px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .co-appr-source-ico svg { width: 15px; height: 15px; }
-        .co-appr-source-card > div { min-width: 0; }
-        .co-appr-source-title { font-size: 12px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .co-appr-source-sub { font-size: 10.5px; color: #64748b; margin-top: 1px; }
-        .co-send-searchrow { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-        .co-send-searchbox { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; height: 38px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 14px; }
-        .co-send-searchbox svg { width: 14px; height: 14px; color: #64748b; flex-shrink: 0; }
-        .co-send-searchbox:focus-within { border-color: #2563eb; background: #fff; }
-        .co-send-drawer-search-input { flex: 1 1 auto; min-width: 0; border: none; background: transparent; outline: none; font-size: 12px; height: 100%; color: #1e293b; }
-        .co-send-addmore { flex-shrink: 0; border: none; background: none; color: #2563eb; font-weight: 700; font-size: 12px; white-space: nowrap; cursor: pointer; padding: 0 4px; }
-        .co-send-addmore:disabled { color: #94a3b8; cursor: not-allowed; }
-        #co_send_member_table { width: 100%; table-layout: fixed; font-size: 11px; }
-        #co_send_member_table thead tr { background: #f1f5f9 !important; }
-        #co_send_member_table thead th { font-size: 10.5px !important; color: #475569 !important; font-weight: 600; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.3px; text-align: left; }
-        #co_send_member_table th:nth-child(1) { width: 40%; }
-        #co_send_member_table th:nth-child(2) { width: 28%; }
-        #co_send_member_table th:nth-child(3) { width: 20%; }
-        #co_send_member_table th:nth-child(4) { width: 12%; }
-        #co_send_member_table tbody td { padding: 9px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        #co_send_member_table tbody td:first-child { white-space: normal; }
-        .co-send-mrow-av { width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; margin-right: 8px; flex-shrink: 0; }
-        #co_send_member_table .co-send-mrow-role { font-size: 9.5px !important; }
-        .co-send-mrow-add { padding: 4px 10px !important; font-size: 11px !important; font-weight: 600; border-radius: 5px !important; }
-        .co-send-mrow-add.co-send-mrow--added { background: #ecfdf5 !important; color: #059669 !important; border-color: #a7f3d0 !important; }
+
+        /* Sub-Tabs / Source Cards (Tier 2 Sub-Tabs) */
+        .co-send-drawer .co-appr-source-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .co-send-drawer .co-appr-source-card { display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 9px; padding: 10px 14px; background: #ffffff; margin: 0; min-width: 0; transition: all 0.15s ease; position: relative; }
+        .co-send-drawer .co-appr-source-card:hover { border-color: #cbd5e1; background: #f8fafc; }
+        .co-send-drawer .co-appr-source-card--active { border-color: #009ef7 !important; background: #f0f9ff !important; box-shadow: 0 1px 3px rgba(0, 158, 247, 0.08); }
+        .co-send-drawer .co-appr-source-ico { width: 32px; height: 32px; border-radius: 7px; background: #eff6ff; color: #009ef7; border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .co-send-drawer .co-appr-source-ico svg { width: 16px; height: 16px; }
+        .co-send-drawer .co-appr-source-card--active .co-appr-source-ico { background: #009ef7; color: #ffffff; border-color: #009ef7; }
+        .co-send-drawer .co-appr-source-meta { flex: 1 1 auto; min-width: 0; }
+        .co-send-drawer .co-appr-source-title { font-size: 12px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Poppins', sans-serif; }
+        .co-send-drawer .co-appr-source-sub { font-size: 10.5px; color: #64748b; margin-top: 1px; }
+        .co-send-drawer .co-appr-count-pill { font-weight: 600; color: #0284c7; }
+        .co-send-drawer .co-appr-source-check { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #cbd5e1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .co-send-drawer .co-appr-source-card--active .co-appr-source-check { border-color: #009ef7; }
+        .co-send-drawer .co-appr-dot { width: 8px; height: 8px; border-radius: 50%; background: transparent; }
+        .co-send-drawer .co-appr-source-card--active .co-appr-dot { background: #009ef7; }
+
+        /* Toolbar / Search Card (Tier 1 Toolbar) */
+        .co-send-drawer .co-appr-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 12px; margin-bottom: 14px; }
+        .co-send-drawer .co-appr-searchbox { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; height: 34px; transition: border-color 0.15s ease; }
+        .co-send-drawer .co-appr-searchbox:focus-within { border-color: #009ef7; box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.12); }
+        .co-send-drawer .co-appr-search-ico { width: 14px; height: 14px; color: #64748b; flex-shrink: 0; }
+        .co-send-drawer .co-appr-search-input { flex: 1 1 auto; min-width: 0; border: none; background: transparent; outline: none; font-size: 11.5px; height: 100%; color: #0f172a; font-family: 'Poppins', sans-serif; }
+        .co-send-drawer .co-appr-search-input::placeholder { color: #94a3b8; }
+        .co-send-drawer .co-appr-search-clear { border: none; background: transparent; color: #94a3b8; font-size: 16px; cursor: pointer; padding: 0 2px; line-height: 1; }
+        .co-send-drawer .co-appr-search-clear:hover { color: #ef4444; }
+        .co-send-drawer .co-appr-counter-badge { font-size: 11px; font-weight: 600; color: #64748b; white-space: nowrap; flex-shrink: 0; }
+        .co-send-drawer .co-appr-counter-badge span { color: #009ef7; font-weight: 700; }
+
+        /* Table Card (Tier 3 Entity Stream) */
+        .co-send-table-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
+        .co-send-drawer .co-appr-table { width: 100%; table-layout: fixed; margin-bottom: 0; border-collapse: separate; border-spacing: 0; font-family: 'Poppins', sans-serif; }
+        .co-send-drawer .co-appr-table thead tr { background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; }
+        .co-send-drawer .co-appr-table thead th { font-size: 10.5px !important; color: #475569 !important; font-weight: 700 !important; padding: 9px 12px !important; border-bottom: 1px solid #e2e8f0 !important; border-top: none !important; text-transform: uppercase !important; letter-spacing: 0.04em !important; text-align: left; }
+        .co-send-drawer .co-appr-table tbody tr { transition: background 0.15s ease; border-bottom: 1px solid #f1f5f9; }
+        .co-send-drawer .co-appr-table tbody tr:hover { background: #f8fafc; }
+        .co-send-drawer .co-appr-table tbody tr:last-child { border-bottom: none !important; }
+        .co-send-drawer .co-appr-table tbody td { padding: 9px 12px !important; vertical-align: middle; border-bottom: 1px solid #f1f5f9; border-top: none !important; color: #334155; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .co-send-drawer .co-appr-table tbody td:first-child { white-space: normal; }
+        .co-send-drawer .co-appr-avatar { width: 30px; height: 30px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; font-family: 'Poppins', sans-serif; }
+        .co-send-drawer .co-appr-name { font-size: 12px; font-weight: 600; color: #0f172a; }
+        .co-send-drawer .co-appr-role-tag { font-size: 10px; color: #64748b; font-weight: 500; }
+        .co-send-drawer .co-appr-contact { display: flex; align-items: center; gap: 6px; min-width: 0; }
+        .co-send-drawer .co-appr-contact-ico { width: 13px; height: 13px; color: #64748b; flex-shrink: 0; }
+        .co-send-drawer .co-appr-email-text { font-size: 11.5px; color: #334155; }
+        .co-send-drawer .co-appr-company { display: flex; align-items: center; gap: 6px; min-width: 0; }
+        .co-send-drawer .co-appr-company-ico { width: 13px; height: 13px; color: #64748b; flex-shrink: 0; }
+        .co-send-drawer .co-appr-company-text { font-size: 11.5px; color: #475569; }
+
+        /* Add / Added Button Styling */
+        .co-send-mrow-add { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px !important; font-size: 11px !important; font-weight: 600; border-radius: 6px !important; background: #eff6ff !important; color: #009ef7 !important; border: 1px solid #bfdbfe !important; text-decoration: none !important; transition: all 0.15s ease; cursor: pointer; }
+        .co-send-mrow-add:hover { background: #009ef7 !important; color: #ffffff !important; border-color: #009ef7 !important; }
+        .co-send-mrow-add.co-send-mrow--added { background: #ecfdf5 !important; color: #059669 !important; border-color: #a7f3d0 !important; cursor: pointer; }
+        .co-send-mrow-add.co-send-mrow--added:hover { background: #fee2e2 !important; color: #dc2626 !important; border-color: #fca5a5 !important; }
+
+        /* Empty State */
+        .co-send-drawer .co-appr-empty-cell { padding: 32px 16px !important; text-align: center; }
+        .co-send-drawer .co-appr-empty-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #94a3b8; }
+        .co-send-drawer .co-appr-empty-ico { font-size: 24px; color: #cbd5e1; }
+        .co-send-drawer .co-appr-empty-msg { font-size: 12px; font-weight: 600; color: #64748b; font-family: 'Poppins', sans-serif; }
+
+        /* Button & Badge State for Offer Released */
+        .co-header-save-btn--released { background: #009ef7 !important; border-color: #009ef7 !important; color: #ffffff !important; cursor: default !important; }
+        .co-header-save-btn--released svg, .co-header-save-btn--released i { color: #ffffff !important; stroke: #ffffff !important; }
     </style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
@@ -5117,13 +5154,18 @@
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
                                             {{-- Offer Status Badge (Moved to Sub-Header as requested) --}}
-                                            <span class="badge {{ $so_sent ? 'badge-light-success text-success co-send-fact-sent' : 'badge-light-warning text-warning co-send-fact-notsent' }} fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_send_status_badge">
-                                                @if($so_sent)
-                                                    <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Offer Released
-                                                @else
-                                                    <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Offer Status: Not Sent
-                                                @endif
-                                            </span>
+                                            @if($so_sent)
+                                                <span class="badge badge-light-primary text-primary fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_send_status_badge" style="background:#eff6ff;border:1px solid #bfdbfe;">
+                                                    <span class="co-badge-ico-wrap me-1.5" style="width:16px;height:16px;border-radius:4px;background:#009ef7;display:inline-flex;align-items:center;justify-content:center;">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                                    </span>
+                                                    <span class="fw-bold" style="color:#009ef7;">Offer Released</span>
+                                                </span>
+                                            @else
+                                                <span class="badge badge-light-warning text-warning fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_send_status_badge">
+                                                    <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Offer Status: Not Sent
+                                                </span>
+                                            @endif
 
                                             {{-- Offer Valid Upto Badge (Moved to Sub-Header as requested) --}}
                                             <span class="badge badge-light-danger text-danger fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_send_valid_badge">
@@ -5333,96 +5375,178 @@
                                      root (#offer_create_show_right_bar is position:relative) to avoid transform/overflow issues. --}}
                                 <div class="co-send-drawer-bd" id="co_send_drawer_bd"></div>
                                 <div class="co-send-drawer" id="co_send_drawer" data-target="co_cc_chips">
+                                    {{-- Header (Rule 20 Anchor Background) --}}
                                     <div class="co-send-drawer-head">
-                                        <div>
-                                            <div class="co-send-drawer-title">Select Email</div>
-                                            <div class="co-send-drawer-sub">Choose from your internal team or client company contacts.</div>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="co-send-drawer-icon">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="co-send-drawer-title">Select Email Recipients</div>
+                                                <div class="co-send-drawer-sub">Choose team members or client contacts to receive offer notifications via CC</div>
+                                            </div>
                                         </div>
-                                        <button type="button" class="co-send-drawer-x" id="co_send_drawer_close" aria-label="Close">&times;</button>
+                                        <button type="button" class="co-send-drawer-x" id="co_send_drawer_close" aria-label="Close drawer">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                        </button>
                                     </div>
+
                                     <div class="co-send-drawer-body co-appr-picker">
-                                        {{-- Choose source: internal always shown; client when job has external client; agency when candidate is from agency bench --}}
+                                        {{-- Tier 2 Sub-Tabs / Source Cards --}}
                                         <div class="co-appr-source-row">
-                                            <label class="co-appr-source-card co-appr-source-card--active" data-source="internal">
-                                                <input type="radio" name="coSendSource" value="internal" checked>
-                                                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></span>
-                                                <div>
-                                                    <div class="co-appr-source-title">Internal Company Approvers</div>
-                                                    <div class="co-appr-source-sub">{{ count($co_send_internal ?? []) }} available</div>
+                                            <div class="co-appr-source-card co-appr-source-card--active" data-source="internal">
+                                                <input type="radio" name="coSendSource" value="internal" checked style="display:none;">
+                                                <span class="co-appr-source-ico">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg>
+                                                </span>
+                                                <div class="co-appr-source-meta">
+                                                    <div class="co-appr-source-title">Internal Team Members</div>
+                                                    <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($co_send_internal ?? []) }} available</span></div>
                                                 </div>
-                                            </label>
+                                                <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
+                                            </div>
                                             @if(!empty($co_send_client))
-                                            <label class="co-appr-source-card" data-source="client">
-                                                <input type="radio" name="coSendSource" value="client">
-                                                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                                                <div>
-                                                    <div class="co-appr-source-title">Client Company Approvers</div>
-                                                    <div class="co-appr-source-sub">{{ count($co_send_client) }} available</div>
+                                            <div class="co-appr-source-card" data-source="client">
+                                                <input type="radio" name="coSendSource" value="client" style="display:none;">
+                                                <span class="co-appr-source-ico">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                                </span>
+                                                <div class="co-appr-source-meta">
+                                                    <div class="co-appr-source-title">Client Company Contacts</div>
+                                                    <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($co_send_client) }} available</span></div>
                                                 </div>
-                                            </label>
+                                                <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
+                                            </div>
                                             @endif
                                             @if(!empty($co_send_agency))
-                                            <label class="co-appr-source-card" data-source="agency">
-                                                <input type="radio" name="coSendSource" value="agency">
-                                                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                                                <div>
+                                            <div class="co-appr-source-card" data-source="agency">
+                                                <input type="radio" name="coSendSource" value="agency" style="display:none;">
+                                                <span class="co-appr-source-ico">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                                </span>
+                                                <div class="co-appr-source-meta">
                                                     <div class="co-appr-source-title">Agency / Partner Contacts</div>
-                                                    <div class="co-appr-source-sub">{{ count($co_send_agency) }} available</div>
+                                                    <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($co_send_agency) }} available</span></div>
                                                 </div>
-                                            </label>
+                                                <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
+                                            </div>
                                             @endif
                                         </div>
-                                        <div class="co-send-searchrow">
-                                            <div class="co-send-searchbox">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                                                <input type="text" class="co-send-drawer-search-input" id="co_send_drawer_search" placeholder="Search team members...">
+
+                                        {{-- Tier 1 Toolbar / Search Card --}}
+                                        <div class="co-appr-toolbar">
+                                            <div class="co-appr-searchbox">
+                                                <svg class="co-appr-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                                </svg>
+                                                <input type="text" class="co-appr-search-input" id="co_send_drawer_search" placeholder="Search by name, email, or company...">
+                                                <button type="button" class="co-appr-search-clear d-none" id="co_send_search_clear" aria-label="Clear search">&times;</button>
                                             </div>
-                                            <button type="button" class="co-send-addmore" id="co_send_addmore" disabled>+ Add More</button>
+                                            <div class="co-appr-counter-badge">
+                                                <span class="co-appr-active-count" id="co_send_active_count">{{ count($co_send_internal ?? []) }}</span> contacts
+                                            </div>
                                         </div>
-                                        <table class="table align-middle table-row-dashed fs-6 gy-5" id="co_send_member_table">
-                                            <thead>
-                                                <tr class="fw-bolder text-muted">
-                                                    <th class="min-w-200px">Approver</th>
-                                                    <th class="min-w-200px">Contact</th>
-                                                    <th class="min-w-150px">Company</th>
-                                                    <th class="min-w-90px">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="text-gray-600 fw-bold">
-                                                @foreach ([['data' => $co_send_internal ?? [], 'source' => 'internal'], ['data' => $co_send_client ?? [], 'source' => 'client'], ['data' => $co_send_agency ?? [], 'source' => 'agency']] as $group)
-                                                    @foreach ($group['data'] as $teamVal)
-                                                        @php
-                                                            $bgTextDecore = $strVal = '';
-                                                            $str = trim((string) @$teamVal->name);
-                                                            $str = $strVal = strtolower($str[0] ?? 'c');
-                                                            $str = ord($str);
-                                                            if ($str >= 97 && $str <= 101) { $bgTextDecore = 'bg-light-danger text-danger'; }
-                                                            else if ($str >= 102 && $str <= 106) { $bgTextDecore = 'bg-light-warning text-warning'; }
-                                                            else if ($str >= 107 && $str <= 111) { $bgTextDecore = 'bg-light-primary text-primary'; }
-                                                            else if ($str >= 112 && $str <= 116) { $bgTextDecore = 'bg-light-success text-success'; }
-                                                            else if ($str >= 117 && $str <= 121) { $bgTextDecore = 'bg-dark text-secondary'; }
-                                                            else { $bgTextDecore = 'bg-light-secondary text-dark'; }
-                                                        @endphp
-                                                        <tr class="co-send-mrow co-send-mrow--{{ $group['source'] }} {{ $group['source'] !== 'internal' ? 'd-none' : '' }}"
-                                                            data-email="{{ @$teamVal->email }}"
-                                                            data-search="{{ strtolower(trim((string) @$teamVal->name).' '.@$teamVal->email.' '.@$teamVal->company_name) }}">
-                                                            <td><div class="d-flex align-items-center">
-                                                                <div class="co-send-mrow-av {{ $bgTextDecore }}">{{ strtoupper($strVal) }}</div>
-                                                                <div class="d-flex flex-column"><span class="text-dark fw-bolder">{{ ucwords(substr((string) @$teamVal->name, 0, 22)) }}</span><span class="text-muted fw-bold d-block co-send-mrow-role">{{ ucwords(substr((string) (@$teamVal->display_name ?: @$teamVal->role), 0, 25)) }}</span></div>
-                                                            </div></td>
-                                                            <td>{{ @$teamVal->email }}</td>
-                                                            <td>{{ @$teamVal->company_name }}</td>
-                                                            <td><a href="javascript:void(0);" class="co-send-mrow-add btn btn-sm btn-light-primary">Add</a></td>
-                                                        </tr>
+
+                                        {{-- Tier 3 Table Card --}}
+                                        <div class="co-send-table-card">
+                                            <table class="co-appr-table align-middle" id="co_send_member_table">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="min-width:180px;">RECIPIENT / ROLE</th>
+                                                        <th style="min-width:170px;">EMAIL ADDRESS</th>
+                                                        <th style="min-width:140px;">ORGANIZATION</th>
+                                                        <th style="min-width:90px;width:90px;text-align:center;">ACTION</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ([['data' => $co_send_internal ?? [], 'source' => 'internal'], ['data' => $co_send_client ?? [], 'source' => 'client'], ['data' => $co_send_agency ?? [], 'source' => 'agency']] as $group)
+                                                        @foreach ($group['data'] as $teamVal)
+                                                            @php
+                                                                $teamName = trim((string) @$teamVal->name);
+                                                                $initChar = strtoupper(substr($teamName, 0, 1) ?: 'U');
+                                                                $charOrd = ord(strtolower($initChar));
+                                                                $palettes = [
+                                                                    ['bg' => '#eff6ff', 'text' => '#1d4ed8', 'border' => '#bfdbfe'],
+                                                                    ['bg' => '#ecfdf5', 'text' => '#047857', 'border' => '#a7f3d0'],
+                                                                    ['bg' => '#fef3c7', 'text' => '#b45309', 'border' => '#fde68a'],
+                                                                    ['bg' => '#f5f3ff', 'text' => '#6d28d9', 'border' => '#ddd6fe'],
+                                                                    ['bg' => '#fdf2f8', 'text' => '#be185d', 'border' => '#fbcfe8'],
+                                                                    ['bg' => '#f0fdfa', 'text' => '#0f766e', 'border' => '#99f6e4'],
+                                                                ];
+                                                                $pal = $palettes[$charOrd % count($palettes)];
+                                                                $roleText = trim((string) (@$teamVal->display_name ?: @$teamVal->role));
+                                                                $orgName = trim((string) @$teamVal->company_name) ?: ($group['source'] === 'client' ? 'Client Company' : 'Internal Organization');
+                                                            @endphp
+                                                            <tr class="co-send-mrow co-send-mrow--{{ $group['source'] }} {{ $group['source'] !== 'internal' ? 'd-none' : '' }}"
+                                                                data-email="{{ @$teamVal->email }}"
+                                                                data-search="{{ strtolower(trim((string) @$teamVal->name).' '.@$teamVal->email.' '.$orgName) }}">
+                                                                <td>
+                                                                    <div class="d-flex align-items-center gap-3">
+                                                                        <div class="co-appr-avatar" style="background:{{ $pal['bg'] }};color:{{ $pal['text'] }};border:1px solid {{ $pal['border'] }};">
+                                                                            {{ $initChar }}
+                                                                        </div>
+                                                                        <div class="d-flex flex-column min-w-0">
+                                                                            <span class="co-appr-name text-truncate">{{ ucwords(substr(@$teamVal->name, 0, 24)) }}</span>
+                                                                            @if(!empty($roleText))
+                                                                                <span class="co-appr-role-tag text-truncate">{{ ucwords(substr($roleText, 0, 25)) }}</span>
+                                                                            @endif
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="co-appr-contact">
+                                                                        <svg class="co-appr-contact-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                            <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                                                                        </svg>
+                                                                        <span class="co-appr-email-text text-truncate">{{ @$teamVal->email }}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="co-appr-company">
+                                                                        <svg class="co-appr-company-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                            <path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/>
+                                                                        </svg>
+                                                                        <span class="co-appr-company-text text-truncate">{{ $orgName }}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td style="text-align:center;">
+                                                                    <button type="button" class="co-send-mrow-add">
+                                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                                                        <span>Add</span>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
                                                     @endforeach
-                                                @endforeach
-                                                <tr class="co-send-mrow--internal co-send-mrow-empty {{ !empty($co_send_internal) ? 'd-none' : '' }}"><td colspan="4" class="co-appr-empty">No internal team members found.</td></tr>
-                                                <tr class="co-send-mrow--client co-send-mrow-empty d-none"><td colspan="4" class="co-appr-empty">No client company contacts found.</td></tr>
-                                                <tr class="co-send-mrow--agency co-send-mrow-empty d-none"><td colspan="4" class="co-appr-empty">No agency / partner contacts found.</td></tr>
-                                            </tbody>
-                                        </table>
-                                            </tbody>
-                                        </table>
+                                                    <tr class="co-send-mrow-empty co-send-mrow--internal {{ !empty($co_send_internal) ? 'd-none' : '' }}">
+                                                        <td colspan="4" class="co-appr-empty-cell">
+                                                            <div class="co-appr-empty-inner">
+                                                                <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
+                                                                <div class="co-appr-empty-msg">No internal team members found</div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="co-send-mrow-empty co-send-mrow--client d-none">
+                                                        <td colspan="4" class="co-appr-empty-cell">
+                                                            <div class="co-appr-empty-inner">
+                                                                <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
+                                                                <div class="co-appr-empty-msg">No client company contacts found</div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="co-send-mrow-empty co-send-mrow--agency d-none">
+                                                        <td colspan="4" class="co-appr-empty-cell">
+                                                            <div class="co-appr-empty-inner">
+                                                                <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
+                                                                <div class="co-appr-empty-msg">No agency / partner contacts found</div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -5465,12 +5589,12 @@
                     if (btn.id === 'co_header_save_btn') {
                         var active = typeof coActiveStep === 'function' ? coActiveStep() : 1;
                         if (active === 5) {
-                            btn.innerHTML = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
+                            btn.innerHTML = '<span class="co-header-save-label">Send Offer</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="ms-1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
                             btn.title = 'Send Offer to Candidate';
                             btn._origHtml = btn.innerHTML;
                             return;
                         } else {
-                            btn.innerHTML = '<span class="co-header-save-label">Save &amp; Next</span><i class="fas fa-arrow-right fs-9 ms-1"></i>';
+                            btn.innerHTML = '<span class="co-header-save-label">Save &amp; Next</span><i class="fas fa-arrow-right fs-9 ms-1 text-white"></i>';
                             btn.title = 'Save and proceed to next step';
                             btn._origHtml = btn.innerHTML;
                             return;
@@ -5494,18 +5618,16 @@
                         $hdrBtn.find('.co-btn-spinner').remove();
                         var active = typeof coActiveStep === 'function' ? coActiveStep() : 1;
                         if (active === 5) {
-                            $hdrBtn.find('.co-header-save-label').text('Send Offer');
-                            $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                            $hdrBtn.html('<span class="co-header-save-label">Send Offer</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="ms-1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>');
                             $hdrBtn.attr('title', 'Send Offer to Candidate');
                             if ($hdrBtn[0]) {
-                                $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
+                                $hdrBtn[0]._origHtml = $hdrBtn.html();
                             }
                         } else {
-                            $hdrBtn.find('.co-header-save-label').text('Save & Next');
-                            $hdrBtn.find('i').attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                            $hdrBtn.html('<span class="co-header-save-label">Save &amp; Next</span><i class="fas fa-arrow-right fs-9 ms-1 text-white"></i>');
                             $hdrBtn.attr('title', 'Save and proceed to next step');
                             if ($hdrBtn[0]) {
-                                $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Save &amp; Next</span><i class="fas fa-arrow-right fs-9 ms-1"></i>';
+                                $hdrBtn[0]._origHtml = $hdrBtn.html();
                             }
                         }
                     }
@@ -7973,21 +8095,17 @@
                     if ($hdrBtn.length) {
                         $hdrBtn.prop('disabled', false);
                         $hdrBtn.find('.co-btn-spinner').remove();
-                        var $label = $hdrBtn.find('.co-header-save-label');
-                        var $icon = $hdrBtn.find('i');
                         if (active === 5) {
-                            $label.text('Send Offer');
-                            $icon.attr('class', 'fas fa-paper-plane fs-9 ms-1');
+                            $hdrBtn.html('<span class="co-header-save-label">Send Offer</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="ms-1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>');
                             $hdrBtn.attr('title', 'Send Offer to Candidate');
                             if ($hdrBtn[0]) {
-                                $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
+                                $hdrBtn[0]._origHtml = $hdrBtn.html();
                             }
                         } else {
-                            $label.text('Save & Next');
-                            $icon.attr('class', 'fas fa-arrow-right fs-9 ms-1');
+                            $hdrBtn.html('<span class="co-header-save-label">Save &amp; Next</span><i class="fas fa-arrow-right fs-9 ms-1 text-white"></i>');
                             $hdrBtn.attr('title', 'Save and proceed to next step');
                             if ($hdrBtn[0]) {
-                                $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Save &amp; Next</span><i class="fas fa-arrow-right fs-9 ms-1"></i>';
+                                $hdrBtn[0]._origHtml = $hdrBtn.html();
                             }
                         }
                         $hdrBtn.show();
@@ -8063,6 +8181,10 @@
                         if (typeof nextStep === 'function') nextStep(e, 4);
                     } else if (active === 5) {
                         if (window.coSendInFlight) return false;
+                        if ($('#co_header_save_btn').hasClass('co-header-save-btn--released')) {
+                            coCloseOfferDrawer();
+                            return false;
+                        }
                         var $sendBtn = $('#co_send_submit');
                         if ($sendBtn.length) $sendBtn.trigger('click');
                     }
@@ -8150,39 +8272,52 @@
                         var em = String($(this).data('email') || '').toLowerCase();
                         var added = present.indexOf(em) !== -1;
                         var $btn = $(this).find('.co-send-mrow-add');
-                        $btn.toggleClass('co-send-mrow--added', added).text(added ? 'Added' : 'Add');
+                        $btn.toggleClass('co-send-mrow--added', added);
+                        if (added) {
+                            $btn.html('<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span>Added</span>');
+                            $btn.attr('title', 'Click to remove from CC');
+                        } else {
+                            $btn.html('<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span>Add</span>');
+                            $btn.removeAttr('title');
+                        }
                     });
                 }
                 $(document).on('click', '#co_send_drawer_close, #co_send_drawer_bd', function () { coCloseSendDrawer(); });
-                // Source cards (Internal / Client)
-                $(document).on('click', '.co-appr-source-card', function () {
+                // Source cards (Internal / Client / Agency)
+                $(document).on('click', '#co_send_drawer .co-appr-source-card', function () {
                     var src = $(this).data('source');
                     $('#co_send_drawer .co-appr-source-card').removeClass('co-appr-source-card--active');
                     $(this).addClass('co-appr-source-card--active');
                     $(this).find('input[type=radio]').prop('checked', true);
-                    $('#co_send_member_table .co-send-mrow, #co_send_member_table .co-send-mrow-empty').addClass('d-none');
-                    $('#co_send_member_table .co-send-mrow--' + src + ', #co_send_member_table .co-send-mrow-empty.co-send-mrow--' + src).removeClass('d-none');
-                    $('#co_send_drawer_search').trigger('input');
+                    $('#co_send_drawer_search').val('').trigger('input');
                 });
-                // Search within the active source
+                // Search within active source and update count / empty states
                 $(document).on('input', '#co_send_drawer_search', function () {
                     var q = $(this).val().trim().toLowerCase();
                     var src = coSendActiveSource();
-                    $('#co_send_member_table .co-send-mrow--' + src + ':not(.co-send-mrow-empty)').each(function () {
+                    var visible = 0;
+                    $('#co_send_member_table .co-send-mrow').addClass('d-none');
+                    $('#co_send_member_table .co-send-mrow-empty').addClass('d-none');
+
+                    $('#co_send_member_table .co-send-mrow--' + src).each(function () {
                         var hay = String($(this).data('search') || '');
-                        $(this).toggleClass('d-none', q !== '' && hay.indexOf(q) === -1);
+                        var match = q === '' || hay.indexOf(q) !== -1;
+                        if (match) {
+                            $(this).removeClass('d-none');
+                            visible++;
+                        }
                     });
-                    // "+ Add More" only lights up once what's typed looks like an email —
-                    // it's for adding someone NOT in the searchable list below, not a filter action.
-                    $('#co_send_addmore').prop('disabled', !/^\S+@\S+\.\S+$/.test(q));
+
+                    if (visible === 0) {
+                        $('#co_send_member_table .co-send-mrow-empty.co-send-mrow--' + src).removeClass('d-none');
+                    }
+
+                    $('#co_send_active_count').text(visible);
+                    $('#co_send_search_clear').toggleClass('d-none', q === '');
                 });
-                // Manually add a typed email that isn't one of the searchable team members
-                $(document).on('click', '#co_send_addmore', function () {
-                    var email = $('#co_send_drawer_search').val().trim();
-                    if (!/^\S+@\S+\.\S+$/.test(email)) return;
-                    var target = $('#co_send_drawer').attr('data-target') || 'co_to_chips';
-                    coAddChip(target, email);
-                    $('#co_send_drawer_search').val('').trigger('input');
+                // Clear search input
+                $(document).on('click', '#co_send_search_clear', function () {
+                    $('#co_send_drawer_search').val('').trigger('input').focus();
                 });
                 // Add / remove a member email from the current target field
                 $(document).on('click', '.co-send-mrow-add', function () {
@@ -8192,7 +8327,10 @@
                     var target = $('#co_send_drawer').attr('data-target') || 'co_to_chips';
                     if ($(this).hasClass('co-send-mrow--added')) {
                         $('#' + target).find('.co-send-chip').each(function () {
-                            if ($(this).clone().children().remove().end().text().trim().toLowerCase() === email.toLowerCase()) $(this).remove();
+                            var chipEmail = $(this).attr('data-raw-email') || $(this).clone().children().remove().end().text().trim();
+                            if (chipEmail.toLowerCase() === email.toLowerCase()) {
+                                $(this).remove();
+                            }
                         });
                     } else {
                         coAddChip(target, email);
@@ -8315,19 +8453,36 @@
                 window.coSendInFlight = false;
 
                 function coCloseOfferDrawer() {
+                    // Close nested Add Email drawer if open
+                    if (typeof coCloseSendDrawer === 'function') {
+                        coCloseSendDrawer();
+                    }
                     var $close = $('#kt_offercreate_close');
                     if ($close.length) {
                         $close.trigger('click');
                     }
                     try {
-                        var drawerEl = document.getElementById('kt_activities');
+                        var drawerEl = document.getElementById('kt_create_offer');
                         if (drawerEl && typeof KTDrawer !== 'undefined') {
                             var drawerInst = KTDrawer.getInstance(drawerEl);
                             if (drawerInst) drawerInst.hide();
                         }
                     } catch (e) {}
                     try {
+                        var actEl = document.getElementById('kt_activities');
+                        if (actEl && typeof KTDrawer !== 'undefined') {
+                            var actInst = KTDrawer.getInstance(actEl);
+                            if (actInst) actInst.hide();
+                        }
+                    } catch (e) {}
+                    try {
+                        if ($('#kt_create_offer').hasClass('drawer-on')) {
+                            $('#kt_create_offer_toggle').trigger('click');
+                        }
+                    } catch (e) {}
+                    try {
                         $('body').removeClass('drawer-on');
+                        $('#kt_create_offer').removeClass('drawer-on');
                         $('#kt_activities').removeClass('drawer-on');
                         $('.drawer-overlay').remove();
                     } catch (e) {}
@@ -8395,8 +8550,7 @@
                     $btn.find('.co-send-submit-wait').show();
 
                     $hdrBtn.prop('disabled', true);
-                    $hdrBtn.find('.co-header-save-label').text('Sending Offer…');
-                    $hdrBtn.find('i').attr('class', 'fas fa-spinner fa-spin fs-9 ms-1');
+                    $hdrBtn.html('<span class="co-header-save-label">Sending Offer…</span><span class="spinner-border spinner-border-sm text-white ms-2" role="status" style="width:12px;height:12px;border-width:2px;"></span>');
 
                     $.ajax({
                         type: 'POST',
@@ -8411,10 +8565,8 @@
 
                             if (r && r.status === 'coinCheck') {
                                 window.coSendInFlight = false;
-                                $hdrBtn.prop('disabled', false);
-                                $hdrBtn.find('.co-header-save-label').text('Send Offer');
-                                $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
-                                if ($hdrBtn[0]) $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
+                                $hdrBtn.prop('disabled', false).html('<span class="co-header-save-label">Send Offer</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="ms-1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>');
+                                if ($hdrBtn[0]) $hdrBtn[0]._origHtml = $hdrBtn.html();
                                 Swal.fire({
                                     title: 'Insufficient Coins',
                                     text: r.message || 'Insufficient coin balance to release this offer letter.',
@@ -8427,10 +8579,8 @@
                             }
                             if (r && r.status === 'rateLimited') {
                                 window.coSendInFlight = false;
-                                $hdrBtn.prop('disabled', false);
-                                $hdrBtn.find('.co-header-save-label').text('Send Offer');
-                                $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
-                                if ($hdrBtn[0]) $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
+                                $hdrBtn.prop('disabled', false).html('<span class="co-header-save-label">Send Offer</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="ms-1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>');
+                                if ($hdrBtn[0]) $hdrBtn[0]._origHtml = $hdrBtn.html();
                                 Swal.fire({
                                     title: 'Limit Reached',
                                     text: r.message || 'This offer letter has already been sent the maximum number of times recently.',
@@ -8444,21 +8594,43 @@
 
                             // ── SUCCESS CONFIRMATION STATE (Enterprise Design System) ──
                             window.coSendInFlight = false;
-                            $hdrBtn.find('.co-header-save-label').text('Offer Released ✓');
-                            $hdrBtn.find('i').attr('class', 'fas fa-check fs-9 ms-1');
-                            if ($hdrBtn[0]) $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Offer Released ✓</span><i class="fas fa-check fs-9 ms-1"></i>';
 
-                            // Update in-drawer status badge in Sub-Header immediately
-                            $('#co_send_status_badge')
-                                .removeClass('badge-light-warning text-warning co-send-fact-notsent')
-                                .addClass('badge-light-success text-success co-send-fact-sent')
-                                .html('<svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Offer Released');
+                            // 1. Automatically close the nested Add Email drawer if open
+                            if (typeof coCloseSendDrawer === 'function') {
+                                coCloseSendDrawer();
+                            }
+
+                            // 2. Update Header Button: Light-colored check on blue background
+                            $hdrBtn.prop('disabled', true)
+                                .addClass('co-header-save-btn--released')
+                                .html('<span class="co-header-save-label">Offer Released</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" class="ms-1.5"><polyline points="20 6 9 17 4 12"/></svg>');
+                            if ($hdrBtn[0]) $hdrBtn[0]._origHtml = $hdrBtn.html();
+
+                            // 3. Update Sub-Header Status Badge immediately with light-colored check on blue
+                            $('#co_send_status_badge').replaceWith(
+                                '<span class="badge badge-light-primary text-primary fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_send_status_badge" style="background:#eff6ff;border:1px solid #bfdbfe;">' +
+                                    '<span class="co-badge-ico-wrap me-1.5" style="width:16px;height:16px;border-radius:4px;background:#009ef7;display:inline-flex;align-items:center;justify-content:center;">' +
+                                        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+                                    '</span>' +
+                                    '<span class="fw-bold" style="color:#009ef7;">Offer Released</span>' +
+                                '</span>'
+                            );
                             $('.co-send-fact-v.co-send-fact-notsent').removeClass('co-send-fact-notsent').addClass('co-send-fact-sent').text('Offer Released');
                             $('.co-send-fact-v.co-send-fact-sentby').html(
                                 '<span class="co-send-sentby-name">{{ e($so_from_name) }}</span><span class="co-send-sentby-when">Sent just now</span>'
                             );
 
-                            // Post-Sending Actions: Instantly Refresh Tracker & Pipeline Data
+                            // 4. Update the underlying Offer Tracker page without manual refresh
+                            var currentOfferId = $('#co_send_offerid').val();
+                            if (currentOfferId) {
+                                $('.ot-entity-card[data-offer-id="' + currentOfferId + '"], [data-row-offerid="' + currentOfferId + '"]').each(function() {
+                                    var $card = $(this).closest('.ot-entity-card');
+                                    $card.find('.ot-status-badge, .badge-status')
+                                        .removeClass('badge-light-warning badge-light-danger text-warning text-danger')
+                                        .addClass('badge-light-primary text-primary')
+                                        .html('<i class="fas fa-check-circle me-1"></i> Offer Released');
+                                });
+                            }
                             if (window.jeroOfferTracker && typeof window.jeroOfferTracker.refresh === 'function') {
                                 window.jeroOfferTracker.refresh(false);
                             }
@@ -8486,16 +8658,16 @@
                                 }
                             } catch (e) {}
 
-                            // Clean, professional enterprise confirmation modal
+                            // 5. Success confirmation toast & Automatic Drawer Closure
                             Swal.fire({
-                                title: 'Offer Letter Released Successfully!',
+                                title: 'Offer Released Successfully!',
                                 html: '<div class="text-start mt-2" style="font-family: inherit;">' +
                                         '<p class="fs-6 text-gray-700 mb-3">The official offer letter email has been dispatched to <strong>' + coEsc(toArr.join(', ')) + '</strong>.</p>' +
                                         '<div class="d-flex align-items-center gap-3 p-3 bg-light-primary rounded border border-primary border-dashed mb-2">' +
-                                            '<span class="badge badge-light-success fs-7 fw-bolder px-3 py-2"><i class="fas fa-check-circle text-success me-1"></i> Offer Released</span>' +
+                                            '<span class="badge badge-light-primary fs-7 fw-bolder px-3 py-2"><i class="fas fa-check-circle text-primary me-1"></i> Offer Released</span>' +
                                             '<span class="fs-7 text-gray-700 fw-semibold">Candidate pipeline status updated automatically</span>' +
                                         '</div>' +
-                                        '<div class="text-muted fs-8 text-center mt-3"><i class="fas fa-clock fs-9 me-1"></i> Closing drawer and updating tracker...</div>' +
+                                        '<div class="text-muted fs-8 text-center mt-3"><i class="fas fa-check-circle text-success fs-9 me-1"></i> Closing drawer...</div>' +
                                       '</div>',
                                 icon: 'success',
                                 buttonsStyling: false,
@@ -8504,7 +8676,7 @@
                                 customClass: {
                                     confirmButton: 'btn btn-primary fw-bold px-6 py-2'
                                 },
-                                timer: 2200,
+                                timer: 1500,
                                 timerProgressBar: true
                             }).then(function () {
                                 coCloseOfferDrawer();
@@ -8513,7 +8685,7 @@
                             // Auto-close drawer safely on timer
                             setTimeout(function () {
                                 coCloseOfferDrawer();
-                            }, 2000);
+                            }, 1400);
                         },
                         error: function (xhr) {
                             window.coSendInFlight = false;
@@ -8521,17 +8693,17 @@
                             $btn.find('.co-send-submit-label').show();
                             $btn.find('.co-send-submit-wait').hide();
 
-                            $hdrBtn.prop('disabled', false);
-                            $hdrBtn.find('.co-header-save-label').text('Send Offer');
-                            $hdrBtn.find('i').attr('class', 'fas fa-paper-plane fs-9 ms-1');
-                            if ($hdrBtn[0]) $hdrBtn[0]._origHtml = '<span class="co-header-save-label">Send Offer</span><i class="fas fa-paper-plane fs-9 ms-1"></i>';
+                            $hdrBtn.prop('disabled', false)
+                                .removeClass('co-header-save-btn--released')
+                                .html('<span class="co-header-save-label">Send Offer</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="ms-1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>');
+                            if ($hdrBtn[0]) $hdrBtn[0]._origHtml = $hdrBtn.html();
 
-                            var errMsg = 'Failed to send the offer letter. Please check your network and try again.';
+                            var errMsg = 'Failed to release the offer letter. Please check your network and try again.';
                             if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
                                 errMsg = xhr.responseJSON.message;
                             }
                             Swal.fire({
-                                title: 'Sending Failed',
+                                title: 'Offer Release Failed',
                                 text: errMsg,
                                 icon: 'error',
                                 buttonsStyling: false,

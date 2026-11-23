@@ -555,7 +555,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
       <!--begin::Cancel-->
       <button type="close" id="" class="btn btn-light-dark me-3 co-so-cancel" data-dismiss="modal">Cancel</button>
       <!--begin::Send-->
-      <button type="button" class="btn btn-light-primary co-so-send" name="btnSubmit" id="btnSubmit" value="btnSubmit"> <span class="indicator-label">{{ (int) @$mtype === 1 ? 'Send Offer Letter' : 'Send' }}</span> <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span> </span> </button>
+      <button type="button" class="btn btn-primary text-white fw-bold co-so-send" name="btnSubmit" id="btnSubmit" value="btnSubmit" style="background:#009ef7;border-color:#009ef7;"> <span class="indicator-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="me-1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>{{ (int) @$mtype === 1 ? 'Send Offer Letter' : 'Send' }}</span> <span class="indicator-progress" style="display:none;">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span> </span> </button>
       <!--end::Send-->
     </div>
     <!--<span style="position: absolute;right: 2%;"></span>-->
@@ -576,11 +576,13 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
     <div id="kt__cc_header" style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;min-height:56px;flex-shrink:0;">
         <div class="d-flex align-items-center gap-3">
             <div style="width:34px;height:34px;border-radius:8px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;display:flex;align-items:center;justify-content:center;font-size:13.5px;flex-shrink:0;">
-                <i class="fas fa-user-plus"></i>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+                </svg>
             </div>
             <div>
-                <span class="fw-bold text-dark" style="font-family:'Poppins',sans-serif;font-size:14px;color:#0f172a;letter-spacing:-0.01em;">Select Approver (CC)</span>
-                <div style="font-size:10.5px;color:#64748b;">Add team members to CC on offer notifications</div>
+                <span class="fw-bold text-dark" style="font-family:'Poppins',sans-serif;font-size:14px;color:#0f172a;letter-spacing:-0.01em;">Select Email Recipients</span>
+                <div style="font-size:10.5px;color:#64748b;">Choose team members or client contacts to receive offer notifications via CC</div>
             </div>
         </div>
         <button type="button" id="kt_activitiesIntTeam_close_cc" class="co-drawer-topbar-close" aria-label="Close CC drawer">
@@ -598,7 +600,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg>
                 </span>
                 <div class="co-appr-source-meta">
-                    <div class="co-appr-source-title">Internal Company Approvers</div>
+                    <div class="co-appr-source-title">Internal Team Members</div>
                     <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($cc_email_internal_data ?? []) }} available</span></div>
                 </div>
                 <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
@@ -610,7 +612,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </span>
                 <div class="co-appr-source-meta">
-                    <div class="co-appr-source-title">Client Company Approvers</div>
+                    <div class="co-appr-source-title">Client Company Contacts</div>
                     <div class="co-appr-source-sub"><span class="co-appr-count-pill">{{ count($cc_email_client_data) }} available</span></div>
                 </div>
                 <div class="co-appr-source-check"><span class="co-appr-dot"></span></div>
@@ -628,7 +630,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                 <button type="button" class="co-appr-search-clear d-none" aria-label="Clear search">&times;</button>
             </div>
             <div class="co-appr-counter-badge">
-                <span class="co-appr-active-count">{{ count($cc_email_internal_data ?? []) }}</span> approvers
+                <span class="co-appr-active-count">{{ count($cc_email_internal_data ?? []) }}</span> contacts
             </div>
         </div>
 
@@ -637,9 +639,9 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
             <table class="co-appr-table align-middle" id="Iteam_Table_cc">
               <thead>
                 <tr>
-                  <th style="min-width:180px;">APPROVER</th>
-                  <th style="min-width:170px;">CONTACT</th>
-                  <th style="min-width:140px;">COMPANY</th>
+                  <th style="min-width:180px;">RECIPIENT / ROLE</th>
+                  <th style="min-width:170px;">EMAIL ADDRESS</th>
+                  <th style="min-width:140px;">ORGANIZATION</th>
                   <th style="min-width:80px;width:80px;text-align:center;">ACTION</th>
                 </tr>
               </thead>
@@ -660,9 +662,10 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                             ];
                             $pal = $palettes[$charOrd % count($palettes)];
                             $roleText = trim((string) (@$teamVal->display_name ?: @$teamVal->role));
+                            $orgName = trim((string) @$teamVal->company_name) ?: ($group['source'] === 'client' ? 'Client Company' : 'Internal Organization');
                         @endphp
                         <tr class="co-appr-row co-appr-row--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
-                            data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower((string) @$teamVal->company_name) }}">
+                            data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower($orgName) }}">
                             <td>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="co-appr-avatar" style="background:{{ $pal['bg'] }};color:{{ $pal['text'] }};border:1px solid {{ $pal['border'] }};">
@@ -689,7 +692,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                                     <svg class="co-appr-company-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/>
                                     </svg>
-                                    <span class="co-appr-company-text text-truncate">{{ @$teamVal->company_name ?: 'Internal Team' }}</span>
+                                    <span class="co-appr-company-text text-truncate">{{ $orgName }}</span>
                                 </div>
                             </td>
                             <td style="text-align:center;">
@@ -706,7 +709,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                     <td colspan="4" class="co-appr-empty-cell">
                         <div class="co-appr-empty-inner">
                             <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
-                            <div class="co-appr-empty-msg">No internal approvers found</div>
+                            <div class="co-appr-empty-msg">No internal team members found</div>
                         </div>
                     </td>
                 </tr>
@@ -714,7 +717,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
                     <td colspan="4" class="co-appr-empty-cell">
                         <div class="co-appr-empty-inner">
                             <div class="co-appr-empty-ico"><i class="fas fa-users-slash"></i></div>
-                            <div class="co-appr-empty-msg">No client approvers found</div>
+                            <div class="co-appr-empty-msg">No client company contacts found</div>
                         </div>
                     </td>
                 </tr>
