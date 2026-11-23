@@ -2095,177 +2095,236 @@
             .co-appr-side { width: 100% !important; flex: 1 1 auto !important; }
         }
 
-        /* ══════════════════════════ Step 5 — Send Offer Letter (native full composer) ══════════════════════════ */
-        #step5 { background: #fff; }
-        #step5, #step5 * { font-family: 'Poppins', sans-serif; }
-        .co-step5-final { font-size: 10px !important; font-weight: 700; color: #7239ea; background: #f5f0ff; border-radius: 99px; padding: 2px 9px; vertical-align: middle; margin-left: 6px; }
+        /* ══════════════════════════ Step 5 — Send Offer Letter (Card + Sub-Card Enterprise Standard) ══════════════════════════ */
+        #step5 { background: transparent; }
+        #step5 { font-family: 'Poppins', sans-serif; }
+        .co-step5-final { font-size: 10px !important; font-weight: 700; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 99px; padding: 2px 8px; vertical-align: middle; margin-left: 6px; }
 
         /* MAIN CARD wrapping the whole composer */
-        .co-send-card { background: #fff; border: 1px solid #eef1f7; border-radius: 16px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 20px 22px; }
-        /* SUB CARD: candidate hero — matches the "Krishna Murthy" reference */
-        /* Hero fonts capped at 12px. Facts sit on their own full-width row below the avatar/status
-           row (rather than sharing that row) so all 6 columns have room to stay in one single row
-           on a 15.6" laptop panel instead of wrapping. */
-        .co-send-hero { display: flex; flex-direction: column; gap: 12px; background: #fff; border: 1px solid #eaeefb; border-radius: 14px; padding: 14px 18px; margin-bottom: 20px; }
-        .co-send-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-        .co-send-hero-lead { display: flex; align-items: center; gap: 12px; flex: 1 1 200px; min-width: 180px; }
-        .co-send-hero-avatar { width: 46px; height: 46px; border-radius: 50%; background: #e5eaff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
-        .co-send-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .co-send-hero-name { font-size: 12px !important; font-weight: 700; color: #181c32; }
-        .co-send-hero-role { font-size: 11px; color: #1b84ff; font-weight: 600; margin-top: 2px; }
-        .co-send-hero-meta { font-size: 10px; color: #7e8299; margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; }
-        .co-send-hero-meta span { display: inline-flex; align-items: center; gap: 5px; background: #eef1f7; border-radius: 6px; padding: 2px 8px; }
-        .co-send-hero-meta svg { width: 12px; height: 12px; color: #a1a5b7; }
-        /* Grid (not flex) so every column sits in a fixed slot — position doesn't shift between
-           offers even when a value (e.g. Sent By) is blank or a different length. Fractional (fr)
-           columns so it shrinks instead of overflowing, but always exactly one row of 6. */
-        .co-send-hero-facts { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 12px; align-items: start; }
-        .co-send-fact-l { font-size: 9px; color: #a1a5b7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .co-send-fact-v { font-size: 12px; font-weight: 700; color: #181c32; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .co-send-fact-v.co-send-fact-ctc { color: #0f9463; }
-        .co-send-fact-v.co-send-fact-expiry { color: #d9214e; }
-        .co-send-fact-v.co-send-fact-sent { color: #0f9463; }
-        .co-send-fact-v.co-send-fact-notsent { color: #a1a5b7; }
-        .co-send-fact-v.co-send-fact-sentby { display: flex; flex-direction: column; gap: 2px; min-height: 1.1em; }
-        .co-send-sentby-name { font-size: 11px; font-weight: 700; color: #181c32; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .co-send-sentby-when { font-size: 9px; font-weight: 600; color: #a1a5b7; white-space: nowrap; }
-        .co-send-hero-status { border-radius: 12px; padding: 8px 14px; text-align: center; min-width: 130px; }
-        .co-send-hero-status--approved { background: #e3f7e9; border: 1px solid #b7ebc6; }
-        .co-send-hero-status--pending { background: #fff8e1; border: 1px solid #f6e6b8; }
-        .co-send-status-title { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
-        .co-send-hero-status--approved .co-send-status-title { color: #0f7a3d; }
-        .co-send-hero-status--pending .co-send-status-title { color: #8a6d00; }
-        .co-send-status-title svg { width: 14px; height: 14px; }
-        .co-send-status-sub { font-size: 10px; color: #5e6278; margin-top: 3px; }
-
-        /* Form rows: icon label left, field right */
-        .co-send-form { display: flex; flex-direction: column; }
-        .co-send-row-grid { display: flex; gap: 20px; border-bottom: 1px solid #f4f4f6; }
-        .co-send-row-grid .co-send-row-col { flex: 1 1 50%; min-width: 0; }
-        .co-send-row-grid .co-send-row { border-bottom: none; }
-        .co-send-row-grid .co-send-row-col:last-child .co-send-label { flex: 0 0 90px; }
-        @media (max-width: 768px) {
-            .co-send-row-grid { flex-direction: column; gap: 0; }
-            .co-send-row-grid .co-send-row-col:first-child .co-send-row { border-bottom: 1px solid #f4f4f6; }
+        .co-send-main-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+            overflow: hidden !important;
+            padding: 0 !important;
         }
-        .co-send-row { display: flex; align-items: flex-start; gap: 20px; padding: 16px 0; border-bottom: 1px solid #f4f4f6; }
-        .co-send-row:last-child { border-bottom: none; }
-        .co-send-label { flex: 0 0 170px; font-size: 13px; font-weight: 600; color: #3f4254; display: flex; align-items: center; gap: 8px; padding-top: 10px; }
-        .co-send-label svg { width: 16px; height: 16px; color: #4f46e5; flex-shrink: 0; }
-        .co-send-req { color: #f1416c; }
-        .co-send-field { flex: 1 1 auto; min-width: 0; }
-        .co-send-input { width: 100%; height: 44px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 8px 14px; font-size: 13px; color: #3f4254; background: #fff; }
-        .co-send-input:focus { outline: none; border-color: #1b84ff; }
-        .co-send-input[readonly] { background: #f9fafd; color: #5e6278; }
-        .co-send-hint { font-size: 11px; color: #a1a5b7; margin-top: 7px; }
 
-        /* Chip inputs (To / CC): one compact box holding chips + the input, kept as short as the chip row allows */
-        .co-send-chips { min-width: 0; min-height: 38px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 4px 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: #fff; }
-        .co-send-chips:focus-within { border-color: #1b84ff; }
-        .co-send-chip { display: inline-flex; align-items: center; gap: 6px; background: #eef3ff; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 7px; padding: 5px 10px; }
-        .co-send-chip .co-chip-x { cursor: pointer; font-style: normal; font-size: 14px; line-height: 1; opacity: .7; }
-        .co-send-chip .co-chip-x:hover { opacity: 1; }
-        .co-send-chip-input { flex: 1 1 100px; min-width: 60px; border: none; outline: none; font-size: 13px; padding: 4px; background: transparent; }
-        /* "+ Add Email" reads as plain text, not a button, pinned to the box's right edge */
-        .co-send-addemail { flex-shrink: 0; margin-left: auto; background: none; border: none; color: #4f46e5; font-size: 12px; font-weight: 700; padding: 2px 4px; cursor: pointer; white-space: nowrap; }
-        .co-send-addemail:hover { text-decoration: underline; }
-        /* To Email ID: locked to the candidate's address — no remove, no typing, no add control */
-        .co-send-chips--locked { background: #f8f9fb; }
-        .co-send-chip--locked { background: #eef1f7; color: #3f4254; cursor: default; }
-        .co-chip-lock { width: 12px; height: 12px; opacity: .55; }
-        .co-send-attach-count { font-size: 11px; color: #a1a5b7; font-weight: 600; }
-        .co-send-attachrow { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+        /* Status and Expiry header badges */
+        #co_send_status_badge,
+        #co_send_valid_badge {
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.2px !important;
+            white-space: nowrap !important;
+        }
+
+        /* Form hints within Step 5 */
+        .co-send-hint {
+            font-size: 11px !important;
+            color: #64748b !important;
+            margin-top: 4px !important;
+            line-height: 1.35 !important;
+        }
+
+        /* Chip inputs (To / CC) */
+        .co-send-chips {
+            min-width: 0;
+            min-height: 40px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            padding: 4px 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            background: #ffffff;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .co-send-chips:focus-within {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+        .co-send-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            font-size: 11.5px;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 4px 8px;
+            line-height: 1.2;
+        }
+        .co-send-chip .co-chip-x {
+            cursor: pointer;
+            font-style: normal;
+            font-size: 14px;
+            line-height: 1;
+            opacity: .7;
+            background: none;
+            border: none;
+            padding: 0;
+            color: #1d4ed8;
+        }
+        .co-send-chip .co-chip-x:hover { opacity: 1; color: #b91c1c; }
+        .co-send-chip-input {
+            flex: 1 1 120px;
+            min-width: 80px;
+            border: none;
+            outline: none;
+            font-size: 12px;
+            padding: 4px 6px;
+            background: transparent;
+            color: #1e293b;
+        }
+        .co-send-addemail {
+            flex-shrink: 0;
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #2563eb;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 2px 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            border-radius: 4px;
+            transition: background-color 0.15s ease;
+        }
+        .co-send-addemail:hover {
+            background-color: #eff6ff;
+            text-decoration: underline;
+        }
+
+        /* Locked chips for candidate recipient */
+        .co-send-chips--locked {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+        }
+        .co-send-chip--locked {
+            background: #f1f5f9;
+            color: #334155;
+            border-color: #cbd5e1;
+            cursor: default;
+        }
+        .co-chip-lock {
+            width: 12px;
+            height: 12px;
+            opacity: .65;
+        }
+
+        /* Attachments */
+        .co-send-attachrow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
         .co-send-attachrow:empty { margin-bottom: 0; }
-        .co-send-attach-chip { display: inline-flex; align-items: center; gap: 9px; background: #fff; border: 1px solid #e4e6ef; border-radius: 9px; padding: 8px 12px; min-width: 190px; }
-        .co-send-attach-ico { width: 30px; height: 30px; border-radius: 7px; background: #fde8ec; color: #d9214e; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .co-send-attach-ico svg { width: 14px; height: 14px; }
-        .co-send-attach-ico.co-send-attach-ico--doc { background: #e7edff; color: #3568e8; }
+        .co-send-attach-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 6px 10px;
+            min-width: 170px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+        .co-send-attach-ico {
+            width: 26px;
+            height: 26px;
+            border-radius: 5px;
+            background: #fef2f2;
+            color: #dc2626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .co-send-attach-ico svg { width: 13px; height: 13px; }
+        .co-send-attach-ico.co-send-attach-ico--doc { background: #eff6ff; color: #2563eb; }
         .co-send-attach-meta { min-width: 0; }
-        .co-send-attach-name { font-size: 12px; font-weight: 600; color: #181c32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
-        .co-send-attach-size { font-size: 10px; color: #a1a5b7; }
-        .co-send-attach-x { margin-left: 4px; cursor: pointer; color: #a1a5b7; font-size: 16px; line-height: 1; flex-shrink: 0; }
-        .co-send-attach-x:hover { color: #f1416c; }
-        .co-send-addattach { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px dashed #c4cada; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 10px; padding: 9px 16px; cursor: pointer; }
-        .co-send-addattach:hover { background: #f8f9ff; }
-        .co-send-addattach svg { width: 13px; height: 13px; }
+        .co-send-attach-name { font-size: 11.5px; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+        .co-send-attach-size { font-size: 10px; color: #64748b; }
+        .co-send-attach-x { margin-left: auto; cursor: pointer; color: #94a3b8; font-size: 15px; line-height: 1; flex-shrink: 0; }
+        .co-send-attach-x:hover { color: #dc2626; }
+        .co-send-addattach {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            border: 1px dashed #94a3b8;
+            color: #2563eb;
+            font-size: 11.5px;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .co-send-addattach:hover {
+            background: #eff6ff;
+            border-color: #2563eb;
+        }
 
-        /* Signature toggle */
-        .co-send-sigrow { display: flex; align-items: center; gap: 12px; padding-top: 10px; }
-        .co-send-switch { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
+        /* E-Signature toggle */
+        .co-send-sigrow { display: flex; align-items: center; gap: 10px; }
+        .co-send-switch { position: relative; display: inline-block; width: 38px; height: 20px; flex-shrink: 0; }
         .co-send-switch input { opacity: 0; width: 0; height: 0; }
-        .co-send-slider { position: absolute; inset: 0; background: #d7dae3; border-radius: 99px; transition: .2s; cursor: pointer; }
-        .co-send-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
-        .co-send-switch input:checked + .co-send-slider { background: #1b84ff; }
-        .co-send-switch input:checked + .co-send-slider::before { transform: translateX(20px); }
-        .co-send-sigtext { font-size: 13px; color: #3f4254; }
+        .co-send-slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 99px; transition: .2s; cursor: pointer; }
+        .co-send-slider::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+        .co-send-switch input:checked + .co-send-slider { background: #2563eb; }
+        .co-send-switch input:checked + .co-send-slider::before { transform: translateX(18px); }
+        .co-send-sigtext { font-size: 12px; color: #1e293b; font-weight: 600; }
 
-        /* Body / CKEditor */
-        .co-send-row--body .co-send-field { padding-top: 0; }
-        #step5 .cke_chrome { border-radius: 10px !important; border-color: #e4e6ef !important; }
+        /* CKEditor in Step 5 */
+        #step5 .cke_chrome { border-radius: 7px !important; border-color: #cbd5e1 !important; box-shadow: none !important; }
 
-        /* Footer */
-        .co-send-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; border-top: 1px solid #eef1f7; padding: 16px 0 4px; margin-top: 8px; flex-wrap: wrap; }
-        .co-send-footer-note { font-size: 11px; color: #7e8299; display: inline-flex; align-items: center; gap: 6px; }
-        .co-send-footer-note svg { width: 14px; height: 14px; color: #a1a5b7; }
-        .co-send-footer-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-        .co-send-submit { background: linear-gradient(90deg,#4f46e5,#1b84ff) !important; border: none !important; color: #fff !important; font-weight: 600 !important; font-size: 13px !important; min-width: 180px; height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; }
-        .co-send-submit:hover { filter: brightness(.95); }
-        .co-send-submit:disabled { opacity: .7; cursor: not-allowed; }
-
-        /* Add-Email drawer — anchored to #offer_create_show_right_bar (position:relative), full height,
-           wide enough for the 4-column member table (translateX avoids magic offsets). */
-        .co-send-drawer-bd { display: none; position: absolute; inset: 0; background: rgba(24,28,50,.4); z-index: 1000; }
+        /* Add-Email drawer Header & Table (Rule 20 Anchor Backgrounds) */
+        .co-send-drawer-bd { display: none; position: absolute; inset: 0; background: rgba(15, 23, 42, 0.4); z-index: 1000; }
         .co-send-drawer-bd.co-send-drawer-bd--open { display: block; }
-        .co-send-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 70%; max-width: 70%; background: #fff; box-shadow: -8px 0 30px rgba(24,28,50,.22); z-index: 1001; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; visibility: hidden; }
+        .co-send-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 70%; max-width: 70%; background: #fff; box-shadow: -8px 0 30px rgba(15, 23, 42, 0.22); z-index: 1001; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; visibility: hidden; }
         .co-send-drawer.co-send-drawer--open { transform: translateX(0); visibility: visible; }
-        .co-send-drawer-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #eef1f7; flex-shrink: 0; }
-        .co-send-drawer-title { font-size: 14px !important; font-weight: 700; color: #181c32; }
-        .co-send-drawer-sub { font-size: 11px; color: #7e8299; margin-top: 2px; }
-        .co-send-drawer-x { background: #f5f8fa; border: none; width: 32px; height: 32px; border-radius: 8px; font-size: 18px; color: #7e8299; cursor: pointer; line-height: 1; flex-shrink: 0; }
-        .co-send-drawer-x:hover { background: #eef1f7; color: #f1416c; }
+        .co-send-drawer-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 18px; background: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; flex-shrink: 0; }
+        .co-send-drawer-title { font-size: 13px !important; font-weight: 700; color: #0f172a; }
+        .co-send-drawer-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .co-send-drawer-x { background: #f1f5f9; border: 1px solid #e2e8f0; width: 28px; height: 28px; border-radius: 6px; font-size: 16px; color: #64748b; cursor: pointer; line-height: 1; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+        .co-send-drawer-x:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
         .co-send-drawer-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; padding: 16px 20px 20px; }
-        /* Source cards (Internal / Client) — the previous approver-picker design */
         .co-appr-source-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-        .co-appr-source-card { flex: 1 1 230px; display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid #e4e6ef; border-radius: 10px; padding: 10px 12px; background: #fff; margin: 0; min-width: 0; }
+        .co-appr-source-card { flex: 1 1 230px; display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; background: #fff; margin: 0; min-width: 0; }
         .co-appr-source-card input { margin: 0 6px 0 0; flex-shrink: 0; }
-        .co-appr-source-card--active { border-color: #1b84ff; background: #f3f8ff; }
-        .co-appr-source-ico { width: 30px; height: 30px; border-radius: 8px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .co-appr-source-ico svg { width: 16px; height: 16px; }
+        .co-appr-source-card--active { border-color: #2563eb; background: #eff6ff; }
+        .co-appr-source-ico { width: 30px; height: 30px; border-radius: 6px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .co-appr-source-ico svg { width: 15px; height: 15px; }
         .co-appr-source-card > div { min-width: 0; }
-        .co-appr-source-title { font-size: 12px; font-weight: 700; color: #181c32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .co-appr-source-sub { font-size: 10px; color: #7e8299; margin-top: 1px; }
-        .co-appr-search { margin-bottom: 12px; }
-        .co-appr-search input { width: 100%; height: 40px; font-size: 12px; border: 1px solid #e4e6ef; border-radius: 9px; padding: 6px 12px; }
-        .co-appr-search input:focus { outline: none; border-color: #1b84ff; }
-        .co-appr-empty { font-size: 11px; color: #a1a5b7; text-align: center; padding: 16px 4px; }
-        /* Search bar + inline "add a custom email not in the list" action, one pill row */
+        .co-appr-source-title { font-size: 12px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .co-appr-source-sub { font-size: 10.5px; color: #64748b; margin-top: 1px; }
         .co-send-searchrow { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-        .co-send-searchbox { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; height: 42px; background: #f8f9fb; border: 1px solid #e4e6ef; border-radius: 21px; padding: 0 16px; }
-        .co-send-searchbox svg { width: 15px; height: 15px; color: #a1a5b7; flex-shrink: 0; }
-        .co-send-searchbox:focus-within { border-color: #1b84ff; background: #fff; }
-        .co-send-drawer-search-input { flex: 1 1 auto; min-width: 0; border: none; background: transparent; outline: none; font-size: 12px; height: 100%; }
-        .co-send-addmore { flex-shrink: 0; border: none; background: none; color: #4f46e5; font-weight: 700; font-size: 12px; white-space: nowrap; cursor: pointer; padding: 0 4px; }
-        .co-send-addmore:disabled { color: #c4c7d6; cursor: not-allowed; }
-        /* Member table — table-layout fixed so 4 columns fit the drawer; long text truncates */
+        .co-send-searchbox { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; height: 38px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 14px; }
+        .co-send-searchbox svg { width: 14px; height: 14px; color: #64748b; flex-shrink: 0; }
+        .co-send-searchbox:focus-within { border-color: #2563eb; background: #fff; }
+        .co-send-drawer-search-input { flex: 1 1 auto; min-width: 0; border: none; background: transparent; outline: none; font-size: 12px; height: 100%; color: #1e293b; }
+        .co-send-addmore { flex-shrink: 0; border: none; background: none; color: #2563eb; font-weight: 700; font-size: 12px; white-space: nowrap; cursor: pointer; padding: 0 4px; }
+        .co-send-addmore:disabled { color: #94a3b8; cursor: not-allowed; }
         #co_send_member_table { width: 100%; table-layout: fixed; font-size: 11px; }
-        #co_send_member_table thead th { font-size: 10px !important; color: #a1a5b7; font-weight: 600; padding: 6px 6px; border-bottom: 1px solid #eef1f7; text-transform: none; text-align: left; }
-        #co_send_member_table th:nth-child(1) { width: 42%; }
-        #co_send_member_table th:nth-child(2) { width: 26%; }
+        #co_send_member_table thead tr { background: #f1f5f9 !important; }
+        #co_send_member_table thead th { font-size: 10.5px !important; color: #475569 !important; font-weight: 600; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.3px; text-align: left; }
+        #co_send_member_table th:nth-child(1) { width: 40%; }
+        #co_send_member_table th:nth-child(2) { width: 28%; }
         #co_send_member_table th:nth-child(3) { width: 20%; }
         #co_send_member_table th:nth-child(4) { width: 12%; }
-        #co_send_member_table tbody td { padding: 9px 6px; border-bottom: 1px dashed #f1f1f4; vertical-align: middle; color: #5e6278; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #co_send_member_table tbody td { padding: 9px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         #co_send_member_table tbody td:first-child { white-space: normal; }
-        .co-send-mrow-av { width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 8px; flex-shrink: 0; }
-        #co_send_member_table .co-send-mrow-role { font-size: 9px !important; }
-        .co-send-mrow-add { padding: 5px 12px !important; font-size: 11px !important; font-weight: 600; }
-        .co-send-mrow-add.co-send-mrow--added { background: #e8fff3 !important; color: #0f9463 !important; }
-
-        @media (max-width: 900px) {
-            .co-send-row { flex-direction: column; gap: 8px; }
-            .co-send-label { flex: none; padding-top: 0; }
-            .co-send-hero-facts { margin-left: 0; }
-            .co-send-hero-lead { min-width: 0; }
-        }
+        .co-send-mrow-av { width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; margin-right: 8px; flex-shrink: 0; }
+        #co_send_member_table .co-send-mrow-role { font-size: 9.5px !important; }
+        .co-send-mrow-add { padding: 4px 10px !important; font-size: 11px !important; font-weight: 600; border-radius: 5px !important; }
+        .co-send-mrow-add.co-send-mrow--added { background: #ecfdf5 !important; color: #059669 !important; border-color: #a7f3d0 !important; }
     </style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
@@ -4931,13 +4990,6 @@
 
                             <!-- Step 5 : Send Offer Letter (candidate email composer, inline) -->
                             <div class="tab-content-section pt-5" id="step5">
-                                <div class="co-tpl-header">
-                                    <div>
-                                        <h5 class="co-tpl-title">Send Offer Letter <span class="co-step5-final">Final Step</span></h5>
-                                        <div class="co-tpl-sub">Review the details and send the final offer email to your candidate.</div>
-                                    </div>
-                                </div>
-
                                 @php
                                     // Native composer — all values are real (from createOffer's scope); no AJAX loader. condidate_type
                                     $origin_res = $origin_resolution ?? \App\Services\CandidateOriginResolver::resolve(@$application, auth()->user()->company_id, @$job_id);
@@ -4962,6 +5014,8 @@
                                     $so_initial = strtoupper(substr(trim($so_name), 0, 1) ?: 'C');
                                     $so_from_name  = auth()->user()->name ?? '';
                                     $so_from_email = 'notify@jeroworks.com';
+                                    // Logged-in user email used for Reply-To so candidate replies route directly to sender
+                                    $so_reply_to_email = auth()->user()->email ?? 'notify@jeroworks.com';
                                     $so_currencyArr = ['INR','EUR','JPY','GBP','USD','AED'];
                                     $so_curr    = $so_currencyArr[(int) @$section_change_value->currency] ?? '';
                                     $so_ctc     = @$yearly_final_gross;
@@ -4971,196 +5025,235 @@
                                     $_so_tl_latest = ($co_appr_timeline instanceof \Illuminate\Support\Collection) ? $co_appr_timeline->first() : $co_appr_timeline;
                                     $so_appr_name = trim((string) (@$_so_tl_latest->name_hr ?: @$_so_tl_latest->email_id_hr ?? ''));
                                     $so_appr_date = @$section_change_value->approved_date_time;
-                                    // Not a stored field (no expiry column exists on offer_create_main_tds) — a standard
-                                    // 15-day acceptance window computed off the offer's creation date, display-only.
-                                    // offer_create_main_tds.created_at is not populated by the offer-save insert
-                                    // (existing gap, out of scope here) so it's frequently NULL — fall back to
-                                    // "today" (i.e. the send date), which is the standard offer-letter convention anyway.
+                                    // 15-day acceptance window computed off offer's creation date, display-only.
                                     $so_valid_days = 15;
                                     $so_created = @$section_change_value->created_at ?: now();
                                     $so_valid_until = date('d M Y', strtotime($so_created.' +'.$so_valid_days.' days'));
-                                    // Offer Status / Sent By — send_accept_date_time is set by fwd_offer_send() the
-                                    // moment the candidate email actually goes out (mtypeId==1); co_send_timeline
-                                    // carries who sent it (event_by_user_id joined to users), blank if never sent.
+                                    // Offer Status / Sent By
                                     $so_sent_date = @$section_change_value->send_accept_date_time;
                                     $so_sent = !empty($so_sent_date);
                                     $so_sent_by_name = trim((string) (@$co_send_timeline->sent_by_name ?? ''));
                                     $so_sent_by_when = ($so_sent && $so_sent_by_name) ? (date('j F y', strtotime($so_sent_date)).' | '.date('h:iA', strtotime($so_sent_date)).' (IST)') : '';
                                     $so_ctc_line = trim($so_curr.' '.($so_ctc ? number_format((float) $so_ctc) : ''));
-                                    // Subject/body start blank by design — they should only ever be filled by
-                                    // the sender typing them or by picking a Template (which fills both via
-                                    // the email_template AJAX call), never a canned pre-fill nobody asked for.
                                     $so_subject = '';
                                     $so_default_body = '';
                                 @endphp
 
-                                {{-- MAIN CARD --}}
-                                <div class="co-send co-send-card section_change_value {{ $section_change_value ? '' : 'd-none' }}">
-                                    {{-- SUB CARD 1: candidate hero --}}
-                                    <div class="co-send-hero">
-                                        <div class="co-send-hero-top">
-                                            <div class="co-send-hero-lead">
-                                                <div class="co-send-hero-avatar">
-                                                    @if(!empty($so_photo))<img src="{{ $so_photo }}" alt="{{ $so_name }}" onerror="this.parentNode.innerHTML='{{ $so_initial }}';">@else{{ $so_initial }}@endif
-                                                </div>
-                                                <div class="co-send-hero-ident">
-                                                    <div class="co-send-hero-name">{{ ucwords($so_name) }}</div>
-                                                    <div class="co-send-hero-role" id="co-send-step5-designation"@if(empty($so_role)) style="display:none"@endif>{{ ucwords($so_role) }}</div>
-                                                    <div class="co-send-hero-meta">
-                                                        @if(!empty($so_location))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>{{ ucwords($so_location) }}</span>@endif
-                                                    </div>
-                                                </div>
+                                {{-- MAIN CARD — Modern Card + Sub-Card Enterprise Design Standard (Rule 20) --}}
+                                <div class="card mb-4 mx-2 co-main-card co-send co-send-card co-send-main-card section_change_value {{ $section_change_value ? '' : 'd-none' }}">
+                                    {{-- Sub-Header with Dedicated Background Color (Rule 20) hosting Offer Status & Valid Upto --}}
+                                    <div class="card-header co-card-header">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="co-card-header-icon co-card-header-icon--blue">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="22" y1="2" x2="11" y2="13"/>
+                                                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                                </svg>
                                             </div>
-                                            @if($so_mgmt === 2 || $so_mgmt === 1)
-                                            <div class="co-send-hero-status co-send-hero-status--{{ $so_mgmt === 2 ? 'approved' : 'pending' }}">
-                                                <span class="co-send-status-title">
-                                                    @if($so_mgmt === 2)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg> Approved
-                                                    @else<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Pending
-                                                    @endif
-                                                </span>
-                                                @if($so_mgmt === 2 && !empty($so_appr_name))<div class="co-send-status-sub">by {{ ucwords($so_appr_name) }}</div>@endif
-                                                @if($so_mgmt === 2 && !empty($so_appr_date))<div class="co-send-status-sub">on {{ date('d M Y, h:i A', strtotime($so_appr_date)) }}</div>@endif
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <h5 class="co-section-title mb-0">Send Offer Letter</h5>
+                                                    <span class="badge badge-light-primary fw-bold fs-8">Final Step</span>
+                                                </div>
+                                                <div class="co-section-sub">Review the details and send the final offer email to your candidate</div>
                                             </div>
-                                            @endif
                                         </div>
-                                        <div class="co-send-hero-facts">
-                                            <div class="co-send-fact"><div class="co-send-fact-l">Offer ID</div><div class="co-send-fact-v">OFF-{{ $offer_id }}</div></div>
-                                            <div class="co-send-fact"><div class="co-send-fact-l">Offered CTC</div><div class="co-send-fact-v co-send-fact-ctc">{{ $so_ctc_line }}</div></div>
-                                            <div class="co-send-fact"><div class="co-send-fact-l">Joining Date</div><div class="co-send-fact-v">{{ $so_join_fmt }}</div></div>
-                                            <div class="co-send-fact"><div class="co-send-fact-l">Offer Status</div><div class="co-send-fact-v {{ $so_sent ? 'co-send-fact-sent' : 'co-send-fact-notsent' }}">{{ $so_sent ? 'Sent' : 'Not Sent' }}</div></div>
-                                            <div class="co-send-fact"><div class="co-send-fact-l">Offer Valid Until</div><div class="co-send-fact-v co-send-fact-expiry">{{ $so_valid_until }}</div></div>
-                                            <div class="co-send-fact"><div class="co-send-fact-l">Sent By</div><div class="co-send-fact-v co-send-fact-sentby">@if($so_sent && $so_sent_by_name)<span class="co-send-sentby-name">{{ ucwords($so_sent_by_name) }}</span><span class="co-send-sentby-when">{{ $so_sent_by_when }}</span>@endif</div></div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            {{-- Offer Status Badge (Moved to Sub-Header as requested) --}}
+                                            <span class="badge {{ $so_sent ? 'badge-light-success text-success co-send-fact-sent' : 'badge-light-warning text-warning co-send-fact-notsent' }} fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_send_status_badge">
+                                                @if($so_sent)
+                                                    <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Offer Released
+                                                @else
+                                                    <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Offer Status: Not Sent
+                                                @endif
+                                            </span>
+
+                                            {{-- Offer Valid Upto Badge (Moved to Sub-Header as requested) --}}
+                                            <span class="badge badge-light-danger text-danger fw-semibold fs-8 px-2.5 py-1.5 d-inline-flex align-items-center" id="co_send_valid_badge">
+                                                <svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                                Offer Valid Upto: {{ $so_valid_until }}
+                                            </span>
                                         </div>
                                     </div>
 
-                                    {{-- SUB CARD 2: composer form (native; posts to fwd_offer_send) --}}
-                                    <div class="co-send-form">
+                                    <div class="card-body p-4">
+                                        {{-- Hidden inputs required for offer email transmission & reactivity --}}
                                         <input type="hidden" id="co_send_offerid" value="{{ $offer_id }}">
                                         <input type="hidden" id="co_send_appid" value="{{ @$application->id }}">
                                         <input type="hidden" id="co_send_fromemail" value="{{ $so_from_email }}">
                                         <input type="hidden" id="co_send_candidateemail" value="{{ $so_email }}">
+                                        {{-- Hidden compatibility anchor for designation updater --}}
+                                        <span id="co-send-step5-designation" style="display:none;">{{ ucwords($so_role) }}</span>
 
-                                        <div class="co-send-row-grid">
-                                            <div class="co-send-row-col">
-                                                <div class="co-send-row">
-                                                    <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> From Email ID</label>
-                                                    <div class="co-send-field">
-                                                        <input type="text" class="co-send-input" value="{{ $so_from_name ? $so_from_name.' <'.$so_from_email.'>' : $so_from_email }}" readonly>
+                                        {{-- SUB-CARD 1: Email Addressing & Configuration --}}
+                                        <div class="co-subcard mb-4">
+                                            <div class="co-subcard-header d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="co-subcard-title fs-7 fw-bolder text-gray-800 d-flex align-items-center gap-1.5">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                                                        EMAIL RECIPIENTS &amp; CONFIGURATION
+                                                    </span>
+                                                </div>
+                                                <div class="co-subcard-badge">Recipient Setup</div>
+                                            </div>
+                                            <div class="co-subcard-body p-4">
+                                                <!-- Row 1: From Email & Reply To (2 columns) -->
+                                                <div class="row g-3 mb-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                                                            From Email ID
+                                                        </label>
+                                                        <input type="text" class="form-control form-control-solid fs-7 h-40px bg-light-secondary text-gray-700" value="{{ $so_from_name ? $so_from_name.' <'.$so_from_email.'>' : $so_from_email }}" readonly>
                                                         <div class="co-send-hint">This will be the email sender address</div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                            <div class="co-send-row-col">
-                                                <div class="co-send-row">
-                                                    <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg> Reply To</label>
-                                                    <div class="co-send-field">
-                                                        <input type="text" class="co-send-input" id="co_send_replyto" value="{{ $so_from_email }}" readonly>
-                                                        <div class="co-send-hint">Direct candidate replies to this address</div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                                                            Reply To
+                                                        </label>
+                                                        <input type="email" class="form-control fs-7 h-40px" id="co_send_replyto" value="{{ $so_reply_to_email }}" placeholder="Enter reply-to email address">
+                                                        <div class="co-send-hint">Direct candidate replies to this address (defaults to logged-in user: {{ $so_reply_to_email }})</div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
 
-                                        <div class="co-send-row">
-                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg> To Email ID <span class="co-send-req">*</span></label>
-                                            <div class="co-send-field">
-                                                <div class="co-send-chips co-send-chips--locked" id="co_to_chips">
-                                                    @if(!empty($so_email))
-                                                        <span class="co-send-chip co-send-chip--locked" data-raw-email="{{ $so_email }}">
-                                                            {{ $so_email }}
-                                                            @if($so_is_agency_bench)
-                                                                <span class="badge badge-light-warning ms-1" style="font-size:10px;padding:2px 6px;vertical-align:1px;">Agency RM</span>
-                                                            @endif
-                                                            <svg class="co-chip-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-                                                        </span>
+                                                <!-- Row 2: To Email ID -->
+                                                <div class="mb-3">
+                                                    <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+                                                        To Email ID <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="co-send-chips co-send-chips--locked" id="co_to_chips">
+                                                        @if(!empty($so_email))
+                                                            <span class="co-send-chip co-send-chip--locked" data-raw-email="{{ $so_email }}">
+                                                                {{ $so_email }}
+                                                                @if($so_is_agency_bench)
+                                                                    <span class="badge badge-light-warning ms-1" style="font-size:10px;padding:2px 6px;vertical-align:1px;">Agency RM</span>
+                                                                @endif
+                                                                <svg class="co-chip-lock" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                    @if($so_is_confidential)
+                                                        <div class="co-send-hint" style="color: #92400e; font-weight: 500;">
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                            <strong>Marketplace Confidentiality Guard:</strong> Candidate personal email{{ $so_masked_email ? ' ('.$so_masked_email.')' : '' }} is protected. Offer will be delivered directly to the Agency Relationship Manager ({{ $so_agency_name ?: 'Partner Agency' }}).
+                                                        </div>
+                                                    @elseif($so_is_education_bench)
+                                                        <div class="co-send-hint" style="color: #059669; font-weight: 500;">
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                                                            <strong>Campus / Training Candidate:</strong> Direct candidate contact authorized for employment onboarding. Institutional placement coordinator CC'd.
+                                                        </div>
+                                                    @else
+                                                        <div class="co-send-hint">Primary candidate email address — fixed, can't be changed or removed</div>
                                                     @endif
                                                 </div>
-                                                @if($so_is_confidential)
-                                                    <div class="co-send-hint" style="color: #92400e; font-weight: 500;">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                                        <strong>Marketplace Confidentiality Guard:</strong> Candidate personal email{{ $so_masked_email ? ' ('.$so_masked_email.')' : '' }} is protected. Offer will be delivered directly to the Agency Relationship Manager ({{ $so_agency_name ?: 'Partner Agency' }}).
+
+                                                <!-- Row 3: CC Email ID -->
+                                                <div class="mb-3">
+                                                    <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="7" y="7" width="14" height="14" rx="2"/><path d="M3 15V5a2 2 0 0 1 2-2h10"/></svg>
+                                                        CC Email ID
+                                                    </label>
+                                                    <div class="co-send-chips" id="co_cc_chips">
+                                                        @foreach($so_cc_emails as $ccEmail)
+                                                            <span class="co-send-chip">{{ $ccEmail }}<button type="button" class="co-send-chip-x" aria-label="Remove">&times;</button></span>
+                                                        @endforeach
+                                                        <input type="text" class="co-send-chip-input" placeholder="Type an email…">
+                                                        <span class="co-send-addemail" data-chip-target="co_cc_chips">+ Add Email</span>
                                                     </div>
-                                                @elseif($so_is_education_bench)
-                                                    <div class="co-send-hint" style="color: #059669; font-weight: 500;">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                                                        <strong>Campus / Training Candidate:</strong> Direct candidate contact authorized for employment onboarding. Institutional placement coordinator CC'd.
+                                                    <div class="co-send-hint">Add email addresses separated by commas or click + Add Email to select from your internal team or client contacts</div>
+                                                </div>
+
+                                                <!-- Row 4: E-Signature & Template (2 columns) -->
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M3 21c3-1 6-8 8-8s2 3 4 3 3-2 6-2"/><path d="m15 5 4 4"/></svg>
+                                                            E-Signature Requirement
+                                                        </label>
+                                                        <div class="co-send-sigrow d-flex align-items-center gap-3 pt-1">
+                                                            <label class="co-send-switch mb-0"><input type="checkbox" id="co_send_signature" checked><span class="co-send-slider"></span></label>
+                                                            <span class="co-send-sigtext fw-semibold fs-7 text-gray-800" id="co_send_sigtext">With E-Signature</span>
+                                                        </div>
+                                                        <div class="co-send-hint">Candidate uploads a digital signature to accept offer</div>
                                                     </div>
-                                                @else
-                                                    <div class="co-send-hint">Primary candidate email address — fixed, can't be changed or removed</div>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        <div class="co-send-row">
-                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="14" height="14" rx="2"/><path d="M3 15V5a2 2 0 0 1 2-2h10"/></svg> CC Email ID</label>
-                                            <div class="co-send-field">
-                                                <div class="co-send-chips" id="co_cc_chips">
-                                                    @foreach($so_cc_emails as $ccEmail)
-                                                        <span class="co-send-chip">{{ $ccEmail }}<button type="button" class="co-send-chip-x" aria-label="Remove">&times;</button></span>
-                                                    @endforeach
-                                                    <input type="text" class="co-send-chip-input" placeholder="Type an email…">
-                                                    <span class="co-send-addemail" data-chip-target="co_cc_chips">+ Add Email</span>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                                                            Email Template
+                                                        </label>
+                                                        <select class="form-select fs-7 h-40px" id="co_send_template">
+                                                            <option value="">Select Email Template…</option>
+                                                            @foreach($co_send_templates ?? [] as $co_tpl)
+                                                                <option value="{{ $co_tpl->id }}" {{ (!empty($is_bench_candidate) && stripos($co_tpl->display_name, 'Relationship Manager') !== false) ? 'selected' : '' }}>{{ $co_tpl->display_name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <div class="co-send-hint">Choosing a template auto-populates Subject and Body below</div>
+                                                    </div>
                                                 </div>
-                                                <div class="co-send-hint">Add email addresses separated by commas</div>
                                             </div>
                                         </div>
 
-                                        <div class="co-send-row">
-                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3-1 6-8 8-8s2 3 4 3 3-2 6-2"/><path d="m15 5 4 4"/></svg> E-Signature</label>
-                                            <div class="co-send-field">
-                                                <div class="co-send-sigrow">
-                                                    <label class="co-send-switch"><input type="checkbox" id="co_send_signature" checked><span class="co-send-slider"></span></label>
-                                                    <span class="co-send-sigtext" id="co_send_sigtext">With E-Signature</span>
+                                        {{-- SUB-CARD 2: Composer Form & Attachments --}}
+                                        <div class="co-subcard mb-4">
+                                            <div class="co-subcard-header d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="co-subcard-title fs-7 fw-bolder text-gray-800 d-flex align-items-center gap-1.5">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                                        OFFER LETTER COMPOSER &amp; ATTACHMENTS
+                                                    </span>
                                                 </div>
-                                                <div class="co-send-hint">On: candidate uploads a signature to accept, which appears on the offer letter copy. Off: candidate can only accept or reject, no signature required.</div>
+                                                <div class="co-subcard-badge">Email Content</div>
+                                            </div>
+                                            <div class="co-subcard-body p-4">
+                                                <!-- Subject -->
+                                                <div class="mb-3">
+                                                    <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M20.6 8.4 12 3 3.4 8.4M4 10v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m4 10 8 5 8-5"/></svg>
+                                                        Subject <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input type="text" class="form-control fs-7 h-40px" id="co_send_subject" value="{{ $so_subject }}" placeholder="Enter email subject line">
+                                                </div>
+
+                                                <!-- Body / CKEditor -->
+                                                <div class="mb-3">
+                                                    <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+                                                        Email Body
+                                                    </label>
+                                                    <div>
+                                                        <textarea id="co_send_editor" name="co_send_editor">{!! $so_default_body !!}</textarea>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Attachments -->
+                                                <div>
+                                                    <label class="form-label fs-7 fw-semibold text-gray-700 mb-1 d-flex align-items-center gap-1.5">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="m21.4 11.5-8.9 8.9a5 5 0 0 1-7.1-7.1l8.9-8.9a3.5 3.5 0 0 1 5 5l-8.9 8.9a2 2 0 0 1-2.8-2.8l8.2-8.2"/></svg>
+                                                        Attachments <span class="co-send-attach-count text-muted fs-8 ms-1" id="co_send_attach_count"></span>
+                                                    </label>
+                                                    <div class="co-send-attachrow" id="co_send_attach_list"></div>
+                                                    <input type="file" id="co_send_attach_input" multiple style="display:none;">
+                                                    <div>
+                                                        <button type="button" class="btn btn-sm co-send-addattach" id="co_send_addattach">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add Attachment
+                                                        </button>
+                                                    </div>
+                                                    <div class="co-send-hint mt-2">Max 2 MB each, up to 3 files. Supported formats: PDF, DOC, DOCX, PNG, JPG</div>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div class="co-send-row">
-                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Template</label>
-                                            <div class="co-send-field">
-                                                <select class="co-send-input" id="co_send_template">
-                                                    <option value="">Select Email Template…</option>
-                                                    @foreach($co_send_templates ?? [] as $co_tpl)
-                                                        <option value="{{ $co_tpl->id }}" {{ (!empty($is_bench_candidate) && stripos($co_tpl->display_name, 'Relationship Manager') !== false) ? 'selected' : '' }}>{{ $co_tpl->display_name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <div class="co-send-hint">Choosing a template replaces the Subject and Body below</div>
+                                        {{-- Informative Bottom Notification Strip (Rule 20) --}}
+                                        <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                            <div class="d-flex align-items-center gap-2 text-gray-600 fs-8">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                                <span>The official offer letter email will be dispatched automatically upon clicking <strong>Save &amp; Next</strong> in the header topbar.</span>
                                             </div>
+                                            {{-- Hidden submit trigger for header Save & Next action --}}
+                                            <button type="button" class="btn co-send-submit" id="co_send_submit" style="display: none !important;"><span class="co-send-submit-label">Send Offer Letter</span><span class="co-send-submit-wait" style="display:none;">Sending…</span></button>
                                         </div>
-
-                                        <div class="co-send-row">
-                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 8.4 12 3 3.4 8.4M4 10v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m4 10 8 5 8-5"/></svg> Subject <span class="co-send-req">*</span></label>
-                                            <div class="co-send-field">
-                                                <input type="text" class="co-send-input" id="co_send_subject" value="{{ $so_subject }}" placeholder="Enter email subject">
-                                            </div>
-                                        </div>
-
-                                        <div class="co-send-row co-send-row--body">
-                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg> Email Body</label>
-                                            <div class="co-send-field">
-                                                <textarea id="co_send_editor" name="co_send_editor">{!! $so_default_body !!}</textarea>
-                                            </div>
-                                        </div>
-
-                                        <div class="co-send-row">
-                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.4 11.5-8.9 8.9a5 5 0 0 1-7.1-7.1l8.9-8.9a3.5 3.5 0 0 1 5 5l-8.9 8.9a2 2 0 0 1-2.8-2.8l8.2-8.2"/></svg> Attachments <span class="co-send-attach-count" id="co_send_attach_count"></span></label>
-                                            <div class="co-send-field">
-                                                <div class="co-send-attachrow" id="co_send_attach_list"></div>
-                                                <input type="file" id="co_send_attach_input" multiple style="display:none;">
-                                                <button type="button" class="co-send-addattach" id="co_send_addattach">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add Attachment
-                                                </button>
-                                                <div class="co-send-hint">Max 2 MB each, up to 3 files</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Footer: informative note kept; duplicate footer buttons removed (handled by header topbar) --}}
-                                    <div class="co-send-footer">
-                                        <div class="co-send-footer-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> Email will be sent automatically upon clicking Save &amp; Next</div>
-                                        {{-- Hidden submit trigger for header Save & Next action --}}
-                                        <button type="button" class="btn co-send-submit" id="co_send_submit" style="display: none !important;"><span class="co-send-submit-label">Send Offer Letter</span><span class="co-send-submit-wait" style="display:none;">Sending…</span></button>
                                     </div>
                                 </div>
 
@@ -8105,7 +8198,11 @@
                             $hdrBtn.find('.co-header-save-label').text('Offer Released ✓');
                             $hdrBtn.find('i').attr('class', 'fas fa-check fs-9 ms-1');
 
-                            // Update in-drawer hero pill immediately
+                            // Update in-drawer status badge in Sub-Header immediately
+                            $('#co_send_status_badge')
+                                .removeClass('badge-light-warning text-warning co-send-fact-notsent')
+                                .addClass('badge-light-success text-success co-send-fact-sent')
+                                .html('<svg class="me-1.5" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Offer Released');
                             $('.co-send-fact-v.co-send-fact-notsent').removeClass('co-send-fact-notsent').addClass('co-send-fact-sent').text('Offer Released');
                             $('.co-send-fact-v.co-send-fact-sentby').html(
                                 '<span class="co-send-sentby-name">{{ e($so_from_name) }}</span><span class="co-send-sentby-when">Sent just now</span>'
